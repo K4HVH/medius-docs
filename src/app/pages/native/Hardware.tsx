@@ -6,100 +6,89 @@ import '../../../styles/docs.css';
 const Hardware: Component = () => {
   return (
     <>
-      <div id="hardware-architecture" data-search-target>
+      <div id="ports" data-search-target>
         <Card>
-          <CardHeader title="Hardware Architecture" subtitle="Device layout and USB ports" />
+          <CardHeader title="Ports" subtitle="The three USB ports and how to cable them" />
           <p>
-            Two independent ESP32-S3 microcontrollers connected via three USB ports.
+            Wire the box once at first plug-in; after that everything is software.
           </p>
-          <pre class="diagram">{
-`[USB 1 - Left ]  -->  Gaming PC / Console         (left chip,  v3.2)
-[USB 2 - COM  ]  -->  Control software            (serial command interface)
-[USB 3 - Right]  -->  Mouse                       (right chip, v3.7)`
-          }</pre>
+          <p>
+            Inside are two ESP32-S3 microcontrollers and a <code>CH343</code> USB-serial bridge. Your
+            program only ever speaks to the <code>CH343</code> serial port; the two chips talk over an
+            internal 5 Mbaud link you never touch, separate from the 4 Mbaud control link.
+          </p>
           <table class="api-params">
             <thead>
               <tr>
-                <th>Port</th>
-                <th>Label</th>
-                <th>Chip</th>
+                <th>Component</th>
                 <th>Role</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>USB 1</code></td>
-                <td>Left</td>
-                <td>Left (v3.2)</td>
-                <td>HID output to the host PC. Runs the command interpreter.</td>
+                <td><A href="/native/architecture">Host chip</A></td>
+                <td>Reads the real mouse.</td>
               </tr>
               <tr>
-                <td><code>USB 2</code></td>
-                <td>COM</td>
-                <td>Left (v3.2)</td>
-                <td>Serial command interface. Software connects here. See <A href="/native/transport">Transport</A>.</td>
+                <td><A href="/native/architecture">Device chip</A></td>
+                <td>
+                  Presents <A href="/native/architecture">the clone</A>, a copy of the mouse's USB
+                  identity, so the PC sees the same device it would if the mouse were plugged in
+                  directly.
+                </td>
               </tr>
               <tr>
-                <td><code>USB 3</code></td>
-                <td>Right</td>
-                <td>Right (v3.7)</td>
-                <td>Physical mouse input.</td>
+                <td><code>CH343</code> bridge</td>
+                <td>
+                  Exposes the control port as a serial device (see{' '}
+                  <A href="/native/transport">Transport</A>).
+                </td>
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-
-      <div id="constraints" data-search-target>
-        <Card>
-          <CardHeader title="Constraints" />
-          <div class="callout callout--warning">
-            <p>
-              Only one process may hold the COM port at a time. Attempting to open
-              it from a second process will fail.
-            </p>
-          </div>
-          <div class="callout callout--warning">
-            <p>
-              A mouse must be connected to USB 3 (Right) or the device will not function.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="led-indicators" data-search-target>
-        <Card>
-          <CardHeader title="LED Indicators" />
           <table class="api-params">
             <thead>
               <tr>
-                <th>Pattern</th>
-                <th>Meaning</th>
+                <th>Port</th>
+                <th>Connects to</th>
+                <th>Role</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Solid ON</td>
-                <td>Side functioning correctly</td>
+                <td><code>USB1</code></td>
+                <td>Game PC</td>
+                <td>The clone (<A href="/native/architecture">device chip</A>)</td>
               </tr>
               <tr>
-                <td>Solid OFF</td>
-                <td>No peripheral detected</td>
+                <td><code>USB2</code></td>
+                <td>Control PC</td>
+                <td><A href="/native/transport">CH343</A> serial control, the{' '}
+                  <code>/dev/ttyACM*</code> port your program opens</td>
               </tr>
               <tr>
-                <td>Slow blink (500ms)</td>
-                <td>Reconfiguring or warning state</td>
-              </tr>
-              <tr>
-                <td>Left LED at startup: 1 flash</td>
-                <td>Operating at <A href="/native/transport#baud-rate">115200 baud</A></td>
-              </tr>
-              <tr>
-                <td>Left LED at startup: 4 flashes</td>
-                <td>Operating at <A href="/native/transport#baud-rate">4 Mbaud</A></td>
+                <td><code>USB3</code></td>
+                <td>Mouse</td>
+                <td>Real mouse (<A href="/native/architecture">host chip</A>)</td>
               </tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+
+      <div id="hazard" data-search-target>
+        <Card>
+          <CardHeader title="USB3 power hazard" subtitle="The one wiring pairing to avoid" />
+          <div class="callout callout--danger">
+            <p>
+              ⚠️ <code>USB1</code> and <code>USB3</code> must never both connect to the same machine.
+            </p>
+            <p>
+              The <code>USB3</code> 5V rail can't be pulled low in firmware, so wiring both to one
+              machine back-feeds power and can force a shutdown or drain the battery. Keep them on
+              separate machines per the port table above.
+            </p>
+          </div>
         </Card>
       </div>
     </>

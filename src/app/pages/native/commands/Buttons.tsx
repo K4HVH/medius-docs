@@ -6,107 +6,63 @@ import '../../../../styles/docs.css';
 const Buttons: Component = () => {
   return (
     <>
-      <div id="mouse-buttons" data-search-target>
-        <Card>
-          <CardHeader title="Mouse Buttons" subtitle="Query and control button states" />
-          <p>
-            Five buttons are available: <code>left</code>, <code>right</code>, <code>middle</code>,
-            {' '}<code>ms1</code> (side button 1), and <code>ms2</code> (side button 2).
-            The Rust library wraps these as the <A href="/library/types#enums"><code>Button</code></A> enum
-            with a <A href="/library/buttons">typed button API</A>.
-          </p>
-          <div class="callout callout--danger">
-            <p>
-              The names <code>side1</code> and <code>side2</code> are <A href="/native/broken#silent-commands"><strong>not recognised</strong></A> by
-              the firmware. Always use <code>ms1</code> and <code>ms2</code>.
-            </p>
-          </div>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader title="Buttons" subtitle="Press and release" />
+        <p>
+          <A href="/native/commands/buttons#button"><code>BUTTON</code></A> presses or releases a
+          mouse button without touching the real mouse, on top of whatever the user is physically
+          doing.
+        </p>
+      </Card>
 
-      <div id="query-state" data-search-target>
+      <div id="button" data-search-target>
         <Card>
-          <CardHeader title="Query State" subtitle="Read the current button state" />
-          <pre class="api-signature">{'km.<button>()\\r\\n'}</pre>
-          <div class="api-response-label">Response Type</div>
-          <span class="api-badge api-badge--responded">RESPONDED</span>
+          <CardHeader title="BUTTON" subtitle="Button overrides" />
           <p>
-            Returns <code>0</code> (released) or <code>1</code> (pressed). The value
-            reflects the combined physical and software state.
+            <code>BUTTON</code> sets a per-button <A href="/native/injection#state">override</A>, the
+            box's own held decision layered over the physical mouse.{' '}
+            <A href="/native/frame#opcodes">Opcode</A> <code>0x03</code>.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              The zero-argument form is a <strong>state query</strong>, not a click. It does
-              not produce any input on the host.
-            </p>
-          </div>
-          <table class="api-params">
+          <pre class="api-signature">BUTTON  0x03  ·  payload 2 bytes</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
             <thead>
-              <tr>
-                <th>Command</th>
-                <th>Button</th>
-              </tr>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>km.left()</code></td><td>Left</td></tr>
-              <tr><td><code>km.right()</code></td><td>Right</td></tr>
-              <tr><td><code>km.middle()</code></td><td>Middle</td></tr>
-              <tr><td><code>km.ms1()</code></td><td>Side 1</td></tr>
-              <tr><td><code>km.ms2()</code></td><td>Side 2</td></tr>
+              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>0=Left 1=Right 2=Middle 3=Side1 4=Side2</td></tr>
+              <tr><td>1</td><td><code>action</code></td><td><code>u8</code></td><td>0=soft-release 1=press 2=force-release</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`-->  km.left()\\r\\n\n<--  km.left()\\r\\n0\\r\\n>>> `}</code></pre>
-        </Card>
-      </div>
-
-      <div id="set-state" data-search-target>
-        <Card>
-          <CardHeader title="Set State" subtitle="Press, release, or force-release a button" />
-          <pre class="api-signature">{'km.<button>(arg)\\r\\n'}</pre>
-          <div class="api-response-label">Response Type</div>
-          <span class="api-badge api-badge--executed">EXECUTED</span>
-          <div class="api-response-label">Parameters</div>
+          <div class="api-response-label">ACTIONS</div>
           <table class="api-params">
             <thead>
-              <tr>
-                <th>Argument</th>
-                <th>Behaviour</th>
-              </tr>
+              <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td><code>1</code></td>
-                <td>Press. Overrides the physical state.</td>
-              </tr>
-              <tr>
-                <td><code>0</code></td>
-                <td>Soft release. Does not override an active physical press.</td>
-              </tr>
-              <tr>
-                <td><code>2</code></td>
-                <td>Force release regardless of physical state.</td>
-              </tr>
+              <tr><td>press</td><td><code>1</code></td><td>Force the button down regardless of physical state.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Clear our injected press only; a physical hold stays pressed.</td></tr>
+              <tr><td>force-release</td><td><code>2</code></td><td>Force the button up, masking a physical press too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`-->  km.left(1)\\r\\n      (press)\n<--  km.left(1)\\r\\n>>> \n\n-->  km.left(0)\\r\\n      (soft release)\n<--  km.left(0)\\r\\n>>> \n\n-->  km.left(2)\\r\\n      (force release)\n<--  km.left(2)\\r\\n>>> `}</code></pre>
-        </Card>
-      </div>
-
-      <div id="click" data-search-target>
-        <Card>
-          <CardHeader title="Click" subtitle="Press and release sequence" />
+          <div class="api-response-label">EFFECT</div>
           <p>
-            There is no working click shorthand (<code>km.click()</code> is <A href="/native/broken#silent-commands">non-functional</A>).
-            Send two separate commands:
+            The override sets the button's bit in the report the PC sees, merged at the same point as{' '}
+            <A href="/native/commands/movement#move"><code>MOVE</code></A>. <code>id</code> is bound at
+            clone time to the real mouse's buttons, so a command for a button it lacks is a no-op.
+            There is no firmware click: compose a <code>press</code> then a client-timed{' '}
+            <code>soft-release</code>. <A href="/native/commands/admin#reset"><code>RESET</code></A>{' '}
+            releases every override. Library bindings:{' '}
+            <A href="/library/buttons#methods"><code>press</code> / <code>soft_release</code> / <code>force_release</code></A>.
           </p>
-          <pre><code>{`km.left(1)\\r\\n\nkm.left(0)\\r\\n`}</code></pre>
-          <p>
-            Insert a delay between the press and release if the target application requires
-            a minimum hold duration. The Rust library's <A href="/library/features/extras#click"><code>click()</code></A> method
-            handles this automatically.
-          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Press Left — <code>id</code> <code>0x00</code>, <code>action</code> <code>0x01</code>:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 03     | 00     | 02 00  | 00     | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | action | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
     </>

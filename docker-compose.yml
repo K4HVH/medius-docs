@@ -1,7 +1,7 @@
 services:
-  makcu-docs:
-    image: ghcr.io/k4hvh/makcu-docs:latest
-    container_name: makcu-docs
+  medius-docs:
+    image: ghcr.io/k4hvh/medius-docs:latest
+    container_name: medius-docs
     ports:
       - "3003:3000"
     restart: unless-stopped

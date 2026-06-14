@@ -6,130 +6,79 @@ import '../../../styles/docs.css';
 const Movement: Component = () => {
   return (
     <>
-      <div id="movement-overview" data-search-target>
-        <Card>
-          <CardHeader title="Movement" subtitle="Relative cursor movement, silent move, and scroll wheel" />
-          <p>
-            Three methods control cursor position and scroll input. All accept signed integers
-            and validate ranges before sending to the device. For smooth multi-step movement,
-            see the <A href="/library/features/extras#move-smooth"><code>extras</code></A> feature.
-            All movement methods support <A href="/library/fire-and-forget">fire-and-forget</A> mode
-            and <A href="/library/features/batch#batch-methods">batch sequences</A>.
-          </p>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader title="Movement & scroll" subtitle="Cursor motion and wheel input" />
+        <p>
+          The box is a USB bridge between a real mouse and the PC. Both methods send{' '}
+          <A href="/native/injection"><code>injection</code></A>: motion the box adds on top of the
+          real mouse's input (<A href="/native/injection#fire-and-forget">passthrough</A>). Both are{' '}
+          <A href="/native/injection#fire-and-forget"><code>fire-and-forget</code></A> &mdash; each
+          sends one <A href="/native/frame"><code>frame</code></A> (one packet on the wire) and returns
+          without an acknowledgement, since the box sends none for these commands.
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>Method</th><th>Frame</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>move_rel</code></td><td><A href="/native/commands/movement#move"><code>MOVE</code></A></td><td>Carries relative cursor motion.</td></tr>
+            <tr><td><code>wheel</code></td><td><A href="/native/commands/movement#wheel"><code>WHEEL</code></A></td><td>Carries wheel scroll steps.</td></tr>
+          </tbody>
+        </table>
+      </Card>
 
-      <div id="move-xy" data-search-target>
+      <div id="move-rel" data-search-target>
         <Card>
-          <CardHeader title="move_xy" subtitle="Relative cursor movement" />
-          <pre class="api-signature">{`fn move_xy(&self, x: i32, y: i32) -> Result<()>`}</pre>
+          <CardHeader title="move_rel" subtitle="Relative cursor movement" />
+          <pre class="api-signature">fn move_rel(&self, dx: i16, dy: i16) -&gt; Result&lt;()&gt;</pre>
           <p>
-            Moves the cursor by <code>(x, y)</code> relative to its current position.
-            Positive <code>x</code> moves right, positive <code>y</code> moves down.
-            Maps to the firmware's <A href="/native/commands/movement#km-move"><code>km.move(x,y)</code></A> command.
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <table class="api-params">
             <thead>
-              <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Range</th>
-                <th>Description</th>
-              </tr>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td><code>x</code></td>
-                <td><code>i32</code></td>
-                <td>-32767 to 32767</td>
-                <td>Horizontal offset. Positive moves right.</td>
-              </tr>
-              <tr>
-                <td><code>y</code></td>
-                <td><code>i32</code></td>
-                <td>-32767 to 32767</td>
-                <td>Vertical offset. Positive moves down.</td>
-              </tr>
+              <tr><td><code>dx</code></td><td><code>i16</code></td><td>Horizontal offset, in mouse counts (raw motion units the OS scales like any mouse, not pixels). Positive moves right.</td></tr>
+              <tr><td><code>dy</code></td><td><code>i16</code></td><td>Vertical offset, in mouse counts. Positive moves down.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`device.move_xy(100, -50)?;  // right 100, up 50`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              Values outside the valid range return <A href="/library/types#error-variants"><code>MakcuError::OutOfRange</code></A> without
-              sending any data to the device.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="silent-move" data-search-target>
-        <Card>
-          <CardHeader title="silent_move" subtitle="Atomic drag operation" />
-          <pre class="api-signature">{`fn silent_move(&self, x: i32, y: i32) -> Result<()>`}</pre>
           <p>
-            Performs a left-button-down, move, left-button-up sequence across two HID frames.
-            The host sees a brief drag rather than a plain move. This maps to the
-            firmware's <A href="/native/commands/movement#km-silent"><code>km.silent(x,y)</code></A> command.
+            <code>dx</code> and <code>dy</code> are offsets from the current cursor position, not
+            screen coordinates, each spanning the full <code>i16</code> range{' '}
+            <code>−32768 to 32767</code>. They add into the{' '}
+            <A href="/native/injection#state">accumulator</A>, a running total of pending injected
+            motion the box drains into the reports it sends the PC (<code>accumulator += dx, dy</code>).
+            The caller owns timing: sustained 1 kHz motion is a caller-driven <code>move_rel</code>{' '}
+            loop. Returns a <A href="/library/types#errors"><code>Result</code></A>.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Range</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>x</code></td>
-                <td><code>i32</code></td>
-                <td>-32767 to 32767</td>
-                <td>Horizontal offset.</td>
-              </tr>
-              <tr>
-                <td><code>y</code></td>
-                <td><code>i32</code></td>
-                <td>-32767 to 32767</td>
-                <td>Vertical offset.</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`device.silent_move(200, 0)?;  // drag right 200`}</code></pre>
+          <pre><code>{`device.move_rel(40, 0)?;`}</code></pre>
         </Card>
       </div>
 
       <div id="wheel" data-search-target>
         <Card>
-          <CardHeader title="wheel" subtitle="Scroll wheel input" />
-          <pre class="api-signature">{`fn wheel(&self, delta: i32) -> Result<()>`}</pre>
+          <CardHeader title="wheel" subtitle="Wheel scroll" />
+          <pre class="api-signature">fn wheel(&self, delta: i16) -&gt; Result&lt;()&gt;</pre>
           <p>
-            Sends a scroll wheel event. Positive values scroll up, negative values scroll down.
-            Maps to the firmware's <A href="/native/commands/wheel#km-wheel"><code>km.wheel(n)</code></A> command.
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <table class="api-params">
             <thead>
-              <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Range</th>
-                <th>Description</th>
-              </tr>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td><code>delta</code></td>
-                <td><code>i32</code></td>
-                <td>-127 to 127</td>
-                <td>Scroll amount. Positive scrolls up.</td>
-              </tr>
+              <tr><td><code>delta</code></td><td><code>i16</code></td><td>Scroll steps. Positive scrolls up, negative scrolls down.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`device.wheel(3)?;   // scroll up 3
-device.wheel(-5)?;  // scroll down 5`}</code></pre>
+          <p>
+            <code>delta</code> spans the full <code>i16</code> range{' '}
+            <code>−32768 to 32767</code> and adds into the same{' '}
+            <A href="/native/injection#state">accumulator</A> as movement{' '}
+            (<code>accumulator += delta</code>), so multi-step scrolls are preserved rather than
+            clamped to one notch. Returns a <A href="/library/types#errors"><code>Result</code></A>.
+          </p>
+          <pre><code>{`device.wheel(3)?;`}</code></pre>
         </Card>
       </div>
     </>

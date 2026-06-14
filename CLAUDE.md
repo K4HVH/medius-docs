@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository. This is the **MAKCU documentation site**, built with SolidJS and MidnightUI components.
+Guidance for Claude Code when working in this repository. This is the **Medius documentation site**, built with SolidJS and MidnightUI components.
 
 ## What This Project Is
 
-A static documentation site for the MAKCU device. Two sections:
+A static documentation site for Medius: replacement firmware for MAKCU-class mouse-passthrough boxes, its open binary control protocol, and the `medius` Rust library. Two sections:
 
-- **Native API** -- Firmware command reference for the MAKCU hardware (v3.2 left chip / v3.7 right chip). Covers hardware, transport, connection, protocol, and all `km.*` commands.
-- **Rust Library** -- Documentation for the MAKCU Rust library (in progress, currently a placeholder).
+- **Native API** -- The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x08`).
+- **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` features.
 
 The site uses **MidnightUI** as its component library. MidnightUI components live in `src/components/` and `src/styles/` and are synced from an upstream repo. Do not modify MidnightUI component source files.
 
@@ -42,38 +42,41 @@ src/
       DocsLayout.tsx                  # Docs layout (sidebar, titlebar, search)
       native/
         Introduction.tsx              # Native API overview
-        Hardware.tsx                  # USB ports, LEDs, constraints
-        Transport.tsx                 # Serial interface, baud, USB IDs
-        Connection.tsx                # Connection sequence, baud change frame
-        Protocol.tsx                  # Request/response format
-        BrokenCommands.tsx            # Non-functional commands
-        Notes.tsx                     # Behaviour notes
+        Quickstart.tsx                # Open the port and send a MOVE
+        Architecture.tsx              # Mouse -> box -> PC data path
+        Hardware.tsx                  # Three USB ports, the USB3 hazard
+        Transport.tsx                 # 4 Mbaud framed serial, CH343, USB id
+        Connection.tsx                # Handshake and the boot version hello
+        Frame.tsx                     # Frame format, CRC16, opcodes
+        Injection.tsx                 # Injection model, carry, emission, safety
         commands/
-          Version.tsx                 # km.version()
-          Buttons.tsx                 # km.left/right/middle/ms1/ms2
-          Movement.tsx                # km.move(), km.silent()
-          Wheel.tsx                   # km.wheel()
-          Locks.tsx                   # km.lock_mx/my/ml/mr/mm/ms1/ms2
-          Stream.tsx                  # km.buttons() event stream
-          Catch.tsx                   # km.catch_m*() button capture
-          Serial.tsx                  # km.serial() (non-functional)
+          Movement.tsx                # MOVE 0x01
+          Wheel.tsx                   # WHEEL 0x02
+          Buttons.tsx                 # BUTTON 0x03
+          Reset.tsx                   # RESET 0x04
+          Version.tsx                 # QUERY/RESP VERSION (0x05/0x06)
+          Health.tsx                  # QUERY/RESP HEALTH
+          Reboot.tsx                  # REBOOT 0x07
+          Log.tsx                     # LOG 0x08
+        Flashing.tsx                  # Firmware updates over REBOOT
+        Troubleshooting.tsx           # Common problems and fixes
       library/
-        Introduction.tsx              # Rust library overview
-        Connection.tsx                # Device/AsyncDevice connection
-        Movement.tsx                  # move_xy, silent_move, wheel
-        Buttons.tsx                   # button_down/up, button_state
-        Locks.tsx                     # set_lock, lock_state, lock_states_all
-        Stream.tsx                    # Button event stream
-        Catch.tsx                     # Per-button capture (CatchEvent)
-        DeviceInfo.tsx                # version, serial, device_info
-        FireAndForget.tsx             # ff() wrapper
-        TypesAndErrors.tsx            # Types, enums, MakcuError
+        Introduction.tsx              # Rust library overview, install, features
+        Connection.tsx                # open, find, handshake, threading
+        Movement.tsx                  # move_rel
+        Wheel.tsx                     # wheel
+        Buttons.tsx                   # press, soft_release, force_release, button
+        Reset.tsx                     # reset
+        Version.tsx                   # query_version
+        Health.tsx                    # query_health
+        Lifecycle.tsx                 # keepalive, reapply, reconnect
+        Reboot.tsx                    # reboot
+        Diagnostics.tsx               # logs(), counters()
+        TypesAndErrors.tsx            # public types and the Error enum
         features/
-          Async.tsx                   # AsyncDevice, async feature
-          BatchBuilder.tsx            # BatchBuilder fluent API
-          Extras.tsx                  # click, smooth, drag, callbacks
-          Mock.tsx                    # MockTransport for testing
-          Profile.tsx                 # Per-command timing profiler
+          Async.tsx                   # AsyncDevice (async feature)
+          Mock.tsx                    # MockBox (mock feature)
+          Flash.tsx                   # medius::flash (flash feature)
   components/                         # MidnightUI components (DO NOT MODIFY)
   styles/
     global.css                        # MidnightUI theme tokens (DO NOT MODIFY)
@@ -85,101 +88,71 @@ src/
 
 ### Routing
 
-All routes are defined in `App.tsx`. `DocsLayout` is the layout component for all docs pages -- it provides the sidebar, titlebar, and search. The landing page (`Home.tsx`) is outside the docs layout.
-
-Bad URLs redirect to `/` via a catch-all route.
+All routes are defined in `App.tsx`. `DocsLayout` is the layout component for all docs pages -- it provides the sidebar, titlebar, and search. The landing page (`Home.tsx`) is outside the docs layout. Bad URLs redirect to `/` via a catch-all route.
 
 ### Search System
 
-The site has Ctrl+K search powered by MidnightUI's `CommandPalette` component. The search index is a **curated list** in `src/app/searchIndex.ts`.
-
-**When adding or modifying documentation pages, you MUST update the search index.** Each entry has:
-- `label` -- What the user sees in search results
-- `description` -- Subtitle shown below the label
-- `path` -- Route path, optionally with a `#hash` anchor (e.g. `/native/commands/buttons#set-state`)
-- `group` -- Groups results in the palette
-- `keywords` -- Additional terms that make the entry findable
-- `icon` / `tags` -- Optional visual indicators
-
-Entries should exist for:
-- Every page (top-level entry)
-- Every Card/section within a page (with `#hash` anchor)
-- Every individual `km.*` command
-- Every broken/silent command
-- Important concepts (bitmask, baud rate, USB IDs, etc.)
+Ctrl+K search is powered by MidnightUI's `CommandPalette`. The search index is a curated list in `src/app/searchIndex.ts`. **When adding or modifying pages, update the search index.** Each entry has `label`, `description`, `path` (optionally with a `#hash` anchor), `group`, `keywords`, and an optional `icon`.
 
 ### Scroll Targets
 
-Every Card on every page is wrapped in a `<div id="..." data-search-target>`. This enables search results to scroll directly to the relevant section and highlight it. The `data-search-target` attribute provides `scroll-margin-top` to account for the sticky titlebar.
+Every Card is wrapped in a `<div id="..." data-search-target>`. This lets search and deep links scroll to a section and highlight it, with `scroll-margin-top` for the sticky titlebar.
 
-**When adding new Cards, always wrap them in a div with an `id` and `data-search-target`:**
 ```tsx
 <div id="my-section" data-search-target>
   <Card>
     <CardHeader title="My Section" />
-    ...
   </Card>
 </div>
 ```
 
 ### Sidebar Navigation
 
-Sidebar tabs are defined as arrays in `DocsLayout.tsx` (`nativeOverviewTabs`, `nativeCommandTabs`, `nativeReferenceTabs`, `libraryTabOptions`). When adding a new page, add it to the appropriate tab array.
+Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryFeatureTabs`, `libraryReferenceTabs`. Add new pages to the right array. Nav icons come from `solid-icons/bs`.
 
 ## Styling Rules
 
-- Use MidnightUI components (Card, CardHeader, Divider, etc.) for all layout. Do not write custom CSS unless required.
-- Documentation-specific styles go in `src/styles/docs.css` (callouts, API badges, tables, etc.)
-- Do not modify `global.css` or any files under `src/components/` or `src/styles/components/` -- these are MidnightUI upstream files.
-- No emojis anywhere.
-- Professional, concise wording. No filler phrases.
+- Use MidnightUI components (Card, CardHeader, Divider) for all layout. Avoid custom CSS.
+- Documentation-specific styles live in `src/styles/docs.css` (callouts, API badges, tables).
+- Do not modify `global.css` or anything under `src/components/` or `src/styles/components/`.
+- No emojis except the ⚠️ on the USB3 hazard callout.
+- Terse, declarative wording. No filler, no marketing language.
 
 ### Documentation Page Patterns
 
-All documentation pages follow consistent patterns:
-
-- **Cards** for every section. First card is the page header (title + subtitle via `CardHeader`).
-- **`api-signature`** class on `<pre>` for command signatures.
-- **`api-response-label`** divs for section labels (Response Type, Parameters, Example, etc.)
-- **`api-badge`** spans for response type badges (EXECUTED, RESPONDED, SILENT, BROKEN).
-- **`api-params`** class on tables for parameter/command tables.
-- **`callout`** divs for warnings/info/danger notes (`callout--info`, `callout--warning`, `callout--danger`).
-- **`byte-table`** class for hex/binary layout tables.
+- **Cards** for every section; the first card is the page header (title + subtitle via `CardHeader`).
+- **`api-signature`** on `<pre>` for an opcode or method signature line.
+- **`api-response-label`** divs for small uppercase labels (PAYLOAD, EFFECT, EXAMPLE).
+- **`api-badge`** spans for badges: `--executed` (green, "Fire-and-forget"), `--responded` (blue, "Returns RESP").
+- **`api-params`** on parameter/reference tables; **`byte-table`** for wire/byte-layout tables.
+- **`callout`** divs (`--info`, `--warning`, `--danger`) for notes.
+- **`diagram`** on `<pre>` for ASCII diagrams.
 
 ### Mobile Considerations
 
 - Tables must work on mobile. Avoid 3+ column tables with long `code` content.
-- `code` elements have `white-space: nowrap` globally. Long code strings in table cells can push tables wider than the viewport. Use plain text descriptions instead of long code strings where possible.
-- `pre code` blocks override with `white-space: pre`.
-- Cards use `overflow: hidden`, so content wider than the card gets clipped.
+- `code` elements are `white-space: nowrap` globally; long code strings in cells can overflow. Prefer plain-text descriptions in cells.
+- `pre code` blocks override with `white-space: pre`. Cards use `overflow: hidden`.
 
 ## Favicon and Social Embeds
 
-The site favicon lives in `public/favicon.svg` (served at a stable `/favicon.svg` URL via Vite's `publicDir`). A PNG copy at `public/favicon.png` is used as the Open Graph / Twitter Card preview image for link embeds on Discord, Twitter/X, etc.
-
-Embed metadata (description, `og:*`, `twitter:*` tags) is defined in `src/index.html`. The preview image URL points to `https://makcu.k4tech.net/favicon.png`.
-
-**If the favicon SVG is modified, regenerate the PNG:**
+The favicon lives in `public/favicon.svg` (served at `/favicon.svg`). A PNG copy at `public/favicon.png` is the Open Graph / Twitter Card preview. Embed metadata is in `src/index.html`; the preview-image and canonical URLs are placeholders (`https://medius.example/...`) -- set the real domain before deploying.
 
 ```bash
 magick -background none -density 2048 public/favicon.svg -resize 1024x1024 public/favicon.png
 ```
 
-Requires ImageMagick (`magick` CLI). The `-density 2048` flag rasterizes the SVG at high DPI before downscaling, which keeps the output sharp.
-
 ## Content Rules
 
-- The Native API section documents the MAKCU device firmware. Do not reference the Rust library in native API pages.
-- The Rust Library section documents the MAKCU Rust crate. It is currently a placeholder.
-- All commands have been physically verified against firmware v3.2 (left) / v3.7 (right).
-- Commands marked as broken/silent are documented in `BrokenCommands.tsx`.
-- `km.serial()` has never been observed to work on any tested hardware.
+- Native pages document the wire protocol and observable device behavior, byte-exact. The authoritative source is the firmware's `docs/protocol/control-protocol.md`.
+- Library pages document the `medius` crate as it actually is (1:1 firmware bindings plus connect/keepalive/reconnect infrastructure; no input automation or gestures).
+- Document guarantees, not implementation tells. The firmware is closed; do not document the internal transparency/cloning mechanism (e.g. how baselines are seeded or how vendor fields are tracked), specific mouse-model quirks, or microsecond timing figures. State the guarantees (byte-identical clone, additive injection, native-equivalent idle, safety auto-clear) and the full protocol.
+- Do not invent facts. If a value isn't confirmed, leave it out.
 
 ## Adding a New Page
 
-1. Create the page component in the appropriate directory under `src/app/pages/`.
-2. Wrap every Card in `<div id="..." data-search-target>`.
-3. Add a route in `App.tsx`.
-4. Add a tab entry in the appropriate array in `DocsLayout.tsx`.
-5. Add search entries to `searchIndex.ts` (page-level + section-level + individual commands).
-6. Follow existing page patterns for consistency.
+1. Create the component under `src/app/pages/`. Wrap every Card in `<div id="..." data-search-target>`.
+2. Add a route in `App.tsx`.
+3. Add a tab entry in the right array in `DocsLayout.tsx` (with a `solid-icons/bs` icon).
+4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).
+5. Follow existing page patterns.

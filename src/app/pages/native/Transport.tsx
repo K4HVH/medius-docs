@@ -6,9 +6,43 @@ import '../../../styles/docs.css';
 const Transport: Component = () => {
   return (
     <>
-      <div id="serial-transport" data-search-target>
+      <Card>
+        <CardHeader title="Transport" subtitle="USB-serial port" />
+        <p>
+          The box enumerates as a USB-serial device, so it appears as an ordinary serial port.
+          Everything travels over that port as raw bytes. Open the port at the fixed baud, then send{' '}
+          <A href="/native/frame">frames</A> and confirm the box with the{' '}
+          <A href="/native/connection">handshake</A>.
+        </p>
+      </Card>
+
+      <div id="serial" data-search-target>
         <Card>
-          <CardHeader title="Serial Transport" subtitle="USB serial interface details" />
+          <CardHeader title="Serial link" subtitle="Baud and framing" />
+          <p>
+            Fixed <code>4,000,000</code> baud (4 Mbaud), no negotiation. Open the port at that exact
+            baud and start sending bytes; any other baud fails.
+          </p>
+          <p>
+            The box speaks <A href="/native/frame">framed binary</A> from the first byte. There is
+            no legacy startup path:
+          </p>
+          <ul>
+            <li>No ASCII console.</li>
+            <li>No <code>115200</code> startup step.</li>
+            <li>No baud-switch frame.</li>
+            <li>Baud is never saved on the box, so a bad setting can't lock you out.</li>
+          </ul>
+        </Card>
+      </div>
+
+      <div id="usb-identity" data-search-target>
+        <Card>
+          <CardHeader title="USB identity" subtitle="WCH CH343 bridge" />
+          <p>
+            A WCH <code>CH343</code> chip does the USB-to-serial conversion. Match on its vendor and
+            product IDs to pick the box out from other serial devices.
+          </p>
           <table class="api-params">
             <thead>
               <tr>
@@ -18,63 +52,43 @@ const Transport: Component = () => {
             </thead>
             <tbody>
               <tr>
-                <td>Interface</td>
-                <td>Serial over USB (CDC / virtual COM port)</td>
+                <td>Bridge chip</td>
+                <td><code>CH343</code></td>
               </tr>
               <tr>
-                <td>USB Chip</td>
-                <td>WCH CH340 / CH343</td>
-              </tr>
-              <tr>
-                <td>Device Name</td>
-                <td><code>USB-Enhanced-SERIAL CH343</code> or <code>USB Single Serial</code></td>
-              </tr>
-              <tr>
-                <td>USB VID</td>
+                <td>VID</td>
                 <td><code>0x1A86</code></td>
               </tr>
               <tr>
-                <td>USB PID</td>
+                <td>PID</td>
                 <td><code>0x55D3</code></td>
               </tr>
               <tr>
-                <td>Default Baud</td>
-                <td><code>115200</code>. See <A href="/native/connection#baud-change-frame">baud change frame</A>.</td>
+                <td>Baud</td>
+                <td><code>4,000,000</code></td>
               </tr>
               <tr>
-                <td>Operating Baud</td>
-                <td><code>4000000</code> (4 Mbaud). See <A href="/native/connection#connection-sequence">connection sequence</A>.</td>
+                <td>Framing</td>
+                <td><code>8N1</code></td>
               </tr>
               <tr>
-                <td>Line Terminator</td>
-                <td><code>\r\n</code>. See <A href="/native/protocol#request-format">request format</A>.</td>
+                <td>Linux path</td>
+                <td><code>/dev/ttyACM*</code></td>
               </tr>
               <tr>
-                <td>Linux Path</td>
-                <td><code>/dev/ttyACM0</code> (typical)</td>
-              </tr>
-              <tr>
-                <td>Windows Path</td>
-                <td>Numbered COM port</td>
+                <td>Windows path</td>
+                <td><code>COMx</code></td>
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-
-      <div id="baud-rate" data-search-target>
-        <Card>
-          <CardHeader title="Baud Rate" subtitle="Speed negotiation" />
           <p>
-            The device defaults to <strong>115200 baud</strong> on power-up. The higher
-            rate is not persistent across power cycles.
+            <code>8N1</code> is 8 data bits, no parity, 1 stop bit. Open the OS port path above at
+            that baud and framing to connect.
           </p>
           <div class="callout callout--info">
             <p>
-              If the device was previously switched to 4 Mbaud within the same power session,
-              it will remain at that speed. Always attempt 4 Mbaud first before sending the
-              baud change frame. See the <A href="/native/connection">Connection</A> page for
-              the full negotiation sequence.
+              See <A href="/native/connection">Connection</A> for the handshake and{' '}
+              <A href="/native/frame">Frame Format</A> for the wire format.
             </p>
           </div>
         </Card>

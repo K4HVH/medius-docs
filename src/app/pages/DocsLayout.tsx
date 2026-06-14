@@ -8,11 +8,10 @@ import { Titlebar } from '../../components/navigation/Titlebar';
 import { Button } from '../../components/inputs/Button';
 import { CommandPalette } from '../../components/navigation/CommandPalette';
 import {
-  BsList, BsInfoCircle, BsCpu, BsPlug, BsLink45deg, BsTerminal,
-  BsCheckCircle, BsCursor, BsArrowsMove, BsMouse, BsLock,
-  BsBroadcast, BsUpcScan, BsFunnel, BsExclamationTriangle, BsJournalText,
-  BsBook, BsHouseDoor, BsSearch, BsLightning, BsStack, BsStars,
-  BsArrowRepeat, BsWrench, BsFileCode, BsSpeedometer,
+  BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
+  BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
+  BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
+  BsStars, BsWrench, BsTerminal, BsBook, BsHouseDoor, BsSearch,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -24,29 +23,33 @@ const sectionTabs: TabOption[] = [
 
 const nativeOverviewTabs: TabOption[] = [
   { value: '/native', label: 'Introduction', icon: BsInfoCircle },
+  { value: '/native/quickstart', label: 'Quickstart', icon: BsLightning },
+  { value: '/native/architecture', label: 'Architecture', icon: BsStack },
   { value: '/native/hardware', label: 'Hardware', icon: BsCpu },
+];
+
+const nativeProtocolTabs: TabOption[] = [
   { value: '/native/transport', label: 'Transport', icon: BsPlug },
   { value: '/native/connection', label: 'Connection', icon: BsLink45deg },
-  { value: '/native/protocol', label: 'Protocol', icon: BsTerminal },
+  { value: '/native/frame', label: 'Frame Format', icon: BsFileCode },
+  { value: '/native/injection', label: 'Injection Model', icon: BsBroadcast },
 ];
 
 const nativeCommandTabs: TabOption[] = [
-  { value: '/native/commands/version', label: 'Version', icon: BsCheckCircle },
-  { value: '/native/commands/buttons', label: 'Buttons', icon: BsCursor },
   { value: '/native/commands/movement', label: 'Movement', icon: BsArrowsMove },
-  { value: '/native/commands/wheel', label: 'Wheel', icon: BsMouse },
-  { value: '/native/commands/locks', label: 'Locks', icon: BsLock },
-  { value: '/native/commands/stream', label: 'Stream', icon: BsBroadcast },
-  { value: '/native/commands/catch', label: 'Catch', icon: BsFunnel },
-  { value: '/native/commands/serial', label: 'Serial', icon: BsUpcScan },
+  { value: '/native/commands/buttons', label: 'Buttons', icon: BsCursor },
+  { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
+  { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
 ];
 
 const nativeReferenceTabs: TabOption[] = [
-  { value: '/native/broken', label: 'Known Issues', icon: BsExclamationTriangle },
-  { value: '/native/notes', label: 'Notes', icon: BsJournalText },
+  { value: '/native/flashing', label: 'Flashing', icon: BsBoxArrowInDown },
+  { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
 ];
 
-const allNativeTabs = [...nativeOverviewTabs, ...nativeCommandTabs, ...nativeReferenceTabs];
+const allNativeTabs = [
+  ...nativeOverviewTabs, ...nativeProtocolTabs, ...nativeCommandTabs, ...nativeReferenceTabs,
+];
 
 const libraryGettingStartedTabs: TabOption[] = [
   { value: '/library', label: 'Introduction', icon: BsInfoCircle },
@@ -56,26 +59,25 @@ const libraryGettingStartedTabs: TabOption[] = [
 const libraryApiTabs: TabOption[] = [
   { value: '/library/movement', label: 'Movement', icon: BsArrowsMove },
   { value: '/library/buttons', label: 'Buttons', icon: BsCursor },
-  { value: '/library/locks', label: 'Locks', icon: BsLock },
-  { value: '/library/info', label: 'Device Info', icon: BsCheckCircle },
-  { value: '/library/stream', label: 'Button Stream', icon: BsBroadcast },
-  { value: '/library/catch', label: 'Button Capture', icon: BsFunnel },
-  { value: '/library/fire-and-forget', label: 'Fire and Forget', icon: BsLightning },
+  { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
+  { value: '/library/admin', label: 'Admin', icon: BsGear },
+  { value: '/library/lifecycle', label: 'Keepalive & Reconnect', icon: BsArrowRepeat },
+  { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
 
 const libraryFeatureTabs: TabOption[] = [
-  { value: '/library/features/async', label: 'Async', icon: BsArrowRepeat },
-  { value: '/library/features/batch', label: 'Batch', icon: BsStack },
-  { value: '/library/features/extras', label: 'Extras', icon: BsStars },
+  { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
-  { value: '/library/features/profile', label: 'Profile', icon: BsSpeedometer },
+  { value: '/library/features/flash', label: 'Flash', icon: BsBoxArrowInDown },
 ];
 
 const libraryReferenceTabs: TabOption[] = [
-  { value: '/library/types', label: 'Types and Errors', icon: BsFileCode },
+  { value: '/library/types', label: 'Types & Errors', icon: BsFileCode },
 ];
 
-const allLibraryTabs = [...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs, ...libraryReferenceTabs];
+const allLibraryTabs = [
+  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs, ...libraryReferenceTabs,
+];
 
 const isMobileQuery = () =>
   typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
@@ -189,6 +191,14 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={nativeOverviewTabs}
             />
+            <Divider spacing="compact" label="Protocol" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={nativeProtocolTabs}
+            />
             <Divider spacing="compact" label="Commands" labelAlign="start" />
             <Tabs
               orientation="vertical"
@@ -244,7 +254,7 @@ const DocsLayout = (props: RouteSectionProps) => {
 
         <div ref={contentRef} style={{ flex: 1, overflow: 'auto' }}>
           <Titlebar
-            title={activeSection() === 'library' ? 'MAKCU - Rust Library' : 'MAKCU - Native API'}
+            title={activeSection() === 'library' ? 'Medius - Rust Library' : 'Medius - Native API'}
             subtitle={pageTitle()}
             sticky
             style={{ margin: 'var(--g-spacing-sm)', top: 'var(--g-spacing-sm)' }}

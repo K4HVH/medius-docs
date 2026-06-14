@@ -7,12 +7,36 @@ const Introduction: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="MAKCU Rust Library" subtitle="Safe, high-performance Rust interface for MAKCU devices" />
+        <CardHeader title="Medius Rust Library" subtitle="Official Rust client" />
         <p>
-          The <A href="https://crates.io/crates/makcu"><code>makcu</code></A> crate provides a complete Rust API for controlling MAKCU mouse
-          input devices over serial. It handles connection negotiation, baud rate switching,
-          command serialization, response parsing, automatic reconnection, and concurrent access.
+          A Medius box plugs inline between a mouse and a PC. The real mouse passes through, and
+          your program sends movement, buttons, and scroll over a USB-serial link. The{' '}
+          <code>medius</code> crate drives that link from Rust.
         </p>
+        <p>
+          It is a 1:1 binding of the firmware's <A href="/native/frame">frames</A> (the packets the
+          box speaks on the wire), plus the <A href="/native/connection#handshake">handshake</A>,
+          a <A href="/library/lifecycle">keepalive</A>, and automatic reconnect. Nothing automates or
+          paces input, so the caller owns timing.
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr>
+              <th>Call kind</th>
+              <th>Reply</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><A href="/native/injection#fire-and-forget">Fire-and-forget</A> (move, button, scroll)</td>
+              <td>None. Each call sends one frame.</td>
+            </tr>
+            <tr>
+              <td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td>
+              <td>Asks the box for state and gets a reply.</td>
+            </tr>
+          </tbody>
+        </table>
         <table class="api-params">
           <thead>
             <tr>
@@ -22,28 +46,32 @@ const Introduction: Component = () => {
           </thead>
           <tbody>
             <tr>
-              <td>Crate Version</td>
-              <td><code>0.1.1</code></td>
+              <td>Crate version</td>
+              <td><code>0.1.0</code></td>
             </tr>
             <tr>
-              <td>Rust Edition</td>
+              <td>Edition</td>
               <td><code>2024</code></td>
             </tr>
             <tr>
-              <td>MSRV</td>
+              <td>MSRV (minimum supported Rust version)</td>
               <td><code>1.85</code></td>
             </tr>
             <tr>
-              <td>Firmware Compatibility</td>
-              <td>v3.2 (left) / v3.7 (right)</td>
+              <td>License</td>
+              <td><code>MIT</code></td>
             </tr>
             <tr>
               <td>Transport</td>
-              <td>Serial at 4 Mbaud (auto-negotiated)</td>
+              <td>4 Mbaud, framed-only</td>
             </tr>
             <tr>
-              <td>Thread Safety</td>
-              <td><code>Send + Sync</code> (shareable via <code>Arc</code>)</td>
+              <td>Thread safety</td>
+              <td><code>Send + Sync</code> (clone freely)</td>
+            </tr>
+            <tr>
+              <td>Safety</td>
+              <td><code>#![forbid(unsafe_code)]</code></td>
             </tr>
           </tbody>
         </table>
@@ -51,13 +79,10 @@ const Introduction: Component = () => {
 
       <div id="installation" data-search-target>
         <Card>
-          <CardHeader title="Installation" subtitle="Add makcu to your project" />
-          <pre><code>cargo add makcu</code></pre>
-          <p>
-            With optional features:
-          </p>
-          <pre><code>{`cargo add makcu --features async,batch,extras`}</code></pre>
-          <div class="api-response-label">Feature Flags</div>
+          <CardHeader title="Installation" />
+          <pre><code>cargo add medius</code></pre>
+          <p>With optional features:</p>
+          <pre><code>cargo add medius --features async,mock</code></pre>
           <table class="api-params">
             <thead>
               <tr>
@@ -68,23 +93,19 @@ const Introduction: Component = () => {
             <tbody>
               <tr>
                 <td><A href="/library/features/async"><code>async</code></A></td>
-                <td>Async API via <A href="/library/types#core-types"><code>AsyncDevice</code></A>. Requires Tokio.</td>
-              </tr>
-              <tr>
-                <td><A href="/library/features/batch"><code>batch</code></A></td>
-                <td>Fluent command batching with automatic coalescing.</td>
-              </tr>
-              <tr>
-                <td><A href="/library/features/extras"><code>extras</code></A></td>
-                <td>Software-implemented operations: <A href="/library/features/extras#click">click</A>, <A href="/library/features/extras#move-smooth">smooth move</A>, <A href="/library/features/extras#drag">drag</A>, <A href="/library/features/extras#move-pattern">patterns</A>, <A href="/library/features/extras#catch-convenience">catch convenience</A>, <A href="/library/features/extras#event-callbacks">event callbacks</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/library/features/profile"><code>profile</code></A></td>
-                <td>Per-command timing profiler. Zero cost when disabled.</td>
+                <td>Runtime-agnostic <code>AsyncDevice</code>, async queries.</td>
               </tr>
               <tr>
                 <td><A href="/library/features/mock"><code>mock</code></A></td>
-                <td>In-process mock transport for testing without hardware.</td>
+                <td>In-process fake box for tests.</td>
+              </tr>
+              <tr>
+                <td><A href="/library/features/flash"><code>flash</code></A></td>
+                <td><code>esptool</code> firmware flashing.</td>
+              </tr>
+              <tr>
+                <td><code>tracing</code></td>
+                <td>Tracing instrumentation across the connection lifecycle.</td>
               </tr>
             </tbody>
           </table>
@@ -93,116 +114,133 @@ const Introduction: Component = () => {
 
       <div id="quick-start" data-search-target>
         <Card>
-          <CardHeader title="Quick Start" subtitle="Connect and send commands in five lines" />
-          <pre><code>{`use makcu::{Device, Button};
+          <CardHeader title="Quick start" />
+          <pre><code>{`use medius::{Device, Button};
 
-let device = Device::connect()?;
-device.move_xy(100, -50)?;
-device.button_down(Button::Left)?;
-device.button_up(Button::Left)?;
+let device = Device::find()?;
+device.move_rel(100, -50)?;
+device.press(Button::Left)?;
+device.soft_release(Button::Left)?;
 device.wheel(3)?;`}</code></pre>
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Effect</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/library/connection#open"><code>find</code></A></td>
+                <td>Scans the serial ports, opens the box, and runs the handshake.</td>
+              </tr>
+              <tr>
+                <td><A href="/library/movement#move-rel"><code>move_rel</code></A></td>
+                <td>Moves by <code>dx</code> and <code>dy</code> steps.</td>
+              </tr>
+              <tr>
+                <td><A href="/library/buttons#methods"><code>press</code></A> / <A href="/library/buttons#methods"><code>soft_release</code></A></td>
+                <td>Holds and lets go of a button.</td>
+              </tr>
+              <tr>
+                <td><A href="/library/movement#wheel"><code>wheel</code></A></td>
+                <td>Scrolls.</td>
+              </tr>
+            </tbody>
+          </table>
           <p>
-            <A href="/library/connection#connecting"><code>Device::connect()</code></A> auto-detects the MAKCU by USB VID/PID, negotiates
-            the baud rate to 4 Mbaud, and verifies the firmware responds. All methods
-            take <code>&self</code> and can be called concurrently from multiple threads.
-            See the <A href="/library/connection#threading-model">threading model</A> for details.
+            Every method takes <code>&self</code>, so one{' '}
+            <A href="/library/connection"><code>Device</code></A> clones across threads.
           </p>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader title="Getting Started" subtitle="Connection and configuration" />
-        <div class="docs-grid">
-          <A href="/library/connection" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Connection" subtitle="Auto-detect, connect, configure, and reconnect" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="getting-started" data-search-target>
+        <Card>
+          <CardHeader title="Getting started" />
+          <div class="docs-grid">
+            <A href="/library/connection" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Connection" subtitle="Open, find, handshake" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader title="API" subtitle="Device control methods" />
-        <div class="docs-grid">
-          <A href="/library/movement" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Movement" subtitle="Relative cursor movement, silent move, and scroll wheel" />
-            </Card>
-          </A>
-          <A href="/library/buttons" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Buttons" subtitle="Press, release, and query button states" />
-            </Card>
-          </A>
-          <A href="/library/locks" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Locks" subtitle="Lock and unlock mouse inputs" />
-            </Card>
-          </A>
-          <A href="/library/info" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Device Info" subtitle="Version, device info, and serial number" />
-            </Card>
-          </A>
-          <A href="/library/stream" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Button Stream" subtitle="Real-time button state change events" />
-            </Card>
-          </A>
-          <A href="/library/catch" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Button Capture" subtitle="Per-button press/release event stream" />
-            </Card>
-          </A>
-          <A href="/library/fire-and-forget" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Fire and Forget" subtitle="Send commands without waiting for responses" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="api" data-search-target>
+        <Card>
+          <CardHeader title="API" />
+          <div class="docs-grid">
+            <A href="/library/movement" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Movement" subtitle="move_rel, wheel" />
+              </Card>
+            </A>
+            <A href="/library/buttons" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Buttons" subtitle="press, release, force-release" />
+              </Card>
+            </A>
+            <A href="/library/requests" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Requests" subtitle="query_version, query_health" />
+              </Card>
+            </A>
+            <A href="/library/admin" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Admin" subtitle="reset, reboot" />
+              </Card>
+            </A>
+            <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Keepalive & reconnect" subtitle="Holding the link open" />
+              </Card>
+            </A>
+            <A href="/library/diagnostics" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Logs & counters" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader title="Features" subtitle="Optional cargo feature flags" />
-        <div class="docs-grid">
-          <A href="/library/features/async" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Async" subtitle="Full async parity with Tokio" />
-            </Card>
-          </A>
-          <A href="/library/features/batch" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Batch" subtitle="Fluent command sequences with automatic coalescing" />
-            </Card>
-          </A>
-          <A href="/library/features/extras" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Extras" subtitle="Click, smooth move, drag, patterns, catch convenience, and callbacks" />
-            </Card>
-          </A>
-          <A href="/library/features/mock" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Mock" subtitle="In-process mock transport for testing" />
-            </Card>
-          </A>
-          <A href="/library/features/profile" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Profile" subtitle="Per-command timing statistics" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="features" data-search-target>
+        <Card>
+          <CardHeader title="Features" />
+          <div class="docs-grid">
+            <A href="/library/features/async" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="async" subtitle="AsyncDevice" />
+              </Card>
+            </A>
+            <A href="/library/features/mock" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="mock" subtitle="In-process fake box" />
+              </Card>
+            </A>
+            <A href="/library/features/flash" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="flash" subtitle="esptool flashing" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader title="Reference" subtitle="Types and error handling" />
-        <div class="docs-grid">
-          <A href="/library/types" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Types and Errors" subtitle="Complete type reference and error handling" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="reference" data-search-target>
+        <Card>
+          <CardHeader title="Reference" />
+          <div class="docs-grid">
+            <A href="/library/types" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Types & errors" subtitle="Enums, Result, Error" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
     </>
   );
 };

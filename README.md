@@ -1,15 +1,13 @@
-# MAKCU Documentation
+# Medius Documentation
 
-Documentation site for the MAKCU device and the MAKCU Rust library.
-
-Live version can be found here: [MAKCU Docs](https://makcu.k4tech.net)
+Documentation site for Medius: the mouse-passthrough firmware, its binary control protocol, and the `medius` Rust library.
 
 Built with [SolidJS](https://solidjs.com) and [MidnightUI](https://github.com/user/midnightui).
 
 ## Sections
 
-- **Native API** -- Complete firmware command reference for the MAKCU device (v3.2 / v3.7). Covers hardware, transport, connection protocol, and all `km.*` commands.
-- **Rust Library** -- API reference and usage guides for the MAKCU Rust crate (in progress).
+- **Native API** -- The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x08`).
+- **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` features.
 
 ## Development
 

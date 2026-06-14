@@ -1,7 +1,7 @@
 {
-  "name": "makcu-docs",
+  "name": "medius-docs",
   "version": "0.1.0",
-  "description": "Documentation site for the makcu Rust library",
+  "description": "Documentation site for Medius: the mouse-passthrough firmware, its binary control protocol, and the medius Rust library",
   "type": "module",
   "scripts": {
     "dev": "vite",

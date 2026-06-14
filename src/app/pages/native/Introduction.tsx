@@ -3,14 +3,20 @@ import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import '../../../styles/docs.css';
 
-const Introduction: Component = () => {
+const NativeIntroduction: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="MAKCU Native API" subtitle="Firmware command reference for v3.2 (left) / v3.7 (right)" />
+        <CardHeader
+          title="Medius Native API"
+          subtitle="The binary control protocol"
+        />
         <p>
-          Complete reference for the MAKCU device firmware command interface.
-          All commands have been physically verified against the tested firmware.
+          Medius is replacement firmware for MAKCU-class USB mouse-passthrough boxes plus an open
+          binary control protocol. The box sits inline between a mouse and a PC: the real mouse
+          passes through unchanged while your program injects movement, buttons, and scroll
+          over a separate USB-serial link. Drive it from any language; the Rust{' '}
+          <A href="/library">library</A> is the official client.
         </p>
         <table class="api-params">
           <thead>
@@ -21,114 +27,172 @@ const Introduction: Component = () => {
           </thead>
           <tbody>
             <tr>
-              <td>Left Chip Firmware</td>
-              <td><code>v3.2</code></td>
+              <td>Firmware version</td>
+              <td><code>0.1.0</code></td>
             </tr>
             <tr>
-              <td>Right Chip Firmware</td>
-              <td><code>v3.7</code></td>
+              <td>Protocol version</td>
+              <td><code>1</code></td>
             </tr>
             <tr>
-              <td>Protocol</td>
-              <td>ASCII over serial (4 Mbaud). See <A href="/native/protocol">Command Protocol</A> and <A href="/native/transport">Transport</A>.</td>
+              <td>Transport</td>
+              <td>4 Mbaud, framed-only (CH343)</td>
             </tr>
             <tr>
-              <td>Line Terminator</td>
-              <td><code>\r\n</code></td>
+              <td>USB id</td>
+              <td>VID <code>0x1A86</code> / PID <code>0x55D3</code></td>
+            </tr>
+            <tr>
+              <td>Delivery</td>
+              <td>
+                Fire-and-forget;{' '}
+                <A href="/native/commands/requests#requests"><code>QUERY</code></A> &rarr;{' '}
+                <A href="/native/commands/requests#resp"><code>RESP</code></A> is the only round-trip
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Before you talk to the box:</p>
+        <table class="api-params">
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>What to know</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Protocol version</td>
+              <td>
+                These pages describe version <code>1</code>. Confirm it during the{' '}
+                <A href="/native/connection#handshake">handshake</A> from the{' '}
+                <code>proto_ver</code> field of the{' '}
+                <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
+                different value means firmware these pages don't cover.
+              </td>
+            </tr>
+            <tr>
+              <td>Wire format</td>
+              <td>
+                The box speaks <A href="/native/frame">framed binary</A> from the first byte. No
+                startup baud, no text mode.
+              </td>
+            </tr>
+            <tr>
+              <td>Finding the port</td>
+              <td>Scan for the CH343's VID/PID pair to locate the box's serial port.</td>
+            </tr>
+            <tr>
+              <td>Correlation</td>
+              <td>
+                <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.
+                A <A href="/native/commands/requests#requests"><code>QUERY</code></A> is correlated
+                to its <A href="/native/commands/requests#resp"><code>RESP</code></A> by{' '}
+                <code>SEQ</code>.
+              </td>
             </tr>
           </tbody>
         </table>
       </Card>
 
-      <Card>
-        <CardHeader title="Overview" subtitle="Device architecture and protocol" />
-        <div class="docs-grid">
-          <A href="/native/hardware" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Hardware" subtitle="Device architecture and USB port layout" />
-            </Card>
-          </A>
-          <A href="/native/transport" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Transport" subtitle="Serial interface, baud rates, and USB identification" />
-            </Card>
-          </A>
-          <A href="/native/connection" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Connection" subtitle="Baud negotiation and connection sequence" />
-            </Card>
-          </A>
-          <A href="/native/protocol" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Command Protocol" subtitle="Request format, response types, and parsing" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="overview" data-search-target>
+        <Card>
+          <CardHeader title="Overview" />
+          <div class="docs-grid">
+            <A href="/native/quickstart" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Quickstart" subtitle="Open the port and inject" />
+              </Card>
+            </A>
+            <A href="/native/architecture" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Architecture" subtitle="Clone, passthrough, inject" />
+              </Card>
+            </A>
+            <A href="/native/hardware" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Hardware" subtitle="Three USB ports and the chips" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader title="Commands" subtitle="Firmware command reference" />
-        <div class="docs-grid">
-          <A href="/native/commands/version" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Version" subtitle="Firmware identification" />
-            </Card>
-          </A>
-          <A href="/native/commands/buttons" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Mouse Buttons" subtitle="Query and set button states" />
-            </Card>
-          </A>
-          <A href="/native/commands/movement" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Mouse Movement" subtitle="Relative cursor movement and silent move" />
-            </Card>
-          </A>
-          <A href="/native/commands/wheel" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Scroll Wheel" subtitle="Scroll input control" />
-            </Card>
-          </A>
-          <A href="/native/commands/locks" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Input Locks" subtitle="Block axes and buttons from reaching the host" />
-            </Card>
-          </A>
-          <A href="/native/commands/stream" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Button Stream" subtitle="Asynchronous button state change events" />
-            </Card>
-          </A>
-          <A href="/native/commands/catch" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Button Capture" subtitle="Per-button press/release event stream while locked" />
-            </Card>
-          </A>
-          <A href="/native/commands/serial" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Serial Spoofing" subtitle="Read and modify the mouse serial number" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="protocol" data-search-target>
+        <Card>
+          <CardHeader title="Protocol" />
+          <div class="docs-grid">
+            <A href="/native/transport" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Transport" subtitle="4 Mbaud, framed-only" />
+              </Card>
+            </A>
+            <A href="/native/connection" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Connection" subtitle="Handshake and hello" />
+              </Card>
+            </A>
+            <A href="/native/frame" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Frame Format" subtitle="SOF, type, CRC16" />
+              </Card>
+            </A>
+            <A href="/native/injection" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Injection Model" subtitle="Accumulator and emission" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader title="Reference" subtitle="Additional information" />
-        <div class="docs-grid">
-          <A href="/native/broken" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Known Issues" subtitle="Non-functional and broken commands" />
-            </Card>
-          </A>
-          <A href="/native/notes" style={{ "text-decoration": "none" }}>
-            <Card interactive variant="subtle" padding="compact">
-              <CardHeader title="Notes" subtitle="Implementation details and firmware behaviour" />
-            </Card>
-          </A>
-        </div>
-      </Card>
+      <div id="commands" data-search-target>
+        <Card>
+          <CardHeader title="Commands" />
+          <div class="docs-grid">
+            <A href="/native/commands/movement" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Movement" subtitle="MOVE and WHEEL" />
+              </Card>
+            </A>
+            <A href="/native/commands/buttons" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Buttons" subtitle="Press, release, force-release" />
+              </Card>
+            </A>
+            <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Requests" subtitle="QUERY and its RESP" />
+              </Card>
+            </A>
+            <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
+
+      <div id="reference" data-search-target>
+        <Card>
+          <CardHeader title="Reference" />
+          <div class="docs-grid">
+            <A href="/native/flashing" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Flashing" subtitle="Reboot to ROM and flash" />
+              </Card>
+            </A>
+            <A href="/native/troubleshooting" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Troubleshooting" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
     </>
   );
 };
 
-export default Introduction;
+export default NativeIntroduction;
