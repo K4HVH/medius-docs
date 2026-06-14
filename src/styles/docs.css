@@ -96,11 +96,11 @@ pre.diagram {
   font-size: var(--font-size-sm);
 }
 
-.callout > :first-child {
+.callout :first-child {
   margin-top: 0;
 }
 
-.callout > :last-child {
+.callout :last-child {
   margin-bottom: 0;
 }
 
