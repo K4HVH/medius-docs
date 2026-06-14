@@ -3,126 +3,77 @@ import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import '../../../styles/docs.css';
 
-const LibraryButtons: Component = () => {
+const Buttons: Component = () => {
   return (
     <>
-      <div id="buttons-overview" data-search-target>
+      <div id="methods" data-search-target>
         <Card>
-          <CardHeader title="Buttons" subtitle="Press, release, and query mouse button states" />
+          <CardHeader title="Buttons" subtitle="Button overrides on the clone" />
           <p>
-            Button operations use the <A href="/library/types#enums"><code>Button</code></A> enum to identify which button to
-            control. Five buttons are available.
+            The box holds a button down or up on top of whatever the real mouse is doing. That
+            per-button decision is an <A href="/native/injection"><code>override</code></A>. Each call
+            sends one <A href="/native/commands/buttons"><code>BUTTON</code></A> frame and returns once
+            it's queued; <code>BUTTON</code> is{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so the box sends nothing
+            back.
           </p>
-          <div class="api-response-label">Button Enum</div>
-          <pre class="api-signature">{`pub enum Button`}</pre>
+          <pre class="api-signature">fn press(&self, button: Button) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn soft_release(&self, button: Button) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn force_release(&self, button: Button) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn button(&self, button: Button, action: ButtonAction) -&gt; Result&lt;()&gt;</pre>
+          <p>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
+          </p>
+          <p>
+            <code>button</code> is the generic form; the others fill in its{' '}
+            <A href="/library/types#enums"><code>ButtonAction</code></A> for you.
+          </p>
           <table class="api-params">
             <thead>
-              <tr>
-                <th>Variant</th>
-                <th>Description</th>
-              </tr>
+              <tr><th>Method</th><th><code>ButtonAction</code></th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>Button::Left</code></td><td>Left mouse button.</td></tr>
-              <tr><td><code>Button::Right</code></td><td>Right mouse button.</td></tr>
-              <tr><td><code>Button::Middle</code></td><td>Middle mouse button.</td></tr>
-              <tr><td><code>Button::Side1</code></td><td>Side button 1 (back).</td></tr>
-              <tr><td><code>Button::Side2</code></td><td>Side button 2 (forward).</td></tr>
+              <tr><td><code>press</code></td><td><code>Press</code></td><td>Force the button down regardless of physical state.</td></tr>
+              <tr><td><code>soft_release</code></td><td><code>SoftRelease</code></td><td>Clear our injected press only; a physical hold stays pressed.</td></tr>
+              <tr><td><code>force_release</code></td><td><code>ForceRelease</code></td><td>Force the button up, masking a physical press too.</td></tr>
+              <tr><td><code>button</code></td><td>(your argument)</td><td>The generic form; you pass the action.</td></tr>
             </tbody>
           </table>
         </Card>
       </div>
 
-      <div id="button-down" data-search-target>
+      <div id="button-arg" data-search-target>
         <Card>
-          <CardHeader title="button_down" subtitle="Press and hold a button" />
-          <pre class="api-signature">{`fn button_down(&self, button: Button) -> Result<()>`}</pre>
+          <CardHeader title="Which button" />
           <p>
-            Forces the specified button into the pressed state. The button remains held
-            until explicitly released. Overrides the physical button state.
-            Maps to <A href="/native/commands/buttons#set-state"><code>km.&lt;button&gt;(1)</code></A>.
+            <A href="/library/types#enums"><code>Button</code></A> names the button. Each maps to a
+            one-byte <code>id</code>. Buttons act on the{' '}
+            <A href="/native/injection"><code>clone</code></A>, the copy of the real mouse the box
+            presents to the PC, so a call for a button it doesn't have is a no-op.
           </p>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`use makcu::Button;
-
-device.button_down(Button::Left)?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="button-up" data-search-target>
-        <Card>
-          <CardHeader title="button_up" subtitle="Soft release a button" />
-          <pre class="api-signature">{`fn button_up(&self, button: Button) -> Result<()>`}</pre>
+          <table class="api-params">
+            <thead>
+              <tr><th><code>Button</code></th><th><code>id</code></th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>Left</code></td><td><code>0</code></td><td>Left button.</td></tr>
+              <tr><td><code>Right</code></td><td><code>1</code></td><td>Right button.</td></tr>
+              <tr><td><code>Middle</code></td><td><code>2</code></td><td>Middle button.</td></tr>
+              <tr><td><code>Side1</code></td><td><code>3</code></td><td>First thumb button.</td></tr>
+              <tr><td><code>Side2</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
+            </tbody>
+          </table>
           <p>
-            Releases the button. This is a <strong>soft release</strong> -- if the user is
-            physically holding the button, it remains pressed.
-            Maps to <A href="/native/commands/buttons#set-state"><code>km.&lt;button&gt;(0)</code></A>.
+            There's no click helper: send <code>press</code>, then a <code>soft_release</code> you time
+            yourself. To drop every override at once, call{' '}
+            <A href="/library/admin#reset"><code>reset</code></A>.
           </p>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`device.button_up(Button::Left)?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="button-up-force" data-search-target>
-        <Card>
-          <CardHeader title="button_up_force" subtitle="Force release a button" />
-          <pre class="api-signature">{`fn button_up_force(&self, button: Button) -> Result<()>`}</pre>
-          <p>
-            Forces the button into the released state regardless of physical state.
-            Use this when you need to guarantee the button is released.
-            Maps to <A href="/native/commands/buttons#set-state"><code>km.&lt;button&gt;(2)</code></A>.
-          </p>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`device.button_up_force(Button::Left)?;`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              The difference between <code>button_up</code> and <code>button_up_force</code>:
-              soft release (<code>button_up</code>) respects an active physical press, while
-              force release (<code>button_up_force</code>) overrides it.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="button-state" data-search-target>
-        <Card>
-          <CardHeader title="button_state" subtitle="Query current button state" />
-          <pre class="api-signature">{`fn button_state(&self, button: Button) -> Result<bool>`}</pre>
-          <p>
-            Returns <code>true</code> if the button is currently pressed, <code>false</code> if
-            released. Reflects the combined physical and software state.
-            Maps to <A href="/native/commands/buttons#query-state"><code>km.&lt;button&gt;()</code></A>.
-          </p>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`let pressed = device.button_state(Button::Left)?;
-println!("Left button: {}", if pressed { "pressed" } else { "released" });`}</code></pre>
-          <div class="callout callout--warning">
-            <p>
-              This is a query, not an action. It does not produce any input on the host.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="click-pattern" data-search-target>
-        <Card>
-          <CardHeader title="Click Pattern" subtitle="Press and release sequence" />
-          <p>
-            There is no single-command click in the base API. All button write methods
-            support <A href="/library/fire-and-forget">fire-and-forget</A> mode
-            and <A href="/library/features/batch#batch-methods">batch sequences</A>.
-            Send a press followed by a release:
-          </p>
-          <pre><code>{`device.button_down(Button::Left)?;
-device.button_up(Button::Left)?;`}</code></pre>
-          <p>
-            For controlled click timing, use the <A href="/library/features/extras"><code>extras</code></A> feature which
-            provides <A href="/library/features/extras#click"><code>device.click()</code></A> with configurable hold duration.
-          </p>
+          <pre><code>{`device.press(Button::Left)?;
+device.soft_release(Button::Left)?;`}</code></pre>
         </Card>
       </div>
     </>
   );
 };
 
-export default LibraryButtons;
+export default Buttons;

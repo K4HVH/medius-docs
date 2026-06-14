@@ -25,9 +25,9 @@ const Home: Component = () => {
           "text-align": 'center',
         }}>
           <div>
-            <h1 style={{ "margin-bottom": 'var(--g-spacing-sm)' }}>MAKCU</h1>
+            <h1 style={{ "margin-bottom": 'var(--g-spacing-sm)' }}>Medius</h1>
             <p class="text-lg">
-              Documentation for the MAKCU device and the MAKCU Rust library.
+              Documentation for the Medius device and the Medius Rust library.
             </p>
           </div>
 
@@ -36,7 +36,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Native API"
-                  subtitle="Firmware command reference for the MAKCU device"
+                  subtitle="The binary control protocol"
                 />
               </Card>
             </A>
@@ -44,7 +44,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Rust Library"
-                  subtitle="Safe, high-performance Rust interface for MAKCU devices"
+                  subtitle="The Rust client library"
                 />
               </Card>
             </A>

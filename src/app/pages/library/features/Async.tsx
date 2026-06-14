@@ -6,202 +6,117 @@ import '../../../../styles/docs.css';
 const Async: Component = () => {
   return (
     <>
-      <div id="async-overview" data-search-target>
-        <Card>
-          <CardHeader title="Async API" subtitle="Full async parity with Tokio" />
-          <p>
-            The <code>async</code> feature provides <A href="/library/types#core-types"><code>AsyncDevice</code></A>, an async
-            equivalent of <A href="/library/types#core-types"><code>Device</code></A> with identical functionality. All command
-            methods are <code>async fn</code> and require a Tokio runtime.
-          </p>
-          <pre><code>cargo add makcu --features async</code></pre>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader title="Async" subtitle="AsyncDevice with any runtime" />
+        <p>
+          <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its two
+          reply-reading calls turned into futures you <code>.await</code>, so they don't block the thread
+          while the box answers. Everything else behaves as the sync API does.
+        </p>
+        <p>
+          It's behind the <code>async</code> feature flag, off by default. Enable it with{' '}
+          <code>cargo add medius --features async</code>.
+        </p>
+      </Card>
 
-      <div id="async-connecting" data-search-target>
+      <div id="asyncdevice" data-search-target>
         <Card>
-          <CardHeader title="Connecting" subtitle="Async connection methods" />
+          <CardHeader title="AsyncDevice" subtitle="Construction and what stays sync" />
+
+          <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+
+          <p>
+            <code>Result</code> is the library's fallible return type (see{' '}
+            <A href="/library/types#errors">Errors</A>).
+          </p>
+
           <table class="api-params">
             <thead>
               <tr>
-                <th>Method</th>
+                <th>Constructor</th>
                 <th>Description</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>AsyncDevice::connect().await</code></td>
-                <td>Auto-detect and connect.</td>
+                <td><code>open</code></td>
+                <td>Takes a serial-port path and connects directly.</td>
               </tr>
               <tr>
-                <td><code>AsyncDevice::connect_port(port).await</code></td>
-                <td>Connect to a specific port.</td>
+                <td><code>into_async</code></td>
+                <td>Converts an existing <A href="/library/connection"><code>Device</code></A>.</td>
               </tr>
               <tr>
-                <td><code>AsyncDevice::with_config(config).await</code></td>
-                <td>Connect with custom configuration.</td>
+                <td><code>into_inner</code></td>
+                <td>Turns an <code>AsyncDevice</code> back into a <code>Device</code>.</td>
               </tr>
             </tbody>
           </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`use makcu::AsyncDevice;
 
-#[tokio::main]
-async fn main() -> makcu::Result<()> {
-    let device = AsyncDevice::connect().await?;
-    device.move_xy(100, 0).await?;
-    Ok(())
-}`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="async-methods" data-search-target>
-        <Card>
-          <CardHeader title="Async Methods" subtitle="All device methods have async equivalents" />
           <p>
-            Every method on <code>Device</code> has an <code>async</code> counterpart
-            on <code>AsyncDevice</code>. The signatures are identical except for
-            the <code>async</code> qualifier.
+            The wait on a reply uses <code>flume</code>'s async receive channel, which pulls in no{' '}
+            <code>tokio</code> dependency, so it runs under any executor (<code>tokio</code>,{' '}
+            <code>async-std</code>, <code>smol</code>).
           </p>
-          <div class="api-response-label"><A href="/library/movement">Movement</A></div>
-          <pre><code>{`device.move_xy(100, 0).await?;
-device.silent_move(200, 0).await?;
-device.wheel(3).await?;`}</code></pre>
-          <div class="api-response-label"><A href="/library/buttons">Buttons</A></div>
-          <pre><code>{`device.button_down(Button::Left).await?;
-device.button_up(Button::Left).await?;
-let pressed = device.button_state(Button::Left).await?;`}</code></pre>
-          <div class="api-response-label"><A href="/library/locks">Locks</A></div>
-          <pre><code>{`device.set_lock(LockTarget::X, true).await?;
-let locked = device.lock_state(LockTarget::X).await?;
-let all = device.lock_states_all().await?;`}</code></pre>
-          <div class="api-response-label"><A href="/library/info">Device Info</A></div>
-          <pre><code>{`let version = device.version().await?;
-let info = device.device_info().await?;
-let serial = device.serial().await?;`}</code></pre>
-          <div class="api-response-label"><A href="/library/stream">Button Stream</A></div>
-          <pre><code>{`device.enable_button_stream().await?;
-let rx = device.button_events();  // sync -- returns channel`}</code></pre>
-          <div class="api-response-label"><A href="/library/catch">Button Capture</A></div>
-          <pre><code>{`device.enable_catch(Button::Left).await?;
-let rx = device.catch_events();  // sync -- returns channel`}</code></pre>
-        </Card>
-      </div>
 
-      <div id="async-ff" data-search-target>
-        <Card>
-          <CardHeader title="AsyncFireAndForget" subtitle="Async fire-and-forget guard" />
-          <pre class="api-signature">{`fn ff(&self) -> AsyncFireAndForget<'_>`}</pre>
           <p>
-            Works identically to the sync <A href="/library/fire-and-forget"><code>FireAndForget</code></A> guard.
-            Derefs to <code>AsyncDevice</code>, so all methods are available. Write commands
-            skip waiting for responses while the guard is alive. Methods are still async
-            and must be <code>.await</code>ed -- the <code>.await</code> returns immediately
-            after the command is queued.
+            Only the two queries are async, since they're the only calls that wait for a reply: a{' '}
+            <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets one{' '}
+            <A href="/native/commands/requests#resp"><code>RESP</code></A>.
           </p>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`let ff = device.ff();
-ff.move_xy(10, 0).await?;
-ff.button_down(Button::Left).await?;
-ff.click(Button::Left, Duration::from_millis(50)).await?;`}</code></pre>
-        </Card>
-      </div>
 
-      <div id="async-batch" data-search-target>
-        <Card>
-          <CardHeader title="AsyncBatchBuilder" subtitle="Async batch command sequences" />
-          <p>
-            Requires both <code>async</code> and <A href="/library/features/batch"><code>batch</code></A> features. The builder
-            methods are synchronous (they just queue commands), but <code>execute()</code> is
-            async.
-          </p>
-          <pre><code>{`device.batch()
-    .button_down(Button::Left)
-    .move_xy(100, 0)
-    .button_up(Button::Left)
-    .execute()
-    .await?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="async-extras" data-search-target>
-        <Card>
-          <CardHeader title="Async Extras" subtitle="Async versions of extras operations" />
-          <p>
-            With both <code>async</code> and <A href="/library/features/extras"><code>extras</code></A> features, all extras methods
-            have async equivalents.
-          </p>
-          <pre><code>{`device.click(Button::Left, Duration::from_millis(50)).await?;
-device.move_smooth(500, 0, 50, Duration::from_millis(5)).await?;
-device.drag(Button::Left, 300, 0, 30, Duration::from_millis(5)).await?;`}</code></pre>
-          <p>
-            All callback registration methods
-            (<A href="/library/features/extras#event-callbacks"><code>on_button_press</code></A>,
-            <A href="/library/features/extras#event-callbacks"><code>on_button_event</code></A>,
-            <A href="/library/features/extras#catch-callbacks"><code>on_catch</code></A>,
-            <A href="/library/features/extras#catch-callbacks"><code>on_catch_event</code></A>)
-            are async on <code>AsyncDevice</code> and must be <code>.await</code>ed.
-            All callbacks spawn standard threads internally for event delivery.
-          </p>
-          <pre><code>{`let _h = device.on_button_press(Button::Left, |pressed| {
-    println!("{}", if pressed { "down" } else { "up" });
-}).await?;
-
-let _h = device.on_catch(Button::Left, |pressed| {
-    println!("{}", if pressed { "pressed" } else { "released" });
-}).await?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="async-sync-methods" data-search-target>
-        <Card>
-          <CardHeader title="Synchronous Methods" subtitle="Methods that are not async on AsyncDevice" />
-          <p>
-            Some methods on <code>AsyncDevice</code> are synchronous because they do not
-            involve device I/O:
-          </p>
           <table class="api-params">
             <thead>
               <tr>
-                <th>Method</th>
-                <th>Reason</th>
+                <th>Query</th>
+                <th>Returns</th>
+                <th>Description</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>disconnect()</code></td>
-                <td>Signals shutdown to internal threads.</td>
+                <td><A href="/library/requests#version"><code>query_version().await</code></A></td>
+                <td><A href="/library/types#structs"><code>Version</code></A></td>
+                <td>Firmware identity.</td>
               </tr>
               <tr>
-                <td><code>is_connected()</code></td>
-                <td>Reads an atomic flag.</td>
-              </tr>
-              <tr>
-                <td><code>port_name()</code></td>
-                <td>Returns a stored string.</td>
-              </tr>
-              <tr>
-                <td><code>connection_events()</code></td>
-                <td>Returns a <A href="/library/connection#connection-events">channel receiver</A>.</td>
-              </tr>
-              <tr>
-                <td><code>button_events()</code></td>
-                <td>Returns a <A href="/library/stream#button-events">channel receiver</A>.</td>
-              </tr>
-              <tr>
-                <td><code>catch_events()</code></td>
-                <td>Returns a <A href="/library/catch#catch-events">channel receiver</A>.</td>
-              </tr>
-              <tr>
-                <td><code>ff()</code></td>
-                <td>Returns an <A href="/library/fire-and-forget#ff-wrapper">RAII guard</A>.</td>
-              </tr>
-              <tr>
-                <td><code>batch()</code></td>
-                <td>Returns a <A href="/library/features/batch#batch-usage">builder</A>.</td>
+                <td><A href="/library/requests#health"><code>query_health().await</code></A></td>
+                <td><A href="/library/types#structs"><code>Health</code></A></td>
+                <td>Whether the box is wired and ready.</td>
               </tr>
             </tbody>
           </table>
+
+          <p>
+            Every other method is{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>: the box never answers, so
+            the call stays synchronous and returns once the frame is queued, unchanged from the sync
+            API. These are{' '}
+            <A href="/library/movement#move-rel"><code>move_rel</code></A>,{' '}
+            <A href="/library/movement#wheel"><code>wheel</code></A>,{' '}
+            <A href="/library/buttons#methods"><code>button</code></A>,{' '}
+            <A href="/library/buttons#methods"><code>press</code></A>,{' '}
+            <A href="/library/buttons#methods"><code>soft_release</code></A>,{' '}
+            <A href="/library/buttons#methods"><code>force_release</code></A>,{' '}
+            <A href="/library/admin#reset"><code>reset</code></A>, and{' '}
+            <A href="/library/admin#reboot"><code>reboot</code></A>.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`let device = Device::find()?.into_async();
+device.move_rel(10, 0)?;       // dx=10, dy=0: 10 units right, sync
+let v = device.query_version().await?;`}</code></pre>
+
+          <p>
+            <code>find</code> opens the first box and runs the handshake (see{' '}
+            <A href="/library/connection#open">Connection</A>); <code>move_rel(10, 0)</code> returns at
+            once; <code>query_version().await</code> waits for the reply.
+          </p>
         </Card>
       </div>
     </>

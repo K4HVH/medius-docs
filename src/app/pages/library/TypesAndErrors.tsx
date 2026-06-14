@@ -6,271 +6,251 @@ import '../../../styles/docs.css';
 const TypesAndErrors: Component = () => {
   return (
     <>
-      <div id="types-overview" data-search-target>
-        <Card>
-          <CardHeader title="Types and Errors" subtitle="Complete type reference and error handling" />
-          <p>
-            All public types are re-exported from the crate root. Import them
-            with <code>use makcu::TypeName</code>.
-          </p>
-        </Card>
-      </div>
-
-      <div id="core-types" data-search-target>
-        <Card>
-          <CardHeader title="Core Types" subtitle="Primary API types" />
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Kind</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>Device</code></td>
-                <td>struct</td>
-                <td>Main sync API. <code>Send + Sync</code>. See <A href="/library/connection#connecting">Connection</A>.</td>
-              </tr>
-              <tr>
-                <td><code>AsyncDevice</code></td>
-                <td>struct</td>
-                <td>Async API. Requires <A href="/library/features/async"><code>async</code></A> feature.</td>
-              </tr>
-              <tr>
-                <td><code>DeviceConfig</code></td>
-                <td>struct</td>
-                <td><A href="/library/connection#device-config">Connection configuration</A>.</td>
-              </tr>
-              <tr>
-                <td><code>DeviceInfo</code></td>
-                <td>struct</td>
-                <td>Combined port + firmware info. Implements <code>Display</code>. See <A href="/library/info#device-info">Device Info</A>.</td>
-              </tr>
-              <tr>
-                <td><code>FireAndForget&lt;'d&gt;</code></td>
-                <td>struct</td>
-                <td><A href="/library/fire-and-forget">Fire-and-forget</A> RAII guard. Derefs to <code>Device</code>.</td>
-              </tr>
-              <tr>
-                <td><code>AsyncFireAndForget&lt;'d&gt;</code></td>
-                <td>struct</td>
-                <td>Async <A href="/library/fire-and-forget">fire-and-forget</A> RAII guard. Derefs to <code>AsyncDevice</code>. Requires <A href="/library/features/async"><code>async</code></A>.</td>
-              </tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader title="Types & errors" subtitle="Argument, return, and error types" />
+        <p>
+          Enums you pass in, structs you get back, and the one <code>Error</code> every call can fail
+          with. Each maps onto a value in the <A href="/native/frame">wire protocol</A>.
+        </p>
+      </Card>
 
       <div id="enums" data-search-target>
         <Card>
-          <CardHeader title="Enums" subtitle="Enumerated types" />
-
-          <div class="api-response-label">Button</div>
-          <pre class="api-signature">{`pub enum Button { Left, Right, Middle, Side1, Side2 }`}</pre>
-          <p>Identifies a mouse button for <A href="/library/buttons">press, release, and query</A> operations.</p>
-
-          <div class="api-response-label">LockTarget</div>
-          <pre class="api-signature">{`pub enum LockTarget { X, Y, Left, Right, Middle, Side1, Side2 }`}</pre>
-          <p>Identifies a mouse input (axis or button) for <A href="/library/locks">lock operations</A>.</p>
-
-          <div class="api-response-label">ConnectionState</div>
-          <pre class="api-signature">{`pub enum ConnectionState { Disconnected, Connecting, Connected }`}</pre>
-          <p>Observable connection states emitted by <A href="/library/connection#connection-events"><code>connection_events()</code></A>.</p>
-        </Card>
-      </div>
-
-      <div id="data-structs" data-search-target>
-        <Card>
-          <CardHeader title="Data Structs" subtitle="Value types returned by queries" />
-
-          <div class="api-response-label"><A href="/library/stream#button-mask">ButtonMask</A></div>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Method</th>
-                <th>Returns</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td><code>left()</code></td><td><code>bool</code></td><td>Left button state (bit 0).</td></tr>
-              <tr><td><code>right()</code></td><td><code>bool</code></td><td>Right button state (bit 1).</td></tr>
-              <tr><td><code>middle()</code></td><td><code>bool</code></td><td>Middle button state (bit 2).</td></tr>
-              <tr><td><code>side1()</code></td><td><code>bool</code></td><td>Side 1 state (bit 3).</td></tr>
-              <tr><td><code>side2()</code></td><td><code>bool</code></td><td>Side 2 state (bit 4).</td></tr>
-              <tr><td><code>is_pressed(button)</code></td><td><code>bool</code></td><td>Query by <A href="/library/types#enums"><code>Button</code></A> variant.</td></tr>
-              <tr><td><code>raw()</code></td><td><code>u8</code></td><td>Raw bitmask byte.</td></tr>
-            </tbody>
-          </table>
-
-          <div class="api-response-label"><A href="/library/catch#catch-event-type">CatchEvent</A></div>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td><code>button</code></td><td><A href="/library/types#enums"><code>Button</code></A></td><td>Which button produced this event.</td></tr>
-              <tr><td><code>pressed</code></td><td><code>bool</code></td><td><code>true</code> for press, <code>false</code> for release.</td></tr>
-            </tbody>
-          </table>
-
-          <div class="api-response-label"><A href="/library/locks#lock-states-all">LockStates</A></div>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td><code>x</code></td><td><code>bool</code></td><td>Horizontal movement lock.</td></tr>
-              <tr><td><code>y</code></td><td><code>bool</code></td><td>Vertical movement lock.</td></tr>
-              <tr><td><code>left</code></td><td><code>bool</code></td><td>Left button lock.</td></tr>
-              <tr><td><code>right</code></td><td><code>bool</code></td><td>Right button lock.</td></tr>
-              <tr><td><code>middle</code></td><td><code>bool</code></td><td>Middle button lock.</td></tr>
-              <tr><td><code>side1</code></td><td><code>bool</code></td><td>Side 1 lock.</td></tr>
-              <tr><td><code>side2</code></td><td><code>bool</code></td><td>Side 2 lock.</td></tr>
-            </tbody>
-          </table>
-
-          <div class="api-response-label"><A href="/library/info#device-info">DeviceInfo</A></div>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td><code>port</code></td><td><code>String</code></td><td>Serial port name.</td></tr>
-              <tr><td><code>firmware</code></td><td><code>String</code></td><td>Firmware version string.</td></tr>
-            </tbody>
-          </table>
+          <CardHeader title="Enums" subtitle="Command and status enumerations" />
           <p>
-            Implements <code>Display</code> as <code>{'"port (firmware: version)"'}</code>.
+            Four argument enums, each backed by a wire byte. The number on a variant is its wire
+            value; conversion helpers map to and from that byte.
           </p>
-        </Card>
-      </div>
-
-      <div id="feature-types" data-search-target>
-        <Card>
-          <CardHeader title="Feature-Gated Types" subtitle="Types available with optional features" />
           <table class="api-params">
             <thead>
               <tr>
                 <th>Type</th>
-                <th>Feature</th>
-                <th>Description</th>
+                <th>Variant</th>
+                <th>Conversion</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>BatchBuilder&lt;'d&gt;</code></td>
-                <td><A href="/library/features/batch"><code>batch</code></A></td>
-                <td>Fluent sync <A href="/library/features/batch">batch command builder</A>.</td>
+                <td><A href="/library/buttons#button-arg"><code>Button</code></A></td>
+                <td>
+                  <code>Left = 0</code>, <code>Right</code>, <code>Middle</code>, <code>Side1</code>,{' '}
+                  <code>Side2 = 4</code> — the button a{' '}
+                  <A href="/native/commands/buttons"><code>BUTTON</code></A> command acts on.
+                </td>
+                <td><code>as_id()</code> / <code>from_id(u8)</code></td>
               </tr>
               <tr>
-                <td><code>AsyncBatchBuilder&lt;'d&gt;</code></td>
-                <td><A href="/library/features/batch"><code>batch</code></A> + <A href="/library/features/async"><code>async</code></A></td>
-                <td>Fluent <A href="/library/features/async#async-batch">async batch command builder</A>.</td>
+                <td><A href="/native/commands/buttons#button"><code>ButtonAction</code></A></td>
+                <td>
+                  What to do to that button — see the actions table below.
+                </td>
+                <td><code>as_u8()</code> / <code>from_u8(u8)</code></td>
               </tr>
               <tr>
-                <td><code>EventHandle</code></td>
-                <td><A href="/library/features/extras"><code>extras</code></A></td>
-                <td>Handle to a registered <A href="/library/features/extras#event-callbacks">event callback</A>. Unregisters on drop.</td>
+                <td><A href="/library/admin#reboot"><code>RebootTarget</code></A></td>
+                <td>
+                  Which chip to restart and into what mode for a{' '}
+                  <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> — see the targets
+                  table below.
+                </td>
+                <td>—</td>
               </tr>
               <tr>
-                <td><code>MockTransport</code></td>
-                <td><A href="/library/features/mock"><code>mock</code></A></td>
-                <td>In-process <A href="/library/features/mock">mock transport</A> for testing.</td>
-              </tr>
-              <tr>
-                <td><code>CommandStat</code></td>
-                <td><A href="/library/features/profile"><code>profile</code></A></td>
-                <td>Per-command <A href="/library/features/profile#command-stat">timing statistics</A>.</td>
+                <td><A href="/library/diagnostics#logs"><code>LogLevel</code></A></td>
+                <td>
+                  <code>Error</code>, <code>Warn</code>, <code>Info</code>, <code>Debug</code>,{' '}
+                  <code>Verbose</code> — the severity tag on a logged line.
+                </td>
+                <td><code>from_u8</code> (unknown &rarr; <code>Info</code>)</td>
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-
-      <div id="error-handling" data-search-target>
-        <Card>
-          <CardHeader title="Error Handling" subtitle="MakcuError and Result" />
-          <pre class="api-signature">{`pub type Result<T> = std::result::Result<T, MakcuError>`}</pre>
-          <p>
-            All fallible methods return <code>makcu::Result&lt;T&gt;</code>. The error
-            type is <code>MakcuError</code>.
-          </p>
-        </Card>
-      </div>
-
-      <div id="error-variants" data-search-target>
-        <Card>
-          <CardHeader title="MakcuError" subtitle="Error variants" />
-          <pre class="api-signature">{`pub enum MakcuError`}</pre>
           <table class="api-params">
             <thead>
               <tr>
                 <th>Variant</th>
-                <th>Description</th>
+                <th>Effect</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>Port(serialport::Error)</code></td>
-                <td>Serial port error from the underlying driver.</td>
+                <td><code>SoftRelease = 0</code></td>
+                <td>Releases the box's own press but leaves a physical hold.</td>
               </tr>
               <tr>
-                <td><code>Io(io::Error)</code></td>
-                <td>Standard I/O error.</td>
+                <td><code>Press = 1</code></td>
+                <td>Holds the button down.</td>
               </tr>
               <tr>
-                <td><code>Timeout</code></td>
-                <td>Command response timed out. Controlled by <A href="/library/connection#device-config"><code>command_timeout</code></A>.</td>
-              </tr>
-              <tr>
-                <td><code>NotFound</code></td>
-                <td>No MAKCU device found during <A href="/library/connection#connecting">auto-detection</A>.</td>
-              </tr>
-              <tr>
-                <td><code>Disconnected</code></td>
-                <td>Device disconnected during an operation. See <A href="/library/connection#reconnection">reconnection</A>.</td>
-              </tr>
-              <tr>
-                <td><code>Protocol(String)</code></td>
-                <td>Protocol parsing or formatting error.</td>
-              </tr>
-              <tr>
-                <td><code>OutOfRange {'{ value, min, max }'}</code></td>
-                <td>Parameter outside the valid range.</td>
+                <td><code>ForceRelease = 2</code></td>
+                <td>Forces the button up even past a physical press.</td>
               </tr>
             </tbody>
           </table>
-          <div class="api-response-label">Example</div>
-          <pre><code>{`use makcu::MakcuError;
-
-match device.move_xy(99999, 0) {
-    Err(MakcuError::OutOfRange { value, min, max }) => {
-        println!("{} not in {}..={}", value, min, max);
-    }
-    Err(MakcuError::Disconnected) => {
-        println!("Device disconnected");
-    }
-    Err(e) => println!("Error: {}", e),
-    Ok(()) => {}
-}`}</code></pre>
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th>Effect</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>DeviceDownload = 0</code></td>
+                <td>Restarts the device chip into flashing mode.</td>
+              </tr>
+              <tr>
+                <td><code>HostDownload = 1</code></td>
+                <td>Restarts the host chip into flashing mode.</td>
+              </tr>
+              <tr>
+                <td><code>DeviceRun = 2</code></td>
+                <td>Restarts the device chip back into normal running.</td>
+              </tr>
+              <tr>
+                <td><code>HostRun = 3</code></td>
+                <td>Restarts the host chip back into normal running.</td>
+              </tr>
+            </tbody>
+          </table>
         </Card>
       </div>
 
+      <div id="structs" data-search-target>
+        <Card>
+          <CardHeader title="Structs" subtitle="Values the box reports back" />
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Fields</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/library/requests#version"><code>Version</code></A></td>
+                <td>
+                  Firmware identity from <A href="/library/requests#version"><code>query_version()</code></A>:{' '}
+                  <code>proto_ver</code> (the protocol version the firmware speaks, <code>1</code>{' '}
+                  here), then <code>fw_major</code>, <code>fw_minor</code>, <code>fw_patch</code>{' '}
+                  (all <code>u8</code>). <code>Display</code> renders <code>fw M.m.p</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><A href="/library/requests#health"><code>Health</code></A></td>
+                <td>
+                  The box's readiness from <A href="/library/requests#health"><code>query_health()</code></A>,
+                  one <code>bool</code> per bit of the health byte: <code>link_up</code> (link to the
+                  host chip is up), <code>mouse_attached</code> (a real mouse is plugged in),{' '}
+                  <code>clone_configured</code> (the PC has set up the cloned mouse),{' '}
+                  <code>injection_active</code> (the box is holding at least one injected button or
+                  move). <code>from_flags(u8)</code> / <code>to_flags()</code> convert to and from
+                  that byte.
+                </td>
+              </tr>
+              <tr>
+                <td><code>LogLine</code></td>
+                <td>
+                  One line read from the box's <A href="/native/commands/admin#log"><code>LOG</code></A>{' '}
+                  stream: <code>level: LogLevel</code> and <code>text: String</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>PortInfo</code></td>
+                <td>
+                  A serial port that looks like a Medius box, from <code>find_medius()</code>:{' '}
+                  <code>path: String</code>, <code>vid: u16</code>, <code>pid: u16</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><A href="/library/diagnostics#counters"><code>CountersSnapshot</code></A></td>
+                <td>
+                  Four running link totals (all <code>u64</code>): <code>frames_tx</code>,{' '}
+                  <code>frames_rx</code>, <code>crc_drops</code> (frames dropped for a bad{' '}
+                  <A href="/native/frame#crc">checksum</A>), <code>reconnects</code>. See{' '}
+                  <A href="/library/diagnostics#counters">Counters</A>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="logstream" data-search-target>
+        <Card>
+          <CardHeader title="LogStream" subtitle="Receiver for device log frames" />
+          <p>
+            Hands you the box's unsolicited <A href="/native/commands/admin#log"><code>LOG</code></A>{' '}
+            frames as <code>LogLine</code> values, with blocking, non-blocking, and timed receive.
+            See <A href="/library/diagnostics#logs">Logs</A>.
+          </p>
+        </Card>
+      </div>
+
+      <div id="errors" data-search-target>
+        <Card>
+          <CardHeader title="Errors" subtitle="The Error enum and Result alias" />
+          <p>
+            Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
+            <code>core::result::Result&lt;T, Error&gt;</code>. <code>Error</code> is{' '}
+            <code>#[non_exhaustive]</code>, so match it with a wildcard arm.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>Io(std::io::Error)</code></td>
+                <td>An underlying serial or OS error.</td>
+              </tr>
+              <tr>
+                <td><code>NotFound</code></td>
+                <td>No device matched the expected VID/PID.</td>
+              </tr>
+              <tr>
+                <td><code>NoReply</code></td>
+                <td>
+                  The box never answered the version query during the{' '}
+                  <A href="/native/connection#handshake">handshake</A>: wrong port or baud, or not a
+                  Medius box.
+                </td>
+              </tr>
+              <tr>
+                <td><code>BadProtoVer &#123; got &#125;</code></td>
+                <td>
+                  The box answered, but its <code>proto_ver</code> wasn't <code>1</code>;{' '}
+                  <code>got</code> carries the reported value.
+                </td>
+              </tr>
+              <tr>
+                <td><code>QueryTimeout</code></td>
+                <td>
+                  A <A href="/library/requests"><code>query</code></A> hit its deadline with no{' '}
+                  <A href="/native/commands/requests#resp"><code>RESP</code></A> back.
+                </td>
+              </tr>
+              <tr>
+                <td><code>Disconnected</code></td>
+                <td>The device disconnected.</td>
+              </tr>
+              <tr>
+                <td><code>FrameTooLong</code></td>
+                <td>
+                  A payload was over the <A href="/native/frame#layout">512-byte</A> frame limit.
+                </td>
+              </tr>
+              <tr>
+                <td><code>FlashTool(String)</code></td>
+                <td>The flash tool failed. Present only with the <A href="/library/features/flash"><code>flash</code></A> feature.</td>
+              </tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
     </>
   );
 };

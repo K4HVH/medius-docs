@@ -6,88 +6,106 @@ import '../../../styles/docs.css';
 const Connection: Component = () => {
   return (
     <>
-      <div id="connection-sequence" data-search-target>
+      <Card>
+        <CardHeader title="Connection & handshake" subtitle="Open, find, and handshake" />
+        <p>
+          The handshake confirms the device on the serial port is a Medius box and speaks a protocol
+          version you understand: one request, one reply. Open the port and start talking.
+        </p>
+        <ul>
+          <li>No baud negotiation.</li>
+          <li>No login.</li>
+          <li>No <code>115200</code> startup step or baud-switch command.</li>
+        </ul>
+      </Card>
+
+      <div id="handshake" data-search-target>
         <Card>
-          <CardHeader title="Connection Sequence" subtitle="Establishing communication with the device" />
+          <CardHeader title="Handshake" subtitle="One round-trip to confirm the box" />
           <ol>
-            <li>Open the port at <strong><A href="/native/transport#baud-rate">4 Mbaud</A></strong>.</li>
-            <li>Send <A href="/native/commands/version"><code>km.version()\r\n</code></A>.</li>
-            <li>If the response contains <code>km.MAKCU</code>, the connection is established.</li>
-            <li>Otherwise, close the port and proceed with the baud change sequence:
-              <ol style={{ "margin-top": "var(--g-spacing-sm)", "list-style-type": "lower-alpha" }}>
-                <li>Open the port at <strong><A href="/native/transport#baud-rate">115200</A></strong>.</li>
-                <li>Send the binary baud change frame (9 bytes, no <code>\r\n</code>).</li>
-                <li>Wait <strong>100 ms</strong>.</li>
-                <li>Close the port.</li>
-                <li>Open the port at <strong>4 Mbaud</strong>.</li>
-                <li>Wait <strong>50 ms</strong>, then flush the input buffer.</li>
-                <li>Send <A href="/native/commands/version"><code>km.version()\r\n</code></A>.</li>
-                <li>Verify the response contains <code>km.MAKCU</code>. See <A href="/native/protocol#response-format">response format</A>.</li>
-              </ol>
+            <li>
+              Open the serial port at <code>4,000,000</code> baud
+              (<A href="/native/transport">Transport</A>). The box speaks{' '}
+              <A href="/native/frame">framed binary</A> from the first byte.
+            </li>
+            <li>
+              Catch the unsolicited hello the box sends on its own
+              (<A href="/native/connection#hello">below</A>), or send a{' '}
+              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> yourself.
+              Both produce the same{' '}
+              <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
+            </li>
+            <li>
+              Read <code>proto_ver</code> from that reply and check it equals <code>1</code>.
             </li>
           </ol>
-          <div class="callout callout--info">
-            <p>
-              Timeout is <strong>500 ms</strong>. If no response is received, the connection
-              attempt has failed. Retry the full sequence or verify the physical connection.
-            </p>
-          </div>
-          <div class="callout callout--info">
-            <p>
-              The Rust library's <A href="/library/connection#connecting"><code>Device::connect()</code></A> handles
-              this entire sequence automatically, including baud negotiation and auto-detection.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="baud-change-frame" data-search-target>
-        <Card>
-          <CardHeader title="Baud Change Frame" subtitle="Binary frame to switch from 115200 to 4 Mbaud" />
-          <pre class="api-signature">DE AD 05 00 A5 00 09 3D 00</pre>
           <p>
-            Sent as raw bytes at 115200 baud. Do not append a <code>\r\n</code> terminator.
+            <code>proto_ver</code> is the protocol version the firmware speaks, one byte. These pages
+            describe version <code>1</code>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Reply</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>proto_ver == 1</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 1</code></td><td>Speaks a protocol they don't cover; don't assume the commands behave as described.</td></tr>
+              <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
+          <p>
+            Five payload bytes. The first echoes the <code>what</code> selector you asked for (the
+            byte that chose which thing to query), then the protocol and firmware version follow. Full
+            detail on the <A href="/native/commands/requests#version">Requests</A> page.
           </p>
           <table class="byte-table">
             <thead>
-              <tr>
-                <th>Offset</th>
-                <th>Length</th>
-                <th>Bytes</th>
-                <th>Description</th>
-              </tr>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>0</td>
-                <td>2</td>
-                <td>DE AD</td>
-                <td>Magic header</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>2</td>
-                <td>05 00</td>
-                <td>Payload length (little-endian u16) = 5</td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>1</td>
-                <td>A5</td>
-                <td>Command: set baud rate</td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>4</td>
-                <td>00 09 3D 00</td>
-                <td>Target baud rate (little-endian u32) = 4,000,000</td>
-              </tr>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>the selector byte, echoed back; <code>0x00</code> = <code>VERSION</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>1</code></td></tr>
+              <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
+              <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
+              <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--warning">
+        </Card>
+      </div>
+
+      <div id="hello" data-search-target>
+        <Card>
+          <CardHeader title="The ready hello" subtitle="Unsolicited RESP(VERSION) on link-up" />
+          <p>
+            The box sends one{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> on its own as
+            soon as its serial link is up. Treat it as "box is here and ready" and skip your own{' '}
+            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Trigger</th><th>When it fires</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Power-on</td><td>Once, as the box boots.</td></tr>
+              <tr><td>First contact</td><td>On the first valid frame after a program opens the port, so a program that connects after the power-on hello still gets one.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> since no request
+            prompted it. The payload is identical to a queried reply, so a program that ignores the
+            hello loses nothing and just sends{' '}
+            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> instead.
+          </p>
+          <div class="callout callout--info">
             <p>
-              The baud rate is not persistent across power cycles. Persistence requires a
-              physical button press on the device and is not software-controllable.
+              The <A href="/library/connection">medius library</A> does all of this inside{' '}
+              <A href="/library/connection#open"><code>open</code></A> and{' '}
+              <A href="/library/connection#open"><code>find</code></A>: it sends{' '}
+              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retries a
+              few times, and checks <code>proto_ver == 1</code> before handing you a working
+              connection.
             </p>
           </div>
         </Card>
