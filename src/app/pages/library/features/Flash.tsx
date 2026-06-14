@@ -81,24 +81,6 @@ const Flash: Component = () => {
             the two download variants; the <A href="/library/admin#reboot"><code>reboot</code></A>{' '}
             method covers the full set.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Target</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Device chip</td>
-                <td>The chip your program talks to over serial.</td>
-              </tr>
-              <tr>
-                <td>Host chip</td>
-                <td>The chip facing the PC as the cloned mouse.</td>
-              </tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 

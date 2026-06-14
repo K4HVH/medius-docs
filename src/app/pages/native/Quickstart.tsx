@@ -128,50 +128,13 @@ port.write(frame)`}</code></pre>
             <code>dy</code>. <code>+x</code> is right, <code>+y</code> is down. The example moves 100
             right, 0 down.
           </p>
-          <div class="api-response-label">FRAME LAYOUT</div>
-          <table class="byte-table">
-            <thead>
-              <tr>
-                <th>Bytes</th>
-                <th>Field</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>A5</code></td>
-                <td>SOF</td>
-                <td>start-of-frame marker, always <code>0xA5</code></td>
-              </tr>
-              <tr>
-                <td><code>01</code></td>
-                <td>TYPE</td>
-                <td>opcode <code>0x01</code>, <code>MOVE</code></td>
-              </tr>
-              <tr>
-                <td><code>00</code></td>
-                <td>SEQ</td>
-                <td>rolling per-frame counter</td>
-              </tr>
-              <tr>
-                <td><code>04 00</code></td>
-                <td>LEN</td>
-                <td>4-byte payload, u16 LE</td>
-              </tr>
-              <tr>
-                <td><code>64 00 00 00</code></td>
-                <td>PAYLOAD</td>
-                <td><code>dx=100</code>, <code>dy=0</code> (each i16 LE)</td>
-              </tr>
-              <tr>
-                <td><code>CRC_lo CRC_hi</code></td>
-                <td>CRC16</td>
-                <td>over <code>TYPE | SEQ | LEN | PAYLOAD</code>, u16 LE</td>
-              </tr>
-            </tbody>
-          </table>
           <p>
-            Full codec, resync, and drop rules on <A href="/native/frame">Frame Format</A>.
+            That builds the bytes{' '}
+            <code>A5 01 00 04 00 64 00 00 00 &lt;crc&gt;</code>: start byte, opcode <code>0x01</code>,
+            sequence, length, the <code>dx</code>/<code>dy</code> payload, then the checksum. The
+            byte-by-byte breakdown is on{' '}
+            <A href="/native/commands/movement#move"><code>MOVE</code></A>, the frame format on{' '}
+            <A href="/native/frame">Frame Format</A>.
           </p>
         </Card>
       </div>
@@ -185,34 +148,12 @@ port.write(frame)`}</code></pre>
             is live: send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A>, read the{' '}
             <code>flags</code> byte from the{' '}
-            <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check both flags below
-            before trusting that your{' '}
+            <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check that{' '}
+            <code>MOUSE_ATTACHED</code> (<code>0x02</code>) and <code>CLONE_CONFIGURED</code>{' '}
+            (<code>0x04</code>) are set before trusting that your{' '}
             <A href="/native/commands/movement#move"><code>MOVE</code></A> reached the game PC. A flag
-            is set when <code>(flags &amp; mask)</code> is non-zero.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Flag</th>
-                <th>Mask</th>
-                <th>Set when</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>MOUSE_ATTACHED</code></td>
-                <td><code>0x02</code></td>
-                <td>The real mouse is enumerated on the box.</td>
-              </tr>
-              <tr>
-                <td><code>CLONE_CONFIGURED</code></td>
-                <td><code>0x04</code></td>
-                <td>The PC has set up the cloned mouse.</td>
-              </tr>
-            </tbody>
-          </table>
-          <p>
-            All flags on <A href="/native/commands/requests#health">Health</A>.
+            is set when <code>(flags &amp; mask)</code> is non-zero; the full byte is on{' '}
+            <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
       </div>
