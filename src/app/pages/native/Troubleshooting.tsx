@@ -56,28 +56,12 @@ const Troubleshooting: Component = () => {
             <A href="/native/injection">Injection</A> is the input your program adds on top of the
             real mouse's passthrough (movement, buttons, scroll). If it has no effect, send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and read the{' '}
-            <code>flags</code> byte. Each bit is an independent status:
+            <code>flags</code> byte. The box only merges injection once the first three flags are set:{' '}
+            <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a mouse is on{' '}
+            <A href="/native/hardware"><code>USB3</code></A>), and <code>CLONE_CONFIGURED</code> (the
+            PC has enumerated the clone). The full flag byte is on{' '}
+            <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Flag</th><th>Mask</th><th>Set when</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>LINK_UP</code></td><td><code>0x01</code></td><td>The link to the host chip is up.</td></tr>
-              <tr><td><code>MOUSE_ATTACHED</code></td><td><code>0x02</code></td><td>A real mouse is attached (on <A href="/native/hardware"><code>USB3</code></A>).</td></tr>
-              <tr><td><code>CLONE_CONFIGURED</code></td><td><code>0x04</code></td><td>The PC has set up the clone (the mouse the box presents to the PC).</td></tr>
-              <tr><td><code>INJECTION_ACTIVE</code></td><td><code>0x08</code></td><td>The box is currently merging injected input.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            First three flags set means the chain (real mouse to box to PC) is live. Injection only
-            merges once the clone is configured.
-          </p>
-          <div class="callout callout--info">
-            <p>
-              See <A href="/native/commands/requests#health">QUERY(HEALTH)</A> for the full flag byte.
-            </p>
-          </div>
         </Card>
       </div>
 
@@ -142,23 +126,11 @@ const Troubleshooting: Component = () => {
         <Card>
           <CardHeader title="The serial port disappeared after a REBOOT" />
           <p>
-            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> carries one payload byte,{' '}
-            <code>target</code>, selecting which chip reboots and how. The download targets drop a
-            chip into ROM download mode for flashing, so its running firmware (and the serial port it
-            provides) goes away:
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th><code>target</code></th><th>Mode</th><th>Effect</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>device download</td><td>The device chip enters ROM download mode for flashing.</td></tr>
-              <tr><td><code>1</code></td><td>host download</td><td>The host chip enters ROM download mode for flashing.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Flash the chip or power-cycle the box to get the port back. See{' '}
-            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>.
+            A download <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>{' '}
+            (<code>target</code> <code>0</code> or <code>1</code>) drops a chip into ROM download mode,
+            so its running firmware, and the serial port that firmware provides, goes away. Flash the
+            chip or power-cycle the box to get the port back. See{' '}
+            <A href="/native/flashing">Flashing</A>.
           </p>
         </Card>
       </div>
