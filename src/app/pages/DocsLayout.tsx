@@ -89,6 +89,7 @@ const allLibraryTabs = [
 const dashboardTabs: TabOption[] = [
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/flash', label: 'Flash', icon: BsBoxArrowInDown },
+  { value: '/dashboard/recovery', label: 'Recovery', icon: BsWrench },
 ];
 
 const isMobileQuery = () =>

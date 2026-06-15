@@ -25,6 +25,7 @@ import { isWebSerialSupported } from './support';
 export const CTRL_BAUD = 4_000_000;
 export const WCH_VID = 0x1a86;
 export const CH343_PID = 0x55d3;
+export const ESP_ROM_VID = 0x303a;
 
 const HANDSHAKE_ATTEMPTS = 5;
 const HANDSHAKE_TIMEOUT_MS = 250;
@@ -72,6 +73,14 @@ export async function requestMediusPort(): Promise<SerialPort> {
   return navigator.serial.requestPort({
     filters: [{ usbVendorId: WCH_VID, usbProductId: CH343_PID }],
   });
+}
+
+// Open a chooser filtered to an ESP32-S3 in ROM download mode (native USB).
+export async function requestRomPort(): Promise<SerialPort> {
+  if (!isWebSerialSupported()) {
+    throw new Error('Web Serial is not supported in this browser');
+  }
+  return navigator.serial.requestPort({ filters: [{ usbVendorId: ESP_ROM_VID }] });
 }
 
 export class SerialLink {
