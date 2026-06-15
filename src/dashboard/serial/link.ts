@@ -89,6 +89,11 @@ export class SerialLink {
     private readonly events: SerialLinkEvents = {},
   ) {}
 
+  // The underlying Web Serial port, handed to esptool-js for the flash handoff.
+  get serialPort(): SerialPort {
+    return this.port;
+  }
+
   async open(): Promise<void> {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;

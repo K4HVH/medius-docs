@@ -2,6 +2,7 @@ import {
   type Accessor,
   type ParentComponent,
   createContext,
+  createEffect,
   createSignal,
   onCleanup,
   useContext,
@@ -15,8 +16,14 @@ import {
   isWebSerialSupported,
   requestMediusPort,
 } from '../../../dashboard/serial';
+import type { FlashKind, FlashProgress } from '../../../dashboard/flash';
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type ConnectionStatus =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+  | 'error'
+  | 'flashing';
 
 export interface DashboardContextValue {
   supported: boolean;
@@ -29,6 +36,9 @@ export interface DashboardContextValue {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   setHealth: (h: Health | null) => void;
+  flashProgress: Accessor<FlashProgress | null>;
+  flashLog: Accessor<string[]>;
+  flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextValue>();
@@ -56,6 +66,8 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [health, setHealth] = createSignal<Health | null>(null);
   const [error, setError] = createSignal<string | null>(null);
   const [link, setLink] = createSignal<SerialLink | null>(null);
+  const [flashProgress, setFlashProgress] = createSignal<FlashProgress | null>(null);
+  const [flashLog, setFlashLog] = createSignal<string[]>([]);
 
   const HEALTH_POLL_MS = 1000;
   let healthTimer: ReturnType<typeof setTimeout> | null = null;
@@ -90,6 +102,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const connect = async () => {
     if (status() === 'connecting' || status() === 'connected') return;
     setError(null);
+    setFlashProgress(null);
     setStatus('connecting');
     let l: SerialLink | null = null;
     try {
@@ -148,10 +161,54 @@ export const DashboardProvider: ParentComponent = (props) => {
     if (l) await l.close();
   };
 
+  const flashDevice = async (image: Uint8Array, kind: FlashKind) => {
+    if (status() === 'flashing') return;
+    const l = link();
+    if (!l) throw new Error('Connect to the box before flashing.');
+    stopHealthPolling();
+    setError(null);
+    setFlashLog([]);
+    setFlashProgress({ phase: 'rebooting' });
+    setStatus('flashing');
+    try {
+      const { flashDeviceChip } = await import('../../../dashboard/flash/flasher');
+      await flashDeviceChip({
+        link: l,
+        image,
+        kind,
+        onProgress: (p) => setFlashProgress(p),
+        onLog: (line) => setFlashLog((prev) => [...prev, line].slice(-500)),
+      });
+      setLink(null);
+      setVersion(null);
+      setHealth(null);
+      setFlashProgress({ phase: 'done' });
+      setStatus('disconnected');
+    } catch (e) {
+      setLink(null);
+      setVersion(null);
+      setHealth(null);
+      setError(describeError(e));
+      setStatus('error');
+    }
+  };
+
+  // Block tab close / refresh during a flash; esptool cannot survive it.
+  createEffect(() => {
+    if (status() !== 'flashing') return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    onCleanup(() => window.removeEventListener('beforeunload', handler));
+  });
+
   onCleanup(() => {
     disposed = true;
     stopHealthPolling();
-    void link()?.close();
+    // Never close the port mid-flash; esptool owns it during the handoff.
+    if (status() !== 'flashing') void link()?.close();
   });
 
   const value: DashboardContextValue = {
@@ -165,6 +222,9 @@ export const DashboardProvider: ParentComponent = (props) => {
     connect,
     disconnect,
     setHealth,
+    flashProgress,
+    flashLog,
+    flashDevice,
   };
 
   return <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>;
