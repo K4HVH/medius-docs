@@ -60,8 +60,15 @@ async function runEsptool(
       calculateMD5Hash: md5Hex,
     };
     await loader.writeFlash(flashOptions);
+    // Reboot to run the new firmware: the main chip resets via the CH343's RTS,
+    // native USB via its own reset. Best-effort - a power-cycle works if it can't.
+    try {
+      await loader.after('hard_reset', port.getInfo().usbVendorId === 0x303a);
+    } catch {
+      // ignore
+    }
     onProgress?.({ phase: 'done' });
-    onLog?.('Flash complete. Power-cycle the box (unplug and replug) to run the new firmware.');
+    onLog?.('Flash complete.');
   } finally {
     try {
       await transport.disconnect();
