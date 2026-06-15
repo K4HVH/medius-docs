@@ -13,7 +13,7 @@ import { PortDiagram } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
-type Step = 'choose' | 'main' | 'grantMain' | 'mouse' | 'done';
+type Step = 'choose' | 'main' | 'grantMain' | 'mouse' | 'setupMain' | 'setupMouse' | 'done';
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
@@ -33,9 +33,10 @@ const Update = () => {
   // and to resume if the ESP32 port grant is canceled.
   const [mainCtrl, setMainCtrl] = createSignal<SerialPort | null>(null);
 
-  // Reset the unplug gate each time we enter the mouse-side step.
+  // Re-arm the unplug gate on each step that needs a fresh BOOT-button plug-in.
   createEffect(() => {
-    if (step() === 'mouse') setUnplugged(false);
+    const s = step();
+    if (s === 'mouse' || s === 'setupMain' || s === 'setupMouse') setUnplugged(false);
   });
 
   // While the main chip sits in update mode awaiting its port, warn before a
@@ -54,6 +55,10 @@ const Update = () => {
   const lv = () => parseTag(latest()?.tag);
   const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
   const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
+  const deviceFactoryAsset = () =>
+    latest()?.assets.find((a) => a.name === 'medius_device-factory.bin') ?? null;
+  const hostFactoryAsset = () =>
+    latest()?.assets.find((a) => a.name === 'medius_host-factory.bin') ?? null;
   const upToDate = () => {
     const c = dash.version();
     const l = lv();
@@ -125,6 +130,34 @@ const Update = () => {
     }
   };
 
+  // First-time / repair install: write the full factory image to a chip over its
+  // own USB (BOOT-button download). Works from a stock, blank, or bricked box,
+  // where the control link and reboot-over-cable are unavailable.
+  const setupChip = async (
+    asset: ReturnType<typeof deviceFactoryAsset>,
+    missing: string,
+    next: Step,
+  ) => {
+    setErr(null);
+    dash.clearFlashResult();
+    if (!asset) return setErr(missing);
+    setBusy(true);
+    try {
+      const port = await requestRomPort();
+      const ok = await dash.flashNative(port, await downloadAsset(asset), 'factory');
+      if (ok) setStep(next);
+      else setErr(dash.error() ?? 'That did not finish. Hold the BOOT button and try again.');
+    } catch (e) {
+      if (!isUserCancel(e)) setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const setupMain = () =>
+    setupChip(deviceFactoryAsset(), 'No main-chip factory image in this release.', 'setupMouse');
+  const setupMouse = () =>
+    setupChip(hostFactoryAsset(), 'No mouse-side factory image in this release.', 'done');
+
   return (
     <>
       <Show when={!dash.supported}>
@@ -149,20 +182,33 @@ const Update = () => {
             <Match when={step() === 'choose'}>
               <Switch>
                 <Match when={dash.status() !== 'connected'}>
-                  <p>Plug in like this, then connect.</p>
+                  <p>Already running Medius? Plug in like this and connect.</p>
                   <PortDiagram plug={['usb1', 'usb2']} />
-                  <Button
-                    variant="primary"
-                    loading={dash.status() === 'connecting'}
-                    disabled={!dash.supported || busy() || dash.status() === 'connecting'}
-                    onClick={() => void dash.connect()}
-                  >
-                    {dash.status() === 'connecting'
-                      ? 'Connecting...'
-                      : dash.status() === 'error'
-                        ? 'Try again'
-                        : 'Connect'}
-                  </Button>
+                  <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                    <Button
+                      variant="primary"
+                      loading={dash.status() === 'connecting'}
+                      disabled={!dash.supported || busy() || dash.status() === 'connecting'}
+                      onClick={() => void dash.connect()}
+                    >
+                      {dash.status() === 'connecting'
+                        ? 'Connecting...'
+                        : dash.status() === 'error'
+                          ? 'Try again'
+                          : 'Connect'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      disabled={busy()}
+                      onClick={() => { void dash.disconnect(); setErr(null); setStep('setupMain'); }}
+                    >
+                      Set up a new box
+                    </Button>
+                  </div>
+                  <p style={muted}>
+                    Setting it up for the first time, or fixing a box that stopped responding?
+                    Set it up to install Medius.
+                  </p>
                 </Match>
                 <Match when={dash.status() === 'connected'}>
                   <p>
@@ -209,7 +255,7 @@ const Update = () => {
             <Match when={step() === 'grantMain'}>
               <p><strong>The box is in update mode.</strong> Pick the ESP32-S3 port to finish.</p>
               <Button variant="primary" disabled={busy()} onClick={() => void flashMain(true)}>
-                {busy() ? 'Waiting for the port…' : 'Pick ESP32-S3 port'}
+                {busy() ? 'Waiting for the port...' : 'Pick ESP32-S3 port'}
               </Button>
               <p style={muted}>
                 Changed your mind? Power-cycle the box (unplug and replug USB1) to leave it as it was.
@@ -230,16 +276,55 @@ const Update = () => {
               </Show>
             </Match>
 
+            <Match when={step() === 'setupMain'}>
+              <p>Installs Medius from scratch. Two chips, one at a time.</p>
+              <Show
+                when={unplugged()}
+                fallback={<UnplugWatch autoWatch={false} onUnplugged={() => setUnplugged(true)} />}
+              >
+                <p><strong>Step 1 of 2: main chip.</strong> Plug in like this.</p>
+                <PortDiagram plug={['usb1']} boot="main" />
+                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Button variant="primary" disabled={busy()} onClick={() => void setupMain()}>
+                    Install
+                  </Button>
+                  <Button variant="secondary" disabled={busy()} onClick={() => { setErr(null); setStep('choose'); }}>
+                    Back
+                  </Button>
+                </div>
+              </Show>
+            </Match>
+
+            <Match when={step() === 'setupMouse'}>
+              <p>Main chip done.</p>
+              <Show
+                when={unplugged()}
+                fallback={<UnplugWatch autoWatch={false} onUnplugged={() => setUnplugged(true)} />}
+              >
+                <p><strong>Step 2 of 2: mouse-side chip.</strong> Plug in like this.</p>
+                <PortDiagram plug={['usb3']} boot="mouse" />
+                <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
+                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Button variant="primary" disabled={busy()} onClick={() => void setupMouse()}>
+                    Install
+                  </Button>
+                  <Button variant="secondary" disabled={busy()} onClick={() => { setErr(null); setStep('choose'); }}>
+                    Back
+                  </Button>
+                </div>
+              </Show>
+            </Match>
+
             <Match when={step() === 'done'}>
               <Show
                 when={dash.status() === 'connected'}
                 fallback={
                   <>
                     <div class="callout callout--info">
-                      Mouse-side firmware installed. To use the box, plug your mouse into USB3 and
-                      cable USB1 and USB2 to your PC.
+                      Firmware installed. To use the box, plug your mouse into USB3 and cable USB1
+                      and USB2 to your PC.
                     </div>
-                    <PortDiagram plug={['usb1', 'usb2']} />
+                    <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
                     <p style={muted}>Then connect to check the box still answers.</p>
                   </>
                 }

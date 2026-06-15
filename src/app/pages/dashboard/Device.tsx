@@ -1,4 +1,5 @@
 import { For, Match, Show, Switch, createEffect } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -22,8 +23,12 @@ const col = {
   gap: 'var(--g-spacing)',
 } as const;
 
+const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
+const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
+
 const Device = () => {
   const dash = useDashboard();
+  const navigate = useNavigate();
 
   let logEl: HTMLPreElement | undefined;
   let follow = true;
@@ -80,9 +85,21 @@ const Device = () => {
 
                 <Match when={dash.status() === 'error'}>
                   <div class="callout callout--danger" role="alert">{dash.error()}</div>
-                  <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                    Try again
-                  </Button>
+                  <div style={row}>
+                    <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
+                      Try again
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => { void dash.disconnect(); navigate('/dashboard/update'); }}
+                    >
+                      Install Medius
+                    </Button>
+                  </div>
+                  <p style={muted}>
+                    Setting it up for the first time, or fixing a box that stopped responding?
+                    Install Medius from the Update tab.
+                  </p>
                 </Match>
 
                 <Match when={dash.status() === 'disconnected'}>
