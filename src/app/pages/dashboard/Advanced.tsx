@@ -190,7 +190,7 @@ const Advanced = () => {
                 when={chip() === 'device' || unplugged()}
                 fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
               >
-                <p>Plug in and hold BOOT:</p>
+                <p>Hold the BOOT button, then plug in:</p>
                 <PortDiagram
                   plug={chip() === 'host' ? ['usb3'] : ['usb1', 'usb2']}
                   boot={chip() === 'host' ? 'mouse' : 'main'}
