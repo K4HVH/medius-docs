@@ -197,3 +197,19 @@ These are not blockers for building, but the flows must be tested against a box:
 7. Firmware source (release fetch + upload).
 8. Console (stretch).
 9. searchIndex entries, TLS confirmation, build + manual hardware validation.
+
+## Deployment
+
+The firmware proxy needs a GitHub token, server-side only. Set two env vars where the
+container runs:
+
+- `GITHUB_TOKEN`: a fine-grained token with Contents:Read on the firmware repo.
+- `GITHUB_REPO`: `owner/name` of the firmware repo (defaults to `K4HVH/medius-fw`).
+
+Locally, copy `.env.example` to `.env` and paste the token. The browser never sees it;
+without it the firmware-fetch endpoints return 503 and the dashboard falls back to manual
+upload. The dashboard runs as a section inside the existing docs site (Native API / Rust
+Library / Dashboard), so the connection persists as you move around.
+
+Web Serial needs a secure context, so production must be served over HTTPS (localhost is
+exempt for dev).
