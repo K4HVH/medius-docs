@@ -12,7 +12,7 @@ import {
   validateImage,
 } from '../../../dashboard/flash';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
-import { requestMediusPort, requestRomPort } from '../../../dashboard/serial';
+import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { PortDiagram } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
@@ -75,7 +75,9 @@ const Advanced = () => {
     dash.clearFlashResult();
     setBusy(true);
     try {
-      const port = chip() === 'host' ? await requestRomPort() : await requestMediusPort();
+      // Both chips flash over their own native USB in ROM download (device on
+      // USB1 via the LEFT BOOT button, host on USB3 via the RIGHT BOOT button).
+      const port = await requestRomPort();
       const a = asset();
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');

@@ -8,7 +8,7 @@ import {
   onCleanup,
   useContext,
 } from 'solid-js';
-import { type Health, type LogLine, type Version, LogLevel } from '../../../dashboard/protocol';
+import { type Health, type LogLine, type Version, LogLevel, RebootTarget } from '../../../dashboard/protocol';
 import {
   BadProtoVerError,
   NoReplyError,
@@ -39,7 +39,13 @@ export interface DashboardContextValue {
   setHealth: (h: Health | null) => void;
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
-  flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<boolean>;
+  rebootDeviceToDownload: () => Promise<SerialPort>;
+  flashDeviceNative: (
+    romPort: SerialPort,
+    ctrlPort: SerialPort,
+    image: Uint8Array,
+    kind: FlashKind,
+  ) => Promise<boolean>;
   flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<boolean>;
   clearFlashResult: () => void;
   deviceLog: Accessor<string[]>;
@@ -209,27 +215,49 @@ export const DashboardProvider: ParentComponent = (props) => {
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
 
-  const flashDevice = async (image: Uint8Array, kind: FlashKind): Promise<boolean> => {
-    if (status() === 'flashing') return false;
+  // Reboot the device chip into ROM download over the control link, then close
+  // it. The chip re-enumerates on its native USB (0x303a); the returned CH343
+  // port is reused to reconnect and verify once the new firmware is running.
+  const rebootDeviceToDownload = async (): Promise<SerialPort> => {
     const l = link();
-    if (!l) throw new Error('Connect to the box before flashing.');
-    const port = l.serialPort;
+    if (!l) throw new Error('Connect to the box before updating.');
+    const ctrlPort = l.serialPort;
     stopHealthPolling();
     setError(null);
     setFlashLog([]);
     setFlashProgress({ phase: 'rebooting' });
     setStatus('flashing');
+    setLink(null);
+    setVersion(null);
+    setHealth(null);
+    await l.reboot(RebootTarget.DeviceDownload);
+    await l.close();
+    return ctrlPort;
+  };
+
+  // Flash the device chip over its native USB (already in ROM download), then
+  // reconnect over the control port and read the version back as verification.
+  const flashDeviceNative = async (
+    romPort: SerialPort,
+    ctrlPort: SerialPort,
+    image: Uint8Array,
+    kind: FlashKind,
+  ): Promise<boolean> => {
+    setError(null);
+    setFlashLog([]);
+    setFlashProgress({ phase: 'connecting' });
+    setStatus('flashing');
     try {
-      const { flashDeviceChip } = await import('../../../dashboard/flash/flasher');
-      await flashDeviceChip({
-        link: l,
+      const { flashNativePort } = await import('../../../dashboard/flash/flasher');
+      await flashNativePort({
+        port: romPort,
         image,
         kind,
         onProgress: (p) => setFlashProgress(p),
         onLog: (line) => setFlashLog((prev) => [...prev, line].slice(-500)),
       });
       setFlashProgress({ phase: 'done' });
-      const reconnected = await tryReconnect(port);
+      const reconnected = await tryReconnect(ctrlPort);
       if (!reconnected) {
         setLink(null);
         setVersion(null);
@@ -321,7 +349,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     setHealth,
     flashProgress,
     flashLog,
-    flashDevice,
+    rebootDeviceToDownload,
+    flashDeviceNative,
     flashNative,
     clearFlashResult,
     deviceLog,

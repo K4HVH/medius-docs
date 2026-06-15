@@ -62,11 +62,21 @@ const Update = () => {
     if (!a) return setErr('No main-chip update in this release.');
     setBusy(true);
     try {
-      const ok = await dash.flashDevice(await downloadAsset(a), 'app');
+      // Reboot the main chip into update mode over the control cable, flash it
+      // over its own USB (where the reset works), then reconnect and verify.
+      const ctrlPort = await dash.rebootDeviceToDownload();
+      const romPort = await requestRomPort();
+      const image = await downloadAsset(a);
+      const ok = await dash.flashDeviceNative(romPort, ctrlPort, image, 'app');
       if (ok) setStep(alsoMouse() ? 'mouse' : 'done');
-      else setErr(dash.error() ?? 'That did not finish. Power-cycle and try again.');
+      else setErr(dash.error() ?? 'That did not finish. Power-cycle the box and try again.');
     } catch (e) {
-      setErr((e as Error).message);
+      if (isUserCancel(e)) {
+        await dash.disconnect();
+        setErr('Update canceled. The box is in update mode — power-cycle it (USB1), then reconnect.');
+      } else {
+        setErr((e as Error).message);
+      }
     } finally {
       setBusy(false);
     }
@@ -155,6 +165,7 @@ const Update = () => {
                   <p style={muted}>Not connected. <A href="/dashboard">Connect first</A>.</p>
                 }
               >
+                <p style={muted}>When the browser asks, pick the ESP32-S3 port.</p>
                 <Button variant="primary" disabled={busy()} onClick={() => void installMain()}>
                   Install
                 </Button>
