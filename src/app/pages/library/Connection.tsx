@@ -149,7 +149,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
           <CardHeader title="Threading model" subtitle="Thread-safe, cheap to clone" />
           <p>
             <code>Device</code> is <code>Send + Sync</code>, every method takes <code>&amp;self</code>,
-            and it clones cheaply (an <code>Arc</code> inside), so one connection can be shared across
+            and it clones cheaply (an <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html" target="_blank" rel="noreferrer"><code>Arc</code></a> inside), so one connection can be shared across
             threads or cloned into tasks without re-opening the port.
           </p>
           <p>

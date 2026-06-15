@@ -13,7 +13,7 @@ const Hardware: Component = () => {
             Wire the box once at first plug-in; after that everything is software.
           </p>
           <p>
-            Inside are two ESP32-S3 microcontrollers and a <code>CH343</code> USB-serial bridge. Your
+            Inside are two <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3 microcontrollers and a <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> USB-serial bridge. Your
             program only ever speaks to the <code>CH343</code> serial port; the two chips talk over an
             internal 5 Mbaud link you never touch, separate from the 4 Mbaud control link.
           </p>

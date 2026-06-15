@@ -100,7 +100,7 @@ const Quickstart: Component = () => {
               can pair reply to request; here <code>0</code>.
             </li>
             <li>
-              <code>CRC16</code> lets the box reject a corrupted frame. It is CRC16-CCITT (polynomial{' '}
+              <code>CRC16</code> lets the box reject a corrupted frame. It is <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> (polynomial{' '}
               <code>0x1021</code>, initial value <code>0xFFFF</code>) over{' '}
               <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian.
             </li>

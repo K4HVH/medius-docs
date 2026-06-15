@@ -11,7 +11,7 @@ import {
   BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
-  BsStars, BsWrench, BsTerminal, BsBook, BsHouseDoor, BsSearch,
+  BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -61,7 +61,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/buttons', label: 'Buttons', icon: BsCursor },
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/library/admin', label: 'Admin', icon: BsGear },
-  { value: '/library/lifecycle', label: 'Keepalive & Reconnect', icon: BsArrowRepeat },
+  { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
 
@@ -69,6 +69,7 @@ const libraryFeatureTabs: TabOption[] = [
   { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
   { value: '/library/features/flash', label: 'Flash', icon: BsBoxArrowInDown },
+  { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
 ];
 
 const libraryReferenceTabs: TabOption[] = [

@@ -69,7 +69,7 @@ const Flash: Component = () => {
               serial link.
             </li>
             <li>
-              Hand off to <code>esptool</code>, Espressif's flashing tool for these chips, which writes
+              Hand off to <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>, <a href="https://www.espressif.com" target="_blank" rel="noreferrer">Espressif</a>'s flashing tool for these chips, which writes
               the image.
             </li>
           </ol>
@@ -103,6 +103,13 @@ medius::flash("/dev/ttyACM0", "device.bin", false)?;`}</code></pre>
               <A href="/library/admin#reboot"><code>reboot</code></A> for the full set of{' '}
               <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> targets, and{' '}
               <A href="/library/types#errors"><code>Error</code></A> for the rest of the error enum.
+            </p>
+          </div>
+          <div class="callout callout--info">
+            <p>
+              The other features are <A href="/library/features/async"><code>async</code></A>,{' '}
+              <A href="/library/features/mock"><code>mock</code></A>, and{' '}
+              <A href="/library/features/tracing"><code>tracing</code></A>.
             </p>
           </div>
         </Card>

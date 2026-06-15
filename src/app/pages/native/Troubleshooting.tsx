@@ -22,7 +22,7 @@ const Troubleshooting: Component = () => {
 
       <div id="no-reply" data-search-target>
         <Card>
-          <CardHeader title="No reply to QUERY(VERSION)" />
+          <CardHeader title="No reply to QUERY(VERSION)" subtitle="Wrong baud, a held port, or not a Medius box" />
           <p>
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> asks for the
             firmware and protocol version; the reply is a{' '}
@@ -51,7 +51,7 @@ const Troubleshooting: Component = () => {
 
       <div id="no-injection" data-search-target>
         <Card>
-          <CardHeader title="Injection does nothing" />
+          <CardHeader title="Injection does nothing" subtitle="Check HEALTH before you rely on it" />
           <p>
             <A href="/native/injection">Injection</A> is the input your program adds on top of the
             real mouse's passthrough (movement, buttons, scroll). If it has no effect, send{' '}
@@ -67,7 +67,7 @@ const Troubleshooting: Component = () => {
 
       <div id="button-stuck-release" data-search-target>
         <Card>
-          <CardHeader title="A held button releases on its own" />
+          <CardHeader title="A held button releases on its own" subtitle="The silence auto-clear dropped it" />
           <p>
             The box clears all injection if your program goes quiet, so input can't get stuck.
           </p>
@@ -95,7 +95,7 @@ const Troubleshooting: Component = () => {
 
       <div id="shutdown" data-search-target>
         <Card>
-          <CardHeader title="A machine shuts off or drains its battery" />
+          <CardHeader title="A machine shuts off or drains its battery" subtitle="USB1 and USB3 on the same machine" />
           <p>
             <A href="/native/hardware"><code>USB1</code></A> and{' '}
             <A href="/native/hardware"><code>USB3</code></A> share one internal rail, and the{' '}
@@ -124,7 +124,7 @@ const Troubleshooting: Component = () => {
 
       <div id="port-gone" data-search-target>
         <Card>
-          <CardHeader title="The serial port disappeared after a REBOOT" />
+          <CardHeader title="The serial port disappeared after a REBOOT" subtitle="The chip is in ROM download mode" />
           <p>
             A download <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>{' '}
             (<code>target</code> <code>0</code> or <code>1</code>) drops a chip into ROM download mode,
@@ -137,7 +137,7 @@ const Troubleshooting: Component = () => {
 
       <div id="no-logs" data-search-target>
         <Card>
-          <CardHeader title="No LOG frames arrive" />
+          <CardHeader title="No LOG frames arrive" subtitle="Only sent while a control PC is attached" />
           <p>
             <A href="/native/commands/admin#log"><code>LOG</code></A> is the box's unsolicited
             diagnostic frame (box to PC). If none arrive, check:

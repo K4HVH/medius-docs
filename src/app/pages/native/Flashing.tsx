@@ -35,7 +35,7 @@ const Flashing: Component = () => {
               <tr>
                 <td><A href="/native/architecture">Device chip</A></td>
                 <td><code>target = 0</code></td>
-                <td>The same <A href="/native/transport">CH343</A> serial link, with <code>esptool</code>.</td>
+                <td>The same <A href="/native/transport">CH343</A> serial link, with <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>.</td>
               </tr>
               <tr>
                 <td><A href="/native/architecture">Host chip</A></td>

@@ -69,7 +69,7 @@ const Admin: Component = () => {
           <p>
             The <code>Download</code> variants only enter flashing mode; they don't move any bytes. To
             write firmware, use the <A href="/library/features/flash"><code>flash</code></A> feature,
-            which hands off to <code>esptool</code>. See also <A href="/native/flashing">Flashing</A>.
+            which hands off to <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>. See also <A href="/native/flashing">Flashing</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.reboot(RebootTarget::DeviceRun)?;`}</code></pre>

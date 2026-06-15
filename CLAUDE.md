@@ -155,6 +155,7 @@ Library method sections (gold reference: `library/Movement.tsx`): `pre.api-signa
 - **`api-badge`** spans, one under each signature. `--executed` (green) is instant: "Fire-and-forget" when it sends a frame and expects no reply, "No round-trip" when it touches no wire at all (type conversions, port scans, `logs`/`counters`). `--responded` (blue) "Blocks" waits for the box's reply ("Returns RESP" / "Reply" on native). `--warning` (yellow) "Unsolicited".
 - **`api-params`** on parameter/reference tables; **`byte-table`** for wire/byte-layout tables (columns Offset / Field / Type / Notes).
 - **`callout`** divs (`--info`, `--warning`, `--danger`) for notes.
+- **Links.** Internal navigation uses the router `<A href="/...">`. Anything external (a crate, tool, chip, spec, std type) uses a plain `<a href="https://..." target="_blank" rel="noreferrer">` instead. Link the first prose mention per page; never inside a `<pre>`, never nested inside another link, and use a fixed URL (e.g. crates.io for a crate). When a word is already an internal `<A>` link, leave it; do not wrap an external `<a>` around or inside it.
 - **`diagram`** on `<pre>` for ASCII byte/flow diagrams. Byte breakdowns are fixed-width grids: each cell is exactly 8 chars (`+--------+` ASCII borders), byte on the top row, field label beneath, so columns can never drift. Verify with a script that every line in a grid is the same length.
 
 ### Mobile Considerations

@@ -11,7 +11,7 @@ const Introduction: Component = () => {
         <p>
           A Medius box plugs inline between a mouse and a PC. The real mouse passes through, and
           your program sends movement, buttons, and scroll over a USB-serial link. The{' '}
-          <code>medius</code> crate drives that link from Rust.
+          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate drives that link from Rust.
         </p>
         <p>
           It is a 1:1 binding of the firmware's <A href="/native/frame">frames</A> (the packets the
@@ -50,16 +50,16 @@ const Introduction: Component = () => {
               <td><code>0.1.0</code></td>
             </tr>
             <tr>
-              <td>Edition</td>
+              <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
               <td><code>2024</code></td>
             </tr>
             <tr>
-              <td>MSRV (minimum supported Rust version)</td>
+              <td><a href="https://doc.rust-lang.org/cargo/reference/rust-version.html" target="_blank" rel="noreferrer">MSRV</a> (minimum supported Rust version)</td>
               <td><code>1.85</code></td>
             </tr>
             <tr>
               <td>License</td>
-              <td><code>MIT</code></td>
+              <td><a href="https://opensource.org/license/mit" target="_blank" rel="noreferrer"><code>MIT</code></a></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -101,10 +101,10 @@ const Introduction: Component = () => {
               </tr>
               <tr>
                 <td><A href="/library/features/flash"><code>flash</code></A></td>
-                <td><code>esptool</code> firmware flashing.</td>
+                <td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a> firmware flashing.</td>
               </tr>
               <tr>
-                <td><code>tracing</code></td>
+                <td><A href="/library/features/tracing"><code>tracing</code></A></td>
                 <td>Tracing instrumentation across the connection lifecycle.</td>
               </tr>
             </tbody>
@@ -199,7 +199,7 @@ device.wheel(3)?;`}</code></pre>
             </A>
             <A href="/library/diagnostics" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Logs & counters" />
+                <CardHeader title="Logs & counters" subtitle="logs, counters" />
               </Card>
             </A>
           </div>
@@ -223,6 +223,11 @@ device.wheel(3)?;`}</code></pre>
             <A href="/library/features/flash" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="flash" subtitle="esptool flashing" />
+              </Card>
+            </A>
+            <A href="/library/features/tracing" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="tracing" subtitle="Structured diagnostics" />
               </Card>
             </A>
           </div>
