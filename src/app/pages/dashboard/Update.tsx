@@ -180,8 +180,13 @@ const Update = () => {
                 when={dash.status() === 'connected'}
                 fallback={
                   <>
-                    <div class="callout callout--info">Done. Plug back in normally, then reconnect.</div>
+                    <div class="callout callout--info">
+                      Installed. Connect to check it - if it doesn't respond, power-cycle the box first.
+                    </div>
                     <PortDiagram plug={['usb1', 'usb2']} />
+                    <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
+                      Connect
+                    </Button>
                   </>
                 }
               >
