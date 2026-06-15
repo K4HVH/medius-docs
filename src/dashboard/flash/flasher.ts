@@ -15,7 +15,11 @@ import {
 } from './types';
 
 const ROM_SETTLE_MS = 2000;
-const FLASH_BAUD = 921600;
+
+// The main chip flashes over the CH343 UART (0x1a86) and can go fast. The
+// mouse-side chip flashes over the ESP native USB (0x303a), which ignores the
+// serial baud and breaks on a baud change, so keep the ROM baud there.
+const flashBaud = (port: SerialPort) => (port.getInfo().usbVendorId === 0x303a ? 115200 : 921600);
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -40,7 +44,7 @@ async function runEsptool(
     writeLine: (d) => onLog?.(d),
   };
   const transport = new Transport(port, false);
-  const loader = new ESPLoader({ transport, baudrate: FLASH_BAUD, terminal });
+  const loader = new ESPLoader({ transport, baudrate: flashBaud(port), terminal });
   try {
     onProgress?.({ phase: 'connecting' });
     await loader.main('no_reset');
