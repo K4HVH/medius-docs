@@ -81,7 +81,7 @@ const Advanced = () => {
       if (!img) return setErr('No image selected.');
       const ok = await dash.flashNative(port, img, kind());
       if (ok) setDone(true);
-      else setErr('That did not finish. Hold BOOT and try again.');
+      else setErr(dash.error() ?? 'That did not finish. Hold BOOT and try again.');
     } catch (e) {
       if (!isUserCancel(e)) setErr((e as Error).message);
     } finally {

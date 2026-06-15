@@ -64,7 +64,7 @@ const Update = () => {
     try {
       const ok = await dash.flashDevice(await downloadAsset(a), 'app');
       if (ok) setStep(alsoMouse() ? 'mouse' : 'done');
-      else setErr('That did not finish. Power-cycle and try again, or use Advanced.');
+      else setErr(dash.error() ?? 'That did not finish. Power-cycle and try again.');
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -82,7 +82,7 @@ const Update = () => {
       const port = await requestRomPort();
       const ok = await dash.flashNative(port, await downloadAsset(a), 'app');
       if (ok) setStep('done');
-      else setErr('That did not finish. Try again, or use Advanced.');
+      else setErr(dash.error() ?? 'That did not finish. Hold BOOT and try again.');
     } catch (e) {
       if (!isUserCancel(e)) setErr((e as Error).message);
     } finally {
