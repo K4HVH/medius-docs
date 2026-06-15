@@ -7,72 +7,178 @@ const Admin: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Admin" subtitle="Reset injection, reboot a chip" />
+        <CardHeader title="Admin" subtitle="Reboot a chip and return to passthrough" />
         <p>
-          <A href="/library/admin#reset"><code>reset</code></A> wipes everything your program has
-          injected. <A href="/library/admin#reboot"><code>reboot</code></A> restarts one of the box's
-          two chips. Both are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: the call
-          sends one frame and returns; the box sends nothing back.
+          Box-maintenance calls: <A href="/library/admin#reboot"><code>reboot</code></A> restarts one
+          of the two chips, <A href="/library/admin#reset"><code>reset</code></A> drops the box back to{' '}
+          <A href="/native/injection">passthrough</A>. Both are{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>: send one frame, no reply.
+        </p>
+        <pre><code>cargo add medius</code></pre>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code>{`use medius::Device;
+
+let device = Device::find()?;   // first box on the system, handshake done
+device.reset()?;                // back to passthrough`}</code></pre>
+        <p>
+          <A href="/library/connection#open"><code>find</code></A> opens the first box; related calls{' '}
+          <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
+          <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> are on the{' '}
+          <A href="/library/lifecycle">Lifecycle</A> page.
         </p>
       </Card>
 
       <div id="reset" data-search-target>
         <Card>
-          <CardHeader title="reset" subtitle="Clear all injection" />
+          <CardHeader title="reset" subtitle="Clear all injection, return to passthrough" />
           <pre class="api-signature">fn reset(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+
           <div class="api-response-label">EFFECT</div>
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>What reset does</th></tr>
             </thead>
             <tbody>
-              <tr><td>Accumulator</td><td>Zeroed. This is the box's running total of injected motion and scroll not yet emitted to the PC.</td></tr>
-              <tr><td>Overrides</td><td>All released. An override is a per-button decision to hold a button down or up.</td></tr>
+              <tr>
+                <td>Box accumulator</td>
+                <td>Zeroed. This is the box's running total of injected motion and scroll not yet emitted to the PC.</td>
+              </tr>
+              <tr>
+                <td>Box overrides</td>
+                <td>All released. An <A href="/library/buttons">override</A> is a per-button decision to hold a button down or up.</td>
+              </tr>
+              <tr>
+                <td>Library held-state</td>
+                <td>Cleared. The library forgets which overrides it was holding, so a later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing.</td>
+              </tr>
             </tbody>
           </table>
+
           <p>
-            Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame, returning the
-            box to pure <A href="/native/injection">passthrough</A> (the real mouse flowing to the PC
-            untouched, with nothing of yours added). Afterward the box behaves as if your program had
-            injected nothing.
+            Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame and clears
+            the library's held state. Afterward the box behaves as if nothing was injected.
           </p>
+
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.reset()?;`}</code></pre>
+          <pre><code>{`use medius::Button;
+
+device.move_rel(40, 0)?;        // nudge the cursor 40 right
+device.press(Button::Left)?;    // hold left down
+device.soft_release(Button::Left)?;
+
+device.reset()?;                // drop all of the above, back to passthrough`}</code></pre>
         </Card>
       </div>
 
       <div id="reboot" data-search-target>
         <Card>
-          <CardHeader title="reboot" subtitle="Restart or flash-mode a chip" />
+          <CardHeader title="reboot" subtitle="Restart or download-mode one of the two chips" />
           <pre class="api-signature">fn reboot(&self, target: RebootTarget) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Sends one <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> frame. The box has
-            two chips: the device chip (the one your program talks to over serial) and the host chip
-            (the one facing the PC as the cloned mouse).{' '}
-            <A href="/library/types#enums"><code>RebootTarget</code></A> picks which chip restarts and
-            whether it runs firmware or enters flashing mode:
+            <A href="/library/types/enums#reboot-target"><code>RebootTarget</code></A> picks the chip and whether it
+            comes back running its firmware or in download mode; the four variants and their bytes are
+            on <A href="/library/types/enums">Types</A>.
           </p>
-          <div class="api-response-label">TARGETS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Variant</th><th>Effect</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>DeviceDownload</code></td><td>Restart the device chip into flashing mode, ready to take new firmware over the serial link.</td></tr>
-              <tr><td><code>HostDownload</code></td><td>Restart the host chip into flashing mode, ready to take new firmware over its own USB.</td></tr>
-              <tr><td><code>DeviceRun</code></td><td>Restart the device chip and run its firmware normally.</td></tr>
-              <tr><td><code>HostRun</code></td><td>Restart the host chip and run its firmware normally.</td></tr>
-            </tbody>
-          </table>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::RebootTarget;
+
+device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to`}</code></pre>
+
+          <div class="callout callout--warning">
+            <p>
+              A <code>Download</code> variant leaves the chip in ROM download mode: it stops acting
+              as a mouse and stops answering until reflashed or power-cycled. Don't send one unless
+              you're about to flash.
+            </p>
+          </div>
+
+          <div class="callout callout--info">
+            <p>
+              Rebooting the device chip drops the serial link, so the call can return <code>Ok</code>{' '}
+              as the connection goes away. The reader thread auto-reconnects, or force it with{' '}
+              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
+            </p>
+          </div>
+        </Card>
+      </div>
+
+      <div id="reboot-and-flash" data-search-target>
+        <Card>
+          <CardHeader title="Reboot and flashing" subtitle="Why you rarely call the Download variants by hand" />
           <p>
-            The <code>Download</code> variants only enter flashing mode; they don't move any bytes. To
-            write firmware, use the <A href="/library/features/flash"><code>flash</code></A> feature,
-            which hands off to <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>. See also <A href="/native/flashing">Flashing</A>.
+            The <A href="/library/features/flash"><code>flash</code></A> feature already issues the
+            download reboot, waits for the ROM loader, then hands off to{' '}
+            <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>{' '}
+            (<A href="/native/flashing">native side</A>). Doing both reboots twice.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.reboot(RebootTarget::DeviceRun)?;`}</code></pre>
+          <pre><code>{`// don't do this: flash() already does the download reboot
+device.reboot(RebootTarget::DeviceDownload)?;
+medius::flash("/dev/ttyACM0", "device.bin", false)?;
+
+// do this: one call, false picks the device chip
+medius::flash("/dev/ttyACM0", "device.bin", false)?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="async" data-search-target>
+        <Card>
+          <CardHeader title="On AsyncDevice" subtitle="Still fire-and-forget, no await" />
+          <p>
+            <A href="/library/features/async"><code>AsyncDevice</code></A> re-exposes{' '}
+            <code>reset</code> and <code>reboot</code> unchanged: they expect no reply, so no{' '}
+            <code>.await</code> and no{' '}
+            <a href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html" target="_blank" rel="noreferrer"><code>block_on</code></a>.
+            Only the queries are async.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::{AsyncDevice, RebootTarget};
+
+let device = AsyncDevice::open("/dev/ttyACM0")?;
+device.reset()?;                          // sync, no await
+device.reboot(RebootTarget::HostRun)?;    // sync, no await`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="complete-example" data-search-target>
+        <Card>
+          <CardHeader title="Complete example" subtitle="Connect, inject, reset, reboot" />
+          <pre><code>cargo add medius</code></pre>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::{Button, Device, RebootTarget};
+
+fn main() -> medius::Result<()> {
+    let device = Device::find()?;
+
+    let version = device.query_version()?;
+    let health = device.query_health()?;
+    println!("connected: {version}");
+    println!("link_up={} mouse_attached={}", health.link_up, health.mouse_attached);
+
+    // inject something
+    device.move_rel(40, 0)?;
+    device.press(Button::Left)?;
+    device.soft_release(Button::Left)?;
+
+    // and undo it: back to pure passthrough
+    device.reset()?;
+    println!("counters: {:?}", device.counters());
+
+    // restart the device chip; this drops the serial link we're on
+    device.reboot(RebootTarget::DeviceRun)?;
+    Ok(())
+}`}</code></pre>
+          <div class="callout callout--info">
+            <p>
+              No hardware? With the <A href="/library/features/mock"><code>mock</code></A> feature,
+              swap <code>Device::find()?</code> for{' '}
+              <code>Device::with_mock(medius::MockBox::new())</code> and the same calls run against a
+              fake box.
+            </p>
+          </div>
         </Card>
       </div>
     </>

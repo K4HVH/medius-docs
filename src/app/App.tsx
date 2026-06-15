@@ -30,6 +30,10 @@ import FeatMock from './pages/library/features/Mock';
 import FeatFlash from './pages/library/features/Flash';
 import FeatTracing from './pages/library/features/Tracing';
 import LibTypes from './pages/library/TypesAndErrors';
+import LibTypesEnums from './pages/library/types/Enums';
+import LibTypesStructs from './pages/library/types/Structs';
+import LibTypesFrames from './pages/library/types/Frames';
+import LibTypesErrors from './pages/library/types/Errors';
 
 const App: Component = () => {
   return (
@@ -64,6 +68,10 @@ const App: Component = () => {
           <Route path="/library/features/flash" component={FeatFlash} />
           <Route path="/library/features/tracing" component={FeatTracing} />
           <Route path="/library/types" component={LibTypes} />
+          <Route path="/library/types/enums" component={LibTypesEnums} />
+          <Route path="/library/types/structs" component={LibTypesStructs} />
+          <Route path="/library/types/frames" component={LibTypesFrames} />
+          <Route path="/library/types/errors" component={LibTypesErrors} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
       </Router>

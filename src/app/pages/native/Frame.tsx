@@ -24,7 +24,7 @@ const Frame: Component = () => {
               <tr><td><code>TYPE</code></td><td>1</td><td>the opcode</td></tr>
               <tr><td><code>SEQ</code></td><td>1</td><td>per-frame sequence number</td></tr>
               <tr><td><code>LEN</code></td><td>2</td><td>payload byte count, little-endian</td></tr>
-              <tr><td><code>PAYLOAD</code></td><td>0–512</td><td>the command's data; empty for argument-free commands</td></tr>
+              <tr><td><code>PAYLOAD</code></td><td>0-512</td><td>the command's data; empty for argument-free commands</td></tr>
               <tr><td><code>CRC16</code></td><td>2</td><td>checksum over the frame body</td></tr>
             </tbody>
           </table>
@@ -71,9 +71,9 @@ const Frame: Component = () => {
               <tr><td><code>0x03</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
               <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>0 bytes</td><td>none</td></tr>
               <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 byte</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
-              <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>—</td></tr>
+              <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-              <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>—</td></tr>
+              <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
         </Card>

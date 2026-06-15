@@ -65,7 +65,7 @@ const Quickstart: Component = () => {
             <li>
               On first contact the box sends one{' '}
               <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> on its own,
-              with <A href="/native/frame#seq"><code>SEQ</code></A> <code>0</code> — treat it as a
+              with <A href="/native/frame#seq"><code>SEQ</code></A> <code>0</code>, your
               ready signal. Or send{' '}
               <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> yourself.
             </li>

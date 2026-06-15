@@ -57,7 +57,7 @@ const Buttons: Component = () => {
             <A href="/library/buttons#methods"><code>press</code> / <code>soft_release</code> / <code>force_release</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Press Left — <code>id</code> <code>0x00</code>, <code>action</code> <code>0x01</code>:</p>
+          <p>Press Left, <code>id</code> <code>0x00</code>, <code>action</code> <code>0x01</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 03     | 00     | 02 00  | 00     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+

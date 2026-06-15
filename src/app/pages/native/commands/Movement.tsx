@@ -69,7 +69,7 @@ const Movement: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>delta</code></td><td><code>i16</code></td><td>scroll steps; + = up, − = down, little-endian</td></tr>
+              <tr><td>0</td><td><code>delta</code></td><td><code>i16</code></td><td>scroll steps; + = up, - = down, little-endian</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
