@@ -1,4 +1,5 @@
-import { Match, Show, Switch, createEffect, createResource, createSignal } from 'solid-js';
+/// <reference types="w3c-web-serial" />
+import { Match, Show, Switch, createEffect, createResource, createSignal, onCleanup } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
@@ -12,7 +13,7 @@ import { PortDiagram } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
-type Step = 'choose' | 'main' | 'mouse' | 'done';
+type Step = 'choose' | 'main' | 'grantMain' | 'mouse' | 'done';
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
@@ -28,10 +29,25 @@ const Update = () => {
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
   const [unplugged, setUnplugged] = createSignal(false);
+  // The control port held across the main-chip reboot, reused to reconnect/verify
+  // and to resume if the ESP32 port grant is canceled.
+  const [mainCtrl, setMainCtrl] = createSignal<SerialPort | null>(null);
 
   // Reset the unplug gate each time we enter the mouse-side step.
   createEffect(() => {
     if (step() === 'mouse') setUnplugged(false);
+  });
+
+  // While the main chip sits in update mode awaiting its port, warn before a
+  // refresh/close that would strand it (it would then need a power-cycle).
+  createEffect(() => {
+    if (step() !== 'grantMain') return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    onCleanup(() => window.removeEventListener('beforeunload', handler));
   });
 
   const latest = () => releases()?.[0] ?? null;
@@ -51,32 +67,41 @@ const Update = () => {
   const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
     dash.clearFlashResult();
+    setMainCtrl(null);
     setAlsoMouse(mode === 'both');
     setStep(mode === 'mouse' ? 'mouse' : 'main');
   };
 
-  const installMain = async () => {
+  // Main-chip update. First call reboots the chip into update mode over the
+  // control cable; `resume` re-runs the port grant + flash without rebooting
+  // again (the chip is already in download), used after a canceled port grant.
+  const flashMain = async (resume: boolean) => {
     setErr(null);
     dash.clearFlashResult();
     const a = deviceAsset();
     if (!a) return setErr('No main-chip update in this release.');
     setBusy(true);
     try {
-      // Reboot the main chip into update mode over the control cable, flash it
-      // over its own USB (where the reset works), then reconnect and verify.
-      const ctrlPort = await dash.rebootDeviceToDownload();
+      let ctrlPort = mainCtrl();
+      if (!resume || !ctrlPort) {
+        ctrlPort = await dash.rebootDeviceToDownload();
+        setMainCtrl(ctrlPort);
+      }
+      // Show the update-mode screen so a canceled or slow port grant has a clear
+      // home (with a deliberate retry) instead of a dead end.
+      setStep('grantMain');
       const romPort = await requestRomPort();
       const image = await downloadAsset(a);
       const ok = await dash.flashDeviceNative(romPort, ctrlPort, image, 'app');
-      if (ok) setStep(alsoMouse() ? 'mouse' : 'done');
-      else setErr(dash.error() ?? 'That did not finish. Power-cycle the box and try again.');
-    } catch (e) {
-      if (isUserCancel(e)) {
-        await dash.disconnect();
-        setErr('Update canceled. The box is in update mode — power-cycle it (USB1), then reconnect.');
+      if (ok) {
+        setMainCtrl(null);
+        setStep(alsoMouse() ? 'mouse' : 'done');
       } else {
-        setErr((e as Error).message);
+        setErr(dash.error() ?? 'That did not finish. Pick the port to retry, or power-cycle the box.');
       }
+    } catch (e) {
+      // A canceled port grant leaves us on grantMain to retry; surface real errors.
+      if (!isUserCancel(e)) setErr((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -166,10 +191,20 @@ const Update = () => {
                 }
               >
                 <p style={muted}>When the browser asks, pick the ESP32-S3 port.</p>
-                <Button variant="primary" disabled={busy()} onClick={() => void installMain()}>
+                <Button variant="primary" disabled={busy()} onClick={() => void flashMain(false)}>
                   Install
                 </Button>
               </Show>
+            </Match>
+
+            <Match when={step() === 'grantMain'}>
+              <p><strong>The box is in update mode.</strong> Pick the ESP32-S3 port to finish.</p>
+              <Button variant="primary" disabled={busy()} onClick={() => void flashMain(true)}>
+                {busy() ? 'Waiting for the port…' : 'Pick ESP32-S3 port'}
+              </Button>
+              <p style={muted}>
+                Changed your mind? Power-cycle the box (unplug and replug USB1) to leave it as it was.
+              </p>
             </Match>
 
             <Match when={step() === 'mouse'}>
@@ -208,7 +243,7 @@ const Update = () => {
                   </Show>
                 </div>
               </Show>
-              <Button variant="secondary" onClick={() => { setStep('choose'); dash.clearFlashResult(); }}>
+              <Button variant="secondary" onClick={() => { setStep('choose'); setMainCtrl(null); dash.clearFlashResult(); }}>
                 Finish
               </Button>
             </Match>

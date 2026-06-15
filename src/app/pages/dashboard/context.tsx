@@ -225,13 +225,14 @@ export const DashboardProvider: ParentComponent = (props) => {
     stopHealthPolling();
     setError(null);
     setFlashLog([]);
-    setFlashProgress({ phase: 'rebooting' });
-    setStatus('flashing');
     setLink(null);
     setVersion(null);
     setHealth(null);
     await l.reboot(RebootTarget.DeviceDownload);
     await l.close();
+    // The control link is down and the chip is in ROM download; report it as
+    // disconnected (not flashing) so the UI can show the port-grant step.
+    setStatus('disconnected');
     return ctrlPort;
   };
 
@@ -243,6 +244,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     image: Uint8Array,
     kind: FlashKind,
   ): Promise<boolean> => {
+    if (status() === 'flashing') return false;
     setError(null);
     setFlashLog([]);
     setFlashProgress({ phase: 'connecting' });
