@@ -39,6 +39,7 @@ export interface DashboardContextValue {
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
   flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<void>;
+  clearFlashResult: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue>();
@@ -157,9 +158,12 @@ export const DashboardProvider: ParentComponent = (props) => {
     setVersion(null);
     setHealth(null);
     setError(null);
+    setFlashProgress(null);
     setStatus('disconnected');
     if (l) await l.close();
   };
+
+  const clearFlashResult = () => setFlashProgress(null);
 
   const flashDevice = async (image: Uint8Array, kind: FlashKind) => {
     if (status() === 'flashing') return;
@@ -225,6 +229,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     flashProgress,
     flashLog,
     flashDevice,
+    clearFlashResult,
   };
 
   return <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>;
