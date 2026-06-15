@@ -205,10 +205,6 @@ const Update = () => {
                       Set up a new box
                     </Button>
                   </div>
-                  <p style={muted}>
-                    Setting it up for the first time, or fixing a box that stopped responding?
-                    Set it up to install Medius.
-                  </p>
                 </Match>
                 <Match when={dash.status() === 'connected'}>
                   <p>
@@ -245,7 +241,6 @@ const Update = () => {
                   <p style={muted}>Not connected. <A href="/dashboard">Connect first</A>.</p>
                 }
               >
-                <p style={muted}>When the browser asks, pick the ESP32-S3 port.</p>
                 <Button variant="primary" disabled={busy()} onClick={() => void flashMain(false)}>
                   Install
                 </Button>
@@ -257,9 +252,7 @@ const Update = () => {
               <Button variant="primary" disabled={busy()} onClick={() => void flashMain(true)}>
                 {busy() ? 'Waiting for the port...' : 'Pick ESP32-S3 port'}
               </Button>
-              <p style={muted}>
-                Changed your mind? Power-cycle the box (unplug and replug USB1) to leave it as it was.
-              </p>
+              <p style={muted}>Or power-cycle the box (unplug and replug USB1) to cancel.</p>
             </Match>
 
             <Match when={step() === 'mouse'}>
@@ -277,12 +270,11 @@ const Update = () => {
             </Match>
 
             <Match when={step() === 'setupMain'}>
-              <p>Installs Medius from scratch. Two chips, one at a time.</p>
+              <p><strong>Step 1 of 2: main chip.</strong></p>
               <Show
                 when={unplugged()}
                 fallback={<UnplugWatch autoWatch={false} onUnplugged={() => setUnplugged(true)} />}
               >
-                <p><strong>Step 1 of 2: main chip.</strong> Plug in like this.</p>
                 <PortDiagram plug={['usb1']} boot="main" />
                 <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                   <Button variant="primary" disabled={busy()} onClick={() => void setupMain()}>
@@ -296,12 +288,11 @@ const Update = () => {
             </Match>
 
             <Match when={step() === 'setupMouse'}>
-              <p>Main chip done.</p>
+              <p><strong>Step 2 of 2: mouse-side chip.</strong></p>
               <Show
                 when={unplugged()}
                 fallback={<UnplugWatch autoWatch={false} onUnplugged={() => setUnplugged(true)} />}
               >
-                <p><strong>Step 2 of 2: mouse-side chip.</strong> Plug in like this.</p>
                 <PortDiagram plug={['usb3']} boot="mouse" />
                 <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
                 <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
@@ -320,12 +311,8 @@ const Update = () => {
                 when={dash.status() === 'connected'}
                 fallback={
                   <>
-                    <div class="callout callout--info">
-                      Firmware installed. To use the box, plug your mouse into USB3 and cable USB1
-                      and USB2 to your PC.
-                    </div>
+                    <div class="callout callout--info">Firmware installed. Plug in like this.</div>
                     <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
-                    <p style={muted}>Then connect to check the box still answers.</p>
                   </>
                 }
               >
