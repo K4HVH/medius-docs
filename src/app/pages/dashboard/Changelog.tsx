@@ -38,11 +38,11 @@ const Notes = (props: { notes: string }) => {
     <For each={blocks()}>
       {(b) =>
         b.kind === 'list' ? (
-          <ul style={{ margin: 'var(--g-spacing-xs) 0', 'padding-left': 'var(--g-spacing)' }}>
+          <ul style={{ margin: 'var(--g-spacing-xs) 0 0', 'padding-left': 'var(--g-spacing)' }}>
             <For each={b.items}>{(it) => <li>{it}</li>}</For>
           </ul>
         ) : (
-          <p>{b.text}</p>
+          <p style={{ margin: 'var(--g-spacing-xs) 0 0' }}>{b.text}</p>
         )
       }
     </For>
@@ -50,7 +50,7 @@ const Notes = (props: { notes: string }) => {
 };
 
 const Release = (props: { release: FirmwareRelease }) => (
-  <div style={{ 'padding-bottom': 'var(--g-spacing)' }}>
+  <div>
     <div style={{ display: 'flex', 'align-items': 'baseline', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
       <strong style={{ 'font-size': 'var(--font-size-lg)' }}>{props.release.tag}</strong>
       <Show when={props.release.prerelease}>
@@ -83,7 +83,9 @@ const Changelog = () => {
           <p>No releases yet.</p>
         </Match>
         <Match when={releases()}>
-          <For each={releases()}>{(r) => <Release release={r} />}</For>
+          <div style={{ display: 'flex', 'flex-direction': 'column', gap: 'var(--g-spacing)' }}>
+            <For each={releases()}>{(r) => <Release release={r} />}</For>
+          </div>
         </Match>
       </Switch>
     </Card>
