@@ -22,7 +22,7 @@ const Mock: Component = () => {
         <Card>
           <CardHeader title="Usage" subtitle="Wrap a MockBox in a Device" />
           <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
@@ -31,6 +31,7 @@ const Mock: Component = () => {
             <A href="/library/connection"><code>Device</code></A> you drive with the normal API.
           </p>
 
+          <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
             <thead>
               <tr>

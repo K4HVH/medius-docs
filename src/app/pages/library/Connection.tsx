@@ -25,11 +25,12 @@ const Connection: Component = () => {
           <pre class="api-signature">fn find() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Auto-detect matches on USB identity: vendor ID <code>0x1A86</code>, product ID{' '}
             <code>0x55D3</code>.
           </p>
+          <div class="api-response-label">FUNCTIONS</div>
           <table class="api-params">
             <thead>
               <tr>
@@ -99,29 +100,16 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
             <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> the moment its
             link comes up, the boot hello, so the handshake usually settles on the first attempt.
           </p>
-          <div class="api-response-label">FAILURES</div>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Error</th>
-                <th>Cause</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><A href="/library/types#errors"><code>Error::NoReply</code></A></td>
-                <td>No <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> within all 5 attempts.</td>
-              </tr>
-              <tr>
-                <td><A href="/library/types#errors"><code>Error::BadProtoVer {`{ got }`}</code></A></td>
-                <td>Replied, but <code>proto_ver != 1</code>; <code>got</code> carries the value.</td>
-              </tr>
-              <tr>
-                <td><A href="/library/types#errors"><code>Error::Io</code></A></td>
-                <td>The serial open or read itself failed.</td>
-              </tr>
-            </tbody>
-          </table>
+          <p>
+            The handshake fails with{' '}
+            <A href="/library/types#errors"><code>NoReply</code></A> when no{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> lands within the
+            five attempts,{' '}
+            <A href="/library/types#errors"><code>BadProtoVer {`{ got }`}</code></A> when the box
+            replies with <code>proto_ver != 1</code> (<code>got</code> carries the value), or{' '}
+            <A href="/library/types#errors"><code>Io</code></A> when the serial open or read itself
+            fails. All three are on <A href="/library/types#errors">Errors</A>.
+          </p>
         </Card>
       </div>
 

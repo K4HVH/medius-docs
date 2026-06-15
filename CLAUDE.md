@@ -115,6 +115,13 @@ Each fact set lives in exactly ONE place; every other page links to it, it does 
 - Frame layout: only on `Frame.tsx` (`#layout`).
 - Opcode list: only on `Frame.tsx` (`#opcodes`).
 - Chip roles: only on `Architecture.tsx`; elsewhere link the words "device chip" / "host chip".
+
+Library enum/struct semantics live on the METHOD page that uses them; `library/types` summarizes and links, it does not re-table them:
+- `RebootTarget` effects: only on `library/Admin.tsx` (`#reboot`).
+- `ButtonAction` effects: only on `library/Buttons.tsx` (`#methods`); `Button` ids: only on `library/Buttons.tsx` (`#button-arg`).
+- `Health` / `Version` fields: only on `library/Requests.tsx`. `CountersSnapshot`: only on `library/Diagnostics.tsx` (`#counters`). `LogLevel`: only on `library/Diagnostics.tsx` (`#logs`).
+- `Error` variants: only on `library/TypesAndErrors.tsx` (`#errors`); the handshake links there, it does not re-table the three handshake errors.
+
 If you need to reference one of these, link to it. Do not paste a second copy with different columns -- that is the inconsistency this repo kept fighting. Verify with a grep that the distinctive content (e.g. `>device download<`, `<th>Mask</th>`) appears in one file.
 
 ### Command section template
@@ -123,7 +130,7 @@ Every native opcode section uses the same element order (gold references: `comma
 
 `CardHeader` -> intro `<p>` (one sentence, ends "Opcode `0xNN`.") -> `pre.api-signature` -> badge `<p>` -> `PAYLOAD` label + `byte-table` (or `<p>No payload (...).</p>`) -> optional detail table (`ACTIONS`/`TARGETS`/`LEVELS`/`SELECTORS`/`FLAGS`) -> `EFFECT` label + `<p>` (ends "Library binding: ...") -> `EXAMPLE` label + `pre.diagram` byte grid.
 
-Library method sections: `pre.api-signature` (bare `fn name(...) -> T`) -> badge -> optional `PARAMETERS` table -> description `<p>` -> optional `<pre><code>` example. Gold reference: `library/Movement.tsx`.
+Library method sections (gold reference: `library/Movement.tsx`): `pre.api-signature` (bare `fn name(...) -> T`) -> badge `<p>` under each signature -> a primary table under its ALL-CAPS semantic label -> description `<p>` -> `EXAMPLE` label + `<pre><code>`. Every table in a method section carries a label, and every code example carries `EXAMPLE`. The label names what the table holds: `PARAMETERS` (args), `RETURNS` (a returned struct's fields), `EFFECT` (state changes), `ACTIONS`/`BUTTONS`/`TARGETS`/`LEVELS` (enum detail), `FUNCTIONS`/`CONSTRUCTORS`/`QUERIES` (a grouped section's calls). Index and concept cards (Introduction, the Types page, `Connection#handshake`/`#zero-config`, `Lifecycle#keepalive`) use unlabeled tables and are not method sections.
 
 ### Capitalization
 
@@ -144,8 +151,8 @@ Library method sections: `pre.api-signature` (bare `fn name(...) -> T`) -> badge
 
 - **Cards** for every section; the first card is the page header (title + subtitle via `CardHeader`). Subtitles are plain sentence-case noun phrases, no trailing period.
 - **`api-signature`** on `<pre>` for an opcode or method signature line only.
-- **`api-response-label`** divs for ALL-CAPS labels (PAYLOAD, EFFECT, EXAMPLE, PARAMETERS, ACTIONS, TARGETS, LEVELS, SELECTORS, FLAGS).
-- **`api-badge`** spans, one under each signature: `--executed` (green) "Fire-and-forget"; `--responded` (blue) "Returns RESP" / "Reply" / "Blocks"; `--warning` (yellow) "Unsolicited".
+- **`api-response-label`** divs for ALL-CAPS labels. Native: PAYLOAD, EFFECT, EXAMPLE, ACTIONS, TARGETS, LEVELS, SELECTORS, FLAGS. Library adds: PARAMETERS, RETURNS, FUNCTIONS, CONSTRUCTORS, QUERIES, BUTTONS.
+- **`api-badge`** spans, one under each signature. `--executed` (green) is instant: "Fire-and-forget" when it sends a frame and expects no reply, "No round-trip" when it touches no wire at all (type conversions, port scans, `logs`/`counters`). `--responded` (blue) "Blocks" waits for the box's reply ("Returns RESP" / "Reply" on native). `--warning` (yellow) "Unsolicited".
 - **`api-params`** on parameter/reference tables; **`byte-table`** for wire/byte-layout tables (columns Offset / Field / Type / Notes).
 - **`callout`** divs (`--info`, `--warning`, `--danger`) for notes.
 - **`diagram`** on `<pre>` for ASCII byte/flow diagrams. Byte breakdowns are fixed-width grids: each cell is exactly 8 chars (`+--------+` ASCII borders), byte on the top row, field label beneath, so columns can never drift. Verify with a script that every line in a grid is the same length.

@@ -26,15 +26,16 @@ const Async: Component = () => {
           <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
             <code>Result</code> is the library's fallible return type (see{' '}
             <A href="/library/types#errors">Errors</A>).
           </p>
 
+          <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
             <thead>
               <tr>
@@ -70,6 +71,7 @@ const Async: Component = () => {
             <A href="/native/commands/requests#resp"><code>RESP</code></A>.
           </p>
 
+          <div class="api-response-label">QUERIES</div>
           <table class="api-params">
             <thead>
               <tr>

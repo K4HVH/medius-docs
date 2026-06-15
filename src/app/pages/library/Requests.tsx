@@ -44,6 +44,7 @@ const Requests: Component = () => {
             formats it as <code>fw M.m.p</code>. No reply within the timeout yields{' '}
             <A href="/library/types#errors"><code>QueryTimeout</code></A>.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`let v = device.query_version()?;
 println!("{v}");`}</code></pre>
         </Card>
@@ -73,6 +74,7 @@ println!("{v}");`}</code></pre>
             <A href="/library/types#structs"><code>Health</code></A>, the status byte unpacked into four
             booleans. Confirms the chain (real mouse → box → PC) is live before you rely on injection.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`let h = device.query_health()?;
 if h.mouse_attached && h.clone_configured {
     // ready to inject
