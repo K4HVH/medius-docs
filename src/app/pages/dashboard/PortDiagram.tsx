@@ -8,10 +8,15 @@ const PORTS: { id: PortId; label: string; sub: string }[] = [
   { id: 'usb3', label: 'USB3', sub: 'Mouse' },
 ];
 
-// A compact picture of the box: ports to plug are lit, the rest dimmed, plus an
-// optional "hold BOOT" badge. The diagram carries the instruction; words don't.
-export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse' }) => {
+// A compact picture of the box: `plug` ports light green ("plug into PC"),
+// `mouse` ports light blue ("plug your mouse"), the rest dimmed, plus an optional
+// "hold BOOT" badge. The diagram carries the instruction; words don't.
+export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mouse?: PortId[] }) => {
   const on = (id: PortId) => props.plug.includes(id);
+  const isMouse = (id: PortId) => props.mouse?.includes(id) ?? false;
+  const lit = (id: PortId) => on(id) || isMouse(id);
+  const accent = (id: PortId) => (isMouse(id) ? 'var(--color-primary)' : 'var(--color-success)');
+  const note = (id: PortId) => (on(id) ? 'plug into PC' : isMouse(id) ? 'plug your mouse' : 'leave out');
   return (
     <div style={{ margin: 'var(--g-spacing) 0' }}>
       <div
@@ -41,11 +46,11 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse' }) 
                   'text-align': 'center',
                   padding: 'var(--g-spacing-sm)',
                   'border-radius': 'var(--g-radius)',
-                  border: `2px solid ${on(p.id) ? 'var(--color-success)' : 'var(--g-border-color-subtle)'}`,
-                  background: on(p.id)
-                    ? 'color-mix(in srgb, var(--color-success) 14%, transparent)'
+                  border: `2px solid ${lit(p.id) ? accent(p.id) : 'var(--g-border-color-subtle)'}`,
+                  background: lit(p.id)
+                    ? `color-mix(in srgb, ${accent(p.id)} 14%, transparent)`
                     : 'transparent',
-                  opacity: on(p.id) ? '1' : '0.5',
+                  opacity: lit(p.id) ? '1' : '0.5',
                 }}
               >
                 <div style={{ 'font-weight': '700' }}>{p.label}</div>
@@ -55,10 +60,10 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse' }) 
                     'margin-top': '4px',
                     'font-size': '0.8em',
                     'font-weight': '600',
-                    color: on(p.id) ? 'var(--color-success)' : 'var(--g-text-muted)',
+                    color: lit(p.id) ? accent(p.id) : 'var(--g-text-muted)',
                   }}
                 >
-                  {on(p.id) ? 'plug into PC' : 'leave out'}
+                  {note(p.id)}
                 </div>
               </div>
             )}

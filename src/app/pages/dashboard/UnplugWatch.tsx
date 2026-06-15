@@ -5,11 +5,15 @@ import { Button } from '../../../components/inputs/Button';
 // Gate before a mouse-side (USB3) flash. The browser fires a serial `disconnect`
 // when the box's USB2 device is removed, but it CANNOT see USB1 (the HID clone).
 // So: watch for the disconnect, hold the waiting screen a beat, then make the user
-// confirm USB1 is out too (USB1 + USB3 together can cause damage).
+// confirm USB1 is out too (USB1 + USB3 together can cause damage). When autoWatch
+// is false (a fresh setup, where no port was ever granted so no disconnect fires),
+// start straight at the manual confirm.
 const DELAY_MS = 1500;
 
-export const UnplugWatch = (props: { onUnplugged: () => void }) => {
-  const [phase, setPhase] = createSignal<'waiting' | 'confirm'>('waiting');
+export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolean }) => {
+  const [phase, setPhase] = createSignal<'waiting' | 'confirm'>(
+    props.autoWatch === false ? 'confirm' : 'waiting',
+  );
   const [ack, setAck] = createSignal(false);
   let scheduled = false;
 
