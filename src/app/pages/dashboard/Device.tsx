@@ -14,7 +14,13 @@ const healthItems = (h: Health) => [
   { label: 'Injection active', value: h.injectionActive },
 ];
 
-const col = { flex: '1 1 340px', 'min-width': '0' } as const;
+const col = {
+  flex: '1 1 340px',
+  'min-width': '0',
+  display: 'flex',
+  'flex-direction': 'column',
+  gap: 'var(--g-spacing)',
+} as const;
 
 const Device = () => {
   const dash = useDashboard();
