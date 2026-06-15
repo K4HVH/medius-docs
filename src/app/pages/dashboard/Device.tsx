@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch } from 'solid-js';
+import { For, Match, Show, Switch, createEffect } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -24,6 +24,20 @@ const col = {
 
 const Device = () => {
   const dash = useDashboard();
+
+  let logEl: HTMLPreElement | undefined;
+  let follow = true;
+
+  // Stay following only while the view is at (or near) the bottom.
+  const onLogScroll = () => {
+    if (logEl) follow = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight <= 24;
+  };
+
+  // Follow new lines like a terminal, unless the user has scrolled up.
+  createEffect(() => {
+    dash.deviceLog();
+    if (logEl && follow) logEl.scrollTop = logEl.scrollHeight;
+  });
 
   return (
     <>
@@ -109,6 +123,8 @@ const Device = () => {
                 <Button variant="subtle" size="compact" onClick={() => dash.clearDeviceLog()}>Clear</Button>
               </div>
               <pre
+                ref={logEl}
+                onScroll={onLogScroll}
                 class="diagram"
                 style={{ 'max-height': '360px', overflow: 'auto', 'white-space': 'pre-wrap' }}
               >
