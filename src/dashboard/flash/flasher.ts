@@ -1,25 +1,22 @@
-// Device-chip and native-USB flashing via esptool-js. Loaded lazily (dynamic
-// import) so esptool-js stays out of the main bundle.
+// esptool-js flashing over a chip's native USB. Loaded lazily (dynamic import)
+// so esptool-js stays out of the main bundle. Both chips flash over their own
+// USB-Serial-JTAG: DTR/RTS over the CH343 do not reset this board, but the
+// USB-OTG reset does, so a native flash is the only path that reboots to run.
 
 import { ESPLoader, type FlashOptions, type IEspLoaderTerminal, Transport } from 'esptool-js';
 import SparkMD5 from 'spark-md5';
-import { RebootTarget } from '../protocol';
 import {
   APP_FLASH_ADDR,
   FACTORY_FLASH_ADDR,
-  type FlashDeviceParams,
   type FlashKind,
   type FlashNativeParams,
   type FlashProgress,
   validateImage,
 } from './types';
 
-const ROM_SETTLE_MS = 2000;
-
-// The main chip flashes over the CH343 UART (0x1a86) and can go fast. The
-// mouse-side chip flashes over the ESP native USB (0x303a), which ignores the
-// serial baud and breaks on a baud change, so keep the ROM baud there.
-const flashBaud = (port: SerialPort) => (port.getInfo().usbVendorId === 0x303a ? 115200 : 921600);
+// Native USB ignores the serial baud and breaks on a baud change, so stay at the
+// ROM baud (no changeBaud).
+const NATIVE_BAUD = 115200;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -30,7 +27,7 @@ function md5Hex(image: Uint8Array): string {
 
 const addressFor = (kind: FlashKind) => (kind === 'factory' ? FACTORY_FLASH_ADDR : APP_FLASH_ADDR);
 
-// esptool a chip that is already in ROM download mode on `port`.
+// esptool a chip already in ROM download mode on a native USB `port`.
 async function runEsptool(
   port: SerialPort,
   image: Uint8Array,
@@ -44,7 +41,7 @@ async function runEsptool(
     writeLine: (d) => onLog?.(d),
   };
   const transport = new Transport(port, false);
-  const loader = new ESPLoader({ transport, baudrate: flashBaud(port), terminal });
+  const loader = new ESPLoader({ transport, baudrate: NATIVE_BAUD, terminal });
   try {
     onProgress?.({ phase: 'connecting' });
     await loader.main('no_reset');
@@ -61,17 +58,13 @@ async function runEsptool(
     };
     await loader.writeFlash(flashOptions);
     onProgress?.({ phase: 'done' });
-    // Reset the chip to run the new firmware. On this board, ASSERTING DTR/RTS
-    // resets the device chip, so pulse them (esptool-js's hard_reset only
-    // deasserts RTS, which never resets it). Native USB uses its own reset.
+    // Reboot into the new firmware. esptool-js's own USB-OTG hard_reset only
+    // deasserts RTS (no edge); esptool.py pulses it. Replicate the pulse: assert
+    // RTS to reset, then release, with DTR held low so it boots to run.
     try {
-      if (port.getInfo().usbVendorId === 0x303a) {
-        await loader.after('hard_reset', true);
-      } else {
-        await port.setSignals({ dataTerminalReady: true, requestToSend: true });
-        await sleep(100);
-        await port.setSignals({ dataTerminalReady: false, requestToSend: false });
-      }
+      await port.setSignals({ dataTerminalReady: false, requestToSend: true });
+      await sleep(200);
+      await port.setSignals({ dataTerminalReady: false, requestToSend: false });
     } catch {
       // ignore
     }
@@ -85,25 +78,9 @@ async function runEsptool(
   }
 }
 
-// Device chip over its CH343 control port: reboot into download, then esptool.
-// Closes the link; the chip needs a power-cycle to run (no DTR/RTS reset wired).
-export async function flashDeviceChip(params: FlashDeviceParams): Promise<void> {
-  const { link, image, kind, onProgress, onLog } = params;
-  const invalid = validateImage(image, kind);
-  if (invalid) throw new Error(invalid);
-  const port = link.serialPort;
-
-  onProgress?.({ phase: 'rebooting' });
-  onLog?.('Rebooting the device chip into download mode...');
-  await link.reboot(RebootTarget.DeviceDownload);
-  await link.close();
-  await sleep(ROM_SETTLE_MS);
-
-  await runEsptool(port, image, addressFor(kind), onProgress, onLog);
-}
-
-// A chip already in ROM download on a native USB port (the BOOT-button method),
-// used for recovery and for flashing the host chip over its own USB.
+// Flash a chip already in ROM download on its native USB port. Used for the
+// device chip (after a reboot-to-download or the LEFT BOOT button) and the host
+// chip (RIGHT BOOT button), and for recovery.
 export async function flashNativePort(params: FlashNativeParams): Promise<void> {
   const { port, image, kind, onProgress, onLog } = params;
   const invalid = validateImage(image, kind);

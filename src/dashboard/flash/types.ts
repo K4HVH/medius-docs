@@ -2,8 +2,6 @@
 // Flash constants and types, free of the heavy esptool-js dependency so the
 // UI can import them without pulling esptool into the main bundle.
 
-import type { SerialLink } from '../serial';
-
 // ESP32-S3 layout: bootloader at 0x0, app at 0x10000.
 export const APP_FLASH_ADDR = 0x10000;
 export const FACTORY_FLASH_ADDR = 0x0;
@@ -15,14 +13,6 @@ export interface FlashProgress {
   phase: FlashPhase;
   written?: number;
   total?: number;
-}
-
-export interface FlashDeviceParams {
-  link: SerialLink;
-  image: Uint8Array;
-  kind: FlashKind;
-  onProgress?: (p: FlashProgress) => void;
-  onLog?: (line: string) => void;
 }
 
 export interface FlashNativeParams {
