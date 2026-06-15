@@ -5,7 +5,7 @@ import { Button } from '../../../components/inputs/Button';
 // Gate before a mouse-side (USB3) flash. The browser fires a serial `disconnect`
 // when the box's USB2 device is removed, but it CANNOT see USB1 (the HID clone).
 // So: watch for the disconnect, hold the waiting screen a beat, then make the user
-// confirm USB1 is out too (USB1 + USB3 together can shut the machine down).
+// confirm USB1 is out too (USB1 + USB3 together can cause damage).
 const DELAY_MS = 1500;
 
 export const UnplugWatch = (props: { onUnplugged: () => void }) => {
@@ -42,7 +42,7 @@ export const UnplugWatch = (props: { onUnplugged: () => void }) => {
       <Match when={phase() === 'confirm'}>
         <div class="callout callout--danger">
           <p><strong>Make sure every cable is out, including USB1.</strong></p>
-          <p>The browser can't see the USB1 (game PC) port, so check it yourself. USB1 and USB3 plugged into the same PC can shut it down.</p>
+          <p>The browser can't see the USB1 (game PC) port, so check it yourself. USB1 and USB3 plugged into the same PC can cause damage.</p>
         </div>
         <label style={{ display: 'flex', 'align-items': 'center', gap: 'var(--g-spacing-sm)' }}>
           <input type="checkbox" checked={ack()} onChange={(e) => setAck(e.currentTarget.checked)} />
