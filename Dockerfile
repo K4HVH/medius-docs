@@ -28,8 +28,9 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy built files from builder
 COPY --from=builder --chown=bunuser:nodejs /app/dist /app/dist
 
-# Copy the native Bun server
+# Copy the native Bun server and the firmware proxy
 COPY --chown=bunuser:nodejs serve.ts /app/serve.ts
+COPY --chown=bunuser:nodejs server /app/server
 
 USER bunuser
 

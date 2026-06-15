@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createSignal } from 'solid-js';
+import { Match, Show, Switch, createResource, createSignal, onMount } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
@@ -14,11 +14,14 @@ import {
   looksLikeWrongKind,
   validateImage,
 } from '../../../dashboard/flash';
+import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { useDashboard } from './context';
 import '../../../styles/docs.css';
 
+type Source = 'release' | 'upload';
+
 const toHexAddr = (n: number) => `0x${n.toString(16)}`;
-const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KB`);
+const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 
 const phaseLabel: Record<string, string> = {
   rebooting: 'Rebooting into download mode...',
@@ -27,15 +30,34 @@ const phaseLabel: Record<string, string> = {
   done: 'Done',
 };
 
+// The device-chip asset names in a release.
+const assetName = (kind: FlashKind) => `medius_device${kind === 'factory' ? '-factory' : ''}.bin`;
+
 const Flash = () => {
   const dash = useDashboard();
   const [kind, setKind] = createSignal<FlashKind>('app');
+  const [source, setSource] = createSignal<Source>('release');
   const [files, setFiles] = createSignal<File[]>([]);
   const [image, setImage] = createSignal<Uint8Array | null>(null);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
+  const [stepError, setStepError] = createSignal<string | null>(null);
+  const [releases] = createResource(fetchReleases);
+
+  onMount(() => {
+    // Drop a stale done/error banner when returning to a fresh, disconnected page.
+    if (dash.status() === 'disconnected') dash.clearFlashResult();
+  });
 
   const file = () => files()[0] ?? null;
   const address = () => (kind() === 'factory' ? FACTORY_FLASH_ADDR : APP_FLASH_ADDR);
+
+  const latestRelease = () => releases()?.[0] ?? null;
+  const selectedAsset = (): FirmwareAsset | null => {
+    const r = latestRelease();
+    if (!r) return null;
+    return r.assets.find((a) => a.name === assetName(kind())) ?? null;
+  };
+
   const validationError = () => {
     const img = image();
     return img ? validateImage(img, kind()) : null;
@@ -55,6 +77,11 @@ const Flash = () => {
     void f.arrayBuffer().then((b) => setImage(new Uint8Array(b)));
   };
 
+  const canFlash = () => {
+    if (source() === 'upload') return !!image() && validationError() === null;
+    return !!selectedAsset() && !releases.loading;
+  };
+
   const view = () => {
     const s = dash.status();
     if (s === 'flashing') return 'flashing';
@@ -72,9 +99,19 @@ const Flash = () => {
 
   const startFlash = async () => {
     setConfirmOpen(false);
-    const img = image();
-    if (!img) return;
-    await dash.flashDevice(img, kind());
+    setStepError(null);
+    try {
+      let img = source() === 'upload' ? image() : null;
+      if (source() === 'release') {
+        const a = selectedAsset();
+        if (!a) return;
+        img = await downloadAsset(a);
+      }
+      if (!img) return;
+      await dash.flashDevice(img, kind());
+    } catch (e) {
+      setStepError((e as Error).message);
+    }
   };
 
   return (
@@ -147,24 +184,66 @@ const Flash = () => {
                 : 'The application image is just the Medius firmware, written at 0x10000. Use it for normal updates on a working board.'}
             </p>
 
-            <div class="api-response-label">IMAGE FILE</div>
-            <FileUpload
-              accept=".bin"
-              maxSize={FLASH_SIZE_BYTES}
-              value={files()}
-              onChange={onFiles}
-              label="Firmware .bin"
+            <div class="api-response-label">IMAGE SOURCE</div>
+            <Combobox
+              options={[
+                { value: 'release', label: 'Latest release' },
+                { value: 'upload', label: 'Upload a file' },
+              ]}
+              value={source()}
+              onChange={(v) => setSource(v as Source)}
             />
-            <Show when={validationError()}>
-              <div class="callout callout--danger" role="alert">{validationError()}</div>
+
+            <Show when={source() === 'release'}>
+              <Switch>
+                <Match when={releases.loading}>
+                  <p>Loading releases...</p>
+                </Match>
+                <Match when={releases.error}>
+                  <div class="callout callout--warning">
+                    Couldn't fetch releases:{' '}
+                    {releases.error instanceof Error
+                      ? releases.error.message
+                      : String(releases.error)}
+                    . Switch the source to "Upload a file" and provide the .bin yourself.
+                  </div>
+                </Match>
+                <Match when={selectedAsset()}>
+                  {(a) => (
+                    <p>
+                      Will flash <code>{a().name}</code> ({fmtBytes(a().size)}) from{' '}
+                      <strong>{latestRelease()?.tag}</strong>.
+                    </p>
+                  )}
+                </Match>
+                <Match when={latestRelease() && !selectedAsset()}>
+                  <div class="callout callout--warning">
+                    The latest release has no <code>{assetName(kind())}</code>. Use a different type
+                    or upload a file.
+                  </div>
+                </Match>
+              </Switch>
+            </Show>
+
+            <Show when={source() === 'upload'}>
+              <FileUpload
+                accept=".bin"
+                maxSize={FLASH_SIZE_BYTES}
+                value={files()}
+                onChange={onFiles}
+                label="Firmware .bin"
+              />
+              <Show when={validationError()}>
+                <div class="callout callout--danger" role="alert">{validationError()}</div>
+              </Show>
+            </Show>
+
+            <Show when={stepError()}>
+              <div class="callout callout--danger" role="alert">{stepError()}</div>
             </Show>
 
             <div style={{ 'margin-top': 'var(--g-spacing)' }}>
-              <Button
-                variant="primary"
-                disabled={!file() || validationError() !== null}
-                onClick={() => setConfirmOpen(true)}
-              >
+              <Button variant="primary" disabled={!canFlash()} onClick={() => setConfirmOpen(true)}>
                 Flash
               </Button>
             </div>
@@ -174,22 +253,25 @@ const Flash = () => {
 
       <Dialog open={confirmOpen()} onClose={() => setConfirmOpen(false)} size="small">
         <DialogHeader title="Confirm flash" onClose={() => setConfirmOpen(false)} />
-        <Show when={file()}>
-          {(f) => (
-            <table class="api-params">
-              <tbody>
-                <tr><td>Chip</td><td>Device chip (over the control port)</td></tr>
-                <tr><td>Type</td><td>{kind() === 'factory' ? 'Full / recovery' : 'Application update'}</td></tr>
-                <tr><td>Address</td><td><code>{toHexAddr(address())}</code></td></tr>
-                <tr><td>File</td><td>{f().name} ({fmtBytes(f().size)})</td></tr>
-              </tbody>
-            </table>
-          )}
-        </Show>
+        <table class="api-params">
+          <tbody>
+            <tr><td>Chip</td><td>Device chip (over the control port)</td></tr>
+            <tr><td>Type</td><td>{kind() === 'factory' ? 'Full / recovery' : 'Application update'}</td></tr>
+            <tr><td>Address</td><td><code>{toHexAddr(address())}</code></td></tr>
+            <tr>
+              <td>Image</td>
+              <td>
+                <Show when={source() === 'upload'} fallback={<>{selectedAsset()?.name} ({latestRelease()?.tag})</>}>
+                  {file()?.name} ({fmtBytes(file()?.size ?? 0)})
+                </Show>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <div class="callout callout--danger">
           Flashing the wrong image stops the box from booting. Recover with a Full / recovery flash.
         </div>
-        <Show when={mismatch()}>
+        <Show when={source() === 'upload' && mismatch()}>
           <div class="callout callout--warning">
             This file looks like a {kind() === 'app' ? 'factory' : 'application'} image, but you
             picked {kind() === 'app' ? 'Application update' : 'Full / recovery'}. Double-check

@@ -1,4 +1,5 @@
 import { join } from "path";
+import { handleFirmwareApi } from "./server/firmware";
 
 const PORT = parseInt(process.env.PORT || "3000");
 const PUBLIC_DIR = process.env.PUBLIC_DIR || "./dist";
@@ -6,6 +7,9 @@ const PUBLIC_DIR = process.env.PUBLIC_DIR || "./dist";
 Bun.serve({
   port: PORT,
   async fetch(req) {
+    const api = await handleFirmwareApi(req);
+    if (api) return api;
+
     const url = new URL(req.url);
     let pathname = url.pathname;
 
