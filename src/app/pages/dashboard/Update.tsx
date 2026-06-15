@@ -1,6 +1,6 @@
 /// <reference types="w3c-web-serial" />
 import { Match, Show, Switch, createEffect, createResource, createSignal, onCleanup } from 'solid-js';
-import { A } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Progress } from '../../../components/feedback/Progress';
@@ -23,6 +23,7 @@ const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-second
 
 const Update = () => {
   const dash = useDashboard();
+  const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
   const [step, setStep] = createSignal<Step>('choose');
   const [alsoMouse, setAlsoMouse] = createSignal(false);
@@ -338,7 +339,7 @@ const Update = () => {
                         : 'Connect'}
                   </Button>
                 </Show>
-                <Button variant="secondary" onClick={() => { setStep('choose'); setMainCtrl(null); dash.clearFlashResult(); }}>
+                <Button variant="secondary" onClick={() => { dash.clearFlashResult(); setMainCtrl(null); setStep('choose'); navigate('/dashboard'); }}>
                   Finish
                 </Button>
               </div>
