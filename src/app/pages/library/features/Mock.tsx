@@ -76,6 +76,13 @@ device.move_rel(5, 5)?;`}</code></pre>
             right, 5 down) through the same <code>Device</code> API as a real box, so tests cover
             production call paths.
           </p>
+          <div class="callout callout--info">
+            <p>
+              The other features are <A href="/library/features/async"><code>async</code></A>,{' '}
+              <A href="/library/features/flash"><code>flash</code></A>, and{' '}
+              <A href="/library/features/tracing"><code>tracing</code></A>.
+            </p>
+          </div>
         </Card>
       </div>
     </>

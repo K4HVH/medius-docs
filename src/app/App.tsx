@@ -28,6 +28,7 @@ import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
 import FeatMock from './pages/library/features/Mock';
 import FeatFlash from './pages/library/features/Flash';
+import FeatTracing from './pages/library/features/Tracing';
 import LibTypes from './pages/library/TypesAndErrors';
 
 const App: Component = () => {
@@ -61,6 +62,7 @@ const App: Component = () => {
           <Route path="/library/features/async" component={FeatAsync} />
           <Route path="/library/features/mock" component={FeatMock} />
           <Route path="/library/features/flash" component={FeatFlash} />
+          <Route path="/library/features/tracing" component={FeatTracing} />
           <Route path="/library/types" component={LibTypes} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />

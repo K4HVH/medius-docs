@@ -60,9 +60,9 @@ const Async: Component = () => {
           </table>
 
           <p>
-            The wait on a reply uses <code>flume</code>'s async receive channel, which pulls in no{' '}
-            <code>tokio</code> dependency, so it runs under any executor (<code>tokio</code>,{' '}
-            <code>async-std</code>, <code>smol</code>).
+            The wait on a reply uses <a href="https://crates.io/crates/flume" target="_blank" rel="noreferrer"><code>flume</code></a>'s async receive channel, which pulls in no{' '}
+            <a href="https://tokio.rs" target="_blank" rel="noreferrer"><code>tokio</code></a> dependency, so it runs under any executor (<code>tokio</code>,{' '}
+            <a href="https://crates.io/crates/async-std" target="_blank" rel="noreferrer"><code>async-std</code></a>, <a href="https://crates.io/crates/smol" target="_blank" rel="noreferrer"><code>smol</code></a>).
           </p>
 
           <p>
@@ -119,6 +119,13 @@ let v = device.query_version().await?;`}</code></pre>
             <A href="/library/connection#open">Connection</A>); <code>move_rel(10, 0)</code> returns at
             once; <code>query_version().await</code> waits for the reply.
           </p>
+          <div class="callout callout--info">
+            <p>
+              The other features are <A href="/library/features/mock"><code>mock</code></A>,{' '}
+              <A href="/library/features/flash"><code>flash</code></A>, and{' '}
+              <A href="/library/features/tracing"><code>tracing</code></A>.
+            </p>
+          </div>
         </Card>
       </div>
     </>

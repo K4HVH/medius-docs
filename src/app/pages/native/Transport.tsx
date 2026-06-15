@@ -40,7 +40,7 @@ const Transport: Component = () => {
         <Card>
           <CardHeader title="USB identity" subtitle="WCH CH343 bridge" />
           <p>
-            A WCH <code>CH343</code> chip does the USB-to-serial conversion. Match on its vendor and
+            A <a href="https://www.wch-ic.com" target="_blank" rel="noreferrer">WCH</a> <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> chip does the USB-to-serial conversion. Match on its vendor and
             product IDs to pick the box out from other serial devices.
           </p>
           <table class="api-params">

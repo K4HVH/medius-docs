@@ -83,7 +83,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Checksum & integrity" subtitle="Rejecting corrupted frames" />
           <p>
-            The last two bytes are a CRC16-CCITT checksum over{' '}
+            The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
             <code>TYPE | SEQ | LEN | PAYLOAD</code> (everything but <code>SOF</code> and the checksum
             itself), stored little-endian. On a mismatch the box silently drops the frame and resyncs
             at the next <code>0xA5</code>, so corrupted frames are never acted on.

@@ -3,7 +3,7 @@ import type { CommandPaletteItem } from '../components/navigation/CommandPalette
 import {
   BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode,
   BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsBoxArrowInDown,
-  BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText,
+  BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText, BsActivity,
 } from 'solid-icons/bs';
 
 interface SearchEntry {
@@ -112,6 +112,8 @@ const entries: SearchEntry[] = [
   { label: 'AsyncDevice', description: 'into_async, async queries', path: '/library/features/async#asyncdevice', group: 'Library Features', icon: BsStars, keywords: ['asyncdevice', 'into_async', 'await'] },
   { label: 'Mock', description: 'Test without hardware', path: '/library/features/mock', group: 'Library Features', icon: BsWrench, keywords: ['mock', 'mockbox', 'test', 'with_mock', 'open_mock'] },
   { label: 'Flash', description: 'Firmware flashing from Rust', path: '/library/features/flash', group: 'Library Features', icon: BsBoxArrowInDown, keywords: ['flash', 'esptool', 'firmware', 'download'] },
+  { label: 'Tracing', description: 'Structured diagnostics over the link', path: '/library/features/tracing', group: 'Library Features', icon: BsActivity, keywords: ['tracing', 'instrumentation', 'spans', 'subscriber', 'logging', 'diagnostics'] },
+  { label: 'What tracing instruments', description: 'Connect, keepalive, reconnect', path: '/library/features/tracing#coverage', group: 'Library Features', icon: BsActivity, keywords: ['tracing', 'coverage', 'lifecycle', 'spans', 'events'] },
 ];
 
 export function buildSearchItems(navigate: (path: string) => void): CommandPaletteItem[] {
