@@ -21,7 +21,7 @@ const Diagnostics: Component = () => {
           <CardHeader title="logs" subtitle="Stream of box messages" />
           <pre class="api-signature">fn logs(&self) -&gt; LogStream</pre>
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
+            <span class="api-badge api-badge--executed">No round-trip</span>
           </p>
 
           <div class="api-response-label">LEVELS</div>
@@ -92,7 +92,7 @@ while let Ok(line) = stream.recv() {
           <CardHeader title="counters" subtitle="Link statistics" />
           <pre class="api-signature">fn counters(&self) -&gt; CountersSnapshot</pre>
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
+            <span class="api-badge api-badge--executed">No round-trip</span>
           </p>
 
           <div class="api-response-label">RETURNS</div>
@@ -141,7 +141,8 @@ while let Ok(line) = stream.recv() {
 
           <div class="callout callout--info">
             <p>
-              <A href="/library/types"><code>CountersSnapshot</code></A> and the other public types.
+              <A href="/library/types#structs"><code>CountersSnapshot</code></A> and the rest of the
+              public types are on the <A href="/library/types">types</A> page.
             </p>
           </div>
         </Card>

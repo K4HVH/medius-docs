@@ -28,6 +28,7 @@ const Buttons: Component = () => {
             <code>button</code> is the generic form; the others fill in its{' '}
             <A href="/library/types#enums"><code>ButtonAction</code></A> for you.
           </p>
+          <div class="api-response-label">ACTIONS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th><code>ButtonAction</code></th><th>Effect</th></tr>
@@ -44,13 +45,14 @@ const Buttons: Component = () => {
 
       <div id="button-arg" data-search-target>
         <Card>
-          <CardHeader title="Which button" />
+          <CardHeader title="Which button" subtitle="The Button enum and its ids" />
           <p>
             <A href="/library/types#enums"><code>Button</code></A> names the button. Each maps to a
             one-byte <code>id</code>. Buttons act on the{' '}
             <A href="/native/injection"><code>clone</code></A>, the copy of the real mouse the box
             presents to the PC, so a call for a button it doesn't have is a no-op.
           </p>
+          <div class="api-response-label">BUTTONS</div>
           <table class="api-params">
             <thead>
               <tr><th><code>Button</code></th><th><code>id</code></th><th>Description</th></tr>
@@ -68,6 +70,7 @@ const Buttons: Component = () => {
             yourself. To drop every override at once, call{' '}
             <A href="/library/admin#reset"><code>reset</code></A>.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.press(Button::Left)?;
 device.soft_release(Button::Left)?;`}</code></pre>
         </Card>

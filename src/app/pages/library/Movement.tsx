@@ -34,6 +34,7 @@ const Movement: Component = () => {
           <p>
             <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
+          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -52,6 +53,7 @@ const Movement: Component = () => {
             The caller owns timing: sustained 1 kHz motion is a caller-driven <code>move_rel</code>{' '}
             loop. Returns a <A href="/library/types#errors"><code>Result</code></A>.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.move_rel(40, 0)?;`}</code></pre>
         </Card>
       </div>
@@ -63,6 +65,7 @@ const Movement: Component = () => {
           <p>
             <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
+          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -78,6 +81,7 @@ const Movement: Component = () => {
             (<code>accumulator += delta</code>), so multi-step scrolls are preserved rather than
             clamped to one notch. Returns a <A href="/library/types#errors"><code>Result</code></A>.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.wheel(3)?;`}</code></pre>
         </Card>
       </div>

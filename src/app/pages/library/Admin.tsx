@@ -37,6 +37,7 @@ const Admin: Component = () => {
             untouched, with nothing of yours added). Afterward the box behaves as if your program had
             injected nothing.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.reset()?;`}</code></pre>
         </Card>
       </div>
@@ -70,6 +71,7 @@ const Admin: Component = () => {
             write firmware, use the <A href="/library/features/flash"><code>flash</code></A> feature,
             which hands off to <code>esptool</code>. See also <A href="/native/flashing">Flashing</A>.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.reboot(RebootTarget::DeviceRun)?;`}</code></pre>
         </Card>
       </div>

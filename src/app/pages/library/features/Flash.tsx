@@ -81,6 +81,9 @@ const Flash: Component = () => {
             the two download variants; the <A href="/library/admin#reboot"><code>reboot</code></A>{' '}
             method covers the full set.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`// false flashes the device chip, true the host chip
+medius::flash("/dev/ttyACM0", "device.bin", false)?;`}</code></pre>
         </Card>
       </div>
 

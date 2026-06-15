@@ -40,18 +40,22 @@ const TypesAndErrors: Component = () => {
                 <td><code>as_id()</code> / <code>from_id(u8)</code></td>
               </tr>
               <tr>
-                <td><A href="/native/commands/buttons#button"><code>ButtonAction</code></A></td>
+                <td><A href="/library/buttons#methods"><code>ButtonAction</code></A></td>
                 <td>
-                  What to do to that button — see the actions table below.
+                  <code>SoftRelease = 0</code>, <code>Press = 1</code>, <code>ForceRelease = 2</code> —
+                  what to do to the button a{' '}
+                  <A href="/native/commands/buttons"><code>BUTTON</code></A> carries; see{' '}
+                  <A href="/library/buttons#methods">Buttons</A>.
                 </td>
                 <td><code>as_u8()</code> / <code>from_u8(u8)</code></td>
               </tr>
               <tr>
                 <td><A href="/library/admin#reboot"><code>RebootTarget</code></A></td>
                 <td>
-                  Which chip to restart and into what mode for a{' '}
-                  <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> — see the targets
-                  table below.
+                  <code>DeviceDownload = 0</code>, <code>HostDownload = 1</code>,{' '}
+                  <code>DeviceRun = 2</code>, <code>HostRun = 3</code> — which chip a{' '}
+                  <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> restarts and into
+                  what mode; see <A href="/library/admin#reboot"><code>reboot</code></A>.
                 </td>
                 <td>—</td>
               </tr>
@@ -62,54 +66,6 @@ const TypesAndErrors: Component = () => {
                   <code>Verbose</code> — the severity tag on a logged line.
                 </td>
                 <td><code>from_u8</code> (unknown &rarr; <code>Info</code>)</td>
-              </tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Variant</th>
-                <th>Effect</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>SoftRelease = 0</code></td>
-                <td>Releases the box's own press but leaves a physical hold.</td>
-              </tr>
-              <tr>
-                <td><code>Press = 1</code></td>
-                <td>Holds the button down.</td>
-              </tr>
-              <tr>
-                <td><code>ForceRelease = 2</code></td>
-                <td>Forces the button up even past a physical press.</td>
-              </tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Variant</th>
-                <th>Effect</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>DeviceDownload = 0</code></td>
-                <td>Restarts the device chip into flashing mode.</td>
-              </tr>
-              <tr>
-                <td><code>HostDownload = 1</code></td>
-                <td>Restarts the host chip into flashing mode.</td>
-              </tr>
-              <tr>
-                <td><code>DeviceRun = 2</code></td>
-                <td>Restarts the device chip back into normal running.</td>
-              </tr>
-              <tr>
-                <td><code>HostRun = 3</code></td>
-                <td>Restarts the host chip back into normal running.</td>
               </tr>
             </tbody>
           </table>

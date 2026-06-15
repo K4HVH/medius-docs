@@ -124,6 +124,7 @@ const Lifecycle: Component = () => {
             idle.
           </p>
 
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.reapply()?;`}</code></pre>
         </Card>
       </div>
@@ -155,6 +156,7 @@ const Lifecycle: Component = () => {
             path.
           </p>
 
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.reconnect()?;`}</code></pre>
 
           <p>
