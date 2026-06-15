@@ -48,6 +48,14 @@ const Home: Component = () => {
                 />
               </Card>
             </A>
+            <A href="/dashboard" style={{ "text-decoration": "none" }}>
+              <Card interactive padding="normal">
+                <CardHeader
+                  title="Dashboard"
+                  subtitle="Connect, view, and flash your box"
+                />
+              </Card>
+            </A>
           </div>
         </div>
       </div>

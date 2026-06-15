@@ -17,6 +17,10 @@ interface SearchEntry {
 }
 
 const entries: SearchEntry[] = [
+  // ── Dashboard ───────────────────────────────────────────────────────────
+  { label: 'Dashboard', description: 'Connect to your box, view it, and flash firmware in the browser', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['dashboard', 'tool', 'connect', 'flash', 'web serial', 'device'] },
+  { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
+
   // ── Native API ──────────────────────────────────────────────────────────
   { label: 'Introduction', description: 'What Medius is and how to read the native docs', path: '/native', group: 'Native API', icon: BsInfoCircle, keywords: ['native', 'overview', 'start', 'protocol', 'medius'] },
   { label: 'Quickstart', description: 'Wire it up and send your first command', path: '/native/quickstart', group: 'Native API', icon: BsLightning, keywords: ['getting started', 'first command', 'example'] },
