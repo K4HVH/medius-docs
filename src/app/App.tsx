@@ -36,6 +36,7 @@ import LibTypesFrames from './pages/library/types/Frames';
 import LibTypesErrors from './pages/library/types/Errors';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import DashboardDevice from './pages/dashboard/Device';
+import DashboardFlash from './pages/dashboard/Flash';
 
 const App: Component = () => {
   return (
@@ -77,6 +78,7 @@ const App: Component = () => {
         </Route>
         <Route path="/" component={DashboardLayout}>
           <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/dashboard/flash" component={DashboardFlash} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
       </Router>

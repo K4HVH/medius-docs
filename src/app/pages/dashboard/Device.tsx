@@ -54,6 +54,10 @@ const Device = () => {
             </Button>
           </Match>
 
+          <Match when={dash.status() === 'flashing'}>
+            <p>Flashing in progress. See the Flash tab.</p>
+          </Match>
+
           <Match when={dash.status() === 'error'}>
             <div class="callout callout--danger" role="alert">{dash.error()}</div>
             <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
