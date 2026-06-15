@@ -48,7 +48,7 @@ const Home: Component = () => {
                 />
               </Card>
             </A>
-            <A href="/dashboard" style={{ "text-decoration": "none" }}>
+            <A href="/dashboard" class="docs-grid__wide" style={{ "text-decoration": "none" }}>
               <Card interactive padding="normal">
                 <CardHeader
                   title="Dashboard"
