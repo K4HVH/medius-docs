@@ -1,3 +1,4 @@
+/// <reference types="w3c-web-serial" />
 import {
   type Accessor,
   type ParentComponent,
@@ -39,6 +40,7 @@ export interface DashboardContextValue {
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
   flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<void>;
+  flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<void>;
   clearFlashResult: () => void;
 }
 
@@ -197,6 +199,43 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
   };
 
+  // Flash a chip already in ROM download on its native USB port (recovery / host
+  // chip). Independent of the control link; restores it afterwards if one was up.
+  const flashNative = async (port: SerialPort, image: Uint8Array, kind: FlashKind) => {
+    if (status() === 'flashing') return;
+    const hadLink = link();
+    if (hadLink) stopHealthPolling();
+    setError(null);
+    setFlashLog([]);
+    setFlashProgress({ phase: 'connecting' });
+    setStatus('flashing');
+    try {
+      const { flashNativePort } = await import('../../../dashboard/flash/flasher');
+      await flashNativePort({
+        port,
+        image,
+        kind,
+        onProgress: (p) => setFlashProgress(p),
+        onLog: (line) => setFlashLog((prev) => [...prev, line].slice(-500)),
+      });
+      setFlashProgress({ phase: 'done' });
+      if (hadLink) {
+        setStatus('connected');
+        startHealthPolling(hadLink);
+      } else {
+        setStatus('disconnected');
+      }
+    } catch (e) {
+      setError(describeError(e));
+      if (hadLink) {
+        setStatus('connected');
+        startHealthPolling(hadLink);
+      } else {
+        setStatus('error');
+      }
+    }
+  };
+
   // Block tab close / refresh during a flash; esptool cannot survive it.
   createEffect(() => {
     if (status() !== 'flashing') return;
@@ -229,6 +268,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     flashProgress,
     flashLog,
     flashDevice,
+    flashNative,
     clearFlashResult,
   };
 

@@ -1,3 +1,4 @@
+/// <reference types="w3c-web-serial" />
 // Flash constants and types, free of the heavy esptool-js dependency so the
 // UI can import them without pulling esptool into the main bundle.
 
@@ -23,6 +24,16 @@ export interface FlashDeviceParams {
   onProgress?: (p: FlashProgress) => void;
   onLog?: (line: string) => void;
 }
+
+export interface FlashNativeParams {
+  port: SerialPort;
+  image: Uint8Array;
+  kind: FlashKind;
+  onProgress?: (p: FlashProgress) => void;
+  onLog?: (line: string) => void;
+}
+
+export type FlashChip = 'device' | 'host';
 
 // ESP32-S3 with 4 MB flash.
 export const FLASH_SIZE_BYTES = 4 * 1024 * 1024;

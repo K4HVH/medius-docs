@@ -1,11 +1,18 @@
-// Device-chip flashing: reboot into ROM download over the control link, then
-// hand the same port to esptool-js. Mirrors the medius crate's flash flow.
-// Loaded lazily (via dynamic import) so esptool-js stays out of the main bundle.
+// Device-chip and native-USB flashing via esptool-js. Loaded lazily (dynamic
+// import) so esptool-js stays out of the main bundle.
 
 import { ESPLoader, type FlashOptions, type IEspLoaderTerminal, Transport } from 'esptool-js';
 import SparkMD5 from 'spark-md5';
 import { RebootTarget } from '../protocol';
-import { APP_FLASH_ADDR, FACTORY_FLASH_ADDR, type FlashDeviceParams, validateImage } from './types';
+import {
+  APP_FLASH_ADDR,
+  FACTORY_FLASH_ADDR,
+  type FlashDeviceParams,
+  type FlashKind,
+  type FlashNativeParams,
+  type FlashProgress,
+  validateImage,
+} from './types';
 
 const ROM_SETTLE_MS = 2000;
 const FLASH_BAUD = 921600;
@@ -17,29 +24,21 @@ function md5Hex(image: Uint8Array): string {
   return SparkMD5.ArrayBuffer.hash(copy.buffer as ArrayBuffer);
 }
 
-// Flash the device chip over its CH343 control port. Closes the link, so the
-// caller must treat the connection as gone afterwards (the chip needs a
-// power-cycle to run the new firmware: no DTR/RTS reset is wired on this board).
-export async function flashDeviceChip(params: FlashDeviceParams): Promise<void> {
-  const { link, image, kind, onProgress, onLog } = params;
-  // Validate before touching the box, so a bad file never even reboots it.
-  const invalid = validateImage(image, kind);
-  if (invalid) throw new Error(invalid);
-  const address = kind === 'factory' ? FACTORY_FLASH_ADDR : APP_FLASH_ADDR;
-  const port = link.serialPort;
+const addressFor = (kind: FlashKind) => (kind === 'factory' ? FACTORY_FLASH_ADDR : APP_FLASH_ADDR);
 
-  onProgress?.({ phase: 'rebooting' });
-  onLog?.('Rebooting the device chip into download mode...');
-  await link.reboot(RebootTarget.DeviceDownload);
-  await link.close();
-  await sleep(ROM_SETTLE_MS);
-
+// esptool a chip that is already in ROM download mode on `port`.
+async function runEsptool(
+  port: SerialPort,
+  image: Uint8Array,
+  address: number,
+  onProgress?: (p: FlashProgress) => void,
+  onLog?: (line: string) => void,
+): Promise<void> {
   const terminal: IEspLoaderTerminal = {
     clean: () => {},
     write: (d) => onLog?.(d),
     writeLine: (d) => onLog?.(d),
   };
-
   const transport = new Transport(port, false);
   const loader = new ESPLoader({ transport, baudrate: FLASH_BAUD, terminal });
   try {
@@ -66,4 +65,30 @@ export async function flashDeviceChip(params: FlashDeviceParams): Promise<void> 
       // ignore
     }
   }
+}
+
+// Device chip over its CH343 control port: reboot into download, then esptool.
+// Closes the link; the chip needs a power-cycle to run (no DTR/RTS reset wired).
+export async function flashDeviceChip(params: FlashDeviceParams): Promise<void> {
+  const { link, image, kind, onProgress, onLog } = params;
+  const invalid = validateImage(image, kind);
+  if (invalid) throw new Error(invalid);
+  const port = link.serialPort;
+
+  onProgress?.({ phase: 'rebooting' });
+  onLog?.('Rebooting the device chip into download mode...');
+  await link.reboot(RebootTarget.DeviceDownload);
+  await link.close();
+  await sleep(ROM_SETTLE_MS);
+
+  await runEsptool(port, image, addressFor(kind), onProgress, onLog);
+}
+
+// A chip already in ROM download on a native USB port (the BOOT-button method),
+// used for recovery and for flashing the host chip over its own USB.
+export async function flashNativePort(params: FlashNativeParams): Promise<void> {
+  const { port, image, kind, onProgress, onLog } = params;
+  const invalid = validateImage(image, kind);
+  if (invalid) throw new Error(invalid);
+  await runEsptool(port, image, addressFor(kind), onProgress, onLog);
 }
