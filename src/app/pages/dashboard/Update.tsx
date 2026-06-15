@@ -5,64 +5,59 @@ import { Button } from '../../../components/inputs/Button';
 import { Progress } from '../../../components/feedback/Progress';
 import { Chip } from '../../../components/display/Chip';
 import { versionString } from '../../../dashboard/protocol';
-import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
+import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
-type Step = 'start' | 'host-cable' | 'host-done' | 'device' | 'finish';
-
+type Step = 'choose' | 'main' | 'mouse' | 'done';
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
-
 const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
   return m ? { major: +m[1], minor: +m[2], patch: +m[3] } : null;
 };
-
-const phaseLabel: Record<string, string> = {
-  rebooting: 'Getting ready...',
-  connecting: 'Talking to the box...',
-  writing: 'Installing...',
-  done: 'Done',
-};
+const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
 const Update = () => {
   const dash = useDashboard();
   const [releases] = createResource(fetchReleases);
-  const [step, setStep] = createSignal<Step>('start');
+  const [step, setStep] = createSignal<Step>('choose');
+  const [alsoMouse, setAlsoMouse] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
 
   const latest = () => releases()?.[0] ?? null;
-  const latestVer = () => parseTag(latest()?.tag);
-  const deviceAsset = (): FirmwareAsset | null =>
-    latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
-  const hostAsset = (): FirmwareAsset | null =>
-    latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
-
+  const lv = () => parseTag(latest()?.tag);
+  const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
+  const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
   const upToDate = () => {
     const c = dash.version();
-    const l = latestVer();
-    return c && l && c.fwMajor === l.major && c.fwMinor === l.minor && c.fwPatch === l.patch;
+    const l = lv();
+    return !!(c && l && c.fwMajor === l.major && c.fwMinor === l.minor && c.fwPatch === l.patch);
   };
-
   const pct = () => {
     const p = dash.flashProgress();
-    if (p?.phase === 'writing' && p.total) return Math.round(((p.written ?? 0) / p.total) * 100);
-    return undefined;
+    return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
-  const begin = async (scope: 'both' | 'device') => {
+  const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
     dash.clearFlashResult();
-    if (scope === 'device') {
-      setStep('device');
-      return;
-    }
+    setAlsoMouse(mode === 'both');
+    setStep(mode === 'mouse' ? 'mouse' : 'main');
+  };
+
+  const installMain = async () => {
+    setErr(null);
+    dash.clearFlashResult();
+    const a = deviceAsset();
+    if (!a) return setErr('No main-chip update in this release.');
     setBusy(true);
     try {
-      await dash.rebootForHostFlash();
-      setStep('host-cable');
+      const ok = await dash.flashDevice(await downloadAsset(a), 'app');
+      if (ok) setStep(alsoMouse() ? 'mouse' : 'done');
+      else setErr('That did not finish. Power-cycle and try again, or use Recover.');
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -70,50 +65,19 @@ const Update = () => {
     }
   };
 
-  const flashHost = async () => {
+  const installMouse = async () => {
     setErr(null);
     dash.clearFlashResult();
-    const asset = hostAsset();
-    if (!asset) {
-      setErr('This release has no mouse-side update.');
-      return;
-    }
+    const a = hostAsset();
+    if (!a) return setErr('No mouse-side update in this release.');
     setBusy(true);
     try {
       const port = await requestRomPort();
-      const image = await downloadAsset(asset);
-      const ok = await dash.flashNative(port, image, 'app');
-      if (ok) setStep('host-done');
-      else
-        setErr(
-          'The mouse-side update did not finish. The box is partway through; try again, or use Recover.',
-        );
+      const ok = await dash.flashNative(port, await downloadAsset(a), 'app');
+      if (ok) setStep('done');
+      else setErr('That did not finish. Try again, or use Recover.');
     } catch (e) {
       if (!isUserCancel(e)) setErr((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const flashDevice = async () => {
-    setErr(null);
-    dash.clearFlashResult();
-    const asset = deviceAsset();
-    if (!asset) {
-      setErr('This release has no main-chip update.');
-      return;
-    }
-    setBusy(true);
-    try {
-      const image = await downloadAsset(asset);
-      const ok = await dash.flashDevice(image, 'app');
-      if (ok) setStep('finish');
-      else
-        setErr(
-          'The main-chip update did not finish. Power-cycle the box and try again, or use Recover.',
-        );
-    } catch (e) {
-      setErr((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -122,153 +86,91 @@ const Update = () => {
   return (
     <>
       <Show when={!dash.supported}>
-        <div class="callout callout--warning">
-          This browser can't reach USB devices. Open the dashboard in Chrome, Edge, or Opera.
-        </div>
+        <div class="callout callout--warning">Open the dashboard in Chrome, Edge, or Opera.</div>
       </Show>
 
-      {/* While a part is installing, show progress and nothing else. */}
       <Show when={dash.status() === 'flashing'}>
         <Card>
-          <CardHeader title="Installing..." subtitle="This takes a minute" />
-          <p aria-live="polite">{phaseLabel[dash.flashProgress()?.phase ?? 'connecting']}</p>
+          <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
           <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
-          <div class="callout callout--warning">
-            Do not unplug the box or leave this page while it's installing.
-          </div>
         </Card>
       </Show>
 
       <Show when={dash.status() !== 'flashing'}>
         <Card>
-          <CardHeader title="Update your box" subtitle="Get the latest firmware" />
-
+          <CardHeader title="Update" subtitle="Get the latest firmware" />
           <Show when={err()}>
             <div class="callout callout--danger" role="alert">{err()}</div>
           </Show>
 
           <Switch>
-            {/* Not connected yet */}
-            <Match when={dash.status() !== 'connected' && step() === 'start'}>
-              <p>
-                Plug your box into this computer with the <strong>USB2</strong> (control) cable, then
-                connect.
-              </p>
-              <Button
-                variant="primary"
-                disabled={!dash.supported || busy()}
-                onClick={() => void dash.connect()}
-              >
-                Connect
-              </Button>
-            </Match>
-
-            {/* Connected, choose what to update */}
-            <Match when={dash.status() === 'connected' && step() === 'start'}>
-              <Show when={releases.loading}>
-                <p>Checking for updates...</p>
-              </Show>
-              <Show when={releases.error}>
-                <div class="callout callout--warning">
-                  Couldn't reach the update server. You can still install a file from the{' '}
-                  <A href="/dashboard/advanced">Advanced</A> page.
-                </div>
-              </Show>
-              <Show when={latest()}>
-                <p>
-                  Your box is on{' '}
-                  <Show when={dash.version()}>
-                    {(v) => <Chip variant="neutral">v{versionString(v())}</Chip>}
-                  </Show>{' '}
-                  <Show when={upToDate()} fallback={<>. The latest is <strong>{latest()?.tag}</strong>.</>}>
-                    . That's the latest, you're up to date.
-                  </Show>
-                </p>
-                <p>
-                  An update has two parts: the mouse-side chip and the main chip. Doing both keeps
-                  them matched.
-                </p>
-                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Button variant="primary" disabled={busy()} onClick={() => void begin('both')}>
-                    {upToDate() ? 'Reinstall both parts' : 'Update both parts'}
+            <Match when={step() === 'choose'}>
+              <Switch>
+                <Match when={dash.status() !== 'connected'}>
+                  <p>Plug in like this, then connect.</p>
+                  <PortDiagram plug={['usb1', 'usb2']} />
+                  <Button variant="primary" disabled={!dash.supported || busy()} onClick={() => void dash.connect()}>
+                    Connect
                   </Button>
-                  <Button variant="secondary" disabled={busy()} onClick={() => void begin('device')}>
-                    Main chip only
-                  </Button>
-                </div>
-                <p style={{ 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' }}>
-                  "Main chip only" skips the mouse-side chip, which can leave the two parts on
-                  different versions. Do both unless you know you only need the main one.
-                </p>
-              </Show>
+                </Match>
+                <Match when={dash.status() === 'connected'}>
+                  <p>
+                    On{' '}
+                    <Show when={dash.version()}>
+                      {(v) => <Chip variant="neutral">v{versionString(v())}</Chip>}
+                    </Show>
+                    <Show when={latest()}>
+                      {'. '}Latest is <strong>{latest()?.tag}</strong>
+                      {upToDate() ? ' — up to date.' : '.'}
+                    </Show>
+                  </p>
+                  <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                    <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
+                      Update both parts
+                    </Button>
+                    <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
+                      Main only
+                    </Button>
+                    <Button variant="secondary" disabled={busy()} onClick={() => choose('mouse')}>
+                      Mouse-side only
+                    </Button>
+                  </div>
+                </Match>
+              </Switch>
             </Match>
 
-            {/* Host: cable move + flash */}
-            <Match when={step() === 'host-cable'}>
-              <p><strong>Step 1 of 2: the mouse-side chip.</strong></p>
-              <ol>
-                <li>Unplug your mouse from the box's <strong>USB3</strong> (mouse) port.</li>
-                <li>Connect the box's <strong>USB3</strong> port to this computer with a cable.</li>
-                <li>Make sure the <strong>USB1</strong> (game PC) port is not connected to this computer.</li>
-              </ol>
-              <div class="callout callout--danger">
-                USB1 and USB3 must never be on the same computer at once, or it can shut down.
-              </div>
-              <Button variant="primary" disabled={busy()} onClick={() => void flashHost()}>
-                Install on the mouse-side chip
-              </Button>
-              <p style={{ 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' }}>
-                Changed your mind? Nothing's been written yet, so you can unplug the box and plug it
-                back in to start over. If a box ever won't turn on after an update,{' '}
-                <A href="/dashboard/recovery">recover it here</A>.
-              </p>
-            </Match>
-
-            <Match when={step() === 'host-done'}>
-              <div class="callout callout--info">Mouse-side chip done.</div>
-              <p>Unplug the cable from the <strong>USB3</strong> port. Then continue.</p>
-              <Button variant="primary" onClick={() => setStep('device')}>
-                Continue to the main chip
-              </Button>
-            </Match>
-
-            {/* Device flash over the control cable */}
-            <Match when={step() === 'device'}>
-              <p>
-                <strong>Step 2 of 2: the main chip.</strong> This uses the USB2 (control) cable
-                that's already connected, no cable changes.
-              </p>
-              <Show when={dash.status() !== 'connected'}>
-                <div class="callout callout--warning">
-                  The box isn't connected. Go to the <A href="/dashboard">Device</A> tab, connect,
-                  then come back.
-                </div>
-              </Show>
-              <Button
-                variant="primary"
-                disabled={busy() || dash.status() !== 'connected'}
-                onClick={() => void flashDevice()}
+            <Match when={step() === 'main'}>
+              <p><strong>Main chip.</strong> Plug in like this.</p>
+              <PortDiagram plug={['usb1', 'usb2']} />
+              <Show
+                when={dash.status() === 'connected'}
+                fallback={
+                  <p style={muted}>Not connected. <A href="/dashboard">Connect first</A>.</p>
+                }
               >
-                Install on the main chip
+                <Button variant="primary" disabled={busy()} onClick={() => void installMain()}>
+                  Install
+                </Button>
+              </Show>
+            </Match>
+
+            <Match when={step() === 'mouse'}>
+              <p><strong>Mouse-side chip.</strong> Unplug your mouse, then plug in like this.</p>
+              <PortDiagram plug={['usb3']} boot="mouse" />
+              <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
+              <Button variant="primary" disabled={busy()} onClick={() => void installMouse()}>
+                Install
               </Button>
             </Match>
 
-            {/* Done */}
-            <Match when={step() === 'finish'}>
-              <div class="callout callout--info">
-                All done and verified. Unplug the box, plug it back in, then reconnect on the{' '}
-                <A href="/dashboard">Device</A> tab to check the new version.
-              </div>
-              <Button variant="secondary" onClick={() => { setStep('start'); dash.clearFlashResult(); }}>
-                Start over
+            <Match when={step() === 'done'}>
+              <div class="callout callout--info">Done. Plug back in normally, then reconnect.</div>
+              <PortDiagram plug={['usb1', 'usb2']} />
+              <Button variant="secondary" onClick={() => { setStep('choose'); dash.clearFlashResult(); }}>
+                Finish
               </Button>
             </Match>
           </Switch>
-
-          <p style={{ 'margin-top': 'var(--g-spacing)', color: 'var(--g-text-secondary)' }}>
-            Box won't connect? <A href="/dashboard/recovery">Recover it</A>. Know what you're doing?{' '}
-            <A href="/dashboard/advanced">Advanced flashing</A>.
-          </p>
         </Card>
       </Show>
     </>

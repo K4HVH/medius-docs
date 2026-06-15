@@ -8,13 +8,7 @@ import {
   onCleanup,
   useContext,
 } from 'solid-js';
-import {
-  type Health,
-  type LogLine,
-  type Version,
-  LogLevel,
-  RebootTarget,
-} from '../../../dashboard/protocol';
+import { type Health, type LogLine, type Version, LogLevel } from '../../../dashboard/protocol';
 import {
   BadProtoVerError,
   NoReplyError,
@@ -47,7 +41,6 @@ export interface DashboardContextValue {
   flashLog: Accessor<string[]>;
   flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<boolean>;
   flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<boolean>;
-  rebootForHostFlash: () => Promise<void>;
   clearFlashResult: () => void;
   deviceLog: Accessor<string[]>;
   clearDeviceLog: () => void;
@@ -184,14 +177,6 @@ export const DashboardProvider: ParentComponent = (props) => {
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
 
-  // Relay a reboot to the host chip so it enters ROM download on its own USB
-  // (USB3). The control link stays open: the running device chip does the relay.
-  const rebootForHostFlash = async () => {
-    const l = link();
-    if (!l) throw new Error('Connect to the box first.');
-    await l.reboot(RebootTarget.HostDownload);
-  };
-
   const flashDevice = async (image: Uint8Array, kind: FlashKind): Promise<boolean> => {
     if (status() === 'flashing') return false;
     const l = link();
@@ -302,7 +287,6 @@ export const DashboardProvider: ParentComponent = (props) => {
     flashLog,
     flashDevice,
     flashNative,
-    rebootForHostFlash,
     clearFlashResult,
     deviceLog,
     clearDeviceLog,
