@@ -16,6 +16,7 @@ import {
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
 import { useDashboard } from './dashboard/context';
+import '../../styles/docs.css';
 
 const sectionTabs: TabOption[] = [
   { value: 'native', label: 'Native API', icon: BsTerminal },
@@ -334,7 +335,7 @@ const DocsLayout = (props: RouteSectionProps) => {
               />
             }
           />
-          <div class="container container--wide grid">
+          <div class="docs-page">
             {props.children}
           </div>
         </div>
