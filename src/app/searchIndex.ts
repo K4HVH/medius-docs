@@ -20,7 +20,8 @@ const entries: SearchEntry[] = [
   // ── Dashboard ───────────────────────────────────────────────────────────
   { label: 'Dashboard', description: 'Connect to your box, view it, and flash firmware in the browser', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['dashboard', 'tool', 'connect', 'flash', 'web serial', 'device'] },
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
-  { label: 'Flash firmware', description: 'Update or recover the device chip in the browser with esptool', path: '/dashboard/flash', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['flash', 'firmware', 'update', 'recovery', 'factory', 'esptool', 'bin'] },
+  { label: 'Update', description: 'Guided firmware update for your box, both chips, in plain steps', path: '/dashboard/update', group: 'Dashboard', icon: BsArrowRepeat, keywords: ['update', 'firmware', 'upgrade', 'latest', 'flash', 'both chips', 'guided'] },
+  { label: 'Advanced flashing', description: 'Manual chip and offset flashing with esptool', path: '/dashboard/advanced', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['advanced', 'flash', 'manual', 'device chip', 'host chip', 'esptool', 'bin', 'offset'] },
   { label: 'Recovery', description: 'Flash a chip over native USB: recover a box that wont connect, or flash the host chip', path: '/dashboard/recovery', group: 'Dashboard', icon: BsWrench, keywords: ['recovery', 'recover', 'brick', 'bricked', 'blank', 'host chip', 'boot button', 'unbrick', 'native usb', '303a'] },
   { label: 'Console', description: 'Live device diagnostics (LOG frames) while connected', path: '/dashboard/console', group: 'Dashboard', icon: BsJournalText, keywords: ['console', 'log', 'logs', 'diagnostics', 'serial monitor', 'debug'] },
 

@@ -8,7 +8,13 @@ import {
   onCleanup,
   useContext,
 } from 'solid-js';
-import { type Health, type LogLine, type Version, LogLevel } from '../../../dashboard/protocol';
+import {
+  type Health,
+  type LogLine,
+  type Version,
+  LogLevel,
+  RebootTarget,
+} from '../../../dashboard/protocol';
 import {
   BadProtoVerError,
   NoReplyError,
@@ -39,8 +45,9 @@ export interface DashboardContextValue {
   setHealth: (h: Health | null) => void;
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
-  flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<void>;
-  flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<void>;
+  flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<boolean>;
+  flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<boolean>;
+  rebootForHostFlash: () => Promise<void>;
   clearFlashResult: () => void;
   deviceLog: Accessor<string[]>;
   clearDeviceLog: () => void;
@@ -177,8 +184,16 @@ export const DashboardProvider: ParentComponent = (props) => {
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
 
-  const flashDevice = async (image: Uint8Array, kind: FlashKind) => {
-    if (status() === 'flashing') return;
+  // Relay a reboot to the host chip so it enters ROM download on its own USB
+  // (USB3). The control link stays open: the running device chip does the relay.
+  const rebootForHostFlash = async () => {
+    const l = link();
+    if (!l) throw new Error('Connect to the box first.');
+    await l.reboot(RebootTarget.HostDownload);
+  };
+
+  const flashDevice = async (image: Uint8Array, kind: FlashKind): Promise<boolean> => {
+    if (status() === 'flashing') return false;
     const l = link();
     if (!l) throw new Error('Connect to the box before flashing.');
     stopHealthPolling();
@@ -200,19 +215,25 @@ export const DashboardProvider: ParentComponent = (props) => {
       setHealth(null);
       setFlashProgress({ phase: 'done' });
       setStatus('disconnected');
+      return true;
     } catch (e) {
       setLink(null);
       setVersion(null);
       setHealth(null);
       setError(describeError(e));
       setStatus('error');
+      return false;
     }
   };
 
   // Flash a chip already in ROM download on its native USB port (recovery / host
   // chip). Independent of the control link; restores it afterwards if one was up.
-  const flashNative = async (port: SerialPort, image: Uint8Array, kind: FlashKind) => {
-    if (status() === 'flashing') return;
+  const flashNative = async (
+    port: SerialPort,
+    image: Uint8Array,
+    kind: FlashKind,
+  ): Promise<boolean> => {
+    if (status() === 'flashing') return false;
     const hadLink = link();
     if (hadLink) stopHealthPolling();
     setError(null);
@@ -235,6 +256,7 @@ export const DashboardProvider: ParentComponent = (props) => {
       } else {
         setStatus('disconnected');
       }
+      return true;
     } catch (e) {
       setError(describeError(e));
       if (hadLink) {
@@ -243,6 +265,7 @@ export const DashboardProvider: ParentComponent = (props) => {
       } else {
         setStatus('error');
       }
+      return false;
     }
   };
 
@@ -279,6 +302,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     flashLog,
     flashDevice,
     flashNative,
+    rebootForHostFlash,
     clearFlashResult,
     deviceLog,
     clearDeviceLog,
