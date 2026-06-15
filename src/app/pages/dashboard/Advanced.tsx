@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createResource, createSignal } from 'solid-js';
+import { Match, Show, Switch, createEffect, createResource, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Combobox } from '../../../components/inputs/Combobox';
@@ -15,6 +15,7 @@ import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestMediusPort, requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { PortDiagram } from './PortDiagram';
+import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
@@ -34,6 +35,13 @@ const Advanced = () => {
   const [done, setDone] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
+  const [unplugged, setUnplugged] = createSignal(false);
+
+  // Re-arm the unplug gate whenever the chosen chip changes.
+  createEffect(() => {
+    chip();
+    setUnplugged(false);
+  });
 
   const latest = () => releases()?.[0] ?? null;
   const assetName = () => `medius_${chip()}${kind() === 'factory' ? '-factory' : ''}.bin`;
@@ -177,18 +185,23 @@ const Advanced = () => {
                 </Show>
               </Show>
 
-              <p style={{ 'margin-top': 'var(--g-spacing)' }}>Plug in and hold BOOT:</p>
-              <PortDiagram
-                plug={chip() === 'host' ? ['usb3'] : ['usb1', 'usb2']}
-                boot={chip() === 'host' ? 'mouse' : 'main'}
-              />
-              <Show when={chip() === 'host'}>
-                <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
+              <p style={{ 'margin-top': 'var(--g-spacing)' }}>Get the chip into the bootloader:</p>
+              <Show
+                when={chip() === 'device' || unplugged()}
+                fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
+              >
+                <p>Plug in and hold BOOT:</p>
+                <PortDiagram
+                  plug={chip() === 'host' ? ['usb3'] : ['usb1', 'usb2']}
+                  boot={chip() === 'host' ? 'mouse' : 'main'}
+                />
+                <Show when={chip() === 'host'}>
+                  <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
+                </Show>
+                <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
+                  Flash
+                </Button>
               </Show>
-
-              <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
-                Flash
-              </Button>
             </Match>
           </Switch>
         </Card>

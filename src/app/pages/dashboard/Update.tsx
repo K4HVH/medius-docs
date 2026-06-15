@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createResource, createSignal } from 'solid-js';
+import { Match, Show, Switch, createEffect, createResource, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
@@ -9,6 +9,7 @@ import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { PortDiagram } from './PortDiagram';
+import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
 type Step = 'choose' | 'main' | 'mouse' | 'done';
@@ -26,6 +27,12 @@ const Update = () => {
   const [alsoMouse, setAlsoMouse] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
+  const [unplugged, setUnplugged] = createSignal(false);
+
+  // Reset the unplug gate each time we enter the mouse-side step.
+  createEffect(() => {
+    if (step() === 'mouse') setUnplugged(false);
+  });
 
   const latest = () => releases()?.[0] ?? null;
   const lv = () => parseTag(latest()?.tag);
@@ -155,12 +162,17 @@ const Update = () => {
             </Match>
 
             <Match when={step() === 'mouse'}>
-              <p><strong>Mouse-side chip.</strong> Unplug your mouse, then plug in like this.</p>
-              <PortDiagram plug={['usb3']} boot="mouse" />
-              <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
-              <Button variant="primary" disabled={busy()} onClick={() => void installMouse()}>
-                Install
-              </Button>
+              <Show
+                when={unplugged()}
+                fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
+              >
+                <p><strong>Mouse-side chip.</strong> Now plug in like this.</p>
+                <PortDiagram plug={['usb3']} boot="mouse" />
+                <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
+                <Button variant="primary" disabled={busy()} onClick={() => void installMouse()}>
+                  Install
+                </Button>
+              </Show>
             </Match>
 
             <Match when={step() === 'done'}>
