@@ -49,28 +49,21 @@ src/
         Connection.tsx                # Handshake and the boot version hello
         Frame.tsx                     # Frame format, CRC16, opcodes
         Injection.tsx                 # Injection model, carry, emission, safety
-        commands/
-          Movement.tsx                # MOVE 0x01
-          Wheel.tsx                   # WHEEL 0x02
+        commands/                     # one page per command GROUP (not per opcode)
+          Movement.tsx                # MOVE 0x01, WHEEL 0x02
           Buttons.tsx                 # BUTTON 0x03
-          Reset.tsx                   # RESET 0x04
-          Version.tsx                 # QUERY/RESP VERSION (0x05/0x06)
-          Health.tsx                  # QUERY/RESP HEALTH
-          Reboot.tsx                  # REBOOT 0x07
-          Log.tsx                     # LOG 0x08
+          Requests.tsx                # QUERY 0x05, RESP 0x06, with VERSION/HEALTH layouts
+          Admin.tsx                   # RESET 0x04, REBOOT 0x07, LOG 0x08
         Flashing.tsx                  # Firmware updates over REBOOT
         Troubleshooting.tsx           # Common problems and fixes
       library/
         Introduction.tsx              # Rust library overview, install, features
         Connection.tsx                # open, find, handshake, threading
-        Movement.tsx                  # move_rel
-        Wheel.tsx                     # wheel
+        Movement.tsx                  # move_rel, wheel
         Buttons.tsx                   # press, soft_release, force_release, button
-        Reset.tsx                     # reset
-        Version.tsx                   # query_version
-        Health.tsx                    # query_health
+        Requests.tsx                  # query_version, query_health
+        Admin.tsx                     # reset, reboot
         Lifecycle.tsx                 # keepalive, reapply, reconnect
-        Reboot.tsx                    # reboot
         Diagnostics.tsx               # logs(), counters()
         TypesAndErrors.tsx            # public types and the Error enum
         features/
@@ -80,7 +73,7 @@ src/
   components/                         # MidnightUI components (DO NOT MODIFY)
   styles/
     global.css                        # MidnightUI theme tokens (DO NOT MODIFY)
-    docs.css                          # Documentation-specific styles
+    docs.css                          # Documentation-specific styles (editable)
     components/                       # MidnightUI component styles (DO NOT MODIFY)
 ```
 
@@ -110,23 +103,52 @@ Every Card is wrapped in a `<div id="..." data-search-target>`. This lets search
 
 Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryFeatureTabs`, `libraryReferenceTabs`. Add new pages to the right array. Nav icons come from `solid-icons/bs`.
 
+## Consistency rules (read before editing)
+
+These exist because earlier passes drifted. Hold to them.
+
+### Single source of truth -- never duplicate a table
+
+Each fact set lives in exactly ONE place; every other page links to it, it does not re-table it.
+- Reboot targets: only on `commands/Admin.tsx` (`#reboot`). Flashing, Troubleshooting, and the flash feature link there.
+- HEALTH flags: only on `commands/Requests.tsx` (`#health`).
+- Frame layout: only on `Frame.tsx` (`#layout`).
+- Opcode list: only on `Frame.tsx` (`#opcodes`).
+- Chip roles: only on `Architecture.tsx`; elsewhere link the words "device chip" / "host chip".
+If you need to reference one of these, link to it. Do not paste a second copy with different columns -- that is the inconsistency this repo kept fighting. Verify with a grep that the distinctive content (e.g. `>device download<`, `<th>Mask</th>`) appears in one file.
+
+### Command section template
+
+Every native opcode section uses the same element order (gold references: `commands/Movement.tsx`, `commands/Admin.tsx`):
+
+`CardHeader` -> intro `<p>` (one sentence, ends "Opcode `0xNN`.") -> `pre.api-signature` -> badge `<p>` -> `PAYLOAD` label + `byte-table` (or `<p>No payload (...).</p>`) -> optional detail table (`ACTIONS`/`TARGETS`/`LEVELS`/`SELECTORS`/`FLAGS`) -> `EFFECT` label + `<p>` (ends "Library binding: ...") -> `EXAMPLE` label + `pre.diagram` byte grid.
+
+Library method sections: `pre.api-signature` (bare `fn name(...) -> T`) -> badge -> optional `PARAMETERS` table -> description `<p>` -> optional `<pre><code>` example. Gold reference: `library/Movement.tsx`.
+
+### Capitalization
+
+- Table `<th>` headers: sentence case (first word capitalized, rest lowercase); code-identifier headers stay in `<code>` with source case.
+- `byte-table` Notes cells: lowercase fragment, no trailing period.
+- `api-params` description cells (Effect / Description / Meaning ...): full sentence, ending in a period.
+- Short value/label/code cells: no trailing period.
+- `api-response-label` divs: ALL-CAPS.
+
 ## Styling Rules
 
 - Use MidnightUI components (Card, CardHeader, Divider) for all layout. Avoid custom CSS.
-- Documentation-specific styles live in `src/styles/docs.css` (callouts, API badges, tables).
-- Do not modify `global.css` or anything under `src/components/` or `src/styles/components/`.
+- Documentation-specific styles live in `src/styles/docs.css` (callouts, API badges, tables). This file is editable; `global.css` and `src/components/` / `src/styles/components/` are not.
 - No emojis except the ⚠️ on the USB3 hazard callout.
-- Terse, declarative wording. No filler, no marketing language.
+- Terse, declarative wording. No filler, no marketing language. De-AI it (no "robust/seamless/leverage", no "**Bold**: explanation" bullets, contractions).
 
 ### Documentation Page Patterns
 
-- **Cards** for every section; the first card is the page header (title + subtitle via `CardHeader`).
-- **`api-signature`** on `<pre>` for an opcode or method signature line.
-- **`api-response-label`** divs for small uppercase labels (PAYLOAD, EFFECT, EXAMPLE).
-- **`api-badge`** spans for badges: `--executed` (green, "Fire-and-forget"), `--responded` (blue, "Returns RESP").
-- **`api-params`** on parameter/reference tables; **`byte-table`** for wire/byte-layout tables.
+- **Cards** for every section; the first card is the page header (title + subtitle via `CardHeader`). Subtitles are plain sentence-case noun phrases, no trailing period.
+- **`api-signature`** on `<pre>` for an opcode or method signature line only.
+- **`api-response-label`** divs for ALL-CAPS labels (PAYLOAD, EFFECT, EXAMPLE, PARAMETERS, ACTIONS, TARGETS, LEVELS, SELECTORS, FLAGS).
+- **`api-badge`** spans, one under each signature: `--executed` (green) "Fire-and-forget"; `--responded` (blue) "Returns RESP" / "Reply" / "Blocks"; `--warning` (yellow) "Unsolicited".
+- **`api-params`** on parameter/reference tables; **`byte-table`** for wire/byte-layout tables (columns Offset / Field / Type / Notes).
 - **`callout`** divs (`--info`, `--warning`, `--danger`) for notes.
-- **`diagram`** on `<pre>` for ASCII diagrams.
+- **`diagram`** on `<pre>` for ASCII byte/flow diagrams. Byte breakdowns are fixed-width grids: each cell is exactly 8 chars (`+--------+` ASCII borders), byte on the top row, field label beneath, so columns can never drift. Verify with a script that every line in a grid is the same length.
 
 ### Mobile Considerations
 
@@ -149,10 +171,14 @@ magick -background none -density 2048 public/favicon.svg -resize 1024x1024 publi
 - Document guarantees, not implementation tells. The firmware is closed; do not document the internal transparency/cloning mechanism (e.g. how baselines are seeded or how vendor fields are tracked), specific mouse-model quirks, or microsecond timing figures. State the guarantees (byte-identical clone, additive injection, native-equivalent idle, safety auto-clear) and the full protocol.
 - Do not invent facts. If a value isn't confirmed, leave it out.
 
+## Deployment
+
+CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`.
+
 ## Adding a New Page
 
 1. Create the component under `src/app/pages/`. Wrap every Card in `<div id="..." data-search-target>`.
 2. Add a route in `App.tsx`.
 3. Add a tab entry in the right array in `DocsLayout.tsx` (with a `solid-icons/bs` icon).
 4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).
-5. Follow existing page patterns.
+5. Follow the command/method template and the consistency rules above. Link to canonical tables; never duplicate them.
