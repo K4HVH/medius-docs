@@ -34,11 +34,17 @@ import LibTypesEnums from './pages/library/types/Enums';
 import LibTypesStructs from './pages/library/types/Structs';
 import LibTypesFrames from './pages/library/types/Frames';
 import LibTypesErrors from './pages/library/types/Errors';
+import DashboardDevice from './pages/dashboard/Device';
+import DashboardUpdate from './pages/dashboard/Update';
+import DashboardAdvanced from './pages/dashboard/Advanced';
+import DashboardChangelog from './pages/dashboard/Changelog';
+import { DashboardProvider } from './pages/dashboard/context';
 
 const App: Component = () => {
   return (
     <NotificationProvider>
-      <Router>
+      <DashboardProvider>
+        <Router>
         <Route path="/" component={Home} />
         <Route path="/" component={DocsLayout}>
           <Route path="/native" component={NativeIntroduction} />
@@ -72,9 +78,14 @@ const App: Component = () => {
           <Route path="/library/types/structs" component={LibTypesStructs} />
           <Route path="/library/types/frames" component={LibTypesFrames} />
           <Route path="/library/types/errors" component={LibTypesErrors} />
+          <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/dashboard/update" component={DashboardUpdate} />
+          <Route path="/dashboard/advanced" component={DashboardAdvanced} />
+          <Route path="/dashboard/changelog" component={DashboardChangelog} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
-      </Router>
+        </Router>
+      </DashboardProvider>
     </NotificationProvider>
   );
 };

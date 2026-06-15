@@ -1,5 +1,5 @@
 import { createSignal, createEffect, onCleanup, onMount, Show, createMemo } from 'solid-js';
-import { type RouteSectionProps, useNavigate, useLocation } from '@solidjs/router';
+import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Pane, type PaneState } from '../../components/navigation/Pane';
 import { Tabs } from '../../components/navigation/Tabs';
@@ -15,10 +15,13 @@ import {
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
+import { useDashboard } from './dashboard/context';
+import '../../styles/docs.css';
 
 const sectionTabs: TabOption[] = [
   { value: 'native', label: 'Native API', icon: BsTerminal },
   { value: 'library', label: 'Rust Library', icon: BsBook },
+  { value: 'dashboard', label: 'Dashboard', icon: BsBroadcast },
 ];
 
 const nativeOverviewTabs: TabOption[] = [
@@ -84,6 +87,13 @@ const allLibraryTabs = [
   ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs, ...libraryReferenceTabs,
 ];
 
+const dashboardTabs: TabOption[] = [
+  { value: '/dashboard', label: 'Device', icon: BsCpu },
+  { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
+  { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
+  { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
+];
+
 const isMobileQuery = () =>
   typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 
@@ -93,6 +103,12 @@ const DocsLayout = (props: RouteSectionProps) => {
   const [searchOpen, setSearchOpen] = createSignal(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dash = useDashboard();
+  const flashing = () => dash.status() === 'flashing';
+  // Block all in-app navigation (back/forward, links, programmatic) during a flash.
+  useBeforeLeave((e) => {
+    if (flashing()) e.preventDefault();
+  });
   let pendingHash: string | null = null;
 
   const scrollToTarget = (id: string) => {
@@ -104,6 +120,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   };
 
   const handleSearchNavigate = (fullPath: string) => {
+    if (flashing()) return;
     setSearchOpen(false);
     const hashIdx = fullPath.indexOf('#');
     const path = hashIdx >= 0 ? fullPath.slice(0, hashIdx) : fullPath;
@@ -137,10 +154,15 @@ const DocsLayout = (props: RouteSectionProps) => {
     onCleanup(() => mql.removeEventListener('change', handler));
   });
 
-  const activeSection = () => location.pathname.startsWith('/library') ? 'library' : 'native';
+  const activeSection = () =>
+    location.pathname.startsWith('/dashboard')
+      ? 'dashboard'
+      : location.pathname.startsWith('/library')
+        ? 'library'
+        : 'native';
 
   const pageTitle = createMemo(() => {
-    const all = [...allNativeTabs, ...allLibraryTabs];
+    const all = [...allNativeTabs, ...allLibraryTabs, ...dashboardTabs];
     return all.find(t => t.value === location.pathname)?.label ?? '';
   });
 
@@ -159,6 +181,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   });
 
   const handlePageNav = (value: string) => {
+    if (flashing()) return;
     navigate(value);
     if (isMobile()) setPaneState('closed');
   };
@@ -181,8 +204,10 @@ const DocsLayout = (props: RouteSectionProps) => {
             orientation="vertical"
             variant="subtle"
             value={activeSection()}
+            disabled={flashing()}
             onChange={(value: string) => {
-              const prefix = value === 'library' ? '/library' : '/native';
+              const prefix =
+                value === 'dashboard' ? '/dashboard' : value === 'library' ? '/library' : '/native';
               if (!location.pathname.startsWith(prefix)) navigate(prefix);
             }}
             options={sectionTabs}
@@ -255,11 +280,28 @@ const DocsLayout = (props: RouteSectionProps) => {
               options={libraryReferenceTabs}
             />
           </Show>
+          <Show when={activeSection() === 'dashboard'}>
+            <Divider spacing="compact" label="Dashboard" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={dashboardTabs}
+              disabled={flashing()}
+            />
+          </Show>
         </Pane>
 
         <div ref={contentRef} style={{ flex: 1, overflow: 'auto' }}>
           <Titlebar
-            title={activeSection() === 'library' ? 'Medius - Rust Library' : 'Medius - Native API'}
+            title={
+              activeSection() === 'dashboard'
+                ? 'Medius - Dashboard'
+                : activeSection() === 'library'
+                  ? 'Medius - Rust Library'
+                  : 'Medius - Native API'
+            }
             subtitle={pageTitle()}
             sticky
             style={{ margin: 'var(--g-spacing-sm)', top: 'var(--g-spacing-sm)' }}
@@ -278,6 +320,7 @@ const DocsLayout = (props: RouteSectionProps) => {
                   variant="subtle"
                   size="compact"
                   icon={BsHouseDoor}
+                  disabled={flashing()}
                   onClick={() => navigate('/')}
                   aria-label="Home"
                 />
@@ -293,7 +336,7 @@ const DocsLayout = (props: RouteSectionProps) => {
               />
             }
           />
-          <div class="container container--wide grid">
+          <div class="docs-page">
             {props.children}
           </div>
         </div>
@@ -304,7 +347,9 @@ const DocsLayout = (props: RouteSectionProps) => {
         onClose={() => setSearchOpen(false)}
         items={searchItems}
         keybinding
-        onKeybinding={() => setSearchOpen(prev => !prev)}
+        onKeybinding={() => {
+          if (!flashing()) setSearchOpen((prev) => !prev);
+        }}
         placeholder="Search documentation..."
         emptyMessage="No results found"
       />

@@ -169,10 +169,23 @@ pre.diagram {
   color: var(--g-text-secondary);
 }
 
+/* Docs content fills the width left by the side pane (no narrow max-width cap). */
+.docs-page {
+  width: 100%;
+  padding: var(--g-spacing-lg);
+  display: grid;
+  gap: var(--g-spacing-lg);
+}
+
 .docs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--g-spacing);
+}
+
+/* A landing-page card that spans the full grid row, to balance an odd count. */
+.docs-grid__wide {
+  grid-column: 1 / -1;
 }
 
 /* Search scroll targets */
