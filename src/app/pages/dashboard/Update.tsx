@@ -141,8 +141,8 @@ const Update = () => {
       <Show when={dash.status() !== 'flashing'}>
         <Card>
           <CardHeader title="Update" subtitle="Get the latest firmware" />
-          <Show when={err()}>
-            <div class="callout callout--danger" role="alert">{err()}</div>
+          <Show when={err() ?? (dash.status() === 'error' ? dash.error() : null)}>
+            {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
           </Show>
 
           <Switch>
@@ -151,8 +151,17 @@ const Update = () => {
                 <Match when={dash.status() !== 'connected'}>
                   <p>Plug in like this, then connect.</p>
                   <PortDiagram plug={['usb1', 'usb2']} />
-                  <Button variant="primary" disabled={!dash.supported || busy()} onClick={() => void dash.connect()}>
-                    Connect
+                  <Button
+                    variant="primary"
+                    loading={dash.status() === 'connecting'}
+                    disabled={!dash.supported || busy() || dash.status() === 'connecting'}
+                    onClick={() => void dash.connect()}
+                  >
+                    {dash.status() === 'connecting'
+                      ? 'Connecting...'
+                      : dash.status() === 'error'
+                        ? 'Try again'
+                        : 'Connect'}
                   </Button>
                 </Match>
                 <Match when={dash.status() === 'connected'}>
@@ -163,7 +172,7 @@ const Update = () => {
                     </Show>
                     <Show when={latest()}>
                       {'. '}Latest is <strong>{latest()?.tag}</strong>
-                      {upToDate() ? ' — up to date.' : '.'}
+                      {upToDate() ? ', up to date.' : '.'}
                     </Show>
                   </p>
                   <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
@@ -244,8 +253,17 @@ const Update = () => {
               </Show>
               <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap', 'margin-top': 'var(--g-spacing-sm)' }}>
                 <Show when={dash.status() !== 'connected'}>
-                  <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                    Connect
+                  <Button
+                    variant="primary"
+                    loading={dash.status() === 'connecting'}
+                    disabled={!dash.supported || dash.status() === 'connecting'}
+                    onClick={() => void dash.connect()}
+                  >
+                    {dash.status() === 'connecting'
+                      ? 'Connecting...'
+                      : dash.status() === 'error'
+                        ? 'Try again'
+                        : 'Connect'}
                   </Button>
                 </Show>
                 <Button variant="secondary" onClick={() => { setStep('choose'); setMainCtrl(null); dash.clearFlashResult(); }}>
