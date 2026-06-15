@@ -23,7 +23,6 @@ const col = {
   gap: 'var(--g-spacing)',
 } as const;
 
-const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Device = () => {
@@ -96,10 +95,6 @@ const Device = () => {
                       Install Medius
                     </Button>
                   </div>
-                  <p style={muted}>
-                    Setting it up for the first time, or fixing a box that stopped responding?
-                    Install Medius from the Update tab.
-                  </p>
                 </Match>
 
                 <Match when={dash.status() === 'disconnected'}>
