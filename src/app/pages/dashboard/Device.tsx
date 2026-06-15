@@ -1,10 +1,17 @@
-import { Match, Show, Switch } from 'solid-js';
+import { For, Match, Show, Switch } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { versionString } from '../../../dashboard/protocol';
+import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import '../../../styles/docs.css';
+
+const healthItems = (h: Health) => [
+  { label: 'Host link', value: h.linkUp },
+  { label: 'Mouse attached', value: h.mouseAttached },
+  { label: 'Clone configured', value: h.cloneConfigured },
+  { label: 'Injection active', value: h.injectionActive },
+];
 
 const Device = () => {
   const dash = useDashboard();
@@ -66,6 +73,23 @@ const Device = () => {
         </Switch>
         </div>
       </Card>
+
+      <Show when={dash.status() === 'connected'}>
+        <Card>
+          <CardHeader title="Status" subtitle="Live device health" />
+          <Show when={dash.health()} fallback={<p>Reading status...</p>}>
+            {(h) => (
+              <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
+                <For each={healthItems(h())}>
+                  {(item) => (
+                    <Chip variant={item.value ? 'success' : 'neutral'}>{item.label}</Chip>
+                  )}
+                </For>
+              </div>
+            )}
+          </Show>
+        </Card>
+      </Show>
     </>
   );
 };
