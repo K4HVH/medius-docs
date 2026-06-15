@@ -45,3 +45,15 @@ Output goes to `dist/`.
 - [Bun](https://bun.sh) -- Runtime and package manager
 - [MidnightUI](https://github.com/user/midnightui) -- Component library
 - [solid-icons](https://github.com/x64Bits/solid-icons) -- Icons
+
+## Deployment
+
+CI builds the app and a multi-arch container on every push to `main` and publishes it to
+`ghcr.io/k4hvh/medius-docs`. Run it with Docker:
+
+```bash
+docker run --rm -p 3000:3000 ghcr.io/k4hvh/medius-docs:latest
+```
+
+`docker-compose.yml` runs the same image. The container builds with Bun and serves `dist/`
+on port 3000.
