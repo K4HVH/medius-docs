@@ -73,7 +73,11 @@ const libraryFeatureTabs: TabOption[] = [
 ];
 
 const libraryReferenceTabs: TabOption[] = [
-  { value: '/library/types', label: 'Types & Errors', icon: BsFileCode },
+  { value: '/library/types', label: 'Types overview', icon: BsFileCode },
+  { value: '/library/types/enums', label: 'Enums', icon: BsFileCode },
+  { value: '/library/types/structs', label: 'Structs', icon: BsFileCode },
+  { value: '/library/types/frames', label: 'Frames', icon: BsFileCode },
+  { value: '/library/types/errors', label: 'Errors', icon: BsExclamationTriangle },
 ];
 
 const allLibraryTabs = [

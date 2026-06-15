@@ -163,11 +163,11 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Bits b4–b7 are unused. The first three set means the box is ready for input to reach the PC.
+            Bits b4-b7 are unused. The first three set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Ready — link, mouse, and clone all up (<code>flags = 0x07</code>):</p>
+          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x07</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 02 00  | 01     | 07     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+

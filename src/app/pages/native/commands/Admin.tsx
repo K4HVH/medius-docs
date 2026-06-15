@@ -110,7 +110,7 @@ const Admin: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>level</code></td><td><code>u8</code></td><td>severity (see below)</td></tr>
-              <tr><td>1..</td><td><code>text</code></td><td><code>UTF-8</code></td><td>the log line, not NUL-terminated, length = <code>LEN − 1</code></td></tr>
+              <tr><td>1..</td><td><code>text</code></td><td><code>UTF-8</code></td><td>the log line, not NUL-terminated, length = <code>LEN - 1</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">LEVELS</div>

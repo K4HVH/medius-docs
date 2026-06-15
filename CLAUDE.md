@@ -116,11 +116,11 @@ Each fact set lives in exactly ONE place; every other page links to it, it does 
 - Opcode list: only on `Frame.tsx` (`#opcodes`).
 - Chip roles: only on `Architecture.tsx`; elsewhere link the words "device chip" / "host chip".
 
-Library enum/struct semantics live on the METHOD page that uses them; `library/types` summarizes and links, it does not re-table them:
-- `RebootTarget` effects: only on `library/Admin.tsx` (`#reboot`).
-- `ButtonAction` effects: only on `library/Buttons.tsx` (`#methods`); `Button` ids: only on `library/Buttons.tsx` (`#button-arg`).
-- `Health` / `Version` fields: only on `library/Requests.tsx`. `CountersSnapshot`: only on `library/Diagnostics.tsx` (`#counters`). `LogLevel`: only on `library/Diagnostics.tsx` (`#logs`).
-- `Error` variants: only on `library/TypesAndErrors.tsx` (`#errors`); the handshake links there, it does not re-table the three handshake errors.
+Library enum and struct definitions live ONCE, as proper per-type tables on `library/TypesAndErrors.tsx` (one row per variant or field, not a comma-list crammed in a cell). Method pages link to Types for the type and show usage in an example; they do NOT re-table variants or fields.
+- Enums `Button`, `ButtonAction`, `RebootTarget`, `LogLevel`: proper tables only on `library/types` (`#enums`).
+- Structs `Version`, `Health`, `LogLine`, `PortInfo`, `CountersSnapshot`: proper tables only on `library/types` (`#structs`).
+- `FrameType` / `DecodedFrame`: only on `library/types` (`#frames`). `Error` variants: only on `library/types` (`#errors`).
+- A method states what it returns in one sentence with a link to `library/types`, plus an example (see `library/Requests.tsx`, `library/Diagnostics.tsx`). It does not repeat the field/variant table.
 
 If you need to reference one of these, link to it. Do not paste a second copy with different columns -- that is the inconsistency this repo kept fighting. Verify with a grep that the distinctive content (e.g. `>device download<`, `<th>Mask</th>`) appears in one file.
 
@@ -140,12 +140,21 @@ Library method sections (gold reference: `library/Movement.tsx`): `pre.api-signa
 - Short value/label/code cells: no trailing period.
 - `api-response-label` divs: ALL-CAPS.
 
+## Terseness (this is API reference, not a tutorial or a story)
+
+The signature, the table, and the example carry the content. Prose is near zero.
+- Outside tables and code blocks, a card has AT MOST 2 short sentences (the page's first/intro card at most 3). Prefer 1, or zero when the table and example already say it.
+- Delete: narration and transitions ("you work in two halves", "first ... second ..."), second-person hand-holding ("you'll", "a junior wants", "so you can"), and any sentence that restates what a table or example already shows.
+- If you're explaining how to use something in a paragraph, you're doing it wrong: put it in the example. If you're describing fields/variants in prose, put them in a table.
+- The user has said this many times and gets angry about text blobs. When in doubt, cut.
+
 ## Styling Rules
 
 - Use MidnightUI components (Card, CardHeader, Divider) for all layout. Avoid custom CSS.
 - Documentation-specific styles live in `src/styles/docs.css` (callouts, API badges, tables). This file is editable; `global.css` and `src/components/` / `src/styles/components/` are not.
 - No emojis except the ⚠️ on the USB3 hazard callout.
 - Terse, declarative wording. No filler, no marketing language. De-AI it (no "robust/seamless/leverage", no "**Bold**: explanation" bullets, contractions).
+- ASCII punctuation only. No em-dashes or en-dashes, ever (rewrite with commas, periods, parentheses, or "to" for ranges); no unicode minus (use "-"). Em-dashes are the AI tell the user calls out most. Verify with a unicode-dash scan before committing.
 
 ### Documentation Page Patterns
 

@@ -91,6 +91,51 @@ const Hardware: Component = () => {
           </div>
         </Card>
       </div>
+
+      <div id="disconnecting" data-search-target>
+        <Card>
+          <CardHeader title="Disconnecting" subtitle="No power switch, just unplug" />
+          <p>
+            The box is USB bus-powered: no battery, no power button, nothing to power down. Turning
+            it off means unplugging it, and that is safe at any moment. Injected input never outlives
+            the program that sent it, so a button or move can't get stuck.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>You unplug</th><th>What happens</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>USB2</code> (control), or the program stops</td>
+                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and falls back to pure <A href="/native/injection">passthrough</A>. The real mouse keeps working.</td>
+              </tr>
+              <tr>
+                <td><code>USB1</code> (clone)</td>
+                <td>The game PC sees an ordinary mouse unplug; the box drops its injection state.</td>
+              </tr>
+              <tr>
+                <td><code>USB3</code> (mouse)</td>
+                <td>The box tears down the captured mouse cleanly and reports it detached.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            To return to passthrough instantly instead of waiting out the{' '}
+            <A href="/native/injection#safety">silence timeout</A>, send a{' '}
+            <A href="/native/commands/admin#reset"><code>RESET</code></A> before unplugging (the
+            library's <A href="/library/admin#reset"><code>reset</code></A>). Dropping the{' '}
+            <A href="/library/connection#release"><code>Device</code></A> stops its threads, after
+            which the same timeout clears the box. Port order otherwise does not matter.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              The one rule: <code>USB1</code> and <code>USB3</code> must not share a machine at any
+              point, plugging in or unplugging. See the{' '}
+              <A href="/native/hardware#hazard">power hazard</A>.
+            </p>
+          </div>
+        </Card>
+      </div>
     </>
   );
 };
