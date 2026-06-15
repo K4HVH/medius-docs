@@ -227,12 +227,11 @@ const Update = () => {
                 fallback={
                   <>
                     <div class="callout callout--info">
-                      Installed. Connect to check it - if it doesn't respond, power-cycle the box first.
+                      Mouse-side firmware installed. To use the box, plug your mouse into USB3 and
+                      cable USB1 and USB2 to your PC.
                     </div>
                     <PortDiagram plug={['usb1', 'usb2']} />
-                    <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                      Connect
-                    </Button>
+                    <p style={muted}>Then connect to check the box still answers.</p>
                   </>
                 }
               >
@@ -243,9 +242,16 @@ const Update = () => {
                   </Show>
                 </div>
               </Show>
-              <Button variant="secondary" onClick={() => { setStep('choose'); setMainCtrl(null); dash.clearFlashResult(); }}>
-                Finish
-              </Button>
+              <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap', 'margin-top': 'var(--g-spacing-sm)' }}>
+                <Show when={dash.status() !== 'connected'}>
+                  <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
+                    Connect
+                  </Button>
+                </Show>
+                <Button variant="secondary" onClick={() => { setStep('choose'); setMainCtrl(null); dash.clearFlashResult(); }}>
+                  Finish
+                </Button>
+              </div>
             </Match>
           </Switch>
         </Card>
