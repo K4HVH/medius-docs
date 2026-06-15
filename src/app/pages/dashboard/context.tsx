@@ -126,24 +126,28 @@ export const DashboardProvider: ParentComponent = (props) => {
   // After the main chip reboots to run, reconnect and read the version back as a
   // verification. Returns false if it never came back (then a power-cycle is needed).
   const tryReconnect = async (port: SerialPort): Promise<boolean> => {
-    await new Promise((r) => setTimeout(r, 1500));
-    const nl = makeLink(port);
-    try {
-      await nl.open();
-      const v = await nl.handshake();
-      setVersion(v);
-      setLink(nl);
-      setStatus('connected');
-      startHealthPolling(nl);
-      return true;
-    } catch {
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    await sleep(2000);
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const nl = makeLink(port);
       try {
-        await nl.close();
+        await nl.open();
+        const v = await nl.handshake();
+        setVersion(v);
+        setLink(nl);
+        setStatus('connected');
+        startHealthPolling(nl);
+        return true;
       } catch {
-        // ignore
+        try {
+          await nl.close();
+        } catch {
+          // ignore
+        }
+        await sleep(1000);
       }
-      return false;
     }
+    return false;
   };
 
   let disposed = false;
