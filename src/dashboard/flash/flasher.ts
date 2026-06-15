@@ -60,14 +60,21 @@ async function runEsptool(
       calculateMD5Hash: md5Hex,
     };
     await loader.writeFlash(flashOptions);
-    // Reboot to run the new firmware: the main chip resets via the CH343's RTS,
-    // native USB via its own reset. Best-effort - a power-cycle works if it can't.
+    onProgress?.({ phase: 'done' });
+    // Reset the chip to run the new firmware. On this board, ASSERTING DTR/RTS
+    // resets the device chip, so pulse them (esptool-js's hard_reset only
+    // deasserts RTS, which never resets it). Native USB uses its own reset.
     try {
-      await loader.after('hard_reset', port.getInfo().usbVendorId === 0x303a);
+      if (port.getInfo().usbVendorId === 0x303a) {
+        await loader.after('hard_reset', true);
+      } else {
+        await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+        await sleep(100);
+        await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+      }
     } catch {
       // ignore
     }
-    onProgress?.({ phase: 'done' });
     onLog?.('Flash complete.');
   } finally {
     try {
