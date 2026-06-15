@@ -37,6 +37,7 @@ import LibTypesErrors from './pages/library/types/Errors';
 import DashboardDevice from './pages/dashboard/Device';
 import DashboardFlash from './pages/dashboard/Flash';
 import DashboardRecovery from './pages/dashboard/Recovery';
+import DashboardConsole from './pages/dashboard/Console';
 import { DashboardProvider } from './pages/dashboard/context';
 
 const App: Component = () => {
@@ -80,6 +81,7 @@ const App: Component = () => {
           <Route path="/dashboard" component={DashboardDevice} />
           <Route path="/dashboard/flash" component={DashboardFlash} />
           <Route path="/dashboard/recovery" component={DashboardRecovery} />
+          <Route path="/dashboard/console" component={DashboardConsole} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
         </Router>

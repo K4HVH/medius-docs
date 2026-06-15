@@ -8,7 +8,7 @@ import {
   onCleanup,
   useContext,
 } from 'solid-js';
-import type { Health, Version } from '../../../dashboard/protocol';
+import { type Health, type LogLine, type Version, LogLevel } from '../../../dashboard/protocol';
 import {
   BadProtoVerError,
   NoReplyError,
@@ -42,6 +42,12 @@ export interface DashboardContextValue {
   flashDevice: (image: Uint8Array, kind: FlashKind) => Promise<void>;
   flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<void>;
   clearFlashResult: () => void;
+  deviceLog: Accessor<string[]>;
+  clearDeviceLog: () => void;
+}
+
+function formatLogLine(line: LogLine): string {
+  return `[${LogLevel[line.level]}] ${line.text}`;
 }
 
 const DashboardContext = createContext<DashboardContextValue>();
@@ -71,6 +77,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [link, setLink] = createSignal<SerialLink | null>(null);
   const [flashProgress, setFlashProgress] = createSignal<FlashProgress | null>(null);
   const [flashLog, setFlashLog] = createSignal<string[]>([]);
+  const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
 
   const HEALTH_POLL_MS = 1000;
   let healthTimer: ReturnType<typeof setTimeout> | null = null;
@@ -106,12 +113,14 @@ export const DashboardProvider: ParentComponent = (props) => {
     if (status() === 'connecting' || status() === 'connected') return;
     setError(null);
     setFlashProgress(null);
+    setDeviceLog([]);
     setStatus('connecting');
     let l: SerialLink | null = null;
     try {
       const port = await requestMediusPort();
       if (disposed) return;
       l = new SerialLink(port, {
+        onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
         onClose: () => {
           if (link() !== l) return; // ignore a stale or superseded link
           stopHealthPolling();
@@ -166,6 +175,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   };
 
   const clearFlashResult = () => setFlashProgress(null);
+  const clearDeviceLog = () => setDeviceLog([]);
 
   const flashDevice = async (image: Uint8Array, kind: FlashKind) => {
     if (status() === 'flashing') return;
@@ -270,6 +280,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     flashDevice,
     flashNative,
     clearFlashResult,
+    deviceLog,
+    clearDeviceLog,
   };
 
   return <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>;

@@ -22,6 +22,7 @@ const entries: SearchEntry[] = [
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
   { label: 'Flash firmware', description: 'Update or recover the device chip in the browser with esptool', path: '/dashboard/flash', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['flash', 'firmware', 'update', 'recovery', 'factory', 'esptool', 'bin'] },
   { label: 'Recovery', description: 'Flash a chip over native USB: recover a box that wont connect, or flash the host chip', path: '/dashboard/recovery', group: 'Dashboard', icon: BsWrench, keywords: ['recovery', 'recover', 'brick', 'bricked', 'blank', 'host chip', 'boot button', 'unbrick', 'native usb', '303a'] },
+  { label: 'Console', description: 'Live device diagnostics (LOG frames) while connected', path: '/dashboard/console', group: 'Dashboard', icon: BsJournalText, keywords: ['console', 'log', 'logs', 'diagnostics', 'serial monitor', 'debug'] },
 
   // ── Native API ──────────────────────────────────────────────────────────
   { label: 'Introduction', description: 'What Medius is and how to read the native docs', path: '/native', group: 'Native API', icon: BsInfoCircle, keywords: ['native', 'overview', 'start', 'protocol', 'medius'] },
