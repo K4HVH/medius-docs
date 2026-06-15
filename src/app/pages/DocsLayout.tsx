@@ -90,7 +90,6 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
-  { value: '/dashboard/console', label: 'Console', icon: BsJournalText },
 ];
 
 const isMobileQuery = () =>

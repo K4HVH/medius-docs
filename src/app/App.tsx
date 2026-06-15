@@ -35,7 +35,6 @@ import LibTypesStructs from './pages/library/types/Structs';
 import LibTypesFrames from './pages/library/types/Frames';
 import LibTypesErrors from './pages/library/types/Errors';
 import DashboardDevice from './pages/dashboard/Device';
-import DashboardConsole from './pages/dashboard/Console';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import { DashboardProvider } from './pages/dashboard/context';
@@ -81,7 +80,6 @@ const App: Component = () => {
           <Route path="/dashboard" component={DashboardDevice} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
-          <Route path="/dashboard/console" component={DashboardConsole} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
         </Router>

@@ -107,6 +107,45 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
   };
 
+  const makeLink = (port: SerialPort): SerialLink => {
+    const nl: SerialLink = new SerialLink(port, {
+      onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
+      onClose: () => {
+        if (link() !== nl) return;
+        stopHealthPolling();
+        setStatus('disconnected');
+        setVersion(null);
+        setHealth(null);
+        setError(null);
+        setLink(null);
+      },
+    });
+    return nl;
+  };
+
+  // After the main chip reboots to run, reconnect and read the version back as a
+  // verification. Returns false if it never came back (then a power-cycle is needed).
+  const tryReconnect = async (port: SerialPort): Promise<boolean> => {
+    await new Promise((r) => setTimeout(r, 1500));
+    const nl = makeLink(port);
+    try {
+      await nl.open();
+      const v = await nl.handshake();
+      setVersion(v);
+      setLink(nl);
+      setStatus('connected');
+      startHealthPolling(nl);
+      return true;
+    } catch {
+      try {
+        await nl.close();
+      } catch {
+        // ignore
+      }
+      return false;
+    }
+  };
+
   let disposed = false;
 
   const connect = async () => {
@@ -119,18 +158,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     try {
       const port = await requestMediusPort();
       if (disposed) return;
-      l = new SerialLink(port, {
-        onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
-        onClose: () => {
-          if (link() !== l) return; // ignore a stale or superseded link
-          stopHealthPolling();
-          setStatus('disconnected');
-          setVersion(null);
-          setHealth(null);
-          setError(null);
-          setLink(null);
-        },
-      });
+      l = makeLink(port);
       await l.open();
       if (disposed) {
         await l.close();
@@ -181,6 +209,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     if (status() === 'flashing') return false;
     const l = link();
     if (!l) throw new Error('Connect to the box before flashing.');
+    const port = l.serialPort;
     stopHealthPolling();
     setError(null);
     setFlashLog([]);
@@ -195,11 +224,14 @@ export const DashboardProvider: ParentComponent = (props) => {
         onProgress: (p) => setFlashProgress(p),
         onLog: (line) => setFlashLog((prev) => [...prev, line].slice(-500)),
       });
-      setLink(null);
-      setVersion(null);
-      setHealth(null);
       setFlashProgress({ phase: 'done' });
-      setStatus('disconnected');
+      const reconnected = await tryReconnect(port);
+      if (!reconnected) {
+        setLink(null);
+        setVersion(null);
+        setHealth(null);
+        setStatus('disconnected');
+      }
       return true;
     } catch (e) {
       setLink(null);

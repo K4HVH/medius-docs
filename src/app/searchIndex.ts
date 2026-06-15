@@ -22,7 +22,6 @@ const entries: SearchEntry[] = [
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
   { label: 'Update', description: 'Guided firmware update for your box, both chips, in plain steps', path: '/dashboard/update', group: 'Dashboard', icon: BsArrowRepeat, keywords: ['update', 'firmware', 'upgrade', 'latest', 'flash', 'both chips', 'guided'] },
   { label: 'Advanced', description: 'Manual flash: any chip, app or factory, release or upload, recover a bricked box', path: '/dashboard/advanced', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['advanced', 'manual', 'flash', 'recover', 'recovery', 'brick', 'bricked', 'device chip', 'host chip', 'factory', 'boot button', 'upload'] },
-  { label: 'Console', description: 'Live device diagnostics (LOG frames) while connected', path: '/dashboard/console', group: 'Dashboard', icon: BsJournalText, keywords: ['console', 'log', 'logs', 'diagnostics', 'serial monitor', 'debug'] },
 
   // ── Native API ──────────────────────────────────────────────────────────
   { label: 'Introduction', description: 'What Medius is and how to read the native docs', path: '/native', group: 'Native API', icon: BsInfoCircle, keywords: ['native', 'overview', 'start', 'protocol', 'medius'] },

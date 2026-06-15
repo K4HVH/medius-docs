@@ -176,8 +176,22 @@ const Update = () => {
             </Match>
 
             <Match when={step() === 'done'}>
-              <div class="callout callout--info">Done. Plug back in normally, then reconnect.</div>
-              <PortDiagram plug={['usb1', 'usb2']} />
+              <Show
+                when={dash.status() === 'connected'}
+                fallback={
+                  <>
+                    <div class="callout callout--info">Done. Plug back in normally, then reconnect.</div>
+                    <PortDiagram plug={['usb1', 'usb2']} />
+                  </>
+                }
+              >
+                <div class="callout callout--info">
+                  Updated and verified.{' '}
+                  <Show when={dash.version()}>
+                    {(v) => <>Now on <strong>v{versionString(v())}</strong>.</>}
+                  </Show>
+                </div>
+              </Show>
               <Button variant="secondary" onClick={() => { setStep('choose'); dash.clearFlashResult(); }}>
                 Finish
               </Button>
