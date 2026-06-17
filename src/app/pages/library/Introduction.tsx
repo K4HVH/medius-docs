@@ -79,7 +79,7 @@ const Introduction: Component = () => {
                 <td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a> firmware flashing.</td>
               </tr>
               <tr>
-                <td><A href="/library/guides#tracing"><code>tracing</code></A></td>
+                <td><A href="/library/guides/testing#tracing"><code>tracing</code></A></td>
                 <td>Tracing instrumentation across the connection lifecycle.</td>
               </tr>
             </tbody>
@@ -163,16 +163,21 @@ const Introduction: Component = () => {
 
       <div id="guides" data-search-target>
         <Card>
-          <CardHeader title="Guides & examples" subtitle="Behavior, how-to, and runnable programs, outside the reference" />
+          <CardHeader title="Guides" subtitle="Behavior and how-to, outside the reference" />
           <div class="docs-grid">
-            <A href="/library/guides" style={{ "text-decoration": "none" }}>
+            <A href="/library/guides/calls" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Guides" subtitle="Call kinds, threading, keepalive, testing, tracing" />
+                <CardHeader title="Calls & input" subtitle="Call kinds, async, motion, clicks" />
               </Card>
             </A>
-            <A href="/library/examples" style={{ "text-decoration": "none" }}>
+            <A href="/library/guides/connection" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Cookbook" subtitle="Full runnable programs" />
+                <CardHeader title="Connection & lifecycle" subtitle="Ports, threads, keepalive" />
+              </Card>
+            </A>
+            <A href="/library/guides/testing" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Testing & tracing" subtitle="MockBox and diagnostics" />
               </Card>
             </A>
           </div>

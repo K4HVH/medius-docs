@@ -25,7 +25,6 @@ device.reset()?;                // back to passthrough`}</code></pre>
           <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> are on the{' '}
           <A href="/library/lifecycle">Lifecycle</A> page.
         </p>
-        <p>See also: the <A href="/library/examples#admin">worked example</A>.</p>
       </Card>
 
       <div id="reset" data-search-target>

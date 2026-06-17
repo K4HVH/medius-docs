@@ -17,7 +17,7 @@ const Mock: Component = () => {
           It's a cheap <A href="/library/connection"><code>Clone</code></A>: hand one to the{' '}
           <code>Device</code>, keep one to script and inspect.
         </p>
-        <p>See also: <A href="/library/guides#testing">testing with MockBox</A> and the <A href="/library/examples#mock-test">worked example</A>.</p>
+        <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
       </Card>
 
       <div id="create" data-search-target>

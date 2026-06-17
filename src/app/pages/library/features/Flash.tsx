@@ -17,7 +17,7 @@ const Flash: Component = () => {
         <p>
           With the feature off, none of the <code>medius::flash</code> items below exist.
         </p>
-        <p>See also: the <A href="/library/examples#flash">worked example</A> and the firmware-side <A href="/native/flashing">flashing</A> page.</p>
+        <p>See also: the firmware-side <A href="/native/flashing">flashing</A> page.</p>
       </Card>
 
       <div id="prerequisites" data-search-target>
@@ -158,10 +158,6 @@ match flash::flash("/dev/ttyACM0", "device.bin", false) {
           <pre class="api-signature">fn flash_with&lt;R, F&gt;(port: &amp;str, bin_path: &amp;Path, host: bool, runner: &amp;R, reboot: F) -&gt; Result&lt;()&gt;
 where R: CommandRunner, F: FnOnce(&amp;str, bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            A full hardware-free test with a fake <code>CommandRunner</code> is in the{' '}
-            <A href="/library/examples#flash">cookbook</A>.
-          </p>
         </Card>
       </div>
 
