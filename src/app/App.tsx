@@ -28,6 +28,7 @@ import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
 import FeatMock from './pages/library/features/Mock';
 import FeatFlash from './pages/library/features/Flash';
+import FeatTracing from './pages/library/features/Tracing';
 import GuideCalls from './pages/library/GuideCalls';
 import GuideConnection from './pages/library/GuideConnection';
 import GuideTesting from './pages/library/GuideTesting';
@@ -74,7 +75,7 @@ const App: Component = () => {
           <Route path="/library/features/async" component={FeatAsync} />
           <Route path="/library/features/mock" component={FeatMock} />
           <Route path="/library/features/flash" component={FeatFlash} />
-          <Route path="/library/features/tracing" component={() => <Navigate href="/library/guides/testing#tracing" />} />
+          <Route path="/library/features/tracing" component={FeatTracing} />
           <Route path="/library/guides/calls" component={GuideCalls} />
           <Route path="/library/guides/connection" component={GuideConnection} />
           <Route path="/library/guides/testing" component={GuideTesting} />

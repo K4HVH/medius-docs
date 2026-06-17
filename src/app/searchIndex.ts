@@ -102,7 +102,6 @@ const entries: SearchEntry[] = [
   { label: 'On AsyncDevice (movement)', description: 'Movement stays synchronous', path: '/library/movement#async', group: 'Rust Library', icon: BsArrowsMove, keywords: ['asyncdevice', 'movement', 'stays', 'synchronous', 'async'] },
   { label: 'Buttons (library)', description: 'press, release, button overrides', path: '/library/buttons', group: 'Rust Library', icon: BsCursor, keywords: ['buttons', 'library', 'press', 'release', 'button', 'overrides'] },
   { label: 'Buttons', description: 'Override mouse buttons on the clone', path: '/library/buttons#overview', group: 'Rust Library', icon: BsCursor, keywords: ['buttons', 'override', 'mouse', 'clone', 'overview'] },
-  { label: 'Button', description: 'Which button, and its wire id', path: '/library/buttons#button-arg', group: 'Rust Library', icon: BsCursor, keywords: ['button', 'which', 'wire', 'id', 'arg'] },
   { label: 'press', description: 'Force a button down', path: '/library/buttons#press', group: 'Rust Library', icon: BsCursor, keywords: ['press', 'force', 'button'] },
   { label: 'soft_release', description: 'Clear your injected press only', path: '/library/buttons#soft-release', group: 'Rust Library', icon: BsCursor, keywords: ['soft_release', 'clear', 'injected', 'press', 'only', 'soft', 'release'] },
   { label: 'force_release', description: 'Force a button up, masking a physical hold', path: '/library/buttons#force-release', group: 'Rust Library', icon: BsCursor, keywords: ['force_release', 'force', 'button', 'masking', 'physical', 'hold', 'release'] },
@@ -145,10 +144,17 @@ const entries: SearchEntry[] = [
   { label: 'When it fails', description: 'Error::FlashTool', path: '/library/features/flash#errors', group: 'Library Features', icon: BsBoxArrowInDown, keywords: ['fails', 'error', 'flashtool', 'errors'] },
   { label: 'Flashing in tests', description: 'Swap the runner, skip the hardware', path: '/library/features/flash#testing', group: 'Library Features', icon: BsBoxArrowInDown, keywords: ['flashing', 'tests', 'swap', 'runner', 'skip', 'hardware', 'testing'] },
 
+  { label: 'Tracing', description: 'Structured diagnostics over the link', path: '/library/features/tracing', group: 'Library Features', icon: BsActivity, keywords: ['tracing', 'structured', 'diagnostics', 'feature', 'subscriber'] },
+  { label: 'Install a subscriber', description: 'Print something to stderr', path: '/library/features/tracing#subscriber', group: 'Library Features', icon: BsActivity, keywords: ['install', 'subscriber', 'stderr', 'fmt'] },
+  { label: 'Targets and levels', description: 'What gets emitted and where', path: '/library/features/tracing#targets', group: 'Library Features', icon: BsActivity, keywords: ['targets', 'levels', 'emitted'] },
+  { label: 'Filter by level and target', description: 'EnvFilter and RUST_LOG', path: '/library/features/tracing#filtering', group: 'Library Features', icon: BsActivity, keywords: ['filter', 'level', 'target', 'envfilter', 'rust_log'] },
+  { label: 'Frames, device logs, and reconnects', description: 'The events worth knowing', path: '/library/features/tracing#events', group: 'Library Features', icon: BsActivity, keywords: ['frames', 'device', 'logs', 'reconnect', 'events'] },
+  { label: 'JSON output', description: 'Ship structured events', path: '/library/features/tracing#json', group: 'Library Features', icon: BsActivity, keywords: ['json', 'output', 'structured', 'events'] },
+
   // ── Guides ────────────────────────────────────────────────────────────────
   { label: 'Calls & input', description: 'Call kinds, async, motion, clicks', path: '/library/guides/calls', group: 'Guides', icon: BsLightning, keywords: ['calls', 'input', 'guide', 'async', 'motion', 'click'] },
   { label: 'Connection', description: 'Ports, threads, keepalive, teardown', path: '/library/guides/connection', group: 'Guides', icon: BsArrowRepeat, keywords: ['connection', 'connecting', 'ports', 'threads', 'keepalive', 'lifecycle', 'guide'] },
-  { label: 'Testing & tracing', description: 'MockBox and diagnostics', path: '/library/guides/testing', group: 'Guides', icon: BsActivity, keywords: ['testing', 'tracing', 'diagnostics', 'mockbox', 'guide'] },
+  { label: 'Testing', description: 'Test with a MockBox', path: '/library/guides/testing', group: 'Guides', icon: BsWrench, keywords: ['testing', 'mockbox', 'mock', 'guide'] },
   { label: 'Call kinds', description: 'Fire-and-forget, blocking query, no round-trip', path: '/library/guides/calls#call-kinds', group: 'Guides', icon: BsLightning, keywords: ['call', 'kinds', 'fire', 'forget', 'blocking', 'async', 'badge'] },
   { label: 'Why only two calls are async', description: 'Queries await a reply, everything else fires and forgets', path: '/library/guides/calls#why-async', group: 'Guides', icon: BsLightning, keywords: ['why', 'only', 'two', 'calls', 'async', 'queries', 'await'] },
   { label: 'Driving futures without a runtime', description: 'futures::executor::block_on', path: '/library/guides/calls#block-on', group: 'Guides', icon: BsLightning, keywords: ['driving', 'futures', 'without', 'runtime', 'block_on', 'executor'] },
@@ -163,12 +169,6 @@ const entries: SearchEntry[] = [
   { label: 'Testing without hardware', description: 'Assert the queued frames with MockBox', path: '/library/guides/testing#testing', group: 'Guides', icon: BsWrench, keywords: ['testing', 'hardware', 'assert', 'frames', 'mockbox'] },
   { label: 'Driving logs in a test', description: 'Push log lines with a MockBox', path: '/library/guides/testing#logs-without-hardware', group: 'Guides', icon: BsWrench, keywords: ['driving', 'logs', 'test', 'push', 'mockbox'] },
   { label: 'Testing async code', description: 'A MockBox behind an AsyncDevice', path: '/library/guides/testing#mock-async', group: 'Guides', icon: BsWrench, keywords: ['testing', 'async', 'asyncdevice', 'mock', 'into_async'] },
-  { label: 'Tracing', description: 'Structured diagnostics over the link', path: '/library/guides/testing#tracing', group: 'Guides', icon: BsActivity, keywords: ['tracing', 'structured', 'diagnostics', 'link'] },
-  { label: 'Install a subscriber', description: 'Print something to stderr', path: '/library/guides/testing#subscriber', group: 'Guides', icon: BsActivity, keywords: ['install', 'subscriber', 'stderr', 'fmt'] },
-  { label: 'Targets and levels', description: 'What gets emitted and where', path: '/library/guides/testing#targets', group: 'Guides', icon: BsActivity, keywords: ['targets', 'levels', 'emitted'] },
-  { label: 'Filter by level and target', description: 'EnvFilter and RUST_LOG', path: '/library/guides/testing#filtering', group: 'Guides', icon: BsActivity, keywords: ['filter', 'level', 'target', 'envfilter', 'rust_log'] },
-  { label: 'Frames, device logs, and reconnects', description: 'The events worth knowing', path: '/library/guides/testing#events', group: 'Guides', icon: BsActivity, keywords: ['frames', 'device', 'logs', 'reconnect', 'events', 'tx', 'rx'] },
-  { label: 'JSON output', description: 'Ship structured events', path: '/library/guides/testing#json', group: 'Guides', icon: BsActivity, keywords: ['json', 'output', 'structured', 'events'] },
 
   // ── Library Reference ─────────────────────────────────────────────────────
   { label: 'Types & errors', description: 'Enums, structs, frames, errors', path: '/library/types', group: 'Library Reference', icon: BsFileCode, keywords: ['types', 'errors', 'enums', 'structs', 'frames'] },

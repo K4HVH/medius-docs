@@ -72,12 +72,13 @@ const libraryFeatureTabs: TabOption[] = [
   { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
   { value: '/library/features/flash', label: 'Flash', icon: BsBoxArrowInDown },
+  { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
 ];
 
 const libraryGuidesTabs: TabOption[] = [
   { value: '/library/guides/calls', label: 'Calls & input', icon: BsLightning },
   { value: '/library/guides/connection', label: 'Connection', icon: BsArrowRepeat },
-  { value: '/library/guides/testing', label: 'Testing & tracing', icon: BsActivity },
+  { value: '/library/guides/testing', label: 'Testing', icon: BsWrench },
 ];
 
 const libraryReferenceTabs: TabOption[] = [
