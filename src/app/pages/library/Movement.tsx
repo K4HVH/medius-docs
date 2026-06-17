@@ -22,7 +22,7 @@ const Movement: Component = () => {
               <tr><td><code>wheel</code></td><td><A href="/native/commands/movement#wheel"><code>WHEEL</code></A></td><td>Carries wheel scroll steps.</td></tr>
             </tbody>
           </table>
-          <p>See also: <A href="/library/guides/smooth-motion">smooth motion</A>, the <A href="/library/examples#move-scroll">worked example</A>, and how the box <A href="/native/injection#state">accumulates motion</A>.</p>
+          <p>See also: <A href="/library/guides#smooth-motion">smooth motion</A>, the <A href="/library/examples#move-scroll">worked example</A>, and how the box <A href="/native/injection#state">accumulates motion</A>.</p>
         </Card>
       </div>
 
