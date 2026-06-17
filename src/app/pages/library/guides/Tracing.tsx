@@ -61,7 +61,7 @@ device.move_rel(10, 0)?;
 
           <p>
             Transport events appear only above <code>INFO</code>, covered in{' '}
-            <A href="/library/features/tracing#filtering">filtering</A>.
+            <A href="/library/guides/tracing#filtering">filtering</A>.
           </p>
         </Card>
       </div>
@@ -130,7 +130,7 @@ device.move_rel(10, 0)?;
           <p>
             Lower the default <code>INFO</code> floor with a per-target{' '}
             <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}
-            (names in <A href="/library/features/tracing#targets">targets</A>).
+            (names in <A href="/library/guides/tracing#targets">targets</A>).
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -273,44 +273,6 @@ tracing_subscriber::fmt()
               The <code>json</code> formatter needs <code>tracing-subscriber</code>'s <code>json</code>{' '}
               feature (<code>cargo add tracing-subscriber --features json</code>); see its{' '}
               <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/struct.SubscriberBuilder.html#method.json" target="_blank" rel="noreferrer">json docs</a>.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="complete" data-search-target>
-        <Card>
-          <CardHeader title="Complete example" subtitle="Subscriber, connect, traced calls" />
-          <p>
-            Subscriber, connect, and two traced calls, with stderr lines shown as trailing comments.
-          </p>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
-
-fn main() -> medius::Result<()> {
-    // INFO and up by default; bump medius to DEBUG to see queries resolve.
-    tracing_subscriber::fmt()
-        .with_env_filter("medius=debug")
-        .init();
-
-    let device = Device::find()?;
-    //   INFO connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=2 fw_patch=0
-
-    device.move_rel(40, 0)?;
-
-    let health = device.query_health()?;
-    //   DEBUG medius::device: query resolved selector=17 seq=3 resp_len=4
-    println!("link_up={}", health.link_up);
-
-    Ok(())
-}`}</code></pre>
-
-          <div class="callout callout--info">
-            <p>
-              The other features are <A href="/library/features/async"><code>async</code></A>,{' '}
-              <A href="/library/features/mock"><code>mock</code></A>, and{' '}
-              <A href="/library/features/flash"><code>flash</code></A>.
             </p>
           </div>
         </Card>

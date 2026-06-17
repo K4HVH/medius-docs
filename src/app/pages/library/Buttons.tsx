@@ -24,6 +24,7 @@ const Buttons: Component = () => {
               <tr><td><code>button</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>The generic form; you pass the <A href="#methods"><code>ButtonAction</code></A>.</td></tr>
             </tbody>
           </table>
+          <p>See also: <A href="/library/guides/clicking">clicking &amp; holds</A>, <A href="/library/guides/testing">testing with MockBox</A>, and the <A href="/library/examples#click">worked example</A>.</p>
         </Card>
       </div>
 
@@ -163,28 +164,6 @@ device.button(Button::Right, ButtonAction::Press)?;`}</code></pre>
         </Card>
       </div>
 
-      <div id="clicking" data-search-target>
-        <Card>
-          <CardHeader title="Making a click" subtitle="Press, wait, release (there is no click helper)" />
-          <p>
-            No one-shot <code>click</code>: press, wait, then release with{' '}
-            <A href="#soft-release"><code>soft_release</code></A> so you don't stomp a physical hold.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::{thread, time::Duration};
-use medius::Button;
-
-device.press(Button::Left)?;
-thread::sleep(Duration::from_millis(20));
-device.soft_release(Button::Left)?;`}</code></pre>
-          <p>
-            <A href="/library/admin#reset"><code>reset</code></A> drops every override at once; a held
-            press is re-asserted on reconnect via{' '}
-            <A href="/library/lifecycle#reapply"><code>reapply</code></A>.
-          </p>
-        </Card>
-      </div>
-
       <div id="async" data-search-target>
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="Same calls, still synchronous" />
@@ -208,61 +187,6 @@ async_device.press(Button::Left)?; // no .await, it just queues the frame`}</cod
         </Card>
       </div>
 
-      <div id="testing" data-search-target>
-        <Card>
-          <CardHeader title="Testing without hardware" subtitle="Assert the frames with MockBox" />
-          <p>
-            Drive a <code>Device</code> with a{' '}
-            <A href="/library/features/mock"><code>MockBox</code></A> and assert the queued frames.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Device, FrameType, MockBox};
-
-let mock = MockBox::new();
-let device = Device::with_mock(mock.clone());
-
-device.press(Button::Left)?;
-
-assert!(mock.saw(FrameType::Button));
-// the recorded BUTTON payload is [id, action] = [0, 1]
-let frame = mock
-    .recorded_frames()
-    .into_iter()
-    .find(|f| f.ty == FrameType::Button)
-    .unwrap();
-assert_eq!(frame.payload, vec![0, 1]);`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              Pull in the fake box with <code>cargo add medius --features mock</code>.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="full-example" data-search-target>
-        <Card>
-          <CardHeader title="Full example" subtitle="Open, click, reset" />
-          <p>
-            Open, click, then clear every override with{' '}
-            <A href="/library/admin#reset"><code>reset</code></A>. Mirrors{' '}
-            <code>examples/basic.rs</code>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::{thread, time::Duration};
-use medius::{Button, Device};
-
-fn main() -> medius::Result<()> {
-    let device = Device::find()?;
-
-    device.press(Button::Left)?;
-    thread::sleep(Duration::from_millis(20));
-    device.soft_release(Button::Left)?;
-
-    device.reset()?; // drop every override, back to plain passthrough
-    Ok(())
-}`}</code></pre>
-        </Card>
-      </div>
     </>
   );
 };

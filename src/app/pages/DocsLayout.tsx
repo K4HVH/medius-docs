@@ -72,7 +72,21 @@ const libraryFeatureTabs: TabOption[] = [
   { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
   { value: '/library/features/flash', label: 'Flash', icon: BsBoxArrowInDown },
-  { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
+];
+
+const libraryGuidesTabs: TabOption[] = [
+  { value: '/library/guides/call-kinds', label: 'Call kinds', icon: BsLightning },
+  { value: '/library/guides/threading', label: 'Threading & Clone', icon: BsStack },
+  { value: '/library/guides/keepalive', label: 'Keepalive & holds', icon: BsArrowRepeat },
+  { value: '/library/guides/smooth-motion', label: 'Smooth motion', icon: BsArrowsMove },
+  { value: '/library/guides/clicking', label: 'Clicking & holds', icon: BsCursor },
+  { value: '/library/guides/choosing-a-port', label: 'Choosing a port', icon: BsPlug },
+  { value: '/library/guides/testing', label: 'Testing with MockBox', icon: BsWrench },
+  { value: '/library/guides/tracing', label: 'Tracing', icon: BsActivity },
+];
+
+const libraryExamplesTabs: TabOption[] = [
+  { value: '/library/examples', label: 'Cookbook', icon: BsFileCode },
 ];
 
 const libraryReferenceTabs: TabOption[] = [
@@ -84,7 +98,8 @@ const libraryReferenceTabs: TabOption[] = [
 ];
 
 const allLibraryTabs = [
-  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs, ...libraryReferenceTabs,
+  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs,
+  ...libraryGuidesTabs, ...libraryExamplesTabs, ...libraryReferenceTabs,
 ];
 
 const dashboardTabs: TabOption[] = [
@@ -270,6 +285,22 @@ const DocsLayout = (props: RouteSectionProps) => {
               value={location.pathname}
               onChange={handlePageNav}
               options={libraryFeatureTabs}
+            />
+            <Divider spacing="compact" label="Guides" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={libraryGuidesTabs}
+            />
+            <Divider spacing="compact" label="Examples" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={libraryExamplesTabs}
             />
             <Divider spacing="compact" label="Reference" labelAlign="start" />
             <Tabs

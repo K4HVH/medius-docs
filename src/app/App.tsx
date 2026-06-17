@@ -28,7 +28,15 @@ import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
 import FeatMock from './pages/library/features/Mock';
 import FeatFlash from './pages/library/features/Flash';
-import FeatTracing from './pages/library/features/Tracing';
+import GuideCallKinds from './pages/library/guides/CallKinds';
+import GuideThreading from './pages/library/guides/Threading';
+import GuideKeepalive from './pages/library/guides/Keepalive';
+import GuideSmoothMotion from './pages/library/guides/SmoothMotion';
+import GuideClicking from './pages/library/guides/Clicking';
+import GuideChoosingPort from './pages/library/guides/ChoosingPort';
+import GuideTesting from './pages/library/guides/Testing';
+import GuideTracing from './pages/library/guides/Tracing';
+import LibExamples from './pages/library/Examples';
 import LibTypes from './pages/library/TypesAndErrors';
 import LibTypesEnums from './pages/library/types/Enums';
 import LibTypesStructs from './pages/library/types/Structs';
@@ -72,7 +80,16 @@ const App: Component = () => {
           <Route path="/library/features/async" component={FeatAsync} />
           <Route path="/library/features/mock" component={FeatMock} />
           <Route path="/library/features/flash" component={FeatFlash} />
-          <Route path="/library/features/tracing" component={FeatTracing} />
+          <Route path="/library/features/tracing" component={() => <Navigate href="/library/guides/tracing" />} />
+          <Route path="/library/guides/call-kinds" component={GuideCallKinds} />
+          <Route path="/library/guides/threading" component={GuideThreading} />
+          <Route path="/library/guides/keepalive" component={GuideKeepalive} />
+          <Route path="/library/guides/smooth-motion" component={GuideSmoothMotion} />
+          <Route path="/library/guides/clicking" component={GuideClicking} />
+          <Route path="/library/guides/choosing-a-port" component={GuideChoosingPort} />
+          <Route path="/library/guides/testing" component={GuideTesting} />
+          <Route path="/library/guides/tracing" component={GuideTracing} />
+          <Route path="/library/examples" component={LibExamples} />
           <Route path="/library/types" component={LibTypes} />
           <Route path="/library/types/enums" component={LibTypesEnums} />
           <Route path="/library/types/structs" component={LibTypesStructs} />

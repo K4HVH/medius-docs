@@ -22,6 +22,7 @@ const Movement: Component = () => {
               <tr><td><code>wheel</code></td><td><A href="/native/commands/movement#wheel"><code>WHEEL</code></A></td><td>Carries wheel scroll steps.</td></tr>
             </tbody>
           </table>
+          <p>See also: <A href="/library/guides/smooth-motion">smooth motion</A>, the <A href="/library/examples#move-scroll">worked example</A>, and how the box <A href="/native/injection#state">accumulates motion</A>.</p>
         </Card>
       </div>
 
@@ -50,50 +51,6 @@ const Movement: Component = () => {
           <pre><code>{`device.move_rel(20, 20)?;  // right and down
 device.move_rel(-40, 0)?;  // left
 device.move_rel(0, -10)?;  // up`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="accumulator" data-search-target>
-        <Card>
-          <CardHeader title="How motion adds up" subtitle="The accumulator and large moves" />
-          <p>
-            The box totals pending motion in the{' '}
-            <A href="/native/injection#state">accumulator</A> and drains it into HID reports. Rapid
-            calls sum instead of dropping, and a large value paces across several reports rather than
-            teleporting.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// These two calls land in the same place as a single move_rel(30, 10).
-device.move_rel(20, 0)?;
-device.move_rel(10, 10)?;
-
-// A large value still arrives in full; the box just paces it
-// across several reports instead of one giant jump.
-device.move_rel(30000, 0)?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="smooth-motion" data-search-target>
-        <Card>
-          <CardHeader title="Smooth motion" subtitle="Glide instead of teleport, and 1 kHz loops" />
-          <p>
-            There's no <code>move_smooth</code>: subdivide and loop with a ~1 ms sleep for ~1 kHz glide.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::thread::sleep;
-use std::time::Duration;
-
-// Glide ~400 counts to the right over 200 steps (~200 ms at 1 kHz).
-for _ in 0..200 {
-    device.move_rel(2, 0)?;
-    sleep(Duration::from_millis(1));
-}`}</code></pre>
-          <div class="callout callout--warning">
-            <p>
-              The library applies no rate limit. A no-sleep loop floods the 4 Mbaud link; pace your
-              own steps.
-            </p>
-          </div>
         </Card>
       </div>
 
@@ -140,46 +97,6 @@ dev.wheel(1)?;`}</code></pre>
         </Card>
       </div>
 
-      <div id="reset-note" data-search-target>
-        <Card>
-          <CardHeader title="Movement and passthrough" subtitle="Motion doesn't stick" />
-          <p>
-            Movement and scroll are one-shot, nothing stays held like a{' '}
-            <A href="/library/buttons"><code>button</code></A> override.{' '}
-            <A href="/library/admin#reset"><code>reset</code></A> clears button overrides but has
-            nothing to clear for movement.
-          </p>
-        </Card>
-      </div>
-
-      <div id="complete-example" data-search-target>
-        <Card>
-          <CardHeader title="Putting it together" subtitle="Open, glide the cursor, scroll, done" />
-          <p>
-            Find the box, glide the cursor, scroll, return.
-          </p>
-          <pre><code>cargo add medius</code></pre>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
-use std::thread::sleep;
-use std::time::Duration;
-
-fn main() -> medius::Result<()> {
-    let device = Device::find()?;
-
-    // Glide ~400 counts to the right at roughly 1 kHz.
-    for _ in 0..200 {
-        device.move_rel(2, 0)?;
-        sleep(Duration::from_millis(1));
-    }
-
-    // Scroll down three notches.
-    device.wheel(-3)?;
-
-    Ok(())
-}`}</code></pre>
-        </Card>
-      </div>
     </>
   );
 };

@@ -14,7 +14,6 @@ const Admin: Component = () => {
           <A href="/native/injection">passthrough</A>. Both are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>: send one frame, no reply.
         </p>
-        <pre><code>cargo add medius</code></pre>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code>{`use medius::Device;
 
@@ -26,6 +25,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
           <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> are on the{' '}
           <A href="/library/lifecycle">Lifecycle</A> page.
         </p>
+        <p>See also: the <A href="/library/examples#admin">worked example</A>.</p>
       </Card>
 
       <div id="reset" data-search-target>
@@ -102,25 +102,7 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to
               <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
             </p>
           </div>
-        </Card>
-      </div>
-
-      <div id="reboot-and-flash" data-search-target>
-        <Card>
-          <CardHeader title="Reboot and flashing" subtitle="Why you rarely call the Download variants by hand" />
-          <p>
-            The <A href="/library/features/flash"><code>flash</code></A> feature already issues the
-            download reboot, waits for the ROM loader, then hands off to{' '}
-            <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>{' '}
-            (<A href="/native/flashing">native side</A>). Doing both reboots twice.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// don't do this: flash() already does the download reboot
-device.reboot(RebootTarget::DeviceDownload)?;
-medius::flash("/dev/ttyACM0", "device.bin", false)?;
-
-// do this: one call, false picks the device chip
-medius::flash("/dev/ttyACM0", "device.bin", false)?;`}</code></pre>
+        <p>The <A href="/library/features/flash">flash</A> feature issues the download reboot for you, so you rarely send a <code>Download</code> variant by hand.</p>
         </Card>
       </div>
 
@@ -140,45 +122,6 @@ medius::flash("/dev/ttyACM0", "device.bin", false)?;`}</code></pre>
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.reset()?;                          // sync, no await
 device.reboot(RebootTarget::HostRun)?;    // sync, no await`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="complete-example" data-search-target>
-        <Card>
-          <CardHeader title="Complete example" subtitle="Connect, inject, reset, reboot" />
-          <pre><code>cargo add medius</code></pre>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Device, RebootTarget};
-
-fn main() -> medius::Result<()> {
-    let device = Device::find()?;
-
-    let version = device.query_version()?;
-    let health = device.query_health()?;
-    println!("connected: {version}");
-    println!("link_up={} mouse_attached={}", health.link_up, health.mouse_attached);
-
-    // inject something
-    device.move_rel(40, 0)?;
-    device.press(Button::Left)?;
-    device.soft_release(Button::Left)?;
-
-    // and undo it: back to pure passthrough
-    device.reset()?;
-    println!("counters: {:?}", device.counters());
-
-    // restart the device chip; this drops the serial link we're on
-    device.reboot(RebootTarget::DeviceRun)?;
-    Ok(())
-}`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              No hardware? With the <A href="/library/features/mock"><code>mock</code></A> feature,
-              swap <code>Device::find()?</code> for{' '}
-              <code>Device::with_mock(medius::MockBox::new())</code> and the same calls run against a
-              fake box.
-            </p>
-          </div>
         </Card>
       </div>
     </>
