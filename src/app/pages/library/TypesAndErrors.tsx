@@ -25,6 +25,7 @@ const TypesAndErrors: Component = () => {
 
 // One flat namespace. This does NOT work:
 // use medius::types::Button;`}</code></pre>
+          <p>See also: the <A href="/library/examples#types">worked example</A>.</p>
         </Card>
       </div>
 
@@ -56,55 +57,6 @@ const TypesAndErrors: Component = () => {
         </Card>
       </div>
 
-      <div id="complete-example" data-search-target>
-        <Card>
-          <CardHeader title="Complete example" subtitle="Every type flowing through one program" />
-          <p>
-            Every type in one file on the{' '}
-            <A href="/library/features/mock"><code>mock</code></A> feature; swap{' '}
-            <code>Device::open_mock(...)</code> for <code>Device::find()?</code> for real hardware.
-          </p>
-
-          <pre><code>{`// cargo add medius --features mock
-use medius::{Device, Error, Health, MockBox, Version};
-
-fn main() -> medius::Result<()> {
-    let mock = MockBox::new()
-        .with_version(Version { proto_ver: 1, fw_major: 1, fw_minor: 4, fw_patch: 0 })
-        .with_health(Health::from_flags(0b0000_0111));
-
-    // open_mock runs the handshake, so a bad proto_ver surfaces here.
-    let device = match Device::open_mock(mock) {
-        Ok(device) => device,
-        Err(Error::NotFound) => return Ok(eprintln!("no box found")),
-        Err(Error::BadProtoVer { got }) => {
-            return Ok(eprintln!("unsupported protocol {got}"));
-        }
-        Err(other) => return Err(other),
-    };
-
-    // Version: Display omits proto_ver, so print the field too.
-    let version: Version = device.query_version()?;
-    println!("{version} (protocol {})", version.proto_ver);
-
-    // Health: four bools off the health byte.
-    let health: Health = device.query_health()?;
-    println!(
-        "link_up={} mouse_attached={} clone_configured={} injection_active={}",
-        health.link_up,
-        health.mouse_attached,
-        health.clone_configured,
-        health.injection_active,
-    );
-
-    // CountersSnapshot: a plain copy of the running link totals.
-    let counters = device.counters();
-    println!("frames_tx={} frames_rx={}", counters.frames_tx, counters.frames_rx);
-
-    Ok(())
-}`}</code></pre>
-        </Card>
-      </div>
     </>
   );
 };

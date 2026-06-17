@@ -13,6 +13,7 @@ const Requests: Component = () => {
             Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, these two methods
             are blocking queries: a question frame out, one answer frame back.
           </p>
+          <p>See also: the <A href="/library/examples#version-health">worked example</A>.</p>
         </Card>
       </div>
 
@@ -38,40 +39,6 @@ println!("proto {}", v.proto_ver);     // proto 1`}</code></pre>
             <p>
               <code>Device::find()</code> already runs a version query during the handshake;
               calling <code>query_version</code> again just re-reads it.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="version-timeout" data-search-target>
-        <Card>
-          <CardHeader title="When no reply comes" subtitle="The query timeout and its error" />
-          <p>
-            Silence for the full one-second{' '}
-            <a
-              href="https://docs.rs/medius/latest/medius/constant.DEFAULT_QUERY_TIMEOUT.html"
-              target="_blank"
-              rel="noreferrer"
-            ><code>DEFAULT_QUERY_TIMEOUT</code></a> returns{' '}
-            <A href="/library/types/errors"><code>QueryTimeout</code></A>;{' '}
-            <A href="/library/types/errors"><code>NoReply</code></A> means an answer came back but was
-            unparseable or the wrong kind.
-          </p>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, Error};
-
-let device = Device::find()?;
-match device.query_version() {
-    Ok(v) => println!("connected: {v}"),
-    Err(Error::QueryTimeout) => eprintln!("box didn't answer in time"),
-    Err(e) => return Err(e),
-}`}</code></pre>
-
-          <div class="callout callout--info">
-            <p>
-              The timeout is fixed in the public sync API; the <A href="#async">async</A> path uses
-              the same one-second default.
             </p>
           </div>
         </Card>
@@ -135,73 +102,6 @@ println!("{v} link_up={}", h.link_up);`}</code></pre>
         </Card>
       </div>
 
-      <div id="mock" data-search-target>
-        <Card>
-          <CardHeader title="Trying it with no box" subtitle="Query a MockBox in tests" />
-          <pre><code>cargo add medius --features mock</code></pre>
-
-          <p>
-            The <code>mock</code> feature gives a scriptable{' '}
-            <a
-              href="https://docs.rs/medius/latest/medius/struct.MockBox.html"
-              target="_blank"
-              rel="noreferrer"
-            ><code>MockBox</code></a>: set its version and health, pass it to{' '}
-            <code>Device::with_mock</code>. <code>MockBox::new().silent()</code> never answers, to
-            exercise the <A href="#version-timeout"><code>QueryTimeout</code></A> path.
-          </p>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, Health, MockBox, Version};
-
-let mock = MockBox::new()
-    .with_version(Version { proto_ver: 1, fw_major: 1, fw_minor: 2, fw_patch: 3 })
-    .with_health(Health {
-        link_up: true,
-        mouse_attached: true,
-        clone_configured: true,
-        injection_active: false,
-    });
-
-let device = Device::with_mock(mock);
-assert_eq!(device.query_version()?.fw_major, 1);
-assert!(device.query_health()?.clone_configured);`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="complete-example" data-search-target>
-        <Card>
-          <CardHeader title="Complete example" subtitle="Find the box, read version and health, check readiness" />
-          <p>
-            Drop into <code>src/main.rs</code>: finds the box, reads both queries, reports inject
-            readiness.
-          </p>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
-
-fn main() -> medius::Result<()> {
-    let device = Device::find()?;
-
-    let v = device.query_version()?;
-    let h = device.query_health()?;
-
-    println!("connected: {v}");
-    println!(
-        "health: link_up={} mouse_attached={} clone_configured={} injection_active={}",
-        h.link_up, h.mouse_attached, h.clone_configured, h.injection_active,
-    );
-
-    if h.link_up && h.mouse_attached && h.clone_configured {
-        println!("chain is live, safe to inject");
-    } else {
-        println!("not ready yet");
-    }
-
-    Ok(())
-}`}</code></pre>
-        </Card>
-      </div>
     </>
   );
 };

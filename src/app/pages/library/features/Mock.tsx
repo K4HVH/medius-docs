@@ -17,6 +17,7 @@ const Mock: Component = () => {
           It's a cheap <A href="/library/connection"><code>Clone</code></A>: hand one to the{' '}
           <code>Device</code>, keep one to script and inspect.
         </p>
+        <p>See also: <A href="/library/guides/testing">testing with MockBox</A> and the <A href="/library/examples#mock-test">worked example</A>.</p>
       </Card>
 
       <div id="create" data-search-target>
@@ -257,81 +258,6 @@ let mock = MockBox::new().with_version(Version {
 });
 let err = Device::open_mock(mock).unwrap_err();
 assert!(matches!(err, Error::BadProtoVer { got: 9 }));`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="async" data-search-target>
-        <Card>
-          <CardHeader title="Mocking an AsyncDevice" subtitle="Wrap, then into_async" />
-
-          <p>
-            There's no <code>AsyncDevice::with_mock</code>: build a mocked <code>Device</code>, then
-            call <A href="/library/features/async"><code>into_async</code></A>.
-          </p>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use futures::executor::block_on;
-use medius::{Device, MockBox};
-
-let device = Device::with_mock(MockBox::new()).into_async();
-device.move_rel(10, 0)?; // fire-and-forget, stays sync
-let v = block_on(device.query_version())?;`}</code></pre>
-
-          <div class="callout callout--info">
-            <p>
-              <code>block_on</code> works under any runtime, so the same mocked{' '}
-              <A href="/library/features/async"><code>AsyncDevice</code></A> tests run with no async
-              runtime at all.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="full-example" data-search-target>
-        <Card>
-          <CardHeader title="Full test example" subtitle="A complete unit test" />
-          <p>
-            A complete <code>#[test]</code> to paste into a module.
-          </p>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Device, FrameType, Health, MockBox, Version};
-
-#[test]
-fn box_reports_config_and_records_input() -> medius::Result<()> {
-    let mock = MockBox::new()
-        .with_version(Version { proto_ver: 1, fw_major: 5, fw_minor: 6, fw_patch: 7 })
-        .with_health(Health::from_flags(0x0F));
-    let device = Device::with_mock(mock.clone());
-
-    // Queries come back as scripted.
-    let v = device.query_version()?;
-    assert_eq!((v.fw_major, v.fw_minor, v.fw_patch), (5, 6, 7));
-    assert!(device.query_health()?.mouse_attached);
-
-    // Drive input through the normal API.
-    device.press(Button::Left)?;
-    device.move_rel(20, -5)?;
-
-    // Assert on what reached the wire.
-    let frames = mock.recorded_frames();
-    let button = frames
-        .iter()
-        .find(|f| f.ty == FrameType::Button)
-        .expect("press recorded");
-    assert_eq!(button.payload, vec![0, 1]);
-    assert!(mock.saw(FrameType::Move));
-
-    Ok(())
-}`}</code></pre>
-
-          <div class="callout callout--info">
-            <p>
-              The other features are <A href="/library/features/async"><code>async</code></A>,{' '}
-              <A href="/library/features/flash"><code>flash</code></A>, and{' '}
-              <A href="/library/features/tracing"><code>tracing</code></A>.
-            </p>
-          </div>
         </Card>
       </div>
     </>
