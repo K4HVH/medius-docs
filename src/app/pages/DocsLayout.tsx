@@ -76,7 +76,7 @@ const libraryFeatureTabs: TabOption[] = [
 
 const libraryGuidesTabs: TabOption[] = [
   { value: '/library/guides/calls', label: 'Calls & input', icon: BsLightning },
-  { value: '/library/guides/connection', label: 'Connection & lifecycle', icon: BsArrowRepeat },
+  { value: '/library/guides/connection', label: 'Connection', icon: BsArrowRepeat },
   { value: '/library/guides/testing', label: 'Testing & tracing', icon: BsActivity },
 ];
 

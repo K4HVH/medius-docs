@@ -172,7 +172,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/guides/connection" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Connection & lifecycle" subtitle="Ports, threads, keepalive" />
+                <CardHeader title="Connection" subtitle="Ports, threads, keepalive" />
               </Card>
             </A>
             <A href="/library/guides/testing" style={{ "text-decoration": "none" }}>
