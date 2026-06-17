@@ -124,7 +124,7 @@ const Hardware: Component = () => {
             <A href="/native/injection#safety">silence timeout</A>, send a{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A> before unplugging (the
             library's <A href="/library/admin#reset"><code>reset</code></A>). Dropping the{' '}
-            <A href="/library/guides#release"><code>Device</code></A> stops its threads, after
+            <A href="/library/guides/connection#release"><code>Device</code></A> stops its threads, after
             which the same timeout clears the box. Port order otherwise does not matter.
           </p>
           <div class="callout callout--warning">

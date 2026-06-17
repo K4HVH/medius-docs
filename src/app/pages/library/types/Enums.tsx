@@ -12,7 +12,6 @@ const Enums: Component = () => {
           <p>
             Four argument enums, each tied to a wire byte. Conversion helpers are listed with each.
           </p>
-          <p>See also: the <A href="/library/examples#types">conversion-helper example</A>.</p>
         </Card>
       </div>
       <div id="button" data-search-target>

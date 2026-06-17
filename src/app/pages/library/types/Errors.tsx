@@ -85,7 +85,6 @@ const Errors: Component = () => {
             </tbody>
           </table>
 
-          <p>Worked error-handling programs are in the <A href="/library/examples#error-handling">cookbook</A>.</p>
 
           <div class="callout callout--warning">
             <p>

@@ -13,7 +13,7 @@ const Diagnostics: Component = () => {
             <code>logs</code> and <code>counters</code> are lock-free, read-only views, both on{' '}
             <A href="/library/connection"><code>Device</code></A>.
           </p>
-          <p>See also: <A href="/library/guides#testing">testing with MockBox</A> and the <A href="/library/examples#logs-counters">worked example</A>.</p>
+          <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
         </Card>
       </div>
 

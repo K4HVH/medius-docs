@@ -25,7 +25,6 @@ const TypesAndErrors: Component = () => {
 
 // One flat namespace. This does NOT work:
 // use medius::types::Button;`}</code></pre>
-          <p>See also: the <A href="/library/examples#types">worked example</A>.</p>
         </Card>
       </div>
 

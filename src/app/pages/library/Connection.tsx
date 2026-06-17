@@ -13,7 +13,7 @@ const Connection: Component = () => {
           Rust client and <code>Device</code> is the handle; opening one finds the box, runs the{' '}
           <A href="/native/connection">handshake</A>, and starts the background threads in one call.
         </p>
-        <p>See also: <A href="/library/guides#choosing-a-port">choosing a port</A>, <A href="/library/guides#threading">threading</A>, <A href="/library/guides#keepalive">keepalive &amp; teardown</A>, the <A href="/library/examples#connect">worked example</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
+        <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
       </Card>
 
       <div id="open" data-search-target>

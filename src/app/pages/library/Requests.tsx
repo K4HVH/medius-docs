@@ -13,7 +13,6 @@ const Requests: Component = () => {
             Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, these two methods
             are blocking queries: a question frame out, one answer frame back.
           </p>
-          <p>See also: the <A href="/library/examples#version-health">worked example</A>.</p>
         </Card>
       </div>
 

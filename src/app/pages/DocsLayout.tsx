@@ -75,8 +75,9 @@ const libraryFeatureTabs: TabOption[] = [
 ];
 
 const libraryGuidesTabs: TabOption[] = [
-  { value: '/library/guides', label: 'Guides', icon: BsBook },
-  { value: '/library/examples', label: 'Cookbook', icon: BsFileCode },
+  { value: '/library/guides/calls', label: 'Calls & input', icon: BsLightning },
+  { value: '/library/guides/connection', label: 'Connection & lifecycle', icon: BsArrowRepeat },
+  { value: '/library/guides/testing', label: 'Testing & tracing', icon: BsActivity },
 ];
 
 const libraryReferenceTabs: TabOption[] = [
@@ -276,7 +277,7 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={libraryFeatureTabs}
             />
-            <Divider spacing="compact" label="Guides & examples" labelAlign="start" />
+            <Divider spacing="compact" label="Guides" labelAlign="start" />
             <Tabs
               orientation="vertical"
               variant="subtle"
