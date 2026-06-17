@@ -14,16 +14,6 @@ const Errors: Component = () => {
             <code>core::result::Result&lt;T, Error&gt;</code>.
           </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
-
-fn main() -> medius::Result<()> {
-    let device = Device::find()?;       // ? bubbles a NotFound / NoReply up
-    let version = device.query_version()?;
-    println!("{version}");
-    Ok(())
-}`}</code></pre>
-
           <p>
             <code>Error</code> is{' '}
             <a
@@ -95,31 +85,6 @@ fn main() -> medius::Result<()> {
             </tbody>
           </table>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, Error};
-
-fn connect() -> medius::Result<Device> {
-    match Device::find() {
-        Ok(device) => Ok(device),
-        Err(Error::NotFound) => {
-            eprintln!("no box plugged in");
-            Err(Error::NotFound)
-        }
-        Err(Error::NoReply) => {
-            eprintln!("found a port but it didn't answer the handshake");
-            Err(Error::NoReply)
-        }
-        Err(Error::BadProtoVer { got }) => {
-            eprintln!("box speaks protocol {got}, this build expects 1");
-            Err(Error::BadProtoVer { got })
-        }
-        Err(Error::QueryTimeout) => Err(Error::QueryTimeout),
-        Err(Error::Disconnected) => Err(Error::Disconnected),
-        Err(Error::FrameTooLong) => Err(Error::FrameTooLong),
-        // Required: Error is #[non_exhaustive], so the wildcard is mandatory.
-        Err(other) => Err(other),
-    }
-}`}</code></pre>
 
           <div class="callout callout--warning">
             <p>

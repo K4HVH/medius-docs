@@ -17,6 +17,7 @@ const Flash: Component = () => {
         <p>
           With the feature off, none of the <code>medius::flash</code> items below exist.
         </p>
+        <p>See also: the firmware-side <A href="/native/flashing">flashing</A> page.</p>
       </Card>
 
       <div id="prerequisites" data-search-target>
@@ -87,19 +88,7 @@ println!("settle:  {:?}", flash::ROM_SETTLE); // 2s`}</code></pre>
             <code>true</code> is <code>RebootTarget::HostDownload</code> (see{' '}
             <A href="/library/admin#reboot"><code>reboot</code></A> for the full set).
           </p>
-          <p>
-            One call runs the sequence:
-          </p>
-          <ol>
-            <li>Open <code>port</code> as a <A href="/library/connection"><code>Device</code></A>.</li>
-            <li>
-              Send a <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> frame for the
-              chosen chip's download target.
-            </li>
-            <li>Drop the device to free the port for the tool.</li>
-            <li>Sleep <code>ROM_SETTLE</code> (2s) while the chip enters the ROM bootloader.</li>
-            <li>Run <code>esptool.py write_flash 0x10000 &lt;bin&gt;</code> on that port.</li>
-          </ol>
+          <p>One call reboots the chosen chip into download mode, frees the port, then runs <code>esptool.py write_flash</code>; the firmware-side sequence is on <A href="/native/flashing#two-chips">flashing</A>.</p>
           <p>
             Blocks for the wait plus the tool's runtime, returning <code>Ok(())</code> on a clean
             exit else <A href="#errors"><code>Err(Error::FlashTool)</code></A>.
@@ -169,83 +158,9 @@ match flash::flash("/dev/ttyACM0", "device.bin", false) {
           <pre class="api-signature">fn flash_with&lt;R, F&gt;(port: &amp;str, bin_path: &amp;Path, host: bool, runner: &amp;R, reboot: F) -&gt; Result&lt;()&gt;
 where R: CommandRunner, F: FnOnce(&amp;str, bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::path::Path;
-use medius::flash::{flash_with, CommandOutput, CommandRunner};
-use medius::Result;
-
-struct FakeRunner;
-
-impl CommandRunner for FakeRunner {
-    fn run(&self, _program: &str, _args: &[String]) -> Result<CommandOutput> {
-        Ok(CommandOutput {
-            success: true,
-            stdout: "wrote 0 bytes".into(),
-            stderr: String::new(),
-        })
-    }
-}
-
-#[test]
-fn flashes_without_hardware() {
-    let result = flash_with(
-        "/dev/null",
-        Path::new("device.bin"),
-        false,
-        &FakeRunner,
-        |_port, _host| Ok(()), // no-op reboot: no box needed
-    );
-    assert!(result.is_ok());
-}`}</code></pre>
         </Card>
       </div>
 
-      <div id="complete" data-search-target>
-        <Card>
-          <CardHeader title="Complete example" subtitle="Update a box end to end" />
-          <p>
-            Reads port and image from argv and flashes the device chip; build with the{' '}
-            <code>flash</code> feature on.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{flash, Error};
-
-fn main() -> medius::Result<()> {
-    let mut args = std::env::args().skip(1);
-    let port = args.next().unwrap_or_else(|| "/dev/ttyACM0".into());
-    let bin = args.next().unwrap_or_else(|| "device.bin".into());
-
-    // false -> device chip, true -> host chip
-    match flash::flash(&port, &bin, false) {
-        Ok(()) => {
-            println!("flashed {bin} onto {port}");
-            Ok(())
-        }
-        Err(Error::FlashTool(msg)) => {
-            eprintln!("flash failed: {msg}");
-            eprintln!("check that esptool.py is on PATH and {port} is right");
-            Err(Error::FlashTool(msg))
-        }
-        Err(e) => Err(e),
-    }
-}`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              See <A href="/native/flashing">Flashing</A> for the native side,{' '}
-              <A href="/library/admin#reboot"><code>reboot</code></A> for the full set of{' '}
-              <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> targets, and{' '}
-              <A href="/library/types/errors"><code>Error</code></A> for the rest of the error enum.
-            </p>
-          </div>
-          <div class="callout callout--info">
-            <p>
-              The other features are <A href="/library/features/async"><code>async</code></A>,{' '}
-              <A href="/library/features/mock"><code>mock</code></A>, and{' '}
-              <A href="/library/features/tracing"><code>tracing</code></A>.
-            </p>
-          </div>
-        </Card>
-      </div>
     </>
   );
 };
