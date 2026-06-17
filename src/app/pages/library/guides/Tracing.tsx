@@ -5,7 +5,7 @@ import '../../../../styles/docs.css';
 
 const Tracing: Component = () => {
   return (
-    <>
+    <div id="tracing" data-search-target>
       <Card>
         <CardHeader title="Tracing" subtitle="Structured diagnostics over the link" />
         <p>
@@ -61,7 +61,7 @@ device.move_rel(10, 0)?;
 
           <p>
             Transport events appear only above <code>INFO</code>, covered in{' '}
-            <A href="/library/guides/tracing#filtering">filtering</A>.
+            <A href="/library/guides#filtering">filtering</A>.
           </p>
         </Card>
       </div>
@@ -130,7 +130,7 @@ device.move_rel(10, 0)?;
           <p>
             Lower the default <code>INFO</code> floor with a per-target{' '}
             <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}
-            (names in <A href="/library/guides/tracing#targets">targets</A>).
+            (names in <A href="/library/guides#targets">targets</A>).
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -277,7 +277,7 @@ tracing_subscriber::fmt()
           </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 };
 

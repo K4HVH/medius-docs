@@ -20,7 +20,7 @@ const Async: Component = () => {
         <p>
           <code>Result</code> is the fallible return type (see <A href="/library/types/errors">Errors</A>).
         </p>
-        <p>See also: <A href="/library/guides/call-kinds">call kinds &amp; timeouts</A>, <A href="/library/guides/threading">concurrency</A>, <A href="/library/guides/testing">testing</A>, and the <A href="/library/examples#async">worked example</A>.</p>
+        <p>See also: <A href="/library/guides#call-kinds">call kinds &amp; timeouts</A>, <A href="/library/guides#threading">concurrency</A>, <A href="/library/guides#testing">testing</A>, and the <A href="/library/examples#async">worked example</A>.</p>
       </Card>
 
       <div id="construction" data-search-target>

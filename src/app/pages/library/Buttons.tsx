@@ -24,7 +24,7 @@ const Buttons: Component = () => {
               <tr><td><code>button</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>The generic form; you pass the <A href="#methods"><code>ButtonAction</code></A>.</td></tr>
             </tbody>
           </table>
-          <p>See also: <A href="/library/guides/clicking">clicking &amp; holds</A>, <A href="/library/guides/testing">testing with MockBox</A>, and the <A href="/library/examples#click">worked example</A>.</p>
+          <p>See also: <A href="/library/guides#clicking">clicking &amp; holds</A>, <A href="/library/guides#testing">testing with MockBox</A>, and the <A href="/library/examples#click">worked example</A>.</p>
         </Card>
       </div>
 

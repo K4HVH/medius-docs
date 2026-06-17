@@ -11,7 +11,7 @@ const Lifecycle: Component = () => {
         <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-window clear</A>, and restores them if the link drops and reopens.</p>
         <ul>
           <li>
-            <A href="/library/guides/keepalive"><code>keepalive</code></A> (automatic) holds an
+            <A href="/library/guides#keepalive"><code>keepalive</code></A> (automatic) holds an
             override past the silence timeout.
           </li>
           <li>
@@ -23,7 +23,7 @@ const Lifecycle: Component = () => {
             port, and restores held state after a dropped link.
           </li>
         </ul>
-        <p>See also: <A href="/library/guides/keepalive">keepalive &amp; holds</A> and the <A href="/library/examples#lifecycle">worked example</A>.</p>
+        <p>See also: <A href="/library/guides#keepalive">keepalive &amp; holds</A> and the <A href="/library/examples#lifecycle">worked example</A>.</p>
       </Card>
 
       <div id="reapply" data-search-target>

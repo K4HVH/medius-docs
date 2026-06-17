@@ -15,7 +15,7 @@ const Keepalive: Component = () => {
         </p>
         <ul>
           <li>
-            <A href="/library/guides/keepalive#keepalive"><code>keepalive</code></A> (automatic) holds an
+            <A href="/library/guides#keepalive"><code>keepalive</code></A> (automatic) holds an
             override past the silence timeout.
           </li>
           <li>
@@ -127,7 +127,7 @@ println!("keepalive fires every {:?}", DEFAULT_KEEPALIVE_CADENCE);`}</code></pre
           <CardHeader title="Releasing the device" subtitle="Drop it; no close() call" />
           <p>
             No <code>close</code> method: the last{' '}
-            <A href="/library/guides/threading#threading"><code>Arc</code>-backed handle</A>'s{' '}
+            <A href="/library/guides#threading"><code>Arc</code>-backed handle</A>'s{' '}
             <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
             tears the connection down.
           </p>

@@ -79,7 +79,7 @@ const Introduction: Component = () => {
                 <td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a> firmware flashing.</td>
               </tr>
               <tr>
-                <td><A href="/library/guides/tracing"><code>tracing</code></A></td>
+                <td><A href="/library/guides#tracing"><code>tracing</code></A></td>
                 <td>Tracing instrumentation across the connection lifecycle.</td>
               </tr>
             </tbody>
@@ -163,56 +163,13 @@ const Introduction: Component = () => {
 
       <div id="guides" data-search-target>
         <Card>
-          <CardHeader title="Guides" subtitle="Behavior and how-to, outside the reference" />
+          <CardHeader title="Guides & examples" subtitle="Behavior, how-to, and runnable programs, outside the reference" />
           <div class="docs-grid">
-            <A href="/library/guides/call-kinds" style={{ "text-decoration": "none" }}>
+            <A href="/library/guides" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Call kinds" subtitle="Fire-and-forget, blocking, async" />
+                <CardHeader title="Guides" subtitle="Call kinds, threading, keepalive, testing, tracing" />
               </Card>
             </A>
-            <A href="/library/guides/threading" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Threading & Clone" subtitle="Share one link across threads" />
-              </Card>
-            </A>
-            <A href="/library/guides/keepalive" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Keepalive & holds" subtitle="Hold injection, recover the link" />
-              </Card>
-            </A>
-            <A href="/library/guides/smooth-motion" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Smooth motion" subtitle="Glide instead of teleport" />
-              </Card>
-            </A>
-            <A href="/library/guides/clicking" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Clicking & holds" subtitle="Press, wait, release" />
-              </Card>
-            </A>
-            <A href="/library/guides/choosing-a-port" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Choosing a port" subtitle="Several boxes at once" />
-              </Card>
-            </A>
-            <A href="/library/guides/testing" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Testing with MockBox" subtitle="Assert frames, drive logs" />
-              </Card>
-            </A>
-            <A href="/library/guides/tracing" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Tracing" subtitle="Structured diagnostics" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
-
-      <div id="examples" data-search-target>
-        <Card>
-          <CardHeader title="Examples" />
-          <div class="docs-grid">
             <A href="/library/examples" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Cookbook" subtitle="Full runnable programs" />
