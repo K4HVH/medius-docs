@@ -28,28 +28,6 @@ const Buttons: Component = () => {
         </Card>
       </div>
 
-      <div id="button-arg" data-search-target>
-        <Card>
-          <CardHeader title="Button" subtitle="Which button, and its wire id" />
-          <pre class="api-signature">enum Button {'{'} Left, Right, Middle, Side1, Side2 {'}'}</pre>
-          <p>
-            <A href="/library/types/enums#button"><code>Button</code></A> names the target; each maps to a
-            one-byte wire <code>id</code> (<code>Left</code> 0 to <code>Side2</code> 4), tabled on{' '}
-            <A href="/library/types/enums">Types</A>.
-          </p>
-          <p>
-            Targeting a button the real mouse lacks (say <code>Side2</code> on a three-button mouse)
-            is a no-op; map a wire byte with <code>Button::from_id(u8)</code> / <code>as_id()</code>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Button;
-
-assert_eq!(Button::from_id(3), Some(Button::Side1));
-assert_eq!(Button::Left.as_id(), 0);
-assert_eq!(Button::from_id(99), None); // unknown id`}</code></pre>
-        </Card>
-      </div>
-
       <div id="press" data-search-target>
         <Card>
           <CardHeader title="press" subtitle="Force a button down" />
@@ -70,7 +48,7 @@ assert_eq!(Button::from_id(99), None); // unknown id`}</code></pre>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>button</code></td><td><A href="#button-arg"><code>Button</code></A></td><td>Which clone button to hold down.</td></tr>
+              <tr><td><code>button</code></td><td><A href="/library/types/enums#button"><code>Button</code></A></td><td>Which clone button to hold down.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

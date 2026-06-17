@@ -79,7 +79,7 @@ const Introduction: Component = () => {
                 <td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a> firmware flashing.</td>
               </tr>
               <tr>
-                <td><A href="/library/guides/testing#tracing"><code>tracing</code></A></td>
+                <td><A href="/library/features/tracing"><code>tracing</code></A></td>
                 <td>Tracing instrumentation across the connection lifecycle.</td>
               </tr>
             </tbody>
@@ -157,6 +157,11 @@ const Introduction: Component = () => {
                 <CardHeader title="flash" subtitle="esptool flashing" />
               </Card>
             </A>
+            <A href="/library/features/tracing" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="tracing" subtitle="Structured diagnostics" />
+              </Card>
+            </A>
           </div>
         </Card>
       </div>
@@ -177,7 +182,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/guides/testing" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Testing & tracing" subtitle="MockBox and diagnostics" />
+                <CardHeader title="Testing" subtitle="MockBox in tests" />
               </Card>
             </A>
           </div>
