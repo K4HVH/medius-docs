@@ -10,47 +10,20 @@ const Tracing: Component = () => {
         <CardHeader title="Tracing" subtitle="Structured diagnostics over the link" />
         <p>
           The <code>tracing</code> feature wires the crate into{' '}
-          <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>,
-          emitting a span and events as it works the link. It adds no medius API and changes no
-          behavior, and nothing prints until you install a subscriber.
+          <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
+          it emits a span and events as it works the link, but adds no medius functions and changes no
+          behavior. The sections below are what it emits; you read them by installing a{' '}
+          <A href="#subscriber">subscriber</A>.
         </p>
         <pre><code>cargo add medius --features tracing</code></pre>
         <p>
-          The Cargo feature is off by default; with it off the macros expand to nothing, so there's no
-          runtime cost. The crate ships no subscriber, so add one alongside the feature, usually{' '}
-          <a href="https://docs.rs/tracing-subscriber" target="_blank" rel="noreferrer"><code>tracing-subscriber</code></a>.
+          Off by default; with the feature off the macros expand to nothing, so there's no runtime cost.
         </p>
-        <pre><code>cargo add tracing-subscriber</code></pre>
       </Card>
-
-      <div id="subscriber" data-search-target>
-        <Card>
-          <CardHeader title="Install a subscriber" subtitle="Print something to stderr" />
-          <p>
-            The{' '}
-            <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html" target="_blank" rel="noreferrer"><code>fmt</code></a>{' '}
-            subscriber writes lines to stderr; call <code>init()</code> once before opening. Without a
-            subscriber every span and event is dropped silently.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
-
-tracing_subscriber::fmt::init();
-
-let device = Device::find()?;
-device.move_rel(10, 0)?;
-// stderr now carries the connect span and an INFO event, e.g.:
-//   INFO connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=2 fw_patch=0`}</code></pre>
-          <p>
-            Transport events appear only below the default <code>INFO</code> floor; lower it under{' '}
-            <A href="#filtering">filtering</A>.
-          </p>
-        </Card>
-      </div>
 
       <div id="targets" data-search-target>
         <Card>
-          <CardHeader title="Targets and levels" subtitle="What gets emitted and where" />
+          <CardHeader title="Targets and levels" subtitle="What the crate emits and where" />
           <div class="api-response-label">TARGETS</div>
           <table class="api-params">
             <thead>
@@ -89,29 +62,21 @@ device.move_rel(10, 0)?;
         </Card>
       </div>
 
-      <div id="filtering" data-search-target>
+      <div id="spans" data-search-target>
         <Card>
-          <CardHeader title="Filter by level and target" subtitle="EnvFilter and RUST_LOG" />
+          <CardHeader title="The connect span" subtitle="A span wraps related events" />
           <p>
-            Lower the default <code>INFO</code> floor with a per-target{' '}
-            <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}
-            (target names in <A href="#targets">targets</A>).
+            The <code>connect</code> span wraps the handshake; retry and <code>connected</code> events
+            nest inside it. Its fields are the numbers{' '}
+            <A href="/library/requests#version"><code>query_version</code></A> returns as a{' '}
+            <A href="/library/types/structs#version"><code>Version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// Code-side: medius events at DEBUG, everything else at the default.
-tracing_subscriber::fmt()
-    .with_env_filter("medius=debug")
-    .init();
-
-// Or set it at runtime instead, no recompile:
-//   RUST_LOG=medius=debug ./your-program
-//   RUST_LOG=medius::transport=trace ./your-program   # every frame`}</code></pre>
-          <div class="callout callout--warning">
-            <p>
-              <code>medius::transport=trace</code> emits one line per frame in both directions. Leave it
-              off unless you're chasing a wire-level bug.
-            </p>
-          </div>
+          <pre><code>{`// With "medius=debug" and a box that answers on the second probe, the
+// fmt subscriber prints the span name on each nested event:
+//   DEBUG connect: medius::device: handshake: version probe timed out, retrying
+//   INFO  connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=2 fw_patch=0
+// "connect:" is the span; the rest is the event with its fields.`}</code></pre>
         </Card>
       </div>
 
@@ -135,6 +100,55 @@ tracing_subscriber::fmt()
 //   WARN  medius::device: mouse detached device_log=true
 // a recovered link:
 //   INFO  medius::device: reconnected port="/dev/ttyACM0" reason="rescan"`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="subscriber" data-search-target>
+        <Card>
+          <CardHeader title="Install a subscriber" subtitle="Print the events to stderr" />
+          <p>
+            The crate ships no subscriber, so add one alongside the feature, usually{' '}
+            <a href="https://docs.rs/tracing-subscriber" target="_blank" rel="noreferrer"><code>tracing-subscriber</code></a>.
+            The <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html" target="_blank" rel="noreferrer"><code>fmt</code></a>{' '}
+            subscriber writes lines to stderr; call <code>init()</code> once before opening. Without one,
+            every span and event is dropped silently.
+          </p>
+          <pre><code>cargo add tracing-subscriber</code></pre>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Device;
+
+tracing_subscriber::fmt::init();
+
+let device = Device::find()?;
+device.move_rel(10, 0)?;
+// stderr now carries the connect span and an INFO event, e.g.:
+//   INFO connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=2 fw_patch=0`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="filtering" data-search-target>
+        <Card>
+          <CardHeader title="Filter by level and target" subtitle="EnvFilter and RUST_LOG" />
+          <p>
+            Transport events sit below the default <code>INFO</code> floor. Lower it with a per-target{' '}
+            <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}
+            (target names in <A href="#targets">targets</A>).
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`// Code-side: medius events at DEBUG, everything else at the default.
+tracing_subscriber::fmt()
+    .with_env_filter("medius=debug")
+    .init();
+
+// Or set it at runtime instead, no recompile:
+//   RUST_LOG=medius=debug ./your-program
+//   RUST_LOG=medius::transport=trace ./your-program   # every frame`}</code></pre>
+          <div class="callout callout--warning">
+            <p>
+              <code>medius::transport=trace</code> emits one line per frame in both directions. Leave it
+              off unless you're chasing a wire-level bug.
+            </p>
+          </div>
         </Card>
       </div>
 
