@@ -12,22 +12,6 @@ const Enums: Component = () => {
           <p>
             Four argument enums, each tied to a wire byte. Conversion helpers are listed with each.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, ButtonAction, RebootTarget, LogLevel};
-
-// Button: id comes from as_id(), and from_id is fallible.
-assert_eq!(Button::Left.as_id(), 0);
-assert_eq!(Button::from_id(99), None); // unknown byte -> None
-
-// ButtonAction: the discriminant IS the wire byte.
-assert_eq!(ButtonAction::Press.as_u8(), 1);
-assert_eq!(ButtonAction::from_u8(2), Some(ButtonAction::ForceRelease));
-
-// RebootTarget: same Option shape.
-assert_eq!(RebootTarget::from_u8(3), Some(RebootTarget::HostRun));
-
-// LogLevel never fails: an unknown byte falls back to Info.
-assert_eq!(LogLevel::from_u8(99), LogLevel::Info);`}</code></pre>
         </Card>
       </div>
       <div id="button" data-search-target>

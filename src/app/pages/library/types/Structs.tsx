@@ -85,7 +85,7 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code><
           <CardHeader title="PortInfo" subtitle="A discovered serial port" />
           <p>
             A serial port that looks like a Medius box, from{' '}
-            <A href="/library/connection#choosing-a-port"><code>find_medius()</code></A>.
+            <A href="/library/guides/connection#choosing-a-port"><code>find_medius()</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
