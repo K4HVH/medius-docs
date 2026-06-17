@@ -51,8 +51,7 @@ const Flashing: Component = () => {
         <Card>
           <CardHeader title="Version scheme" subtitle="major.minor.patch" />
           <p>
-            The firmware version is <code>major.minor.patch</code>; the current version is{' '}
-            <code>0.1.0</code>. Read the running version with{' '}
+            The firmware version is <code>major.minor.patch</code>. Read the running version with{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
           </p>
         </Card>

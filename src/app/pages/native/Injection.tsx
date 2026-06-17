@@ -103,10 +103,10 @@ const Injection: Component = () => {
 
       <div id="emission" data-search-target>
         <Card>
-          <CardHeader title="When the box sends a report" subtitle="At most one per ~1 ms, only on activity" />
+          <CardHeader title="When the box sends a report" subtitle="At the mouse's own report rate, only on activity" />
           <table class="api-params">
             <thead>
-              <tr><th>That millisecond…</th><th>The box sends</th></tr>
+              <tr><th>When…</th><th>The box sends</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -115,7 +115,7 @@ const Injection: Component = () => {
               </tr>
               <tr>
                 <td>the real mouse was still, but you have motion pending</td>
-                <td>A report carrying just the drained accumulator.</td>
+                <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond).</td>
               </tr>
               <tr>
                 <td>a <A href="/native/commands/buttons"><code>BUTTON</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a button</td>
