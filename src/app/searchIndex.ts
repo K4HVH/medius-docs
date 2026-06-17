@@ -78,7 +78,7 @@ const entries: SearchEntry[] = [
   // ── Reference ───────────────────────────────────────────────────────────
   { label: 'Flashing & Updates', description: 'Updating firmware on the two chips', path: '/native/flashing', group: 'Reference', icon: BsBoxArrowInDown, keywords: ['flash', 'esptool', 'update', 'version', 'download'] },
   { label: 'Two chips', description: 'Device over CH343, host over its own USB', path: '/native/flashing#two-chips', group: 'Reference', icon: BsBoxArrowInDown, keywords: ['device chip', 'host chip', 'download', 'esptool'] },
-  { label: 'Version scheme', description: 'major.minor.patch, reported in RESP(VERSION)', path: '/native/flashing#version', group: 'Reference', icon: BsBoxArrowInDown, keywords: ['version', '0.1.0', 'single source'] },
+  { label: 'Version scheme', description: 'major.minor.patch, reported in RESP(VERSION)', path: '/native/flashing#version', group: 'Reference', icon: BsBoxArrowInDown, keywords: ['version', 'semver', 'single source'] },
   { label: 'Flashing notes', description: 'Gotchas when reflashing', path: '/native/flashing#notes', group: 'Reference', icon: BsBoxArrowInDown, keywords: ['notes', 'flashing', 'gotchas'] },
   { label: 'Troubleshooting', description: 'Common problems and fixes', path: '/native/troubleshooting', group: 'Reference', icon: BsExclamationTriangle, keywords: ['troubleshoot', 'faq'] },
   { label: 'No reply to QUERY(VERSION)', description: 'Wrong baud, port held, or not a Medius box', path: '/native/troubleshooting#no-reply', group: 'Reference', icon: BsExclamationTriangle, keywords: ['no reply', 'baud', 'port held', 'handshake'] },

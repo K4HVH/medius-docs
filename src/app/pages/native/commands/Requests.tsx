@@ -101,7 +101,7 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
-            describes <code>1</code>); the current firmware is <code>0.1.0</code>.
+            describes <code>1</code>); the box reports its own firmware version in the bytes that follow.
           </p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -123,9 +123,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>0.1.0</code>, protocol <code>1</code>:</p>
+          <p>Firmware <code>1.1.0</code>, protocol <code>1</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 01     | 00     | 01     | 00     | lo hi  |
+| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 01     | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
