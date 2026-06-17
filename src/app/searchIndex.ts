@@ -146,6 +146,9 @@ const entries: SearchEntry[] = [
   { label: 'Flashing in tests', description: 'Swap the runner, skip the hardware', path: '/library/features/flash#testing', group: 'Library Features', icon: BsBoxArrowInDown, keywords: ['flashing', 'tests', 'swap', 'runner', 'skip', 'hardware', 'testing'] },
 
   // ── Guides ────────────────────────────────────────────────────────────────
+  { label: 'Calls & input', description: 'Call kinds, async, motion, clicks', path: '/library/guides/calls', group: 'Guides', icon: BsLightning, keywords: ['calls', 'input', 'guide', 'async', 'motion', 'click'] },
+  { label: 'Connection', description: 'Ports, threads, keepalive, teardown', path: '/library/guides/connection', group: 'Guides', icon: BsArrowRepeat, keywords: ['connection', 'connecting', 'ports', 'threads', 'keepalive', 'lifecycle', 'guide'] },
+  { label: 'Testing & tracing', description: 'MockBox and diagnostics', path: '/library/guides/testing', group: 'Guides', icon: BsActivity, keywords: ['testing', 'tracing', 'diagnostics', 'mockbox', 'guide'] },
   { label: 'Call kinds', description: 'Fire-and-forget, blocking query, no round-trip', path: '/library/guides/calls#call-kinds', group: 'Guides', icon: BsLightning, keywords: ['call', 'kinds', 'fire', 'forget', 'blocking', 'async', 'badge'] },
   { label: 'Why only two calls are async', description: 'Queries await a reply, everything else fires and forgets', path: '/library/guides/calls#why-async', group: 'Guides', icon: BsLightning, keywords: ['why', 'only', 'two', 'calls', 'async', 'queries', 'await'] },
   { label: 'Driving futures without a runtime', description: 'futures::executor::block_on', path: '/library/guides/calls#block-on', group: 'Guides', icon: BsLightning, keywords: ['driving', 'futures', 'without', 'runtime', 'block_on', 'executor'] },
