@@ -156,6 +156,10 @@ const Injection: Component = () => {
                 <td>The link to the host chip drops.</td>
               </tr>
               <tr>
+                <td>mouse unplugged</td>
+                <td>The real mouse is detached, so there's nothing left to inject into.</td>
+              </tr>
+              <tr>
                 <td><A href="/native/commands/admin#reset"><code>RESET</code></A></td>
                 <td>You send the reset command explicitly.</td>
               </tr>
