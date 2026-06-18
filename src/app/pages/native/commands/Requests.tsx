@@ -123,9 +123,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>1.3.0</code>, protocol <code>1</code>:</p>
+          <p>Firmware <code>1.3.1</code>, protocol <code>1</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 03     | 00     | lo hi  |
+| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 03     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
