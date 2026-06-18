@@ -75,7 +75,7 @@ const Tracing: Component = () => {
           <pre><code>{`// With "medius=debug" and a box that answers on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
-//   INFO  connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=2 fw_patch=0
+//   INFO  connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=3 fw_patch=0
 // "connect:" is the span; the rest is the event with its fields.`}</code></pre>
         </Card>
       </div>
@@ -122,7 +122,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr now carries the connect span and an INFO event, e.g.:
-//   INFO connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=2 fw_patch=0`}</code></pre>
+//   INFO connect: medius::device: connected proto_ver=1 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
         </Card>
       </div>
 
