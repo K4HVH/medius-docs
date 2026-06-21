@@ -21,8 +21,11 @@ import {
   Q_RATE,
   Q_STATS,
   Q_VERSION,
+  LedMode,
+  LedTarget,
   RebootTarget,
   encode,
+  ledPayload,
   parseLog,
   parseResp,
   queryPayload,
@@ -179,6 +182,10 @@ export class SerialLink {
 
   reboot(target: RebootTarget): Promise<void> {
     return this.send(encode(FrameType.RebootDl, this.nextSeq(), rebootPayload(target)));
+  }
+
+  led(target: LedTarget, mode: LedMode, level: number): Promise<void> {
+    return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
   async close(): Promise<void> {

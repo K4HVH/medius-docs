@@ -10,7 +10,7 @@ const Enums: Component = () => {
         <Card>
           <CardHeader title="Enums" subtitle="Command and status enumerations" />
           <p>
-            Four argument enums, each tied to a wire byte. Conversion helpers are listed with each.
+            Six argument enums, each tied to a wire byte. Conversion helpers are listed with each.
           </p>
         </Card>
       </div>
@@ -69,6 +69,46 @@ const Enums: Component = () => {
               <tr><td><code>HostDownload</code></td><td><code>1</code></td><td>Host chip into ROM download mode, ready to flash over its own USB.</td></tr>
               <tr><td><code>DeviceRun</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
               <tr><td><code>HostRun</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="led-target" data-search-target>
+        <Card>
+          <CardHeader title="LedTarget" subtitle="Which chip's status LED to drive" />
+          <pre class="api-signature">enum LedTarget {'{'} Device, Host, Both {'}'}</pre>
+          <p>
+            Which chip's LED a <A href="/native/commands/led"><code>LED</code></A> command drives. The
+            discriminant is the wire <code>target</code> byte. Convert with <code>as_u8()</code> and{' '}
+            <code>from_u8(u8) -&gt; Option&lt;LedTarget&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Device</code></td><td><code>0</code></td><td>The device chip's own LED.</td></tr>
+              <tr><td><code>Host</code></td><td><code>1</code></td><td>The host chip's LED, relayed over the inter-chip link.</td></tr>
+              <tr><td><code>Both</code></td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="led-mode" data-search-target>
+        <Card>
+          <CardHeader title="LedMode" subtitle="What to drive the LED to" />
+          <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
+          <p>
+            What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to;{' '}
+            <code>Auto</code> hands it back to the box's status display. The discriminant is the wire{' '}
+            <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
+            <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Auto</code></td><td><code>0</code></td><td>Restore the chip's own status display.</td></tr>
+              <tr><td><code>Off</code></td><td><code>1</code></td><td>LED dark.</td></tr>
+              <tr><td><code>Solid</code></td><td><code>2</code></td><td>Lit steadily at the command's <code>level</code>.</td></tr>
+              <tr><td><code>Blink</code></td><td><code>3</code></td><td>Blinks at the command's <code>level</code>.</td></tr>
             </tbody>
           </table>
         </Card>
