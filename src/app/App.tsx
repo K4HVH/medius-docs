@@ -40,6 +40,7 @@ import LibTypesStructs from './pages/library/types/Structs';
 import LibTypesFrames from './pages/library/types/Frames';
 import LibTypesErrors from './pages/library/types/Errors';
 import DashboardDevice from './pages/dashboard/Device';
+import DashboardControl from './pages/dashboard/Control';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
@@ -89,6 +90,7 @@ const App: Component = () => {
           <Route path="/library/types/frames" component={LibTypesFrames} />
           <Route path="/library/types/errors" component={LibTypesErrors} />
           <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/dashboard/control" component={DashboardControl} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />

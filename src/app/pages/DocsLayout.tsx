@@ -12,7 +12,7 @@ import {
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
-  BsLightbulb,
+  BsLightbulb, BsSliders,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -99,6 +99,7 @@ const allLibraryTabs = [
 
 const dashboardTabs: TabOption[] = [
   { value: '/dashboard', label: 'Device', icon: BsCpu },
+  { value: '/dashboard/control', label: 'Control', icon: BsSliders },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
