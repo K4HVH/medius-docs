@@ -10,7 +10,7 @@ const Structs: Component = () => {
         <Card>
           <CardHeader title="Structs" subtitle="Values the box reports back" />
           <p>
-            Five plain value types you get back from queries and discovery. Their fields are public.
+            Plain value types you get back from queries and discovery. Their fields are public.
           </p>
         </Card>
       </div>
@@ -53,6 +53,7 @@ println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
               <tr><td><code>mouse_attached</code></td><td><code>bool</code></td><td>A real mouse is plugged in.</td></tr>
               <tr><td><code>clone_configured</code></td><td><code>bool</code></td><td>The PC has set up the cloned mouse.</td></tr>
               <tr><td><code>injection_active</code></td><td><code>bool</code></td><td>The box is holding at least one injected button or move.</td></tr>
+              <tr><td><code>rate_confident</code></td><td><code>bool</code></td><td>The native-rate estimator window is full, so <A href="/library/types/structs#rate"><code>Rate</code></A> is trustworthy.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -62,6 +63,104 @@ let h = Health::from_flags(0b0000_0011); // link_up | mouse_attached
 assert!(h.link_up && h.mouse_attached);
 assert!(!h.clone_configured);
 assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code></pre>
+        </Card>
+      </div>
+      <div id="mouse-info" data-search-target>
+        <Card>
+          <CardHeader title="MouseInfo" subtitle="The cloned mouse's USB identity" />
+          <p>
+            USB identity from{' '}
+            <A href="/library/requests#query-mouse-info"><code>query_mouse_info()</code></A>. Every
+            field is zero when no mouse is cloned. <code>Display</code> prints <code>VVVV:PPPP</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>vid</code></td><td><code>u16</code></td><td>USB vendor id (idVendor).</td></tr>
+              <tr><td><code>pid</code></td><td><code>u16</code></td><td>USB product id (idProduct).</td></tr>
+              <tr><td><code>bcd_device</code></td><td><code>u16</code></td><td>Device release (bcdDevice).</td></tr>
+              <tr><td><code>bcd_usb</code></td><td><code>u16</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
+              <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>The clone serves a serial string.</td></tr>
+              <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>The clone serves a BOS descriptor.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::MouseInfo;
+
+let m = MouseInfo { vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201, has_serial: true, has_bos: true };
+assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
+        </Card>
+      </div>
+      <div id="caps" data-search-target>
+        <Card>
+          <CardHeader title="Caps" subtitle="What the emulated mouse can do" />
+          <p>
+            Semantic capabilities from <A href="/library/requests#query-caps"><code>query_caps()</code></A>.
+            Every field is zero when no relative-axis mouse interface is bound.{' '}
+            <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>n_buttons</code></td><td><code>u8</code></td><td>Buttons the mouse report carries.</td></tr>
+              <tr><td><code>has_x</code></td><td><code>bool</code></td><td>The report carries an X axis.</td></tr>
+              <tr><td><code>has_y</code></td><td><code>bool</code></td><td>The report carries a Y axis.</td></tr>
+              <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>The report carries a wheel.</td></tr>
+              <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
+              <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Caps;
+
+let c = Caps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
+assert!(!c.is_composite()); // single HID interface`}</code></pre>
+        </Card>
+      </div>
+      <div id="rate" data-search-target>
+        <Card>
+          <CardHeader title="Rate" subtitle="The native report rate the box tracks" />
+          <p>
+            Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
+            <code>native_hz()</code> converts the period to a frequency, returning <code>None</code>{' '}
+            while <code>native_period_us</code> is still <code>0</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>native_period_us</code></td><td><code>u16</code></td><td>Realised native report period in µs; <code>0</code> = not learned.</td></tr>
+              <tr><td><code>poll_period_us</code></td><td><code>u16</code></td><td>Cloned inject-endpoint poll period in µs.</td></tr>
+              <tr><td><code>confident</code></td><td><code>bool</code></td><td>The estimator window is full and the value is trustworthy.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Rate;
+
+let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true };
+assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
+        </Card>
+      </div>
+      <div id="stats" data-search-target>
+        <Card>
+          <CardHeader title="Stats" subtitle="Delivery and telemetry counters" />
+          <p>
+            Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>.
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery degraded under
+            load. The narrowed fields saturate instead of wrapping.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports dropped on TX-queue overflow (should stay 0).</td></tr>
+              <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
+              <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
+              <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
+              <tr><td><code>wakeups</code></td><td><code>u16</code></td><td>Remote-wakeups issued.</td></tr>
+              <tr><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen.</td></tr>
+              <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
       <div id="log-line" data-search-target>

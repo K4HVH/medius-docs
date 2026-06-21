@@ -10,9 +10,14 @@ const Requests: Component = () => {
         <CardHeader title="Requests" subtitle="Query the box for state" />
         <p>
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> is the only command that
-          gets a reply, a <A href="/native/commands/requests#resp"><code>RESP</code></A>. Use it to read
-          the firmware <A href="/native/commands/requests#version">version</A> and the box's{' '}
-          <A href="/native/commands/requests#health">health</A>.
+          gets a reply, a <A href="/native/commands/requests#resp"><code>RESP</code></A>. Pick what to
+          read with the <code>what</code> selector: the firmware{' '}
+          <A href="/native/commands/requests#version">version</A>, the box's{' '}
+          <A href="/native/commands/requests#health">health</A>, the cloned{' '}
+          <A href="/native/commands/requests#mouse-info">mouse info</A>,{' '}
+          <A href="/native/commands/requests#caps">capabilities</A>,{' '}
+          <A href="/native/commands/requests#rate">rate</A>, or delivery{' '}
+          <A href="/native/commands/requests#stats">stats</A>.
         </p>
       </Card>
 
@@ -42,15 +47,24 @@ const Requests: Component = () => {
             <tbody>
               <tr><td><code>0</code></td><td>The firmware version.</td><td><A href="/native/commands/requests#version"><code>VERSION</code></A></td></tr>
               <tr><td><code>1</code></td><td>The box's health.</td><td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td></tr>
+              <tr><td><code>2</code></td><td>The cloned mouse's USB identity.</td><td><A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A></td></tr>
+              <tr><td><code>3</code></td><td>The emulated mouse's capabilities.</td><td><A href="/native/commands/requests#caps"><code>CAPS</code></A></td></tr>
+              <tr><td><code>4</code></td><td>The native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
+              <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
-            carrying the same <code>what</code> and the requested data. Everything else is{' '}
+            carrying the same <code>what</code> and the requested data, one per selector in the table
+            above. <code>QUERY</code> is the only command that gets a reply; everything else is{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A>. Library bindings:{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
-            <A href="/library/requests#health"><code>query_health</code></A>.
+            <A href="/library/requests#health"><code>query_health</code></A>,{' '}
+            <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+            <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
+            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
+            <A href="/library/requests#query-stats"><code>query_stats</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -79,7 +93,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>echoes the request's selector</td></tr>
-              <tr><td>1..</td><td><code>data</code></td><td><code>varies</code></td><td>the version or health layout below</td></tr>
+              <tr><td>1..</td><td><code>data</code></td><td><code>varies</code></td><td>the layout for the requested <code>what</code> (see the <A href="/native/commands/requests#requests">selectors</A>)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -87,10 +101,13 @@ const Requests: Component = () => {
             You get exactly one <code>RESP</code> per <code>QUERY</code>. Its{' '}
             <A href="/native/frame#seq"><code>SEQ</code></A> matches the request's and{' '}
             <code>what</code> echoes the selector, so you can pair a reply with its request and tell
-            which kind it is. The two payload layouts,{' '}
-            <A href="/native/commands/requests#version"><code>VERSION</code></A> and{' '}
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A>, are below, each with an
-            example frame.
+            which kind it is. Each selector's payload is laid out below, with an example frame:{' '}
+            <A href="/native/commands/requests#version"><code>VERSION</code></A>,{' '}
+            <A href="/native/commands/requests#health"><code>HEALTH</code></A>,{' '}
+            <A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A>,{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
+            <A href="/native/commands/requests#rate"><code>RATE</code></A>, and{' '}
+            <A href="/native/commands/requests#stats"><code>STATS</code></A>.
           </p>
         </Card>
       </div>
@@ -123,9 +140,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>1.3.1</code>, protocol <code>1</code>:</p>
+          <p>Firmware <code>1.4.0</code>, protocol <code>1</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 03     | 01     | lo hi  |
+| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 04     | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -159,11 +176,12 @@ const Requests: Component = () => {
               <tr><td>b1</td><td><code>0x02</code></td><td>a real mouse is attached</td></tr>
               <tr><td>b2</td><td><code>0x04</code></td><td>the PC has set up the cloned mouse</td></tr>
               <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
+              <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Bits b4-b7 are unused. The first three set means the box is ready for input to reach the PC.
+            Bits b5-b7 are unused. The first three set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -173,6 +191,207 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | flags  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="mouse-info" data-search-target>
+        <Card>
+          <CardHeader title="MOUSE_INFO" subtitle="RESP payload, what = 2" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 2</code>: the USB identity the box read from the real mouse, its vendor and
+            product id numbers, its USB version, and whether it has a serial number. The clone shows up
+            on the game PC, not here, so this is the only way the control PC can read it. Every field is
+            zero when no mouse is attached.
+          </p>
+          <pre class="api-signature">QUERY  what = 2  ·  RESP 10 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x02</td></tr>
+              <tr><td>1</td><td><code>vid</code></td><td><code>u16</code></td><td>idVendor, little-endian</td></tr>
+              <tr><td>3</td><td><code>pid</code></td><td><code>u16</code></td><td>idProduct, little-endian</td></tr>
+              <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
+              <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
+              <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>HAS_SERIAL</code>: the clone serves a serial string</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>HAS_BOS</code>: the clone serves a BOS descriptor</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            A <code>vid</code> of <code>0</code> means nothing is attached yet. Library binding:{' '}
+            <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A Logitech G502 (<code>046D:C08B</code>), USB 2.01, serial and BOS served:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 0A 00  | 02     | 6D 04  | 8B C0  | ...    |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | vid    | pid    | ...    |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| ...    | 00 00  | 01 02  | 03     | lo hi  |
++--------+--------+--------+--------+--------+
+| ...    | bcdDev | bcdUSB | flags  | CRC16  |
++--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="caps" data-search-target>
+        <Card>
+          <CardHeader title="CAPS" subtitle="RESP payload, what = 3" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 3</code>: a plain summary of what the cloned mouse can do, read from its HID
+            report descriptor. Counts and yes/no flags only, never raw HID field offsets. Use it to
+            check before you act: a <A href="/native/commands/buttons"><code>BUTTON</code></A> for a
+            button the mouse doesn't have is silently ignored, so <code>n_buttons</code> tells you which
+            ids are real. Every field is zero when no mouse is bound.
+          </p>
+          <pre class="api-signature">QUERY  what = 3  ·  RESP 4 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
+              <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries</td></tr>
+              <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>X</code>: the report carries an X axis</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>Y</code>: the report carries a Y axis</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>WHEEL</code>: the report carries a wheel</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the mouse report sits behind a HID report ID</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            Library binding: <A href="/library/requests#query-caps"><code>query_caps</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A 5-button mouse with X, Y, and wheel, single HID interface (<code>axis_flags = 0x07</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 04 00  | 03     | 05     | 07     | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | n_btn  | axis   | n_hid  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="rate" data-search-target>
+        <Card>
+          <CardHeader title="RATE" subtitle="RESP payload, what = 4" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 4</code>: how fast the real mouse reports, plus the poll period the clone
+            advertises. <code>native_period_us</code> is the gap between reports in microseconds, so the
+            rate in Hz is <code>1e6 / period</code>. It reads <code>0</code> until the box has learned
+            the rate. The box paces injection to this rate on its own; you read it to confirm what the
+            box sees.
+          </p>
+          <pre class="api-signature">QUERY  what = 4  ·  RESP 6 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x04</td></tr>
+              <tr><td>1</td><td><code>native_period_us</code></td><td><code>u16</code></td><td>realised native period in µs; 0 = not learned, Hz = 1e6/period</td></tr>
+              <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs</td></tr>
+              <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>CONFIDENT</code>: the estimator window is full, same source as HEALTH <A href="/native/commands/requests#health"><code>RATE_CONFIDENT</code></A></td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            A 1 kHz mouse reads ~1000 µs once learned. Library binding:{' '}
+            <A href="/library/requests#query-rate"><code>query_rate</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A 1 kHz mouse, 1000 µs poll, estimator confident (<code>flags = 0x01</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 06 00  | 04     | E8 03  | E8 03  | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | native | poll   | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="stats" data-search-target>
+        <Card>
+          <CardHeader title="STATS" subtitle="RESP payload, what = 5" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 5</code>: counters the box keeps about whether your commands were delivered.
+            Commands are <A href="/native/injection#fire-and-forget">fire-and-forget</A> with no
+            acknowledgement, so these counters are the only way to tell that everything you sent landed.
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery slipped under load.
+            Wide counters clamp at their max instead of wrapping around.
+          </p>
+          <pre class="api-signature">QUERY  what = 5  ·  RESP 17 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
+              <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
+              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports dropped on TX-queue overflow; should stay 0</td></tr>
+              <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
+              <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>deepest the TX queue has reached</td></tr>
+              <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
+              <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
+              <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
+              <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            <code>inject_emits</code> counts the no-halving / 1 kHz path. The rest are merge, queue,
+            wakeup, reset, and reconfig counters. Library binding:{' '}
+            <A href="/library/requests#query-stats"><code>query_stats</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>4096 emits, no drops, no wedges:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
+| A5     | 06     | 00     | 11 00  | 05     | 00 10 00 00  | 00 00  | ...
++--------+--------+--------+--------+--------+--------------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits | drops  | ...
++--------+--------+--------+--------+--------+--------------+--------+`}</pre>
         </Card>
       </div>
     </>

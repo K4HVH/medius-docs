@@ -6,11 +6,29 @@ export const PROTO_VER = 1;
 
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
+export const Q_MOUSE_INFO = 2;
+export const Q_CAPS = 3;
+export const Q_RATE = 4;
+export const Q_STATS = 5;
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
 export const H_CLONE_CFG = 0x04;
 export const H_INJECT_ON = 0x08;
+export const H_RATE_CONFIDENT = 0x10;
+
+// MOUSE_INFO flags (§4.3).
+export const MI_HAS_SERIAL = 0x01;
+export const MI_HAS_BOS = 0x02;
+
+// CAPS axis_flags (§4.4).
+export const CAP_X = 0x01;
+export const CAP_Y = 0x02;
+export const CAP_WHEEL = 0x04;
+export const CAP_REPORT_ID = 0x08;
+
+// RATE flags (§4.5).
+export const RATE_CONFIDENT = 0x01;
 
 export enum FrameType {
   Move = 0x01,
