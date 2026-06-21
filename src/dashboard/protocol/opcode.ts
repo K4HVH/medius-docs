@@ -39,6 +39,7 @@ export enum FrameType {
   Resp = 0x06,
   RebootDl = 0x07,
   Log = 0x08,
+  Led = 0x09,
 }
 
 export function frameTypeFromU8(value: number): FrameType | null {
@@ -59,6 +60,8 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.RebootDl;
     case 0x08:
       return FrameType.Log;
+    case 0x09:
+      return FrameType.Led;
     default:
       return null;
   }

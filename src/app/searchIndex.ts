@@ -4,6 +4,7 @@ import {
   BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode,
   BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsBoxArrowInDown,
   BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText, BsActivity,
+  BsLightbulb, BsSliders,
 } from 'solid-icons/bs';
 
 interface SearchEntry {
@@ -20,6 +21,7 @@ const entries: SearchEntry[] = [
   // ── Dashboard ───────────────────────────────────────────────────────────
   { label: 'Dashboard', description: 'Connect to your box, view it, and flash firmware in the browser', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['dashboard', 'tool', 'connect', 'flash', 'web serial', 'device'] },
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
+  { label: 'Control', description: 'Drive the box to test it: override the status LEDs and more', path: '/dashboard/control', group: 'Dashboard', icon: BsSliders, keywords: ['control', 'controls', 'led', 'light', 'status light', 'drive', 'test', 'override', 'brightness', 'blink'] },
   { label: 'Update', description: 'Guided firmware update for your box, both chips, in plain steps', path: '/dashboard/update', group: 'Dashboard', icon: BsArrowRepeat, keywords: ['update', 'firmware', 'upgrade', 'latest', 'flash', 'both chips', 'guided'] },
   { label: 'Advanced', description: 'Manual flash: any chip, app or factory, release or upload, recover a bricked box', path: '/dashboard/advanced', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['advanced', 'manual', 'flash', 'recover', 'recovery', 'brick', 'bricked', 'device chip', 'host chip', 'factory', 'boot button', 'upload'] },
   { label: 'Changelog', description: 'Firmware release history, version by version', path: '/dashboard/changelog', group: 'Dashboard', icon: BsJournalText, keywords: ['changelog', 'releases', 'history', 'versions', 'whats new', 'notes', 'commits'] },
@@ -50,7 +52,7 @@ const entries: SearchEntry[] = [
   { label: 'Frame layout', description: 'SOF, TYPE, SEQ, LEN, PAYLOAD, CRC16', path: '/native/frame#layout', group: 'Native API', icon: BsFileCode, keywords: ['layout', 'byte', 'fields', 'len'] },
   { label: 'Checksum (CRC16-CCITT)', description: 'Poly 0x1021, init 0xFFFF, resync, unknown opcode ignored', path: '/native/frame#crc', group: 'Native API', icon: BsFileCode, keywords: ['crc', 'crc16', 'ccitt', '0x1021', 'checksum', 'resync', 'forward compatible'] },
   { label: 'Sequence numbers', description: 'SEQ correlates a QUERY with its RESP', path: '/native/frame#seq', group: 'Native API', icon: BsFileCode, keywords: ['seq', 'sequence', 'correlate'] },
-  { label: 'Opcodes', description: 'The full opcode table 0x01 to 0x08', path: '/native/frame#opcodes', group: 'Native API', icon: BsFileCode, keywords: ['opcode', 'type', 'table', '0x01', '0x08'] },
+  { label: 'Opcodes', description: 'The full opcode table 0x01 to 0x09', path: '/native/frame#opcodes', group: 'Native API', icon: BsFileCode, keywords: ['opcode', 'type', 'table', '0x01', '0x09'] },
   { label: 'Example frame', description: 'An annotated MOVE frame', path: '/native/frame#example', group: 'Native API', icon: BsFileCode, keywords: ['example', 'hex', 'move'] },
   { label: 'Injection Model', description: 'How injection merges with the real mouse', path: '/native/injection', group: 'Native API', icon: BsBroadcast, keywords: ['injection', 'additive', 'merge', 'no-halving'] },
   { label: 'Fire-and-forget', description: 'No per-command ack; QUERY is the only round-trip', path: '/native/injection#fire-and-forget', group: 'Native API', icon: BsBroadcast, keywords: ['fire and forget', 'ack', '1 kHz', 'reconcile'] },
@@ -82,6 +84,8 @@ const entries: SearchEntry[] = [
   { label: 'RESET', description: 'Back to pure passthrough, opcode 0x04', path: '/native/commands/admin#reset', group: 'Native Commands', icon: BsGear, keywords: ['reset', '0x04', 'clear', 'passthrough'] },
   { label: 'REBOOT', description: 'Reboot a chip for flashing or restart, opcode 0x07', path: '/native/commands/admin#reboot', group: 'Native Commands', icon: BsGear, keywords: ['reboot', 'download', 'flash', '0x07', 'target', 'esptool'] },
   { label: 'LOG', description: 'Device diagnostics, opcode 0x08', path: '/native/commands/admin#log', group: 'Native Commands', icon: BsGear, keywords: ['log', 'diagnostics', '0x08', 'level', 'console'] },
+  { label: 'LED', description: 'Drive a status LED, opcode 0x09', path: '/native/commands/led', group: 'Native Commands', icon: BsLightbulb, keywords: ['led', 'light', 'status', '0x09', 'brightness'] },
+  { label: 'LED command', description: 'target, mode, level bytes, opcode 0x09', path: '/native/commands/led#led', group: 'Native Commands', icon: BsLightbulb, keywords: ['led', 'target', 'mode', 'level', 'device', 'host', 'both', 'auto', 'off', 'solid', 'blink', 'pwm', 'gpio9', '0x09'] },
 
   // ── Native Reference ────────────────────────────────────────────────────
   { label: 'Flashing & Updates', description: 'Updating firmware on the two chips', path: '/native/flashing', group: 'Native Reference', icon: BsBoxArrowInDown, keywords: ['flash', 'esptool', 'update', 'version', 'download'] },
@@ -132,6 +136,9 @@ const entries: SearchEntry[] = [
   { label: 'reset', description: 'Clear all injection, return to passthrough', path: '/library/admin#reset', group: 'Rust Library', icon: BsGear, keywords: ['reset', 'clear', 'injection', 'return', 'passthrough'] },
   { label: 'reboot', description: 'Restart or download-mode one of the two chips', path: '/library/admin#reboot', group: 'Rust Library', icon: BsGear, keywords: ['reboot', 'restart', 'download', 'mode', 'chips'] },
   { label: 'On AsyncDevice (admin)', description: 'Still fire-and-forget, no await', path: '/library/admin#async', group: 'Rust Library', icon: BsGear, keywords: ['asyncdevice', 'still', 'fire', 'forget', 'await', 'async'] },
+  { label: 'LED (library)', description: 'led: drive a status LED', path: '/library/led', group: 'Rust Library', icon: BsLightbulb, keywords: ['led', 'library', 'light', 'status', 'brightness'] },
+  { label: 'led', description: 'Override or restore a status LED', path: '/library/led#led', group: 'Rust Library', icon: BsLightbulb, keywords: ['led', 'ledtarget', 'ledmode', 'target', 'mode', 'level', 'auto', 'off', 'solid', 'blink', 'brightness'] },
+  { label: 'On AsyncDevice (led)', description: 'Still fire-and-forget, no await', path: '/library/led#async', group: 'Rust Library', icon: BsLightbulb, keywords: ['asyncdevice', 'led', 'fire', 'forget', 'await', 'async'] },
   { label: 'Lifecycle', description: 'reapply, reconnect', path: '/library/lifecycle', group: 'Rust Library', icon: BsArrowRepeat, keywords: ['lifecycle', 'reapply', 'reconnect'] },
   { label: 'reapply', description: 'Re-send the held overrides so the box matches the library', path: '/library/lifecycle#reapply', group: 'Rust Library', icon: BsArrowRepeat, keywords: ['reapply', 're', 'send', 'held', 'overrides', 'box', 'matches', 'library'] },
   { label: 'reconnect', description: 'Rescan, reopen the port, and restore held state', path: '/library/lifecycle#reconnect', group: 'Rust Library', icon: BsArrowRepeat, keywords: ['reconnect', 'rescan', 'reopen', 'port', 'restore', 'held', 'state'] },
@@ -190,10 +197,12 @@ const entries: SearchEntry[] = [
   // ── Library Reference ─────────────────────────────────────────────────────
   { label: 'Types & errors', description: 'Enums, structs, frames, errors', path: '/library/types', group: 'Library Reference', icon: BsFileCode, keywords: ['types', 'errors', 'enums', 'structs', 'frames'] },
   { label: 'Types & errors overview', description: 'What you pass in, what you get back, and how calls fail', path: '/library/types#types-overview', group: 'Library Reference', icon: BsFileCode, keywords: ['types', 'errors', 'pass', 'get', 'back', 'calls', 'fail', 'overview'] },
-  { label: 'Enums', description: 'Button, ButtonAction, RebootTarget, LogLevel', path: '/library/types/enums', group: 'Library Reference', icon: BsFileCode, keywords: ['enums', 'button', 'buttonaction', 'reboottarget', 'loglevel'] },
+  { label: 'Enums', description: 'Button, ButtonAction, RebootTarget, LedTarget, LedMode, LogLevel', path: '/library/types/enums', group: 'Library Reference', icon: BsFileCode, keywords: ['enums', 'button', 'buttonaction', 'reboottarget', 'ledtarget', 'ledmode', 'loglevel'] },
   { label: 'Button', description: 'The button a command acts on', path: '/library/types/enums#button', group: 'Library Reference', icon: BsFileCode, keywords: ['button', 'command', 'acts'] },
   { label: 'ButtonAction', description: 'What to do to a button', path: '/library/types/enums#button-action', group: 'Library Reference', icon: BsFileCode, keywords: ['buttonaction', 'button', 'action'] },
   { label: 'RebootTarget', description: 'Which chip to restart, and how', path: '/library/types/enums#reboot-target', group: 'Library Reference', icon: BsFileCode, keywords: ['reboottarget', 'which', 'chip', 'restart', 'reboot', 'target'] },
+  { label: 'LedTarget', description: "Which chip's status LED to drive", path: '/library/types/enums#led-target', group: 'Library Reference', icon: BsFileCode, keywords: ['ledtarget', 'led', 'target', 'device', 'host', 'both'] },
+  { label: 'LedMode', description: 'What to drive the LED to', path: '/library/types/enums#led-mode', group: 'Library Reference', icon: BsFileCode, keywords: ['ledmode', 'led', 'mode', 'auto', 'off', 'solid', 'blink'] },
   { label: 'LogLevel', description: 'Severity tag on a log line', path: '/library/types/enums#log-level', group: 'Library Reference', icon: BsFileCode, keywords: ['loglevel', 'severity', 'tag', 'log', 'line', 'level'] },
   { label: 'Structs', description: 'Version, Health, MouseInfo, Caps, Rate, Stats, and more', path: '/library/types/structs', group: 'Library Reference', icon: BsFileCode, keywords: ['structs', 'version', 'health', 'mouseinfo', 'caps', 'rate', 'stats', 'logline', 'portinfo', 'counterssnapshot', 'logstream'] },
   { label: 'Version', description: 'Firmware identity', path: '/library/types/structs#version', group: 'Library Reference', icon: BsFileCode, keywords: ['version', 'firmware', 'identity'] },

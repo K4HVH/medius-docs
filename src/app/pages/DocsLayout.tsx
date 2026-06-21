@@ -12,6 +12,7 @@ import {
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
+  BsLightbulb, BsSliders,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -43,6 +44,7 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/buttons', label: 'Buttons', icon: BsCursor },
   { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
+  { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
 ];
 
 const nativeReferenceTabs: TabOption[] = [
@@ -64,6 +66,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/buttons', label: 'Buttons', icon: BsCursor },
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/library/admin', label: 'Admin', icon: BsGear },
+  { value: '/library/led', label: 'LED', icon: BsLightbulb },
   { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
@@ -96,6 +99,7 @@ const allLibraryTabs = [
 
 const dashboardTabs: TabOption[] = [
   { value: '/dashboard', label: 'Device', icon: BsCpu },
+  { value: '/dashboard/control', label: 'Control', icon: BsSliders },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },

@@ -10,7 +10,10 @@ import {
   crc16Ccitt,
   encode,
   healthFromFlags,
+  LedMode,
+  LedTarget,
   isComposite,
+  ledPayload,
   logLevelFromU8,
   nativeHz,
   parseLog,
@@ -182,7 +185,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x09;
+    const ty = 0x0a; // next free opcode past LED (0x09)
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -260,6 +263,16 @@ describe('helpers', () => {
 
 // The byte vectors mirror the firmware packer test (medius-fw tests/host/test_ctrl_proto.c) so the
 // JS decoder is pinned to the firmware wire format, not merely to itself.
+describe('LED command (§3.7)', () => {
+  it('ledPayload packs [target][mode][level]', () => {
+    expect(Array.from(ledPayload(LedTarget.Both, LedMode.Blink, 128))).toEqual([2, 3, 128]);
+  });
+  it('enum wire values match ctrl_proto.h', () => {
+    expect([LedTarget.Device, LedTarget.Host, LedTarget.Both]).toEqual([0, 1, 2]);
+    expect([LedMode.Auto, LedMode.Off, LedMode.Solid, LedMode.Blink]).toEqual([0, 1, 2, 3]);
+  });
+});
+
 describe('device-info RESP decoding (v1.4.0)', () => {
   it('MOUSE_INFO (§4.3)', () => {
     const p = new Uint8Array([2, 0x6d, 0x04, 0x8b, 0xc0, 0x10, 0x01, 0x00, 0x02, 0x03]);

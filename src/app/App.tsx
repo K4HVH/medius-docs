@@ -15,6 +15,7 @@ import CmdMovement from './pages/native/commands/Movement';
 import CmdButtons from './pages/native/commands/Buttons';
 import CmdRequests from './pages/native/commands/Requests';
 import CmdAdmin from './pages/native/commands/Admin';
+import CmdLed from './pages/native/commands/Led';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import LibIntroduction from './pages/library/Introduction';
@@ -23,6 +24,7 @@ import LibMovement from './pages/library/Movement';
 import LibButtons from './pages/library/Buttons';
 import LibRequests from './pages/library/Requests';
 import LibAdmin from './pages/library/Admin';
+import LibLed from './pages/library/Led';
 import LibLifecycle from './pages/library/Lifecycle';
 import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
@@ -38,6 +40,7 @@ import LibTypesStructs from './pages/library/types/Structs';
 import LibTypesFrames from './pages/library/types/Frames';
 import LibTypesErrors from './pages/library/types/Errors';
 import DashboardDevice from './pages/dashboard/Device';
+import DashboardControl from './pages/dashboard/Control';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
@@ -62,6 +65,7 @@ const App: Component = () => {
           <Route path="/native/commands/buttons" component={CmdButtons} />
           <Route path="/native/commands/requests" component={CmdRequests} />
           <Route path="/native/commands/admin" component={CmdAdmin} />
+          <Route path="/native/commands/led" component={CmdLed} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
           <Route path="/library" component={LibIntroduction} />
@@ -70,6 +74,7 @@ const App: Component = () => {
           <Route path="/library/buttons" component={LibButtons} />
           <Route path="/library/requests" component={LibRequests} />
           <Route path="/library/admin" component={LibAdmin} />
+          <Route path="/library/led" component={LibLed} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
           <Route path="/library/diagnostics" component={LibDiagnostics} />
           <Route path="/library/features/async" component={FeatAsync} />
@@ -85,6 +90,7 @@ const App: Component = () => {
           <Route path="/library/types/frames" component={LibTypesFrames} />
           <Route path="/library/types/errors" component={LibTypesErrors} />
           <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/dashboard/control" component={DashboardControl} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
