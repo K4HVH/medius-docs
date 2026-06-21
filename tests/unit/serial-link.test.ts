@@ -78,6 +78,7 @@ describe('SerialLink', () => {
       mouseAttached: true,
       cloneConfigured: false,
       injectionActive: false,
+      rateConfident: false,
     });
     await link.close();
   });

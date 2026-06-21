@@ -4,14 +4,22 @@
 // medius crate's link/correlation behavior.
 
 import {
+  type Caps,
   type DecodedFrame,
   type Health,
   type LogLine,
+  type MouseInfo,
+  type Rate,
+  type Stats,
   type Version,
   FrameDecoder,
   FrameType,
   PROTO_VER,
+  Q_CAPS,
   Q_HEALTH,
+  Q_MOUSE_INFO,
+  Q_RATE,
+  Q_STATS,
   Q_VERSION,
   RebootTarget,
   encode,
@@ -143,6 +151,30 @@ export class SerialLink {
     const resp = parseResp(await this.query(Q_HEALTH, timeoutMs));
     if (resp?.kind !== 'health') throw new Error('unexpected reply to HEALTH query');
     return resp.health;
+  }
+
+  async queryMouseInfo(timeoutMs?: number): Promise<MouseInfo> {
+    const resp = parseResp(await this.query(Q_MOUSE_INFO, timeoutMs));
+    if (resp?.kind !== 'mouseInfo') throw new Error('unexpected reply to MOUSE_INFO query');
+    return resp.mouseInfo;
+  }
+
+  async queryCaps(timeoutMs?: number): Promise<Caps> {
+    const resp = parseResp(await this.query(Q_CAPS, timeoutMs));
+    if (resp?.kind !== 'caps') throw new Error('unexpected reply to CAPS query');
+    return resp.caps;
+  }
+
+  async queryRate(timeoutMs?: number): Promise<Rate> {
+    const resp = parseResp(await this.query(Q_RATE, timeoutMs));
+    if (resp?.kind !== 'rate') throw new Error('unexpected reply to RATE query');
+    return resp.rate;
+  }
+
+  async queryStats(timeoutMs?: number): Promise<Stats> {
+    const resp = parseResp(await this.query(Q_STATS, timeoutMs));
+    if (resp?.kind !== 'stats') throw new Error('unexpected reply to STATS query');
+    return resp.stats;
   }
 
   reboot(target: RebootTarget): Promise<void> {

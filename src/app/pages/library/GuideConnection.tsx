@@ -68,7 +68,7 @@ let h = h?;
 println!("{v}, link_up={}", h.link_up);`}</code></pre>
           <div class="callout callout--info">
             <p>
-              Only the two queries need <code>.await</code>; mutators stay synchronous on either handle.
+              Only the queries need <code>.await</code>; mutators stay synchronous on either handle.
             </p>
           </div>
         </Card>

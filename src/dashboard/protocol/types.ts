@@ -1,6 +1,12 @@
 // Decoded protocol value types, mirroring the medius crate.
 
-import { H_CLONE_CFG, H_INJECT_ON, H_LINK_UP, H_MOUSE_ATT } from './opcode';
+import {
+  H_CLONE_CFG,
+  H_INJECT_ON,
+  H_LINK_UP,
+  H_MOUSE_ATT,
+  H_RATE_CONFIDENT,
+} from './opcode';
 
 export interface Version {
   protoVer: number;
@@ -18,6 +24,7 @@ export interface Health {
   mouseAttached: boolean;
   cloneConfigured: boolean;
   injectionActive: boolean;
+  rateConfident: boolean;
 }
 
 export function healthFromFlags(flags: number): Health {
@@ -26,7 +33,63 @@ export function healthFromFlags(flags: number): Health {
     mouseAttached: (flags & H_MOUSE_ATT) !== 0,
     cloneConfigured: (flags & H_CLONE_CFG) !== 0,
     injectionActive: (flags & H_INJECT_ON) !== 0,
+    rateConfident: (flags & H_RATE_CONFIDENT) !== 0,
   };
+}
+
+// The cloned mouse's USB identity (§4.3). All-zero when no mouse is cloned.
+export interface MouseInfo {
+  vid: number;
+  pid: number;
+  bcdDevice: number;
+  bcdUsb: number;
+  hasSerial: boolean;
+  hasBos: boolean;
+}
+
+// vid:pid formatted as the familiar 04X:04X, e.g. "046D:C08B".
+export function vidPid(m: MouseInfo): string {
+  const hex = (n: number) => n.toString(16).toUpperCase().padStart(4, '0');
+  return `${hex(m.vid)}:${hex(m.pid)}`;
+}
+
+// Semantic capabilities of the emulated mouse (§4.4). Counts and booleans only.
+export interface Caps {
+  nButtons: number;
+  hasX: boolean;
+  hasY: boolean;
+  hasWheel: boolean;
+  hasReportId: boolean;
+  nHid: number;
+}
+
+export function isComposite(c: Caps): boolean {
+  return c.nHid > 1;
+}
+
+// Live native report rate and clone poll period (§4.5).
+export interface Rate {
+  nativePeriodUs: number;
+  pollPeriodUs: number;
+  confident: boolean;
+}
+
+// Native report rate in Hz, or null until learned (nativePeriodUs === 0).
+export function nativeHz(r: Rate): number | null {
+  if (r.nativePeriodUs === 0) return null;
+  return Math.round((1_000_000 / r.nativePeriodUs) * 10) / 10;
+}
+
+// Delivery/telemetry counters (§4.6).
+export interface Stats {
+  injectEmits: number;
+  txDrops: number;
+  txMerges: number;
+  txMaxdepth: number;
+  txWedges: number;
+  wakeups: number;
+  resetCount: number;
+  configCount: number;
 }
 
 export enum RebootTarget {
