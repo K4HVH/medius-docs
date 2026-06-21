@@ -6,6 +6,7 @@ import { Chip } from '../../../components/display/Chip';
 import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
+import DeviceLed from './DeviceLed';
 import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
@@ -125,6 +126,7 @@ const Device = () => {
             </Card>
 
             <DeviceInfo />
+            <DeviceLed />
           </Show>
         </div>
 

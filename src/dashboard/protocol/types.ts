@@ -99,6 +99,20 @@ export enum RebootTarget {
   HostRun = 3,
 }
 
+// LED command (§3.7): which LED, and what to drive it to. Wire values match ctrl_proto.h.
+export enum LedTarget {
+  Device = 0,
+  Host = 1,
+  Both = 2,
+}
+
+export enum LedMode {
+  Auto = 0,
+  Off = 1,
+  Solid = 2,
+  Blink = 3,
+}
+
 export enum LogLevel {
   Error = 0,
   Warn = 1,
