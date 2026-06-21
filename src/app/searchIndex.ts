@@ -4,7 +4,7 @@ import {
   BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode,
   BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsBoxArrowInDown,
   BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText, BsActivity,
-  BsLightbulb,
+  BsLightbulb, BsSliders,
 } from 'solid-icons/bs';
 
 interface SearchEntry {
@@ -21,6 +21,7 @@ const entries: SearchEntry[] = [
   // ── Dashboard ───────────────────────────────────────────────────────────
   { label: 'Dashboard', description: 'Connect to your box, view it, and flash firmware in the browser', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['dashboard', 'tool', 'connect', 'flash', 'web serial', 'device'] },
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
+  { label: 'Control', description: 'Drive the box to test it: override the status LEDs and more', path: '/dashboard/control', group: 'Dashboard', icon: BsSliders, keywords: ['control', 'controls', 'led', 'light', 'status light', 'drive', 'test', 'override', 'brightness', 'blink'] },
   { label: 'Update', description: 'Guided firmware update for your box, both chips, in plain steps', path: '/dashboard/update', group: 'Dashboard', icon: BsArrowRepeat, keywords: ['update', 'firmware', 'upgrade', 'latest', 'flash', 'both chips', 'guided'] },
   { label: 'Advanced', description: 'Manual flash: any chip, app or factory, release or upload, recover a bricked box', path: '/dashboard/advanced', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['advanced', 'manual', 'flash', 'recover', 'recovery', 'brick', 'bricked', 'device chip', 'host chip', 'factory', 'boot button', 'upload'] },
   { label: 'Changelog', description: 'Firmware release history, version by version', path: '/dashboard/changelog', group: 'Dashboard', icon: BsJournalText, keywords: ['changelog', 'releases', 'history', 'versions', 'whats new', 'notes', 'commits'] },
