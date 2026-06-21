@@ -10,7 +10,7 @@ const Enums: Component = () => {
         <Card>
           <CardHeader title="Enums" subtitle="Command and status enumerations" />
           <p>
-            Six argument enums, each tied to a wire byte. Conversion helpers are listed with each.
+            Six command and status enums, each tied to a wire byte. Conversion helpers are listed with each.
           </p>
         </Card>
       </div>
