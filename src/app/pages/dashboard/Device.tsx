@@ -5,6 +5,7 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
+import DeviceInfo from './DeviceInfo';
 import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
@@ -13,6 +14,7 @@ const healthItems = (h: Health) => [
   { label: 'Mouse attached', value: h.mouseAttached },
   { label: 'Clone configured', value: h.cloneConfigured },
   { label: 'Injection active', value: h.injectionActive },
+  { label: 'Rate confirmed', value: h.rateConfident },
 ];
 
 const col = {
@@ -121,6 +123,8 @@ const Device = () => {
                 )}
               </Show>
             </Card>
+
+            <DeviceInfo />
           </Show>
         </div>
 

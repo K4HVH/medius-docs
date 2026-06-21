@@ -91,10 +91,18 @@ device.move_rel(5, 5)?;`}</code></pre>
 
       <div id="responses" data-search-target>
         <Card>
-          <CardHeader title="Scripting query answers" subtitle="Set the version and health the box reports" />
+          <CardHeader title="Scripting query answers" subtitle="Set the version, health, and device-info a query returns" />
           <pre class="api-signature">fn with_version(self, version: Version) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_mouse_info(self, mouse_info: MouseInfo) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_stats(self, stats: Stats) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_version(&self, version: Version)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -102,11 +110,17 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            The <code>with_*</code> builders set what{' '}
-            <A href="/library/requests"><code>query_version</code></A> and{' '}
-            <code>query_health</code> return; <code>set_*</code> changes a live fake in place to flip
-            a value mid-test. <A href="/library/types/structs#version"><code>Version</code></A> and{' '}
-            <A href="/library/types/structs#health"><code>Health</code></A> live on the types page, and{' '}
+            The <code>with_*</code> builders set what each query returns:{' '}
+            <A href="/library/requests"><code>query_version</code></A>,{' '}
+            <code>query_health</code>, and the device-info queries{' '}
+            (<A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+            <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
+            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
+            <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live
+            fake in place to flip the version or health mid-test.{' '}
+            <A href="/library/types/structs#version"><code>Version</code></A>,{' '}
+            <A href="/library/types/structs#health"><code>Health</code></A>, and the device-info{' '}
+            <A href="/library/types/structs">structs</A> live on the types page, and{' '}
             <code>Health::from_flags</code> builds one from the raw status byte.
           </p>
 
