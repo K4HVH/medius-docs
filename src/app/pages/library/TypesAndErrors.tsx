@@ -39,7 +39,7 @@ const TypesAndErrors: Component = () => {
             </A>
             <A href="/library/types/structs" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Structs" subtitle="Version, Health, LogLine, PortInfo, CountersSnapshot, LogStream" />
+                <CardHeader title="Structs" subtitle="Version, Health, MouseInfo, Caps, Rate, Stats, and more" />
               </Card>
             </A>
             <A href="/library/types/frames" style={{ "text-decoration": "none" }}>

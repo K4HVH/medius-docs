@@ -10,12 +10,15 @@ import {
   crc16Ccitt,
   encode,
   healthFromFlags,
+  isComposite,
   logLevelFromU8,
+  nativeHz,
   parseLog,
   parseResp,
   queryPayload,
   rebootPayload,
   versionString,
+  vidPid,
 } from '../../src/dashboard/protocol';
 
 const toHex = (b: Uint8Array) =>
@@ -105,7 +108,13 @@ describe('FrameDecoder', () => {
     const resp = parseResp(frames[0].payload);
     expect(resp).toEqual({
       kind: 'health',
-      health: { linkUp: true, mouseAttached: true, cloneConfigured: true, injectionActive: true },
+      health: {
+        linkUp: true,
+        mouseAttached: true,
+        cloneConfigured: true,
+        injectionActive: true,
+        rateConfident: false,
+      },
     });
   });
 
@@ -229,10 +238,95 @@ describe('helpers', () => {
       mouseAttached: false,
       cloneConfigured: true,
       injectionActive: false,
+      rateConfident: false,
+    });
+  });
+
+  it('healthFromFlags decodes the rate_confident bit (0x10)', () => {
+    expect(healthFromFlags(0x10).rateConfident).toBe(true);
+    expect(healthFromFlags(0x1f)).toEqual({
+      linkUp: true,
+      mouseAttached: true,
+      cloneConfigured: true,
+      injectionActive: true,
+      rateConfident: true,
     });
   });
 
   it('versionString formats major.minor.patch', () => {
     expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0 })).toBe('0.1.0');
+  });
+});
+
+// The byte vectors mirror the firmware packer test (medius-fw tests/host/test_ctrl_proto.c) so the
+// JS decoder is pinned to the firmware wire format, not merely to itself.
+describe('device-info RESP decoding (v1.4.0)', () => {
+  it('MOUSE_INFO (§4.3)', () => {
+    const p = new Uint8Array([2, 0x6d, 0x04, 0x8b, 0xc0, 0x10, 0x01, 0x00, 0x02, 0x03]);
+    const resp = parseResp(p);
+    expect(resp).toEqual({
+      kind: 'mouseInfo',
+      mouseInfo: {
+        vid: 0x046d,
+        pid: 0xc08b,
+        bcdDevice: 0x0110,
+        bcdUsb: 0x0200,
+        hasSerial: true,
+        hasBos: true,
+      },
+    });
+    if (resp?.kind === 'mouseInfo') expect(vidPid(resp.mouseInfo)).toBe('046D:C08B');
+  });
+
+  it('CAPS (§4.4)', () => {
+    const resp = parseResp(new Uint8Array([3, 5, 0x07, 2]));
+    expect(resp).toEqual({
+      kind: 'caps',
+      caps: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+    });
+    if (resp?.kind === 'caps') expect(isComposite(resp.caps)).toBe(true);
+  });
+
+  it('RATE (§4.5) confident, with Hz', () => {
+    const resp = parseResp(new Uint8Array([4, 0xe8, 0x03, 0xe8, 0x03, 0x01]));
+    expect(resp).toEqual({
+      kind: 'rate',
+      rate: { nativePeriodUs: 1000, pollPeriodUs: 1000, confident: true },
+    });
+    if (resp?.kind === 'rate') expect(nativeHz(resp.rate)).toBe(1000);
+  });
+
+  it('RATE unlearned period yields null Hz (truthful)', () => {
+    const resp = parseResp(new Uint8Array([4, 0x00, 0x00, 0xe8, 0x03, 0x00]));
+    if (resp?.kind !== 'rate') throw new Error('expected rate');
+    expect(resp.rate.nativePeriodUs).toBe(0);
+    expect(nativeHz(resp.rate)).toBeNull();
+  });
+
+  it('STATS (§4.6) with saturated fields and a 32-bit count', () => {
+    const p = new Uint8Array([
+      5, 0x04, 0x03, 0x02, 0x01, 0xff, 0xff, 0x0a, 0x00, 0xff, 0x02, 0xff, 0xff, 0x07, 0x00, 0x09,
+      0x00,
+    ]);
+    expect(parseResp(p)).toEqual({
+      kind: 'stats',
+      stats: {
+        injectEmits: 0x01020304,
+        txDrops: 0xffff,
+        txMerges: 10,
+        txMaxdepth: 0xff,
+        txWedges: 2,
+        wakeups: 0xffff,
+        resetCount: 7,
+        configCount: 9,
+      },
+    });
+  });
+
+  it('returns null for truncated device-info payloads', () => {
+    expect(parseResp(new Uint8Array([2, 0, 0]))).toBeNull(); // MOUSE_INFO needs 10
+    expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
+    expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
+    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 17
   });
 });
