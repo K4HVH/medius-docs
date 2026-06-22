@@ -65,11 +65,11 @@ const Catch: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             The box streams from the moment a non-zero mask arrives until you send <code>0</code>. The
-            subscription is PC-owned, but unlike injection or a lock it survives a{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> and device-side blips (a mouse
-            re-plug, inter-chip link loss) — catch never alters the emitted report, so the box keeps
-            streaming and resumes when reports flow. It clears only on control-PC silence (the ~1&nbsp;s
-            timeout, i.e. the PC is gone) or an explicit unsubscribe.{' '}
+            subscription is PC-owned and clears on the same triggers as injection — control-PC silence
+            (the ~1&nbsp;s timeout), a{' '}
+            <A href="/native/commands/admin#reset"><code>RESET</code></A>, a mouse detach, or inter-chip
+            link loss — plus an explicit unsubscribe. The host library holds an open subscription alive
+            with its keepalive (re-asserting it after a device-side blip) and across a reconnect.{' '}
             <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> reads
             the active mask and a dropped-event count; the HEALTH{' '}
             <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> bit is set while
