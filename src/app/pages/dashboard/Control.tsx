@@ -5,6 +5,7 @@ import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
 import DeviceLed from './DeviceLed';
 import DeviceLock from './DeviceLock';
+import DeviceEventCatch from './DeviceEventCatch';
 import '../../../styles/docs.css';
 
 // Controls that drive the box to test it. Starts with the status lights; more
@@ -30,6 +31,7 @@ const Control = () => {
     >
       <DeviceLed />
       <DeviceLock />
+      <DeviceEventCatch />
     </Show>
   );
 };

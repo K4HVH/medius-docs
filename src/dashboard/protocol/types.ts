@@ -1,6 +1,7 @@
 // Decoded protocol value types, mirroring the medius crate.
 
 import {
+  H_CATCH_ON,
   H_CLONE_CFG,
   H_INJECT_ON,
   H_LINK_UP,
@@ -27,6 +28,7 @@ export interface Health {
   injectionActive: boolean;
   rateConfident: boolean;
   lockOn: boolean;
+  catchOn: boolean;
 }
 
 export function healthFromFlags(flags: number): Health {
@@ -37,6 +39,7 @@ export function healthFromFlags(flags: number): Health {
     injectionActive: (flags & H_INJECT_ON) !== 0,
     rateConfident: (flags & H_RATE_CONFIDENT) !== 0,
     lockOn: (flags & H_LOCK_ON) !== 0,
+    catchOn: (flags & H_CATCH_ON) !== 0,
   };
 }
 
@@ -151,6 +154,37 @@ export function lockSet(locks: Locks, target: LockTarget, direction: LockDirecti
 function locksBit(locks: Locks, target: LockTarget, positive: boolean): boolean {
   const bit = target * 2 + (positive ? 0 : 1);
   return (locks.mask & (1 << bit)) !== 0;
+}
+
+// CATCH subscription classes (§3.9): which physical-input changes stream as EVENT frames. Combine
+// with bitwise OR. The mask only gates which reports trigger an event; the payload is always the
+// full snapshot. Wire values match ctrl_proto.h.
+export enum CatchClass {
+  Motion = 0x01,
+  Wheel = 0x02,
+  Buttons = 0x04,
+}
+
+export const CATCH_ALL = 0x07;
+
+// One physical-input snapshot from the CATCH stream (an EVENT frame, §4.10), captured at the merge
+// point before any lock suppression or injection.
+export interface InputReport {
+  buttons: number; // bit b set = button id b held (0=Left .. 4=Side2)
+  dx: number;
+  dy: number;
+  wheel: number;
+}
+
+// True when button id `button` (0=Left .. 4=Side2) is held in this snapshot.
+export function inputReportPressed(r: InputReport, button: number): boolean {
+  return (r.buttons & (1 << button)) !== 0;
+}
+
+// Decoded RESP(CATCH) (§4.9): the active subscription mask + box-side dropped-event count.
+export interface CatchState {
+  mask: number;
+  dropped: number;
 }
 
 export enum LogLevel {

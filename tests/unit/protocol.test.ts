@@ -1,14 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
   type DecodedFrame,
+  CATCH_ALL,
+  CatchClass,
   FrameDecoder,
   FrameType,
   LogLevel,
   PayloadTooLongError,
   RebootTarget,
   SOF,
+  catchPayload,
   crc16Ccitt,
   encode,
+  frameTypeFromU8,
   healthFromFlags,
   LedMode,
   LedTarget,
@@ -20,6 +24,7 @@ import {
   lockSet,
   logLevelFromU8,
   nativeHz,
+  parseEvent,
   parseLog,
   parseResp,
   queryPayload,
@@ -122,6 +127,7 @@ describe('FrameDecoder', () => {
         injectionActive: true,
         rateConfident: false,
         lockOn: false,
+        catchOn: false,
       },
     });
   });
@@ -190,7 +196,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x0b; // next free opcode past LOCK (0x0a)
+    const ty = 0x0d; // next free opcode past EVENT (0x0c)
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -240,6 +246,13 @@ describe('helpers', () => {
     expect(logLevelFromU8(99)).toBe(LogLevel.Info);
   });
 
+  it('frameTypeFromU8 maps CATCH/EVENT, null for unknown', () => {
+    expect(frameTypeFromU8(0x0b)).toBe(FrameType.Catch);
+    expect(frameTypeFromU8(0x0c)).toBe(FrameType.Event);
+    expect(frameTypeFromU8(0x0d)).toBeNull();
+    expect(frameTypeFromU8(0x00)).toBeNull();
+  });
+
   it('healthFromFlags decodes individual bits', () => {
     expect(healthFromFlags(0x05)).toEqual({
       linkUp: true,
@@ -248,6 +261,7 @@ describe('helpers', () => {
       injectionActive: false,
       rateConfident: false,
       lockOn: false,
+      catchOn: false,
     });
   });
 
@@ -260,6 +274,7 @@ describe('helpers', () => {
       injectionActive: true,
       rateConfident: true,
       lockOn: false,
+      catchOn: false,
     });
   });
 
@@ -273,6 +288,21 @@ describe('helpers', () => {
       injectionActive: true,
       rateConfident: true,
       lockOn: true,
+      catchOn: false,
+    });
+  });
+
+  it('healthFromFlags decodes the catch_on bit (0x40)', () => {
+    expect(healthFromFlags(0x40).catchOn).toBe(true);
+    expect(healthFromFlags(0x3f).catchOn).toBe(false);
+    expect(healthFromFlags(0x7f)).toEqual({
+      linkUp: true,
+      mouseAttached: true,
+      cloneConfigured: true,
+      injectionActive: true,
+      rateConfident: true,
+      lockOn: true,
+      catchOn: true,
     });
   });
 
@@ -338,6 +368,56 @@ describe('LOCK command (§3.8)', () => {
 
   it('returns null for a truncated LOCKS payload', () => {
     expect(parseResp(new Uint8Array([6, 0x20]))).toBeNull(); // needs 3 bytes
+  });
+});
+
+describe('CATCH command (§3.9)', () => {
+  it('catchPayload packs [mask]', () => {
+    // Motion + Buttons, no wheel.
+    expect(Array.from(catchPayload(CatchClass.Motion | CatchClass.Buttons))).toEqual([0x05]);
+    // Subscribe to everything, then unsubscribe.
+    expect(Array.from(catchPayload(CATCH_ALL))).toEqual([0x07]);
+    expect(Array.from(catchPayload(0))).toEqual([0x00]);
+  });
+
+  it('CatchClass wire values match ctrl_proto.h', () => {
+    expect([CatchClass.Motion, CatchClass.Wheel, CatchClass.Buttons]).toEqual([0x01, 0x02, 0x04]);
+    expect(CATCH_ALL).toBe(0x07);
+  });
+
+  it('parses a CATCH RESP into mask + dropped', () => {
+    // what = 7, mask = 0x05 (motion+buttons), dropped = 0x00000102 little-endian.
+    const resp = parseResp(new Uint8Array([7, 0x05, 0x02, 0x01, 0x00, 0x00]));
+    expect(resp).toEqual({ kind: 'catch', catch: { mask: 0x05, dropped: 0x00000102 } });
+  });
+
+  it('returns null for a truncated CATCH payload', () => {
+    expect(parseResp(new Uint8Array([7, 0x05, 0x00, 0x00, 0x00]))).toBeNull(); // needs 6 bytes
+  });
+
+  it('parseEvent decodes [buttons][dx][dy][wheel] with i16 sign-extension', () => {
+    // buttons = Left + Side2 (0x11), dx = +1, dy = -2, wheel = -1.
+    const resp = parseEvent(new Uint8Array([0x11, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]));
+    expect(resp).toEqual({ buttons: 0x11, dx: 1, dy: -2, wheel: -1 });
+  });
+
+  it('parseEvent returns null for a short payload', () => {
+    expect(parseEvent(new Uint8Array([0, 0, 0, 0, 0, 0]))).toBeNull(); // needs 7 bytes
+  });
+
+  it('round-trips an EVENT frame through the decoder', () => {
+    // buttons = 0x04 (Middle), dx = -1000, dy = +1000, wheel = -120 (one notch up).
+    const payload = new Uint8Array([0x04, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff]);
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.Event, 200, payload));
+    expect(frames).toHaveLength(1);
+    expect(frames[0].ty).toBe(FrameType.Event);
+    expect(frames[0].seq).toBe(200);
+    expect(parseEvent(frames[0].payload)).toEqual({
+      buttons: 0x04,
+      dx: -1000,
+      dy: 1000,
+      wheel: -120,
+    });
   });
 });
 

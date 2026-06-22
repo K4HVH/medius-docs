@@ -8,7 +8,14 @@ import {
   onCleanup,
   useContext,
 } from 'solid-js';
-import { type Health, type LogLine, type Version, LogLevel, RebootTarget } from '../../../dashboard/protocol';
+import {
+  type Health,
+  type InputReport,
+  type LogLine,
+  type Version,
+  LogLevel,
+  RebootTarget,
+} from '../../../dashboard/protocol';
 import {
   BadProtoVerError,
   NoReplyError,
@@ -25,6 +32,12 @@ export type ConnectionStatus =
   | 'connected'
   | 'error'
   | 'flashing';
+
+// One physical-input EVENT received on the CATCH stream, with its rolling box-side sequence.
+export interface InputEventEntry {
+  seq: number;
+  report: InputReport;
+}
 
 export interface DashboardContextValue {
   supported: boolean;
@@ -50,6 +63,8 @@ export interface DashboardContextValue {
   clearFlashResult: () => void;
   deviceLog: Accessor<string[]>;
   clearDeviceLog: () => void;
+  inputEvents: Accessor<InputEventEntry[]>;
+  clearInputEvents: () => void;
 }
 
 function formatLogLine(line: LogLine): string {
@@ -84,6 +99,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [flashProgress, setFlashProgress] = createSignal<FlashProgress | null>(null);
   const [flashLog, setFlashLog] = createSignal<string[]>([]);
   const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
+  const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
 
   const HEALTH_POLL_MS = 1000;
   let healthTimer: ReturnType<typeof setTimeout> | null = null;
@@ -116,6 +132,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const makeLink = (port: SerialPort): SerialLink => {
     const nl: SerialLink = new SerialLink(port, {
       onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
+      onEvent: (report, seq) => setInputEvents((prev) => [...prev, { seq, report }].slice(-200)),
       onClose: () => {
         if (link() !== nl) return;
         stopHealthPolling();
@@ -163,6 +180,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     setError(null);
     setFlashProgress(null);
     setDeviceLog([]);
+    setInputEvents([]);
     setStatus('connecting');
     let l: SerialLink | null = null;
     try {
@@ -214,6 +232,7 @@ export const DashboardProvider: ParentComponent = (props) => {
 
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
+  const clearInputEvents = () => setInputEvents([]);
 
   // Reboot the device chip into ROM download over the control link, then close
   // it. The chip re-enumerates on its native USB (0x303a); the returned CH343
@@ -357,6 +376,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     clearFlashResult,
     deviceLog,
     clearDeviceLog,
+    inputEvents,
+    clearInputEvents,
   };
 
   return <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>;

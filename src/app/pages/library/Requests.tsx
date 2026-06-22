@@ -10,15 +10,16 @@ const Requests: Component = () => {
         <Card>
           <CardHeader title="Requests" subtitle="Asking the box a question and waiting for the answer" />
           <p>
-            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the seven queries
+            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the eight queries
             are blocking: a question frame out, one answer frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
             <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>, and{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>, each covered below.
+            <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>, and{' '}
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below.
           </p>
         </Card>
       </div>
@@ -210,9 +211,34 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
         </Card>
       </div>
 
+      <div id="query-catch" data-search-target>
+        <Card>
+          <CardHeader title="query_catch" subtitle="Read the active catch subscription" />
+          <pre class="api-signature">fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
+            <code>mask</code> currently streaming via{' '}
+            <A href="/library/catch#catch-events"><code>catch_events</code></A>, plus{' '}
+            <code>dropped</code>, the box-side count of events shed under back-pressure. Read it to
+            confirm a subscription is live, or to mirror the box's catch state in a UI.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Device;
+
+let device = Device::find()?;
+let c = device.query_catch()?;
+if !c.mask.is_empty() {
+    println!("catching {:?}, {} dropped", c.mask, c.dropped);
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="Async queries" subtitle="The same seven queries on AsyncDevice" />
+          <CardHeader title="Async queries" subtitle="The same eight queries on AsyncDevice" />
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
           <pre class="api-signature">async fn query_mouse_info(&self) -&gt; Result&lt;MouseInfo&gt;</pre>
@@ -220,6 +246,7 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
           <pre class="api-signature">async fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
           <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
           <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
+          <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <pre><code>cargo add medius --features async</code></pre>
@@ -227,7 +254,7 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
           <p>
             With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
             <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures;
-            other methods stay synchronous. All seven queries are
+            other methods stay synchronous. All eight queries are
             futures here. The crate is
             runtime-agnostic (no tokio), so drive a future with anything, such as{' '}
             <a
