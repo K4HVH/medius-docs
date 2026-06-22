@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>1.5.0</code></td>
+              <td><code>1.6.0</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -122,6 +122,11 @@ const Introduction: Component = () => {
             <A href="/library/admin" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Admin" subtitle="reset, reboot" />
+              </Card>
+            </A>
+            <A href="/library/catch" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>

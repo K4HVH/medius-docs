@@ -23,3 +23,8 @@ export function lockPayload(
 ): Uint8Array {
   return new Uint8Array([target, direction, state & 0xff]);
 }
+
+// CATCH (§3.9): [mask u8] — subscribe to physical-input event classes (0 = unsubscribe).
+export function catchPayload(mask: number): Uint8Array {
+  return new Uint8Array([mask & 0xff]);
+}

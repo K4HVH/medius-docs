@@ -5,8 +5,10 @@
 
 import {
   type Caps,
+  type CatchState,
   type DecodedFrame,
   type Health,
+  type InputReport,
   type Locks,
   type LogLine,
   type MouseInfo,
@@ -17,6 +19,7 @@ import {
   FrameType,
   PROTO_VER,
   Q_CAPS,
+  Q_CATCH,
   Q_HEALTH,
   Q_LOCKS,
   Q_MOUSE_INFO,
@@ -28,9 +31,11 @@ import {
   LockDirection,
   LockTarget,
   RebootTarget,
+  catchPayload,
   encode,
   ledPayload,
   lockPayload,
+  parseEvent,
   parseLog,
   parseResp,
   queryPayload,
@@ -72,6 +77,8 @@ export interface SerialLinkEvents {
   onLog?: (line: LogLine) => void;
   onClose?: (reason?: Error) => void;
   onVersionHello?: (version: Version) => void;
+  // An unsolicited physical-input EVENT (the CATCH stream); `seq` is the box's rolling event counter.
+  onEvent?: (report: InputReport, seq: number) => void;
 }
 
 interface Pending {
@@ -191,6 +198,12 @@ export class SerialLink {
     return resp.locks;
   }
 
+  async queryCatch(timeoutMs?: number): Promise<CatchState> {
+    const resp = parseResp(await this.query(Q_CATCH, timeoutMs));
+    if (resp?.kind !== 'catch') throw new Error('unexpected reply to CATCH query');
+    return resp.catch;
+  }
+
   reboot(target: RebootTarget): Promise<void> {
     return this.send(encode(FrameType.RebootDl, this.nextSeq(), rebootPayload(target)));
   }
@@ -205,6 +218,16 @@ export class SerialLink {
 
   unlock(target: LockTarget, direction: LockDirection): Promise<void> {
     return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 0)));
+  }
+
+  // Subscribe to the physical-input event stream (§3.9); EVENT frames arrive on `onEvent`. mask 0
+  // unsubscribes. The subscription clears after ~1 s of silence — poll a query to hold it alive.
+  catch(mask: number): Promise<void> {
+    return this.send(encode(FrameType.Catch, this.nextSeq(), catchPayload(mask)));
+  }
+
+  uncatch(): Promise<void> {
+    return this.catch(0);
   }
 
   async close(): Promise<void> {
@@ -323,6 +346,11 @@ export class SerialLink {
     }
     if (f.ty === FrameType.Log) {
       this.events.onLog?.(parseLog(f.payload));
+      return;
+    }
+    if (f.ty === FrameType.Event) {
+      const report = parseEvent(f.payload);
+      if (report) this.events.onEvent?.(report, f.seq);
     }
   }
 
