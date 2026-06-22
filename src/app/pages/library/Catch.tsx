@@ -40,10 +40,11 @@ const Catch: Component = () => {
             </tbody>
           </table>
           <p>
-            The subscription is held alive by the library's keepalive and re-asserted across a
-            reconnect; it survives a <A href="/library/admin#reset"><code>reset</code></A> and
-            device-side blips, and the box clears it on its own only after ~1&nbsp;s of control-PC
-            silence (or when you drop the stream). The reported input is the user's <em>physical</em>{' '}
+            The subscription is held alive by the library's keepalive (which re-asserts it after a
+            device-side blip) and across a reconnect; it clears like injection — on control-PC silence,
+            a <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream — its{' '}
+            <code>recv</code> returns <code>Err</code>), or link loss. The reported input is the user's{' '}
+            <em>physical</em>{' '}
             input — a locked or injected target still reports its real hand value here. See the native{' '}
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> command for the wire layout.
           </p>
@@ -87,8 +88,9 @@ while let Ok(report) = events.recv() {
           </table>
           <div class="callout callout--info">
             <p>
-              The buffer is bounded and lossy: a slow consumer drops the newest events (count them with{' '}
-              <code>dropped()</code>). The box's own drop count, under back-pressure on the wire, is on{' '}
+              The buffer is bounded and lossy: a slow consumer drops the OLDEST events, keeping the
+              freshest input (count them with <code>dropped()</code>). The box's own drop count, under
+              back-pressure on the wire, is on{' '}
               <A href="/library/catch#query-catch"><code>query_catch</code></A>.
             </p>
           </div>
