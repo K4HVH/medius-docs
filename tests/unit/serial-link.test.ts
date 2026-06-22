@@ -85,6 +85,28 @@ describe('SerialLink', () => {
     await link.close();
   });
 
+  it('decodes the catch_on bit (all seven flags set)', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 1) {
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x7f])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const health = await link.queryHealth();
+    expect(health).toEqual({
+      linkUp: true,
+      mouseAttached: true,
+      cloneConfigured: true,
+      injectionActive: true,
+      rateConfident: true,
+      lockOn: true,
+      catchOn: true,
+    });
+    await link.close();
+  });
+
   it('rejects with QueryTimeoutError when the box is silent', async () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));
