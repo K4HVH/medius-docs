@@ -11,6 +11,7 @@ export const Q_CAPS = 3;
 export const Q_RATE = 4;
 export const Q_STATS = 5;
 export const Q_LOCKS = 6;
+export const Q_CATCH = 7;
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
@@ -18,6 +19,7 @@ export const H_CLONE_CFG = 0x04;
 export const H_INJECT_ON = 0x08;
 export const H_RATE_CONFIDENT = 0x10;
 export const H_LOCK_ON = 0x20;
+export const H_CATCH_ON = 0x40;
 
 // MOUSE_INFO flags (§4.3).
 export const MI_HAS_SERIAL = 0x01;
@@ -43,6 +45,8 @@ export enum FrameType {
   Log = 0x08,
   Led = 0x09,
   Lock = 0x0a,
+  Catch = 0x0b,
+  Event = 0x0c,
 }
 
 export function frameTypeFromU8(value: number): FrameType | null {
@@ -67,6 +71,10 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.Led;
     case 0x0a:
       return FrameType.Lock;
+    case 0x0b:
+      return FrameType.Catch;
+    case 0x0c:
+      return FrameType.Event;
     default:
       return null;
   }

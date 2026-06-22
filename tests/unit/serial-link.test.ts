@@ -80,6 +80,7 @@ describe('SerialLink', () => {
       injectionActive: false,
       rateConfident: false,
       lockOn: false,
+      catchOn: false,
     });
     await link.close();
   });

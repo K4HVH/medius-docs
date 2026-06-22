@@ -162,7 +162,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all seven selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all eight selectors" />
               </Card>
             </A>
             <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
@@ -178,6 +178,11 @@ const NativeIntroduction: Component = () => {
             <A href="/native/commands/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Lock" subtitle="Block a physical input" />
+              </Card>
+            </A>
+            <A href="/native/commands/catch" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
           </div>

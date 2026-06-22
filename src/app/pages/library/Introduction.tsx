@@ -124,6 +124,11 @@ const Introduction: Component = () => {
                 <CardHeader title="Admin" subtitle="reset, reboot" />
               </Card>
             </A>
+            <A href="/library/catch" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Catch" subtitle="Stream physical input" />
+              </Card>
+            </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Lifecycle" subtitle="reapply, reconnect" />

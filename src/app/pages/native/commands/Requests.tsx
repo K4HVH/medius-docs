@@ -17,8 +17,9 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#mouse-info">mouse info</A>,{' '}
           <A href="/native/commands/requests#caps">capabilities</A>,{' '}
           <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
-          <A href="/native/commands/requests#stats">stats</A>, or the active input{' '}
-          <A href="/native/commands/requests#locks">locks</A>.
+          <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
+          <A href="/native/commands/requests#locks">locks</A>, or the{' '}
+          <A href="/native/commands/requests#catch">catch</A> subscription.
         </p>
       </Card>
 
@@ -53,6 +54,7 @@ const Requests: Component = () => {
               <tr><td><code>4</code></td><td>The native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
+              <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -67,7 +69,8 @@ const Requests: Component = () => {
             <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>.
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
+            <A href="/library/catch#query-catch"><code>query_catch</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -110,8 +113,9 @@ const Requests: Component = () => {
             <A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A>,{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
             <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
-            <A href="/native/commands/requests#stats"><code>STATS</code></A>, and{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>.
+            <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
+            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>, and{' '}
+            <A href="/native/commands/requests#catch"><code>CATCH</code></A>.
           </p>
         </Card>
       </div>
@@ -182,11 +186,12 @@ const Requests: Component = () => {
               <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
               <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input <A href="/native/commands/lock"><code>LOCK</code></A> is active</td></tr>
+              <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: a <A href="/native/commands/catch"><code>CATCH</code></A> subscription is active, physical-input events are streaming</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Bits b6-b7 are unused. The first three set means the box is ready for input to reach the PC.
+            Bit b7 is unused. The first three set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -454,6 +459,45 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | mask   | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="catch" data-search-target>
+        <Card>
+          <CardHeader title="CATCH" subtitle="RESP payload, what = 7" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 7</code>: the active <A href="/native/commands/catch"><code>CATCH</code></A>{' '}
+            subscription <code>mask</code>, plus the box-side count of{' '}
+            <A href="/native/commands/catch#event"><code>EVENT</code></A> frames dropped under
+            back-pressure. A zero mask means nothing is subscribed. Mirrors the{' '}
+            <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> health bit.
+          </p>
+          <pre class="api-signature">QUERY  what = 7  ·  RESP 6 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
+              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04</td></tr>
+              <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>events dropped box-side under back-pressure, little-endian</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            Read it to confirm a subscription landed, or to check whether you're losing events. Library
+            binding: <A href="/library/catch#query-catch"><code>query_catch</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Motion and buttons subscribed, no drops (<code>mask = 0x05</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+--------+
+| A5     | 06     | 00     | 06 00  | 07     | 05     | 00 00 00 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | mask   | dropped      | CRC16  |
++--------+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
         </Card>
       </div>
     </>
