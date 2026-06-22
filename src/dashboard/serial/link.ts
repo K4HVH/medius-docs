@@ -7,6 +7,7 @@ import {
   type Caps,
   type DecodedFrame,
   type Health,
+  type Locks,
   type LogLine,
   type MouseInfo,
   type Rate,
@@ -17,15 +18,19 @@ import {
   PROTO_VER,
   Q_CAPS,
   Q_HEALTH,
+  Q_LOCKS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
   Q_VERSION,
   LedMode,
   LedTarget,
+  LockDirection,
+  LockTarget,
   RebootTarget,
   encode,
   ledPayload,
+  lockPayload,
   parseLog,
   parseResp,
   queryPayload,
@@ -180,12 +185,26 @@ export class SerialLink {
     return resp.stats;
   }
 
+  async queryLocks(timeoutMs?: number): Promise<Locks> {
+    const resp = parseResp(await this.query(Q_LOCKS, timeoutMs));
+    if (resp?.kind !== 'locks') throw new Error('unexpected reply to LOCKS query');
+    return resp.locks;
+  }
+
   reboot(target: RebootTarget): Promise<void> {
     return this.send(encode(FrameType.RebootDl, this.nextSeq(), rebootPayload(target)));
   }
 
   led(target: LedTarget, mode: LedMode, level: number): Promise<void> {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
+  }
+
+  lock(target: LockTarget, direction: LockDirection): Promise<void> {
+    return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 1)));
+  }
+
+  unlock(target: LockTarget, direction: LockDirection): Promise<void> {
+    return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 0)));
   }
 
   async close(): Promise<void> {

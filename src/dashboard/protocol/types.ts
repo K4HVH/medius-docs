@@ -4,6 +4,7 @@ import {
   H_CLONE_CFG,
   H_INJECT_ON,
   H_LINK_UP,
+  H_LOCK_ON,
   H_MOUSE_ATT,
   H_RATE_CONFIDENT,
 } from './opcode';
@@ -25,6 +26,7 @@ export interface Health {
   cloneConfigured: boolean;
   injectionActive: boolean;
   rateConfident: boolean;
+  lockOn: boolean;
 }
 
 export function healthFromFlags(flags: number): Health {
@@ -34,6 +36,7 @@ export function healthFromFlags(flags: number): Health {
     cloneConfigured: (flags & H_CLONE_CFG) !== 0,
     injectionActive: (flags & H_INJECT_ON) !== 0,
     rateConfident: (flags & H_RATE_CONFIDENT) !== 0,
+    lockOn: (flags & H_LOCK_ON) !== 0,
   };
 }
 
@@ -111,6 +114,43 @@ export enum LedMode {
   Off = 1,
   Solid = 2,
   Blink = 3,
+}
+
+// LOCK command (§3.8): which input to lock, and which direction/edge. Wire values match ctrl_proto.h.
+export enum LockTarget {
+  X = 0,
+  Y = 1,
+  Wheel = 2,
+  Left = 3,
+  Right = 4,
+  Middle = 5,
+  Side1 = 6,
+  Side2 = 7,
+}
+
+export enum LockDirection {
+  Both = 0,
+  Positive = 1,
+  Negative = 2,
+}
+
+// Active input locks (§4.8): a 16-bit mask, 2 bits per target. bit(target*2) is the
+// positive/press direction, bit(target*2+1) the negative/release direction.
+export interface Locks {
+  mask: number;
+}
+
+// True when the given target+direction lock is set in the mask.
+export function lockSet(locks: Locks, target: LockTarget, direction: LockDirection): boolean {
+  if (direction === LockDirection.Both) {
+    return locksBit(locks, target, true) && locksBit(locks, target, false);
+  }
+  return locksBit(locks, target, direction === LockDirection.Positive);
+}
+
+function locksBit(locks: Locks, target: LockTarget, positive: boolean): boolean {
+  const bit = target * 2 + (positive ? 0 : 1);
+  return (locks.mask & (1 << bit)) !== 0;
 }
 
 export enum LogLevel {

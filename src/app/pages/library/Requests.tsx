@@ -10,14 +10,15 @@ const Requests: Component = () => {
         <Card>
           <CardHeader title="Requests" subtitle="Asking the box a question and waiting for the answer" />
           <p>
-            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the six queries
+            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the seven queries
             are blocking: a question frame out, one answer frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
             <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>, and{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>, each covered below.
+            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
+            <A href="/library/requests#query-stats"><code>query_stats</code></A>, and{' '}
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>, each covered below.
           </p>
         </Card>
       </div>
@@ -56,7 +57,7 @@ println!("proto {}", v.proto_ver);     // proto 1`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, five booleans from one
+            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, six booleans from one
             status byte. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
             <code>clone_configured</code> must all be true before{' '}
             <A href="/native/injection">injection</A> has anywhere to land.
@@ -185,15 +186,40 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
         </Card>
       </div>
 
+      <div id="query-locks" data-search-target>
+        <Card>
+          <CardHeader title="query_locks" subtitle="Read the active input locks" />
+          <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the inputs
+            currently blocked by <A href="/library/lock#lock"><code>lock</code></A>.{' '}
+            <code>is_locked(target, direction)</code> answers whether one particular lock is set. Read
+            it to confirm a lock landed, or to mirror the box's lock state in a UI.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::{Device, LockTarget, LockDirection};
+
+let device = Device::find()?;
+let locks = device.query_locks()?;
+if locks.is_locked(LockTarget::X, LockDirection::Both) {
+    println!("horizontal motion is frozen");
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="Async queries" subtitle="The same six queries on AsyncDevice" />
+          <CardHeader title="Async queries" subtitle="The same seven queries on AsyncDevice" />
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
           <pre class="api-signature">async fn query_mouse_info(&self) -&gt; Result&lt;MouseInfo&gt;</pre>
           <pre class="api-signature">async fn query_caps(&self) -&gt; Result&lt;Caps&gt;</pre>
           <pre class="api-signature">async fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
           <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
+          <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <pre><code>cargo add medius --features async</code></pre>
@@ -201,7 +227,7 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
           <p>
             With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
             <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures;
-            other methods stay synchronous. All six queries, including the four device-info ones, are
+            other methods stay synchronous. All seven queries are
             futures here. The crate is
             runtime-agnostic (no tokio), so drive a future with anything, such as{' '}
             <a

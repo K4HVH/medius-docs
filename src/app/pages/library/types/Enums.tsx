@@ -10,7 +10,7 @@ const Enums: Component = () => {
         <Card>
           <CardHeader title="Enums" subtitle="Command and status enumerations" />
           <p>
-            Six command and status enums, each tied to a wire byte. Conversion helpers are listed with each.
+            Eight command and status enums, each tied to a wire byte. Conversion helpers are listed with each.
           </p>
         </Card>
       </div>
@@ -109,6 +109,52 @@ const Enums: Component = () => {
               <tr><td><code>Off</code></td><td><code>1</code></td><td>LED dark.</td></tr>
               <tr><td><code>Solid</code></td><td><code>2</code></td><td>Lit steadily at the command's <code>level</code>.</td></tr>
               <tr><td><code>Blink</code></td><td><code>3</code></td><td>Blinks at the command's <code>level</code>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="lock-target" data-search-target>
+        <Card>
+          <CardHeader title="LockTarget" subtitle="Which input a lock acts on" />
+          <pre class="api-signature">enum LockTarget {'{'} X, Y, Wheel, Button(Button) {'}'}</pre>
+          <p>
+            Which physical input a <A href="/native/commands/lock"><code>LOCK</code></A> command
+            blocks. A button variant carries a{' '}
+            <A href="/library/types/enums#button"><code>Button</code></A>, so the eight wire targets
+            are <code>X</code>, <code>Y</code>, <code>Wheel</code>, then one per button. Convert with{' '}
+            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;LockTarget&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>X</code></td><td><code>0</code></td><td>Horizontal movement.</td></tr>
+              <tr><td><code>Y</code></td><td><code>1</code></td><td>Vertical movement.</td></tr>
+              <tr><td><code>Wheel</code></td><td><code>2</code></td><td>Scroll wheel.</td></tr>
+              <tr><td><code>Button(Left)</code></td><td><code>3</code></td><td>Left button.</td></tr>
+              <tr><td><code>Button(Right)</code></td><td><code>4</code></td><td>Right button.</td></tr>
+              <tr><td><code>Button(Middle)</code></td><td><code>5</code></td><td>Middle button.</td></tr>
+              <tr><td><code>Button(Side1)</code></td><td><code>6</code></td><td>First thumb button.</td></tr>
+              <tr><td><code>Button(Side2)</code></td><td><code>7</code></td><td>Second thumb button.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="lock-direction" data-search-target>
+        <Card>
+          <CardHeader title="LockDirection" subtitle="Which way or which edge to block" />
+          <pre class="api-signature">enum LockDirection {'{'} Both, Positive, Negative {'}'}</pre>
+          <p>
+            Which side of an input a <A href="/native/commands/lock"><code>LOCK</code></A> blocks. For
+            an axis or the wheel it's a sign; for a button it's an edge. The discriminant is the wire{' '}
+            <code>direction</code> byte. Convert with <code>as_u8()</code> and{' '}
+            <code>from_u8(u8) -&gt; Option&lt;LockDirection&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>Both signs, or press and release.</td></tr>
+              <tr><td><code>Positive</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or button press.</td></tr>
+              <tr><td><code>Negative</code></td><td><code>2</code></td><td>Axis negative (<code>−</code>), or button release.</td></tr>
             </tbody>
           </table>
         </Card>

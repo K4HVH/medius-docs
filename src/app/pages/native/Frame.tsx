@@ -58,7 +58,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            There are nine opcodes. An unrecognised one is ignored harmlessly, which keeps newer and
+            There are ten opcodes. An unrecognised one is ignored harmlessly, which keeps newer and
             older firmware compatible.
           </p>
           <table class="api-params">
@@ -75,6 +75,7 @@ const Frame: Component = () => {
               <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
             </tbody>
           </table>
         </Card>

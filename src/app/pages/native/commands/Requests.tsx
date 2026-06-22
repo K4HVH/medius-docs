@@ -16,8 +16,9 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#health">health</A>, the cloned{' '}
           <A href="/native/commands/requests#mouse-info">mouse info</A>,{' '}
           <A href="/native/commands/requests#caps">capabilities</A>,{' '}
-          <A href="/native/commands/requests#rate">rate</A>, or delivery{' '}
-          <A href="/native/commands/requests#stats">stats</A>.
+          <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
+          <A href="/native/commands/requests#stats">stats</A>, or the active input{' '}
+          <A href="/native/commands/requests#locks">locks</A>.
         </p>
       </Card>
 
@@ -51,6 +52,7 @@ const Requests: Component = () => {
               <tr><td><code>3</code></td><td>The emulated mouse's capabilities.</td><td><A href="/native/commands/requests#caps"><code>CAPS</code></A></td></tr>
               <tr><td><code>4</code></td><td>The native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
+              <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -64,7 +66,8 @@ const Requests: Component = () => {
             <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
             <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>.
+            <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -106,8 +109,9 @@ const Requests: Component = () => {
             <A href="/native/commands/requests#health"><code>HEALTH</code></A>,{' '}
             <A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A>,{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
-            <A href="/native/commands/requests#rate"><code>RATE</code></A>, and{' '}
-            <A href="/native/commands/requests#stats"><code>STATS</code></A>.
+            <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
+            <A href="/native/commands/requests#stats"><code>STATS</code></A>, and{' '}
+            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>.
           </p>
         </Card>
       </div>
@@ -140,9 +144,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>1.4.1</code>, protocol <code>1</code>:</p>
+          <p>Firmware <code>1.5.0</code>, protocol <code>1</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 04     | 01     | lo hi  |
+| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 05     | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -177,11 +181,12 @@ const Requests: Component = () => {
               <tr><td>b2</td><td><code>0x04</code></td><td>the PC has set up the cloned mouse</td></tr>
               <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
               <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
+              <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input <A href="/native/commands/lock"><code>LOCK</code></A> is active</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Bits b5-b7 are unused. The first three set means the box is ready for input to reach the PC.
+            Bits b6-b7 are unused. The first three set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -392,6 +397,63 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits | drops  | ...
 +--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="locks" data-search-target>
+        <Card>
+          <CardHeader title="LOCKS" subtitle="RESP payload, what = 6" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 6</code>: which physical inputs are currently locked by{' '}
+            <A href="/native/commands/lock"><code>LOCK</code></A>, as a 16-bit <code>mask</code>. Two
+            bits per target, one for each direction, so you can read back a per-direction lock exactly
+            as you set it. A zero mask means nothing is locked.
+          </p>
+          <pre class="api-signature">QUERY  what = 6  ·  RESP 3 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
+              <tr><td>1</td><td><code>mask</code></td><td><code>u16</code></td><td>active locks, little-endian; bit layout below</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">BIT LAYOUT</div>
+          <p>
+            Each <A href="/native/commands/lock"><code>target</code></A> owns two bits. Bit{' '}
+            <code>target*2</code> is the positive/press direction, bit <code>target*2 + 1</code> the
+            negative/release direction. So <code>X+</code> is bit 0, <code>X−</code> bit 1,{' '}
+            <code>Y+</code> bit 2, up to <code>Side2</code> release at bit 15.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x0001</code></td><td><code>X</code> positive is locked</td></tr>
+              <tr><td>b1</td><td><code>0x0002</code></td><td><code>X</code> negative is locked</td></tr>
+              <tr><td>b2 / b3</td><td><code>0x0004</code> / <code>0x0008</code></td><td><code>Y</code> positive / negative</td></tr>
+              <tr><td>b4 / b5</td><td><code>0x0010</code> / <code>0x0020</code></td><td><code>Wheel</code> up / down</td></tr>
+              <tr><td>b6 / b7</td><td><code>0x0040</code> / <code>0x0080</code></td><td><code>Left</code> press / release</td></tr>
+              <tr><td>b8..b15</td><td><code>0x0100</code>+</td><td><code>Right</code>, <code>Middle</code>, <code>Side1</code>, <code>Side2</code>, press then release</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            Read it to confirm a lock landed, or to mirror the box's lock state in a UI. Library
+            binding: <A href="/library/requests#query-locks"><code>query_locks</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Only the wheel's negative (scroll-down) direction locked (<code>mask = 0x0020</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 03 00  | 06     | 20 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | mask   | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
     </>
