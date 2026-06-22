@@ -295,7 +295,7 @@ describe('LED command (§3.7)', () => {
 
 describe('LOCK command (§3.8)', () => {
   it('lockPayload packs [target][direction][state]', () => {
-    // Lock the wheel's release direction.
+    // Lock the wheel's negative (scroll-down) direction.
     expect(Array.from(lockPayload(LockTarget.Wheel, LockDirection.Negative, 1))).toEqual([2, 2, 1]);
     // Unlock the X axis, both signs.
     expect(Array.from(lockPayload(LockTarget.X, LockDirection.Both, 0))).toEqual([0, 0, 0]);
@@ -319,13 +319,13 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('parses a LOCKS RESP into the 16-bit mask', () => {
-    // what = 6, mask = 0x0020 little-endian (wheel release locked).
+    // what = 6, mask = 0x0020 little-endian (wheel negative / scroll-down locked).
     const resp = parseResp(new Uint8Array([6, 0x20, 0x00]));
     expect(resp).toEqual({ kind: 'locks', locks: { mask: 0x0020 } });
   });
 
   it('lockSet reads a per-direction bit out of the mask', () => {
-    // bit(Wheel*2 + 1) = bit 5 = 0x20 = wheel negative/release.
+    // bit(Wheel*2 + 1) = bit 5 = 0x20 = wheel negative (scroll-down).
     const locks = { mask: 0x0020 };
     expect(lockSet(locks, LockTarget.Wheel, LockDirection.Negative)).toBe(true);
     expect(lockSet(locks, LockTarget.Wheel, LockDirection.Positive)).toBe(false);

@@ -34,14 +34,13 @@ const GuideCalls: Component = () => {
 
       <div id="why-async" data-search-target>
         <Card>
-          <CardHeader title="Why only two calls are async" subtitle="Queries await a reply, everything else fires and forgets" />
+          <CardHeader title="Why the queries are async" subtitle="Queries await a reply, everything else fires and forgets" />
           <p>
-            With the <A href="/library/features/async"><code>async</code></A> feature,{' '}
-            <code>query_version</code> and <code>query_health</code> are the only <code>async fn</code>s,
-            because a <A href="/native/commands/requests#requests"><code>QUERY</code></A> blocks for its
-            correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>. Every other
-            method is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so it stays
-            synchronous.
+            With the <A href="/library/features/async"><code>async</code></A> feature, the{' '}
+            <A href="/native/commands/requests#requests"><code>QUERY</code></A> methods are the{' '}
+            <code>async fn</code>s, because a query blocks for its correlated{' '}
+            <A href="/native/commands/requests#resp"><code>RESP</code></A>. Every other method is{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so it stays synchronous.
           </p>
 
           <div class="api-response-label">METHOD SPLIT</div>
@@ -54,21 +53,15 @@ const GuideCalls: Component = () => {
             </thead>
             <tbody>
               <tr>
-                <td><A href="/library/requests#version"><code>query_version</code></A></td>
                 <td>
-                  <A href="/library/movement#move-rel"><code>move_rel</code></A>,{' '}
-                  <A href="/library/movement#wheel"><code>wheel</code></A>,{' '}
-                  <A href="/library/buttons#methods"><code>button</code></A>,{' '}
-                  <A href="/library/buttons#methods"><code>press</code></A>
+                  <code>query_version</code>, <code>query_health</code>,{' '}
+                  <code>query_mouse_info</code>, <code>query_caps</code>, <code>query_rate</code>,{' '}
+                  <code>query_stats</code>, <code>query_locks</code>
                 </td>
-              </tr>
-              <tr>
-                <td><A href="/library/requests#health"><code>query_health</code></A></td>
                 <td>
-                  <A href="/library/buttons#methods"><code>soft_release</code></A>,{' '}
-                  <A href="/library/buttons#methods"><code>force_release</code></A>,{' '}
-                  <A href="/library/admin#reset"><code>reset</code></A>,{' '}
-                  <A href="/library/admin#reboot"><code>reboot</code></A>
+                  <code>move_rel</code>, <code>wheel</code>, <code>button</code>, <code>press</code>,{' '}
+                  <code>soft_release</code>, <code>force_release</code>, <code>reset</code>,{' '}
+                  <code>reboot</code>, <code>led</code>, <code>lock</code>, <code>unlock</code>
                 </td>
               </tr>
             </tbody>
