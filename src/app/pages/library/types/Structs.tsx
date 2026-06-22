@@ -168,7 +168,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
         <Card>
           <CardHeader title="Locks" subtitle="The active input locks" />
           <p>
-            Active locks from <A href="/library/lock#query-locks"><code>query_locks()</code></A>, a
+            Active locks from <A href="/library/requests#query-locks"><code>query_locks()</code></A>, a
             16-bit mask wrapped in a value type.{' '}
             <code>is_locked(target, direction)</code> answers whether one particular lock is set, and{' '}
             <code>mask()</code> hands back the raw bits. See the native{' '}

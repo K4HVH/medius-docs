@@ -9,7 +9,7 @@ const Async: Component = () => {
       <Card>
         <CardHeader title="Async" subtitle="AsyncDevice on any executor" />
         <p>
-          <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its two
+          <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its
           queries as futures, behind the off-by-default <code>async</code> flag.
         </p>
         <pre><code>cargo add medius --features async</code></pre>
@@ -86,7 +86,7 @@ let device = AsyncDevice::open("/dev/ttyACM0")?;`}</code></pre>
 
       <div id="queries" data-search-target>
         <Card>
-          <CardHeader title="Awaiting a query" subtitle="query_version and query_health as futures" />
+          <CardHeader title="Awaiting a query" subtitle="every query method is a future" />
 
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
