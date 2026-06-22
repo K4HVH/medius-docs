@@ -15,6 +15,7 @@ const healthItems = (h: Health) => [
   { label: 'Clone configured', value: h.cloneConfigured },
   { label: 'Injection active', value: h.injectionActive },
   { label: 'Rate confirmed', value: h.rateConfident },
+  { label: 'Locks active', value: h.lockOn },
 ];
 
 const col = {

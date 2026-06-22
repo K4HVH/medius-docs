@@ -54,6 +54,7 @@ println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
               <tr><td><code>clone_configured</code></td><td><code>bool</code></td><td>The PC has set up the cloned mouse.</td></tr>
               <tr><td><code>injection_active</code></td><td><code>bool</code></td><td>The box is holding at least one injected button or move.</td></tr>
               <tr><td><code>rate_confident</code></td><td><code>bool</code></td><td>The native-rate estimator window is full, so <A href="/library/types/structs#rate"><code>Rate</code></A> is trustworthy.</td></tr>
+              <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input <A href="/library/lock#lock"><code>lock</code></A> is active.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -161,6 +162,33 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+      <div id="locks" data-search-target>
+        <Card>
+          <CardHeader title="Locks" subtitle="The active input locks" />
+          <p>
+            Active locks from <A href="/library/lock#query-locks"><code>query_locks()</code></A>, a
+            16-bit mask wrapped in a value type.{' '}
+            <code>is_locked(target, direction)</code> answers whether one particular lock is set, and{' '}
+            <code>mask()</code> hands back the raw bits. See the native{' '}
+            <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the bit layout.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>is_locked(LockTarget, LockDirection)</code></td><td><code>bool</code></td><td>Whether that target+direction is locked.</td></tr>
+              <tr><td><code>mask()</code></td><td><code>u16</code></td><td>The raw mask, 2 bits per target.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::{LockTarget, LockDirection};
+
+let locks = device.query_locks()?;
+if locks.is_locked(LockTarget::X, LockDirection::Positive) {
+    // the real mouse can't move right
+}
+println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
         </Card>
       </div>
       <div id="log-line" data-search-target>

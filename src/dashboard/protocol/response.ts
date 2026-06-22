@@ -9,6 +9,7 @@ import {
   MI_HAS_SERIAL,
   Q_CAPS,
   Q_HEALTH,
+  Q_LOCKS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
@@ -18,6 +19,7 @@ import {
 import {
   type Caps,
   type Health,
+  type Locks,
   type LogLine,
   type MouseInfo,
   type Rate,
@@ -34,7 +36,8 @@ export type Resp =
   | { kind: 'mouseInfo'; mouseInfo: MouseInfo }
   | { kind: 'caps'; caps: Caps }
   | { kind: 'rate'; rate: Rate }
-  | { kind: 'stats'; stats: Stats };
+  | { kind: 'stats'; stats: Stats }
+  | { kind: 'locks'; locks: Locks };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -115,6 +118,10 @@ export function parseResp(payload: Uint8Array): Resp | null {
           configCount: u16le(payload, 15),
         },
       };
+    }
+    case Q_LOCKS: {
+      if (payload.length < 3) return null;
+      return { kind: 'locks', locks: { mask: u16le(payload, 1) } };
     }
     default:
       return null;
