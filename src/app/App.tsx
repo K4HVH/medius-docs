@@ -16,6 +16,7 @@ import CmdButtons from './pages/native/commands/Buttons';
 import CmdRequests from './pages/native/commands/Requests';
 import CmdAdmin from './pages/native/commands/Admin';
 import CmdLed from './pages/native/commands/Led';
+import CmdLock from './pages/native/commands/Lock';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import LibIntroduction from './pages/library/Introduction';
@@ -25,6 +26,7 @@ import LibButtons from './pages/library/Buttons';
 import LibRequests from './pages/library/Requests';
 import LibAdmin from './pages/library/Admin';
 import LibLed from './pages/library/Led';
+import LibLock from './pages/library/Lock';
 import LibLifecycle from './pages/library/Lifecycle';
 import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
@@ -66,6 +68,7 @@ const App: Component = () => {
           <Route path="/native/commands/requests" component={CmdRequests} />
           <Route path="/native/commands/admin" component={CmdAdmin} />
           <Route path="/native/commands/led" component={CmdLed} />
+          <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
           <Route path="/library" component={LibIntroduction} />
@@ -75,6 +78,7 @@ const App: Component = () => {
           <Route path="/library/requests" component={LibRequests} />
           <Route path="/library/admin" component={LibAdmin} />
           <Route path="/library/led" component={LibLed} />
+          <Route path="/library/lock" component={LibLock} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
           <Route path="/library/diagnostics" component={LibDiagnostics} />
           <Route path="/library/features/async" component={FeatAsync} />

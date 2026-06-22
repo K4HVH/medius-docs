@@ -10,12 +10,14 @@ export const Q_MOUSE_INFO = 2;
 export const Q_CAPS = 3;
 export const Q_RATE = 4;
 export const Q_STATS = 5;
+export const Q_LOCKS = 6;
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
 export const H_CLONE_CFG = 0x04;
 export const H_INJECT_ON = 0x08;
 export const H_RATE_CONFIDENT = 0x10;
+export const H_LOCK_ON = 0x20;
 
 // MOUSE_INFO flags (§4.3).
 export const MI_HAS_SERIAL = 0x01;
@@ -40,6 +42,7 @@ export enum FrameType {
   RebootDl = 0x07,
   Log = 0x08,
   Led = 0x09,
+  Lock = 0x0a,
 }
 
 export function frameTypeFromU8(value: number): FrameType | null {
@@ -62,6 +65,8 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.Log;
     case 0x09:
       return FrameType.Led;
+    case 0x0a:
+      return FrameType.Lock;
     default:
       return null;
   }

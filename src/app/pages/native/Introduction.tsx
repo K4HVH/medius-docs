@@ -28,7 +28,7 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>1.4.1</code></td>
+              <td><code>1.5.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
@@ -162,12 +162,22 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all six selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all seven selectors" />
               </Card>
             </A>
             <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
+              </Card>
+            </A>
+            <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="LED" subtitle="Override the status LEDs" />
+              </Card>
+            </A>
+            <A href="/native/commands/lock" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Lock" subtitle="Block a physical input" />
               </Card>
             </A>
           </div>

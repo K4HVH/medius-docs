@@ -79,6 +79,7 @@ describe('SerialLink', () => {
       cloneConfigured: false,
       injectionActive: false,
       rateConfident: false,
+      lockOn: false,
     });
     await link.close();
   });
