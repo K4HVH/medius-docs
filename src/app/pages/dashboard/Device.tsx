@@ -16,6 +16,7 @@ const healthItems = (h: Health) => [
   { label: 'Injection active', value: h.injectionActive },
   { label: 'Rate confirmed', value: h.rateConfident },
   { label: 'Locks active', value: h.lockOn },
+  { label: 'Events streaming', value: h.catchOn },
 ];
 
 const col = {

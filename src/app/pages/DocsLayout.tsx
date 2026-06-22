@@ -46,6 +46,7 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
   { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
   { value: '/native/commands/lock', label: 'Lock', icon: BsLock },
+  { value: '/native/commands/catch', label: 'Catch', icon: BsActivity },
 ];
 
 const nativeReferenceTabs: TabOption[] = [
@@ -69,6 +70,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/admin', label: 'Admin', icon: BsGear },
   { value: '/library/led', label: 'LED', icon: BsLightbulb },
   { value: '/library/lock', label: 'Lock', icon: BsLock },
+  { value: '/library/catch', label: 'Catch', icon: BsActivity },
   { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];

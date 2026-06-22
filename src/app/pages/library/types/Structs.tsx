@@ -55,6 +55,7 @@ println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
               <tr><td><code>injection_active</code></td><td><code>bool</code></td><td>The box is holding at least one injected button or move.</td></tr>
               <tr><td><code>rate_confident</code></td><td><code>bool</code></td><td>The native-rate estimator window is full, so <A href="/library/types/structs#rate"><code>Rate</code></A> is trustworthy.</td></tr>
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input <A href="/library/lock#lock"><code>lock</code></A> is active.</td></tr>
+              <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>A <A href="/library/catch#catch-events"><code>catch</code></A> subscription is streaming physical-input events.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -189,6 +190,96 @@ if locks.is_locked(LockTarget::X, LockDirection::Positive) {
     // the real mouse can't move right
 }
 println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
+        </Card>
+      </div>
+      <div id="catch-mask" data-search-target>
+        <Card>
+          <CardHeader title="CatchMask" subtitle="Which physical reports raise an event" />
+          <p>
+            A bitflags newtype you hand to{' '}
+            <A href="/library/catch#catch-events"><code>catch_events()</code></A>. It gates{' '}
+            <em>which</em> reports trigger an{' '}
+            <A href="/library/types/structs#input-report"><code>InputReport</code></A>; the payload is
+            always the full snapshot. Combine the consts with <code>|</code> (<code>BitOr</code>), e.g.{' '}
+            <code>CatchMask::MOTION | CatchMask::BUTTONS</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Const</th><th>Bit</th><th>Triggers on</th></tr></thead>
+            <tbody>
+              <tr><td><code>MOTION</code></td><td><code>0x01</code></td><td>The mouse moved (dx/dy).</td></tr>
+              <tr><td><code>WHEEL</code></td><td><code>0x02</code></td><td>The wheel turned.</td></tr>
+              <tr><td><code>BUTTONS</code></td><td><code>0x04</code></td><td>A button changed.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>empty()</code></td><td><code>CatchMask</code></td><td>No bits set (unsubscribe).</td></tr>
+              <tr><td><code>all()</code></td><td><code>CatchMask</code></td><td>Every bit set (<code>0x07</code>).</td></tr>
+              <tr><td><code>bits()</code></td><td><code>u8</code></td><td>The raw mask byte.</td></tr>
+              <tr><td><code>is_empty()</code></td><td><code>bool</code></td><td>No bits set.</td></tr>
+              <tr><td><code>contains(other)</code></td><td><code>bool</code></td><td>Every bit in <code>other</code> is set here.</td></tr>
+              <tr><td><code>union(other)</code></td><td><code>CatchMask</code></td><td>The two masks ORed together.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::CatchMask;
+
+let mask = CatchMask::MOTION | CatchMask::BUTTONS;
+assert!(mask.contains(CatchMask::BUTTONS));
+assert_eq!(mask.bits(), 0x05);
+let stream = device.catch_events(mask)?;`}</code></pre>
+        </Card>
+      </div>
+      <div id="input-report" data-search-target>
+        <Card>
+          <CardHeader title="InputReport" subtitle="One physical-input snapshot" />
+          <p>
+            The user's real input for one event, read off an{' '}
+            <A href="/library/catch#event-stream"><code>EventStream</code></A>. It's captured{' '}
+            <em>before</em> lock suppression or injection, so a locked or injected target still reports
+            the real hand value. Diff <code>buttons</code> across events to find press/release edges.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>buttons</code></td><td><code>u8</code></td><td>Bit <code>b</code> = button id <code>b</code> (<code>0</code>=Left .. <code>4</code>=Side2).</td></tr>
+              <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report.</td></tr>
+              <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report.</td></tr>
+              <tr><td><code>wheel</code></td><td><code>i16</code></td><td>Wheel movement this report.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>is_pressed(Button)</code></td><td><code>bool</code></td><td>Whether that button's bit is set.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::{Button, CatchMask};
+
+let stream = device.catch_events(CatchMask::all())?;
+let r = stream.recv()?;
+if r.is_pressed(Button::Left) {
+    println!("left held, moved {} {}", r.dx, r.dy);
+}`}</code></pre>
+        </Card>
+      </div>
+      <div id="catch-state" data-search-target>
+        <Card>
+          <CardHeader title="CatchState" subtitle="The active catch subscription" />
+          <p>
+            The current subscription from{' '}
+            <A href="/library/catch#query-catch"><code>query_catch()</code></A>. A nonzero{' '}
+            <code>dropped</code> means the box shed events under back-pressure.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mask</code></td><td><A href="/library/types/structs#catch-mask"><code>CatchMask</code></A></td><td>Which reports are subscribed; empty = none.</td></tr>
+              <tr><td><code>dropped</code></td><td><code>u32</code></td><td>Box-side events dropped under back-pressure.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
       <div id="log-line" data-search-target>

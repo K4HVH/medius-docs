@@ -8,6 +8,7 @@ import {
   MI_HAS_BOS,
   MI_HAS_SERIAL,
   Q_CAPS,
+  Q_CATCH,
   Q_HEALTH,
   Q_LOCKS,
   Q_MOUSE_INFO,
@@ -18,7 +19,9 @@ import {
 } from './opcode';
 import {
   type Caps,
+  type CatchState,
   type Health,
+  type InputReport,
   type Locks,
   type LogLine,
   type MouseInfo,
@@ -37,11 +40,13 @@ export type Resp =
   | { kind: 'caps'; caps: Caps }
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
-  | { kind: 'locks'; locks: Locks };
+  | { kind: 'locks'; locks: Locks }
+  | { kind: 'catch'; catch: CatchState };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
   (p[i] | (p[i + 1] << 8) | (p[i + 2] << 16) | (p[i + 3] << 24)) >>> 0;
+const i16le = (p: Uint8Array, i: number): number => ((p[i] | (p[i + 1] << 8)) << 16) >> 16;
 
 // Parse a RESP payload: [what u8][data..]. All multi-byte fields little-endian (§4).
 export function parseResp(payload: Uint8Array): Resp | null {
@@ -123,9 +128,24 @@ export function parseResp(payload: Uint8Array): Resp | null {
       if (payload.length < 3) return null;
       return { kind: 'locks', locks: { mask: u16le(payload, 1) } };
     }
+    case Q_CATCH: {
+      if (payload.length < 6) return null;
+      return { kind: 'catch', catch: { mask: payload[1], dropped: u32le(payload, 2) } };
+    }
     default:
       return null;
   }
+}
+
+// Parse an EVENT payload (§4.10): [buttons u8][dx i16][dy i16][wheel i16]. Unsolicited (box -> PC).
+export function parseEvent(payload: Uint8Array): InputReport | null {
+  if (payload.length < 7) return null;
+  return {
+    buttons: payload[0],
+    dx: i16le(payload, 1),
+    dy: i16le(payload, 3),
+    wheel: i16le(payload, 5),
+  };
 }
 
 const logDecoder = new TextDecoder('utf-8', { fatal: false });
