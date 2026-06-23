@@ -35,6 +35,7 @@ const Row = (props: { label: string; children: unknown }) => (
 
 const DeviceInfo = () => {
   const dash = useDashboard();
+  const mouseAttached = () => dash.health()?.mouseAttached === true;
   const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
   const [caps, setCaps] = createSignal<MouseCaps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
@@ -89,6 +90,11 @@ const DeviceInfo = () => {
         <Show when={mouse()} fallback={<p>Reading...</p>}>
           {(m) => (
             <Show when={m().vid !== 0} fallback={<p>No mouse is plugged into the box yet.</p>}>
+              <Show when={!mouseAttached()}>
+                <p style={{ ...note, 'margin-top': '0' }}>
+                  This is a companion mouse interface on a keyboard-first device, not a real mouse.
+                </p>
+              </Show>
               <Row label="USB id">
                 <code>{vidPid(m())}</code>
               </Row>
@@ -119,8 +125,16 @@ const DeviceInfo = () => {
         <Show when={rate()} fallback={<p>Reading...</p>}>
           {(r) => (
             <Row label="Report rate">
-              <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>learning...</span>}>
-                {nativeHz(r())} Hz
+              <Show
+                when={mouseAttached()}
+                fallback={<span style={muted}>No mouse attached.</span>}
+              >
+                <Show
+                  when={nativeHz(r()) !== null}
+                  fallback={<span style={muted}>waiting for mouse activity...</span>}
+                >
+                  {nativeHz(r())} Hz
+                </Show>
               </Show>
             </Row>
           )}
