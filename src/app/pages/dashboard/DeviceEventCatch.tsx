@@ -104,6 +104,14 @@ const DeviceEventCatch = () => {
     return r ? BUTTON_NAMES.filter((_, i) => mouseReportPressed(r, i)) : [];
   };
 
+  // Per-kind counts, so the mouse / keyboard / media asymmetry shows at a glance. A keyboard that
+  // never binds reads media events but zero key events; that count makes the gap obvious.
+  const kindCounts = () => {
+    const c = { mouse: 0, keyboard: 0, media: 0 };
+    for (const e of events()) c[e.ev.kind]++;
+    return c;
+  };
+
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
@@ -157,6 +165,20 @@ const DeviceEventCatch = () => {
               </Show>
             </div>
           </Show>
+          <div style={{ 'margin-top': 'var(--g-spacing)' }}>
+            <div style={label}>Events by kind</div>
+            <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
+              <Chip variant={kindCounts().mouse > 0 ? 'info' : 'neutral'}>
+                Mouse {kindCounts().mouse}
+              </Chip>
+              <Chip variant={kindCounts().keyboard > 0 ? 'info' : 'neutral'}>
+                Keyboard {kindCounts().keyboard}
+              </Chip>
+              <Chip variant={kindCounts().media > 0 ? 'info' : 'neutral'}>
+                Media {kindCounts().media}
+              </Chip>
+            </div>
+          </div>
           <div style={{ 'margin-top': 'var(--g-spacing)' }}>
             <div style={label}>
               Recent events ({events().length} received, {dropped()} dropped by the box)
