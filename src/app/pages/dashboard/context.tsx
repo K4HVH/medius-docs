@@ -9,8 +9,8 @@ import {
   useContext,
 } from 'solid-js';
 import {
+  type CatchEvent,
   type Health,
-  type InputReport,
   type LogLine,
   type Version,
   LogLevel,
@@ -33,10 +33,10 @@ export type ConnectionStatus =
   | 'error'
   | 'flashing';
 
-// One physical-input EVENT received on the CATCH stream, with its rolling box-side sequence.
+// One physical-input event received on the CATCH stream, with its rolling box-side sequence.
 export interface InputEventEntry {
   seq: number;
-  report: InputReport;
+  ev: CatchEvent;
 }
 
 export interface DashboardContextValue {
@@ -132,7 +132,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const makeLink = (port: SerialPort): SerialLink => {
     const nl: SerialLink = new SerialLink(port, {
       onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
-      onEvent: (report, seq) => setInputEvents((prev) => [...prev, { seq, report }].slice(-200)),
+      onEvent: (ev, seq) => setInputEvents((prev) => [...prev, { seq, ev }].slice(-200)),
       onClose: () => {
         if (link() !== nl) return;
         stopHealthPolling();

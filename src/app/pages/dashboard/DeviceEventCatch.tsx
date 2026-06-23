@@ -3,16 +3,35 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { CATCH_ALL, CatchClass, inputReportPressed } from '../../../dashboard/protocol';
+import { CatchClass, mouseReportPressed } from '../../../dashboard/protocol';
+import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
 
 const PRESETS: Record<string, number> = {
-  all: CATCH_ALL,
+  all: CatchClass.All,
   buttons: CatchClass.Buttons,
   motion: CatchClass.Motion | CatchClass.Wheel,
+  keys: CatchClass.Keys,
 };
 
 const BUTTON_NAMES = ['Left', 'Right', 'Middle', 'Side 1', 'Side 2'];
+
+const hex2 = (n: number) => n.toString(16).padStart(2, '0');
+
+// One line of the event log, per CATCH event kind.
+const eventLine = (e: InputEventEntry): string => {
+  if (e.ev.kind === 'mouse') {
+    const r = e.ev.report;
+    return `#${e.seq} mouse btns=0x${hex2(r.buttons)} dx=${r.dx} dy=${r.dy} wheel=${r.wheel}`;
+  }
+  if (e.ev.kind === 'keyboard') {
+    const r = e.ev.report;
+    const keys = r.keys.map(hex2).join(' ') || '(none)';
+    return `#${e.seq} keys mod=0x${hex2(r.modifiers)} [${keys}]`;
+  }
+  const usages = e.ev.report.usages.map((u) => `0x${u.toString(16)}`).join(' ') || '(none)';
+  return `#${e.seq} media [${usages}]`;
+};
 
 const label = {
   color: 'var(--g-text-muted, #8a8a8a)',
@@ -71,23 +90,28 @@ const DeviceEventCatch = () => {
   });
 
   const events = () => dash.inputEvents();
-  const latest = () => {
+  // The most recent mouse snapshot, for the "buttons held now" readout.
+  const latestMouse = () => {
     const e = events();
-    return e.length ? e[e.length - 1].report : null;
+    for (let i = e.length - 1; i >= 0; i--) {
+      const ev = e[i].ev;
+      if (ev.kind === 'mouse') return ev.report;
+    }
+    return null;
   };
   const held = () => {
-    const r = latest();
-    return r ? BUTTON_NAMES.filter((_, i) => inputReportPressed(r, i)) : [];
+    const r = latestMouse();
+    return r ? BUTTON_NAMES.filter((_, i) => mouseReportPressed(r, i)) : [];
   };
 
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
-        <CardHeader title="Input catch" subtitle="Watch the physical mouse's input live" />
+        <CardHeader title="Input catch" subtitle="Watch the physical mouse and keyboard live" />
         <p>
-          Subscribe and the box streams the real mouse's input — buttons, wheel, and movement — as it
-          happens, even for inputs you've locked. Move or click the mouse to see events. The stream
-          stops on its own if the dashboard disconnects.
+          Subscribe and the box streams the real input (mouse buttons, wheel, and movement, plus
+          keyboard and media keys) as it happens, even for inputs you've locked. Move, click, or type
+          to see events. The stream stops on its own if the dashboard disconnects.
         </p>
         <div style={label}>What to watch</div>
         <RadioGroup
@@ -98,6 +122,7 @@ const DeviceEventCatch = () => {
             { value: 'all', label: 'Everything' },
             { value: 'buttons', label: 'Buttons only' },
             { value: 'motion', label: 'Movement + wheel' },
+            { value: 'keys', label: 'Keyboard + media' },
           ]}
         />
         <div
@@ -122,27 +147,24 @@ const DeviceEventCatch = () => {
           </Show>
         </div>
         <Show when={streaming()}>
-          <div style={{ 'margin-top': 'var(--g-spacing)' }}>
-            <div style={label}>Buttons held now</div>
-            <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
-              <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
-                <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
-              </div>
-            </Show>
-          </div>
+          <Show when={latestMouse()}>
+            <div style={{ 'margin-top': 'var(--g-spacing)' }}>
+              <div style={label}>Buttons held now</div>
+              <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
+                <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
+                  <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
+                </div>
+              </Show>
+            </div>
+          </Show>
           <div style={{ 'margin-top': 'var(--g-spacing)' }}>
             <div style={label}>
               Recent events ({events().length} received, {dropped()} dropped by the box)
             </div>
-            <Show when={events().length > 0} fallback={<p>Move or click the mouse…</p>}>
+            <Show when={events().length > 0} fallback={<p>Move, click, or type...</p>}>
               <div style={mono}>
                 <For each={events().slice(-12).reverse()}>
-                  {(e) => (
-                    <div>
-                      #{e.seq} btns=0x{e.report.buttons.toString(16).padStart(2, '0')} dx=
-                      {e.report.dx} dy={e.report.dy} wheel={e.report.wheel}
-                    </div>
-                  )}
+                  {(e) => <div>{eventLine(e)}</div>}
                 </For>
               </div>
             </Show>

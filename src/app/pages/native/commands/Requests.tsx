@@ -15,11 +15,12 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#version">version</A>, the box's{' '}
           <A href="/native/commands/requests#health">health</A>, the cloned{' '}
           <A href="/native/commands/requests#mouse-info">mouse info</A>,{' '}
-          <A href="/native/commands/requests#caps">capabilities</A>,{' '}
+          <A href="/native/commands/requests#mouse-caps">mouse capabilities</A>,{' '}
           <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
           <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
-          <A href="/native/commands/requests#locks">locks</A>, or the{' '}
-          <A href="/native/commands/requests#catch">catch</A> subscription.
+          <A href="/native/commands/requests#locks">locks</A>, the{' '}
+          <A href="/native/commands/requests#catch">catch</A> subscription, or the cloned{' '}
+          <A href="/native/commands/requests#kbd-caps">keyboard capabilities</A>.
         </p>
       </Card>
 
@@ -50,11 +51,12 @@ const Requests: Component = () => {
               <tr><td><code>0</code></td><td>The firmware version.</td><td><A href="/native/commands/requests#version"><code>VERSION</code></A></td></tr>
               <tr><td><code>1</code></td><td>The box's health.</td><td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td></tr>
               <tr><td><code>2</code></td><td>The cloned mouse's USB identity.</td><td><A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A></td></tr>
-              <tr><td><code>3</code></td><td>The emulated mouse's capabilities.</td><td><A href="/native/commands/requests#caps"><code>CAPS</code></A></td></tr>
+              <tr><td><code>3</code></td><td>The emulated mouse's capabilities.</td><td><A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A></td></tr>
               <tr><td><code>4</code></td><td>The native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
+              <tr><td><code>8</code></td><td>The cloned keyboard's capabilities.</td><td><A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -66,11 +68,12 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
-            <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
+            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-            <A href="/library/catch#query-catch"><code>query_catch</code></A>.
+            <A href="/library/catch#query-catch"><code>query_catch</code></A>,{' '}
+            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -111,11 +114,12 @@ const Requests: Component = () => {
             <A href="/native/commands/requests#version"><code>VERSION</code></A>,{' '}
             <A href="/native/commands/requests#health"><code>HEALTH</code></A>,{' '}
             <A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A>,{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
+            <A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A>,{' '}
             <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
             <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>, and{' '}
-            <A href="/native/commands/requests#catch"><code>CATCH</code></A>.
+            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>,{' '}
+            <A href="/native/commands/requests#catch"><code>CATCH</code></A>, and{' '}
+            <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A>.
           </p>
         </Card>
       </div>
@@ -187,11 +191,12 @@ const Requests: Component = () => {
               <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input <A href="/native/commands/lock"><code>LOCK</code></A> is active</td></tr>
               <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: a <A href="/native/commands/catch"><code>CATCH</code></A> subscription is active, physical-input events are streaming</td></tr>
+              <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Bit b7 is unused. The first three set means the box is ready for input to reach the PC.
+            The first three set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -259,16 +264,17 @@ const Requests: Component = () => {
         </Card>
       </div>
 
-      <div id="caps" data-search-target>
+      <div id="mouse-caps" data-search-target>
         <Card>
-          <CardHeader title="CAPS" subtitle="RESP payload, what = 3" />
+          <CardHeader title="MOUSE_CAPS" subtitle="RESP payload, what = 3" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 3</code>: a plain summary of what the cloned mouse can do, read from its HID
             report descriptor. Counts and yes/no flags only, never raw HID field offsets. Use it to
             check before you act: a <A href="/native/commands/buttons"><code>BUTTON</code></A> for a
             button the mouse doesn't have is silently ignored, so <code>n_buttons</code> tells you which
-            ids are real. Every field is zero when no mouse is bound.
+            ids are real. Every field is zero when no mouse is bound. The keyboard's capabilities are{' '}
+            <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A>.
           </p>
           <pre class="api-signature">QUERY  what = 3  ·  RESP 4 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -298,7 +304,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Library binding: <A href="/library/requests#query-caps"><code>query_caps</code></A>.
+            Library binding: <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>A 5-button mouse with X, Y, and wheel, single HID interface (<code>axis_flags = 0x07</code>):</p>
@@ -468,8 +474,7 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 7</code>: the active <A href="/native/commands/catch"><code>CATCH</code></A>{' '}
-            subscription <code>mask</code>, plus the box-side count of{' '}
-            <A href="/native/commands/catch#event"><code>EVENT</code></A> frames dropped under
+            subscription <code>mask</code>, plus the box-side count of event frames dropped under
             back-pressure. A zero mask means nothing is subscribed. Mirrors the{' '}
             <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> health bit.
           </p>
@@ -482,7 +487,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
-              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04</td></tr>
+              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04, Keys 0x08</td></tr>
               <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>events dropped box-side under back-pressure, little-endian</td></tr>
             </tbody>
           </table>
@@ -498,6 +503,57 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | mask   | dropped      | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="kbd-caps" data-search-target>
+        <Card>
+          <CardHeader title="KBD_CAPS" subtitle="RESP payload, what = 8" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 8</code>: a plain summary of what the cloned keyboard can do. Counts and yes/no
+            flags only. Use it to feature-detect a board: the <code>CONSUMER</code> flag gates media
+            injection (<A href="/native/commands/keyboard#consumer"><code>CONSUMER</code></A>), and{' '}
+            <code>n_keys</code> / <code>NKRO</code> describe its rollover. Every field is zero when no
+            keyboard is bound, so check the{' '}
+            <A href="/native/commands/requests#health"><code>KBD_ATT</code></A> health bit first.
+          </p>
+          <pre class="api-signature">QUERY  what = 8  ·  RESP 3 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x08</td></tr>
+              <tr><td>1</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for an NKRO bitmap keyboard</td></tr>
+              <tr><td>2</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>NKRO</code>: the keyboard reports an NKRO bitmap</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>CONSUMER</code>: a Consumer collection is present, so media keys are injectable</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>SYSTEM</code>: a system-control collection is present (passthrough-only, not injectable)</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the keyboard report sits behind a HID report ID</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            Library binding: <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A 6KRO board with a Consumer collection (<code>n_keys = 6</code>, <code>flags = 0x02</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 03 00  | 08     | 06     | 02     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | n_keys | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
     </>

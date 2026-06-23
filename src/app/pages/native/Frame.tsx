@@ -58,8 +58,8 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            There are ten opcodes. An unrecognised one is ignored harmlessly, which keeps newer and
-            older firmware compatible.
+            There are sixteen opcodes. An unrecognised one is ignored harmlessly, which keeps newer
+            and older firmware compatible.
           </p>
           <table class="api-params">
             <thead>
@@ -76,6 +76,12 @@ const Frame: Component = () => {
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
               <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
+              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#mouse-event"><code>MOUSE_EVENT</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0D</code></td><td><A href="/native/commands/keyboard#key"><code>KEY</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0E</code></td><td><A href="/native/commands/keyboard#consumer"><code>CONSUMER</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#kb-event"><code>KB_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x10</code></td><td><A href="/native/commands/catch#cons-event"><code>CONS_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
         </Card>

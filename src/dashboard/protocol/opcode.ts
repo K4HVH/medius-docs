@@ -7,11 +7,12 @@ export const PROTO_VER = 1;
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
 export const Q_MOUSE_INFO = 2;
-export const Q_CAPS = 3;
+export const Q_MOUSE_CAPS = 3;
 export const Q_RATE = 4;
 export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 export const Q_CATCH = 7;
+export const Q_KBD_CAPS = 8;
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
@@ -20,16 +21,23 @@ export const H_INJECT_ON = 0x08;
 export const H_RATE_CONFIDENT = 0x10;
 export const H_LOCK_ON = 0x20;
 export const H_CATCH_ON = 0x40;
+export const H_KBD_ATT = 0x80;
 
 // MOUSE_INFO flags (§4.3).
 export const MI_HAS_SERIAL = 0x01;
 export const MI_HAS_BOS = 0x02;
 
-// CAPS axis_flags (§4.4).
+// MOUSE_CAPS axis_flags (§4.4).
 export const CAP_X = 0x01;
 export const CAP_Y = 0x02;
 export const CAP_WHEEL = 0x04;
 export const CAP_REPORT_ID = 0x08;
+
+// KBD_CAPS flags (§4.11). n_keys 0xff means an NKRO bitmap.
+export const KBC_NKRO = 0x01;
+export const KBC_CONSUMER = 0x02;
+export const KBC_SYSTEM = 0x04;
+export const KBC_REPORT_ID = 0x08;
 
 // RATE flags (§4.5).
 export const RATE_CONFIDENT = 0x01;
@@ -46,7 +54,11 @@ export enum FrameType {
   Led = 0x09,
   Lock = 0x0a,
   Catch = 0x0b,
-  Event = 0x0c,
+  MouseEvent = 0x0c,
+  Key = 0x0d,
+  Consumer = 0x0e,
+  KbEvent = 0x0f,
+  ConsEvent = 0x10,
 }
 
 export function frameTypeFromU8(value: number): FrameType | null {
@@ -74,7 +86,15 @@ export function frameTypeFromU8(value: number): FrameType | null {
     case 0x0b:
       return FrameType.Catch;
     case 0x0c:
-      return FrameType.Event;
+      return FrameType.MouseEvent;
+    case 0x0d:
+      return FrameType.Key;
+    case 0x0e:
+      return FrameType.Consumer;
+    case 0x0f:
+      return FrameType.KbEvent;
+    case 0x10:
+      return FrameType.ConsEvent;
     default:
       return null;
   }

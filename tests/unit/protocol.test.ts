@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   type DecodedFrame,
-  CATCH_ALL,
+
   CatchClass,
   FrameDecoder,
   FrameType,
@@ -10,10 +10,12 @@ import {
   RebootTarget,
   SOF,
   catchPayload,
+  consumerPayload,
   crc16Ccitt,
   encode,
   frameTypeFromU8,
   healthFromFlags,
+  keyPayload,
   LedMode,
   LedTarget,
   LockDirection,
@@ -24,7 +26,10 @@ import {
   lockSet,
   logLevelFromU8,
   nativeHz,
-  parseEvent,
+  parseConsEvent,
+  parseKbEvent,
+  parseKbdCaps,
+  parseMouseEvent,
   parseLog,
   parseResp,
   queryPayload,
@@ -128,6 +133,7 @@ describe('FrameDecoder', () => {
         rateConfident: false,
         lockOn: false,
         catchOn: false,
+        kbdAttached: false,
       },
     });
   });
@@ -196,7 +202,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x0d; // next free opcode past EVENT (0x0c)
+    const ty = 0x11; // next free opcode past CONS_EVENT (0x10)
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -246,10 +252,14 @@ describe('helpers', () => {
     expect(logLevelFromU8(99)).toBe(LogLevel.Info);
   });
 
-  it('frameTypeFromU8 maps CATCH/EVENT, null for unknown', () => {
+  it('frameTypeFromU8 maps the catch + inject opcodes, null for unknown', () => {
     expect(frameTypeFromU8(0x0b)).toBe(FrameType.Catch);
-    expect(frameTypeFromU8(0x0c)).toBe(FrameType.Event);
-    expect(frameTypeFromU8(0x0d)).toBeNull();
+    expect(frameTypeFromU8(0x0c)).toBe(FrameType.MouseEvent);
+    expect(frameTypeFromU8(0x0d)).toBe(FrameType.Key);
+    expect(frameTypeFromU8(0x0e)).toBe(FrameType.Consumer);
+    expect(frameTypeFromU8(0x0f)).toBe(FrameType.KbEvent);
+    expect(frameTypeFromU8(0x10)).toBe(FrameType.ConsEvent);
+    expect(frameTypeFromU8(0x11)).toBeNull();
     expect(frameTypeFromU8(0x00)).toBeNull();
   });
 
@@ -262,6 +272,7 @@ describe('helpers', () => {
       rateConfident: false,
       lockOn: false,
       catchOn: false,
+      kbdAttached: false,
     });
   });
 
@@ -275,6 +286,7 @@ describe('helpers', () => {
       rateConfident: true,
       lockOn: false,
       catchOn: false,
+      kbdAttached: false,
     });
   });
 
@@ -289,6 +301,7 @@ describe('helpers', () => {
       rateConfident: true,
       lockOn: true,
       catchOn: false,
+      kbdAttached: false,
     });
   });
 
@@ -303,6 +316,22 @@ describe('helpers', () => {
       rateConfident: true,
       lockOn: true,
       catchOn: true,
+      kbdAttached: false,
+    });
+  });
+
+  it('healthFromFlags decodes the kbd_att bit (0x80)', () => {
+    expect(healthFromFlags(0x80).kbdAttached).toBe(true);
+    expect(healthFromFlags(0x7f).kbdAttached).toBe(false);
+    expect(healthFromFlags(0xff)).toEqual({
+      linkUp: true,
+      mouseAttached: true,
+      cloneConfigured: true,
+      injectionActive: true,
+      rateConfident: true,
+      lockOn: true,
+      catchOn: true,
+      kbdAttached: true,
     });
   });
 
@@ -375,14 +404,16 @@ describe('CATCH command (§3.9)', () => {
   it('catchPayload packs [mask]', () => {
     // Motion + Buttons, no wheel.
     expect(Array.from(catchPayload(CatchClass.Motion | CatchClass.Buttons))).toEqual([0x05]);
-    // Subscribe to everything, then unsubscribe.
-    expect(Array.from(catchPayload(CATCH_ALL))).toEqual([0x07]);
+    // Subscribe to everything (now includes the keys class), then unsubscribe.
+    expect(Array.from(catchPayload(CatchClass.All))).toEqual([0x0f]);
     expect(Array.from(catchPayload(0))).toEqual([0x00]);
   });
 
   it('CatchClass wire values match ctrl_proto.h', () => {
-    expect([CatchClass.Motion, CatchClass.Wheel, CatchClass.Buttons]).toEqual([0x01, 0x02, 0x04]);
-    expect(CATCH_ALL).toBe(0x07);
+    expect([CatchClass.Motion, CatchClass.Wheel, CatchClass.Buttons, CatchClass.Keys]).toEqual([
+      0x01, 0x02, 0x04, 0x08,
+    ]);
+    expect(CatchClass.All).toBe(0x0f);
   });
 
   it('parses a CATCH RESP into mask + dropped', () => {
@@ -395,24 +426,24 @@ describe('CATCH command (§3.9)', () => {
     expect(parseResp(new Uint8Array([7, 0x05, 0x00, 0x00, 0x00]))).toBeNull(); // needs 6 bytes
   });
 
-  it('parseEvent decodes [buttons][dx][dy][wheel] with i16 sign-extension', () => {
+  it('parseMouseEvent decodes [buttons][dx][dy][wheel] with i16 sign-extension', () => {
     // buttons = Left + Side2 (0x11), dx = +1, dy = -2, wheel = -1.
-    const resp = parseEvent(new Uint8Array([0x11, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]));
+    const resp = parseMouseEvent(new Uint8Array([0x11, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]));
     expect(resp).toEqual({ buttons: 0x11, dx: 1, dy: -2, wheel: -1 });
   });
 
-  it('parseEvent returns null for a short payload', () => {
-    expect(parseEvent(new Uint8Array([0, 0, 0, 0, 0, 0]))).toBeNull(); // needs 7 bytes
+  it('parseMouseEvent returns null for a short payload', () => {
+    expect(parseMouseEvent(new Uint8Array([0, 0, 0, 0, 0, 0]))).toBeNull(); // needs 7 bytes
   });
 
-  it('round-trips an EVENT frame through the decoder', () => {
+  it('round-trips a MOUSE_EVENT frame through the decoder', () => {
     // buttons = 0x04 (Middle), dx = -1000, dy = +1000, wheel = -120 (one notch up).
     const payload = new Uint8Array([0x04, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff]);
-    const frames = decodeAll(new FrameDecoder(), encode(FrameType.Event, 200, payload));
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.MouseEvent, 200, payload));
     expect(frames).toHaveLength(1);
-    expect(frames[0].ty).toBe(FrameType.Event);
+    expect(frames[0].ty).toBe(FrameType.MouseEvent);
     expect(frames[0].seq).toBe(200);
-    expect(parseEvent(frames[0].payload)).toEqual({
+    expect(parseMouseEvent(frames[0].payload)).toEqual({
       buttons: 0x04,
       dx: -1000,
       dy: 1000,
@@ -489,5 +520,99 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
     expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
     expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 17
+  });
+});
+
+// KEY/CONSUMER inject + the keyboard/media catch stream + KBD_CAPS. Byte vectors mirror the firmware
+// packers/decoders in ctrl_proto.h so the JS side is pinned to the wire format.
+describe('keyboard + media (v1.7.0)', () => {
+  it('keyPayload packs [usage][action] (§3.10)', () => {
+    // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1).
+    expect(Array.from(keyPayload(0x04, 1))).toEqual([0x04, 1]);
+    expect(Array.from(keyPayload(0xe1, 0))).toEqual([0xe1, 0]);
+  });
+
+  it('consumerPayload packs [usage u16 LE][action] (§3.11)', () => {
+    // Press Volume Up (0x00E9); force-release Play/Pause (0x00CD).
+    expect(Array.from(consumerPayload(0xe9, 1))).toEqual([0xe9, 0x00, 1]);
+    expect(Array.from(consumerPayload(0xcd, 2))).toEqual([0xcd, 0x00, 2]);
+    // A two-byte usage stays little-endian.
+    expect(Array.from(consumerPayload(0x0123, 1))).toEqual([0x23, 0x01, 1]);
+  });
+
+  it('parseKbdCaps decodes [n_keys][flags] (§4.11)', () => {
+    // 6-key board, Consumer + report-id, no NKRO/system. Selector byte then n_keys=6, flags=0x0a.
+    expect(parseResp(new Uint8Array([8, 6, 0x0a]))).toEqual({
+      kind: 'kbdcaps',
+      caps: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
+    });
+    // NKRO bitmap board: n_keys = 0xff implies nkro even with the flag clear.
+    expect(parseResp(new Uint8Array([8, 0xff, 0x00]))).toEqual({
+      kind: 'kbdcaps',
+      caps: { nKeys: 0xff, nkro: true, hasConsumer: false, hasSystem: false, hasReportId: false },
+    });
+    // The NKRO flag (b0) also sets nkro.
+    expect(parseKbdCaps(new Uint8Array([8, 0, 0x07]))).toEqual({
+      nKeys: 0,
+      nkro: true,
+      hasConsumer: true,
+      hasSystem: true,
+      hasReportId: false,
+    });
+  });
+
+  it('returns null for a truncated KBD_CAPS payload', () => {
+    expect(parseResp(new Uint8Array([8, 6]))).toBeNull(); // needs 3 bytes
+  });
+
+  it('parseKbEvent decodes [modifiers][n][keycodes] (§4.12)', () => {
+    // Left Ctrl held (0x01), keys A (0x04) and C (0x06) pressed.
+    expect(parseKbEvent(new Uint8Array([0x01, 2, 0x04, 0x06]))).toEqual({
+      modifiers: 0x01,
+      keys: [0x04, 0x06],
+    });
+    // No keys, only a modifier.
+    expect(parseKbEvent(new Uint8Array([0x02, 0]))).toEqual({ modifiers: 0x02, keys: [] });
+  });
+
+  it('parseKbEvent returns null for a short payload or a truncated key array', () => {
+    expect(parseKbEvent(new Uint8Array([0x01]))).toBeNull(); // needs the n byte
+    expect(parseKbEvent(new Uint8Array([0x00, 3, 0x04, 0x05]))).toBeNull(); // n=3 but only 2 keys
+  });
+
+  it('round-trips a KB_EVENT frame through the decoder', () => {
+    // mod = Left Shift (0x02), keys = [0x1a 'w', 0x07 'd'].
+    const payload = new Uint8Array([0x02, 2, 0x1a, 0x07]);
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.KbEvent, 7, payload));
+    expect(frames).toHaveLength(1);
+    expect(frames[0].ty).toBe(FrameType.KbEvent);
+    expect(frames[0].seq).toBe(7);
+    expect(parseKbEvent(frames[0].payload)).toEqual({ modifiers: 0x02, keys: [0x1a, 0x07] });
+  });
+
+  it('parseConsEvent decodes [n][usage u16 LE x n] (§4.13)', () => {
+    // One active usage: Volume Up (0x00E9).
+    expect(parseConsEvent(new Uint8Array([1, 0xe9, 0x00]))).toEqual({ usages: [0xe9] });
+    // Two usages, little-endian: 0x00E9 and 0x0123.
+    expect(parseConsEvent(new Uint8Array([2, 0xe9, 0x00, 0x23, 0x01]))).toEqual({
+      usages: [0xe9, 0x0123],
+    });
+    // Empty (nothing held).
+    expect(parseConsEvent(new Uint8Array([0]))).toEqual({ usages: [] });
+  });
+
+  it('parseConsEvent returns null for a short or truncated payload', () => {
+    expect(parseConsEvent(new Uint8Array([]))).toBeNull(); // needs the n byte
+    expect(parseConsEvent(new Uint8Array([2, 0xe9, 0x00]))).toBeNull(); // n=2 but one usage
+  });
+
+  it('round-trips a CONS_EVENT frame through the decoder', () => {
+    // One usage: Mute (0x00E2).
+    const payload = new Uint8Array([1, 0xe2, 0x00]);
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.ConsEvent, 9, payload));
+    expect(frames).toHaveLength(1);
+    expect(frames[0].ty).toBe(FrameType.ConsEvent);
+    expect(frames[0].seq).toBe(9);
+    expect(parseConsEvent(frames[0].payload)).toEqual({ usages: [0xe2] });
   });
 });
