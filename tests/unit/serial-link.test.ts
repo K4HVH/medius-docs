@@ -81,15 +81,16 @@ describe('SerialLink', () => {
       rateConfident: false,
       lockOn: false,
       catchOn: false,
+      kbdAttached: false,
     });
     await link.close();
   });
 
-  it('decodes the catch_on bit (all seven flags set)', async () => {
+  it('decodes the kbd_att bit (all eight flags set)', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x7f])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0xff])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -103,6 +104,7 @@ describe('SerialLink', () => {
       rateConfident: true,
       lockOn: true,
       catchOn: true,
+      kbdAttached: true,
     });
     await link.close();
   });
@@ -153,6 +155,74 @@ describe('SerialLink', () => {
     const frame = mock.written[0];
     expect(frame[1]).toBe(FrameType.RebootDl);
     expect(frame[5]).toBe(RebootTarget.DeviceDownload);
+    await link.close();
+  });
+
+  it('queryKbdCaps decodes the KBD_CAPS reply', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 8) {
+        // n_keys = 6, flags = Consumer (0x02).
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([8, 6, 0x02])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const caps = await link.queryKbdCaps();
+    expect(caps).toEqual({
+      nKeys: 6,
+      nkro: false,
+      hasConsumer: true,
+      hasSystem: false,
+      hasReportId: false,
+    });
+    await link.close();
+  });
+
+  it('sends a KEY frame on key()', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.key(0x04, 1); // press 'A'
+    expect(mock.written).toHaveLength(1);
+    const frame = mock.written[0];
+    expect(frame[1]).toBe(FrameType.Key);
+    expect(frame[5]).toBe(0x04);
+    expect(frame[6]).toBe(1);
+    await link.close();
+  });
+
+  it('sends a CONSUMER frame on consumer() with a little-endian usage', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.consumer(0xe9, 1); // press Volume Up
+    expect(mock.written).toHaveLength(1);
+    const frame = mock.written[0];
+    expect(frame[1]).toBe(FrameType.Consumer);
+    expect(frame[5]).toBe(0xe9);
+    expect(frame[6]).toBe(0x00);
+    expect(frame[7]).toBe(1);
+    await link.close();
+  });
+
+  it('routes catch-stream frames to onEvent tagged by kind', async () => {
+    const mock = new MockSerialPort();
+    const events: { kind: string; seq: number }[] = [];
+    const link = new SerialLink(asPort(mock), {
+      onEvent: (ev, seq) => events.push({ kind: ev.kind, seq }),
+    });
+    await link.open();
+    // A mouse, keyboard, then media snapshot.
+    mock.push(encode(FrameType.MouseEvent, 10, new Uint8Array([0x01, 1, 0, 0, 0, 0, 0])));
+    mock.push(encode(FrameType.KbEvent, 11, new Uint8Array([0x02, 1, 0x04])));
+    mock.push(encode(FrameType.ConsEvent, 12, new Uint8Array([1, 0xe9, 0x00])));
+    await new Promise((r) => setTimeout(r, 10));
+    expect(events).toEqual([
+      { kind: 'mouse', seq: 10 },
+      { kind: 'keyboard', seq: 11 },
+      { kind: 'media', seq: 12 },
+    ]);
     await link.close();
   });
 

@@ -4,13 +4,14 @@
 // medius crate's link/correlation behavior.
 
 import {
-  type Caps,
+  type CatchEvent,
   type CatchState,
   type DecodedFrame,
   type Health,
-  type InputReport,
+  type KbdCaps,
   type Locks,
   type LogLine,
+  type MouseCaps,
   type MouseInfo,
   type Rate,
   type Stats,
@@ -18,10 +19,11 @@ import {
   FrameDecoder,
   FrameType,
   PROTO_VER,
-  Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
+  Q_KBD_CAPS,
   Q_LOCKS,
+  Q_MOUSE_CAPS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
@@ -32,11 +34,15 @@ import {
   LockTarget,
   RebootTarget,
   catchPayload,
+  consumerPayload,
   encode,
+  keyPayload,
   ledPayload,
   lockPayload,
-  parseEvent,
+  parseConsEvent,
+  parseKbEvent,
   parseLog,
+  parseMouseEvent,
   parseResp,
   queryPayload,
   rebootPayload,
@@ -77,8 +83,9 @@ export interface SerialLinkEvents {
   onLog?: (line: LogLine) => void;
   onClose?: (reason?: Error) => void;
   onVersionHello?: (version: Version) => void;
-  // An unsolicited physical-input EVENT (the CATCH stream); `seq` is the box's rolling event counter.
-  onEvent?: (report: InputReport, seq: number) => void;
+  // An unsolicited physical-input event (the CATCH stream); `seq` is the box's rolling event counter.
+  // The event is tagged mouse / keyboard / media by its source frame type.
+  onEvent?: (ev: CatchEvent, seq: number) => void;
 }
 
 interface Pending {
@@ -174,9 +181,15 @@ export class SerialLink {
     return resp.mouseInfo;
   }
 
-  async queryCaps(timeoutMs?: number): Promise<Caps> {
-    const resp = parseResp(await this.query(Q_CAPS, timeoutMs));
-    if (resp?.kind !== 'caps') throw new Error('unexpected reply to CAPS query');
+  async queryMouseCaps(timeoutMs?: number): Promise<MouseCaps> {
+    const resp = parseResp(await this.query(Q_MOUSE_CAPS, timeoutMs));
+    if (resp?.kind !== 'caps') throw new Error('unexpected reply to MOUSE_CAPS query');
+    return resp.caps;
+  }
+
+  async queryKbdCaps(timeoutMs?: number): Promise<KbdCaps> {
+    const resp = parseResp(await this.query(Q_KBD_CAPS, timeoutMs));
+    if (resp?.kind !== 'kbdcaps') throw new Error('unexpected reply to KBD_CAPS query');
     return resp.caps;
   }
 
@@ -220,8 +233,19 @@ export class SerialLink {
     return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 0)));
   }
 
-  // Subscribe to the physical-input event stream (§3.9); EVENT frames arrive on `onEvent`. mask 0
-  // unsubscribes. The subscription clears after ~1 s of silence — poll a query to hold it alive.
+  // Inject a keyboard key or modifier by HID keycode (§3.10), tri-state action (0/1/2).
+  key(usage: number, action: number): Promise<void> {
+    return this.send(encode(FrameType.Key, this.nextSeq(), keyPayload(usage, action)));
+  }
+
+  // Inject a media key by 16-bit Consumer usage (§3.11), tri-state action (0/1/2).
+  consumer(usage: number, action: number): Promise<void> {
+    return this.send(encode(FrameType.Consumer, this.nextSeq(), consumerPayload(usage, action)));
+  }
+
+  // Subscribe to the physical-input event stream (§3.9); event frames arrive on `onEvent` tagged
+  // mouse / keyboard / media. mask 0 unsubscribes. The subscription clears after ~1 s of silence,
+  // so poll a query to hold it alive.
   catch(mask: number): Promise<void> {
     return this.send(encode(FrameType.Catch, this.nextSeq(), catchPayload(mask)));
   }
@@ -348,9 +372,19 @@ export class SerialLink {
       this.events.onLog?.(parseLog(f.payload));
       return;
     }
-    if (f.ty === FrameType.Event) {
-      const report = parseEvent(f.payload);
-      if (report) this.events.onEvent?.(report, f.seq);
+    if (f.ty === FrameType.MouseEvent) {
+      const report = parseMouseEvent(f.payload);
+      if (report) this.events.onEvent?.({ kind: 'mouse', report }, f.seq);
+      return;
+    }
+    if (f.ty === FrameType.KbEvent) {
+      const report = parseKbEvent(f.payload);
+      if (report) this.events.onEvent?.({ kind: 'keyboard', report }, f.seq);
+      return;
+    }
+    if (f.ty === FrameType.ConsEvent) {
+      const report = parseConsEvent(f.payload);
+      if (report) this.events.onEvent?.({ kind: 'media', report }, f.seq);
     }
   }
 

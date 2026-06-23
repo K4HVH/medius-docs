@@ -55,14 +55,15 @@ const GuideCalls: Component = () => {
               <tr>
                 <td>
                   <code>query_version</code>, <code>query_health</code>,{' '}
-                  <code>query_mouse_info</code>, <code>query_caps</code>, <code>query_rate</code>,{' '}
-                  <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>
+                  <code>query_mouse_info</code>, <code>query_mouse_caps</code>, <code>query_rate</code>,{' '}
+                  <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>,{' '}
+                  <code>query_kbd_caps</code>
                 </td>
                 <td>
                   <code>move_rel</code>, <code>wheel</code>, <code>button</code>, <code>press</code>,{' '}
-                  <code>soft_release</code>, <code>force_release</code>, <code>reset</code>,{' '}
-                  <code>reboot</code>, <code>led</code>, <code>lock</code>, <code>unlock</code>,{' '}
-                  <code>catch_events</code>
+                  <code>soft_release</code>, <code>force_release</code>, <code>key</code>,{' '}
+                  <code>media</code>, <code>reset</code>, <code>reboot</code>, <code>led</code>,{' '}
+                  <code>lock</code>, <code>unlock</code>, <code>catch_events</code>
                 </td>
               </tr>
             </tbody>

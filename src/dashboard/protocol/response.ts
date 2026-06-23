@@ -7,10 +7,11 @@ import {
   CAP_Y,
   MI_HAS_BOS,
   MI_HAS_SERIAL,
-  Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
+  Q_KBD_CAPS,
   Q_LOCKS,
+  Q_MOUSE_CAPS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
@@ -18,18 +19,22 @@ import {
   RATE_CONFIDENT,
 } from './opcode';
 import {
-  type Caps,
   type CatchState,
+  type ConsumerReport,
   type Health,
-  type InputReport,
+  type KbdCaps,
+  type KeyboardReport,
   type Locks,
   type LogLine,
+  type MouseCaps,
   type MouseInfo,
+  type MouseReport,
   type Rate,
   type Stats,
   type Version,
   LogLevel,
   healthFromFlags,
+  kbdCapsFromBytes,
   logLevelFromU8,
 } from './types';
 
@@ -37,7 +42,8 @@ export type Resp =
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
   | { kind: 'mouseInfo'; mouseInfo: MouseInfo }
-  | { kind: 'caps'; caps: Caps }
+  | { kind: 'caps'; caps: MouseCaps }
+  | { kind: 'kbdcaps'; caps: KbdCaps }
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
@@ -82,7 +88,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
         },
       };
     }
-    case Q_CAPS: {
+    case Q_MOUSE_CAPS: {
       if (payload.length < 4) return null;
       const axis = payload[2];
       return {
@@ -96,6 +102,10 @@ export function parseResp(payload: Uint8Array): Resp | null {
           nHid: payload[3],
         },
       };
+    }
+    case Q_KBD_CAPS: {
+      if (payload.length < 3) return null;
+      return { kind: 'kbdcaps', caps: parseKbdCaps(payload) };
     }
     case Q_RATE: {
       if (payload.length < 6) return null;
@@ -137,8 +147,13 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse an EVENT payload (§4.10): [buttons u8][dx i16][dy i16][wheel i16]. Unsolicited (box -> PC).
-export function parseEvent(payload: Uint8Array): InputReport | null {
+// Parse the RESP(KBD_CAPS) data (§4.11): [n_keys u8][flags u8] after the selector byte.
+export function parseKbdCaps(payload: Uint8Array): KbdCaps {
+  return kbdCapsFromBytes(payload[1], payload[2]);
+}
+
+// Parse a MOUSE_EVENT payload (§4.10): [buttons u8][dx i16][dy i16][wheel i16]. Unsolicited.
+export function parseMouseEvent(payload: Uint8Array): MouseReport | null {
   if (payload.length < 7) return null;
   return {
     buttons: payload[0],
@@ -146,6 +161,26 @@ export function parseEvent(payload: Uint8Array): InputReport | null {
     dy: i16le(payload, 3),
     wheel: i16le(payload, 5),
   };
+}
+
+// Parse a KB_EVENT payload (§4.12): [modifiers u8][n u8][keycode u8 x n]. Unsolicited.
+export function parseKbEvent(payload: Uint8Array): KeyboardReport | null {
+  if (payload.length < 2) return null;
+  const n = payload[1];
+  if (payload.length < 2 + n) return null;
+  const keys: number[] = [];
+  for (let i = 0; i < n; i++) keys.push(payload[2 + i]);
+  return { modifiers: payload[0], keys };
+}
+
+// Parse a CONS_EVENT payload (§4.13): [n u8][usage u16 LE x n]. Unsolicited.
+export function parseConsEvent(payload: Uint8Array): ConsumerReport | null {
+  if (payload.length < 1) return null;
+  const n = payload[0];
+  if (payload.length < 1 + 2 * n) return null;
+  const usages: number[] = [];
+  for (let i = 0; i < n; i++) usages.push(u16le(payload, 1 + 2 * i));
+  return { usages };
 }
 
 const logDecoder = new TextDecoder('utf-8', { fatal: false });

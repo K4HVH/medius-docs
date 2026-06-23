@@ -17,6 +17,7 @@ const healthItems = (h: Health) => [
   { label: 'Rate confirmed', value: h.rateConfident },
   { label: 'Locks active', value: h.lockOn },
   { label: 'Events streaming', value: h.catchOn },
+  { label: 'Keyboard attached', value: h.kbdAttached },
 ];
 
 const col = {

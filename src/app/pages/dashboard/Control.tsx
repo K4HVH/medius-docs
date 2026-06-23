@@ -5,6 +5,7 @@ import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
 import DeviceLed from './DeviceLed';
 import DeviceLock from './DeviceLock';
+import DeviceKeyboard from './DeviceKeyboard';
 import DeviceEventCatch from './DeviceEventCatch';
 import '../../../styles/docs.css';
 
@@ -31,6 +32,7 @@ const Control = () => {
     >
       <DeviceLed />
       <DeviceLock />
+      <DeviceKeyboard />
       <DeviceEventCatch />
     </Show>
   );

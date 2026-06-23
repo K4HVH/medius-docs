@@ -2,7 +2,7 @@ import { Show, createEffect, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import {
-  type Caps,
+  type MouseCaps,
   type MouseInfo,
   type Rate,
   type Stats,
@@ -36,7 +36,7 @@ const Row = (props: { label: string; children: unknown }) => (
 const DeviceInfo = () => {
   const dash = useDashboard();
   const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
-  const [caps, setCaps] = createSignal<Caps | null>(null);
+  const [caps, setCaps] = createSignal<MouseCaps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
   const [stats, setStats] = createSignal<Stats | null>(null);
 
@@ -67,7 +67,7 @@ const DeviceInfo = () => {
       if (!running || dash.link() !== link) return;
       try {
         setMouse(await link.queryMouseInfo());
-        setCaps(await link.queryCaps());
+        setCaps(await link.queryMouseCaps());
         setRate(await link.queryRate());
         setStats(await link.queryStats());
       } catch {
