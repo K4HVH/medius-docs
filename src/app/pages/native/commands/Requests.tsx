@@ -73,7 +73,7 @@ const Requests: Component = () => {
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
             <A href="/library/catch#query-catch"><code>query_catch</code></A>,{' '}
-            <A href="/library/imperfect#imperfect"><code>imperfect</code></A>.
+            <A href="/library/imperfect#query-imperfect"><code>query_imperfect</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -553,7 +553,7 @@ const Requests: Component = () => {
             Read it to tell why a clone is missing (<code>over_capacity = 1</code>,{' '}
             <code>allowed = 0</code>), or to confirm an imperfect clone is live
             (<code>clone_imperfect = 1</code>). Library binding:{' '}
-            <A href="/library/imperfect#imperfect"><code>imperfect</code></A>.
+            <A href="/library/imperfect#query-imperfect"><code>query_imperfect</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Opted in, an over-capacity device attached and cloned imperfectly:</p>

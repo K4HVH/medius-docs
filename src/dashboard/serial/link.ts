@@ -263,10 +263,10 @@ export class SerialLink {
     return this.catch(0);
   }
 
-  // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted on the box;
-  // takes effect on the next clone (device re-plug or box reboot). Fire-and-forget. Read the state back
-  // with `queryImperfect`.
-  setImperfectAllowed(allow: boolean): Promise<void> {
+  // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted in NVS; the box
+  // reboots itself to re-clone with the new setting. Fire-and-forget. Read the state back with
+  // `queryImperfect`.
+  allowImperfectClones(allow: boolean): Promise<void> {
     return this.send(encode(FrameType.Imperfect, this.nextSeq(), imperfectPayload(allow)));
   }
 
