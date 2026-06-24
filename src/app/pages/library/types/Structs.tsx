@@ -430,6 +430,23 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           </table>
         </Card>
       </div>
+      <div id="imperfect-status" data-search-target>
+        <Card>
+          <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />
+          <p>
+            The imperfect-clone state from{' '}
+            <A href="/library/imperfect#imperfect"><code>imperfect()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning an over-capacity device is allowed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device needs an interrupt-IN endpoint the box can't service.</td></tr>
+              <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is over-capacity and was cloned anyway, so one interface is dead.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="log-line" data-search-target>
         <Card>
           <CardHeader title="LogLine" subtitle="One line from the LOG stream" />

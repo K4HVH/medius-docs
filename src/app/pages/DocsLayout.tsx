@@ -12,7 +12,7 @@ import {
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
-  BsLightbulb, BsSliders, BsLock, BsHash,
+  BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -44,6 +44,7 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/move', label: 'Move', icon: BsArrowsMove },
   { value: '/native/commands/lock', label: 'Lock', icon: BsLock },
   { value: '/native/commands/catch', label: 'Catch', icon: BsActivity },
+  { value: '/native/commands/imperfect', label: 'Imperfect', icon: BsPuzzle },
   { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
   { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
@@ -69,6 +70,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/move', label: 'Move', icon: BsArrowsMove },
   { value: '/library/lock', label: 'Lock', icon: BsLock },
   { value: '/library/catch', label: 'Catch', icon: BsActivity },
+  { value: '/library/imperfect', label: 'Imperfect', icon: BsPuzzle },
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/library/led', label: 'LED', icon: BsLightbulb },
   { value: '/library/admin', label: 'Admin', icon: BsGear },

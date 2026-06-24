@@ -23,6 +23,7 @@ import {
   LockDirection,
   LockTarget,
   isComposite,
+  imperfectPayload,
   ledPayload,
   lockPayload,
   lockSet,
@@ -203,7 +204,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x11; // next free opcode past CONS_EVENT (0x10)
+    const ty = 0x12; // next free opcode past IMPERFECT (0x11)
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -226,7 +227,8 @@ describe('parseResp / parseLog', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
     expect(parseResp(new Uint8Array([0, 1, 0, 1]))).toBeNull(); // version needs 5 bytes
     expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 2 bytes
-    expect(parseResp(new Uint8Array([9]))).toBeNull(); // unknown selector
+    expect(parseResp(new Uint8Array([9]))).toBeNull(); // imperfect needs 4 bytes
+    expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
 
   it('ignores trailing bytes past a complete RESP(VERSION)', () => {
@@ -259,7 +261,8 @@ describe('helpers', () => {
     expect(frameTypeFromU8(0x0c)).toBe(FrameType.MouseEvent);
     expect(frameTypeFromU8(0x0f)).toBe(FrameType.KbEvent);
     expect(frameTypeFromU8(0x10)).toBe(FrameType.ConsEvent);
-    expect(frameTypeFromU8(0x11)).toBeNull();
+    expect(frameTypeFromU8(0x11)).toBe(FrameType.Imperfect);
+    expect(frameTypeFromU8(0x12)).toBeNull();
     expect(frameTypeFromU8(0x00)).toBeNull();
   });
 
@@ -457,6 +460,30 @@ describe('CATCH command (§3.9)', () => {
       dy: 1000,
       wheel: -120,
     });
+  });
+});
+
+describe('IMPERFECT command (§3.10)', () => {
+  it('imperfectPayload packs [allow]', () => {
+    expect(Array.from(imperfectPayload(true))).toEqual([1]);
+    expect(Array.from(imperfectPayload(false))).toEqual([0]);
+  });
+
+  it('parses a Q_IMPERFECT RESP into allowed / over_capacity / clone_imperfect', () => {
+    // what = 9, allowed = 1, over_capacity = 1, clone_imperfect = 1.
+    expect(parseResp(new Uint8Array([9, 1, 1, 1]))).toEqual({
+      kind: 'imperfect',
+      imperfect: { allowed: true, overCapacity: true, cloneImperfect: true },
+    });
+    // Faithful-only, an over-capacity device attached but refused (no live clone).
+    expect(parseResp(new Uint8Array([9, 0, 1, 0]))).toEqual({
+      kind: 'imperfect',
+      imperfect: { allowed: false, overCapacity: true, cloneImperfect: false },
+    });
+  });
+
+  it('returns null for a truncated Q_IMPERFECT payload', () => {
+    expect(parseResp(new Uint8Array([9, 1, 1]))).toBeNull(); // needs 4 bytes
   });
 });
 

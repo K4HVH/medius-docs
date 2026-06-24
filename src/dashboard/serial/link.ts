@@ -9,6 +9,7 @@ import {
   type CatchState,
   type DecodedFrame,
   type Health,
+  type ImperfectStatus,
   type Locks,
   type LogLine,
   type MouseInfo,
@@ -21,6 +22,7 @@ import {
   Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
+  Q_IMPERFECT,
   Q_LOCKS,
   Q_MOUSE_INFO,
   Q_RATE,
@@ -36,6 +38,7 @@ import {
   RebootTarget,
   catchPayload,
   encode,
+  imperfectPayload,
   injectPayload,
   ledPayload,
   lockPayload,
@@ -211,6 +214,12 @@ export class SerialLink {
     return resp.catch;
   }
 
+  async queryImperfect(timeoutMs?: number): Promise<ImperfectStatus> {
+    const resp = parseResp(await this.query(Q_IMPERFECT, timeoutMs));
+    if (resp?.kind !== 'imperfect') throw new Error('unexpected reply to IMPERFECT query');
+    return resp.imperfect;
+  }
+
   reboot(target: RebootTarget): Promise<void> {
     return this.send(encode(FrameType.RebootDl, this.nextSeq(), rebootPayload(target)));
   }
@@ -252,6 +261,13 @@ export class SerialLink {
 
   uncatch(): Promise<void> {
     return this.catch(0);
+  }
+
+  // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted on the box;
+  // takes effect on the next clone (device re-plug or box reboot). Fire-and-forget. Read the state back
+  // with `queryImperfect`.
+  setImperfectAllowed(allow: boolean): Promise<void> {
+    return this.send(encode(FrameType.Imperfect, this.nextSeq(), imperfectPayload(allow)));
   }
 
   async close(): Promise<void> {

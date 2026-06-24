@@ -20,6 +20,7 @@ export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
+export const Q_IMPERFECT = 9;
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
@@ -68,6 +69,7 @@ export enum FrameType {
   MouseEvent = 0x0c,
   KbEvent = 0x0f,
   ConsEvent = 0x10,
+  Imperfect = 0x11,
 }
 
 export function frameTypeFromU8(value: number): FrameType | null {
@@ -98,6 +100,8 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.KbEvent;
     case 0x10:
       return FrameType.ConsEvent;
+    case 0x11:
+      return FrameType.Imperfect;
     default:
       return null;
   }
