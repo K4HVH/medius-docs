@@ -9,11 +9,11 @@ const Injection: Component = () => {
       <Card>
         <CardHeader title="Injection model" subtitle="How sent input combines with the real mouse" />
         <p>
-          Injection is the input your program sends:{' '}
-          <A href="/native/commands/movement#move"><code>MOVE</code></A>,{' '}
-          <A href="/native/commands/movement#wheel"><code>WHEEL</code></A>, and{' '}
-          <A href="/native/commands/buttons"><code>BUTTON</code></A>. The box adds it to the real
-          mouse's own movement and clicks (passthrough): <code>PC sees = injected + real</code>.
+          Injection is the input your program sends: a{' '}
+          <A href="/native/commands/move#move"><code>MOVE</code></A> for the cursor or wheel, and an{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A> for a button, key, or media
+          usage. The box adds it to the real device's own movement and clicks (passthrough):{' '}
+          <code>PC sees = injected + real</code>.
         </p>
         <table class="api-params">
           <thead>
@@ -77,9 +77,8 @@ const Injection: Component = () => {
                 <td>accumulator</td>
                 <td>
                   A running total of sent motion and scroll not yet delivered to the PC. Each{' '}
-                  <A href="/native/commands/movement#move"><code>MOVE</code></A> or{' '}
-                  <A href="/native/commands/movement#wheel"><code>WHEEL</code></A> adds in; the box
-                  drains it into outgoing reports.
+                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in;
+                  the box drains it into outgoing reports.
                 </td>
               </tr>
               <tr>
@@ -87,7 +86,7 @@ const Injection: Component = () => {
                 <td>
                   Per button, whether the box forces it down, forces it up, or leaves it to the real
                   mouse. Set by the{' '}
-                  <A href="/native/commands/buttons#button"><code>BUTTON</code></A> actions: press
+                  <A href="/native/commands/inject#button"><code>INJECT</code></A> actions: press
                   forces down, force-release forces up, soft-release hands it back.
                 </td>
               </tr>
@@ -118,7 +117,7 @@ const Injection: Component = () => {
                 <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond).</td>
               </tr>
               <tr>
-                <td>a <A href="/native/commands/buttons"><code>BUTTON</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a button</td>
+                <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a button</td>
                 <td>One report reflecting the new button state.</td>
               </tr>
             </tbody>
@@ -134,7 +133,7 @@ const Injection: Component = () => {
         <Card>
           <CardHeader title="Safety" subtitle="Injected state can't trap the real mouse" />
           <p>
-            A <A href="/native/commands/buttons#button">force-release</A> always wins: it clears an
+            A <A href="/native/commands/inject#button">force-release</A> always wins: it clears an
             injected hold and masks a physical press, so there's always a way to put a button back to
             up.
           </p>

@@ -127,20 +127,24 @@ assert!(!c.is_composite()); // single HID interface`}</code></pre>
           <p>
             Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
             <code>native_hz()</code> converts the period to a frequency, returning <code>None</code>{' '}
-            while <code>native_period_us</code> is still <code>0</code>.
+            while <code>native_period_us</code> is still <code>0</code>. The rate is class-aware: a
+            change-driven input (a keyboard or media device) has no continuous cadence, so it sets{' '}
+            <code>change_driven</code> and leaves <code>native_period_us</code> at <code>0</code>, with{' '}
+            <code>poll_period_us</code> the honest figure.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>native_period_us</code></td><td><code>u16</code></td><td>Realised native report period in µs; <code>0</code> = not learned.</td></tr>
+              <tr><td><code>native_period_us</code></td><td><code>u16</code></td><td>Realised native report period in µs; <code>0</code> = not learned, or change-driven.</td></tr>
               <tr><td><code>poll_period_us</code></td><td><code>u16</code></td><td>Cloned inject-endpoint poll period in µs.</td></tr>
               <tr><td><code>confident</code></td><td><code>bool</code></td><td>The estimator window is full and the value is trustworthy.</td></tr>
+              <tr><td><code>change_driven</code></td><td><code>bool</code></td><td>The active input is event-driven (keyboard / media), so there is no continuous cadence.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Rate;
 
-let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true };
+let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true, change_driven: false };
 assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
         </Card>
       </div>
@@ -313,7 +317,7 @@ if let CatchEvent::Mouse(m) = stream.recv()? {
           <CardHeader title="Key" subtitle="A HID keyboard keycode" />
           <p>
             A newtype over a HID keyboard/keypad usage, passed to{' '}
-            <A href="/library/keyboard#key"><code>key()</code></A>. Named consts cover the common keys
+            <A href="/library/inject#key"><code>key()</code></A>. Named consts cover the common keys
             (<code>Key::A</code>, <code>Key::ENTER</code>, <code>Key::LEFT_SHIFT</code>); build any
             other with <code>Key::new(u8)</code>. Modifiers are the usages <code>0xE0</code>-<code>0xE7</code>.
           </p>
@@ -339,7 +343,7 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
           <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
           <p>
             A newtype over a 16-bit Consumer usage, passed to{' '}
-            <A href="/library/keyboard#media"><code>media()</code></A>. Named consts cover the common
+            <A href="/library/inject#media"><code>media()</code></A>. Named consts cover the common
             media keys (<code>MediaKey::VOLUME_UP</code>, <code>MediaKey::PLAY_PAUSE</code>,{' '}
             <code>MediaKey::MUTE</code>); build any other with <code>MediaKey::new(u16)</code>.
           </p>
@@ -367,7 +371,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             Semantic capabilities from{' '}
             <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps()</code></A>. Every field is
             zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
-            <A href="/library/keyboard#media"><code>media</code></A> injection.
+            <A href="/library/inject#media"><code>media</code></A> injection.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>

@@ -130,7 +130,7 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
-            describes <code>1</code>); the box reports its own firmware version in the bytes that follow.
+            describes <code>2</code>); the box reports its own firmware version in the bytes that follow.
           </p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -139,7 +139,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 1</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 2</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -152,9 +152,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>1.6.0</code>, protocol <code>1</code>:</p>
+          <p>Firmware <code>1.6.0</code>, protocol <code>2</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 01     | 01     | 06     | 00     | lo hi  |
+| A5     | 06     | 00     | 05 00  | 00     | 02     | 01     | 06     | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -271,9 +271,9 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 3</code>: a plain summary of what the cloned mouse can do, read from its HID
             report descriptor. Counts and yes/no flags only, never raw HID field offsets. Use it to
-            check before you act: a <A href="/native/commands/buttons"><code>BUTTON</code></A> for a
-            button the mouse doesn't have is silently ignored, so <code>n_buttons</code> tells you which
-            ids are real. Every field is zero when no mouse is bound. The keyboard's capabilities are{' '}
+            check before you act: an <A href="/native/commands/inject#button"><code>INJECT</code></A>{' '}
+            for a button the mouse doesn't have is silently ignored, so <code>n_buttons</code> tells you
+            which ids are real. Every field is zero when no mouse is bound. The keyboard's capabilities are{' '}
             <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A>.
           </p>
           <pre class="api-signature">QUERY  what = 3  ·  RESP 4 bytes</pre>
@@ -321,11 +321,14 @@ const Requests: Component = () => {
           <CardHeader title="RATE" subtitle="RESP payload, what = 4" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 4</code>: how fast the real mouse reports, plus the poll period the clone
-            advertises. <code>native_period_us</code> is the gap between reports in microseconds, so the
-            rate in Hz is <code>1e6 / period</code>. It reads <code>0</code> until the box has learned
-            the rate. The box paces injection to this rate on its own; you read it to confirm what the
-            box sees.
+            <code>what = 4</code>: how fast the active input reports, plus the poll period the clone
+            advertises. The answer is class-aware. A continuous input (a moving mouse) carries a
+            learned <code>native_period_us</code>, the gap between reports in microseconds, so the rate
+            in Hz is <code>1e6 / period</code>; it reads <code>0</code> until the box has learned it. A
+            change-driven input (a keyboard or media device) has no steady cadence, so it sets the{' '}
+            <code>CHANGE_DRIVEN</code> flag and reports <code>native_period_us = 0</code>; the honest
+            figure is then <code>poll_period_us</code>, the cloned endpoint's <code>bInterval</code>{' '}
+            floor. Reading it tells you what the box actually sees rather than a made-up number.
           </p>
           <pre class="api-signature">QUERY  what = 4  ·  RESP 6 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -336,8 +339,8 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x04</td></tr>
-              <tr><td>1</td><td><code>native_period_us</code></td><td><code>u16</code></td><td>realised native period in µs; 0 = not learned, Hz = 1e6/period</td></tr>
-              <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs</td></tr>
+              <tr><td>1</td><td><code>native_period_us</code></td><td><code>u16</code></td><td>realised native period in µs; 0 = not learned, or change-driven (see flags), Hz = 1e6/period</td></tr>
+              <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs; the honest figure for a change-driven input</td></tr>
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
             </tbody>
           </table>
@@ -348,6 +351,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>b0</td><td><code>0x01</code></td><td><code>CONFIDENT</code>: the estimator window is full, same source as HEALTH <A href="/native/commands/requests#health"><code>RATE_CONFIDENT</code></A></td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>CHANGE_DRIVEN</code>: the active input is event-driven (keyboard / media), so there is no continuous cadence and <code>native_period_us</code> is 0</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -513,7 +517,7 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 8</code>: a plain summary of what the cloned keyboard can do. Counts and yes/no
             flags only. Use it to feature-detect a board: the <code>CONSUMER</code> flag gates media
-            injection (<A href="/native/commands/keyboard#consumer"><code>CONSUMER</code></A>), and{' '}
+            injection (<A href="/native/commands/inject#media"><code>INJECT</code> class media</A>), and{' '}
             <code>n_keys</code> / <code>NKRO</code> describe its rollover. Every field is zero when no
             keyboard is bound, so check the{' '}
             <A href="/native/commands/requests#health"><code>KBD_ATT</code></A> health bit first.

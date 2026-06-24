@@ -150,29 +150,14 @@ const NativeIntroduction: Component = () => {
         <Card>
           <CardHeader title="Commands" />
           <div class="docs-grid">
-            <A href="/native/commands/movement" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/inject" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Movement" subtitle="MOVE and WHEEL" />
+                <CardHeader title="Inject" subtitle="Press buttons, keys, media" />
               </Card>
             </A>
-            <A href="/native/commands/buttons" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/move" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Buttons" subtitle="Press, release, force-release" />
-              </Card>
-            </A>
-            <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all nine selectors" />
-              </Card>
-            </A>
-            <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
-              </Card>
-            </A>
-            <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="LED" subtitle="Override the status LEDs" />
+                <CardHeader title="Move" subtitle="Cursor and wheel" />
               </Card>
             </A>
             <A href="/native/commands/lock" style={{ "text-decoration": "none" }}>
@@ -185,9 +170,24 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
-            <A href="/native/commands/keyboard" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Keyboard" subtitle="Inject keys and media keys" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all nine selectors" />
+              </Card>
+            </A>
+            <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="LED" subtitle="Override the status LEDs" />
+              </Card>
+            </A>
+            <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
+              </Card>
+            </A>
+            <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Usage IDs" subtitle="Button, key, media numbers" />
               </Card>
             </A>
           </div>

@@ -3,26 +3,30 @@ import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import '../../../styles/docs.css';
 
-const Movement: Component = () => {
+const Move: Component = () => {
   return (
     <>
-      <div id="movement-overview" data-search-target>
+      <div id="move" data-search-target>
         <Card>
-          <CardHeader title="Movement and scroll" subtitle="Relative cursor motion and wheel input" />
+          <CardHeader title="Move" subtitle="Cursor motion and scroll" />
           <p>
-            <code>move_rel</code> and <code>wheel</code> are{' '}
-            <A href="/native/injection#fire-and-forget"><code>fire-and-forget</code></A> injection over passthrough.
+            One field-generic verb drives the relative axes. Each call queues one{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A> frame.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Method</th><th>Frame</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>move_rel</code></td><td><A href="/native/commands/movement#move"><code>MOVE</code></A></td><td>Carries relative cursor motion.</td></tr>
-              <tr><td><code>wheel</code></td><td><A href="/native/commands/movement#wheel"><code>WHEEL</code></A></td><td>Carries wheel scroll steps.</td></tr>
-            </tbody>
-          </table>
-          <p>See also: <A href="/library/guides/calls#smooth-motion">smooth motion</A> and how the box <A href="/native/injection#state">accumulates motion</A>.</p>
+          <pre class="api-signature">fn move_axis(&self, motion: Motion) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            <code>motion</code> is a <A href="/library/types/enums#motion"><code>Motion</code></A>:{' '}
+            <code>Cursor {'{'} dx, dy {'}'}</code> for pointer movement or <code>Wheel(dz)</code> for
+            scroll. The two methods below are thin wrappers over this verb; reach for{' '}
+            <code>move_axis</code> when the motion is a value you're passing around.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Motion;
+
+device.move_axis(Motion::Cursor { dx: 20, dy: 20 })?; // right and down
+device.move_axis(Motion::Wheel(1))?;                  // one notch up`}</code></pre>
         </Card>
       </div>
 
@@ -30,8 +34,10 @@ const Movement: Component = () => {
         <Card>
           <CardHeader title="move_rel" subtitle="Relative cursor movement" />
           <pre class="api-signature">fn move_rel(&self, dx: i16, dy: i16) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
+            A wrapper over <A href="/library/move#move"><code>move_axis</code></A> with{' '}
+            <code>Motion::Cursor</code>.
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
@@ -58,8 +64,10 @@ device.move_rel(0, -10)?;  // up`}</code></pre>
         <Card>
           <CardHeader title="wheel" subtitle="Wheel scroll" />
           <pre class="api-signature">fn wheel(&self, delta: i16) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
+            A wrapper over <A href="/library/move#move"><code>move_axis</code></A> with{' '}
+            <code>Motion::Wheel</code>.
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
@@ -72,8 +80,8 @@ device.move_rel(0, -10)?;  // up`}</code></pre>
           </table>
           <p>
             <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>) and
-            feeds the same <A href="/native/injection#state">accumulator</A> as movement, pacing large
-            values across reports.
+            feeds the same <A href="/native/injection#state">accumulator</A> as cursor motion, pacing
+            large values across reports.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`device.wheel(3)?;   // up three notches
@@ -85,8 +93,9 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="Movement stays synchronous" />
           <p>
-            <A href="/library/features/async"><code>AsyncDevice</code></A> keeps <code>move_rel</code>{' '}
-            and <code>wheel</code> synchronous: no <code>.await</code>, same signatures. The{' '}
+            <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
+            <code>move_axis</code>, <code>move_rel</code>, and <code>wheel</code> synchronous: no{' '}
+            <code>.await</code>, same signatures. The{' '}
             <a href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html" target="_blank" rel="noreferrer"><code>block_on</code></a>{' '}
             pattern is only for async queries.
           </p>
@@ -96,9 +105,8 @@ dev.move_rel(40, 0)?;  // no .await
 dev.wheel(1)?;`}</code></pre>
         </Card>
       </div>
-
     </>
   );
 };
 
-export default Movement;
+export default Move;

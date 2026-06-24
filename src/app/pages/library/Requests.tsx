@@ -115,7 +115,7 @@ if m.vid == 0 {
 
           <p>
             Returns a <A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A>. Use it for
-            feature detection: a <A href="/library/buttons#press"><code>press</code></A> on a button the
+            feature detection: a <A href="/library/inject#button"><code>press</code></A> on a button the
             mouse lacks is a silent no-op, so <code>n_buttons</code> tells you which ids are real.{' '}
             <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>. Every field is zero
             when no relative-axis mouse interface is bound.
@@ -220,7 +220,7 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
 
           <p>
             Returns a <A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A>.{' '}
-            <code>has_consumer</code> gates <A href="/library/keyboard#media"><code>media</code></A>{' '}
+            <code>has_consumer</code> gates <A href="/library/inject#media"><code>media</code></A>{' '}
             injection, and <code>n_keys</code> / <code>nkro</code> describe the keyboard's rollover.
             Every field is zero when no keyboard is bound, so check{' '}
             <A href="/library/requests#health"><code>Health::kbd_attached</code></A> first.

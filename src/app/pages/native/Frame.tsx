@@ -58,32 +58,40 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            There are sixteen opcodes. An unrecognised one is ignored harmlessly, which keeps newer
-            and older firmware compatible.
+            The opcodes run from <code>0x01</code> to <code>0x10</code>. Three values are reserved,
+            retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
+            keeps newer and older firmware compatible.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Opcode</th><th>Name</th><th>Direction</th><th>Payload</th><th>Reply</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><A href="/native/commands/movement#move"><code>MOVE</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
-              <tr><td><code>0x02</code></td><td><A href="/native/commands/movement#wheel"><code>WHEEL</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
-              <tr><td><code>0x03</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
+              <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>3 or 5 bytes</td><td>none</td></tr>
+              <tr><td><code>0x02</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
               <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>0 bytes</td><td>none</td></tr>
               <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 byte</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
               <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>5 bytes</td><td>none</td></tr>
               <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#mouse-event"><code>MOUSE_EVENT</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0D</code></td><td><A href="/native/commands/keyboard#key"><code>KEY</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0E</code></td><td><A href="/native/commands/keyboard#consumer"><code>CONSUMER</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0D</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td><code>0x0E</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
               <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#kb-event"><code>KB_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x10</code></td><td><A href="/native/commands/catch#cons-event"><code>CONS_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
+          <p>
+            <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were the old <code>WHEEL</code>,{' '}
+            <code>KEY</code>, and <code>CONSUMER</code> opcodes. They folded into{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A> (now motion-tagged) and{' '}
+            <A href="/native/commands/inject#inject"><code>INJECT</code></A> (now class-tagged), and the
+            old numbers are never reused.
+          </p>
         </Card>
       </div>
 
@@ -126,22 +134,22 @@ def encode_frame(type, seq, payload):
         <Card>
           <CardHeader title="Example: a MOVE frame" />
           <p>
-            A <A href="/native/commands/movement#move"><code>MOVE</code></A> of{' '}
+            A cursor <A href="/native/commands/move#move"><code>MOVE</code></A> of{' '}
             <code>dx = 100</code>, <code>dy = 0</code>.
           </p>
           <ul>
             <li>Opcode <code>0x01</code>.</li>
-            <li>Payload is the two 16-bit values <code>dx</code> then <code>dy</code> (<code>64 00</code>, <code>00 00</code>).</li>
-            <li><code>LEN</code> is <code>04 00</code>.</li>
+            <li>Payload is the <code>motion</code> byte (<code>00</code> = cursor) then the two 16-bit values <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>).</li>
+            <li><code>LEN</code> is <code>05 00</code>.</li>
           </ul>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 04 00  | 64 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | dx     | dy     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 01     | 00     | 05 00  | 00     | 64 00  | 00 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
             The CRC bytes are the little-endian <code>crc16_ccitt</code> of{' '}
-            <code>01 00 04 00 64 00 00 00</code>. Compute them rather than copying a literal.
+            <code>01 00 05 00 00 64 00 00 00</code>. Compute them rather than copying a literal.
           </p>
         </Card>
       </div>

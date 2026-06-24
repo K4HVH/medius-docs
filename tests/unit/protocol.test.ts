@@ -492,7 +492,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     const resp = parseResp(new Uint8Array([4, 0xe8, 0x03, 0xe8, 0x03, 0x01]));
     expect(resp).toEqual({
       kind: 'rate',
-      rate: { nativePeriodUs: 1000, pollPeriodUs: 1000, confident: true },
+      rate: { nativePeriodUs: 1000, pollPeriodUs: 1000, confident: true, changeDriven: false },
     });
     if (resp?.kind === 'rate') expect(nativeHz(resp.rate)).toBe(1000);
   });
@@ -500,6 +500,15 @@ describe('device-info RESP decoding (v1.4.0)', () => {
   it('RATE unlearned period yields null Hz (truthful)', () => {
     const resp = parseResp(new Uint8Array([4, 0x00, 0x00, 0xe8, 0x03, 0x00]));
     if (resp?.kind !== 'rate') throw new Error('expected rate');
+    expect(resp.rate.nativePeriodUs).toBe(0);
+    expect(nativeHz(resp.rate)).toBeNull();
+  });
+
+  it('RATE change-driven (keyboard) sets the flag and reports no cadence', () => {
+    const resp = parseResp(new Uint8Array([4, 0x00, 0x00, 0xe8, 0x03, 0x02]));
+    if (resp?.kind !== 'rate') throw new Error('expected rate');
+    expect(resp.rate.changeDriven).toBe(true);
+    expect(resp.rate.confident).toBe(false);
     expect(resp.rate.nativePeriodUs).toBe(0);
     expect(nativeHz(resp.rate)).toBeNull();
   });

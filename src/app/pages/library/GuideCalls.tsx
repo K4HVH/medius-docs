@@ -125,7 +125,7 @@ println!("{v}");`}</code></pre>
         <Card>
           <CardHeader title="Smooth motion" subtitle="Glide instead of teleport" />
           <p>
-            <A href="/library/movement#move-rel"><code>move_rel</code></A> applies one delta at once. For
+            <A href="/library/move#move-rel"><code>move_rel</code></A> applies one delta at once. For
             a glide rather than a jump, subdivide the move and pace the steps yourself, roughly one per
             millisecond. There's no <code>move_smooth</code>.
           </p>
@@ -152,8 +152,8 @@ for _ in 0..200 {
           <CardHeader title="Making a click" subtitle="Press, wait, release" />
           <p>
             There's no one-shot <code>click</code>:{' '}
-            <A href="/library/buttons#press"><code>press</code></A>, wait, then release with{' '}
-            <A href="/library/buttons#soft-release"><code>soft_release</code></A> so you don't stomp a
+            <A href="/library/inject#button"><code>press</code></A>, wait, then release with{' '}
+            <A href="/library/inject#button"><code>soft_release</code></A> so you don't stomp a
             physical hold.
           </p>
           <div class="api-response-label">EXAMPLE</div>

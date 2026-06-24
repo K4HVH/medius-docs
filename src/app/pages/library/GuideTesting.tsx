@@ -23,14 +23,15 @@ let device = Device::with_mock(mock.clone());
 
 device.press(Button::Left)?;
 
-assert!(mock.saw(FrameType::Button));
-// the recorded BUTTON payload is [id, action] = [0, 1]
+assert!(mock.saw(FrameType::Inject));
+// the recorded INJECT payload is [class, id_lo, id_hi, action]
+// = [0 (button), 0, 0, 1 (press)] for a left-button press
 let frame = mock
     .recorded_frames()
     .into_iter()
-    .find(|f| f.ty == FrameType::Button)
+    .find(|f| f.ty == FrameType::Inject)
     .unwrap();
-assert_eq!(frame.payload, vec![0, 1]);`}</code></pre>
+assert_eq!(frame.payload, vec![0, 0, 0, 1]);`}</code></pre>
         </Card>
       </div>
 

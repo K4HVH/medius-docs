@@ -45,7 +45,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
               </tr>
               <tr>
                 <td>Box overrides</td>
-                <td>All released. An <A href="/library/buttons">override</A> is a per-button decision to hold a button down or up.</td>
+                <td>All released. An <A href="/library/inject">override</A> is a per-button decision to hold a button down or up.</td>
               </tr>
               <tr>
                 <td>Library held-state</td>

@@ -237,9 +237,10 @@ assert!(matches!(stream.recv()?, CatchEvent::Keyboard(k) if k.keys == vec![Key::
           <p>
             A <A href="/library/types/frames"><code>DecodedFrame</code></A> is{' '}
             <code>{`{ ty, seq, payload }`}</code>; a{' '}
-            <A href="/library/buttons"><code>press(Button::Left)</code></A> records a{' '}
-            <A href="/library/types/enums"><code>FrameType::Button</code></A> frame with payload{' '}
-            <code>[0, 1]</code> (button id <code>0</code>, action <code>1</code>).
+            <A href="/library/inject"><code>press(Button::Left)</code></A> records a{' '}
+            <A href="/library/types/frames"><code>FrameType::Inject</code></A> frame with payload{' '}
+            <code>[0, 0, 0, 1]</code> (class <code>0</code> = button, id <code>0</code>, action{' '}
+            <code>1</code>).
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -251,12 +252,12 @@ let device = Device::with_mock(mock.clone());
 device.press(Button::Left)?;
 
 let frames = mock.recorded_frames();
-let button = frames
+let inject = frames
     .iter()
-    .find(|f| f.ty == FrameType::Button)
+    .find(|f| f.ty == FrameType::Inject)
     .expect("press recorded");
-assert_eq!(button.payload, vec![0, 1]);
-assert!(mock.saw(FrameType::Button));
+assert_eq!(inject.payload, vec![0, 0, 0, 1]);
+assert!(mock.saw(FrameType::Inject));
 
 mock.clear_recorded(); // next assertions see a fresh log`}</code></pre>
         </Card>

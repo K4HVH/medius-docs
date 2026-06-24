@@ -103,8 +103,8 @@ std::thread::sleep(std::time::Duration::from_secs(5));
 device.reset()?;`}</code></pre>
           <p>
             An <em>override</em> is the box holding a button down or up itself, set by{' '}
-            <A href="/library/buttons#press"><code>press</code></A> or{' '}
-            <A href="/library/buttons#force-release"><code>force_release</code></A>; the library keeps a
+            <A href="/library/inject#button"><code>press</code></A> or{' '}
+            <A href="/library/inject#button"><code>force_release</code></A>; the library keeps a
             copy. After a dropped link, <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it.
           </p>
