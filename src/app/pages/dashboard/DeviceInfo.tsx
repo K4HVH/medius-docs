@@ -126,14 +126,24 @@ const DeviceInfo = () => {
           {(r) => (
             <Row label="Report rate">
               <Show
-                when={mouseAttached()}
-                fallback={<span style={muted}>No mouse attached.</span>}
+                when={!r().changeDriven}
+                fallback={
+                  <span style={muted}>
+                    A keyboard reports only when keys change, so it has no steady rate — it's checked
+                    up to {Math.round(1_000_000 / r().pollPeriodUs)} times a second.
+                  </span>
+                }
               >
                 <Show
-                  when={nativeHz(r()) !== null}
-                  fallback={<span style={muted}>waiting for mouse activity...</span>}
+                  when={mouseAttached()}
+                  fallback={<span style={muted}>No mouse attached.</span>}
                 >
-                  {nativeHz(r())} Hz
+                  <Show
+                    when={nativeHz(r()) !== null}
+                    fallback={<span style={muted}>waiting for mouse activity...</span>}
+                  >
+                    {nativeHz(r())} Hz
+                  </Show>
                 </Show>
               </Show>
             </Row>

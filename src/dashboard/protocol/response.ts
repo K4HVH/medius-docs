@@ -16,6 +16,7 @@ import {
   Q_RATE,
   Q_STATS,
   Q_VERSION,
+  RATE_CHANGE_DRIVEN,
   RATE_CONFIDENT,
 } from './opcode';
 import {

@@ -105,6 +105,8 @@ export interface Rate {
   nativePeriodUs: number;
   pollPeriodUs: number;
   confident: boolean;
+  // The active input is change-driven (keyboard/media): no continuous cadence, poll floor only.
+  changeDriven: boolean;
 }
 
 // Native report rate in Hz, or null until learned (nativePeriodUs === 0).
@@ -164,6 +166,16 @@ export enum LockTarget {
   Middle = 5,
   Side1 = 6,
   Side2 = 7,
+}
+
+// LOCK class (§3.8): which input class a lock addresses. usage is class-specific.
+export enum LockClass {
+  Mouse = 0,
+  Key = 1,
+  Media = 2,
+  AllKeys = 3,
+  AllMedia = 4,
+  AllButtons = 5,
 }
 
 export enum LockDirection {

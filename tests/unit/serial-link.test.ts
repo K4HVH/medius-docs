@@ -53,13 +53,13 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 0, 1, 0])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 0, 1, 0])));
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version).toEqual({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0 });
+    expect(version).toEqual({ protoVer: 2, fwMajor: 0, fwMinor: 1, fwPatch: 0 });
     await link.close();
   });
 
@@ -121,7 +121,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 9, 9, 9])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 9, 9, 9, 9])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -183,26 +183,29 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));
     await link.open();
-    await link.key(0x04, 1); // press 'A'
+    await link.key(0x04, 1); // press 'A' -> INJECT [class=key=1][id=0x04 u16][action=1]
     expect(mock.written).toHaveLength(1);
     const frame = mock.written[0];
-    expect(frame[1]).toBe(FrameType.Key);
-    expect(frame[5]).toBe(0x04);
-    expect(frame[6]).toBe(1);
+    expect(frame[1]).toBe(FrameType.Inject);
+    expect(frame[5]).toBe(1); // class = key
+    expect(frame[6]).toBe(0x04); // id lo
+    expect(frame[7]).toBe(0x00); // id hi
+    expect(frame[8]).toBe(1); // action
     await link.close();
   });
 
-  it('sends a CONSUMER frame on consumer() with a little-endian usage', async () => {
+  it('sends an INJECT (media) frame on consumer() with a little-endian usage', async () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));
     await link.open();
-    await link.consumer(0xe9, 1); // press Volume Up
+    await link.consumer(0xe9, 1); // press Volume Up -> INJECT [class=media=2][id=0x00E9][action=1]
     expect(mock.written).toHaveLength(1);
     const frame = mock.written[0];
-    expect(frame[1]).toBe(FrameType.Consumer);
-    expect(frame[5]).toBe(0xe9);
-    expect(frame[6]).toBe(0x00);
-    expect(frame[7]).toBe(1);
+    expect(frame[1]).toBe(FrameType.Inject);
+    expect(frame[5]).toBe(2); // class = media
+    expect(frame[6]).toBe(0xe9);
+    expect(frame[7]).toBe(0x00);
+    expect(frame[8]).toBe(1);
     await link.close();
   });
 
