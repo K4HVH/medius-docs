@@ -98,9 +98,11 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_mouse_info(self, mouse_info: MouseInfo) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_mouse_caps(self, caps: MouseCaps) -&gt; MockBox</pre>
+          <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_kbd_caps(self, kbd_caps: KbdCaps) -&gt; MockBox</pre>
+          <pre class="api-signature">fn with_mouse_caps(self, mouse: MouseCaps) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_kbd_caps(self, keyboard: KbdCaps) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -116,8 +118,7 @@ device.move_rel(5, 5)?;`}</code></pre>
             <A href="/library/requests"><code>query_version</code></A>,{' '}
             <code>query_health</code>, and the device-info queries{' '}
             (<A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
-            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps</code></A>,{' '}
-            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>,{' '}
+            <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live
             fake in place to flip the version or health mid-test.{' '}

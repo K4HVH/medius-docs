@@ -5,13 +5,14 @@ import {
   CAP_WHEEL,
   CAP_X,
   CAP_Y,
+  CAPS_CD_KBD,
+  CAPS_CD_MOUSE,
   MI_HAS_BOS,
   MI_HAS_SERIAL,
+  Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
-  Q_KBD_CAPS,
   Q_LOCKS,
-  Q_MOUSE_CAPS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
@@ -20,14 +21,13 @@ import {
   RATE_CONFIDENT,
 } from './opcode';
 import {
+  type Caps,
   type CatchState,
   type ConsumerReport,
   type Health,
-  type KbdCaps,
   type KeyboardReport,
   type Locks,
   type LogLine,
-  type MouseCaps,
   type MouseInfo,
   type MouseReport,
   type Rate,
@@ -43,8 +43,7 @@ export type Resp =
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
   | { kind: 'mouseInfo'; mouseInfo: MouseInfo }
-  | { kind: 'caps'; caps: MouseCaps }
-  | { kind: 'kbdcaps'; caps: KbdCaps }
+  | { kind: 'caps'; caps: Caps }
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
@@ -89,24 +88,26 @@ export function parseResp(payload: Uint8Array): Resp | null {
         },
       };
     }
-    case Q_MOUSE_CAPS: {
-      if (payload.length < 4) return null;
+    case Q_CAPS: {
+      if (payload.length < 7) return null;
       const axis = payload[2];
+      const cd = payload[6];
       return {
         kind: 'caps',
         caps: {
-          nButtons: payload[1],
-          hasX: (axis & CAP_X) !== 0,
-          hasY: (axis & CAP_Y) !== 0,
-          hasWheel: (axis & CAP_WHEEL) !== 0,
-          hasReportId: (axis & CAP_REPORT_ID) !== 0,
-          nHid: payload[3],
+          mouse: {
+            nButtons: payload[1],
+            hasX: (axis & CAP_X) !== 0,
+            hasY: (axis & CAP_Y) !== 0,
+            hasWheel: (axis & CAP_WHEEL) !== 0,
+            hasReportId: (axis & CAP_REPORT_ID) !== 0,
+            nHid: payload[3],
+          },
+          keyboard: kbdCapsFromBytes(payload[4], payload[5]),
+          mouseChangeDriven: (cd & CAPS_CD_MOUSE) !== 0,
+          kbdChangeDriven: (cd & CAPS_CD_KBD) !== 0,
         },
       };
-    }
-    case Q_KBD_CAPS: {
-      if (payload.length < 3) return null;
-      return { kind: 'kbdcaps', caps: parseKbdCaps(payload) };
     }
     case Q_RATE: {
       if (payload.length < 6) return null;
@@ -147,11 +148,6 @@ export function parseResp(payload: Uint8Array): Resp | null {
     default:
       return null;
   }
-}
-
-// Parse the RESP(KBD_CAPS) data (§4.11): [n_keys u8][flags u8] after the selector byte.
-export function parseKbdCaps(payload: Uint8Array): KbdCaps {
-  return kbdCapsFromBytes(payload[1], payload[2]);
 }
 
 // Parse a MOUSE_EVENT payload (§4.10): [buttons u8][dx i16][dy i16][wheel i16]. Unsolicited.

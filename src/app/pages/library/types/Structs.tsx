@@ -94,12 +94,40 @@ let m = MouseInfo { vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201, ha
 assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
         </Card>
       </div>
+      <div id="caps" data-search-target>
+        <Card>
+          <CardHeader title="Caps" subtitle="The whole device, mouse and keyboard" />
+          <p>
+            One <A href="/library/requests#caps"><code>caps()</code></A> query, returned as one struct:
+            a <A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A> half and a{' '}
+            <A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A> half, plus the per-class
+            change-driven flags. <code>has_mouse()</code> / <code>has_keyboard()</code> tell you which
+            are bound; <code>is_composite()</code> is true when the device has more than one HID
+            interface.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mouse</code></td><td><A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A></td><td>The mouse half (all-zero when no mouse is bound).</td></tr>
+              <tr><td><code>keyboard</code></td><td><A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A></td><td>The keyboard half (all-zero when no keyboard is bound).</td></tr>
+              <tr><td><code>mouse_change_driven</code></td><td><code>bool</code></td><td>Always false: mouse motion is continuous, so its <A href="/library/types/structs#rate"><code>Rate</code></A> has a learned cadence.</td></tr>
+              <tr><td><code>kbd_change_driven</code></td><td><code>bool</code></td><td>True when a keyboard is bound: it reports only on a key change, so its rate has no continuous cadence.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`let caps = device.caps()?;
+if caps.has_keyboard() && caps.keyboard.has_consumer {
+    // media injection is real on this board
+}
+println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
+        </Card>
+      </div>
       <div id="mouse-caps" data-search-target>
         <Card>
           <CardHeader title="MouseCaps" subtitle="What the emulated mouse can do" />
           <p>
             Semantic capabilities from{' '}
-            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps()</code></A>. Every
+            <A href="/library/requests#caps"><code>caps()</code></A>. Every
             field is zero when no relative-axis mouse interface is bound.{' '}
             <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>.
           </p>
@@ -369,7 +397,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="KbdCaps" subtitle="What the cloned keyboard can do" />
           <p>
             Semantic capabilities from{' '}
-            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps()</code></A>. Every field is
+            <A href="/library/requests#caps"><code>caps()</code></A>. Every field is
             zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
             <A href="/library/inject#media"><code>media</code></A> injection.
           </p>

@@ -100,6 +100,23 @@ export function kbdCapsFromBytes(nKeys: number, flags: number): KbdCaps {
   };
 }
 
+// Unified device capabilities (§4.4): one query describes the whole cloned device — mouse + keyboard +
+// per-class change_driven. A class that is not present reads all-zero/false.
+export interface Caps {
+  mouse: MouseCaps;
+  keyboard: KbdCaps;
+  mouseChangeDriven: boolean;
+  kbdChangeDriven: boolean;
+}
+
+export function hasMouse(c: Caps): boolean {
+  return c.mouse.nButtons > 0 || c.mouse.hasX || c.mouse.hasY || c.mouse.hasWheel;
+}
+
+export function hasKeyboard(c: Caps): boolean {
+  return c.keyboard.nKeys > 0 || c.keyboard.hasConsumer || c.keyboard.hasSystem;
+}
+
 // Live native report rate and clone poll period (§4.5).
 export interface Rate {
   nativePeriodUs: number;

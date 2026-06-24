@@ -2,7 +2,7 @@ import { Show, createEffect, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import {
-  type MouseCaps,
+  type Caps,
   type MouseInfo,
   type Rate,
   type Stats,
@@ -37,7 +37,7 @@ const DeviceInfo = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
   const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
-  const [caps, setCaps] = createSignal<MouseCaps | null>(null);
+  const [caps, setCaps] = createSignal<Caps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
   const [stats, setStats] = createSignal<Stats | null>(null);
 
@@ -68,7 +68,7 @@ const DeviceInfo = () => {
       if (!running || dash.link() !== link) return;
       try {
         setMouse(await link.queryMouseInfo());
-        setCaps(await link.queryMouseCaps());
+        setCaps(await link.queryCaps());
         setRate(await link.queryRate());
         setStats(await link.queryStats());
       } catch {
@@ -101,11 +101,11 @@ const DeviceInfo = () => {
               <Show when={caps()}>
                 {(c) => (
                   <>
-                    <Row label="Buttons">{c().nButtons}</Row>
-                    <Row label="Scroll wheel">{c().hasWheel ? 'Yes' : 'No'}</Row>
+                    <Row label="Buttons">{c().mouse.nButtons}</Row>
+                    <Row label="Scroll wheel">{c().mouse.hasWheel ? 'Yes' : 'No'}</Row>
                     <p style={{ ...note, 'margin-top': 'var(--g-spacing-sm)' }}>
-                      USB {bcd(m().bcdUsb)} · {c().nHid} interface{c().nHid === 1 ? '' : 's'}
-                      {isComposite(c()) ? ' (composite)' : ''}
+                      USB {bcd(m().bcdUsb)} · {c().mouse.nHid} interface{c().mouse.nHid === 1 ? '' : 's'}
+                      {isComposite(c().mouse) ? ' (composite)' : ''}
                       {m().hasSerial ? ' · has a serial number' : ''}
                     </p>
                   </>

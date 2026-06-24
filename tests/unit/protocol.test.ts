@@ -30,7 +30,6 @@ import {
   nativeHz,
   parseConsEvent,
   parseKbEvent,
-  parseKbdCaps,
   parseMouseEvent,
   parseLog,
   parseResp,
@@ -479,13 +478,19 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     if (resp?.kind === 'mouseInfo') expect(vidPid(resp.mouseInfo)).toBe('046D:C08B');
   });
 
-  it('CAPS (§4.4)', () => {
-    const resp = parseResp(new Uint8Array([3, 5, 0x07, 2]));
+  it('CAPS (§4.4) unified mouse + keyboard', () => {
+    // 5 buttons, X|Y|WHEEL, 2 ifaces; 6-key board, Consumer + report-id; keyboard class change-driven
+    const resp = parseResp(new Uint8Array([3, 5, 0x07, 2, 6, 0x0a, 0x02]));
     expect(resp).toEqual({
       kind: 'caps',
-      caps: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+      caps: {
+        mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+        keyboard: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
+        mouseChangeDriven: false,
+        kbdChangeDriven: true,
+      },
     });
-    if (resp?.kind === 'caps') expect(isComposite(resp.caps)).toBe(true);
+    if (resp?.kind === 'caps') expect(isComposite(resp.caps.mouse)).toBe(true);
   });
 
   it('RATE (§4.5) confident, with Hz', () => {
@@ -557,29 +562,24 @@ describe('keyboard + media (v1.7.0)', () => {
     expect(Array.from(injectPayload(INJ_MEDIA, 0x0123, 1))).toEqual([2, 0x23, 0x01, 1]);
   });
 
-  it('parseKbdCaps decodes [n_keys][flags] (§4.11)', () => {
-    // 6-key board, Consumer + report-id, no NKRO/system. Selector byte then n_keys=6, flags=0x0a.
-    expect(parseResp(new Uint8Array([8, 6, 0x0a]))).toEqual({
-      kind: 'kbdcaps',
-      caps: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
-    });
-    // NKRO bitmap board: n_keys = 0xff implies nkro even with the flag clear.
-    expect(parseResp(new Uint8Array([8, 0xff, 0x00]))).toEqual({
-      kind: 'kbdcaps',
-      caps: { nKeys: 0xff, nkro: true, hasConsumer: false, hasSystem: false, hasReportId: false },
-    });
-    // The NKRO flag (b0) also sets nkro.
-    expect(parseKbdCaps(new Uint8Array([8, 0, 0x07]))).toEqual({
-      nKeys: 0,
+  it('CAPS keyboard half: NKRO bitmap implies nkro, change-driven (§4.4)', () => {
+    // no mouse; NKRO board (n_keys 0xff) with Consumer; keyboard class change-driven
+    const resp = parseResp(new Uint8Array([3, 0, 0, 0, 0xff, 0x02, 0x02]));
+    expect(resp?.kind).toBe('caps');
+    if (resp?.kind !== 'caps') throw new Error('expected caps');
+    expect(resp.caps.keyboard).toEqual({
+      nKeys: 0xff,
       nkro: true,
       hasConsumer: true,
-      hasSystem: true,
+      hasSystem: false,
       hasReportId: false,
     });
+    expect(resp.caps.kbdChangeDriven).toBe(true);
+    expect(resp.caps.mouseChangeDriven).toBe(false);
   });
 
-  it('returns null for a truncated KBD_CAPS payload', () => {
-    expect(parseResp(new Uint8Array([8, 6]))).toBeNull(); // needs 3 bytes
+  it('returns null for a truncated CAPS payload', () => {
+    expect(parseResp(new Uint8Array([3, 5, 0x07, 2]))).toBeNull(); // unified CAPS needs 7 bytes
   });
 
   it('parseKbEvent decodes [modifiers][n][keycodes] (§4.12)', () => {

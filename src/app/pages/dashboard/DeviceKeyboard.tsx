@@ -2,7 +2,7 @@ import { For, Show, createEffect, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { Action, type KbdCaps } from '../../../dashboard/protocol';
+import { Action, type Caps } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 
 // A few common HID keycodes (Keyboard/Keypad usage page). 0xE0-0xE7 are modifiers.
@@ -56,7 +56,7 @@ const DeviceKeyboard = () => {
   const kbdAttached = () => dash.health()?.kbdAttached === true;
 
   // Read the keyboard capabilities once a keyboard is bound. Re-reads when the bound state flips.
-  const [caps, setCaps] = createSignal<KbdCaps | null>(null);
+  const [caps, setCaps] = createSignal<Caps | null>(null);
   createEffect(() => {
     const link = dash.link();
     if (!kbdAttached() || !link) {
@@ -65,7 +65,7 @@ const DeviceKeyboard = () => {
     }
     let live = true;
     link
-      .queryKbdCaps()
+      .queryCaps()
       .then((c) => {
         if (live && dash.link() === link) setCaps(c);
       })
@@ -133,14 +133,14 @@ const DeviceKeyboard = () => {
             {(c) => (
               <>
                 <Row label="Key slots">
-                  {c().nkro ? 'NKRO bitmap' : `${c().nKeys} keys`}
+                  {c().keyboard.nkro ? 'NKRO bitmap' : `${c().keyboard.nKeys} keys`}
                 </Row>
                 <Row label="Media keys">
-                  <Show when={c().hasConsumer} fallback={<Chip variant="neutral">No</Chip>}>
+                  <Show when={c().keyboard.hasConsumer} fallback={<Chip variant="neutral">No</Chip>}>
                     <Chip variant="success">Yes</Chip>
                   </Show>
                 </Row>
-                <Row label="Report id">{c().hasReportId ? 'Yes' : 'No'}</Row>
+                <Row label="Report id">{c().keyboard.hasReportId ? 'Yes' : 'No'}</Row>
               </>
             )}
           </Show>

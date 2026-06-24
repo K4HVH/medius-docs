@@ -86,8 +86,7 @@ RESET      releases every override at once`}</pre>
           <div class="callout callout--warning">
             <p>
               A usage the cloned device can't report is a silent no-op. Check{' '}
-              <A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A> /{' '}
-              <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A> before you rely on it.
+              <A href="/native/commands/requests#caps"><code>CAPS</code></A> before you rely on it.
             </p>
           </div>
           <p>Library binding: <A href="/library/inject#inject"><code>inject</code></A>.</p>
@@ -145,7 +144,7 @@ RESET      releases every override at once`}</pre>
             <A href="/native/commands/usage#consumer">Consumer usage</A> (e.g. 0xCD Play/Pause, 0xE9
             Volume Up), merged onto the cloned keyboard's Consumer report. Present-gated to a board
             that declares a Consumer collection, read from the{' '}
-            <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A>{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>CONSUMER</code> flag; otherwise a no-op. Library bindings:{' '}
             <A href="/library/inject#media"><code>media</code> / <code>media_down</code> / <code>media_up</code> / <code>media_force_release</code></A>.
           </p>

@@ -55,9 +55,8 @@ const GuideCalls: Component = () => {
               <tr>
                 <td>
                   <code>query_version</code>, <code>query_health</code>,{' '}
-                  <code>query_mouse_info</code>, <code>query_mouse_caps</code>, <code>query_rate</code>,{' '}
-                  <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>,{' '}
-                  <code>query_kbd_caps</code>
+                  <code>query_mouse_info</code>, <code>caps</code>, <code>query_rate</code>,{' '}
+                  <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>
                 </td>
                 <td>
                   <code>move_rel</code>, <code>wheel</code>, <code>button</code>, <code>press</code>,{' '}

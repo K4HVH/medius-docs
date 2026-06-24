@@ -158,24 +158,25 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('queryKbdCaps decodes the KBD_CAPS reply', async () => {
+  it('queryCaps decodes the unified CAPS reply', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
-      if (f.ty === FrameType.Query && f.payload[0] === 8) {
-        // n_keys = 6, flags = Consumer (0x02).
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([8, 6, 0x02])));
+      if (f.ty === FrameType.Query && f.payload[0] === 3) {
+        // no mouse; keyboard n_keys=6, kbd_flags=Consumer(0x02); keyboard class change-driven (0x02)
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([3, 0, 0, 0, 6, 0x02, 0x02])));
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
-    const caps = await link.queryKbdCaps();
-    expect(caps).toEqual({
+    const caps = await link.queryCaps();
+    expect(caps.keyboard).toEqual({
       nKeys: 6,
       nkro: false,
       hasConsumer: true,
       hasSystem: false,
       hasReportId: false,
     });
+    expect(caps.kbdChangeDriven).toBe(true);
     await link.close();
   });
 

@@ -5,13 +5,12 @@
 
 import {
   type CatchEvent,
+  type Caps,
   type CatchState,
   type DecodedFrame,
   type Health,
-  type KbdCaps,
   type Locks,
   type LogLine,
-  type MouseCaps,
   type MouseInfo,
   type Rate,
   type Stats,
@@ -19,11 +18,10 @@ import {
   FrameDecoder,
   FrameType,
   PROTO_VER,
+  Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
-  Q_KBD_CAPS,
   Q_LOCKS,
-  Q_MOUSE_CAPS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
@@ -183,15 +181,9 @@ export class SerialLink {
     return resp.mouseInfo;
   }
 
-  async queryMouseCaps(timeoutMs?: number): Promise<MouseCaps> {
-    const resp = parseResp(await this.query(Q_MOUSE_CAPS, timeoutMs));
-    if (resp?.kind !== 'caps') throw new Error('unexpected reply to MOUSE_CAPS query');
-    return resp.caps;
-  }
-
-  async queryKbdCaps(timeoutMs?: number): Promise<KbdCaps> {
-    const resp = parseResp(await this.query(Q_KBD_CAPS, timeoutMs));
-    if (resp?.kind !== 'kbdcaps') throw new Error('unexpected reply to KBD_CAPS query');
+  async queryCaps(timeoutMs?: number): Promise<Caps> {
+    const resp = parseResp(await this.query(Q_CAPS, timeoutMs));
+    if (resp?.kind !== 'caps') throw new Error('unexpected reply to CAPS query');
     return resp.caps;
   }
 
