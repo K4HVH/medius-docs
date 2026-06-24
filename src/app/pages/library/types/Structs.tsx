@@ -435,7 +435,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />
           <p>
             The imperfect-clone state from{' '}
-            <A href="/library/imperfect#imperfect"><code>imperfect()</code></A>.
+            <A href="/library/imperfect#query-imperfect"><code>query_imperfect()</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>

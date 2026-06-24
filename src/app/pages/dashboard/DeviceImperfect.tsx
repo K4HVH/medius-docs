@@ -19,7 +19,7 @@ const DeviceImperfect = () => {
   };
 
   const set = async (allow: boolean) => {
-    await dash.link()?.setImperfectAllowed(allow);
+    await dash.link()?.allowImperfectClones(allow);
     await refresh();
   };
 

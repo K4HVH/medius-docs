@@ -44,12 +44,11 @@ const Imperfect: Component = () => {
           </p>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The setting is persisted on the box and takes effect on the next clone, so re-plug the
-            device or reboot the box for a change to apply.{' '}
+            Persisted in NVS. When it changes for an over-capacity device the box reboots itself and
+            re-clones with the new setting, so it applies without unplugging anything.{' '}
             <A href="/native/commands/requests#imperfect"><code>QUERY(IMPERFECT)</code></A> reads the
-            opt-in plus whether the attached device is over-capacity and whether the live clone is
-            imperfect. Library binding:{' '}
-            <A href="/library/imperfect#set-imperfect-allowed"><code>set_imperfect_allowed</code></A>.
+            opt-in plus the over-capacity and imperfect-clone flags. Library binding:{' '}
+            <A href="/library/imperfect#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Opt in (<code>allow = 1</code>):</p>
