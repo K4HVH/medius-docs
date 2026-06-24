@@ -12,6 +12,7 @@ import {
   Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
+  Q_IMPERFECT,
   Q_LOCKS,
   Q_MOUSE_INFO,
   Q_RATE,
@@ -25,6 +26,7 @@ import {
   type CatchState,
   type ConsumerReport,
   type Health,
+  type ImperfectStatus,
   type KeyboardReport,
   type Locks,
   type LogLine,
@@ -47,7 +49,8 @@ export type Resp =
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
-  | { kind: 'catch'; catch: CatchState };
+  | { kind: 'catch'; catch: CatchState }
+  | { kind: 'imperfect'; imperfect: ImperfectStatus };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -144,6 +147,17 @@ export function parseResp(payload: Uint8Array): Resp | null {
     case Q_CATCH: {
       if (payload.length < 6) return null;
       return { kind: 'catch', catch: { mask: payload[1], dropped: u32le(payload, 2) } };
+    }
+    case Q_IMPERFECT: {
+      if (payload.length < 4) return null;
+      return {
+        kind: 'imperfect',
+        imperfect: {
+          allowed: payload[1] !== 0,
+          overCapacity: payload[2] !== 0,
+          cloneImperfect: payload[3] !== 0,
+        },
+      };
     }
     default:
       return null;

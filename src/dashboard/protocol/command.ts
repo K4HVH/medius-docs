@@ -31,6 +31,12 @@ export function catchPayload(mask: number): Uint8Array {
   return new Uint8Array([mask & 0xff]);
 }
 
+// IMPERFECT (§3.10): [allow u8] - 1 opts into cloning an over-capacity device, 0 is faithful-only
+// (default). Persisted in NVS; takes effect on the next clone.
+export function imperfectPayload(allow: boolean): Uint8Array {
+  return new Uint8Array([allow ? 1 : 0]);
+}
+
 // INJECT (§3.2): [class u8][id u16 LE][action u8]. class 0 button / 1 key / 2 media; tri-state action.
 export function injectPayload(cls: number, id: number, action: number): Uint8Array {
   return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, action & 0xff]);
