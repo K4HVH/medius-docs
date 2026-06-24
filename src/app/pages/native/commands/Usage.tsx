@@ -25,7 +25,7 @@ const Usage: Component = () => {
           <p>
             A small semantic id, bound at clone time to the real mouse's buttons. A command for an id
             the mouse lacks is a no-op, so read{' '}
-            <A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A>{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>n_buttons</code> first. The same button has two numbers: an{' '}
             <A href="/native/commands/inject#button"><code>INJECT</code></A> id and a{' '}
             <A href="/native/commands/lock#lock"><code>LOCK</code></A> target, offset by 3.
@@ -90,7 +90,7 @@ const Usage: Component = () => {
             The <code>id</code> is a 16-bit usage from the Consumer page (0x0C) of the{' '}
             <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>.
             Present-gated to a board with a Consumer collection, read from the{' '}
-            <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A>{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>CONSUMER</code> flag. The usual transport controls:
           </p>
           <table class="api-params">

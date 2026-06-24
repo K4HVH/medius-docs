@@ -126,7 +126,7 @@ device.key_up(Key::LEFT_SHIFT)?;`}</code></pre>
             The media counterpart, taking a{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> (a 16-bit Consumer
             usage). Present-gated to a board that declares a Consumer collection (read{' '}
-            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>); otherwise a
+            <A href="/library/requests#caps"><code>caps</code></A>); otherwise a
             no-op.
           </p>
           <div class="api-response-label">EXAMPLE</div>

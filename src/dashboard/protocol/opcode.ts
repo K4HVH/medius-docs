@@ -14,12 +14,12 @@ export const MOTION_WHEEL = 1;
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
 export const Q_MOUSE_INFO = 2;
-export const Q_MOUSE_CAPS = 3;
+export const Q_CAPS = 3; // unified: mouse + keyboard + per-class change_driven
 export const Q_RATE = 4;
 export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 export const Q_CATCH = 7;
-export const Q_KBD_CAPS = 8;
+// selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
@@ -34,17 +34,21 @@ export const H_KBD_ATT = 0x80;
 export const MI_HAS_SERIAL = 0x01;
 export const MI_HAS_BOS = 0x02;
 
-// MOUSE_CAPS axis_flags (§4.4).
+// CAPS axis_flags (§4.4).
 export const CAP_X = 0x01;
 export const CAP_Y = 0x02;
 export const CAP_WHEEL = 0x04;
 export const CAP_REPORT_ID = 0x08;
 
-// KBD_CAPS flags (§4.11). n_keys 0xff means an NKRO bitmap.
+// CAPS kbd_flags (§4.4). n_keys 0xff means an NKRO bitmap.
 export const KBC_NKRO = 0x01;
 export const KBC_CONSUMER = 0x02;
 export const KBC_SYSTEM = 0x04;
 export const KBC_REPORT_ID = 0x08;
+
+// CAPS change_driven byte (§4.4), per class.
+export const CAPS_CD_MOUSE = 0x01;
+export const CAPS_CD_KBD = 0x02;
 
 // RATE flags (§4.5).
 export const RATE_CONFIDENT = 0x01;
