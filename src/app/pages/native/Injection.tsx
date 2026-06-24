@@ -7,27 +7,39 @@ const Injection: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Injection model" subtitle="How sent input combines with the real mouse" />
+        <CardHeader title="Injection model" subtitle="One device of fields, two verbs, added on top of the user" />
         <p>
-          Injection is the input your program sends: a{' '}
-          <A href="/native/commands/move#move"><code>MOVE</code></A> for the cursor or wheel, and an{' '}
-          <A href="/native/commands/inject#inject"><code>INJECT</code></A> for a button, key, or media
-          usage. The box adds it to the real device's own movement and clicks (passthrough):{' '}
-          <code>PC sees = injected + real</code>.
+          A connected device is a set of <em>fields</em>. Every field is one of two kinds, and each
+          kind has exactly one verb:
         </p>
+        <pre class="diagram">{`  relative axis    →  MOVE     cursor X/Y, wheel
+  momentary usage  →  INJECT   buttons, keys, media`}</pre>
+        <table class="api-params">
+          <thead>
+            <tr><th>Device</th><th>Axes (<A href="/native/commands/move#move"><code>MOVE</code></A>)</th><th>Momentary (<A href="/native/commands/inject#inject"><code>INJECT</code></A>)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>mouse</td><td>cursor X/Y, wheel</td><td>buttons</td></tr>
+            <tr><td>keyboard</td><td>—</td><td>keys, modifiers</td></tr>
+            <tr><td>media</td><td>—</td><td>volume, play/pause, ...</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A mouse and a keyboard aren't special cases; they're the same machine with different fields,
+          driven by the same two verbs. Whatever you send is <em>added on top of</em> the user's own
+          input, never replacing it:
+        </p>
+        <pre class="diagram">{`  physical input  (real device)  --+
+                                   +-->  one combined report  -->  game PC
+  injected input  (your program) --+`}</pre>
         <table class="api-params">
           <thead>
             <tr><th>You send</th><th>The PC sees</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td>a <code>MOVE</code> while the real mouse moves</td>
-              <td>The sum of both.</td>
-            </tr>
-            <tr>
-              <td>nothing</td>
-              <td>Only the real mouse.</td>
-            </tr>
+            <tr><td>a <code>MOVE</code> while the real mouse moves</td><td>The sum of both.</td></tr>
+            <tr><td>an <code>INJECT</code> press while the user holds nothing</td><td>The injected press.</td></tr>
+            <tr><td>nothing</td><td>Only the real device.</td></tr>
           </tbody>
         </table>
       </Card>

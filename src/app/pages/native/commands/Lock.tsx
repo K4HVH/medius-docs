@@ -90,12 +90,20 @@ const Lock: Component = () => {
             <A href="/native/commands/inject#inject"><code>INJECT</code></A> drives a locked button or
             key. Lock an input the user shouldn't touch, then drive it yourself.
           </p>
+          <div class="api-response-label">A LOCK CLEARS ON</div>
+          <pre class="diagram">{`unlock      you send the matching unlock (state = 0)
+silence     ~1 s with no control-PC frame (same net as injection)
+RESET       a RESET command
+link loss   the inter-chip link drops`}</pre>
+          <div class="callout callout--warning">
+            <p>
+              A lock isn't permanent. It auto-clears on the same safety net as injection, so hold it
+              with a keepalive if the user has to stay locked out.
+            </p>
+          </div>
           <div class="api-response-label">EFFECT</div>
           <p>
-            A lock holds until you unlock it, and the box also clears every lock on control-PC silence
-            (the same ~1 s timeout that clears injection), on{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, or on inter-chip link loss.
-            Locks are PC-owned state, released like injection, and never visible to the game PC.{' '}
+            Locks are PC-owned and never visible to the game PC.{' '}
             <A href="/native/commands/requests#locks"><code>QUERY(LOCKS)</code></A> reads the active
             mouse set; the HEALTH <A href="/native/commands/requests#health"><code>LOCK_ON</code></A>{' '}
             bit is set while any lock, of any class, is active. Library bindings:{' '}

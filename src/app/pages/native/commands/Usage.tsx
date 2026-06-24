@@ -26,18 +26,18 @@ const Usage: Component = () => {
             A small semantic id, bound at clone time to the real mouse's buttons. A command for an id
             the mouse lacks is a no-op, so read{' '}
             <A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A>{' '}
-            <code>n_buttons</code> first. For a{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> the button id maps to the lock
-            target <code>3 + id</code>.
+            <code>n_buttons</code> first. The same button has two numbers: an{' '}
+            <A href="/native/commands/inject#button"><code>INJECT</code></A> id and a{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A> target, offset by 3.
           </p>
           <table class="api-params">
-            <thead><tr><th>Button</th><th>id</th></tr></thead>
+            <thead><tr><th>Button</th><th>INJECT id</th><th>LOCK target</th></tr></thead>
             <tbody>
-              <tr><td>Left</td><td><code>0</code></td></tr>
-              <tr><td>Right</td><td><code>1</code></td></tr>
-              <tr><td>Middle</td><td><code>2</code></td></tr>
-              <tr><td>Side1 (first thumb)</td><td><code>3</code></td></tr>
-              <tr><td>Side2 (second thumb)</td><td><code>4</code></td></tr>
+              <tr><td>Left</td><td><code>0</code></td><td><code>3</code></td></tr>
+              <tr><td>Right</td><td><code>1</code></td><td><code>4</code></td></tr>
+              <tr><td>Middle</td><td><code>2</code></td><td><code>5</code></td></tr>
+              <tr><td>Side1 (first thumb)</td><td><code>3</code></td><td><code>6</code></td></tr>
+              <tr><td>Side2 (second thumb)</td><td><code>4</code></td><td><code>7</code></td></tr>
             </tbody>
           </table>
         </Card>

@@ -19,9 +19,16 @@ const Move: Component = () => {
           <p>
             <code>motion</code> is a <A href="/library/types/enums#motion"><code>Motion</code></A>:{' '}
             <code>Cursor {'{'} dx, dy {'}'}</code> for pointer movement or <code>Wheel(dz)</code> for
-            scroll. The two methods below are thin wrappers over this verb; reach for{' '}
-            <code>move_axis</code> when the motion is a value you're passing around.
+            scroll. The two methods below are thin wrappers over this verb.
           </p>
+          <div class="api-response-label">PICK A METHOD</div>
+          <table class="api-params">
+            <thead><tr><th>You want</th><th>Method</th><th>Same as</th></tr></thead>
+            <tbody>
+              <tr><td>move the cursor</td><td><A href="/library/move#move-rel"><code>move_rel(dx, dy)</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx, dy {'}'})</code></td></tr>
+              <tr><td>scroll the wheel</td><td><A href="/library/move#wheel"><code>wheel(dz)</code></A></td><td><code>move_axis(Motion::Wheel(dz))</code></td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Motion;
 

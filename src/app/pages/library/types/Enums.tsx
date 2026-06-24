@@ -57,6 +57,16 @@ const Enums: Component = () => {
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">RESULT THE PC SEES</div>
+          <p>The two releases differ only when the user physically holds the same input:</p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>User holds nothing</th><th>User is holding it</th></tr></thead>
+            <tbody>
+              <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
+              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (physical wins)</td></tr>
+              <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
       <div id="input" data-search-target>

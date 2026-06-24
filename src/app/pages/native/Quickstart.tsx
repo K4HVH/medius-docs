@@ -9,9 +9,10 @@ const Quickstart: Component = () => {
       <Card>
         <CardHeader title="Quickstart" subtitle="Plug in and send your first command" />
         <p>
-          A Medius box sits inline between a mouse and a PC. The real mouse passes through, and your
-          program sends extra movement, buttons, and scroll over a USB-serial link. Below: wire it,
-          open the link, send one movement command. Every step is byte-exact firmware behavior.
+          A Medius box sits inline between a USB device and a PC. The real device passes through, and
+          your program sends input of its own (cursor and buttons for a mouse, keys and media for a
+          keyboard) over a USB-serial link. Below: wire it, open the link, send one movement command.
+          Every step is byte-exact firmware behavior.
         </p>
         <p>
           The box talks in <A href="/native/frame">frames</A>, small fixed-shape packets that each

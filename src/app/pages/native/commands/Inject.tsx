@@ -65,18 +65,32 @@ const Inject: Component = () => {
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The override merges into the report the PC sees, at the same point as{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A>, so injection never evicts the
-            user's own input. A usage the cloned device can't report is a silent no-op, so check{' '}
-            <A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A> /{' '}
-            <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A> first. There is no
-            firmware click or chord: compose a <code>press</code> then a client-timed{' '}
-            <code>soft-release</code>. <A href="/native/commands/admin#reset"><code>RESET</code></A>{' '}
-            releases every override. Library binding:{' '}
-            <A href="/library/inject#inject"><code>inject</code></A>.
-          </p>
+          <div class="api-response-label">RESULT THE PC SEES</div>
+          <p>The two releases differ only when the user is physically holding the same input:</p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Action</th><th>User holds nothing</th><th>User is holding it</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>press</code></td><td>active</td><td>active</td></tr>
+              <tr><td><code>soft-release</code></td><td>inactive</td><td>active (physical wins)</td></tr>
+              <tr><td><code>force-release</code></td><td>inactive</td><td>inactive (masks physical)</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">RULES</div>
+          <pre class="diagram">{`additive   layers over the user at the same merge point as MOVE;
+           never evicts the user's own input
+no click   no firmware click or chord; send a press, then your
+           own client-timed soft-release
+RESET      releases every override at once`}</pre>
+          <div class="callout callout--warning">
+            <p>
+              A usage the cloned device can't report is a silent no-op. Check{' '}
+              <A href="/native/commands/requests#mouse-caps"><code>MOUSE_CAPS</code></A> /{' '}
+              <A href="/native/commands/requests#kbd-caps"><code>KBD_CAPS</code></A> before you rely on it.
+            </p>
+          </div>
+          <p>Library binding: <A href="/library/inject#inject"><code>inject</code></A>.</p>
         </Card>
       </div>
 

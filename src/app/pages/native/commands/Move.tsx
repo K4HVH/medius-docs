@@ -16,6 +16,13 @@ const Move: Component = () => {
           (buttons, keys, media) have their own verb,{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
         </p>
+        <table class="api-params">
+          <thead><tr><th>motion</th><th>axis</th><th>carries</th><th>payload</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A></td><td><code>dx</code>, <code>dy</code> (i16)</td><td>5 bytes</td></tr>
+            <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>3 bytes</td></tr>
+          </tbody>
+        </table>
       </Card>
 
       <div id="move" data-search-target>
@@ -40,14 +47,16 @@ const Move: Component = () => {
               <tr><td>3</td><td><code>dy</code></td><td><code>i16</code></td><td>vertical step; +y = down, little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
+          <div class="api-response-label">GUARANTEES</div>
+          <pre class="diagram">{`exact   net move = the sum of every delta you send
+range   full i16 per axis, no clamp
+signs   +x right, +y down (screen-style), +z wheel up
+paced   a large move drains across frames; nothing is dropped`}</pre>
           <p>
-            The box adds the deltas into its{' '}
-            <A href="/native/injection#state">accumulator</A> and drains it onto the real mouse's
-            reports across <A href="/native/frame">frames</A>, carrying any remainder, so the axis
-            moves by exactly the sum of the deltas. Full <code>i16</code> range, no clamp.{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> zeroes the accumulator.
-            Library binding: <A href="/library/move#move-rel"><code>move_rel</code></A>.
+            The box carries any remainder in its{' '}
+            <A href="/native/injection#state">accumulator</A>;{' '}
+            <A href="/native/commands/admin#reset"><code>RESET</code></A> zeroes it. Library binding:{' '}
+            <A href="/library/move#move-rel"><code>move_rel</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Cursor <code>dx = 100</code>, <code>dy = 0</code> (<code>motion = 0</code>):</p>

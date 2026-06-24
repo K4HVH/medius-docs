@@ -7,16 +7,27 @@ const Lock: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Lock" subtitle="Block one input from the physical mouse" />
+        <CardHeader title="Lock" subtitle="Block one physical input; injection still drives it" />
         <p>
-          <A href="/library/lock#lock"><code>lock</code></A> stops the real mouse from driving one
-          axis, the wheel, or one button, and <A href="/library/lock#lock-key"><code>lock_key</code></A>,{' '}
-          <A href="/library/lock#lock-media"><code>lock_media</code></A>, and{' '}
-          <A href="/library/lock#lock-all"><code>lock_all</code></A> extend the same idea to keyboard
-          keys, media usages, and whole-class blankets. Each has an <code>unlock</code> counterpart.
-          Host <A href="/native/injection">injection</A> still reaches a locked input, so you can take
-          one over without the user fighting you. All are{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.
+          A lock blocks the <em>physical</em> device from one input, while host{' '}
+          <A href="/native/injection">injection</A> still drives that same input. Lock what the user
+          shouldn't touch, then drive it yourself.
+        </p>
+        <pre class="diagram">{`  a locked input:
+     physical  --X   blocked
+     injected  -->   still reaches the PC`}</pre>
+        <table class="api-params">
+          <thead><tr><th>Block a...</th><th>Lock</th><th>Release</th></tr></thead>
+          <tbody>
+            <tr><td>mouse axis / wheel / button</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><code>unlock</code></td></tr>
+            <tr><td>keyboard key</td><td><A href="/library/lock#lock-key"><code>lock_key</code></A></td><td><code>unlock_key</code></td></tr>
+            <tr><td>media usage</td><td><A href="/library/lock#lock-media"><code>lock_media</code></A></td><td><code>unlock_media</code></td></tr>
+            <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><code>unlock_all</code></td></tr>
+          </tbody>
+        </table>
+        <p>
+          All are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.{' '}
+          <A href="/library/lock#query-locks"><code>query_locks</code></A> reads the active mouse set.
         </p>
       </Card>
 

@@ -322,14 +322,15 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 4</code>: how fast the active input reports, plus the poll period the clone
-            advertises. The answer is class-aware. A continuous input (a moving mouse) carries a
-            learned <code>native_period_us</code>, the gap between reports in microseconds, so the rate
-            in Hz is <code>1e6 / period</code>; it reads <code>0</code> until the box has learned it. A
-            change-driven input (a keyboard or media device) has no steady cadence, so it sets the{' '}
-            <code>CHANGE_DRIVEN</code> flag and reports <code>native_period_us = 0</code>; the honest
-            figure is then <code>poll_period_us</code>, the cloned endpoint's <code>bInterval</code>{' '}
-            floor. Reading it tells you what the box actually sees rather than a made-up number.
+            advertises. The answer is class-aware, so read the field that fits the input kind:
           </p>
+          <table class="api-params">
+            <thead><tr><th>Input kind</th><th><code>CHANGE_DRIVEN</code></th><th>Read</th><th>Gives</th></tr></thead>
+            <tbody>
+              <tr><td>continuous (moving mouse)</td><td><code>0</code></td><td><code>native_period_us</code></td><td>Hz = 1e6 / period; reads 0 until learned</td></tr>
+              <tr><td>change-driven (keyboard, media)</td><td><code>1</code></td><td><code>poll_period_us</code></td><td>no steady cadence, so <code>native_period_us</code> is 0</td></tr>
+            </tbody>
+          </table>
           <pre class="api-signature">QUERY  what = 4  ·  RESP 6 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
