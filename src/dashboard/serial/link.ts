@@ -28,15 +28,17 @@ import {
   Q_RATE,
   Q_STATS,
   Q_VERSION,
+  INJ_KEY,
+  INJ_MEDIA,
   LedMode,
   LedTarget,
+  LockClass,
   LockDirection,
   LockTarget,
   RebootTarget,
   catchPayload,
-  consumerPayload,
   encode,
-  keyPayload,
+  injectPayload,
   ledPayload,
   lockPayload,
   parseConsEvent,
@@ -226,21 +228,27 @@ export class SerialLink {
   }
 
   lock(target: LockTarget, direction: LockDirection): Promise<void> {
-    return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 1)));
+    return this.send(
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(LockClass.Mouse, target, direction, 1)),
+    );
   }
 
   unlock(target: LockTarget, direction: LockDirection): Promise<void> {
-    return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 0)));
+    return this.send(
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(LockClass.Mouse, target, direction, 0)),
+    );
   }
 
-  // Inject a keyboard key or modifier by HID keycode (§3.10), tri-state action (0/1/2).
+  // Inject a keyboard key or modifier by HID keycode (§3.2, class key), tri-state action (0/1/2).
   key(usage: number, action: number): Promise<void> {
-    return this.send(encode(FrameType.Key, this.nextSeq(), keyPayload(usage, action)));
+    return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_KEY, usage, action)));
   }
 
-  // Inject a media key by 16-bit Consumer usage (§3.11), tri-state action (0/1/2).
+  // Inject a media key by 16-bit Consumer usage (§3.2, class media), tri-state action (0/1/2).
   consumer(usage: number, action: number): Promise<void> {
-    return this.send(encode(FrameType.Consumer, this.nextSeq(), consumerPayload(usage, action)));
+    return this.send(
+      encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_MEDIA, usage, action)),
+    );
   }
 
   // Subscribe to the physical-input event stream (§3.9); event frames arrive on `onEvent` tagged

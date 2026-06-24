@@ -10,14 +10,16 @@ import {
   RebootTarget,
   SOF,
   catchPayload,
-  consumerPayload,
   crc16Ccitt,
   encode,
   frameTypeFromU8,
   healthFromFlags,
-  keyPayload,
+  injectPayload,
+  INJ_KEY,
+  INJ_MEDIA,
   LedMode,
   LedTarget,
+  LockClass,
   LockDirection,
   LockTarget,
   isComposite,
@@ -253,10 +255,9 @@ describe('helpers', () => {
   });
 
   it('frameTypeFromU8 maps the catch + inject opcodes, null for unknown', () => {
+    expect(frameTypeFromU8(0x03)).toBe(FrameType.Inject);
     expect(frameTypeFromU8(0x0b)).toBe(FrameType.Catch);
     expect(frameTypeFromU8(0x0c)).toBe(FrameType.MouseEvent);
-    expect(frameTypeFromU8(0x0d)).toBe(FrameType.Key);
-    expect(frameTypeFromU8(0x0e)).toBe(FrameType.Consumer);
     expect(frameTypeFromU8(0x0f)).toBe(FrameType.KbEvent);
     expect(frameTypeFromU8(0x10)).toBe(FrameType.ConsEvent);
     expect(frameTypeFromU8(0x11)).toBeNull();
@@ -353,11 +354,19 @@ describe('LED command (§3.7)', () => {
 });
 
 describe('LOCK command (§3.8)', () => {
-  it('lockPayload packs [target][direction][state]', () => {
-    // Lock the wheel's negative (scroll-down) direction.
-    expect(Array.from(lockPayload(LockTarget.Wheel, LockDirection.Negative, 1))).toEqual([2, 2, 1]);
+  it('lockPayload packs [class][usage u16 LE][direction][state]', () => {
+    // Lock the mouse wheel's negative (scroll-down) direction.
+    expect(
+      Array.from(lockPayload(LockClass.Mouse, LockTarget.Wheel, LockDirection.Negative, 1)),
+    ).toEqual([0, 2, 0, 2, 1]);
     // Unlock the X axis, both signs.
-    expect(Array.from(lockPayload(LockTarget.X, LockDirection.Both, 0))).toEqual([0, 0, 0]);
+    expect(Array.from(lockPayload(LockClass.Mouse, LockTarget.X, LockDirection.Both, 0))).toEqual([
+      0, 0, 0, 0, 0,
+    ]);
+    // A media-class lock keeps its 16-bit usage.
+    expect(Array.from(lockPayload(LockClass.Media, 0x00e9, LockDirection.Both, 1))).toEqual([
+      2, 0xe9, 0x00, 0, 1,
+    ]);
   });
 
   it('LockTarget wire values match ctrl_proto.h', () => {
@@ -526,18 +535,17 @@ describe('device-info RESP decoding (v1.4.0)', () => {
 // KEY/CONSUMER inject + the keyboard/media catch stream + KBD_CAPS. Byte vectors mirror the firmware
 // packers/decoders in ctrl_proto.h so the JS side is pinned to the wire format.
 describe('keyboard + media (v1.7.0)', () => {
-  it('keyPayload packs [usage][action] (§3.10)', () => {
-    // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1).
-    expect(Array.from(keyPayload(0x04, 1))).toEqual([0x04, 1]);
-    expect(Array.from(keyPayload(0xe1, 0))).toEqual([0xe1, 0]);
+  it('injectPayload (key) packs [class][usage u16 LE][action] (§3.2)', () => {
+    // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1). class key = 1.
+    expect(Array.from(injectPayload(INJ_KEY, 0x04, 1))).toEqual([1, 0x04, 0x00, 1]);
+    expect(Array.from(injectPayload(INJ_KEY, 0xe1, 0))).toEqual([1, 0xe1, 0x00, 0]);
   });
 
-  it('consumerPayload packs [usage u16 LE][action] (§3.11)', () => {
-    // Press Volume Up (0x00E9); force-release Play/Pause (0x00CD).
-    expect(Array.from(consumerPayload(0xe9, 1))).toEqual([0xe9, 0x00, 1]);
-    expect(Array.from(consumerPayload(0xcd, 2))).toEqual([0xcd, 0x00, 2]);
-    // A two-byte usage stays little-endian.
-    expect(Array.from(consumerPayload(0x0123, 1))).toEqual([0x23, 0x01, 1]);
+  it('injectPayload (media) keeps the 16-bit usage little-endian (§3.2)', () => {
+    // Press Volume Up (0x00E9); force-release Play/Pause (0x00CD). class media = 2.
+    expect(Array.from(injectPayload(INJ_MEDIA, 0xe9, 1))).toEqual([2, 0xe9, 0x00, 1]);
+    expect(Array.from(injectPayload(INJ_MEDIA, 0xcd, 2))).toEqual([2, 0xcd, 0x00, 2]);
+    expect(Array.from(injectPayload(INJ_MEDIA, 0x0123, 1))).toEqual([2, 0x23, 0x01, 1]);
   });
 
   it('parseKbdCaps decodes [n_keys][flags] (§4.11)', () => {

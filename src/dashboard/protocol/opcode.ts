@@ -2,7 +2,14 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 1;
+export const PROTO_VER = 2; // the unified-input-core redesign (generic INJECT/MOVE/LOCK, class-aware RATE)
+
+// INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
+export const INJ_BTN = 0;
+export const INJ_KEY = 1;
+export const INJ_MEDIA = 2;
+export const MOTION_CURSOR = 0;
+export const MOTION_WHEEL = 1;
 
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
@@ -41,11 +48,11 @@ export const KBC_REPORT_ID = 0x08;
 
 // RATE flags (§4.5).
 export const RATE_CONFIDENT = 0x01;
+export const RATE_CHANGE_DRIVEN = 0x02;
 
 export enum FrameType {
   Move = 0x01,
-  Wheel = 0x02,
-  Button = 0x03,
+  Inject = 0x03,
   Reset = 0x04,
   Query = 0x05,
   Resp = 0x06,
@@ -55,8 +62,6 @@ export enum FrameType {
   Lock = 0x0a,
   Catch = 0x0b,
   MouseEvent = 0x0c,
-  Key = 0x0d,
-  Consumer = 0x0e,
   KbEvent = 0x0f,
   ConsEvent = 0x10,
 }
@@ -65,10 +70,8 @@ export function frameTypeFromU8(value: number): FrameType | null {
   switch (value) {
     case 0x01:
       return FrameType.Move;
-    case 0x02:
-      return FrameType.Wheel;
     case 0x03:
-      return FrameType.Button;
+      return FrameType.Inject;
     case 0x04:
       return FrameType.Reset;
     case 0x05:
@@ -87,10 +90,6 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.Catch;
     case 0x0c:
       return FrameType.MouseEvent;
-    case 0x0d:
-      return FrameType.Key;
-    case 0x0e:
-      return FrameType.Consumer;
     case 0x0f:
       return FrameType.KbEvent;
     case 0x10:
