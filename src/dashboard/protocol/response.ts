@@ -116,6 +116,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           nativePeriodUs: u16le(payload, 1),
           pollPeriodUs: u16le(payload, 3),
           confident: (payload[5] & RATE_CONFIDENT) !== 0,
+          changeDriven: (payload[5] & RATE_CHANGE_DRIVEN) !== 0,
         },
       };
     }

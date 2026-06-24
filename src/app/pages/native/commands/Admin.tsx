@@ -30,8 +30,8 @@ const Admin: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             Zeroes the accumulators (<code>accX</code>, <code>accY</code>, <code>accWheel</code>) and
-            sets every <A href="/native/commands/buttons"><code>BUTTON</code></A> override back to
-            none, so injected-held buttons release and the real mouse passes through. The report is
+            sets every <A href="/native/commands/inject"><code>INJECT</code></A> override back to
+            none, so injected-held buttons and keys release and the real device passes through. The report is
             then byte-identical to passthrough; sending it twice is a no-op. This is what the{' '}
             <A href="/native/injection#safety">safety auto-clear</A> performs. Library binding:{' '}
             <A href="/library/admin#reset"><code>reset</code></A>.

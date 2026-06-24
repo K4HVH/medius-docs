@@ -88,7 +88,7 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="Send a MOVE" subtitle="Relative cursor movement" />
           <p>
-            <A href="/native/commands/movement#move"><code>MOVE</code></A> nudges the cursor on the
+            <A href="/native/commands/move#move"><code>MOVE</code></A> nudges the cursor on the
             PC. Its frame has the standard shape, laid out byte-by-byte below.
           </p>
           <ul>
@@ -123,7 +123,7 @@ def encode(type, seq, payload):
 frame = encode(0x01, 0, struct.pack('<hh', 100, 0))
 port.write(frame)`}</code></pre>
           <p>
-            <A href="/native/commands/movement#move"><code>MOVE</code></A> has opcode{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A> has opcode{' '}
             <code>0x01</code>. Its payload is two signed 16-bit deltas, <code>dx</code> then{' '}
             <code>dy</code>. <code>+x</code> is right, <code>+y</code> is down. The example moves 100
             right, 0 down.
@@ -133,7 +133,7 @@ port.write(frame)`}</code></pre>
             <code>A5 01 00 04 00 64 00 00 00 &lt;crc&gt;</code>: start byte, opcode <code>0x01</code>,
             sequence, length, the <code>dx</code>/<code>dy</code> payload, then the checksum. The
             byte-by-byte breakdown is on{' '}
-            <A href="/native/commands/movement#move"><code>MOVE</code></A>, the frame format on{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A>, the frame format on{' '}
             <A href="/native/frame">Frame Format</A>.
           </p>
         </Card>
@@ -151,7 +151,7 @@ port.write(frame)`}</code></pre>
             <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check that{' '}
             <code>MOUSE_ATTACHED</code> (<code>0x02</code>) and <code>CLONE_CONFIGURED</code>{' '}
             (<code>0x04</code>) are set before trusting that your{' '}
-            <A href="/native/commands/movement#move"><code>MOVE</code></A> reached the game PC. A flag
+            <A href="/native/commands/move#move"><code>MOVE</code></A> reached the game PC. A flag
             is set when <code>(flags &amp; mask)</code> is non-zero; the full byte is on{' '}
             <A href="/native/commands/requests#health">HEALTH</A>.
           </p>

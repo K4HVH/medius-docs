@@ -12,7 +12,7 @@ import {
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
-  BsLightbulb, BsSliders, BsLock, BsKeyboard,
+  BsLightbulb, BsSliders, BsLock, BsHash,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -40,14 +40,14 @@ const nativeProtocolTabs: TabOption[] = [
 ];
 
 const nativeCommandTabs: TabOption[] = [
-  { value: '/native/commands/movement', label: 'Movement', icon: BsArrowsMove },
-  { value: '/native/commands/buttons', label: 'Buttons', icon: BsCursor },
-  { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
-  { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
-  { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
+  { value: '/native/commands/inject', label: 'Inject', icon: BsCursor },
+  { value: '/native/commands/move', label: 'Move', icon: BsArrowsMove },
   { value: '/native/commands/lock', label: 'Lock', icon: BsLock },
   { value: '/native/commands/catch', label: 'Catch', icon: BsActivity },
-  { value: '/native/commands/keyboard', label: 'Keyboard', icon: BsKeyboard },
+  { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
+  { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
+  { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
+  { value: '/native/commands/usage', label: 'Usage IDs', icon: BsHash },
 ];
 
 const nativeReferenceTabs: TabOption[] = [
@@ -65,14 +65,13 @@ const libraryGettingStartedTabs: TabOption[] = [
 ];
 
 const libraryApiTabs: TabOption[] = [
-  { value: '/library/movement', label: 'Movement', icon: BsArrowsMove },
-  { value: '/library/buttons', label: 'Buttons', icon: BsCursor },
-  { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
-  { value: '/library/admin', label: 'Admin', icon: BsGear },
-  { value: '/library/led', label: 'LED', icon: BsLightbulb },
+  { value: '/library/inject', label: 'Inject', icon: BsCursor },
+  { value: '/library/move', label: 'Move', icon: BsArrowsMove },
   { value: '/library/lock', label: 'Lock', icon: BsLock },
   { value: '/library/catch', label: 'Catch', icon: BsActivity },
-  { value: '/library/keyboard', label: 'Keyboard', icon: BsKeyboard },
+  { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
+  { value: '/library/led', label: 'LED', icon: BsLightbulb },
+  { value: '/library/admin', label: 'Admin', icon: BsGear },
   { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];

@@ -11,26 +11,25 @@ import NativeTransport from './pages/native/Transport';
 import NativeConnection from './pages/native/Connection';
 import NativeFrame from './pages/native/Frame';
 import NativeInjection from './pages/native/Injection';
-import CmdMovement from './pages/native/commands/Movement';
-import CmdButtons from './pages/native/commands/Buttons';
+import CmdInject from './pages/native/commands/Inject';
+import CmdMove from './pages/native/commands/Move';
+import CmdUsage from './pages/native/commands/Usage';
 import CmdRequests from './pages/native/commands/Requests';
 import CmdAdmin from './pages/native/commands/Admin';
 import CmdLed from './pages/native/commands/Led';
 import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
-import CmdKeyboard from './pages/native/commands/Keyboard';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import LibIntroduction from './pages/library/Introduction';
 import LibConnection from './pages/library/Connection';
-import LibMovement from './pages/library/Movement';
-import LibButtons from './pages/library/Buttons';
+import LibInject from './pages/library/Inject';
+import LibMove from './pages/library/Move';
 import LibRequests from './pages/library/Requests';
 import LibAdmin from './pages/library/Admin';
 import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
-import LibKeyboard from './pages/library/Keyboard';
 import LibLifecycle from './pages/library/Lifecycle';
 import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
@@ -67,26 +66,25 @@ const App: Component = () => {
           <Route path="/native/connection" component={NativeConnection} />
           <Route path="/native/frame" component={NativeFrame} />
           <Route path="/native/injection" component={NativeInjection} />
-          <Route path="/native/commands/movement" component={CmdMovement} />
-          <Route path="/native/commands/buttons" component={CmdButtons} />
+          <Route path="/native/commands/inject" component={CmdInject} />
+          <Route path="/native/commands/move" component={CmdMove} />
           <Route path="/native/commands/requests" component={CmdRequests} />
           <Route path="/native/commands/admin" component={CmdAdmin} />
           <Route path="/native/commands/led" component={CmdLed} />
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
-          <Route path="/native/commands/keyboard" component={CmdKeyboard} />
+          <Route path="/native/commands/usage" component={CmdUsage} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
           <Route path="/library" component={LibIntroduction} />
           <Route path="/library/connection" component={LibConnection} />
-          <Route path="/library/movement" component={LibMovement} />
-          <Route path="/library/buttons" component={LibButtons} />
+          <Route path="/library/inject" component={LibInject} />
+          <Route path="/library/move" component={LibMove} />
           <Route path="/library/requests" component={LibRequests} />
           <Route path="/library/admin" component={LibAdmin} />
           <Route path="/library/led" component={LibLed} />
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
-          <Route path="/library/keyboard" component={LibKeyboard} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
           <Route path="/library/diagnostics" component={LibDiagnostics} />
           <Route path="/library/features/async" component={FeatAsync} />
