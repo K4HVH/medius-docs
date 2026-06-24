@@ -37,9 +37,20 @@ const Inject: Component = () => {
               <tr><td><code>action</code></td><td><A href="/library/types/enums#action"><code>Action</code></A></td><td>Press, soft-release, or force-release.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">PICK A METHOD</div>
+          <table class="api-params">
+            <thead><tr><th>Input</th><th>Hold down</th><th>Release</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/library/inject#button">button</A></td><td><code>press</code></td><td><code>soft_release</code> / <code>force_release</code></td></tr>
+              <tr><td><A href="/library/inject#key">key</A></td><td><code>key_down</code></td><td><code>key_up</code> / <code>key_force_release</code></td></tr>
+              <tr><td><A href="/library/inject#media">media</A></td><td><code>media_down</code></td><td><code>media_up</code> / <code>media_force_release</code></td></tr>
+            </tbody>
+          </table>
           <p>
-            A usage the cloned device can't report is a no-op. There is no firmware click or chord:
-            compose a press then a client-timed release.{' '}
+            Every row is a thin wrapper over <code>inject</code> with the matching class; call{' '}
+            <code>inject(input, action)</code> directly when the input or action is a value you're
+            passing around. A usage the cloned device can't report is a no-op, and there's no firmware
+            click or chord (compose a press then a client-timed release).{' '}
             <A href="/library/admin#reset"><code>reset</code></A> releases every override.
           </p>
           <div class="api-response-label">EXAMPLE</div>
