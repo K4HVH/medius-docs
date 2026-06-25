@@ -21,7 +21,7 @@ const TypesAndErrors: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, ButtonAction, Health, Version, Error, Result};
+          <pre><code>{`use medius::{Button, Action, Health, Version, Error, Result};
 
 // One flat namespace. This does NOT work:
 // use medius::types::Button;`}</code></pre>
@@ -34,12 +34,12 @@ const TypesAndErrors: Component = () => {
           <div class="docs-grid">
             <A href="/library/types/enums" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Enums" subtitle="Button, ButtonAction, RebootTarget, LogLevel" />
+                <CardHeader title="Enums" subtitle="Button, Action, RebootTarget, LogLevel, CatchEvent" />
               </Card>
             </A>
             <A href="/library/types/structs" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Structs" subtitle="Version, Health, MouseInfo, Caps, Rate, Stats, and more" />
+                <CardHeader title="Structs" subtitle="Version, Health, MouseCaps, KbdCaps, Key, MediaKey, and more" />
               </Card>
             </A>
             <A href="/library/types/frames" style={{ "text-decoration": "none" }}>

@@ -4,10 +4,15 @@ import {
   H_CATCH_ON,
   H_CLONE_CFG,
   H_INJECT_ON,
+  H_KBD_ATT,
   H_LINK_UP,
   H_LOCK_ON,
   H_MOUSE_ATT,
   H_RATE_CONFIDENT,
+  KBC_CONSUMER,
+  KBC_NKRO,
+  KBC_REPORT_ID,
+  KBC_SYSTEM,
 } from './opcode';
 
 export interface Version {
@@ -29,6 +34,7 @@ export interface Health {
   rateConfident: boolean;
   lockOn: boolean;
   catchOn: boolean;
+  kbdAttached: boolean;
 }
 
 export function healthFromFlags(flags: number): Health {
@@ -40,6 +46,7 @@ export function healthFromFlags(flags: number): Health {
     rateConfident: (flags & H_RATE_CONFIDENT) !== 0,
     lockOn: (flags & H_LOCK_ON) !== 0,
     catchOn: (flags & H_CATCH_ON) !== 0,
+    kbdAttached: (flags & H_KBD_ATT) !== 0,
   };
 }
 
@@ -60,7 +67,7 @@ export function vidPid(m: MouseInfo): string {
 }
 
 // Semantic capabilities of the emulated mouse (§4.4). Counts and booleans only.
-export interface Caps {
+export interface MouseCaps {
   nButtons: number;
   hasX: boolean;
   hasY: boolean;
@@ -69,8 +76,28 @@ export interface Caps {
   nHid: number;
 }
 
-export function isComposite(c: Caps): boolean {
+export function isComposite(c: MouseCaps): boolean {
   return c.nHid > 1;
+}
+
+// Semantic capabilities of the cloned keyboard (§4.11). All-zero when no keyboard is bound.
+// nkro is true for an NKRO bitmap board (n_keys 0xff or the NKRO flag).
+export interface KbdCaps {
+  nKeys: number;
+  nkro: boolean;
+  hasConsumer: boolean;
+  hasSystem: boolean;
+  hasReportId: boolean;
+}
+
+export function kbdCapsFromBytes(nKeys: number, flags: number): KbdCaps {
+  return {
+    nKeys,
+    nkro: nKeys === 0xff || (flags & KBC_NKRO) !== 0,
+    hasConsumer: (flags & KBC_CONSUMER) !== 0,
+    hasSystem: (flags & KBC_SYSTEM) !== 0,
+    hasReportId: (flags & KBC_REPORT_ID) !== 0,
+  };
 }
 
 // Live native report rate and clone poll period (§4.5).
@@ -96,6 +123,14 @@ export interface Stats {
   wakeups: number;
   resetCount: number;
   configCount: number;
+}
+
+// Injection override action, shared by BUTTON, KEY (§3.10), and CONSUMER (§3.11). Wire values
+// match ctrl_proto.h CTRL_ACT_*.
+export enum Action {
+  SoftRelease = 0,
+  Press = 1,
+  ForceRelease = 2,
 }
 
 export enum RebootTarget {
@@ -156,20 +191,20 @@ function locksBit(locks: Locks, target: LockTarget, positive: boolean): boolean 
   return (locks.mask & (1 << bit)) !== 0;
 }
 
-// CATCH subscription classes (§3.9): which physical-input changes stream as EVENT frames. Combine
+// CATCH subscription classes (§3.9): which physical-input changes stream as event frames. Combine
 // with bitwise OR. The mask only gates which reports trigger an event; the payload is always the
 // full snapshot. Wire values match ctrl_proto.h.
 export enum CatchClass {
   Motion = 0x01,
   Wheel = 0x02,
   Buttons = 0x04,
+  Keys = 0x08,
+  All = 0x0f,
 }
 
-export const CATCH_ALL = 0x07;
-
-// One physical-input snapshot from the CATCH stream (an EVENT frame, §4.10), captured at the merge
+// One mouse snapshot from the CATCH stream (a MOUSE_EVENT frame, §4.10), captured at the merge
 // point before any lock suppression or injection.
-export interface InputReport {
+export interface MouseReport {
   buttons: number; // bit b set = button id b held (0=Left .. 4=Side2)
   dx: number;
   dy: number;
@@ -177,9 +212,28 @@ export interface InputReport {
 }
 
 // True when button id `button` (0=Left .. 4=Side2) is held in this snapshot.
-export function inputReportPressed(r: InputReport, button: number): boolean {
+export function mouseReportPressed(r: MouseReport, button: number): boolean {
   return (r.buttons & (1 << button)) !== 0;
 }
+
+// One keyboard snapshot from the CATCH stream (a KB_EVENT frame, §4.12): the modifier bitmap plus
+// every currently-pressed keycode (ascending). A snapshot, not edge deltas.
+export interface KeyboardReport {
+  modifiers: number; // bit m set = the modifier at usage 0xE0 + m
+  keys: number[]; // pressed HID keycodes
+}
+
+// One media snapshot from the CATCH stream (a CONS_EVENT frame, §4.13): the active Consumer usages.
+export interface ConsumerReport {
+  usages: number[];
+}
+
+// One decoded frame from the CATCH stream, tagged by source. The dashboard's `mouse`/`keyboard`/
+// `media` kinds avoid shadowing the DOM `MouseEvent` / `KeyboardEvent` globals.
+export type CatchEvent =
+  | { kind: 'mouse'; report: MouseReport }
+  | { kind: 'keyboard'; report: KeyboardReport }
+  | { kind: 'media'; report: ConsumerReport };
 
 // Decoded RESP(CATCH) (§4.9): the active subscription mask + box-side dropped-event count.
 export interface CatchState {

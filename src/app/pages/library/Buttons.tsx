@@ -21,7 +21,7 @@ const Buttons: Component = () => {
               <tr><td><code>press</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>Force the button down and hold it.</td></tr>
               <tr><td><code>soft_release</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>Clear your press; a physical hold stays down.</td></tr>
               <tr><td><code>force_release</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>Force the button up, masking a physical hold.</td></tr>
-              <tr><td><code>button</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>The generic form; you pass the <A href="#methods"><code>ButtonAction</code></A>.</td></tr>
+              <tr><td><code>button</code></td><td><A href="/native/commands/buttons"><code>BUTTON</code></A></td><td>The generic form; you pass the <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
             </tbody>
           </table>
           <p>See also: <A href="/library/guides/calls#clicking">clicking &amp; holds</A>, <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
@@ -40,7 +40,7 @@ const Buttons: Component = () => {
             <A href="#soft-release"><code>soft_release</code></A> or{' '}
             <A href="#force-release"><code>force_release</code></A>) or call{' '}
             <A href="/library/admin#reset"><code>reset</code></A>. Shorthand for{' '}
-            <A href="#methods"><code>button(button, ButtonAction::Press)</code></A>.
+            <A href="#methods"><code>button(button, Action::Press)</code></A>.
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
@@ -107,8 +107,8 @@ device.force_release(Button::Right)?; // a physical hold of Right is forced up`}
 
       <div id="methods" data-search-target>
         <Card>
-          <CardHeader title="button and ButtonAction" subtitle="The generic form and its action enum" />
-          <pre class="api-signature">fn button(&self, button: Button, action: ButtonAction) -&gt; Result&lt;()&gt;</pre>
+          <CardHeader title="button and Action" subtitle="The generic form and its action enum" />
+          <pre class="api-signature">fn button(&self, button: Button, action: Action) -&gt; Result&lt;()&gt;</pre>
           <p>
             <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
@@ -116,13 +116,13 @@ device.force_release(Button::Right)?; // a physical hold of Right is forced up`}
             The generic form behind <A href="#press"><code>press</code></A>,{' '}
             <A href="#soft-release"><code>soft_release</code></A>, and{' '}
             <A href="#force-release"><code>force_release</code></A>; reach for it when the{' '}
-            <A href="/library/types/enums#button-action"><code>ButtonAction</code></A> is a value you're passing
+            <A href="/library/types/enums#action"><code>Action</code></A> is a value you're passing
             around.
           </p>
           <div class="api-response-label">ACTIONS</div>
           <table class="api-params">
             <thead>
-              <tr><th>Helper</th><th><code>ButtonAction</code></th><th>byte</th><th>Effect</th></tr>
+              <tr><th>Helper</th><th><code>Action</code></th><th>byte</th><th>Effect</th></tr>
             </thead>
             <tbody>
               <tr><td><code>soft_release</code></td><td><code>SoftRelease</code></td><td><code>0</code></td><td>Clear your press; defer to physical state.</td></tr>
@@ -132,13 +132,13 @@ device.force_release(Button::Right)?; // a physical hold of Right is forced up`}
           </table>
           <p>
             Each discriminant is the wire <code>action</code> byte; convert with{' '}
-            <code>ButtonAction::from_u8(u8)</code> and <code>as_u8()</code>.
+            <code>Action::from_u8(u8)</code> and <code>as_u8()</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, ButtonAction};
+          <pre><code>{`use medius::{Button, Action};
 
 // same as device.press(Button::Right)?
-device.button(Button::Right, ButtonAction::Press)?;`}</code></pre>
+device.button(Button::Right, Action::Press)?;`}</code></pre>
         </Card>
       </div>
 

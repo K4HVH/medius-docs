@@ -116,7 +116,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="version, health, and the four device-info queries" />
+                <CardHeader title="Requests" subtitle="version, health, and the five device-info queries" />
               </Card>
             </A>
             <A href="/library/admin" style={{ "text-decoration": "none" }}>
@@ -127,6 +127,11 @@ const Introduction: Component = () => {
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Catch" subtitle="Stream physical input" />
+              </Card>
+            </A>
+            <A href="/library/keyboard" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Keyboard" subtitle="Inject keys and media keys" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>

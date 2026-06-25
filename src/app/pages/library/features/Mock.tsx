@@ -98,7 +98,9 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_mouse_info(self, mouse_info: MouseInfo) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
+          <pre class="api-signature">fn with_mouse_caps(self, caps: MouseCaps) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_kbd_caps(self, kbd_caps: KbdCaps) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -114,7 +116,8 @@ device.move_rel(5, 5)?;`}</code></pre>
             <A href="/library/requests"><code>query_version</code></A>,{' '}
             <code>query_health</code>, and the device-info queries{' '}
             (<A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
-            <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
+            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps</code></A>,{' '}
+            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live
             fake in place to flip the version or health mid-test.{' '}
@@ -149,28 +152,44 @@ assert!(device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn push_event(&self, seq: u8, report: MouseEvent)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn push_kb_event(&self, seq: u8, event: &KeyboardEvent)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn push_cons_event(&self, seq: u8, event: &MediaEvent)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            Both put bytes on the inbound stream as if the box emitted them.{' '}
+            All put bytes on the inbound stream as if the box emitted them.{' '}
             <code>push_log</code> frames a <code>LOG</code> line that surfaces on{' '}
             <A href="/library/diagnostics#logs"><code>logs()</code></A> as a{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> ({' '}
             <A href="/library/types/enums#log-level"><code>LogLevel</code></A> plus <code>text</code>);{' '}
-            <code>push_raw</code> sends arbitrary bytes.
+            <code>push_raw</code> sends arbitrary bytes. The three <code>push_*_event</code> calls feed the{' '}
+            <A href="/library/catch#event-stream"><code>EventStream</code></A>: a{' '}
+            <A href="/library/types/structs#mouse-event"><code>MouseEvent</code></A>,{' '}
+            <A href="/library/types/structs#keyboard-event"><code>KeyboardEvent</code></A>, or{' '}
+            <A href="/library/types/structs#media-event"><code>MediaEvent</code></A> arrives as the matching{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant, with <code>seq</code> as
+            the rolling counter so a test can assert gap detection.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use std::time::Duration;
-use medius::{Device, LogLevel, MockBox};
+use medius::{CatchEvent, CatchMask, Device, Key, KeyboardEvent, LogLevel, MockBox};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
 let rx = device.logs();
 
 mock.push_log(LogLevel::Warn, "overheating");
-
 let line = rx.recv_timeout(Duration::from_secs(1))?;
-assert_eq!(line.text, "overheating");`}</code></pre>
+assert_eq!(line.text, "overheating");
+
+// Fake a catch subscription seeing the user hold A.
+let stream = device.catch_events(CatchMask::KEYS)?;
+mock.push_kb_event(0, &KeyboardEvent { modifiers: 0, keys: vec![Key::A] });
+assert!(matches!(stream.recv()?, CatchEvent::Keyboard(k) if k.keys == vec![Key::A]));`}</code></pre>
         </Card>
       </div>
 
