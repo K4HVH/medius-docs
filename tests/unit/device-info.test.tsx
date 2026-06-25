@@ -54,7 +54,8 @@ describe('DeviceInfo — one Capabilities card', () => {
 
     const { findByText, queryByText } = render(() => <DeviceInfo />);
     await findByText('Capabilities');                 // one unified card
-    await findByText(/NKRO/);                          // keyboard caps shown on the Device tab
+    await findByText('Keyboard');                      // keyboard section on the Device tab
+    await findByText('Media keys');                    // a capability chip
     await findByText(/31E3:1232/);                     // the cloned device's USB id
     await findByText('Full clone');                    // over-capacity as a terse row...
     await findByText(/1 input can't be copied/);       // ...not a prose card
@@ -78,10 +79,13 @@ describe('DeviceInfo — one Capabilities card', () => {
     mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
 
     const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText('Capabilities');
+    await findByText('Mouse');            // mouse section
+    await findByText('Buttons');
+    await findByText('Wheel');            // a capability chip
     await findByText(/046D:C08B/);
-    await findByText(/5 btn \/ wheel \/ 1 iface/);
     await findByText('Full clone');
-    await findByText('Yes');
-    expect(queryByText('Keyboard')).toBeNull();
+    await findByText('Yes');              // full-clone success chip
+    expect(queryByText('Keyboard')).toBeNull();   // no keyboard section
   });
 });

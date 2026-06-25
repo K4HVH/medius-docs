@@ -9,6 +9,7 @@ import {
   type Stats,
   hasKeyboard,
   hasMouse,
+  isComposite,
   nativeHz,
   vidPid,
 } from '../../../dashboard/protocol';
@@ -16,19 +17,41 @@ import { useDashboard } from './context';
 
 const INFO_POLL_MS = 2000;
 
+// bcdUSB is binary-coded decimal: 0x0200 -> "2.00", 0x0201 -> "2.01".
+const bcd = (n: number) => `${n >> 8}.${(n >> 4) & 0xf}${n & 0xf}`;
+
+const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
 const field = {
   display: 'flex',
   'justify-content': 'space-between',
   gap: 'var(--g-spacing)',
   padding: '6px 0',
 } as const;
-const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
+const sectionLabel = {
+  color: 'var(--g-text-muted, #8a8a8a)',
+  'font-size': 'var(--font-size-xs, 0.75rem)',
+  'font-weight': '600',
+  'letter-spacing': '0.05em',
+  'text-transform': 'uppercase',
+  margin: 'var(--g-spacing) 0 var(--g-spacing-sm)',
+} as const;
+const chipRow = {
+  display: 'flex',
+  'flex-wrap': 'wrap',
+  gap: 'var(--g-spacing-sm)',
+  'padding-top': '4px',
+} as const;
 
 const Row = (props: { label: string; children: unknown }) => (
   <div style={field}>
     <span style={muted}>{props.label}</span>
     <span>{props.children as never}</span>
   </div>
+);
+
+// A capability chip: lit (success) when present, dim (neutral) when absent.
+const CapChip = (props: { on: boolean; children: unknown }) => (
+  <Chip variant={props.on ? 'success' : 'neutral'}>{props.children as never}</Chip>
 );
 
 const DeviceInfo = () => {
@@ -79,41 +102,66 @@ const DeviceInfo = () => {
     onCleanup(stop);
   });
 
-  const usbId = () => (mouse()?.vid ? vidPid(mouse()!) : null);
-
   return (
     <>
       <Card>
-        <CardHeader title="Capabilities" subtitle="What the box detected and clones" />
-        <Show when={caps()} fallback={<Row label="Device">none cloned</Row>}>
+        <CardHeader title="Capabilities" subtitle="What the box detected and clones to the game" />
+        <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
           {(c) => (
             <>
+              <Show when={mouse()?.vid}>
+                <Row label="USB id">
+                  <code>{vidPid(mouse()!)}</code>
+                  <span style={muted}> · USB {bcd(mouse()!.bcdUsb)}</span>
+                </Row>
+              </Show>
+
               <Show when={hasMouse(c())}>
-                <Row label="Mouse">
-                  <Show when={usbId()}>
-                    <code>{usbId()}</code>{' '}
-                  </Show>
-                  {c().mouse.nButtons} btn{c().mouse.hasWheel ? ' / wheel' : ''} / {c().mouse.nHid} iface
-                  {c().mouse.nHid === 1 ? '' : 's'}
+                <div style={sectionLabel}>Mouse</div>
+                <Row label="Buttons">{c().mouse.nButtons}</Row>
+                <Row label="Interfaces">
+                  {c().mouse.nHid}
+                  {isComposite(c().mouse) ? ' · composite' : ''}
                 </Row>
+                <div style={chipRow}>
+                  <CapChip on={c().mouse.hasX}>X axis</CapChip>
+                  <CapChip on={c().mouse.hasY}>Y axis</CapChip>
+                  <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
+                  <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
+                </div>
               </Show>
+
               <Show when={hasKeyboard(c())}>
-                <Row label="Keyboard">
-                  <Show when={usbId()}>
-                    <code>{usbId()}</code>{' '}
-                  </Show>
-                  {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys} keys`}
-                  {c().keyboard.hasConsumer ? ' / media' : ''}
-                  {c().keyboard.hasReportId ? ' / report id' : ''}
+                <div style={sectionLabel}>Keyboard</div>
+                <Row label="Rollover">
+                  {c().keyboard.nkro ? 'NKRO (every key at once)' : `${c().keyboard.nKeys}-key`}
                 </Row>
+                <div style={chipRow}>
+                  <CapChip on={c().keyboard.nkro}>NKRO</CapChip>
+                  <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
+                  <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
+                  <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
+                </div>
               </Show>
+
               <Show when={imperfect()}>
                 {(imp) => (
-                  <Row label="Full clone">
-                    <Show when={imp().overCapacity} fallback={<Chip variant="success">Yes</Chip>}>
-                      <Chip variant="warning">No · 1 input can't be copied</Chip>
-                    </Show>
-                  </Row>
+                  <>
+                    <div style={sectionLabel}>Clone</div>
+                    <Row label="Full clone">
+                      <Show
+                        when={imp().overCapacity}
+                        fallback={<Chip variant="success">Yes</Chip>}
+                      >
+                        <Chip variant="warning">No · 1 input can't be copied</Chip>
+                      </Show>
+                    </Row>
+                    <Row label="Serial number">
+                      <Chip variant={mouse()?.hasSerial ? 'success' : 'neutral'}>
+                        {mouse()?.hasSerial ? 'Cloned' : 'None'}
+                      </Chip>
+                    </Row>
+                  </>
                 )}
               </Show>
             </>
