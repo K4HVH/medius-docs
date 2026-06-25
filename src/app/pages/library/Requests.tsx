@@ -79,7 +79,7 @@ if h.link_up && h.mouse_attached && h.clone_configured {
 
       <div id="query-mouse-info" data-search-target>
         <Card>
-          <CardHeader title="query_mouse_info" subtitle="USB identity of the emulated mouse" />
+          <CardHeader title="query_mouse_info" subtitle="USB identity of the clone" />
           <pre class="api-signature">fn query_mouse_info(&self) -&gt; Result&lt;MouseInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 

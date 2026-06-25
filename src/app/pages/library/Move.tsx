@@ -6,29 +6,34 @@ import '../../../styles/docs.css';
 const Move: Component = () => {
   return (
     <>
+      <Card>
+        <CardHeader title="Move" subtitle="Cursor motion and scroll" />
+        <p>
+          One field-generic verb, <A href="/library/move#move"><code>move_axis</code></A>, drives the
+          relative axes. <A href="/library/move#move-rel"><code>move_rel</code></A> and{' '}
+          <A href="/library/move#wheel"><code>wheel</code></A> are thin wrappers over it. Each call
+          queues one <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
+          <A href="/native/commands/move#move"><code>MOVE</code></A> frame.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>You want</th><th>Method</th><th>Same as</th></tr></thead>
+          <tbody>
+            <tr><td>move the cursor</td><td><A href="/library/move#move-rel"><code>move_rel(dx, dy)</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx, dy {'}'})</code></td></tr>
+            <tr><td>scroll the wheel</td><td><A href="/library/move#wheel"><code>wheel(dz)</code></A></td><td><code>move_axis(Motion::Wheel(dz))</code></td></tr>
+          </tbody>
+        </table>
+      </Card>
+
       <div id="move" data-search-target>
         <Card>
-          <CardHeader title="Move" subtitle="Cursor motion and scroll" />
-          <p>
-            One field-generic verb drives the relative axes. Each call queues one{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A> frame.
-          </p>
+          <CardHeader title="move_axis" subtitle="Field-generic motion verb" />
           <pre class="api-signature">fn move_axis(&self, motion: Motion) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             <code>motion</code> is a <A href="/library/types/enums#motion"><code>Motion</code></A>:{' '}
             <code>Cursor {'{'} dx, dy {'}'}</code> for pointer movement or <code>Wheel(dz)</code> for
-            scroll. The two methods below are thin wrappers over this verb.
+            scroll. Backs the <A href="/native/commands/move#move"><code>MOVE</code></A> command.
           </p>
-          <div class="api-response-label">PICK A METHOD</div>
-          <table class="api-params">
-            <thead><tr><th>You want</th><th>Method</th><th>Same as</th></tr></thead>
-            <tbody>
-              <tr><td>move the cursor</td><td><A href="/library/move#move-rel"><code>move_rel(dx, dy)</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx, dy {'}'})</code></td></tr>
-              <tr><td>scroll the wheel</td><td><A href="/library/move#wheel"><code>wheel(dz)</code></A></td><td><code>move_axis(Motion::Wheel(dz))</code></td></tr>
-            </tbody>
-          </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Motion;
 
