@@ -1,4 +1,5 @@
 import { Show, createSignal, onCleanup, onMount } from 'solid-js';
+import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -37,9 +38,10 @@ const DeviceImperfect = () => {
       <Card>
         <CardHeader title="Imperfect clone" subtitle="Clone a device the box can't fully fit" />
         <p>
-          Some devices need more interrupt-IN endpoints than the box has. By default the box refuses
-          them rather than show a broken clone. Allow imperfect cloning and it clones the device anyway,
-          with the one over-capacity interface dead. Re-plug the device for a change to take effect.
+          Some devices have more inputs than the box can copy. By default the box refuses them rather than
+          show a half-working clone. Allow imperfect cloning and it clones the device anyway, with the one
+          extra input left off. The box reboots itself to apply the change — no re-plug needed. Whether
+          the attached device actually needs this shows on the <A href="/dashboard">Device</A> page.
         </p>
         <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
           <Button variant="primary" onClick={() => void set(true)}>Allow imperfect</Button>
@@ -47,22 +49,9 @@ const DeviceImperfect = () => {
         </div>
         <Show when={status()} fallback={<p style={{ 'margin-top': 'var(--g-spacing)' }}>Reading status...</p>}>
           {(s) => (
-            <div
-              style={{
-                display: 'flex',
-                'flex-wrap': 'wrap',
-                gap: 'var(--g-spacing-sm)',
-                'margin-top': 'var(--g-spacing)',
-              }}
-            >
+            <div style={{ 'margin-top': 'var(--g-spacing)' }}>
               <Chip variant={s().allowed ? 'success' : 'neutral'}>
-                {s().allowed ? 'Imperfect allowed' : 'Faithful only'}
-              </Chip>
-              <Chip variant={s().overCapacity ? 'warning' : 'neutral'}>
-                {s().overCapacity ? 'Device over-capacity' : 'Device fits'}
-              </Chip>
-              <Chip variant={s().cloneImperfect ? 'warning' : 'neutral'}>
-                {s().cloneImperfect ? 'Clone imperfect' : 'Clone faithful'}
+                {s().allowed ? 'Imperfect clones allowed' : 'Faithful only'}
               </Chip>
             </div>
           )}
