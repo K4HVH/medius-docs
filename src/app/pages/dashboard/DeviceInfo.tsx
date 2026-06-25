@@ -3,6 +3,7 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import {
   type Caps,
+  type ImperfectStatus,
   type MouseInfo,
   type Rate,
   type Stats,
@@ -36,10 +37,12 @@ const Row = (props: { label: string; children: unknown }) => (
 const DeviceInfo = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
+  const kbdAttached = () => dash.health()?.kbdAttached === true;
   const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
   const [caps, setCaps] = createSignal<Caps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
   const [stats, setStats] = createSignal<Stats | null>(null);
+  const [imperfect, setImperfect] = createSignal<ImperfectStatus | null>(null);
 
   let timer: ReturnType<typeof setTimeout> | null = null;
   let running = false;
@@ -61,6 +64,7 @@ const DeviceInfo = () => {
       setCaps(null);
       setRate(null);
       setStats(null);
+      setImperfect(null);
       return;
     }
     running = true;
@@ -71,6 +75,7 @@ const DeviceInfo = () => {
         setCaps(await link.queryCaps());
         setRate(await link.queryRate());
         setStats(await link.queryStats());
+        setImperfect(await link.queryImperfect());
       } catch {
         // transient; try again next tick
       }
@@ -115,6 +120,46 @@ const DeviceInfo = () => {
           )}
         </Show>
       </Card>
+
+      <Show when={kbdAttached()}>
+        <Card>
+          <CardHeader title="Your keyboard" subtitle="What the box detected on the cloned keyboard" />
+          <Show when={caps()} fallback={<p>Reading...</p>}>
+            {(c) => (
+              <>
+                <Row label="Key slots">
+                  {c().keyboard.nkro ? 'NKRO bitmap' : `${c().keyboard.nKeys} keys`}
+                </Row>
+                <Row label="Media keys">
+                  <Show when={c().keyboard.hasConsumer} fallback={<Chip variant="neutral">No</Chip>}>
+                    <Chip variant="success">Yes</Chip>
+                  </Show>
+                </Row>
+                <Row label="Report id">{c().keyboard.hasReportId ? 'Yes' : 'No'}</Row>
+              </>
+            )}
+          </Show>
+        </Card>
+      </Show>
+
+      <Show when={imperfect()?.overCapacity}>
+        <Card>
+          <CardHeader title="Not a full copy" subtitle="This device has more than the box can clone" />
+          <p style={muted}>
+            This device has more separate inputs than the box can copy at once, so one of them (often an
+            extra analog or sensor stream) can't come through. The keyboard, mouse, and media parts are
+            still exact copies.
+          </p>
+          <Show
+            when={imperfect()?.cloneImperfect}
+            fallback={
+              <Chip variant="warning">Not cloned — turn on "Allow imperfect" in Control to use it anyway</Chip>
+            }
+          >
+            <Chip variant="warning">Cloned, with the one extra input left off</Chip>
+          </Show>
+        </Card>
+      </Show>
 
       <Card>
         <CardHeader title="Performance" subtitle="How fast your mouse reports, and whether the box keeps up" />
