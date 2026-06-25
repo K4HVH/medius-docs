@@ -137,7 +137,6 @@ const DeviceInfo = () => {
                   {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
                 </Row>
                 <div style={chipRow}>
-                  <CapChip on={c().keyboard.nkro}>NKRO</CapChip>
                   <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
                   <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
                   <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
