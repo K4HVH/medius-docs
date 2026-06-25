@@ -10,7 +10,7 @@ const Enums: Component = () => {
         <Card>
           <CardHeader title="Enums" subtitle="Command and status enumerations" />
           <p>
-            Eight command and status enums, each tied to a wire byte. Conversion helpers are listed with each.
+            Command and status enums, each tied to a wire byte. Conversion helpers are listed with each.
           </p>
         </Card>
       </div>
@@ -35,20 +35,24 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
-      <div id="button-action" data-search-target>
+      <div id="action" data-search-target>
         <Card>
-          <CardHeader title="ButtonAction" subtitle="What to do to a button" />
-          <pre class="api-signature">enum ButtonAction {'{'} SoftRelease, Press, ForceRelease {'}'}</pre>
+          <CardHeader title="Action" subtitle="The shared press / release tri-state" />
+          <pre class="api-signature">enum Action {'{'} SoftRelease, Press, ForceRelease {'}'}</pre>
           <p>
-            The discriminant is the wire byte. Convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;ButtonAction&gt;</code>.
+            The shared override action for a{' '}
+            <A href="/library/buttons#methods"><code>button</code></A>,{' '}
+            <A href="/library/keyboard#key"><code>key</code></A>, or{' '}
+            <A href="/library/keyboard#media"><code>media</code></A> call. The discriminant is the wire
+            byte. Convert with <code>as_u8()</code> and{' '}
+            <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Clear the box's own press; a physical hold stays down.</td></tr>
-              <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the button down.</td></tr>
-              <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the button up, masking a physical hold.</td></tr>
+              <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
+              <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -175,6 +179,25 @@ const Enums: Component = () => {
               <tr><td><code>Info</code></td><td><code>2</code></td><td>Normal operational notices.</td></tr>
               <tr><td><code>Debug</code></td><td><code>3</code></td><td>Detail for diagnosing a problem.</td></tr>
               <tr><td><code>Verbose</code></td><td><code>4</code></td><td>The finest-grained trace output.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="catch-event" data-search-target>
+        <Card>
+          <CardHeader title="CatchEvent" subtitle="One physical-input snapshot off the stream" />
+          <pre class="api-signature">enum CatchEvent {'{'} Mouse(MouseEvent), Keyboard(KeyboardEvent), Media(MediaEvent) {'}'}</pre>
+          <p>
+            What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields. Each
+            variant carries the full snapshot for its class, captured before lock suppression or
+            injection. Match on the variant to handle mouse, keyboard, and media input.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
+            <tbody>
+              <tr><td><code>Mouse</code></td><td><A href="/library/types/structs#mouse-event"><code>MouseEvent</code></A></td><td>A motion, wheel, or button change.</td></tr>
+              <tr><td><code>Keyboard</code></td><td><A href="/library/types/structs#keyboard-event"><code>KeyboardEvent</code></A></td><td>A key change (the <code>KEYS</code> class).</td></tr>
+              <tr><td><code>Media</code></td><td><A href="/library/types/structs#media-event"><code>MediaEvent</code></A></td><td>A media-key change (the <code>KEYS</code> class).</td></tr>
             </tbody>
           </table>
         </Card>

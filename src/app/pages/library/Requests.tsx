@@ -10,16 +10,17 @@ const Requests: Component = () => {
         <Card>
           <CardHeader title="Requests" subtitle="Asking the box a question and waiting for the answer" />
           <p>
-            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the eight queries
-            are blocking: a question frame out, one answer frame back. They are{' '}
+            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the queries are
+            blocking: a question frame out, one answer frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
-            <A href="/library/requests#query-caps"><code>query_caps</code></A>,{' '}
+            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>, and{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below.
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>, and{' '}
+            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>, each covered below.
           </p>
         </Card>
       </div>
@@ -58,7 +59,7 @@ println!("proto {}", v.proto_ver);     // proto 1`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, seven booleans from one
+            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eight booleans from one
             status byte. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
             <code>clone_configured</code> must all be true before{' '}
             <A href="/native/injection">injection</A> has anywhere to land.
@@ -106,16 +107,16 @@ if m.vid == 0 {
         </Card>
       </div>
 
-      <div id="query-caps" data-search-target>
+      <div id="query-mouse-caps" data-search-target>
         <Card>
-          <CardHeader title="query_caps" subtitle="Feature-detect the cloned mouse" />
-          <pre class="api-signature">fn query_caps(&self) -&gt; Result&lt;Caps&gt;</pre>
+          <CardHeader title="query_mouse_caps" subtitle="Feature-detect the cloned mouse" />
+          <pre class="api-signature">fn query_mouse_caps(&self) -&gt; Result&lt;MouseCaps&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#caps"><code>Caps</code></A>. Use it for feature
-            detection: a <A href="/library/buttons#press"><code>press</code></A> on a button the mouse
-            lacks is a silent no-op, so <code>n_buttons</code> tells you which ids are real.{' '}
+            Returns a <A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A>. Use it for
+            feature detection: a <A href="/library/buttons#press"><code>press</code></A> on a button the
+            mouse lacks is a silent no-op, so <code>n_buttons</code> tells you which ids are real.{' '}
             <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>. Every field is zero
             when no relative-axis mouse interface is bound.
           </p>
@@ -124,7 +125,7 @@ if m.vid == 0 {
           <pre><code>{`use medius::Device;
 
 let device = Device::find()?;
-let c = device.query_caps()?;
+let c = device.query_mouse_caps()?;
 println!("{} buttons", c.n_buttons);
 if c.has_wheel {
     device.wheel(1)?;
@@ -211,6 +212,32 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
         </Card>
       </div>
 
+      <div id="query-kbd-caps" data-search-target>
+        <Card>
+          <CardHeader title="query_kbd_caps" subtitle="Feature-detect the cloned keyboard" />
+          <pre class="api-signature">fn query_kbd_caps(&self) -&gt; Result&lt;KbdCaps&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            Returns a <A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A>.{' '}
+            <code>has_consumer</code> gates <A href="/library/keyboard#media"><code>media</code></A>{' '}
+            injection, and <code>n_keys</code> / <code>nkro</code> describe the keyboard's rollover.
+            Every field is zero when no keyboard is bound, so check{' '}
+            <A href="/library/requests#health"><code>Health::kbd_attached</code></A> first.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::{Device, MediaKey};
+
+let device = Device::find()?;
+let k = device.query_kbd_caps()?;
+println!("{} key slots, nkro={}", k.n_keys, k.nkro);
+if k.has_consumer {
+    device.media_down(MediaKey::MUTE)?;
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="query-catch" data-search-target>
         <Card>
           <CardHeader title="query_catch" subtitle="Read the active catch subscription" />
@@ -238,15 +265,16 @@ if !c.mask.is_empty() {
 
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="Async queries" subtitle="The same eight queries on AsyncDevice" />
+          <CardHeader title="Async queries" subtitle="The same queries on AsyncDevice" />
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
           <pre class="api-signature">async fn query_mouse_info(&self) -&gt; Result&lt;MouseInfo&gt;</pre>
-          <pre class="api-signature">async fn query_caps(&self) -&gt; Result&lt;Caps&gt;</pre>
+          <pre class="api-signature">async fn query_mouse_caps(&self) -&gt; Result&lt;MouseCaps&gt;</pre>
           <pre class="api-signature">async fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
           <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
           <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
           <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
+          <pre class="api-signature">async fn query_kbd_caps(&self) -&gt; Result&lt;KbdCaps&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <pre><code>cargo add medius --features async</code></pre>
@@ -254,8 +282,7 @@ if !c.mask.is_empty() {
           <p>
             With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
             <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures;
-            other methods stay synchronous. All eight queries are
-            futures here. The crate is
+            other methods stay synchronous. The crate is
             runtime-agnostic (no tokio), so drive a future with anything, such as{' '}
             <a
               href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html"

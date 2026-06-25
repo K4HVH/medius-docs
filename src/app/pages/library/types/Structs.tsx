@@ -56,6 +56,7 @@ println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
               <tr><td><code>rate_confident</code></td><td><code>bool</code></td><td>The native-rate estimator window is full, so <A href="/library/types/structs#rate"><code>Rate</code></A> is trustworthy.</td></tr>
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input <A href="/library/lock#lock"><code>lock</code></A> is active.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>A <A href="/library/catch#catch-events"><code>catch</code></A> subscription is streaming physical-input events.</td></tr>
+              <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -93,12 +94,13 @@ let m = MouseInfo { vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201, ha
 assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
         </Card>
       </div>
-      <div id="caps" data-search-target>
+      <div id="mouse-caps" data-search-target>
         <Card>
-          <CardHeader title="Caps" subtitle="What the emulated mouse can do" />
+          <CardHeader title="MouseCaps" subtitle="What the emulated mouse can do" />
           <p>
-            Semantic capabilities from <A href="/library/requests#query-caps"><code>query_caps()</code></A>.
-            Every field is zero when no relative-axis mouse interface is bound.{' '}
+            Semantic capabilities from{' '}
+            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps()</code></A>. Every
+            field is zero when no relative-axis mouse interface is bound.{' '}
             <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>.
           </p>
           <table class="api-params">
@@ -113,9 +115,9 @@ assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Caps;
+          <pre><code>{`use medius::MouseCaps;
 
-let c = Caps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
+let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
         </Card>
       </div>
@@ -198,8 +200,8 @@ println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
           <p>
             A bitflags newtype you hand to{' '}
             <A href="/library/catch#catch-events"><code>catch_events()</code></A>. It gates{' '}
-            <em>which</em> reports trigger an{' '}
-            <A href="/library/types/structs#input-report"><code>InputReport</code></A>; the payload is
+            <em>which</em> reports raise a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>; the payload is
             always the full snapshot. Combine the consts with <code>|</code> (<code>BitOr</code>), e.g.{' '}
             <code>CatchMask::MOTION | CatchMask::BUTTONS</code>.
           </p>
@@ -209,13 +211,14 @@ println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
               <tr><td><code>MOTION</code></td><td><code>0x01</code></td><td>The mouse moved (dx/dy).</td></tr>
               <tr><td><code>WHEEL</code></td><td><code>0x02</code></td><td>The wheel turned.</td></tr>
               <tr><td><code>BUTTONS</code></td><td><code>0x04</code></td><td>A button changed.</td></tr>
+              <tr><td><code>KEYS</code></td><td><code>0x08</code></td><td>A keyboard or media key changed.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>empty()</code></td><td><code>CatchMask</code></td><td>No bits set (unsubscribe).</td></tr>
-              <tr><td><code>all()</code></td><td><code>CatchMask</code></td><td>Every bit set (<code>0x07</code>).</td></tr>
+              <tr><td><code>all()</code></td><td><code>CatchMask</code></td><td>Every bit set (<code>0x0F</code>).</td></tr>
               <tr><td><code>bits()</code></td><td><code>u8</code></td><td>The raw mask byte.</td></tr>
               <tr><td><code>is_empty()</code></td><td><code>bool</code></td><td>No bits set.</td></tr>
               <tr><td><code>contains(other)</code></td><td><code>bool</code></td><td>Every bit in <code>other</code> is set here.</td></tr>
@@ -231,11 +234,12 @@ assert_eq!(mask.bits(), 0x05);
 let stream = device.catch_events(mask)?;`}</code></pre>
         </Card>
       </div>
-      <div id="input-report" data-search-target>
+      <div id="mouse-event" data-search-target>
         <Card>
-          <CardHeader title="InputReport" subtitle="One physical-input snapshot" />
+          <CardHeader title="MouseEvent" subtitle="One physical mouse snapshot" />
           <p>
-            The user's real input for one event, read off an{' '}
+            The mouse payload of a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Mouse</code></A>, read off an{' '}
             <A href="/library/catch#event-stream"><code>EventStream</code></A>. It's captured{' '}
             <em>before</em> lock suppression or injection, so a locked or injected target still reports
             the real hand value. Diff <code>buttons</code> across events to find press/release edges.
@@ -256,13 +260,125 @@ let stream = device.catch_events(mask)?;`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, CatchMask};
+          <pre><code>{`use medius::{Button, CatchMask, CatchEvent};
 
 let stream = device.catch_events(CatchMask::all())?;
-let r = stream.recv()?;
-if r.is_pressed(Button::Left) {
-    println!("left held, moved {} {}", r.dx, r.dy);
+if let CatchEvent::Mouse(m) = stream.recv()? {
+    if m.is_pressed(Button::Left) {
+        println!("left held, moved {} {}", m.dx, m.dy);
+    }
 }`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="keyboard-event" data-search-target>
+        <Card>
+          <CardHeader title="KeyboardEvent" subtitle="One physical keyboard snapshot" />
+          <p>
+            The keyboard payload of a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Keyboard</code></A>. A full
+            snapshot of the keys held, captured before injection; diff successive snapshots for down /
+            up edges.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>modifiers</code></td><td><code>u8</code></td><td>Modifier bitmap: bit <code>m</code> = the modifier at usage <code>0xE0 + m</code>.</td></tr>
+              <tr><td><code>keys</code></td><td><code>Vec&lt;<A href="/library/types/structs#key">Key</A>&gt;</code></td><td>The currently-pressed keycodes.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="media-event" data-search-target>
+        <Card>
+          <CardHeader title="MediaEvent" subtitle="One physical media snapshot" />
+          <p>
+            The media payload of a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Media</code></A>: the active
+            Consumer usages, self-correcting like{' '}
+            <A href="/library/types/structs#keyboard-event"><code>KeyboardEvent</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>keys</code></td><td><code>Vec&lt;<A href="/library/types/structs#media-key">MediaKey</A>&gt;</code></td><td>The currently-active media usages.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="key" data-search-target>
+        <Card>
+          <CardHeader title="Key" subtitle="A HID keyboard keycode" />
+          <p>
+            A newtype over a HID keyboard/keypad usage, passed to{' '}
+            <A href="/library/keyboard#key"><code>key()</code></A>. Named consts cover the common keys
+            (<code>Key::A</code>, <code>Key::ENTER</code>, <code>Key::LEFT_SHIFT</code>); build any
+            other with <code>Key::new(u8)</code>. Modifiers are the usages <code>0xE0</code>-<code>0xE7</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Key::A</code> .. <code>Key::LEFT_SHIFT</code></td><td><code>Key</code></td><td>Named consts for common keycodes and modifiers.</td></tr>
+              <tr><td><code>new(u8)</code></td><td><code>Key</code></td><td>Wrap any raw HID keycode.</td></tr>
+              <tr><td><code>usage()</code></td><td><code>u8</code></td><td>The raw keycode byte.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Key;
+
+let a = Key::A;            // 0x04
+let custom = Key::new(0x04);
+assert_eq!(a.usage(), custom.usage());`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="media-key" data-search-target>
+        <Card>
+          <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
+          <p>
+            A newtype over a 16-bit Consumer usage, passed to{' '}
+            <A href="/library/keyboard#media"><code>media()</code></A>. Named consts cover the common
+            media keys (<code>MediaKey::VOLUME_UP</code>, <code>MediaKey::PLAY_PAUSE</code>,{' '}
+            <code>MediaKey::MUTE</code>); build any other with <code>MediaKey::new(u16)</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MediaKey::VOLUME_UP</code> .. <code>MediaKey::MUTE</code></td><td><code>MediaKey</code></td><td>Named consts for common media usages.</td></tr>
+              <tr><td><code>new(u16)</code></td><td><code>MediaKey</code></td><td>Wrap any raw Consumer usage.</td></tr>
+              <tr><td><code>usage()</code></td><td><code>u16</code></td><td>The raw Consumer usage.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::MediaKey;
+
+let vol_up = MediaKey::VOLUME_UP;   // 0x00E9
+let custom = MediaKey::new(0xE9);
+assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="kbd-caps" data-search-target>
+        <Card>
+          <CardHeader title="KbdCaps" subtitle="What the cloned keyboard can do" />
+          <p>
+            Semantic capabilities from{' '}
+            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps()</code></A>. Every field is
+            zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
+            <A href="/library/keyboard#media"><code>media</code></A> injection.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>n_keys</code></td><td><code>u8</code></td><td>Keycode-array slots, or <code>0xFF</code> for an NKRO bitmap.</td></tr>
+              <tr><td><code>nkro</code></td><td><code>bool</code></td><td>The keyboard reports an NKRO bitmap.</td></tr>
+              <tr><td><code>has_consumer</code></td><td><code>bool</code></td><td>A Consumer collection is present (media keys injectable).</td></tr>
+              <tr><td><code>has_system</code></td><td><code>bool</code></td><td>A system-control collection is present (passthrough-only).</td></tr>
+              <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The keyboard report sits behind a HID report ID.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
       <div id="catch-state" data-search-target>
