@@ -28,17 +28,12 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Move</code></td>
                 <td><code>0x01</code></td>
-                <td>Relative cursor movement (PC to box).</td>
+                <td>Motion-tagged cursor or wheel movement (PC to box).</td>
               </tr>
               <tr>
-                <td><code>Wheel</code></td>
-                <td><code>0x02</code></td>
-                <td>Vertical scroll (PC to box).</td>
-              </tr>
-              <tr>
-                <td><code>Button</code></td>
+                <td><code>Inject</code></td>
                 <td><code>0x03</code></td>
-                <td>Set a button injection override (PC to box).</td>
+                <td>Class-tagged button, key, or media override (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Reset</code></td>
@@ -64,6 +59,41 @@ const Frames: Component = () => {
                 <td><code>Log</code></td>
                 <td><code>0x08</code></td>
                 <td>Unsolicited device diagnostics (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Led</code></td>
+                <td><code>0x09</code></td>
+                <td>Drive a status LED (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Lock</code></td>
+                <td><code>0x0A</code></td>
+                <td>Block a physical input (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Catch</code></td>
+                <td><code>0x0B</code></td>
+                <td>Subscribe to physical-input events (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Event</code></td>
+                <td><code>0x0C</code></td>
+                <td>A physical mouse snapshot (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>KbEvent</code></td>
+                <td><code>0x0F</code></td>
+                <td>A physical keyboard snapshot (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>ConsEvent</code></td>
+                <td><code>0x10</code></td>
+                <td>A physical media snapshot (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Imperfect</code></td>
+                <td><code>0x11</code></td>
+                <td>Opt into cloning an over-capacity device imperfectly (PC to box).</td>
               </tr>
             </tbody>
           </table>

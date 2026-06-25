@@ -84,8 +84,10 @@ println!("settle:  {:?}", flash::ROM_SETTLE); // 2s`}</code></pre>
           </table>
           <p>
             The <code>host</code> flag picks the reboot target:{' '}
-            <code>false</code> is <A href="/library/types/enums"><code>RebootTarget::DeviceDownload</code></A>,{' '}
-            <code>true</code> is <code>RebootTarget::HostDownload</code> (see{' '}
+            <code>false</code> is{' '}
+            <A href="/library/types/enums#reboot-target"><code>RebootTarget::DeviceDownload</code></A>,{' '}
+            <code>true</code> is{' '}
+            <A href="/library/types/enums#reboot-target"><code>RebootTarget::HostDownload</code></A> (see{' '}
             <A href="/library/admin#reboot"><code>reboot</code></A> for the full set).
           </p>
           <p>One call reboots the chosen chip into download mode, frees the port, then runs <code>esptool.py write_flash</code>; the firmware-side sequence is on <A href="/native/flashing#two-chips">flashing</A>.</p>

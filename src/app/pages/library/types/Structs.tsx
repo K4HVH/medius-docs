@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>1</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>2</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -34,7 +34,7 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Version;
 
-let v = Version { proto_ver: 1, fw_major: 2, fw_minor: 0, fw_patch: 3 };
+let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 0, fw_patch: 3 };
 assert_eq!(v.to_string(), "fw 2.0.3"); // Display omits proto_ver
 println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
         </Card>
@@ -94,12 +94,40 @@ let m = MouseInfo { vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201, ha
 assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
         </Card>
       </div>
+      <div id="caps" data-search-target>
+        <Card>
+          <CardHeader title="Caps" subtitle="The whole device, mouse and keyboard" />
+          <p>
+            One <A href="/library/requests#caps"><code>caps()</code></A> query, returned as one struct:
+            a <A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A> half and a{' '}
+            <A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A> half, plus the per-class
+            change-driven flags. <code>has_mouse()</code> / <code>has_keyboard()</code> tell you which
+            are bound; <code>is_composite()</code> is true when the device has more than one HID
+            interface.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mouse</code></td><td><A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A></td><td>The mouse half (all-zero when no mouse is bound).</td></tr>
+              <tr><td><code>keyboard</code></td><td><A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A></td><td>The keyboard half (all-zero when no keyboard is bound).</td></tr>
+              <tr><td><code>mouse_change_driven</code></td><td><code>bool</code></td><td>Always false: mouse motion is continuous, so its <A href="/library/types/structs#rate"><code>Rate</code></A> has a learned cadence.</td></tr>
+              <tr><td><code>kbd_change_driven</code></td><td><code>bool</code></td><td>True when a keyboard is bound: it reports only on a key change, so its rate has no continuous cadence.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`let caps = device.caps()?;
+if caps.has_keyboard() && caps.keyboard.has_consumer {
+    // media injection is real on this board
+}
+println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
+        </Card>
+      </div>
       <div id="mouse-caps" data-search-target>
         <Card>
-          <CardHeader title="MouseCaps" subtitle="What the emulated mouse can do" />
+          <CardHeader title="MouseCaps" subtitle="What the cloned mouse can do" />
           <p>
             Semantic capabilities from{' '}
-            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps()</code></A>. Every
+            <A href="/library/requests#caps"><code>caps()</code></A>. Every
             field is zero when no relative-axis mouse interface is bound.{' '}
             <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>.
           </p>
@@ -127,20 +155,24 @@ assert!(!c.is_composite()); // single HID interface`}</code></pre>
           <p>
             Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
             <code>native_hz()</code> converts the period to a frequency, returning <code>None</code>{' '}
-            while <code>native_period_us</code> is still <code>0</code>.
+            while <code>native_period_us</code> is still <code>0</code>. The rate is class-aware: a
+            change-driven input (a keyboard or media device) has no continuous cadence, so it sets{' '}
+            <code>change_driven</code> and leaves <code>native_period_us</code> at <code>0</code>, with{' '}
+            <code>poll_period_us</code> the honest figure.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>native_period_us</code></td><td><code>u16</code></td><td>Realised native report period in µs; <code>0</code> = not learned.</td></tr>
+              <tr><td><code>native_period_us</code></td><td><code>u16</code></td><td>Realised native report period in µs; <code>0</code> = not learned, or change-driven.</td></tr>
               <tr><td><code>poll_period_us</code></td><td><code>u16</code></td><td>Cloned inject-endpoint poll period in µs.</td></tr>
               <tr><td><code>confident</code></td><td><code>bool</code></td><td>The estimator window is full and the value is trustworthy.</td></tr>
+              <tr><td><code>change_driven</code></td><td><code>bool</code></td><td>The active input is event-driven (keyboard / media), so there is no continuous cadence.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Rate;
 
-let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true };
+let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true, change_driven: false };
 assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
         </Card>
       </div>
@@ -313,7 +345,7 @@ if let CatchEvent::Mouse(m) = stream.recv()? {
           <CardHeader title="Key" subtitle="A HID keyboard keycode" />
           <p>
             A newtype over a HID keyboard/keypad usage, passed to{' '}
-            <A href="/library/keyboard#key"><code>key()</code></A>. Named consts cover the common keys
+            <A href="/library/inject#key"><code>key()</code></A>. Named consts cover the common keys
             (<code>Key::A</code>, <code>Key::ENTER</code>, <code>Key::LEFT_SHIFT</code>); build any
             other with <code>Key::new(u8)</code>. Modifiers are the usages <code>0xE0</code>-<code>0xE7</code>.
           </p>
@@ -339,7 +371,7 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
           <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
           <p>
             A newtype over a 16-bit Consumer usage, passed to{' '}
-            <A href="/library/keyboard#media"><code>media()</code></A>. Named consts cover the common
+            <A href="/library/inject#media"><code>media()</code></A>. Named consts cover the common
             media keys (<code>MediaKey::VOLUME_UP</code>, <code>MediaKey::PLAY_PAUSE</code>,{' '}
             <code>MediaKey::MUTE</code>); build any other with <code>MediaKey::new(u16)</code>.
           </p>
@@ -365,9 +397,9 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="KbdCaps" subtitle="What the cloned keyboard can do" />
           <p>
             Semantic capabilities from{' '}
-            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps()</code></A>. Every field is
+            <A href="/library/requests#caps"><code>caps()</code></A>. Every field is
             zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
-            <A href="/library/keyboard#media"><code>media</code></A> injection.
+            <A href="/library/inject#media"><code>media</code></A> injection.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -386,7 +418,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="CatchState" subtitle="The active catch subscription" />
           <p>
             The current subscription from{' '}
-            <A href="/library/catch#query-catch"><code>query_catch()</code></A>. A nonzero{' '}
+            <A href="/library/requests#query-catch"><code>query_catch()</code></A>. A nonzero{' '}
             <code>dropped</code> means the box shed events under back-pressure.
           </p>
           <table class="api-params">
@@ -394,6 +426,23 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             <tbody>
               <tr><td><code>mask</code></td><td><A href="/library/types/structs#catch-mask"><code>CatchMask</code></A></td><td>Which reports are subscribed; empty = none.</td></tr>
               <tr><td><code>dropped</code></td><td><code>u32</code></td><td>Box-side events dropped under back-pressure.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="imperfect-status" data-search-target>
+        <Card>
+          <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />
+          <p>
+            The imperfect-clone state from{' '}
+            <A href="/library/imperfect#query-imperfect"><code>query_imperfect()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning an over-capacity device is allowed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device needs an interrupt-IN endpoint the box can't service.</td></tr>
+              <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is over-capacity and was cloned anyway, so one interface is dead.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -454,7 +503,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="LogStream" subtitle="Receiver for the device LOG stream" />
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
-            <code>LogLine</code> values off a local channel, from{' '}
+            <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
             <A href="/library/diagnostics#logs"><code>device.logs()</code></A>.
           </p>
 

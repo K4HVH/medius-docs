@@ -74,9 +74,9 @@ const Architecture: Component = () => {
           </table>
           <p>
             That program speaks the <A href="/native/frame">binary protocol</A>, sending{' '}
-            <A href="/native/commands/movement">movement</A>,{' '}
-            <A href="/native/commands/buttons">button</A>, and{' '}
-            <A href="/native/commands/movement#wheel">scroll</A> commands.
+            <A href="/native/commands/move">movement</A>,{' '}
+            <A href="/native/commands/inject">button</A>, and{' '}
+            <A href="/native/commands/move#wheel">scroll</A> commands.
           </p>
         </Card>
       </div>

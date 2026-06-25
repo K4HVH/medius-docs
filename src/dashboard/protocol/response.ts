@@ -5,28 +5,31 @@ import {
   CAP_WHEEL,
   CAP_X,
   CAP_Y,
+  CAPS_CD_KBD,
+  CAPS_CD_MOUSE,
   MI_HAS_BOS,
   MI_HAS_SERIAL,
+  Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
-  Q_KBD_CAPS,
+  Q_IMPERFECT,
   Q_LOCKS,
-  Q_MOUSE_CAPS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
   Q_VERSION,
+  RATE_CHANGE_DRIVEN,
   RATE_CONFIDENT,
 } from './opcode';
 import {
+  type Caps,
   type CatchState,
   type ConsumerReport,
   type Health,
-  type KbdCaps,
+  type ImperfectStatus,
   type KeyboardReport,
   type Locks,
   type LogLine,
-  type MouseCaps,
   type MouseInfo,
   type MouseReport,
   type Rate,
@@ -42,12 +45,12 @@ export type Resp =
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
   | { kind: 'mouseInfo'; mouseInfo: MouseInfo }
-  | { kind: 'caps'; caps: MouseCaps }
-  | { kind: 'kbdcaps'; caps: KbdCaps }
+  | { kind: 'caps'; caps: Caps }
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
-  | { kind: 'catch'; catch: CatchState };
+  | { kind: 'catch'; catch: CatchState }
+  | { kind: 'imperfect'; imperfect: ImperfectStatus };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -88,24 +91,26 @@ export function parseResp(payload: Uint8Array): Resp | null {
         },
       };
     }
-    case Q_MOUSE_CAPS: {
-      if (payload.length < 4) return null;
+    case Q_CAPS: {
+      if (payload.length < 7) return null;
       const axis = payload[2];
+      const cd = payload[6];
       return {
         kind: 'caps',
         caps: {
-          nButtons: payload[1],
-          hasX: (axis & CAP_X) !== 0,
-          hasY: (axis & CAP_Y) !== 0,
-          hasWheel: (axis & CAP_WHEEL) !== 0,
-          hasReportId: (axis & CAP_REPORT_ID) !== 0,
-          nHid: payload[3],
+          mouse: {
+            nButtons: payload[1],
+            hasX: (axis & CAP_X) !== 0,
+            hasY: (axis & CAP_Y) !== 0,
+            hasWheel: (axis & CAP_WHEEL) !== 0,
+            hasReportId: (axis & CAP_REPORT_ID) !== 0,
+            nHid: payload[3],
+          },
+          keyboard: kbdCapsFromBytes(payload[4], payload[5]),
+          mouseChangeDriven: (cd & CAPS_CD_MOUSE) !== 0,
+          kbdChangeDriven: (cd & CAPS_CD_KBD) !== 0,
         },
       };
-    }
-    case Q_KBD_CAPS: {
-      if (payload.length < 3) return null;
-      return { kind: 'kbdcaps', caps: parseKbdCaps(payload) };
     }
     case Q_RATE: {
       if (payload.length < 6) return null;
@@ -115,6 +120,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           nativePeriodUs: u16le(payload, 1),
           pollPeriodUs: u16le(payload, 3),
           confident: (payload[5] & RATE_CONFIDENT) !== 0,
+          changeDriven: (payload[5] & RATE_CHANGE_DRIVEN) !== 0,
         },
       };
     }
@@ -142,14 +148,20 @@ export function parseResp(payload: Uint8Array): Resp | null {
       if (payload.length < 6) return null;
       return { kind: 'catch', catch: { mask: payload[1], dropped: u32le(payload, 2) } };
     }
+    case Q_IMPERFECT: {
+      if (payload.length < 4) return null;
+      return {
+        kind: 'imperfect',
+        imperfect: {
+          allowed: payload[1] !== 0,
+          overCapacity: payload[2] !== 0,
+          cloneImperfect: payload[3] !== 0,
+        },
+      };
+    }
     default:
       return null;
   }
-}
-
-// Parse the RESP(KBD_CAPS) data (§4.11): [n_keys u8][flags u8] after the selector byte.
-export function parseKbdCaps(payload: Uint8Array): KbdCaps {
-  return kbdCapsFromBytes(payload[1], payload[2]);
 }
 
 // Parse a MOUSE_EVENT payload (§4.10): [buttons u8][dx i16][dy i16][wheel i16]. Unsolicited.

@@ -1,8 +1,7 @@
-import { For, Show, createEffect, createSignal, onCleanup } from 'solid-js';
+import { For, Show } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
-import { Chip } from '../../../components/display/Chip';
-import { Action, type KbdCaps } from '../../../dashboard/protocol';
+import { Action } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 
 // A few common HID keycodes (Keyboard/Keypad usage page). 0xE0-0xE7 are modifiers.
@@ -36,44 +35,11 @@ const grid = {
   gap: 'var(--g-spacing-sm)',
 } as const;
 
-const field = {
-  display: 'flex',
-  'justify-content': 'space-between',
-  gap: 'var(--g-spacing)',
-  padding: '6px 0',
-} as const;
 const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
-
-const Row = (props: { label: string; children: unknown }) => (
-  <div style={field}>
-    <span style={muted}>{props.label}</span>
-    <span>{props.children as never}</span>
-  </div>
-);
 
 const DeviceKeyboard = () => {
   const dash = useDashboard();
   const kbdAttached = () => dash.health()?.kbdAttached === true;
-
-  // Read the keyboard capabilities once a keyboard is bound. Re-reads when the bound state flips.
-  const [caps, setCaps] = createSignal<KbdCaps | null>(null);
-  createEffect(() => {
-    const link = dash.link();
-    if (!kbdAttached() || !link) {
-      setCaps(null);
-      return;
-    }
-    let live = true;
-    link
-      .queryKbdCaps()
-      .then((c) => {
-        if (live && dash.link() === link) setCaps(c);
-      })
-      .catch(() => {});
-    onCleanup(() => {
-      live = false;
-    });
-  });
 
   // Hold the key down while the pointer is held, release on up or leave (matches a real key press).
   const keyHold = (usage: number) => ({
@@ -125,27 +91,6 @@ const DeviceKeyboard = () => {
           </div>
         </Show>
       </Card>
-
-      <Show when={kbdAttached()}>
-        <Card>
-          <CardHeader title="Your keyboard" subtitle="What the box detected on the cloned keyboard" />
-          <Show when={caps()} fallback={<p style={muted}>Reading...</p>}>
-            {(c) => (
-              <>
-                <Row label="Key slots">
-                  {c().nkro ? 'NKRO bitmap' : `${c().nKeys} keys`}
-                </Row>
-                <Row label="Media keys">
-                  <Show when={c().hasConsumer} fallback={<Chip variant="neutral">No</Chip>}>
-                    <Chip variant="success">Yes</Chip>
-                  </Show>
-                </Row>
-                <Row label="Report id">{c().hasReportId ? 'Yes' : 'No'}</Row>
-              </>
-            )}
-          </Show>
-        </Card>
-      </Show>
     </Show>
   );
 };

@@ -7,13 +7,27 @@ const Lock: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Lock" subtitle="Block one input from the physical mouse" />
+        <CardHeader title="Lock" subtitle="Block one physical input; injection still drives it" />
         <p>
-          <A href="/library/lock#lock"><code>lock</code></A> stops the real mouse from driving one
-          axis, the wheel, or one button, while <A href="/library/lock#unlock"><code>unlock</code></A>{' '}
-          clears the block. Host <A href="/native/injection">injection</A> still reaches a locked
-          target, so you can take an input over without the user fighting you. Both are{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.
+          A lock blocks the <em>physical</em> device from one input, while host{' '}
+          <A href="/native/injection">injection</A> still drives that same input. Lock what the user
+          shouldn't touch, then drive it yourself.
+        </p>
+        <pre class="diagram">{`  a locked input:
+     physical  --X   blocked
+     injected  -->   still reaches the PC`}</pre>
+        <table class="api-params">
+          <thead><tr><th>Block a...</th><th>Lock</th><th>Release</th></tr></thead>
+          <tbody>
+            <tr><td>mouse axis / wheel / button</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
+            <tr><td>keyboard key</td><td><A href="/library/lock#lock-key"><code>lock_key</code></A></td><td><A href="/library/lock#lock-key"><code>unlock_key</code></A></td></tr>
+            <tr><td>media usage</td><td><A href="/library/lock#lock-media"><code>lock_media</code></A></td><td><A href="/library/lock#lock-media"><code>unlock_media</code></A></td></tr>
+            <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><A href="/library/lock#lock-all"><code>unlock_all</code></A></td></tr>
+          </tbody>
+        </table>
+        <p>
+          All are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A> reads the active mouse set.
         </p>
       </Card>
 
@@ -75,26 +89,60 @@ device.unlock(LockTarget::X, LockDirection::Both)?;   // hand horizontal motion 
         </Card>
       </div>
 
-      <div id="query-locks" data-search-target>
+      <div id="lock-key" data-search-target>
         <Card>
-          <CardHeader title="query_locks" subtitle="Read the active locks" />
-          <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <CardHeader title="lock_key / unlock_key" subtitle="Block a physical key" />
+          <pre class="api-signature">fn lock_key(&self, key: Key, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn unlock_key(&self, key: Key, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the set of
-            currently locked inputs. <code>is_locked(target, direction)</code> answers whether one
-            particular lock is set. Read it to confirm a lock landed, or to mirror the box's state in a
-            UI. See the native{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the bit layout.
+            Block one physical keyboard <A href="/library/types/structs#key"><code>Key</code></A> by
+            edge: <A href="/library/types/enums#lock-direction"><code>Positive</code></A> stops new
+            presses, <A href="/library/types/enums#lock-direction"><code>Negative</code></A> latches a
+            held key down. Injection still drives the key. <code>unlock_key</code> clears the block.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, LockTarget, LockDirection};
+          <pre><code>{`use medius::{Key, LockDirection};
 
-let device = Device::find()?;
-let locks = device.query_locks()?;
-if locks.is_locked(LockTarget::X, LockDirection::Both) {
-    println!("horizontal motion is frozen");
-}`}</code></pre>
+device.lock_key(Key::LEFT_GUI, LockDirection::Both)?;   // block the GUI/Windows key
+device.unlock_key(Key::LEFT_GUI, LockDirection::Both)?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="lock-media" data-search-target>
+        <Card>
+          <CardHeader title="lock_media / unlock_media" subtitle="Block a physical media key" />
+          <pre class="api-signature">fn lock_media(&self, key: MediaKey) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn unlock_media(&self, key: MediaKey) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Drop one physical <A href="/library/types/structs#media-key"><code>MediaKey</code></A> usage
+            from the report. Injection still drives it; <code>unlock_media</code> hands it back.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::MediaKey;
+
+device.lock_media(MediaKey::VOLUME_UP)?;
+device.unlock_media(MediaKey::VOLUME_UP)?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="lock-all" data-search-target>
+        <Card>
+          <CardHeader title="lock_all / unlock_all" subtitle="Blanket-block a whole class" />
+          <pre class="api-signature">fn lock_all(&self, what: Blanket) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn unlock_all(&self, what: Blanket) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Block an entire input class at once with a{' '}
+            <A href="/library/types/enums#blanket"><code>Blanket</code></A>: <code>Keys</code>,{' '}
+            <code>Media</code>, or <code>Buttons</code>. Injection still drives any field you choose to.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code>{`use medius::Blanket;
+
+device.lock_all(Blanket::Keys)?;    // every physical key blocked
+device.unlock_all(Blanket::Keys)?;`}</code></pre>
         </Card>
       </div>
 
@@ -103,8 +151,10 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
           <CardHeader title="On AsyncDevice" subtitle="lock and unlock fire, query_locks awaits" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
-            <code>lock</code> and <code>unlock</code> synchronous, since they expect no reply.{' '}
-            <code>query_locks</code> is a future, like the other queries.
+            <code>lock</code> and <code>unlock</code> synchronous, since they expect no reply, and{' '}
+            <code>query_locks</code> is a future like the other queries. The key, media, and blanket
+            variants live on <A href="/library/connection#async"><code>Device</code></A> only; reach
+            them with <code>into_inner()</code> if you hold an <code>AsyncDevice</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use futures::executor::block_on;

@@ -98,9 +98,11 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_mouse_info(self, mouse_info: MouseInfo) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_mouse_caps(self, caps: MouseCaps) -&gt; MockBox</pre>
+          <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_kbd_caps(self, kbd_caps: KbdCaps) -&gt; MockBox</pre>
+          <pre class="api-signature">fn with_mouse_caps(self, mouse: MouseCaps) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_kbd_caps(self, keyboard: KbdCaps) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -113,11 +115,10 @@ device.move_rel(5, 5)?;`}</code></pre>
 
           <p>
             The <code>with_*</code> builders set what each query returns:{' '}
-            <A href="/library/requests"><code>query_version</code></A>,{' '}
-            <code>query_health</code>, and the device-info queries{' '}
+            <A href="/library/requests#version"><code>query_version</code></A>,{' '}
+            <A href="/library/requests#health"><code>query_health</code></A>, and the device-info queries{' '}
             (<A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
-            <A href="/library/requests#query-mouse-caps"><code>query_mouse_caps</code></A>,{' '}
-            <A href="/library/requests#query-kbd-caps"><code>query_kbd_caps</code></A>,{' '}
+            <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live
             fake in place to flip the version or health mid-test.{' '}
@@ -131,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code>{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 1, fw_major: 5, fw_minor: 6, fw_patch: 7 })
+    .with_version(Version { proto_ver: 2, fw_major: 5, fw_minor: 6, fw_patch: 7 })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -237,9 +238,10 @@ assert!(matches!(stream.recv()?, CatchEvent::Keyboard(k) if k.keys == vec![Key::
           <p>
             A <A href="/library/types/frames"><code>DecodedFrame</code></A> is{' '}
             <code>{`{ ty, seq, payload }`}</code>; a{' '}
-            <A href="/library/buttons"><code>press(Button::Left)</code></A> records a{' '}
-            <A href="/library/types/enums"><code>FrameType::Button</code></A> frame with payload{' '}
-            <code>[0, 1]</code> (button id <code>0</code>, action <code>1</code>).
+            <A href="/library/inject"><code>press(Button::Left)</code></A> records a{' '}
+            <A href="/library/types/frames"><code>FrameType::Inject</code></A> frame with payload{' '}
+            <code>[0, 0, 0, 1]</code> (class <code>0</code> = button, id <code>0</code>, action{' '}
+            <code>1</code>).
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -251,12 +253,12 @@ let device = Device::with_mock(mock.clone());
 device.press(Button::Left)?;
 
 let frames = mock.recorded_frames();
-let button = frames
+let inject = frames
     .iter()
-    .find(|f| f.ty == FrameType::Button)
+    .find(|f| f.ty == FrameType::Inject)
     .expect("press recorded");
-assert_eq!(button.payload, vec![0, 1]);
-assert!(mock.saw(FrameType::Button));
+assert_eq!(inject.payload, vec![0, 0, 0, 1]);
+assert!(mock.saw(FrameType::Inject));
 
 mock.clear_recorded(); // next assertions see a fresh log`}</code></pre>
         </Card>
