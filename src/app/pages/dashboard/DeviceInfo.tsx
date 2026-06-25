@@ -7,16 +7,14 @@ import {
   type MouseInfo,
   type Rate,
   type Stats,
-  isComposite,
+  hasKeyboard,
+  hasMouse,
   nativeHz,
   vidPid,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 
 const INFO_POLL_MS = 2000;
-
-// bcdUSB is binary-coded decimal: 0x0200 -> "2.00", 0x0201 -> "2.01".
-const bcd = (n: number) => `${n >> 8}.${(n >> 4) & 0xf}${n & 0xf}`;
 
 const field = {
   display: 'flex',
@@ -25,7 +23,6 @@ const field = {
   padding: '6px 0',
 } as const;
 const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
-const note = { ...muted, 'font-size': 'var(--font-size-xs, 0.8rem)' } as const;
 
 const Row = (props: { label: string; children: unknown }) => (
   <div style={field}>
@@ -37,7 +34,6 @@ const Row = (props: { label: string; children: unknown }) => (
 const DeviceInfo = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
-  const kbdAttached = () => dash.health()?.kbdAttached === true;
   const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
   const [caps, setCaps] = createSignal<Caps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
@@ -54,8 +50,6 @@ const DeviceInfo = () => {
     }
   };
 
-  // Read the four device-info queries every couple of seconds while connected. A transient miss is
-  // ignored; a real drop unmounts this panel.
   createEffect(() => {
     const link = dash.link();
     stop();
@@ -85,108 +79,63 @@ const DeviceInfo = () => {
     onCleanup(stop);
   });
 
+  const usbId = () => (mouse()?.vid ? vidPid(mouse()!) : null);
+
   return (
     <>
       <Card>
-        <CardHeader title="Your mouse" subtitle="What the box detected and shows the game" />
-        <p style={muted}>
-          The box reads your real mouse and hands the game an identical copy. Here's what it sees.
-        </p>
-        <Show when={mouse()} fallback={<p>Reading...</p>}>
-          {(m) => (
-            <Show when={m().vid !== 0} fallback={<p>No mouse is plugged into the box yet.</p>}>
-              <Show when={!mouseAttached()}>
-                <p style={{ ...note, 'margin-top': '0' }}>
-                  This is a companion mouse interface on a keyboard-first device, not a real mouse.
-                </p>
+        <CardHeader title="Capabilities" subtitle="What the box detected and clones" />
+        <Show when={caps()} fallback={<Row label="Device">none cloned</Row>}>
+          {(c) => (
+            <>
+              <Show when={hasMouse(c())}>
+                <Row label="Mouse">
+                  <Show when={usbId()}>
+                    <code>{usbId()}</code>{' '}
+                  </Show>
+                  {c().mouse.nButtons} btn{c().mouse.hasWheel ? ' / wheel' : ''} / {c().mouse.nHid} iface
+                  {c().mouse.nHid === 1 ? '' : 's'}
+                </Row>
               </Show>
-              <Row label="USB id">
-                <code>{vidPid(m())}</code>
-              </Row>
-              <Show when={caps()}>
-                {(c) => (
-                  <>
-                    <Row label="Buttons">{c().mouse.nButtons}</Row>
-                    <Row label="Scroll wheel">{c().mouse.hasWheel ? 'Yes' : 'No'}</Row>
-                    <p style={{ ...note, 'margin-top': 'var(--g-spacing-sm)' }}>
-                      USB {bcd(m().bcdUsb)} · {c().mouse.nHid} interface{c().mouse.nHid === 1 ? '' : 's'}
-                      {isComposite(c().mouse) ? ' (composite)' : ''}
-                      {m().hasSerial ? ' · has a serial number' : ''}
-                    </p>
-                  </>
+              <Show when={hasKeyboard(c())}>
+                <Row label="Keyboard">
+                  <Show when={usbId()}>
+                    <code>{usbId()}</code>{' '}
+                  </Show>
+                  {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys} keys`}
+                  {c().keyboard.hasConsumer ? ' / media' : ''}
+                  {c().keyboard.hasReportId ? ' / report id' : ''}
+                </Row>
+              </Show>
+              <Show when={imperfect()}>
+                {(imp) => (
+                  <Row label="Full clone">
+                    <Show when={imp().overCapacity} fallback={<Chip variant="success">Yes</Chip>}>
+                      <Chip variant="warning">No · 1 input can't be copied</Chip>
+                    </Show>
+                  </Row>
                 )}
               </Show>
-            </Show>
+            </>
           )}
         </Show>
       </Card>
 
-      <Show when={kbdAttached()}>
-        <Card>
-          <CardHeader title="Your keyboard" subtitle="What the box detected on the cloned keyboard" />
-          <Show when={caps()} fallback={<p>Reading...</p>}>
-            {(c) => (
-              <>
-                <Row label="Key slots">
-                  {c().keyboard.nkro ? 'NKRO bitmap' : `${c().keyboard.nKeys} keys`}
-                </Row>
-                <Row label="Media keys">
-                  <Show when={c().keyboard.hasConsumer} fallback={<Chip variant="neutral">No</Chip>}>
-                    <Chip variant="success">Yes</Chip>
-                  </Show>
-                </Row>
-                <Row label="Report id">{c().keyboard.hasReportId ? 'Yes' : 'No'}</Row>
-              </>
-            )}
-          </Show>
-        </Card>
-      </Show>
-
-      <Show when={imperfect()?.overCapacity}>
-        <Card>
-          <CardHeader title="Not a full copy" subtitle="This device has more than the box can clone" />
-          <p style={muted}>
-            This device has more separate inputs than the box can copy at once, so one of them (often an
-            extra analog or sensor stream) can't come through. The keyboard, mouse, and media parts are
-            still exact copies.
-          </p>
-          <Show
-            when={imperfect()?.cloneImperfect}
-            fallback={
-              <Chip variant="warning">Not cloned — turn on "Allow imperfect" in Control to use it anyway</Chip>
-            }
-          >
-            <Chip variant="warning">Cloned, with the one extra input left off</Chip>
-          </Show>
-        </Card>
-      </Show>
-
       <Card>
-        <CardHeader title="Performance" subtitle="How fast your mouse reports, and whether the box keeps up" />
-        <p style={muted}>
-          The report rate is how many times a second your mouse tells the PC where it is. The box should
-          pass every update through without dropping any.
-        </p>
-        <Show when={rate()} fallback={<p>Reading...</p>}>
+        <CardHeader title="Performance" subtitle="Report rate and delivery" />
+        <Show when={rate()} fallback={<Row label="Report rate">—</Row>}>
           {(r) => (
             <Row label="Report rate">
               <Show
                 when={!r().changeDriven}
                 fallback={
                   <span style={muted}>
-                    A keyboard reports only when keys change, so it has no steady rate — it's checked
-                    up to {Math.round(1_000_000 / r().pollPeriodUs)} times a second.
+                    on key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
                   </span>
                 }
               >
-                <Show
-                  when={mouseAttached()}
-                  fallback={<span style={muted}>No mouse attached.</span>}
-                >
-                  <Show
-                    when={nativeHz(r()) !== null}
-                    fallback={<span style={muted}>waiting for mouse activity...</span>}
-                  >
+                <Show when={mouseAttached()} fallback={<span style={muted}>no mouse</span>}>
+                  <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting…</span>}>
                     {nativeHz(r())} Hz
                   </Show>
                 </Show>
@@ -196,23 +145,18 @@ const DeviceInfo = () => {
         </Show>
         <Show when={stats()}>
           {(s) => (
-            <>
-              <Row label="Delivery">
-                <Show
-                  when={s().txDrops === 0 && s().txWedges === 0}
-                  fallback={
-                    <Chip variant="warning">
-                      {s().txDrops} dropped, {s().txWedges} recovered
-                    </Chip>
-                  }
-                >
-                  <Chip variant="success">Healthy</Chip>
-                </Show>
-              </Row>
-              <p style={note}>
-                {s().injectEmits} injected updates passed through · {s().resetCount} reconnects since power-on
-              </p>
-            </>
+            <Row label="Delivery">
+              <Show
+                when={s().txDrops === 0 && s().txWedges === 0}
+                fallback={
+                  <Chip variant="warning">
+                    {s().txDrops} dropped, {s().txWedges} recovered
+                  </Chip>
+                }
+              >
+                <Chip variant="success">Healthy</Chip>
+              </Show>
+            </Row>
           )}
         </Show>
       </Card>
