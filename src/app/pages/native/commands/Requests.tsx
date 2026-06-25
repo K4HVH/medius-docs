@@ -154,7 +154,7 @@ const Requests: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <p>Firmware <code>2.0.0</code>, protocol <code>2</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 02     | 01     | 06     | 00     | lo hi  |
+| A5     | 06     | 00     | 05 00  | 00     | 02     | 02     | 00     | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -214,8 +214,7 @@ const Requests: Component = () => {
           <CardHeader title="MOUSE_INFO" subtitle="RESP payload, what = 2" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 2</code>: the USB identity the box read from the real mouse, its vendor and
-            product id numbers, its USB version, and whether it has a serial number. The clone shows up
+            <code>what = 2</code>: the USB identity the box read from the real mouse. The clone shows up
             on the game PC, not here, so this is the only way the control PC can read it. Every field is
             zero when no mouse is attached.
           </p>
@@ -454,10 +453,9 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">BIT LAYOUT</div>
           <p>
-            Each <A href="/native/commands/lock"><code>target</code></A> owns two bits. Bit{' '}
+            Each <A href="/native/commands/lock"><code>target</code></A> owns two bits: bit{' '}
             <code>target*2</code> is the positive/press direction, bit <code>target*2 + 1</code> the
-            negative/release direction. So <code>X+</code> is bit 0, <code>X−</code> bit 1,{' '}
-            <code>Y+</code> bit 2, up to <code>Side2</code> release at bit 15.
+            negative/release direction.
           </p>
           <table class="api-params">
             <thead>

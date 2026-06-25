@@ -36,20 +36,20 @@ const Connection: Component = () => {
               <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
             </li>
             <li>
-              Read <code>proto_ver</code> from that reply and check it equals <code>1</code>.
+              Read <code>proto_ver</code> from that reply and check it equals <code>2</code>.
             </li>
           </ol>
           <p>
             <code>proto_ver</code> is the protocol version the firmware speaks, one byte. These pages
-            describe version <code>1</code>.
+            describe version <code>2</code>.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Reply</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>proto_ver == 1</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 1</code></td><td>Speaks a protocol they don't cover; don't assume the commands behave as described.</td></tr>
+              <tr><td><code>proto_ver == 2</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 2</code></td><td>Speaks a protocol they don't cover; don't assume the commands behave as described.</td></tr>
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
@@ -65,7 +65,7 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>the selector byte, echoed back; <code>0x00</code> = <code>VERSION</code></td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>1</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>2</code></td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -104,7 +104,7 @@ const Connection: Component = () => {
               <A href="/library/connection#open"><code>open</code></A> and{' '}
               <A href="/library/connection#open"><code>find</code></A>: it sends{' '}
               <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retries a
-              few times, and checks <code>proto_ver == 1</code> before handing you a working
+              few times, and checks <code>proto_ver == 2</code> before handing you a working
               connection.
             </p>
           </div>

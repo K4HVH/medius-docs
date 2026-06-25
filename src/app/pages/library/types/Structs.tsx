@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>1</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>2</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -34,7 +34,7 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Version;
 
-let v = Version { proto_ver: 1, fw_major: 2, fw_minor: 0, fw_patch: 3 };
+let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 0, fw_patch: 3 };
 assert_eq!(v.to_string(), "fw 2.0.3"); // Display omits proto_ver
 println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
         </Card>
@@ -503,7 +503,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="LogStream" subtitle="Receiver for the device LOG stream" />
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
-            <code>LogLine</code> values off a local channel, from{' '}
+            <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
             <A href="/library/diagnostics#logs"><code>device.logs()</code></A>.
           </p>
 

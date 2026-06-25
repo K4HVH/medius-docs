@@ -23,9 +23,7 @@ const Inject: Component = () => {
             <A href="/library/types/structs#key"><code>Key</code></A>, or a{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> (each has{' '}
             <code>From</code>, so you pass it directly). <code>action</code> is the shared{' '}
-            <A href="/library/types/enums#action"><code>Action</code></A> tri-state. The per-class
-            methods below are thin wrappers over this verb; reach for <code>inject</code> when the input
-            or action is a value you're passing around.
+            <A href="/library/types/enums#action"><code>Action</code></A> tri-state.
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">

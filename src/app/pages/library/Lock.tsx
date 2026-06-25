@@ -19,10 +19,10 @@ const Lock: Component = () => {
         <table class="api-params">
           <thead><tr><th>Block a...</th><th>Lock</th><th>Release</th></tr></thead>
           <tbody>
-            <tr><td>mouse axis / wheel / button</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><code>unlock</code></td></tr>
-            <tr><td>keyboard key</td><td><A href="/library/lock#lock-key"><code>lock_key</code></A></td><td><code>unlock_key</code></td></tr>
-            <tr><td>media usage</td><td><A href="/library/lock#lock-media"><code>lock_media</code></A></td><td><code>unlock_media</code></td></tr>
-            <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><code>unlock_all</code></td></tr>
+            <tr><td>mouse axis / wheel / button</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
+            <tr><td>keyboard key</td><td><A href="/library/lock#lock-key"><code>lock_key</code></A></td><td><A href="/library/lock#lock-key"><code>unlock_key</code></A></td></tr>
+            <tr><td>media usage</td><td><A href="/library/lock#lock-media"><code>lock_media</code></A></td><td><A href="/library/lock#lock-media"><code>unlock_media</code></A></td></tr>
+            <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><A href="/library/lock#lock-all"><code>unlock_all</code></A></td></tr>
           </tbody>
         </table>
         <p>
@@ -98,8 +98,8 @@ device.unlock(LockTarget::X, LockDirection::Both)?;   // hand horizontal motion 
           <p>
             Block one physical keyboard <A href="/library/types/structs#key"><code>Key</code></A> by
             edge: <A href="/library/types/enums#lock-direction"><code>Positive</code></A> stops new
-            presses, <code>Negative</code> latches a held key down. Injection still drives the key.{' '}
-            <code>unlock_key</code> clears the block.
+            presses, <A href="/library/types/enums#lock-direction"><code>Negative</code></A> latches a
+            held key down. Injection still drives the key. <code>unlock_key</code> clears the block.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::{Key, LockDirection};

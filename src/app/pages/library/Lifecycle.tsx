@@ -54,9 +54,9 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
             <p>
               Overrides are keyed by their{' '}
               <A href="/library/types/enums#button"><code>Button</code></A> values.{' '}
-              <A href="/library/inject"><code>press</code></A> and{' '}
-              <A href="/library/inject"><code>force_release</code></A> add a held override;{' '}
-              <A href="/library/inject"><code>soft_release</code></A> and{' '}
+              <A href="/library/inject#button"><code>press</code></A> and{' '}
+              <A href="/library/inject#button"><code>force_release</code></A> add a held override;{' '}
+              <A href="/library/inject#button"><code>soft_release</code></A> and{' '}
               <A href="/library/admin#reset"><code>reset</code></A> clear them.
             </p>
           </div>
