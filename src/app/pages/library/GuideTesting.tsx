@@ -77,7 +77,7 @@ fn logs_reach_the_stream() {
 use medius::{Device, Error, MockBox, Version};
 
 let mock = MockBox::new().with_version(Version {
-    proto_ver: 1, fw_major: 1, fw_minor: 2, fw_patch: 3,
+    proto_ver: 2, fw_major: 1, fw_minor: 2, fw_patch: 3,
 });
 let device = Device::with_mock(mock).into_async();
 let v = block_on(device.query_version())?;

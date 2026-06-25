@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer &#123; got &#125;</code></td>
                 <td>
-                  The box answered, but its <code>proto_ver</code> wasn't <code>1</code>;{' '}
+                  The box answered, but its <code>proto_ver</code> wasn't <code>2</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>

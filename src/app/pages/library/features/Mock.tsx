@@ -115,8 +115,8 @@ device.move_rel(5, 5)?;`}</code></pre>
 
           <p>
             The <code>with_*</code> builders set what each query returns:{' '}
-            <A href="/library/requests"><code>query_version</code></A>,{' '}
-            <code>query_health</code>, and the device-info queries{' '}
+            <A href="/library/requests#version"><code>query_version</code></A>,{' '}
+            <A href="/library/requests#health"><code>query_health</code></A>, and the device-info queries{' '}
             (<A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
             <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
@@ -132,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code>{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 1, fw_major: 5, fw_minor: 6, fw_patch: 7 })
+    .with_version(Version { proto_ver: 2, fw_major: 5, fw_minor: 6, fw_patch: 7 })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 

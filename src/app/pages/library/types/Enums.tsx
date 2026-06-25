@@ -245,7 +245,7 @@ const Enums: Component = () => {
           <pre class="api-signature">enum Blanket {'{'} Keys, Media, Buttons {'}'}</pre>
           <p>
             Which whole class <A href="/library/lock#lock-all"><code>lock_all</code></A> and{' '}
-            <code>unlock_all</code> block in one call.
+            <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
@@ -262,7 +262,7 @@ const Enums: Component = () => {
           <CardHeader title="LogLevel" subtitle="Severity tag on a log line" />
           <pre class="api-signature">enum LogLevel {'{'} Error, Warn, Info, Debug, Verbose {'}'}</pre>
           <p>
-            The severity tag on a <A href="/library/types/structs#logstream"><code>LogLine</code></A>.{' '}
+            The severity tag on a <A href="/library/types/structs#log-line"><code>LogLine</code></A>.{' '}
             <code>from_u8(u8)</code> is infallible: an unknown byte falls back to <code>Info</code>.
           </p>
           <table class="api-params">

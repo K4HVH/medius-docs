@@ -78,7 +78,8 @@ device.reset()?;                // drop all of the above, back to passthrough`}<
           <p>
             <A href="/library/types/enums#reboot-target"><code>RebootTarget</code></A> picks the chip and whether it
             comes back running its firmware or in download mode; the four variants and their bytes are
-            on <A href="/library/types/enums">Types</A>.
+            on <A href="/library/types/enums">Types</A>. See the native{' '}
+            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> command for the wire layout.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

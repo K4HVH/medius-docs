@@ -40,7 +40,7 @@ const Requests: Component = () => {
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
 println!("{v}");                       // fw 1.2.3
-println!("proto {}", v.proto_ver);     // proto 1`}</code></pre>
+println!("proto {}", v.proto_ver);     // proto 2`}</code></pre>
 
           <div class="callout callout--info">
             <p>

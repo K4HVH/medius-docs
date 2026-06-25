@@ -113,8 +113,9 @@ while let Ok(event) = events.recv() {
             Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the
             classes the box is currently streaming, and the count of events it dropped under
             back-pressure (the box-side counterpart to{' '}
-            <A href="/library/catch#event-stream"><code>EventStream::dropped</code></A>). The HEALTH{' '}
-            <code>catch_on</code> bit is the cheap "subscribed" summary.
+            <A href="/library/catch#event-stream"><code>EventStream::dropped</code></A>). The{' '}
+            <A href="/native/commands/requests#health">HEALTH</A> <code>catch_on</code> bit is the cheap
+            "subscribed" summary.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::Device;

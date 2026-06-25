@@ -90,6 +90,11 @@ const Frames: Component = () => {
                 <td><code>0x10</code></td>
                 <td>A physical media snapshot (box to PC).</td>
               </tr>
+              <tr>
+                <td><code>Imperfect</code></td>
+                <td><code>0x11</code></td>
+                <td>Opt into cloning an over-capacity device imperfectly (PC to box).</td>
+              </tr>
             </tbody>
           </table>
 

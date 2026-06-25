@@ -75,8 +75,8 @@ const Quickstart: Component = () => {
               protocol version the firmware speaks.
             </li>
             <li>
-              Check <code>proto_ver == 1</code> before trusting the commands here. This documents
-              version <code>1</code>.
+              Check <code>proto_ver == 2</code> before trusting the commands here. This documents
+              version <code>2</code>.
             </li>
           </ol>
           <p>
@@ -121,19 +121,19 @@ def encode(type, seq, payload):
     head = bytes([type, seq]) + struct.pack('<H', len(payload)) + payload
     return bytes([0xA5]) + head + struct.pack('<H', crc16_ccitt(head))
 
-frame = encode(0x01, 0, struct.pack('<hh', 100, 0))
+frame = encode(0x01, 0, struct.pack('<Bhh', 0, 100, 0))
 port.write(frame)`}</code></pre>
           <p>
             <A href="/native/commands/move#move"><code>MOVE</code></A> has opcode{' '}
-            <code>0x01</code>. Its payload is two signed 16-bit deltas, <code>dx</code> then{' '}
-            <code>dy</code>. <code>+x</code> is right, <code>+y</code> is down. The example moves 100
-            right, 0 down.
+            <code>0x01</code>. Its payload is a <code>motion</code> byte (<code>0</code> = cursor)
+            then two signed 16-bit deltas, <code>dx</code> then <code>dy</code>. <code>+x</code> is
+            right, <code>+y</code> is down. The example moves 100 right, 0 down.
           </p>
           <p>
             That builds the bytes{' '}
-            <code>A5 01 00 04 00 64 00 00 00 &lt;crc&gt;</code>: start byte, opcode <code>0x01</code>,
-            sequence, length, the <code>dx</code>/<code>dy</code> payload, then the checksum. The
-            byte-by-byte breakdown is on{' '}
+            <code>A5 01 00 05 00 00 64 00 00 00 &lt;crc&gt;</code>: start byte, opcode{' '}
+            <code>0x01</code>, sequence, length, the <code>motion</code>/<code>dx</code>/<code>dy</code>{' '}
+            payload, then the checksum. The byte-by-byte breakdown is on{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A>, the frame format on{' '}
             <A href="/native/frame">Frame Format</A>.
           </p>
@@ -145,16 +145,26 @@ port.write(frame)`}</code></pre>
           <CardHeader title="Confirm" subtitle="Check the chain before relying on injection" />
           <p>
             <A href="/native/injection">Injection</A> is the input your program sends on top of the
-            real mouse's passthrough. Before relying on it, confirm the chain (real mouse → box → PC)
-            is live: send{' '}
+            real mouse's passthrough. Confirm the chain (real mouse → box → PC) is live before you
+            rely on it: send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A>, read the{' '}
             <code>flags</code> byte from the{' '}
-            <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check that{' '}
-            <code>MOUSE_ATTACHED</code> (<code>0x02</code>) and <code>CLONE_CONFIGURED</code>{' '}
-            (<code>0x04</code>) are set before trusting that your{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A> reached the game PC. A flag
-            is set when <code>(flags &amp; mask)</code> is non-zero; the full byte is on{' '}
-            <A href="/native/commands/requests#health">HEALTH</A>.
+            <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check these bits are
+            set.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Flag</th><th>Mask</th><th>Means</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>MOUSE_ATTACHED</code></td><td><code>0x02</code></td><td>A mouse is on <code>USB3</code>.</td></tr>
+              <tr><td><code>CLONE_CONFIGURED</code></td><td><code>0x04</code></td><td>The game PC has enumerated the clone.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            A flag is set when <code>(flags &amp; mask)</code> is non-zero. With both set, your{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC. The full
+            byte is on <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
       </div>
