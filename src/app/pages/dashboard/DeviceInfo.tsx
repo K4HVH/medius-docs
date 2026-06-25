@@ -134,7 +134,7 @@ const DeviceInfo = () => {
               <Show when={hasKeyboard(c())}>
                 <div style={sectionLabel}>Keyboard</div>
                 <Row label="Rollover">
-                  {c().keyboard.nkro ? 'NKRO (every key at once)' : `${c().keyboard.nKeys}-key`}
+                  {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
                 </Row>
                 <div style={chipRow}>
                   <CapChip on={c().keyboard.nkro}>NKRO</CapChip>
