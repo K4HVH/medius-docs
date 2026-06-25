@@ -72,7 +72,7 @@ const Requests: Component = () => {
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-            <A href="/library/catch#query-catch"><code>query_catch</code></A>,{' '}
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
             <A href="/library/imperfect#query-imperfect"><code>query_imperfect</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -511,7 +511,7 @@ const Requests: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             Read it to confirm a subscription landed, or to check whether you're losing events. Library
-            binding: <A href="/library/catch#query-catch"><code>query_catch</code></A>.
+            binding: <A href="/library/requests#query-catch"><code>query_catch</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Motion and buttons subscribed, no drops (<code>mask = 0x05</code>):</p>

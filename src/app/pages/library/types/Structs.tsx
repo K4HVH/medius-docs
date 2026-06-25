@@ -124,7 +124,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
       </div>
       <div id="mouse-caps" data-search-target>
         <Card>
-          <CardHeader title="MouseCaps" subtitle="What the emulated mouse can do" />
+          <CardHeader title="MouseCaps" subtitle="What the cloned mouse can do" />
           <p>
             Semantic capabilities from{' '}
             <A href="/library/requests#caps"><code>caps()</code></A>. Every
@@ -418,7 +418,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="CatchState" subtitle="The active catch subscription" />
           <p>
             The current subscription from{' '}
-            <A href="/library/catch#query-catch"><code>query_catch()</code></A>. A nonzero{' '}
+            <A href="/library/requests#query-catch"><code>query_catch()</code></A>. A nonzero{' '}
             <code>dropped</code> means the box shed events under back-pressure.
           </p>
           <table class="api-params">

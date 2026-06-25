@@ -27,7 +27,7 @@ const Lock: Component = () => {
         </table>
         <p>
           All are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.{' '}
-          <A href="/library/lock#query-locks"><code>query_locks</code></A> reads the active mouse set.
+          <A href="/library/requests#query-locks"><code>query_locks</code></A> reads the active mouse set.
         </p>
       </Card>
 
@@ -143,29 +143,6 @@ device.unlock_media(MediaKey::VOLUME_UP)?;`}</code></pre>
 
 device.lock_all(Blanket::Keys)?;    // every physical key blocked
 device.unlock_all(Blanket::Keys)?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="query-locks" data-search-target>
-        <Card>
-          <CardHeader title="query_locks" subtitle="Read the active locks" />
-          <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the set of
-            currently locked inputs. <code>is_locked(target, direction)</code> answers whether one
-            particular lock is set. Read it to confirm a lock landed, or to mirror the box's state in a
-            UI. See the native{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the bit layout.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, LockTarget, LockDirection};
-
-let device = Device::find()?;
-let locks = device.query_locks()?;
-if locks.is_locked(LockTarget::X, LockDirection::Both) {
-    println!("horizontal motion is frozen");
-}`}</code></pre>
         </Card>
       </div>
 

@@ -6,14 +6,23 @@ import '../../../styles/docs.css';
 const Inject: Component = () => {
   return (
     <>
+      <Card>
+        <CardHeader title="Inject" subtitle="Press and release any input" />
+        <p>
+          One field-generic verb drives every momentary input. Pick the typed wrapper for a{' '}
+          <A href="/library/inject#button"><code>button</code></A>,{' '}
+          <A href="/library/inject#key"><code>key</code></A>, or{' '}
+          <A href="/library/inject#media"><code>media</code></A> key, or call{' '}
+          <A href="/library/inject#inject"><code>inject</code></A> directly with any{' '}
+          <A href="/library/types/enums#input"><code>Input</code></A>. Each call queues one{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A> frame.
+        </p>
+      </Card>
+
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject" subtitle="Press and release any input" />
-          <p>
-            One field-generic verb drives every momentary input. Each call queues one{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A> frame.
-          </p>
+          <CardHeader title="inject" subtitle="Press and release any input" />
           <pre class="api-signature">fn inject(&self, input: impl Into&lt;Input&gt;, action: Action) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
