@@ -575,7 +575,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
 
 // KEY/CONSUMER inject + the keyboard/media catch stream + KBD_CAPS. Byte vectors mirror the firmware
 // packers/decoders in ctrl_proto.h so the JS side is pinned to the wire format.
-describe('keyboard + media (v1.7.0)', () => {
+describe('keyboard + media (v2.0.0)', () => {
   it('injectPayload (key) packs [class][usage u16 LE][action] (§3.2)', () => {
     // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1). class key = 1.
     expect(Array.from(injectPayload(INJ_KEY, 0x04, 1))).toEqual([1, 0x04, 0x00, 1]);
