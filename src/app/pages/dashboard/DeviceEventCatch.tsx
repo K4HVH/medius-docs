@@ -117,9 +117,9 @@ const DeviceEventCatch = () => {
       <Card>
         <CardHeader title="Input catch" subtitle="Watch the physical mouse and keyboard live" />
         <p>
-          Subscribe and the box streams the real input (mouse buttons, wheel, and movement, plus
-          keyboard and media keys) as it happens, even for inputs you've locked. Move, click, or type
-          to see events. The stream stops on its own if the dashboard disconnects.
+          The box streams the real input as it happens, even for inputs you've locked: mouse buttons,
+          wheel, and movement, plus keyboard and media keys. Move, click, or type to see events. The
+          stream stops on its own if the dashboard disconnects.
         </p>
         <div style={label}>What to watch</div>
         <RadioGroup

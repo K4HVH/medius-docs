@@ -54,16 +54,30 @@ const GuideCalls: Component = () => {
             <tbody>
               <tr>
                 <td>
-                  <code>query_version</code>, <code>query_health</code>,{' '}
-                  <code>query_mouse_info</code>, <code>query_mouse_caps</code>, <code>query_rate</code>,{' '}
-                  <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>,{' '}
-                  <code>query_kbd_caps</code>
+                  <A href="/library/requests#version"><code>query_version</code></A>,{' '}
+                  <A href="/library/requests#health"><code>query_health</code></A>,{' '}
+                  <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+                  <A href="/library/requests#caps"><code>caps</code></A>,{' '}
+                  <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
+                  <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
+                  <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
+                  <A href="/library/requests#query-catch"><code>query_catch</code></A>
                 </td>
                 <td>
-                  <code>move_rel</code>, <code>wheel</code>, <code>button</code>, <code>press</code>,{' '}
-                  <code>soft_release</code>, <code>force_release</code>, <code>key</code>,{' '}
-                  <code>media</code>, <code>reset</code>, <code>reboot</code>, <code>led</code>,{' '}
-                  <code>lock</code>, <code>unlock</code>, <code>catch_events</code>
+                  <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}
+                  <A href="/library/move#wheel"><code>wheel</code></A>,{' '}
+                  <A href="/library/inject#button"><code>button</code></A>,{' '}
+                  <A href="/library/inject#button"><code>press</code></A>,{' '}
+                  <A href="/library/inject#button"><code>soft_release</code></A>,{' '}
+                  <A href="/library/inject#button"><code>force_release</code></A>,{' '}
+                  <A href="/library/inject#key"><code>key</code></A>,{' '}
+                  <A href="/library/inject#media"><code>media</code></A>,{' '}
+                  <A href="/library/admin#reset"><code>reset</code></A>,{' '}
+                  <A href="/library/admin#reboot"><code>reboot</code></A>,{' '}
+                  <A href="/library/led#led"><code>led</code></A>,{' '}
+                  <A href="/library/lock#lock"><code>lock</code></A>,{' '}
+                  <A href="/library/lock#unlock"><code>unlock</code></A>,{' '}
+                  <A href="/library/catch#catch-events"><code>catch_events</code></A>
                 </td>
               </tr>
             </tbody>
@@ -125,7 +139,7 @@ println!("{v}");`}</code></pre>
         <Card>
           <CardHeader title="Smooth motion" subtitle="Glide instead of teleport" />
           <p>
-            <A href="/library/movement#move-rel"><code>move_rel</code></A> applies one delta at once. For
+            <A href="/library/move#move-rel"><code>move_rel</code></A> applies one delta at once. For
             a glide rather than a jump, subdivide the move and pace the steps yourself, roughly one per
             millisecond. There's no <code>move_smooth</code>.
           </p>
@@ -152,8 +166,8 @@ for _ in 0..200 {
           <CardHeader title="Making a click" subtitle="Press, wait, release" />
           <p>
             There's no one-shot <code>click</code>:{' '}
-            <A href="/library/buttons#press"><code>press</code></A>, wait, then release with{' '}
-            <A href="/library/buttons#soft-release"><code>soft_release</code></A> so you don't stomp a
+            <A href="/library/inject#button"><code>press</code></A>, wait, then release with{' '}
+            <A href="/library/inject#button"><code>soft_release</code></A> so you don't stomp a
             physical hold.
           </p>
           <div class="api-response-label">EXAMPLE</div>

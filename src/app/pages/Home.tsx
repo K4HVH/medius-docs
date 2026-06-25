@@ -27,7 +27,7 @@ const Home: Component = () => {
           <div>
             <h1 style={{ "margin-bottom": 'var(--g-spacing-sm)' }}>Medius</h1>
             <p class="text-lg">
-              Documentation for the Medius device and the Medius Rust library.
+              Documentation for the Medius box and the Rust library.
             </p>
           </div>
 

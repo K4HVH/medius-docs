@@ -10,7 +10,7 @@ const Introduction: Component = () => {
         <CardHeader title="Medius Rust Library" subtitle="Official Rust client" />
         <p>
           The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate
-          injects input on top of a real mouse over a USB-serial link.
+          injects input on top of a real mouse, keyboard, or combo over a USB-serial link.
         </p>
         <table class="api-params">
           <thead>
@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>1.6.0</code></td>
+              <td><code>2.0.0</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -104,24 +104,19 @@ const Introduction: Component = () => {
         <Card>
           <CardHeader title="API" />
           <div class="docs-grid">
-            <A href="/library/movement" style={{ "text-decoration": "none" }}>
+            <A href="/library/inject" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Movement" subtitle="move_rel, wheel" />
+                <CardHeader title="Inject" subtitle="press, key, media" />
               </Card>
             </A>
-            <A href="/library/buttons" style={{ "text-decoration": "none" }}>
+            <A href="/library/move" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Buttons" subtitle="press, release, force-release" />
+                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel" />
               </Card>
             </A>
-            <A href="/library/requests" style={{ "text-decoration": "none" }}>
+            <A href="/library/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="version, health, and the five device-info queries" />
-              </Card>
-            </A>
-            <A href="/library/admin" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Admin" subtitle="reset, reboot" />
+                <CardHeader title="Lock" subtitle="lock, lock_key, lock_all" />
               </Card>
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
@@ -129,9 +124,24 @@ const Introduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
-            <A href="/library/keyboard" style={{ "text-decoration": "none" }}>
+            <A href="/library/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Keyboard" subtitle="Inject keys and media keys" />
+                <CardHeader title="Requests" subtitle="version, health, and the device-info queries" />
+              </Card>
+            </A>
+            <A href="/library/led" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="LED" subtitle="Drive a status LED" />
+              </Card>
+            </A>
+            <A href="/library/admin" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Admin" subtitle="reset, reboot" />
+              </Card>
+            </A>
+            <A href="/library/imperfect" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Imperfect" subtitle="allow_imperfect_clones, query_imperfect" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>

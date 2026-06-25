@@ -10,17 +10,20 @@ import {
   RebootTarget,
   SOF,
   catchPayload,
-  consumerPayload,
   crc16Ccitt,
   encode,
   frameTypeFromU8,
   healthFromFlags,
-  keyPayload,
+  injectPayload,
+  INJ_KEY,
+  INJ_MEDIA,
   LedMode,
   LedTarget,
+  LockClass,
   LockDirection,
   LockTarget,
   isComposite,
+  imperfectPayload,
   ledPayload,
   lockPayload,
   lockSet,
@@ -28,7 +31,6 @@ import {
   nativeHz,
   parseConsEvent,
   parseKbEvent,
-  parseKbdCaps,
   parseMouseEvent,
   parseLog,
   parseResp,
@@ -202,7 +204,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x11; // next free opcode past CONS_EVENT (0x10)
+    const ty = 0x12; // next free opcode past IMPERFECT (0x11)
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -225,7 +227,8 @@ describe('parseResp / parseLog', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
     expect(parseResp(new Uint8Array([0, 1, 0, 1]))).toBeNull(); // version needs 5 bytes
     expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 2 bytes
-    expect(parseResp(new Uint8Array([9]))).toBeNull(); // unknown selector
+    expect(parseResp(new Uint8Array([9]))).toBeNull(); // imperfect needs 4 bytes
+    expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
 
   it('ignores trailing bytes past a complete RESP(VERSION)', () => {
@@ -253,13 +256,13 @@ describe('helpers', () => {
   });
 
   it('frameTypeFromU8 maps the catch + inject opcodes, null for unknown', () => {
+    expect(frameTypeFromU8(0x03)).toBe(FrameType.Inject);
     expect(frameTypeFromU8(0x0b)).toBe(FrameType.Catch);
     expect(frameTypeFromU8(0x0c)).toBe(FrameType.MouseEvent);
-    expect(frameTypeFromU8(0x0d)).toBe(FrameType.Key);
-    expect(frameTypeFromU8(0x0e)).toBe(FrameType.Consumer);
     expect(frameTypeFromU8(0x0f)).toBe(FrameType.KbEvent);
     expect(frameTypeFromU8(0x10)).toBe(FrameType.ConsEvent);
-    expect(frameTypeFromU8(0x11)).toBeNull();
+    expect(frameTypeFromU8(0x11)).toBe(FrameType.Imperfect);
+    expect(frameTypeFromU8(0x12)).toBeNull();
     expect(frameTypeFromU8(0x00)).toBeNull();
   });
 
@@ -353,11 +356,19 @@ describe('LED command (§3.7)', () => {
 });
 
 describe('LOCK command (§3.8)', () => {
-  it('lockPayload packs [target][direction][state]', () => {
-    // Lock the wheel's negative (scroll-down) direction.
-    expect(Array.from(lockPayload(LockTarget.Wheel, LockDirection.Negative, 1))).toEqual([2, 2, 1]);
+  it('lockPayload packs [class][usage u16 LE][direction][state]', () => {
+    // Lock the mouse wheel's negative (scroll-down) direction.
+    expect(
+      Array.from(lockPayload(LockClass.Mouse, LockTarget.Wheel, LockDirection.Negative, 1)),
+    ).toEqual([0, 2, 0, 2, 1]);
     // Unlock the X axis, both signs.
-    expect(Array.from(lockPayload(LockTarget.X, LockDirection.Both, 0))).toEqual([0, 0, 0]);
+    expect(Array.from(lockPayload(LockClass.Mouse, LockTarget.X, LockDirection.Both, 0))).toEqual([
+      0, 0, 0, 0, 0,
+    ]);
+    // A media-class lock keeps its 16-bit usage.
+    expect(Array.from(lockPayload(LockClass.Media, 0x00e9, LockDirection.Both, 1))).toEqual([
+      2, 0xe9, 0x00, 0, 1,
+    ]);
   });
 
   it('LockTarget wire values match ctrl_proto.h', () => {
@@ -452,6 +463,30 @@ describe('CATCH command (§3.9)', () => {
   });
 });
 
+describe('IMPERFECT command (§3.10)', () => {
+  it('imperfectPayload packs [allow]', () => {
+    expect(Array.from(imperfectPayload(true))).toEqual([1]);
+    expect(Array.from(imperfectPayload(false))).toEqual([0]);
+  });
+
+  it('parses a Q_IMPERFECT RESP into allowed / over_capacity / clone_imperfect', () => {
+    // what = 9, allowed = 1, over_capacity = 1, clone_imperfect = 1.
+    expect(parseResp(new Uint8Array([9, 1, 1, 1]))).toEqual({
+      kind: 'imperfect',
+      imperfect: { allowed: true, overCapacity: true, cloneImperfect: true },
+    });
+    // Faithful-only, an over-capacity device attached but refused (no live clone).
+    expect(parseResp(new Uint8Array([9, 0, 1, 0]))).toEqual({
+      kind: 'imperfect',
+      imperfect: { allowed: false, overCapacity: true, cloneImperfect: false },
+    });
+  });
+
+  it('returns null for a truncated Q_IMPERFECT payload', () => {
+    expect(parseResp(new Uint8Array([9, 1, 1]))).toBeNull(); // needs 4 bytes
+  });
+});
+
 describe('device-info RESP decoding (v1.4.0)', () => {
   it('MOUSE_INFO (§4.3)', () => {
     const p = new Uint8Array([2, 0x6d, 0x04, 0x8b, 0xc0, 0x10, 0x01, 0x00, 0x02, 0x03]);
@@ -470,20 +505,26 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     if (resp?.kind === 'mouseInfo') expect(vidPid(resp.mouseInfo)).toBe('046D:C08B');
   });
 
-  it('CAPS (§4.4)', () => {
-    const resp = parseResp(new Uint8Array([3, 5, 0x07, 2]));
+  it('CAPS (§4.4) unified mouse + keyboard', () => {
+    // 5 buttons, X|Y|WHEEL, 2 ifaces; 6-key board, Consumer + report-id; keyboard class change-driven
+    const resp = parseResp(new Uint8Array([3, 5, 0x07, 2, 6, 0x0a, 0x02]));
     expect(resp).toEqual({
       kind: 'caps',
-      caps: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+      caps: {
+        mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+        keyboard: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
+        mouseChangeDriven: false,
+        kbdChangeDriven: true,
+      },
     });
-    if (resp?.kind === 'caps') expect(isComposite(resp.caps)).toBe(true);
+    if (resp?.kind === 'caps') expect(isComposite(resp.caps.mouse)).toBe(true);
   });
 
   it('RATE (§4.5) confident, with Hz', () => {
     const resp = parseResp(new Uint8Array([4, 0xe8, 0x03, 0xe8, 0x03, 0x01]));
     expect(resp).toEqual({
       kind: 'rate',
-      rate: { nativePeriodUs: 1000, pollPeriodUs: 1000, confident: true },
+      rate: { nativePeriodUs: 1000, pollPeriodUs: 1000, confident: true, changeDriven: false },
     });
     if (resp?.kind === 'rate') expect(nativeHz(resp.rate)).toBe(1000);
   });
@@ -491,6 +532,15 @@ describe('device-info RESP decoding (v1.4.0)', () => {
   it('RATE unlearned period yields null Hz (truthful)', () => {
     const resp = parseResp(new Uint8Array([4, 0x00, 0x00, 0xe8, 0x03, 0x00]));
     if (resp?.kind !== 'rate') throw new Error('expected rate');
+    expect(resp.rate.nativePeriodUs).toBe(0);
+    expect(nativeHz(resp.rate)).toBeNull();
+  });
+
+  it('RATE change-driven (keyboard) sets the flag and reports no cadence', () => {
+    const resp = parseResp(new Uint8Array([4, 0x00, 0x00, 0xe8, 0x03, 0x02]));
+    if (resp?.kind !== 'rate') throw new Error('expected rate');
+    expect(resp.rate.changeDriven).toBe(true);
+    expect(resp.rate.confident).toBe(false);
     expect(resp.rate.nativePeriodUs).toBe(0);
     expect(nativeHz(resp.rate)).toBeNull();
   });
@@ -525,44 +575,38 @@ describe('device-info RESP decoding (v1.4.0)', () => {
 
 // KEY/CONSUMER inject + the keyboard/media catch stream + KBD_CAPS. Byte vectors mirror the firmware
 // packers/decoders in ctrl_proto.h so the JS side is pinned to the wire format.
-describe('keyboard + media (v1.7.0)', () => {
-  it('keyPayload packs [usage][action] (§3.10)', () => {
-    // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1).
-    expect(Array.from(keyPayload(0x04, 1))).toEqual([0x04, 1]);
-    expect(Array.from(keyPayload(0xe1, 0))).toEqual([0xe1, 0]);
+describe('keyboard + media (v2.0.0)', () => {
+  it('injectPayload (key) packs [class][usage u16 LE][action] (§3.2)', () => {
+    // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1). class key = 1.
+    expect(Array.from(injectPayload(INJ_KEY, 0x04, 1))).toEqual([1, 0x04, 0x00, 1]);
+    expect(Array.from(injectPayload(INJ_KEY, 0xe1, 0))).toEqual([1, 0xe1, 0x00, 0]);
   });
 
-  it('consumerPayload packs [usage u16 LE][action] (§3.11)', () => {
-    // Press Volume Up (0x00E9); force-release Play/Pause (0x00CD).
-    expect(Array.from(consumerPayload(0xe9, 1))).toEqual([0xe9, 0x00, 1]);
-    expect(Array.from(consumerPayload(0xcd, 2))).toEqual([0xcd, 0x00, 2]);
-    // A two-byte usage stays little-endian.
-    expect(Array.from(consumerPayload(0x0123, 1))).toEqual([0x23, 0x01, 1]);
+  it('injectPayload (media) keeps the 16-bit usage little-endian (§3.2)', () => {
+    // Press Volume Up (0x00E9); force-release Play/Pause (0x00CD). class media = 2.
+    expect(Array.from(injectPayload(INJ_MEDIA, 0xe9, 1))).toEqual([2, 0xe9, 0x00, 1]);
+    expect(Array.from(injectPayload(INJ_MEDIA, 0xcd, 2))).toEqual([2, 0xcd, 0x00, 2]);
+    expect(Array.from(injectPayload(INJ_MEDIA, 0x0123, 1))).toEqual([2, 0x23, 0x01, 1]);
   });
 
-  it('parseKbdCaps decodes [n_keys][flags] (§4.11)', () => {
-    // 6-key board, Consumer + report-id, no NKRO/system. Selector byte then n_keys=6, flags=0x0a.
-    expect(parseResp(new Uint8Array([8, 6, 0x0a]))).toEqual({
-      kind: 'kbdcaps',
-      caps: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
-    });
-    // NKRO bitmap board: n_keys = 0xff implies nkro even with the flag clear.
-    expect(parseResp(new Uint8Array([8, 0xff, 0x00]))).toEqual({
-      kind: 'kbdcaps',
-      caps: { nKeys: 0xff, nkro: true, hasConsumer: false, hasSystem: false, hasReportId: false },
-    });
-    // The NKRO flag (b0) also sets nkro.
-    expect(parseKbdCaps(new Uint8Array([8, 0, 0x07]))).toEqual({
-      nKeys: 0,
+  it('CAPS keyboard half: NKRO bitmap implies nkro, change-driven (§4.4)', () => {
+    // no mouse; NKRO board (n_keys 0xff) with Consumer; keyboard class change-driven
+    const resp = parseResp(new Uint8Array([3, 0, 0, 0, 0xff, 0x02, 0x02]));
+    expect(resp?.kind).toBe('caps');
+    if (resp?.kind !== 'caps') throw new Error('expected caps');
+    expect(resp.caps.keyboard).toEqual({
+      nKeys: 0xff,
       nkro: true,
       hasConsumer: true,
-      hasSystem: true,
+      hasSystem: false,
       hasReportId: false,
     });
+    expect(resp.caps.kbdChangeDriven).toBe(true);
+    expect(resp.caps.mouseChangeDriven).toBe(false);
   });
 
-  it('returns null for a truncated KBD_CAPS payload', () => {
-    expect(parseResp(new Uint8Array([8, 6]))).toBeNull(); // needs 3 bytes
+  it('returns null for a truncated CAPS payload', () => {
+    expect(parseResp(new Uint8Array([3, 5, 0x07, 2]))).toBeNull(); // unified CAPS needs 7 bytes
   });
 
   it('parseKbEvent decodes [modifiers][n][keycodes] (§4.12)', () => {

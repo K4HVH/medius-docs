@@ -2,10 +2,13 @@ import { Show, createEffect, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import {
-  type MouseCaps,
+  type Caps,
+  type ImperfectStatus,
   type MouseInfo,
   type Rate,
   type Stats,
+  hasKeyboard,
+  hasMouse,
   isComposite,
   nativeHz,
   vidPid,
@@ -17,14 +20,27 @@ const INFO_POLL_MS = 2000;
 // bcdUSB is binary-coded decimal: 0x0200 -> "2.00", 0x0201 -> "2.01".
 const bcd = (n: number) => `${n >> 8}.${(n >> 4) & 0xf}${n & 0xf}`;
 
+const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
 const field = {
   display: 'flex',
   'justify-content': 'space-between',
   gap: 'var(--g-spacing)',
   padding: '6px 0',
 } as const;
-const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
-const note = { ...muted, 'font-size': 'var(--font-size-xs, 0.8rem)' } as const;
+const sectionLabel = {
+  color: 'var(--g-text-muted, #8a8a8a)',
+  'font-size': 'var(--font-size-xs, 0.75rem)',
+  'font-weight': '600',
+  'letter-spacing': '0.05em',
+  'text-transform': 'uppercase',
+  margin: 'var(--g-spacing) 0 var(--g-spacing-sm)',
+} as const;
+const chipRow = {
+  display: 'flex',
+  'flex-wrap': 'wrap',
+  gap: 'var(--g-spacing-sm)',
+  'padding-top': '4px',
+} as const;
 
 const Row = (props: { label: string; children: unknown }) => (
   <div style={field}>
@@ -33,13 +49,19 @@ const Row = (props: { label: string; children: unknown }) => (
   </div>
 );
 
+// A capability chip: lit (success) when present, dim (neutral) when absent.
+const CapChip = (props: { on: boolean; children: unknown }) => (
+  <Chip variant={props.on ? 'success' : 'neutral'}>{props.children as never}</Chip>
+);
+
 const DeviceInfo = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
   const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
-  const [caps, setCaps] = createSignal<MouseCaps | null>(null);
+  const [caps, setCaps] = createSignal<Caps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
   const [stats, setStats] = createSignal<Stats | null>(null);
+  const [imperfect, setImperfect] = createSignal<ImperfectStatus | null>(null);
 
   let timer: ReturnType<typeof setTimeout> | null = null;
   let running = false;
@@ -51,8 +73,6 @@ const DeviceInfo = () => {
     }
   };
 
-  // Read the four device-info queries every couple of seconds while connected. A transient miss is
-  // ignored; a real drop unmounts this panel.
   createEffect(() => {
     const link = dash.link();
     stop();
@@ -61,6 +81,7 @@ const DeviceInfo = () => {
       setCaps(null);
       setRate(null);
       setStats(null);
+      setImperfect(null);
       return;
     }
     running = true;
@@ -68,9 +89,10 @@ const DeviceInfo = () => {
       if (!running || dash.link() !== link) return;
       try {
         setMouse(await link.queryMouseInfo());
-        setCaps(await link.queryMouseCaps());
+        setCaps(await link.queryCaps());
         setRate(await link.queryRate());
         setStats(await link.queryStats());
+        setImperfect(await link.queryImperfect());
       } catch {
         // transient; try again next tick
       }
@@ -83,57 +105,86 @@ const DeviceInfo = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Your mouse" subtitle="What the box detected and shows the game" />
-        <p style={muted}>
-          The box reads your real mouse and hands the game an identical copy. Here's what it sees.
-        </p>
-        <Show when={mouse()} fallback={<p>Reading...</p>}>
-          {(m) => (
-            <Show when={m().vid !== 0} fallback={<p>No mouse is plugged into the box yet.</p>}>
-              <Show when={!mouseAttached()}>
-                <p style={{ ...note, 'margin-top': '0' }}>
-                  This is a companion mouse interface on a keyboard-first device, not a real mouse.
-                </p>
+        <CardHeader title="Capabilities" subtitle="What the box detected and clones to the game" />
+        <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
+          {(c) => (
+            <>
+              <Show when={mouse()?.vid}>
+                <Row label="USB id">
+                  <code>{vidPid(mouse()!)}</code>
+                  <span style={muted}> · USB {bcd(mouse()!.bcdUsb)}</span>
+                </Row>
               </Show>
-              <Row label="USB id">
-                <code>{vidPid(m())}</code>
-              </Row>
-              <Show when={caps()}>
-                {(c) => (
+
+              <Show when={hasMouse(c())}>
+                <div style={sectionLabel}>Mouse</div>
+                <Row label="Buttons">{c().mouse.nButtons}</Row>
+                <Row label="Interfaces">
+                  {c().mouse.nHid}
+                  {isComposite(c().mouse) ? ' · composite' : ''}
+                </Row>
+                <div style={chipRow}>
+                  <CapChip on={c().mouse.hasX}>X axis</CapChip>
+                  <CapChip on={c().mouse.hasY}>Y axis</CapChip>
+                  <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
+                  <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
+                </div>
+              </Show>
+
+              <Show when={hasKeyboard(c())}>
+                <div style={sectionLabel}>Keyboard</div>
+                <Row label="Rollover">
+                  {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
+                </Row>
+                <div style={chipRow}>
+                  <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
+                  <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
+                  <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
+                </div>
+              </Show>
+
+              <Show when={imperfect()}>
+                {(imp) => (
                   <>
-                    <Row label="Buttons">{c().nButtons}</Row>
-                    <Row label="Scroll wheel">{c().hasWheel ? 'Yes' : 'No'}</Row>
-                    <p style={{ ...note, 'margin-top': 'var(--g-spacing-sm)' }}>
-                      USB {bcd(m().bcdUsb)} · {c().nHid} interface{c().nHid === 1 ? '' : 's'}
-                      {isComposite(c()) ? ' (composite)' : ''}
-                      {m().hasSerial ? ' · has a serial number' : ''}
-                    </p>
+                    <div style={sectionLabel}>Clone</div>
+                    <Row label="Full clone">
+                      <Show
+                        when={imp().overCapacity}
+                        fallback={<Chip variant="success">Yes</Chip>}
+                      >
+                        <Chip variant="warning">No · 1 input can't be copied</Chip>
+                      </Show>
+                    </Row>
+                    <Row label="Serial number">
+                      <Chip variant={mouse()?.hasSerial ? 'success' : 'neutral'}>
+                        {mouse()?.hasSerial ? 'Cloned' : 'None'}
+                      </Chip>
+                    </Row>
                   </>
                 )}
               </Show>
-            </Show>
+            </>
           )}
         </Show>
       </Card>
 
       <Card>
-        <CardHeader title="Performance" subtitle="How fast your mouse reports, and whether the box keeps up" />
-        <p style={muted}>
-          The report rate is how many times a second your mouse tells the PC where it is. The box should
-          pass every update through without dropping any.
-        </p>
-        <Show when={rate()} fallback={<p>Reading...</p>}>
+        <CardHeader title="Performance" subtitle="Report rate and delivery" />
+        <Show when={rate()} fallback={<Row label="Report rate">—</Row>}>
           {(r) => (
             <Row label="Report rate">
               <Show
-                when={mouseAttached()}
-                fallback={<span style={muted}>No mouse attached.</span>}
+                when={!r().changeDriven}
+                fallback={
+                  <span style={muted}>
+                    on key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
+                  </span>
+                }
               >
-                <Show
-                  when={nativeHz(r()) !== null}
-                  fallback={<span style={muted}>waiting for mouse activity...</span>}
-                >
-                  {nativeHz(r())} Hz
+                <Show when={mouseAttached()} fallback={<span style={muted}>no mouse</span>}>
+                  <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting…</span>}>
+                    {nativeHz(r())} Hz
+                  </Show>
                 </Show>
               </Show>
             </Row>
@@ -141,23 +192,18 @@ const DeviceInfo = () => {
         </Show>
         <Show when={stats()}>
           {(s) => (
-            <>
-              <Row label="Delivery">
-                <Show
-                  when={s().txDrops === 0 && s().txWedges === 0}
-                  fallback={
-                    <Chip variant="warning">
-                      {s().txDrops} dropped, {s().txWedges} recovered
-                    </Chip>
-                  }
-                >
-                  <Chip variant="success">Healthy</Chip>
-                </Show>
-              </Row>
-              <p style={note}>
-                {s().injectEmits} injected updates passed through · {s().resetCount} reconnects since power-on
-              </p>
-            </>
+            <Row label="Delivery">
+              <Show
+                when={s().txDrops === 0 && s().txWedges === 0}
+                fallback={
+                  <Chip variant="warning">
+                    {s().txDrops} dropped, {s().txWedges} recovered
+                  </Chip>
+                }
+              >
+                <Chip variant="success">Healthy</Chip>
+              </Show>
+            </Row>
           )}
         </Show>
       </Card>

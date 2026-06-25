@@ -19,7 +19,8 @@ const Enums: Component = () => {
           <CardHeader title="Button" subtitle="The button a command acts on" />
           <pre class="api-signature">enum Button {'{'} Left, Right, Middle, Side1, Side2 {'}'}</pre>
           <p>
-            The button a <A href="/native/commands/buttons"><code>BUTTON</code></A> command acts on.
+            The button an <A href="/native/commands/inject#button"><code>INJECT</code></A> command acts
+            on, and the payload of <A href="/library/types/enums#input"><code>Input::Button</code></A>.
             Convert with <code>as_id() -&gt; u8</code> and{' '}
             <code>from_id(u8) -&gt; Option&lt;Button&gt;</code>.
           </p>
@@ -40,11 +41,12 @@ const Enums: Component = () => {
           <CardHeader title="Action" subtitle="The shared press / release tri-state" />
           <pre class="api-signature">enum Action {'{'} SoftRelease, Press, ForceRelease {'}'}</pre>
           <p>
-            The shared override action for a{' '}
-            <A href="/library/buttons#methods"><code>button</code></A>,{' '}
-            <A href="/library/keyboard#key"><code>key</code></A>, or{' '}
-            <A href="/library/keyboard#media"><code>media</code></A> call. The discriminant is the wire
-            byte. Convert with <code>as_u8()</code> and{' '}
+            The shared override action for an{' '}
+            <A href="/library/inject#inject"><code>inject</code></A> call, whether a{' '}
+            <A href="/library/inject#button"><code>button</code></A>,{' '}
+            <A href="/library/inject#key"><code>key</code></A>, or{' '}
+            <A href="/library/inject#media"><code>media</code></A>. The discriminant is the wire byte.
+            Convert with <code>as_u8()</code> and{' '}
             <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
           </p>
           <table class="api-params">
@@ -53,6 +55,56 @@ const Enums: Component = () => {
               <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Clear the box's own press; a physical hold stays down.</td></tr>
               <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">RESULT THE PC SEES</div>
+          <p>The two releases differ only when the user physically holds the same input:</p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>User holds nothing</th><th>User is holding it</th></tr></thead>
+            <tbody>
+              <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
+              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (physical wins)</td></tr>
+              <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="input" data-search-target>
+        <Card>
+          <CardHeader title="Input" subtitle="A momentary usage for inject" />
+          <pre class="api-signature">enum Input {'{'} Button(Button), Key(Key), Media(MediaKey) {'}'}</pre>
+          <p>
+            What <A href="/library/inject#inject"><code>inject</code></A> drives: a mouse{' '}
+            <A href="/library/types/enums#button"><code>Button</code></A>, a keyboard{' '}
+            <A href="/library/types/structs#key"><code>Key</code></A>, or a{' '}
+            <A href="/library/types/structs#media-key"><code>MediaKey</code></A>. Each has a{' '}
+            <code>From</code> impl, so you pass one directly wherever an{' '}
+            <code>impl Into&lt;Input&gt;</code> is wanted.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Class</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button</code></td><td><A href="/library/types/enums#button"><code>Button</code></A></td><td>Mouse button.</td></tr>
+              <tr><td><code>Key</code></td><td><A href="/library/types/structs#key"><code>Key</code></A></td><td>Keyboard key or modifier.</td></tr>
+              <tr><td><code>Media</code></td><td><A href="/library/types/structs#media-key"><code>MediaKey</code></A></td><td>Consumer media usage.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="motion" data-search-target>
+        <Card>
+          <CardHeader title="Motion" subtitle="A relative axis for move_axis" />
+          <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16) {'}'}</pre>
+          <p>
+            What <A href="/library/move#move"><code>move_axis</code></A> drives: the cursor (carrying{' '}
+            <code>dx</code> and <code>dy</code>) or the wheel (a single delta). Both span the full{' '}
+            <code>i16</code> range.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Axis</th></tr></thead>
+            <tbody>
+              <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
+              <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -163,12 +215,54 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
+      <div id="lock-class" data-search-target>
+        <Card>
+          <CardHeader title="LockClass" subtitle="Which class a lock addresses" />
+          <pre class="api-signature">enum LockClass {'{'} Mouse, Key, Media, AllKeys, AllMedia, AllButtons {'}'}</pre>
+          <p>
+            The input class a <A href="/native/commands/lock#lock"><code>LOCK</code></A> targets on the
+            wire. The library picks it for you: <A href="/library/lock#lock"><code>lock</code></A> uses{' '}
+            <code>Mouse</code>, <A href="/library/lock#lock-key"><code>lock_key</code></A> uses{' '}
+            <code>Key</code>, and <A href="/library/lock#lock-all"><code>lock_all</code></A> uses the
+            blanket classes. The discriminant is the wire <code>class</code> byte.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Mouse</code></td><td><code>0</code></td><td>A mouse axis, wheel, or button.</td></tr>
+              <tr><td><code>Key</code></td><td><code>1</code></td><td>One keyboard key.</td></tr>
+              <tr><td><code>Media</code></td><td><code>2</code></td><td>One media usage.</td></tr>
+              <tr><td><code>AllKeys</code></td><td><code>3</code></td><td>Every key (blanket).</td></tr>
+              <tr><td><code>AllMedia</code></td><td><code>4</code></td><td>Every media usage (blanket).</td></tr>
+              <tr><td><code>AllButtons</code></td><td><code>5</code></td><td>Every mouse button (blanket).</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="blanket" data-search-target>
+        <Card>
+          <CardHeader title="Blanket" subtitle="A whole-class lock selector" />
+          <pre class="api-signature">enum Blanket {'{'} Keys, Media, Buttons {'}'}</pre>
+          <p>
+            Which whole class <A href="/library/lock#lock-all"><code>lock_all</code></A> and{' '}
+            <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Keys</code></td><td>Every physical keyboard key.</td></tr>
+              <tr><td><code>Media</code></td><td>Every physical media usage.</td></tr>
+              <tr><td><code>Buttons</code></td><td>Every physical mouse button.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="log-level" data-search-target>
         <Card>
           <CardHeader title="LogLevel" subtitle="Severity tag on a log line" />
           <pre class="api-signature">enum LogLevel {'{'} Error, Warn, Info, Debug, Verbose {'}'}</pre>
           <p>
-            The severity tag on a <A href="/library/types/structs#logstream"><code>LogLine</code></A>.{' '}
+            The severity tag on a <A href="/library/types/structs#log-line"><code>LogLine</code></A>.{' '}
             <code>from_u8(u8)</code> is infallible: an unknown byte falls back to <code>Info</code>.
           </p>
           <table class="api-params">

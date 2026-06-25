@@ -100,11 +100,30 @@ export function kbdCapsFromBytes(nKeys: number, flags: number): KbdCaps {
   };
 }
 
+// Unified device capabilities (§4.4): one query describes the whole cloned device — mouse + keyboard +
+// per-class change_driven. A class that is not present reads all-zero/false.
+export interface Caps {
+  mouse: MouseCaps;
+  keyboard: KbdCaps;
+  mouseChangeDriven: boolean;
+  kbdChangeDriven: boolean;
+}
+
+export function hasMouse(c: Caps): boolean {
+  return c.mouse.nButtons > 0 || c.mouse.hasX || c.mouse.hasY || c.mouse.hasWheel;
+}
+
+export function hasKeyboard(c: Caps): boolean {
+  return c.keyboard.nKeys > 0 || c.keyboard.hasConsumer || c.keyboard.hasSystem;
+}
+
 // Live native report rate and clone poll period (§4.5).
 export interface Rate {
   nativePeriodUs: number;
   pollPeriodUs: number;
   confident: boolean;
+  // The active input is change-driven (keyboard/media): no continuous cadence, poll floor only.
+  changeDriven: boolean;
 }
 
 // Native report rate in Hz, or null until learned (nativePeriodUs === 0).
@@ -164,6 +183,16 @@ export enum LockTarget {
   Middle = 5,
   Side1 = 6,
   Side2 = 7,
+}
+
+// LOCK class (§3.8): which input class a lock addresses. usage is class-specific.
+export enum LockClass {
+  Mouse = 0,
+  Key = 1,
+  Media = 2,
+  AllKeys = 3,
+  AllMedia = 4,
+  AllButtons = 5,
 }
 
 export enum LockDirection {
@@ -239,6 +268,15 @@ export type CatchEvent =
 export interface CatchState {
   mask: number;
   dropped: number;
+}
+
+// Decoded RESP(Q_IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is
+// over-capacity (needs an interrupt-IN endpoint the box can't service), and whether the live clone was
+// cloned over-capacity anyway (an interface is silently dead).
+export interface ImperfectStatus {
+  allowed: boolean;
+  overCapacity: boolean;
+  cloneImperfect: boolean;
 }
 
 export enum LogLevel {

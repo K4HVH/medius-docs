@@ -5,13 +5,13 @@
 
 import {
   type CatchEvent,
+  type Caps,
   type CatchState,
   type DecodedFrame,
   type Health,
-  type KbdCaps,
+  type ImperfectStatus,
   type Locks,
   type LogLine,
-  type MouseCaps,
   type MouseInfo,
   type Rate,
   type Stats,
@@ -19,24 +19,27 @@ import {
   FrameDecoder,
   FrameType,
   PROTO_VER,
+  Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
-  Q_KBD_CAPS,
+  Q_IMPERFECT,
   Q_LOCKS,
-  Q_MOUSE_CAPS,
   Q_MOUSE_INFO,
   Q_RATE,
   Q_STATS,
   Q_VERSION,
+  INJ_KEY,
+  INJ_MEDIA,
   LedMode,
   LedTarget,
+  LockClass,
   LockDirection,
   LockTarget,
   RebootTarget,
   catchPayload,
-  consumerPayload,
   encode,
-  keyPayload,
+  imperfectPayload,
+  injectPayload,
   ledPayload,
   lockPayload,
   parseConsEvent,
@@ -181,15 +184,9 @@ export class SerialLink {
     return resp.mouseInfo;
   }
 
-  async queryMouseCaps(timeoutMs?: number): Promise<MouseCaps> {
-    const resp = parseResp(await this.query(Q_MOUSE_CAPS, timeoutMs));
-    if (resp?.kind !== 'caps') throw new Error('unexpected reply to MOUSE_CAPS query');
-    return resp.caps;
-  }
-
-  async queryKbdCaps(timeoutMs?: number): Promise<KbdCaps> {
-    const resp = parseResp(await this.query(Q_KBD_CAPS, timeoutMs));
-    if (resp?.kind !== 'kbdcaps') throw new Error('unexpected reply to KBD_CAPS query');
+  async queryCaps(timeoutMs?: number): Promise<Caps> {
+    const resp = parseResp(await this.query(Q_CAPS, timeoutMs));
+    if (resp?.kind !== 'caps') throw new Error('unexpected reply to CAPS query');
     return resp.caps;
   }
 
@@ -217,6 +214,12 @@ export class SerialLink {
     return resp.catch;
   }
 
+  async queryImperfect(timeoutMs?: number): Promise<ImperfectStatus> {
+    const resp = parseResp(await this.query(Q_IMPERFECT, timeoutMs));
+    if (resp?.kind !== 'imperfect') throw new Error('unexpected reply to IMPERFECT query');
+    return resp.imperfect;
+  }
+
   reboot(target: RebootTarget): Promise<void> {
     return this.send(encode(FrameType.RebootDl, this.nextSeq(), rebootPayload(target)));
   }
@@ -226,21 +229,27 @@ export class SerialLink {
   }
 
   lock(target: LockTarget, direction: LockDirection): Promise<void> {
-    return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 1)));
+    return this.send(
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(LockClass.Mouse, target, direction, 1)),
+    );
   }
 
   unlock(target: LockTarget, direction: LockDirection): Promise<void> {
-    return this.send(encode(FrameType.Lock, this.nextSeq(), lockPayload(target, direction, 0)));
+    return this.send(
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(LockClass.Mouse, target, direction, 0)),
+    );
   }
 
-  // Inject a keyboard key or modifier by HID keycode (§3.10), tri-state action (0/1/2).
+  // Inject a keyboard key or modifier by HID keycode (§3.2, class key), tri-state action (0/1/2).
   key(usage: number, action: number): Promise<void> {
-    return this.send(encode(FrameType.Key, this.nextSeq(), keyPayload(usage, action)));
+    return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_KEY, usage, action)));
   }
 
-  // Inject a media key by 16-bit Consumer usage (§3.11), tri-state action (0/1/2).
+  // Inject a media key by 16-bit Consumer usage (§3.2, class media), tri-state action (0/1/2).
   consumer(usage: number, action: number): Promise<void> {
-    return this.send(encode(FrameType.Consumer, this.nextSeq(), consumerPayload(usage, action)));
+    return this.send(
+      encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_MEDIA, usage, action)),
+    );
   }
 
   // Subscribe to the physical-input event stream (§3.9); event frames arrive on `onEvent` tagged
@@ -252,6 +261,13 @@ export class SerialLink {
 
   uncatch(): Promise<void> {
     return this.catch(0);
+  }
+
+  // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted in NVS; the box
+  // reboots itself to re-clone with the new setting. Fire-and-forget. Read the state back with
+  // `queryImperfect`.
+  allowImperfectClones(allow: boolean): Promise<void> {
+    return this.send(encode(FrameType.Imperfect, this.nextSeq(), imperfectPayload(allow)));
   }
 
   async close(): Promise<void> {

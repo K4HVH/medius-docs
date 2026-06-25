@@ -12,11 +12,12 @@ const NativeIntroduction: Component = () => {
           subtitle="The binary control protocol"
         />
         <p>
-          Medius is replacement firmware for MAKCU-class USB mouse-passthrough boxes plus an open
-          binary control protocol. The box sits inline between a mouse and a PC: the real mouse
-          passes through unchanged while your program injects movement, buttons, and scroll
-          over a separate USB-serial link. Drive it from any language; the Rust{' '}
-          <A href="/library">library</A> is the official client.
+          Medius is replacement firmware for MAKCU-class USB input-passthrough boxes plus an open
+          binary control protocol. The box sits inline between a USB device and a PC: the real device
+          (mouse, keyboard, or combo) passes through unchanged while your program injects input of its
+          own (cursor and buttons for a mouse, keys and media for a keyboard) over a separate
+          USB-serial link. Drive it from any language; the Rust <A href="/library">library</A> is the
+          official client.
         </p>
         <table class="api-params">
           <thead>
@@ -28,11 +29,11 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>1.6.0</code></td>
+              <td><code>2.0.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>1</code></td>
+              <td><code>2</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -64,7 +65,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>1</code>. Confirm it during the{' '}
+                These pages describe version <code>2</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -150,29 +151,14 @@ const NativeIntroduction: Component = () => {
         <Card>
           <CardHeader title="Commands" />
           <div class="docs-grid">
-            <A href="/native/commands/movement" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/inject" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Movement" subtitle="MOVE and WHEEL" />
+                <CardHeader title="Inject" subtitle="Press buttons, keys, media" />
               </Card>
             </A>
-            <A href="/native/commands/buttons" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/move" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Buttons" subtitle="Press, release, force-release" />
-              </Card>
-            </A>
-            <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all nine selectors" />
-              </Card>
-            </A>
-            <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
-              </Card>
-            </A>
-            <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="LED" subtitle="Override the status LEDs" />
+                <CardHeader title="Move" subtitle="Cursor and wheel" />
               </Card>
             </A>
             <A href="/native/commands/lock" style={{ "text-decoration": "none" }}>
@@ -185,9 +171,29 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
-            <A href="/native/commands/keyboard" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Keyboard" subtitle="Inject keys and media keys" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all nine selectors" />
+              </Card>
+            </A>
+            <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="LED" subtitle="Override the status LEDs" />
+              </Card>
+            </A>
+            <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
+              </Card>
+            </A>
+            <A href="/native/commands/imperfect" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Imperfect" subtitle="Clone an over-capacity device" />
+              </Card>
+            </A>
+            <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Usage IDs" subtitle="Button, key, media numbers" />
               </Card>
             </A>
           </div>

@@ -15,7 +15,7 @@ const Catch: Component = () => {
           <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> snapshots, mouse,
           keyboard, and media as the user makes them, captured before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
-          <A href="/library/movement">injection</A>. Drop the stream to unsubscribe.
+          <A href="/library/move">injection</A>. Drop the stream to unsubscribe.
         </p>
       </Card>
 
@@ -98,31 +98,9 @@ while let Ok(event) = events.recv() {
               The buffer is bounded and lossy: a slow consumer drops the OLDEST events, keeping the
               freshest input (count them with <code>dropped()</code>). The box's own drop count, under
               back-pressure on the wire, is on{' '}
-              <A href="/library/catch#query-catch"><code>query_catch</code></A>.
+              <A href="/library/requests#query-catch"><code>query_catch</code></A>.
             </p>
           </div>
-        </Card>
-      </div>
-
-      <div id="query-catch" data-search-target>
-        <Card>
-          <CardHeader title="query_catch" subtitle="Read the subscription state" />
-          <pre class="api-signature">fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the
-            classes the box is currently streaming, and the count of events it dropped under
-            back-pressure (the box-side counterpart to{' '}
-            <A href="/library/catch#event-stream"><code>EventStream::dropped</code></A>). The HEALTH{' '}
-            <code>catch_on</code> bit is the cheap "subscribed" summary.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
-
-let device = Device::find()?;
-let _events = device.catch_events(medius::CatchMask::all())?;
-let state = device.query_catch()?;
-println!("mask={:?} dropped={}", state.mask, state.dropped);`}</code></pre>
         </Card>
       </div>
 
