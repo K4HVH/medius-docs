@@ -33,7 +33,7 @@ const NativeIntroduction: Component = () => {
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>1</code></td>
+              <td><code>2</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -184,6 +184,11 @@ const NativeIntroduction: Component = () => {
             <A href="/native/commands/admin" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
+              </Card>
+            </A>
+            <A href="/native/commands/imperfect" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Imperfect" subtitle="Clone an over-capacity device" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

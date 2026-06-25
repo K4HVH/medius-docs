@@ -10,7 +10,7 @@ const Introduction: Component = () => {
         <CardHeader title="Medius Rust Library" subtitle="Official Rust client" />
         <p>
           The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate
-          injects input on top of a real mouse over a USB-serial link.
+          injects input on top of a real mouse, keyboard, or combo over a USB-serial link.
         </p>
         <table class="api-params">
           <thead>
@@ -137,6 +137,11 @@ const Introduction: Component = () => {
             <A href="/library/admin" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Admin" subtitle="reset, reboot" />
+              </Card>
+            </A>
+            <A href="/library/imperfect" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Imperfect" subtitle="allow_imperfect_clones, query_imperfect" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
