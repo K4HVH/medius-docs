@@ -548,11 +548,11 @@ const Requests: Component = () => {
               <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">id 0 — IMPERFECT</div>
+          <div class="api-response-label">IMPERFECT value</div>
           <p>
-            The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in plus two
-            derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone reads
-            all-zero.
+            The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
+            two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
+            reads all-zero.
           </p>
           <table class="api-params">
             <thead>
@@ -570,9 +570,9 @@ const Requests: Component = () => {
             (<code>clone_imperfect = 1</code>). Library binding:{' '}
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>.
           </p>
-          <div class="api-response-label">id 1 — MOVE_RIDE</div>
+          <div class="api-response-label">MOVE_RIDE value</div>
           <p>
-            The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window.
+            The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window (id 1).
           </p>
           <table class="api-params">
             <thead>
