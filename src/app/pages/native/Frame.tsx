@@ -83,7 +83,7 @@ const Frame: Component = () => {
               <tr><td><code>0x0E</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
               <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#kb-event"><code>KB_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x10</code></td><td><A href="/native/commands/catch#cons-event"><code>CONS_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x11</code></td><td><A href="/native/commands/imperfect#imperfect"><code>IMPERFECT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
+              <tr><td><code>0x11</code></td><td><A href="/native/commands/option#option"><code>OPTION</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
           <p>

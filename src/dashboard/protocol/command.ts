@@ -1,5 +1,6 @@
 // Command payload builders (PC -> box).
 
+import { OPT_IMPERFECT, OPT_MOVE_RIDE } from './opcode';
 import { LedMode, LedTarget, LockClass, LockDirection, RebootTarget } from './types';
 
 export function queryPayload(what: number): Uint8Array {
@@ -31,10 +32,17 @@ export function catchPayload(mask: number): Uint8Array {
   return new Uint8Array([mask & 0xff]);
 }
 
-// IMPERFECT (§3.10): [allow u8] - 1 opts into cloning an over-capacity device, 0 is faithful-only
-// (default). Persisted in NVS; takes effect on the next clone.
+// OPTION(IMPERFECT) (§3.10): [id=0][allow u8] - 1 opts into cloning an over-capacity device, 0 is
+// faithful-only (default). Persisted in NVS; takes effect on the next clone.
 export function imperfectPayload(allow: boolean): Uint8Array {
-  return new Uint8Array([allow ? 1 : 0]);
+  return new Uint8Array([OPT_IMPERFECT, allow ? 1 : 0]);
+}
+
+// OPTION(MOVE_RIDE) (§3.10): [id=1][timeout u16 LE ms] - 0 = off; N = injected motion only rides a
+// native cursor-motion report within an N ms window (no synthetic motion frames). Persisted in NVS.
+export function moveRidePayload(timeoutMs: number): Uint8Array {
+  const ms = Math.max(0, Math.min(0xffff, Math.round(timeoutMs)));
+  return new Uint8Array([OPT_MOVE_RIDE, ms & 0xff, (ms >> 8) & 0xff]);
 }
 
 // INJECT (§3.2): [class u8][id u16 LE][action u8]. class 0 button / 1 key / 2 media; tri-state action.
