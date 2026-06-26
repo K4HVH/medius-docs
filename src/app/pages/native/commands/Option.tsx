@@ -45,11 +45,11 @@ const Option: Component = () => {
           <div class="api-response-label">OPTIONS</div>
           <table class="api-params">
             <thead>
-              <tr><th><code>id</code></th><th>Option</th><th>Value</th></tr>
+              <tr><th>Option</th><th><code>id</code></th><th>Value</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td><td><code>[allow u8]</code></td></tr>
-              <tr><td><code>1</code></td><td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td><td><code>[timeout u16]</code> ms, little-endian</td></tr>
+              <tr><td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td><td><code>0</code></td><td><code>[allow u8]</code></td></tr>
+              <tr><td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td><td><code>1</code></td><td><code>[timeout u16 LE]</code> ms</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -63,30 +63,15 @@ const Option: Component = () => {
 
       <div id="imperfect" data-search-target>
         <Card>
-          <CardHeader title="OPTION · IMPERFECT" subtitle="id 0 — clone an over-capacity device anyway" />
+          <CardHeader title="IMPERFECT" subtitle="Clone an over-capacity device anyway" />
           <p>
-            Some devices need more interrupt-IN endpoints than the box can serve. The ESP32-S3 has five
-            device IN endpoints, so a device whose interfaces want a sixth can't be cloned faithfully:
-            that one interface goes silently dead. The Wooting Two HE is the case in point, with its
-            analog stream on a sixth IN endpoint. By default the box is faithful-only and{' '}
-            <em>refuses</em> such a device, so it never presents a detectably-broken clone.{' '}
-            <code>IMPERFECT</code> opts into cloning it anyway, every other interface byte-faithful.
-          </p>
-          <pre class="api-signature">OPTION  id = 0  ·  value 1 byte</pre>
-          <div class="api-response-label">VALUE</div>
-          <table class="byte-table">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td><code>allow</code></td><td><code>u8</code></td><td><code>1</code> = clone an over-capacity device anyway, <code>0</code> = faithful-only (default)</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            When it changes for an attached over-capacity device the box reboots itself and re-clones
-            with the new setting, so it applies without unplugging anything. A normal device (five IN
-            endpoints or fewer) is never over-capacity, so the toggle does nothing to it (no reboot).{' '}
+            With <code>id = 0</code> the value is <code>[allow u8]</code>: <code>1</code> clones an
+            over-capacity device anyway (every other interface byte-faithful, the over-capacity one
+            dead), <code>0</code> is faithful-only and refuses it (the default). Some devices need more
+            interrupt-IN endpoints than the box can serve (the Wooting Two HE's analog stream wants a
+            sixth, past the ESP32-S3's five), so the box refuses them by default rather than present a
+            detectably-broken clone. When it changes for an attached over-capacity device the box reboots
+            itself to re-clone; a normal device is unaffected.{' '}
             <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 0)</code></A> reads the
             opt-in plus the over-capacity and imperfect-clone flags. Library binding:{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
@@ -103,39 +88,17 @@ const Option: Component = () => {
 
       <div id="move-ride" data-search-target>
         <Card>
-          <CardHeader title="OPTION · MOVE_RIDE" subtitle="id 1 — movement riding" />
+          <CardHeader title="MOVE_RIDE" subtitle="Inject motion only on a real move" />
           <p>
-            Movement riding makes injected motion appear only when the real mouse moves. Injected
-            cursor and wheel motion ride a native cursor-motion report seen within the window, and the
-            box never emits a synthetic motion frame just for injection. Motion left unridden past the
-            window is dropped, not saved up and dumped on the next move, so injection can't be hoarded
-            during idle and released in a burst.
-          </p>
-          <pre class="api-signature">OPTION  id = 1  ·  value 2 bytes</pre>
-          <div class="api-response-label">VALUE</div>
-          <table class="byte-table">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td><code>timeout</code></td><td><code>u16</code></td><td>ride window in ms, little-endian; <code>0</code> = off (default), <code>N &gt; 0</code> = on with an N ms window</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">WHY</div>
-          <p>
-            It erases the report-density tell. A human aiming reports at roughly 270 to 360 Hz with the
-            mouse idle 60 to 70% of the time, but the frame-clock fill that drives injected motion is
-            gapless at about 990 Hz even while the user aims. Riding native reports makes injected
-            motion's density and idle fraction match the real mouse, so injection looks the same as a
-            hand on the mouse.
-          </p>
-          <div class="api-response-label">TRADEOFF</div>
-          <p>
-            The tradeoff is deliberate: pure idle injection, moving the cursor while the user holds
-            still, stops working while riding is on. Button, key, and media injection are unaffected.
-            Off by default.{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 1)</code></A> reads the
-            current window. Library binding:{' '}
+            With <code>id = 1</code> the value is <code>[timeout u16 LE]</code> in milliseconds
+            (<code>0</code> = off, the default). When on, injected cursor and wheel motion only rides a
+            native cursor-motion report seen within the window; the box emits no synthetic motion frame
+            for injection, and motion left unridden is dropped, never dumped on the next move. That keeps
+            injected motion's report density and idle fraction identical to the real mouse's (a human
+            aims at ~270-360 Hz, idle 60-70% of the time, while gap-filling injection runs gapless near
+            990 Hz), erasing the report-density tell. Pure idle injection (moving the cursor while the
+            hand is still) stops working while it's on; button, key, and media injection are unaffected.
+            Library binding:{' '}
             <A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
