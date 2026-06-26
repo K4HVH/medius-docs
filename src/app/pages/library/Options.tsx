@@ -31,8 +31,9 @@ const Options: Component = () => {
           <p>
             By default the box refuses a device it can't clone faithfully. <code>true</code> opts into
             cloning an over-capacity device anyway, the rest faithful and the over-capacity interface
-            dead; <code>false</code> is faithful-only (the default). The box persists it in NVS and
-            reboots itself to re-clone with the new setting, so it lands without unplugging anything.
+            dead; <code>false</code> is faithful-only (the default). It's persisted in NVS. When the
+            setting changes for an <em>attached over-capacity</em> device the box reboots itself to
+            re-clone, so it lands without unplugging anything; a normal device is unaffected (no reboot).
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
@@ -47,7 +48,7 @@ const Options: Component = () => {
           <pre><code>{`use medius::Device;
 
 let device = Device::find()?;
-device.allow_imperfect_clones(true)?;   // the box reboots itself and re-clones`}</code></pre>
+device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capacity device is attached`}</code></pre>
         </Card>
       </div>
 
@@ -142,9 +143,9 @@ match device.query_movement_riding()? {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use std::time::Duration;
-use medius::AsyncDevice;
+use medius::Device;
 
-let device = AsyncDevice::open("/dev/ttyACM0")?;
+let device = Device::find()?.into_async();
 device.set_movement_riding(Some(Duration::from_millis(20)))?;  // sync, no await
 let window = device.query_movement_riding().await?;            // awaits`}</code></pre>
         </Card>

@@ -7,8 +7,7 @@ import DeviceLed from './DeviceLed';
 import DeviceLock from './DeviceLock';
 import DeviceKeyboard from './DeviceKeyboard';
 import DeviceEventCatch from './DeviceEventCatch';
-import DeviceImperfect from './DeviceImperfect';
-import DeviceMovementRiding from './DeviceMovementRiding';
+import DeviceOptions from './DeviceOptions';
 import '../../../styles/docs.css';
 
 // Controls that drive the box to test it. Starts with the status lights; more
@@ -36,8 +35,7 @@ const Control = () => {
       <DeviceLock />
       <DeviceKeyboard />
       <DeviceEventCatch />
-      <DeviceImperfect />
-      <DeviceMovementRiding />
+      <DeviceOptions />
     </Show>
   );
 };
