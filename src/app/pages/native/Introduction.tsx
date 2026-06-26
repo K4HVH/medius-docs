@@ -186,9 +186,9 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
               </Card>
             </A>
-            <A href="/native/commands/imperfect" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/option" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Imperfect" subtitle="Clone an over-capacity device" />
+                <CardHeader title="Option" subtitle="Imperfect clones, movement riding" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

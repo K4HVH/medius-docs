@@ -9,12 +9,14 @@ import {
   CAPS_CD_MOUSE,
   MI_HAS_BOS,
   MI_HAS_SERIAL,
+  OPT_IMPERFECT,
+  OPT_MOVE_RIDE,
   Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
-  Q_IMPERFECT,
   Q_LOCKS,
   Q_MOUSE_INFO,
+  Q_OPTIONS,
   Q_RATE,
   Q_STATS,
   Q_VERSION,
@@ -50,7 +52,8 @@ export type Resp =
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
   | { kind: 'catch'; catch: CatchState }
-  | { kind: 'imperfect'; imperfect: ImperfectStatus };
+  | { kind: 'imperfect'; imperfect: ImperfectStatus }
+  | { kind: 'movementRiding'; windowMs: number }; // 0 = off
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -148,16 +151,27 @@ export function parseResp(payload: Uint8Array): Resp | null {
       if (payload.length < 6) return null;
       return { kind: 'catch', catch: { mask: payload[1], dropped: u32le(payload, 2) } };
     }
-    case Q_IMPERFECT: {
-      if (payload.length < 4) return null;
-      return {
-        kind: 'imperfect',
-        imperfect: {
-          allowed: payload[1] !== 0,
-          overCapacity: payload[2] !== 0,
-          cloneImperfect: payload[3] !== 0,
-        },
-      };
+    case Q_OPTIONS: {
+      if (payload.length < 2) return null;
+      switch (payload[1]) {
+        case OPT_IMPERFECT:
+          // [what=9][id=0][allowed][over_capacity][clone_imperfect]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'imperfect',
+            imperfect: {
+              allowed: payload[2] !== 0,
+              overCapacity: payload[3] !== 0,
+              cloneImperfect: payload[4] !== 0,
+            },
+          };
+        case OPT_MOVE_RIDE:
+          // [what=9][id=1][timeout u16 LE ms]
+          if (payload.length < 4) return null;
+          return { kind: 'movementRiding', windowMs: u16le(payload, 2) };
+        default:
+          return null;
+      }
     }
     default:
       return null;

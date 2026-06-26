@@ -19,8 +19,8 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
           <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
-          <A href="/native/commands/requests#catch">catch</A> subscription, or the{' '}
-          <A href="/native/commands/requests#imperfect">imperfect-clone</A> state.
+          <A href="/native/commands/requests#catch">catch</A> subscription, or a persistent box{' '}
+          <A href="/native/commands/requests#options">option</A>.
         </p>
       </Card>
 
@@ -31,7 +31,7 @@ const Requests: Component = () => {
             <code>QUERY</code> asks for one piece of state, named by its <code>what</code> byte.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x05</code>.
           </p>
-          <pre class="api-signature">QUERY  0x05  ·  payload 1 byte</pre>
+          <pre class="api-signature">QUERY  0x05  ·  payload 1 byte (2 for OPTIONS)</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -40,6 +40,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>which state to read (see below)</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>only for <code>what = 9</code> (OPTIONS): which option to read; omitted otherwise</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">SELECTORS</div>
@@ -56,7 +57,7 @@ const Requests: Component = () => {
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
-              <tr><td><code>9</code></td><td>The imperfect-clone state.</td><td><A href="/native/commands/requests#imperfect"><code>IMPERFECT</code></A></td></tr>
+              <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -73,7 +74,8 @@ const Requests: Component = () => {
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
             <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
-            <A href="/library/imperfect#query-imperfect"><code>query_imperfect</code></A>.
+            <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
+            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -119,7 +121,7 @@ const Requests: Component = () => {
             <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
             <A href="/native/commands/requests#locks"><code>LOCKS</code></A>,{' '}
             <A href="/native/commands/requests#catch"><code>CATCH</code></A>, and{' '}
-            <A href="/native/commands/requests#imperfect"><code>IMPERFECT</code></A>.
+            <A href="/native/commands/requests#options"><code>OPTIONS</code></A>.
           </p>
         </Card>
       </div>
@@ -523,16 +525,17 @@ const Requests: Component = () => {
         </Card>
       </div>
 
-      <div id="imperfect" data-search-target>
+      <div id="options" data-search-target>
         <Card>
-          <CardHeader title="IMPERFECT" subtitle="RESP payload, what = 9" />
+          <CardHeader title="OPTIONS" subtitle="RESP payload, what = 9" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 9</code>: the <A href="/native/commands/imperfect"><code>IMPERFECT</code></A>{' '}
-            opt-in, whether the attached device is over-capacity, and whether the live clone went
-            over-capacity anyway. Each field is one byte, <code>0</code> or <code>1</code>.
+            <code>what = 9</code>: the value of one persistent box{' '}
+            <A href="/native/commands/option"><code>OPTION</code></A>, echoing the queried{' '}
+            <code>id</code>. The value is id-specific, so the query takes the option's <code>id</code> as
+            a second byte and each option is read on its own. An unknown id gets no reply.
           </p>
-          <pre class="api-signature">QUERY  what = 9  ·  RESP 4 bytes</pre>
+          <pre class="api-signature">QUERY  what = 9, id  ·  RESP varies</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -541,24 +544,54 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x09</td></tr>
-              <tr><td>1</td><td><code>allowed</code></td><td><code>u8</code></td><td>the opt-in toggle; <code>1</code> = cloning an over-capacity device is allowed</td></tr>
-              <tr><td>2</td><td><code>over_capacity</code></td><td><code>u8</code></td><td>the attached device needs an interrupt-IN endpoint the box can't service</td></tr>
-              <tr><td>3</td><td><code>clone_imperfect</code></td><td><code>u8</code></td><td>the live clone is over-capacity and was cloned anyway, so one interface is dead</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>which option this value is for</td></tr>
+              <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
+          <div class="api-response-label">id 0 — IMPERFECT</div>
+          <p>
+            The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in plus two
+            derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone reads
+            all-zero.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = cloning an over-capacity device is allowed</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device needs an interrupt-IN endpoint the box can't service</td></tr>
+              <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is over-capacity and was cloned anyway, so one interface is dead</td></tr>
+            </tbody>
+          </table>
           <p>
             Read it to tell why a clone is missing (<code>over_capacity = 1</code>,{' '}
             <code>allowed = 0</code>), or to confirm an imperfect clone is live
             (<code>clone_imperfect = 1</code>). Library binding:{' '}
-            <A href="/library/imperfect#query-imperfect"><code>query_imperfect</code></A>.
+            <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>.
+          </p>
+          <div class="api-response-label">id 1 — MOVE_RIDE</div>
+          <p>
+            The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>timeout</code></td><td><code>u16</code>, little-endian; the ride window in ms, <code>0</code> = off</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Opted in, an over-capacity device attached and cloned imperfectly:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 04 00  | 09     | 01     | 01     | 01     | ... CRC16
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | allow  | overcap| imperf |`}</pre>
+          <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 05 00  | 09     | 00     | 01     | 01     | 01     | ... CRC16
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf |`}</pre>
         </Card>
       </div>
 

@@ -139,9 +139,9 @@ const Introduction: Component = () => {
                 <CardHeader title="Admin" subtitle="reset, reboot" />
               </Card>
             </A>
-            <A href="/library/imperfect" style={{ "text-decoration": "none" }}>
+            <A href="/library/options" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Imperfect" subtitle="allow_imperfect_clones, query_imperfect" />
+                <CardHeader title="Options" subtitle="imperfect clones, movement riding" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
