@@ -91,9 +91,9 @@ const Frames: Component = () => {
                 <td>A physical media snapshot (box to PC).</td>
               </tr>
               <tr>
-                <td><code>Imperfect</code></td>
+                <td><code>Option</code></td>
                 <td><code>0x11</code></td>
-                <td>Opt into cloning an over-capacity device imperfectly (PC to box).</td>
+                <td>Set a persistent box option by id, e.g. imperfect-clone opt-in or movement riding (PC to box).</td>
               </tr>
             </tbody>
           </table>

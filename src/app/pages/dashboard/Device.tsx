@@ -6,6 +6,7 @@ import { Chip } from '../../../components/display/Chip';
 import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
+import DeviceOptionsSummary from './DeviceOptionsSummary';
 import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
@@ -153,6 +154,10 @@ const Device = () => {
               </pre>
             </Show>
           </Card>
+
+          <Show when={dash.status() === 'connected'}>
+            <DeviceOptionsSummary />
+          </Show>
         </div>
       </div>
     </>

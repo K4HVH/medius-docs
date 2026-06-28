@@ -29,7 +29,7 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>2.0.1</code></td>
+              <td><code>2.1.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
@@ -186,9 +186,9 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Admin" subtitle="RESET, REBOOT, LOG" />
               </Card>
             </A>
-            <A href="/native/commands/imperfect" style={{ "text-decoration": "none" }}>
+            <A href="/native/commands/option" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Imperfect" subtitle="Clone an over-capacity device" />
+                <CardHeader title="Option" subtitle="Imperfect clones, movement riding" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

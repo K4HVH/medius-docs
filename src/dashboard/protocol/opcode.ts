@@ -20,7 +20,11 @@ export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
-export const Q_IMPERFECT = 9;
+export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
+
+// OPTION ids (§3.10): persistent box options set via OPTION, read via Q_OPTIONS. The value is id-specific.
+export const OPT_IMPERFECT = 0; // value [allow u8]
+export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
@@ -69,7 +73,7 @@ export enum FrameType {
   MouseEvent = 0x0c,
   KbEvent = 0x0f,
   ConsEvent = 0x10,
-  Imperfect = 0x11,
+  Option = 0x11,
 }
 
 export function frameTypeFromU8(value: number): FrameType | null {
@@ -101,7 +105,7 @@ export function frameTypeFromU8(value: number): FrameType | null {
     case 0x10:
       return FrameType.ConsEvent;
     case 0x11:
-      return FrameType.Imperfect;
+      return FrameType.Option;
     default:
       return null;
   }
