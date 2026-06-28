@@ -25,9 +25,11 @@ const Async: Component = () => {
 
       <div id="construction" data-search-target>
         <Card>
-          <CardHeader title="Constructing an AsyncDevice" subtitle="open, into_async, into_inner" />
+          <CardHeader title="Constructing an AsyncDevice" subtitle="open, find, into_async, into_inner" />
 
           <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <pre class="api-signature">fn find() -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -52,6 +54,14 @@ const Async: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>find</code></td>
+                <td>
+                  Discovers the first medius box by USB id, opens it, and runs the handshake. Blocks
+                  like <A href="/library/connection#open"><code>Device::find</code></A>, then hands
+                  back an <code>AsyncDevice</code>.
+                </td>
+              </tr>
+              <tr>
                 <td><code>into_async</code></td>
                 <td>
                   Reinterprets an already-open{' '}
@@ -61,24 +71,30 @@ const Async: Component = () => {
               </tr>
               <tr>
                 <td><code>into_inner</code></td>
-                <td>Hands the sync <code>Device</code> back, so you can reach the diagnostics methods.</td>
+                <td>Hands the sync <code>Device</code> back.</td>
               </tr>
             </tbody>
           </table>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// reinterpret an already-open Device (handshake ran during find)
-let device = Device::find()?.into_async();
+          <pre><code>{`// discover and open in one call (runs the handshake, blocks)
+let device = AsyncDevice::find()?;
 
-// or open a path directly (this one runs the handshake and blocks)
-let device = AsyncDevice::open("/dev/ttyACM0")?;`}</code></pre>
+// or by path:
+let device = AsyncDevice::open("/dev/ttyACM0")?;
+
+// or reinterpret an already-open Device:
+let device = Device::find()?.into_async();`}</code></pre>
 
           <div class="callout callout--info">
             <p>
-              <A href="/library/diagnostics#counters"><code>counters</code></A> and{' '}
-              <A href="/library/diagnostics#logs"><code>logs</code></A> live on{' '}
-              <A href="/library/connection"><code>Device</code></A>, not <code>AsyncDevice</code>; call{' '}
-              <code>into_inner()</code> for the sync handle.
+              Everything else on <A href="/library/connection"><code>Device</code></A> is mirrored on{' '}
+              <code>AsyncDevice</code> and stays synchronous — including{' '}
+              <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
+              <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
+              <A href="/library/lifecycle#from-async"><code>reapply</code></A>, and{' '}
+              <A href="/library/lifecycle#from-async"><code>reconnect</code></A>. Only the queries
+              are futures.
             </p>
           </div>
         </Card>

@@ -110,26 +110,25 @@ assert!(after > before);`}</code></pre>
 
       <div id="from-async" data-search-target>
         <Card>
-          <CardHeader title="From async code" subtitle="These methods live on Device, not AsyncDevice" />
+          <CardHeader title="On AsyncDevice" subtitle="reapply and reconnect, still direct" />
 
           <p>
             <span class="api-badge api-badge--executed">No round-trip</span>
           </p>
 
           <p>
-            <code>reapply</code> and <code>reconnect</code> live on <code>Device</code> only, not{' '}
-            <A href="/library/features/async"><code>AsyncDevice</code></A>; convert with{' '}
-            <code>into_inner</code> first.
+            <A href="/library/features/async"><code>AsyncDevice</code></A> exposes{' '}
+            <code>reapply</code> and <code>reconnect</code> directly, same signatures.{' '}
+            <code>reapply</code> is a fire-and-forget frame; <code>reconnect</code> blocks while it
+            rescans and reopens the port, so keep it off a latency-sensitive task.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::AsyncDevice;
 
-let async_dev = AsyncDevice::open("/dev/ttyACM0")?;
-
-// reapply and reconnect aren't on AsyncDevice; drop back to Device.
-let device = async_dev.into_inner();
-device.reconnect()?;`}</code></pre>
+let device = AsyncDevice::open("/dev/ttyACM0")?;
+device.reapply()?;     // re-assert held overrides
+device.reconnect()?;   // blocks: rescan + reopen`}</code></pre>
 
           <div class="callout callout--info">
             <p>

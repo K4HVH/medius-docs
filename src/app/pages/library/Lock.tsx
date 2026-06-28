@@ -148,13 +148,13 @@ device.unlock_all(Blanket::Keys)?;`}</code></pre>
 
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="On AsyncDevice" subtitle="lock and unlock fire, query_locks awaits" />
+          <CardHeader title="On AsyncDevice" subtitle="locks fire, query_locks awaits" />
           <p>
-            <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
-            <code>lock</code> and <code>unlock</code> synchronous, since they expect no reply, and{' '}
-            <code>query_locks</code> is a future like the other queries. The key, media, and blanket
-            variants live on <A href="/library/connection#async"><code>Device</code></A> only; reach
-            them with <code>into_inner()</code> if you hold an <code>AsyncDevice</code>.
+            <A href="/library/features/async"><code>AsyncDevice</code></A> keeps every lock call
+            synchronous — <code>lock</code>/<code>unlock</code> and the <code>lock_key</code>,{' '}
+            <code>lock_media</code>, and <code>lock_all</code> variants (with their{' '}
+            <code>unlock</code> pairs) — since they expect no reply; <code>query_locks</code> is a
+            future like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use futures::executor::block_on;

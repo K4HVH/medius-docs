@@ -541,6 +541,15 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             lets <code>for line in stream</code> block per line until the link closes.
           </p>
 
+          <pre class="api-signature">async fn recv_async(&self) -&gt; Result&lt;LogLine&gt;</pre>
+          <p>
+            <span class="api-badge api-badge--executed">No round-trip</span>
+          </p>
+          <p>
+            Await the next line (<code>async</code> feature); <code>Err(Disconnected)</code> if the
+            link drops. Runtime-agnostic.
+          </p>
+
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`let stream = device.logs();
 
