@@ -19,12 +19,14 @@ import {
   FrameDecoder,
   FrameType,
   PROTO_VER,
+  OPT_IMPERFECT,
+  OPT_MOVE_RIDE,
   Q_CAPS,
   Q_CATCH,
   Q_HEALTH,
-  Q_IMPERFECT,
   Q_LOCKS,
   Q_MOUSE_INFO,
+  Q_OPTIONS,
   Q_RATE,
   Q_STATS,
   Q_VERSION,
@@ -42,6 +44,7 @@ import {
   injectPayload,
   ledPayload,
   lockPayload,
+  moveRidePayload,
   parseConsEvent,
   parseKbEvent,
   parseLog,
@@ -215,9 +218,16 @@ export class SerialLink {
   }
 
   async queryImperfect(timeoutMs?: number): Promise<ImperfectStatus> {
-    const resp = parseResp(await this.query(Q_IMPERFECT, timeoutMs));
-    if (resp?.kind !== 'imperfect') throw new Error('unexpected reply to IMPERFECT query');
+    const resp = parseResp(await this.queryOption(OPT_IMPERFECT, timeoutMs));
+    if (resp?.kind !== 'imperfect') throw new Error('unexpected reply to OPTIONS(IMPERFECT) query');
     return resp.imperfect;
+  }
+
+  // The movement-riding window in milliseconds (§4.14); 0 means off.
+  async queryMovementRiding(timeoutMs?: number): Promise<number> {
+    const resp = parseResp(await this.queryOption(OPT_MOVE_RIDE, timeoutMs));
+    if (resp?.kind !== 'movementRiding') throw new Error('unexpected reply to OPTIONS(MOVE_RIDE) query');
+    return resp.windowMs;
   }
 
   reboot(target: RebootTarget): Promise<void> {
@@ -267,7 +277,15 @@ export class SerialLink {
   // reboots itself to re-clone with the new setting. Fire-and-forget. Read the state back with
   // `queryImperfect`.
   allowImperfectClones(allow: boolean): Promise<void> {
-    return this.send(encode(FrameType.Imperfect, this.nextSeq(), imperfectPayload(allow)));
+    return this.send(encode(FrameType.Option, this.nextSeq(), imperfectPayload(allow)));
+  }
+
+  // Set movement riding (§3.10): a window in milliseconds, or 0 to turn it off. With it on, injected
+  // motion only rides a native cursor-motion report inside the window (no synthetic motion frames),
+  // so injection's report density matches the native mouse. Persisted in NVS. Read back with
+  // `queryMovementRiding`.
+  setMovementRiding(windowMs: number): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
   }
 
   async close(): Promise<void> {
@@ -302,8 +320,18 @@ export class SerialLink {
   }
 
   private query(what: number, timeoutMs = DEFAULT_QUERY_TIMEOUT_MS): Promise<Uint8Array> {
+    return this.queryRaw(what, queryPayload(what), timeoutMs);
+  }
+
+  // QUERY(OPTIONS, id): a single persistent box option. The reply still leads with Q_OPTIONS, so it
+  // correlates on that selector (the SEQ disambiguates concurrent option reads).
+  private queryOption(id: number, timeoutMs = DEFAULT_QUERY_TIMEOUT_MS): Promise<Uint8Array> {
+    return this.queryRaw(Q_OPTIONS, new Uint8Array([Q_OPTIONS, id]), timeoutMs);
+  }
+
+  private queryRaw(what: number, request: Uint8Array, timeoutMs: number): Promise<Uint8Array> {
     const seq = this.nextSeq();
-    const frame = encode(FrameType.Query, seq, queryPayload(what));
+    const frame = encode(FrameType.Query, seq, request);
     return new Promise<Uint8Array>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(seq);

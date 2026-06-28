@@ -270,7 +270,7 @@ export interface CatchState {
   dropped: number;
 }
 
-// Decoded RESP(Q_IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is
+// Decoded RESP(OPTIONS, IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is
 // over-capacity (needs an interrupt-IN endpoint the box can't service), and whether the live clone was
 // cloned over-capacity anyway (an interface is silently dead).
 export interface ImperfectStatus {

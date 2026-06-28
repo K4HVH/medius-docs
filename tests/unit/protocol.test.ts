@@ -26,6 +26,7 @@ import {
   imperfectPayload,
   ledPayload,
   lockPayload,
+  moveRidePayload,
   lockSet,
   logLevelFromU8,
   nativeHz,
@@ -227,7 +228,7 @@ describe('parseResp / parseLog', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
     expect(parseResp(new Uint8Array([0, 1, 0, 1]))).toBeNull(); // version needs 5 bytes
     expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 2 bytes
-    expect(parseResp(new Uint8Array([9]))).toBeNull(); // imperfect needs 4 bytes
+    expect(parseResp(new Uint8Array([9]))).toBeNull(); // OPTIONS needs an id byte
     expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
 
@@ -261,7 +262,7 @@ describe('helpers', () => {
     expect(frameTypeFromU8(0x0c)).toBe(FrameType.MouseEvent);
     expect(frameTypeFromU8(0x0f)).toBe(FrameType.KbEvent);
     expect(frameTypeFromU8(0x10)).toBe(FrameType.ConsEvent);
-    expect(frameTypeFromU8(0x11)).toBe(FrameType.Imperfect);
+    expect(frameTypeFromU8(0x11)).toBe(FrameType.Option);
     expect(frameTypeFromU8(0x12)).toBeNull();
     expect(frameTypeFromU8(0x00)).toBeNull();
   });
@@ -463,27 +464,40 @@ describe('CATCH command (§3.9)', () => {
   });
 });
 
-describe('IMPERFECT command (§3.10)', () => {
-  it('imperfectPayload packs [allow]', () => {
-    expect(Array.from(imperfectPayload(true))).toEqual([1]);
-    expect(Array.from(imperfectPayload(false))).toEqual([0]);
+describe('OPTION command (§3.10)', () => {
+  it('imperfectPayload packs [id=0][allow]', () => {
+    expect(Array.from(imperfectPayload(true))).toEqual([0, 1]);
+    expect(Array.from(imperfectPayload(false))).toEqual([0, 0]);
   });
 
-  it('parses a Q_IMPERFECT RESP into allowed / over_capacity / clone_imperfect', () => {
-    // what = 9, allowed = 1, over_capacity = 1, clone_imperfect = 1.
-    expect(parseResp(new Uint8Array([9, 1, 1, 1]))).toEqual({
+  it('moveRidePayload packs [id=1][timeout u16 LE ms]', () => {
+    expect(Array.from(moveRidePayload(5))).toEqual([1, 5, 0]);
+    expect(Array.from(moveRidePayload(0))).toEqual([1, 0, 0]);
+    expect(Array.from(moveRidePayload(1000))).toEqual([1, 0xe8, 0x03]);
+  });
+
+  it('parses RESP(OPTIONS, IMPERFECT) into allowed / over_capacity / clone_imperfect', () => {
+    // what = 9, id = 0, allowed = 1, over_capacity = 1, clone_imperfect = 1.
+    expect(parseResp(new Uint8Array([9, 0, 1, 1, 1]))).toEqual({
       kind: 'imperfect',
       imperfect: { allowed: true, overCapacity: true, cloneImperfect: true },
     });
     // Faithful-only, an over-capacity device attached but refused (no live clone).
-    expect(parseResp(new Uint8Array([9, 0, 1, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 0, 0, 1, 0]))).toEqual({
       kind: 'imperfect',
       imperfect: { allowed: false, overCapacity: true, cloneImperfect: false },
     });
   });
 
-  it('returns null for a truncated Q_IMPERFECT payload', () => {
-    expect(parseResp(new Uint8Array([9, 1, 1]))).toBeNull(); // needs 4 bytes
+  it('parses RESP(OPTIONS, MOVE_RIDE) into a window in ms (0 = off)', () => {
+    expect(parseResp(new Uint8Array([9, 1, 5, 0]))).toEqual({ kind: 'movementRiding', windowMs: 5 });
+    expect(parseResp(new Uint8Array([9, 1, 0, 0]))).toEqual({ kind: 'movementRiding', windowMs: 0 });
+  });
+
+  it('returns null for a truncated or unknown OPTIONS payload', () => {
+    expect(parseResp(new Uint8Array([9, 0, 1, 1]))).toBeNull(); // imperfect needs 5 bytes
+    expect(parseResp(new Uint8Array([9, 1, 0]))).toBeNull(); // move_ride needs 4 bytes
+    expect(parseResp(new Uint8Array([9, 0xff, 0, 0]))).toBeNull(); // unknown option id
   });
 });
 

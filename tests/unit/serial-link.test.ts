@@ -180,6 +180,36 @@ describe('SerialLink', () => {
     await link.close();
   });
 
+  it('option queries send QUERY [9, id] and decode the RESP(OPTIONS) reply', async () => {
+    const mock = new MockSerialPort();
+    const reqs: number[][] = [];
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 9) {
+        reqs.push(Array.from(f.payload));
+        if (f.payload[1] === 0) {
+          // RESP(OPTIONS, IMPERFECT): [9][0][allowed][over_capacity][clone_imperfect]
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 0, 1, 0, 0])));
+        } else if (f.payload[1] === 1) {
+          // RESP(OPTIONS, MOVE_RIDE): [9][1][timeout u16 LE] = 5 ms
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
+        }
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    expect(await link.queryImperfect()).toEqual({
+      allowed: true,
+      overCapacity: false,
+      cloneImperfect: false,
+    });
+    expect(await link.queryMovementRiding()).toBe(5);
+    expect(reqs).toEqual([
+      [9, 0],
+      [9, 1],
+    ]); // each option query carries its id byte, correlated on the Q_OPTIONS selector
+    await link.close();
+  });
+
   it('sends a KEY frame on key()', async () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));
