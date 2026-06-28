@@ -10,8 +10,9 @@ const Diagnostics: Component = () => {
         <Card>
           <CardHeader title="Diagnostics" subtitle="Read-only views of the link" />
           <p>
-            <code>logs</code> and <code>counters</code> are lock-free, read-only views, both on{' '}
-            <A href="/library/connection"><code>Device</code></A>.
+            <code>logs</code> and <code>counters</code> are lock-free, read-only views on{' '}
+            <A href="/library/connection"><code>Device</code></A> and{' '}
+            <A href="/library/features/async"><code>AsyncDevice</code></A>.
           </p>
           <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
         </Card>
@@ -87,6 +88,12 @@ const Diagnostics: Component = () => {
                 <td>iterator</td>
                 <td>No</td>
                 <td>Drains every line queued right now, then stops.</td>
+              </tr>
+              <tr>
+                <td><code>recv_async().await</code></td>
+                <td><code>Result&lt;LogLine&gt;</code></td>
+                <td>Awaits</td>
+                <td>Await the next line (<code>async</code> feature), runtime-agnostic.</td>
               </tr>
             </tbody>
           </table>

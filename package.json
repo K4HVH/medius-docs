@@ -1,6 +1,6 @@
 {
   "name": "medius-docs",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Documentation site for Medius: the mouse-passthrough firmware, its binary control protocol, and the medius Rust library",
   "type": "module",
   "scripts": {

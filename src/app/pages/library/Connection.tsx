@@ -108,25 +108,25 @@ println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
-            Behind the <code>async</code> feature, <code>AsyncDevice</code> turns the two reply-reading
+            Behind the <code>async</code> feature, <code>AsyncDevice</code> turns the reply-reading
             queries into futures; the{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous. No{' '}
-            <code>AsyncDevice::find</code>: use <code>open</code> by path or{' '}
-            <code>into_async</code>, full surface on the{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
+            Construct one with <code>AsyncDevice::find</code>, <code>open</code> by path, or{' '}
+            <code>into_async</code>; full surface on the{' '}
             <A href="/library/features/async">async feature</A> page.
           </p>
           <pre><code>cargo add medius --features async</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use futures::executor::block_on;
-use medius::{AsyncDevice, Device};
+use medius::AsyncDevice;
 
-// open directly as async, by path:
-let dev = AsyncDevice::open("/dev/ttyACM0")?;
+// discover and open directly as async:
+let dev = AsyncDevice::find()?;
 let version = block_on(dev.query_version())?; // awaits the reply
 dev.move_rel(10, 0)?;                          // fire-and-forget, stays sync
 
-// or convert an already-open sync device:
-let dev = Device::find()?.into_async();`}</code></pre>
+// or open a path you already have:
+let dev = AsyncDevice::open("/dev/ttyACM0")?;`}</code></pre>
         </Card>
       </div>
 
