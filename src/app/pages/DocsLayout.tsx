@@ -12,7 +12,7 @@ import {
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
-  BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle,
+  BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -353,13 +353,24 @@ const DocsLayout = (props: RouteSectionProps) => {
               </>
             }
             right={
-              <Button
-                variant="subtle"
-                size="compact"
-                icon={BsSearch}
-                onClick={() => setSearchOpen(true)}
-                aria-label="Search"
-              />
+              <>
+                <Button
+                  variant="subtle"
+                  size="compact"
+                  icon={BsDiscord}
+                  onClick={() =>
+                    window.open('https://discord.gg/ArRqcA84pB', '_blank', 'noopener,noreferrer')
+                  }
+                  aria-label="Discord (opens in a new tab)"
+                />
+                <Button
+                  variant="subtle"
+                  size="compact"
+                  icon={BsSearch}
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search"
+                />
+              </>
             }
           />
           <div class="docs-page">
