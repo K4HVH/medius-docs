@@ -13,9 +13,13 @@ const fmtDate = (iso: string) => {
     : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-// Release notes are a commit list (lines like "- subject (hash)"). Render bullet
-// lines as a list and anything else as a line of text.
-type Block = { kind: 'list'; items: string[] } | { kind: 'text'; text: string };
+// Release notes are a commit list grouped under per-repo headers. A "- subject
+// (hash)" line renders as a list item; a "**Repo**" or "## Repo" line becomes a
+// section heading; anything else renders as a line of text.
+type Block =
+  | { kind: 'heading'; text: string }
+  | { kind: 'list'; items: string[] }
+  | { kind: 'text'; text: string };
 
 const Notes = (props: { notes: string }) => {
   const blocks = (): Block[] => {
@@ -23,30 +27,32 @@ const Notes = (props: { notes: string }) => {
     for (const raw of props.notes.split('\n')) {
       const line = raw.trim();
       if (!line) continue;
-      const m = line.match(/^[-*]\s+(.*)$/);
-      if (m) {
+      const heading = line.match(/^#{1,6}\s+(.*)$/) ?? line.match(/^\*\*(.+?)\*\*$/);
+      const bullet = line.match(/^[-*]\s+(.*)$/);
+      if (heading) {
+        acc.push({ kind: 'heading', text: heading[1] });
+      } else if (bullet) {
         const last = acc[acc.length - 1];
-        if (last && last.kind === 'list') last.items.push(m[1]);
-        else acc.push({ kind: 'list', items: [m[1]] });
+        if (last && last.kind === 'list') last.items.push(bullet[1]);
+        else acc.push({ kind: 'list', items: [bullet[1]] });
       } else {
-        acc.push({ kind: 'text', text: line.replace(/^#+\s*/, '') });
+        acc.push({ kind: 'text', text: line });
       }
     }
     return acc;
   };
-  return (
-    <For each={blocks()}>
-      {(b) =>
-        b.kind === 'list' ? (
-          <ul style={{ margin: 'var(--g-spacing-xs) 0 0', 'padding-left': 'var(--g-spacing)' }}>
-            <For each={b.items}>{(it) => <li>{it}</li>}</For>
-          </ul>
-        ) : (
-          <p style={{ margin: 'var(--g-spacing-xs) 0 0' }}>{b.text}</p>
-        )
-      }
-    </For>
-  );
+  const block = (b: Block) => {
+    if (b.kind === 'heading')
+      return <div style={{ 'font-weight': 600, 'margin-top': 'var(--g-spacing-sm)' }}>{b.text}</div>;
+    if (b.kind === 'list')
+      return (
+        <ul style={{ margin: 'var(--g-spacing-xs) 0 0', 'padding-left': 'var(--g-spacing)' }}>
+          <For each={b.items}>{(it) => <li>{it}</li>}</For>
+        </ul>
+      );
+    return <p style={{ margin: 'var(--g-spacing-xs) 0 0' }}>{b.text}</p>;
+  };
+  return <For each={blocks()}>{block}</For>;
 };
 
 const Release = (props: { release: FirmwareRelease }) => (
