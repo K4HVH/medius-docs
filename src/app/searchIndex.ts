@@ -4,7 +4,7 @@ import {
   BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode,
   BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsBoxArrowInDown,
   BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText, BsActivity,
-  BsLightbulb, BsSliders, BsLock, BsKeyboard, BsHash, BsPuzzle,
+  BsLightbulb, BsSliders, BsLock, BsKeyboard, BsHash, BsPuzzle, BsDiscord,
 } from 'solid-icons/bs';
 
 interface SearchEntry {
@@ -15,9 +15,13 @@ interface SearchEntry {
   icon?: Component;
   tags?: string[];
   keywords?: string[];
+  external?: boolean;
 }
 
 const entries: SearchEntry[] = [
+  // ── Community ───────────────────────────────────────────────────────────
+  { label: 'Discord', description: 'Join the Medius Discord (opens in a new tab)', path: 'https://discord.gg/ArRqcA84pB', external: true, group: 'Community', icon: BsDiscord, keywords: ['discord', 'community', 'chat', 'support', 'help', 'invite', 'server'] },
+
   // ── Dashboard ───────────────────────────────────────────────────────────
   { label: 'Dashboard', description: 'Connect to your box, view it, and flash firmware in the browser', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['dashboard', 'tool', 'connect', 'flash', 'web serial', 'device'] },
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
@@ -294,6 +298,8 @@ export function buildSearchItems(navigate: (path: string) => void): CommandPalet
     group: entry.group,
     tags: entry.tags,
     keywords: entry.keywords,
-    onSelect: () => navigate(entry.path),
+    onSelect: entry.external
+      ? () => window.open(entry.path, '_blank', 'noopener,noreferrer')
+      : () => navigate(entry.path),
   }));
 }
