@@ -1,6 +1,6 @@
 // Command payload builders (PC -> box).
 
-import { OPT_IMPERFECT, OPT_MOVE_RIDE } from './opcode';
+import { EmitMode, OPT_EMIT, OPT_IMPERFECT, OPT_MOVE_RIDE } from './opcode';
 import { LedMode, LedTarget, LockClass, LockDirection, RebootTarget } from './types';
 
 export function queryPayload(what: number): Uint8Array {
@@ -43,6 +43,14 @@ export function imperfectPayload(allow: boolean): Uint8Array {
 export function moveRidePayload(timeoutMs: number): Uint8Array {
   const ms = Math.max(0, Math.min(0xffff, Math.round(timeoutMs)));
   return new Uint8Array([OPT_MOVE_RIDE, ms & 0xff, (ms >> 8) & 0xff]);
+}
+
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE] - emit-rate pacing. mode 0 learned (default), 1
+// follows the cloned poll rate, 2 paces at a fixed rate_hz. rate_hz only matters in fixed mode; the box
+// snaps it to 1000/n Hz and caps it at 1000. Raises the emit ceiling only. Persisted in NVS.
+export function emitPayload(mode: EmitMode, rateHz = 0): Uint8Array {
+  const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
+  return new Uint8Array([OPT_EMIT, mode & 0xff, hz & 0xff, (hz >> 8) & 0xff]);
 }
 
 // INJECT (§3.2): [class u8][id u16 LE][action u8]. class 0 button / 1 key / 2 media; tri-state action.

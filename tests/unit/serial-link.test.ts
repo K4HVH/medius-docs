@@ -4,7 +4,7 @@ import {
   QueryTimeoutError,
   SerialLink,
 } from '../../src/dashboard/serial';
-import { FrameDecoder, FrameType, encode } from '../../src/dashboard/protocol';
+import { EmitMode, FrameDecoder, FrameType, encode } from '../../src/dashboard/protocol';
 
 type PortArg = ConstructorParameters<typeof SerialLink>[0];
 
@@ -192,6 +192,9 @@ describe('SerialLink', () => {
         } else if (f.payload[1] === 1) {
           // RESP(OPTIONS, MOVE_RIDE): [9][1][timeout u16 LE] = 5 ms
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
+        } else if (f.payload[1] === 2) {
+          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01])));
         }
       }
     };
@@ -203,9 +206,15 @@ describe('SerialLink', () => {
       cloneImperfect: false,
     });
     expect(await link.queryMovementRiding()).toBe(5);
+    expect(await link.queryEmitPace()).toEqual({
+      mode: EmitMode.Fixed,
+      fixedHz: 500,
+      resolvedHz: 500,
+    });
     expect(reqs).toEqual([
       [9, 0],
       [9, 1],
+      [9, 2],
     ]); // each option query carries its id byte, correlated on the Q_OPTIONS selector
     await link.close();
   });
