@@ -48,7 +48,7 @@ const Led: Component = () => {
             patterns each chip shows.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, LedTarget, LedMode};
+          <pre><code class="language-rust">{`use medius::{Device, LedTarget, LedMode};
 
 let device = Device::find()?;
 device.led(LedTarget::Both, LedMode::Blink, 200)?;   // both LEDs blink, bright
@@ -66,7 +66,7 @@ device.led(LedTarget::Device, LedMode::Auto, 0)?;    // hand the device LED back
             Only the queries are async.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{AsyncDevice, LedTarget, LedMode};
+          <pre><code class="language-rust">{`use medius::{AsyncDevice, LedTarget, LedMode};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.led(LedTarget::Host, LedMode::Solid, 128)?;   // sync, no await`}</code></pre>

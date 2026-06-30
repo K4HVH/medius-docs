@@ -46,6 +46,21 @@ import LibTypesEnums from './pages/library/types/Enums';
 import LibTypesStructs from './pages/library/types/Structs';
 import LibTypesFrames from './pages/library/types/Frames';
 import LibTypesErrors from './pages/library/types/Errors';
+import BindingsOverview from './pages/bindings/Overview';
+import CInstall from './pages/bindings/c/Install';
+import CQuickstart from './pages/bindings/c/Quickstart';
+import CUsage from './pages/bindings/c/Usage';
+import CStreams from './pages/bindings/c/Streams';
+import CApi from './pages/bindings/c/Api';
+import CTypes from './pages/bindings/c/Types';
+import CBuild from './pages/bindings/c/Build';
+import PyInstall from './pages/bindings/python/Install';
+import PyQuickstart from './pages/bindings/python/Quickstart';
+import PyUsage from './pages/bindings/python/Usage';
+import PyStreams from './pages/bindings/python/Streams';
+import PyApi from './pages/bindings/python/Api';
+import PyTypes from './pages/bindings/python/Types';
+import PyBuild from './pages/bindings/python/Build';
 import DashboardDevice from './pages/dashboard/Device';
 import DashboardControl from './pages/dashboard/Control';
 import DashboardUpdate from './pages/dashboard/Update';
@@ -103,6 +118,21 @@ const App: Component = () => {
           <Route path="/library/types/structs" component={LibTypesStructs} />
           <Route path="/library/types/frames" component={LibTypesFrames} />
           <Route path="/library/types/errors" component={LibTypesErrors} />
+          <Route path="/bindings" component={BindingsOverview} />
+          <Route path="/bindings/c" component={CInstall} />
+          <Route path="/bindings/c/quickstart" component={CQuickstart} />
+          <Route path="/bindings/c/usage" component={CUsage} />
+          <Route path="/bindings/c/streams" component={CStreams} />
+          <Route path="/bindings/c/api" component={CApi} />
+          <Route path="/bindings/c/types" component={CTypes} />
+          <Route path="/bindings/c/build" component={CBuild} />
+          <Route path="/bindings/python" component={PyInstall} />
+          <Route path="/bindings/python/quickstart" component={PyQuickstart} />
+          <Route path="/bindings/python/usage" component={PyUsage} />
+          <Route path="/bindings/python/streams" component={PyStreams} />
+          <Route path="/bindings/python/api" component={PyApi} />
+          <Route path="/bindings/python/types" component={PyTypes} />
+          <Route path="/bindings/python/build" component={PyBuild} />
           <Route path="/dashboard" component={DashboardDevice} />
           <Route path="/dashboard/control" component={DashboardControl} />
           <Route path="/dashboard/update" component={DashboardUpdate} />

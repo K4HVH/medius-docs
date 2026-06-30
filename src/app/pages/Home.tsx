@@ -48,7 +48,15 @@ const Home: Component = () => {
                 />
               </Card>
             </A>
-            <A href="/dashboard" class="docs-grid__wide" style={{ "text-decoration": "none" }}>
+            <A href="/bindings" style={{ "text-decoration": "none" }}>
+              <Card interactive padding="normal">
+                <CardHeader
+                  title="Bindings"
+                  subtitle="Drive the box from C, C++, or Python"
+                />
+              </Card>
+            </A>
+            <A href="/dashboard" style={{ "text-decoration": "none" }}>
               <Card interactive padding="normal">
                 <CardHeader
                   title="Dashboard"

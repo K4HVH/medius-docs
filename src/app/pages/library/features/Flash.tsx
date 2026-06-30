@@ -13,7 +13,7 @@ const Flash: Component = () => {
           rebooting a chip into download mode then writing the image. Behind the <code>flash</code>{' '}
           Cargo feature, off by default.
         </p>
-        <pre><code>cargo add medius --features flash</code></pre>
+        <pre><code class="language-bash">cargo add medius --features flash</code></pre>
         <p>
           With the feature off, none of the <code>medius::flash</code> items below exist.
         </p>
@@ -39,9 +39,9 @@ const Flash: Component = () => {
             The four consts are public:
           </p>
           <pre class="api-signature">const ESPTOOL: &amp;str; const CHIP: &amp;str; const FLASH_ADDR: &amp;str; const ROM_SETTLE: Duration</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::flash;
+          <pre><code class="language-rust">{`use medius::flash;
 
 println!("tool:    {}", flash::ESPTOOL);     // esptool.py
 println!("chip:    {}", flash::CHIP);        // esp32s3
@@ -96,7 +96,7 @@ println!("settle:  {:?}", flash::ROM_SETTLE); // 2s`}</code></pre>
             exit else <A href="#errors"><code>Err(Error::FlashTool)</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::flash;
+          <pre><code class="language-rust">{`use medius::flash;
 
 // false -> device chip
 flash::flash("/dev/ttyACM0", "device.bin", false)?;
@@ -110,14 +110,14 @@ flash::flash("/dev/ttyACM0", "host.bin", true)?;`}</code></pre>
         <Card>
           <CardHeader title="Inspecting the command" subtitle="See exactly what esptool runs" />
           <pre class="api-signature">fn esptool_args(port: &amp;str, bin_path: &amp;Path) -&gt; Vec&lt;String&gt;</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Builds the exact argv <A href="#flash"><code>flash</code></A> passes to{' '}
             <code>esptool.py</code>, without running it. To debug, reboot the chip into download mode
             via <A href="/library/admin#reboot"><code>reboot</code></A> and run these args by hand.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::path::Path;
+          <pre><code class="language-rust">{`use std::path::Path;
 use medius::flash;
 
 let argv = flash::esptool_args("/dev/ttyACM0", Path::new("device.bin"));
@@ -137,7 +137,7 @@ println!("esptool.py {}", argv.join(" "));
             inner <code>String</code> carrying the stderr tail.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{flash, Error};
+          <pre><code class="language-rust">{`use medius::{flash, Error};
 
 match flash::flash("/dev/ttyACM0", "device.bin", false) {
     Ok(()) => println!("flashed"),

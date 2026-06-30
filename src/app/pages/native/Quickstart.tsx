@@ -106,7 +106,7 @@ const Quickstart: Component = () => {
               <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian.
             </li>
           </ul>
-          <pre><code>{`import struct
+          <pre><code class="language-python">{`import struct
 
 def crc16_ccitt(data):
     crc = 0xFFFF

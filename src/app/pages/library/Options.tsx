@@ -45,7 +45,7 @@ const Options: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capacity device is attached`}</code></pre>
@@ -80,7 +80,7 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::time::Duration;
+          <pre><code class="language-rust">{`use std::time::Duration;
 use medius::Device;
 
 let device = Device::find()?;
@@ -101,7 +101,7 @@ device.set_movement_riding(None)?;                             // back to gaples
             over-capacity anyway with one interface dead.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let status = device.query_imperfect()?;
@@ -122,7 +122,7 @@ if status.over_capacity && !status.allowed {
             movement riding is off.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 match device.query_movement_riding()? {
@@ -142,7 +142,7 @@ match device.query_movement_riding()? {
             futures, like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::time::Duration;
+          <pre><code class="language-rust">{`use std::time::Duration;
 use medius::Device;
 
 let device = Device::find()?.into_async();

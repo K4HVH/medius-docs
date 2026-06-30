@@ -54,7 +54,7 @@ pre.api-signature {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   border: var(--g-border-width) solid;
-  margin-bottom: var(--g-spacing);
+  vertical-align: middle;
 }
 
 .api-badge--executed {
@@ -85,6 +85,66 @@ pre.api-signature {
 pre.diagram {
   white-space: pre;
   line-height: var(--line-height-relaxed);
+}
+
+/* Syntax highlighting (Prism), themed to the dark palette. Base (untokenized)
+   text is neutral instead of the all-blue inline-code colour. */
+pre code[class*="language-"] {
+  color: var(--g-text-secondary);
+}
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--g-text-muted);
+  font-style: italic;
+}
+.token.punctuation,
+.token.operator,
+.token.entity {
+  color: var(--g-text-secondary);
+}
+.token.keyword,
+.token.boolean,
+.token.atrule,
+.token.tag,
+.token.macro,
+.token.directive,
+.token.important {
+  color: var(--color-blue-400);
+}
+.token.function {
+  color: var(--color-blue-300);
+}
+.token.class-name,
+.token.builtin,
+.token.constant,
+.token.symbol,
+.token.attribute,
+.token.namespace,
+.token.lifetime-annotation {
+  color: var(--color-yellow-300);
+}
+.token.string,
+.token.char,
+.token.attr-value,
+.token.regex,
+.token.url,
+.token.inserted {
+  color: var(--color-green-400);
+}
+.token.number {
+  color: var(--color-yellow-400);
+}
+.token.property,
+.token.attr-name,
+.token.variable,
+.token.parameter,
+.token.deleted {
+  color: var(--color-green-300);
+}
+.token.namespace {
+  opacity: 0.85;
 }
 
 /* Note/warning callouts */

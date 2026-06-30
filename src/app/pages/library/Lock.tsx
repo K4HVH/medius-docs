@@ -62,7 +62,7 @@ const Lock: Component = () => {
             <A href="/native/commands/lock#lock"><code>LOCK</code></A> command for the wire layout.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, Button, LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Button, LockTarget, LockDirection};
 
 let device = Device::find()?;
 device.lock(LockTarget::X, LockDirection::Both)?;                // freeze horizontal motion
@@ -82,7 +82,7 @@ device.move_rel(50, 0)?;                                         // injection st
             it. Hand a physical input back to the user.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, LockTarget, LockDirection};
 
 let device = Device::find()?;
 device.unlock(LockTarget::X, LockDirection::Both)?;   // hand horizontal motion back`}</code></pre>
@@ -102,7 +102,7 @@ device.unlock(LockTarget::X, LockDirection::Both)?;   // hand horizontal motion 
             held key down. Injection still drives the key. <code>unlock_key</code> clears the block.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Key, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Key, LockDirection};
 
 device.lock_key(Key::LEFT_GUI, LockDirection::Both)?;   // block the GUI/Windows key
 device.unlock_key(Key::LEFT_GUI, LockDirection::Both)?;`}</code></pre>
@@ -120,7 +120,7 @@ device.unlock_key(Key::LEFT_GUI, LockDirection::Both)?;`}</code></pre>
             from the report. Injection still drives it; <code>unlock_media</code> hands it back.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::MediaKey;
+          <pre><code class="language-rust">{`use medius::MediaKey;
 
 device.lock_media(MediaKey::VOLUME_UP)?;
 device.unlock_media(MediaKey::VOLUME_UP)?;`}</code></pre>
@@ -139,7 +139,7 @@ device.unlock_media(MediaKey::VOLUME_UP)?;`}</code></pre>
             <code>Media</code>, or <code>Buttons</code>. Injection still drives any field you choose to.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Blanket;
+          <pre><code class="language-rust">{`use medius::Blanket;
 
 device.lock_all(Blanket::Keys)?;    // every physical key blocked
 device.unlock_all(Blanket::Keys)?;`}</code></pre>
@@ -157,7 +157,7 @@ device.unlock_all(Blanket::Keys)?;`}</code></pre>
             future like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use futures::executor::block_on;
+          <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::{AsyncDevice, LockTarget, LockDirection};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
