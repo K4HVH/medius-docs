@@ -346,7 +346,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           <p><a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">Dataclasses</a> returned by the <A href="/bindings/python/api">queries</A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
           <div id="version">
-            <div class="api-response-label">Version — query_version()</div>
+            <div class="api-response-label">Version (query_version())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -359,7 +359,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="health">
-            <div class="api-response-label">Health — query_health()</div>
+            <div class="api-response-label">Health (query_health())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th></tr></thead>
               <tbody>
@@ -376,7 +376,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="mouseinfo">
-            <div class="api-response-label">MouseInfo — query_mouse_info()</div>
+            <div class="api-response-label">MouseInfo (query_mouse_info())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -391,7 +391,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="caps">
-            <div class="api-response-label">Caps — caps()</div>
+            <div class="api-response-label">Caps (caps())</div>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -443,7 +443,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           <p>More query results, plus <A href="#portinfo"><code>PortInfo</code></A> from <A href="/bindings/python/api#connect"><code>find_ports()</code></A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
           <div id="rate">
-            <div class="api-response-label">Rate — query_rate()</div>
+            <div class="api-response-label">Rate (query_rate())</div>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -457,7 +457,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="stats">
-            <div class="api-response-label">Stats — query_stats()</div>
+            <div class="api-response-label">Stats (query_stats())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -474,7 +474,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="locks">
-            <div class="api-response-label">Locks — query_locks()</div>
+            <div class="api-response-label">Locks (query_locks())</div>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -485,7 +485,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="catchstate">
-            <div class="api-response-label">CatchState — query_catch()</div>
+            <div class="api-response-label">CatchState (query_catch())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -496,7 +496,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="imperfectstatus">
-            <div class="api-response-label">ImperfectStatus — query_imperfect()</div>
+            <div class="api-response-label">ImperfectStatus (query_imperfect())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -509,7 +509,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="counters">
-            <div class="api-response-label">Counters — counters()</div>
+            <div class="api-response-label">Counters (counters())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -522,7 +522,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="portinfo">
-            <div class="api-response-label">PortInfo — find_ports()</div>
+            <div class="api-response-label">PortInfo (find_ports())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -610,7 +610,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
           </div>
 
           <div id="recordedframe">
-            <div class="api-response-label">RecordedFrame — MockBox.recorded_frame(idx)</div>
+            <div class="api-response-label">RecordedFrame (MockBox.recorded_frame(idx))</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>

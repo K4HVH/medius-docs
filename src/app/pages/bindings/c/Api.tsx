@@ -18,7 +18,7 @@ const Api: Component = () => {
           <A href="/bindings/c/streams">Streams</A>.
         </p>
         <p>
-          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A> — they
+          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
           return as soon as the <A href="/native/frame">frame</A> is queued and never wait on the box.
           The query reads and <code>open</code> / <code>find</code> block for the{' '}
           <A href="/native/hardware">box</A>'s <A href="/native/commands/requests">reply</A>. Every
@@ -80,7 +80,7 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject — buttons" subtitle="Press and release mouse buttons" />
+          <CardHeader title="Inject: buttons" subtitle="Press and release mouse buttons" />
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
             <A href="/native/injection">injection model</A> (press / soft-release / force-release).
@@ -110,7 +110,7 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="keys" data-search-target>
         <Card>
-          <CardHeader title="Inject — keyboard" subtitle="Press and release keys" />
+          <CardHeader title="Inject: keyboard" subtitle="Press and release keys" />
           <p>See <A href="/library/inject">Inject</A>; HID keycodes (the <code>MEDIUS_KEY_*</code> constants) on <A href="/native/commands/usage#keycodes">Usage IDs</A>. A <A href="/bindings/c/types#key"><code>MediusKey</code></A> is a <code>uint8_t</code> usage.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
@@ -126,7 +126,7 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="media" data-search-target>
         <Card>
-          <CardHeader title="Inject — media" subtitle="Consumer-control keys" />
+          <CardHeader title="Inject: media" subtitle="Consumer-control keys" />
           <p>See <A href="/library/inject">Inject</A>; Consumer usages (the <code>MEDIUS_MEDIA_*</code> constants) on <A href="/native/commands/usage#consumer">Usage IDs</A>. A <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a <code>uint16_t</code> usage.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
@@ -155,7 +155,7 @@ medius_device_free(dev);`}</code></pre>
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you — see <A href="/library/lock">Lock</A>.</p>
+            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you (see <A href="/library/lock">Lock</A>).</p>
           </div>
         </Card>
       </div>
@@ -180,7 +180,7 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="queries" data-search-target>
         <Card>
-          <CardHeader title="Queries" subtitle="Read box state — each blocks for one reply" />
+          <CardHeader title="Queries" subtitle="Read box state; each blocks for one reply" />
           <p>
             See <A href="/library/requests">Requests</A>. Each blocks for the box's reply, writes a
             struct documented on <A href="/bindings/c/types">Types &amp; errors</A>, and returns{' '}
@@ -189,17 +189,17 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Writes to <code>*out</code></th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_query_version(dev, MediusVersion *out)</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A> — protocol + firmware version.</td></tr>
-              <tr><td><code>medius_device_query_health(dev, MediusHealth *out)</code></td><td><code>MediusHealth</code> — link, mouse, clone, injection flags.</td></tr>
-              <tr><td><code>medius_device_query_mouse_info(dev, MediusMouseInfo *out)</code></td><td><A href="/bindings/c/types#mouse-info"><code>MediusMouseInfo</code></A> — the cloned mouse's USB identity.</td></tr>
-              <tr><td><code>medius_device_caps(dev, MediusCaps *out)</code></td><td><A href="/bindings/c/types#caps"><code>MediusCaps</code></A> — mouse/keyboard capabilities.</td></tr>
-              <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A> — native report rate and poll period.</td></tr>
-              <tr><td><code>medius_device_query_stats(dev, MediusStats *out)</code></td><td><A href="/bindings/c/types#stats"><code>MediusStats</code></A> — box-side telemetry.</td></tr>
-              <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A> — active lock mask.</td></tr>
-              <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A> — subscription mask + dropped count.</td></tr>
-              <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A> — imperfect-clone state.</td></tr>
+              <tr><td><code>medius_device_query_version(dev, MediusVersion *out)</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A>: protocol + firmware version.</td></tr>
+              <tr><td><code>medius_device_query_health(dev, MediusHealth *out)</code></td><td><code>MediusHealth</code>: link, mouse, clone, injection flags.</td></tr>
+              <tr><td><code>medius_device_query_mouse_info(dev, MediusMouseInfo *out)</code></td><td><A href="/bindings/c/types#mouse-info"><code>MediusMouseInfo</code></A>: the cloned mouse's USB identity.</td></tr>
+              <tr><td><code>medius_device_caps(dev, MediusCaps *out)</code></td><td><A href="/bindings/c/types#caps"><code>MediusCaps</code></A>: mouse/keyboard capabilities.</td></tr>
+              <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A>: native report rate and poll period.</td></tr>
+              <tr><td><code>medius_device_query_stats(dev, MediusStats *out)</code></td><td><A href="/bindings/c/types#stats"><code>MediusStats</code></A>: box-side telemetry.</td></tr>
+              <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A>: active lock mask.</td></tr>
+              <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: subscription mask + dropped count.</td></tr>
+              <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
-              <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A> — host-side wire counters.</td></tr>
+              <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -230,7 +230,7 @@ medius_device_free(dev);`}</code></pre>
       <div id="builders" data-search-target>
         <Card>
           <CardHeader title="Input & motion builders" subtitle="Make the value structs the calls take" />
-          <p>Pure constructors — no device, no wire traffic. See <A href="/library/inject">Inject</A> and <A href="/library/move">Move</A>.</p>
+          <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A> and <A href="/library/move">Move</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
@@ -247,18 +247,18 @@ medius_device_free(dev);`}</code></pre>
       <div id="inspectors" data-search-target>
         <Card>
           <CardHeader title="Struct inspectors" subtitle="Read query / event results without the wire" />
-          <p>Helpers that interpret a struct you already have — they take it by value (or pointer) and do no I/O. Each mirrors the matching method on the <A href="/library/types">Rust type</A>.</p>
+          <p>Helpers that interpret a struct you already have. They take it by value (or pointer) and do no I/O. Each mirrors the matching method on the <A href="/library/types">Rust type</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_is_locked(MediusLocks locks, MediusLockTarget target, MediusLockDirection dir)</code></td><td><code>bool</code> — is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
-              <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code> — writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
-              <tr><td><code>medius_mouse_event_is_pressed(const MediusMouseEvent *event, MediusButton button)</code></td><td><code>bool</code> — is that button held in the snapshot.</td></tr>
-              <tr><td><code>medius_keyboard_event_is_pressed(const MediusKeyboardEvent *event, MediusKey key)</code></td><td><code>bool</code> — is that key held (modifier bitmap or keycode list).</td></tr>
-              <tr><td><code>medius_media_event_is_pressed(const MediusMediaEvent *event, MediusMediaKey media)</code></td><td><code>bool</code> — is that media usage active.</td></tr>
-              <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code> — a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
-              <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code> — a keyboard interface is bound.</td></tr>
-              <tr><td><code>medius_caps_is_composite(MediusCaps caps)</code></td><td><code>bool</code> — the clone is multi-HID-interface.</td></tr>
+              <tr><td><code>medius_locks_is_locked(MediusLocks locks, MediusLockTarget target, MediusLockDirection dir)</code></td><td><code>bool</code>: is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
+              <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
+              <tr><td><code>medius_mouse_event_is_pressed(const MediusMouseEvent *event, MediusButton button)</code></td><td><code>bool</code>: is that button held in the snapshot.</td></tr>
+              <tr><td><code>medius_keyboard_event_is_pressed(const MediusKeyboardEvent *event, MediusKey key)</code></td><td><code>bool</code>: is that key held (modifier bitmap or keycode list).</td></tr>
+              <tr><td><code>medius_media_event_is_pressed(const MediusMediaEvent *event, MediusMediaKey media)</code></td><td><code>bool</code>: is that media usage active.</td></tr>
+              <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code>: a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
+              <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code>: a keyboard interface is bound.</td></tr>
+              <tr><td><code>medius_caps_is_composite(MediusCaps caps)</code></td><td><code>bool</code>: the clone is multi-HID-interface.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -284,7 +284,7 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="mock" data-search-target>
         <Card>
-          <CardHeader title="Mock box" subtitle="Scriptable fake for tests — feature-gated" />
+          <CardHeader title="Mock box" subtitle="Scriptable fake for tests, feature-gated" />
           <p>
             All of these are wrapped in <code>#ifdef MEDIUS_FEATURE_MOCK</code> (the <code>mock</code>{' '}
             <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">cargo feature</a>). The concept lives on <A href="/library/features/mock">Mock</A>; turning the
@@ -299,7 +299,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_open_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>and</em> run the handshake.</td></tr>
               <tr><td><code>medius_mock_set_version / _health / _mouse_info / _caps / _mouse_caps / _kbd_caps / _rate / _stats / _locks / _catch_state / _imperfect_status</code></td><td>Set the value the mock answers to each query.</td></tr>
               <tr><td><code>medius_mock_set_movement_riding(mock, bool enabled, uint32_t window_ms)</code></td><td>Set the movement-riding window the mock reports.</td></tr>
-              <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries (still records) — for timeout tests.</td></tr>
+              <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries for timeout tests (still records).</td></tr>
               <tr><td><code>medius_mock_push_raw(mock, const uint8_t *bytes, uintptr_t len)</code></td><td>Inject raw inbound bytes, as if the box sent them.</td></tr>
               <tr><td><code>medius_mock_push_log(mock, MediusLogLevel level, const char *text)</code></td><td>Push a LOG line onto the device's log stream.</td></tr>
               <tr><td><code>medius_mock_push_event / _push_kb_event / _push_cons_event(mock, uint8_t seq, …)</code></td><td>Push a mouse / keyboard / media report as a catch event.</td></tr>

@@ -83,7 +83,7 @@ const Streams: Component = () => {
               <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
               <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops (no exception).</td></tr>
               <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared.</td></tr>
-              <tr><td><code>close()</code> / <code>with stream:</code></td><td>—</td><td>Release the subscription. Automatic on <code>with</code> exit and GC.</td></tr>
+              <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>Release the subscription. Automatic on <code>with</code> exit and GC.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -111,7 +111,7 @@ const Streams: Component = () => {
               <tr><td><A href="/bindings/python/types#mouseevent"><code>MouseEvent</code></A></td><td><code>buttons: int</code>, <code>dx: int</code>, <code>dy: int</code>, <code>wheel: int</code></td><td><code>is_pressed(button)</code> tests the <A href="/bindings/python/types#button"><code>Button</code></A> bit (<A href="/native/commands/usage#buttons">button ids</A>) in <code>buttons</code></td></tr>
               <tr><td><A href="/bindings/python/types#keyboardevent"><code>KeyboardEvent</code></A></td><td><code>modifiers: int</code>, <code>keys: List[int]</code> (<A href="/native/commands/usage#keycodes">HID keycodes</A>)</td><td><code>is_pressed(key)</code>: modifier bit for <code>0xE0–0xE7</code>, else membership in <code>keys</code></td></tr>
               <tr><td><A href="/bindings/python/types#mediaevent"><code>MediaEvent</code></A></td><td><code>keys: List[int]</code> (<A href="/native/commands/usage#consumer">Consumer usages</A>)</td><td><code>is_pressed(media)</code>: membership in <code>keys</code></td></tr>
-              <tr><td><code>LogLine</code></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>—</td></tr>
+              <tr><td><code>LogLine</code></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
           </table>
           <p>

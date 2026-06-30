@@ -33,8 +33,8 @@ const Overview: Component = () => {
         <div class="callout callout--info">
           <p>
             C and C++ are one binding: the C header (<A href="/bindings/c"><code>medius.h</code></A>)
-            compiles as both, so a C++ program includes it and calls the same functions. New to
-            medius? Start with the <A href="/native/quickstart">Quickstart</A> for what the box does;
+            compiles as both, so a C++ program includes it and calls the same functions. If you're
+            new to medius, start with the <A href="/native/quickstart">Quickstart</A> for what the box does;
             these pages link to the <A href="/library">Rust Library</A> and{' '}
             <A href="/native">Native API</A> for what each command means.
           </p>
@@ -86,7 +86,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/requests">Queries (version, health, caps…)</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
               <tr><td><A href="/library/features/flash">Flash firmware</A></td><td>build flag</td><td>build flag</td></tr>
-              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only — build it on the stream timeouts (see each Streams page)</td></tr>
+              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only. Build it on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>
           <p>

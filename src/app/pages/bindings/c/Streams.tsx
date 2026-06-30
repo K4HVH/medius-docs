@@ -74,18 +74,18 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th><th>Blocks?</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_event_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> — <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close</td><td>Yes, until the next event</td></tr>
-              <tr><td><code>medius_event_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> — <code>false</code> if the queue is empty</td><td>No, returns at once</td></tr>
-              <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> — <code>false</code> on timeout or close</td><td>Up to <code>timeout_ms</code></td></tr>
+              <tr><td><code>medius_event_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td><td>Yes, until the next event</td></tr>
+              <tr><td><code>medius_event_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if the queue is empty)</td><td>No, returns at once</td></tr>
+              <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td><td>Up to <code>timeout_ms</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">LOGS MIRROR THIS EXACTLY (writing a <A href="/bindings/c/types#log-line"><code>MediusLogLine</code></A> instead)</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_log_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> — <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close</td></tr>
-              <tr><td><code>medius_log_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> — <code>false</code> if none queued</td></tr>
-              <tr><td><code>medius_log_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> — <code>false</code> on timeout or close</td></tr>
+              <tr><td><code>medius_log_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td></tr>
+              <tr><td><code>medius_log_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if none queued)</td></tr>
+              <tr><td><code>medius_log_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td></tr>
             </tbody>
           </table>
         </Card>
@@ -130,10 +130,10 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <table class="api-params">
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_mouse_event_is_pressed(&amp;ev, button)</code></td><td><code>bool</code> — is that <A href="/bindings/c/types#button"><code>MediusButton</code></A> held in the snapshot.</td></tr>
-              <tr><td><code>medius_keyboard_event_is_pressed(&amp;ev, key)</code></td><td><code>bool</code> — modifier from the bitmap, else searched in the keycode list.</td></tr>
-              <tr><td><code>medius_media_event_is_pressed(&amp;ev, media)</code></td><td><code>bool</code> — is that Consumer usage active.</td></tr>
-              <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code> — events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
+              <tr><td><code>medius_mouse_event_is_pressed(&amp;ev, button)</code></td><td><code>bool</code>: true if that <A href="/bindings/c/types#button"><code>MediusButton</code></A> is held in the snapshot.</td></tr>
+              <tr><td><code>medius_keyboard_event_is_pressed(&amp;ev, key)</code></td><td><code>bool</code>: from the modifier bitmap, else searched in the keycode list.</td></tr>
+              <tr><td><code>medius_media_event_is_pressed(&amp;ev, media)</code></td><td><code>bool</code>: true if that Consumer usage is active.</td></tr>
+              <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
             </tbody>
           </table>
         </Card>
