@@ -44,7 +44,7 @@ const Quickstart: Component = () => {
             <code>medius_last_error_message</code>. Results land through an out-pointer
             (<code>&amp;dev</code>, <code>&amp;v</code>, <code>&amp;events</code>), never the return value.
           </p>
-          <pre><code>{`#include <stdio.h>
+          <pre><code class="language-c">{`#include <stdio.h>
 #include <medius.h>
 
 /* Returns 0 on success, 1 on failure (after printing the last error). */
@@ -85,7 +85,7 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code>{`medius-capi 2.2.0 (abi 1)
+          <pre><code class="language-c">{`medius-capi 2.2.0 (abi 1)
 firmware 2.2.0 (proto 2)
 mouse: dx=12 dy=-4 buttons=0x00`}</code></pre>
           <div class="callout callout--info">
@@ -107,7 +107,7 @@ mouse: dx=12 dy=-4 buttons=0x00`}</code></pre>
             <a href="https://gcc.gnu.org/" target="_blank" rel="noreferrer"><code>gcc</code></a>, and{' '}
             <a href="https://clang.llvm.org/" target="_blank" rel="noreferrer"><code>clang</code></a> all work.
           </p>
-          <pre><code>{`cc first.c -Iinclude -L. -lmedius_capi -o first
+          <pre><code class="language-bash">{`cc first.c -Iinclude -L. -lmedius_capi -o first
 LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code></pre>
           <table class="api-params">
             <thead>

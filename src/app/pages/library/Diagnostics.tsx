@@ -32,7 +32,7 @@ const Diagnostics: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`for line in device.logs() {
+          <pre><code class="language-rust">{`for line in device.logs() {
     println!("[{:?}] {}", line.level, line.text);
 }
 // the loop ends here when the link drops`}</code></pre>
@@ -104,7 +104,7 @@ const Diagnostics: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let stream = device.logs();
+          <pre><code class="language-rust">{`let stream = device.logs();
 
 // once per frame: drain whatever is queued, never blocking
 for line in stream.try_iter() {
@@ -143,7 +143,7 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`println!("{:?}", device.counters());`}</code></pre>
+          <pre><code class="language-rust">{`println!("{:?}", device.counters());`}</code></pre>
         </Card>
       </div>
 

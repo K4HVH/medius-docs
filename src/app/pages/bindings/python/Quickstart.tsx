@@ -30,7 +30,7 @@ const Quickstart: Component = () => {
       <div id="program" data-search-target>
         <Card>
           <CardHeader title="The program" subtitle="The full listing" />
-          <pre><code>{`import time
+          <pre><code class="language-python">{`import time
 from medius import Device, Button, CatchMask, NotFoundError
 
 try:
@@ -121,7 +121,7 @@ except NotFoundError:
       <div id="run" data-search-target>
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
-          <pre><code>{`python first.py
+          <pre><code class="language-bash">{`python first.py
 # firmware 2.2.0, proto 2
 # mouse  buttons=1  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>

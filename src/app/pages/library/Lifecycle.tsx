@@ -42,11 +42,11 @@ const Lifecycle: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.press(Button::Left)?;
+          <pre><code class="language-rust">{`device.press(Button::Left)?;
 device.reapply()?; // re-assert the held override, e.g. if the box reset under you`}</code></pre>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// The no-op case: reset clears every override, so reapply sends nothing.
+          <pre><code class="language-rust">{`// The no-op case: reset clears every override, so reapply sends nothing.
 device.reset()?;
 device.reapply()?; // does nothing, no buttons are held`}</code></pre>
 
@@ -91,7 +91,7 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           </ol>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// After a known unplug and replug, force a rescan and confirm it took.
+          <pre><code class="language-rust">{`// After a known unplug and replug, force a rescan and confirm it took.
 let before = device.counters().reconnects;
 device.reconnect()?;
 let after = device.counters().reconnects;
@@ -124,7 +124,7 @@ assert!(after > before);`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::AsyncDevice;
+          <pre><code class="language-rust">{`use medius::AsyncDevice;
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.reapply()?;     // re-assert held overrides

@@ -61,7 +61,7 @@ const Inject: Component = () => {
             <A href="/library/admin#reset"><code>reset</code></A> releases every override.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Key, MediaKey, Action};
+          <pre><code class="language-rust">{`use medius::{Button, Key, MediaKey, Action};
 
 device.inject(Button::Left, Action::Press)?;        // mouse button
 device.inject(Key::LEFT_SHIFT, Action::Press)?;     // keyboard key
@@ -86,7 +86,7 @@ device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
             <A href="/library/inject#inject"><code>inject</code></A> with the button class.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Button;
+          <pre><code class="language-rust">{`use medius::Button;
 
 device.press(Button::Left)?;        // held down
 device.soft_release(Button::Left)?; // your press cleared; a physical hold survives
@@ -112,7 +112,7 @@ device.force_release(Button::Left)?;// forced up even under a physical hold`}</c
             <A href="/library/admin#reset"><code>reset</code></A> releases every key.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Key;
+          <pre><code class="language-rust">{`use medius::Key;
 
 device.key_down(Key::LEFT_SHIFT)?;
 device.key_down(Key::A)?;            // types an uppercase A
@@ -137,7 +137,7 @@ device.key_up(Key::LEFT_SHIFT)?;`}</code></pre>
             no-op.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{MediaKey, Action};
+          <pre><code class="language-rust">{`use medius::{MediaKey, Action};
 
 device.media_down(MediaKey::VOLUME_UP)?;
 device.media_up(MediaKey::VOLUME_UP)?;
@@ -153,7 +153,7 @@ device.media(MediaKey::PLAY_PAUSE, Action::Press)?;`}</code></pre>
             <code>.await</code>; only the query methods are <code>async</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Key};
+          <pre><code class="language-rust">{`use medius::{Button, Key};
 
 // async_device: medius::AsyncDevice
 async_device.press(Button::Left)?;   // no .await, it just queues the frame

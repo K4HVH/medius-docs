@@ -91,7 +91,7 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`from medius import Device, MediusError, DisconnectedError
+          <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
 
 try:
     with Device.find() as dev:
@@ -145,7 +145,7 @@ dev.clone() ────┘
               <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>Best-effort via <code>__del__</code>. Don't rely on timing.</td></tr>
             </tbody>
           </table>
-          <pre><code>{`# preferred: the context manager closes on exit
+          <pre><code class="language-python">{`# preferred: the context manager closes on exit
 with Device.find() as dev:
     dev.move_rel(5, 5)
 
@@ -186,7 +186,7 @@ dev.close()`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`from medius import Device, Input, Motion, LockTarget, Button, Action, LockDirection
+          <pre><code class="language-python">{`from medius import Device, Input, Motion, LockTarget, Button, Action, LockDirection
 
 with Device.find() as dev:
     dev.inject(Input.button(Button.LEFT), Action.PRESS)        # generic inject

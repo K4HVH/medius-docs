@@ -12,7 +12,7 @@ const Mock: Component = () => {
           A <code>MockBox</code> is an in-process fake Medius box behind the{' '}
           <code>mock</code> cargo feature.
         </p>
-        <pre><code>cargo add medius --features mock</code></pre>
+        <pre><code class="language-bash">cargo add medius --features mock</code></pre>
         <p>
           It's a cheap <A href="/library/connection"><code>Clone</code></A>: hand one to the{' '}
           <code>Device</code>, keep one to script and inspect.
@@ -34,7 +34,7 @@ const Mock: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, MockBox};
+          <pre><code class="language-rust">{`use medius::{Device, MockBox};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -77,7 +77,7 @@ let device = Device::with_mock(mock.clone());
           </table>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, MockBox};
+          <pre><code class="language-rust">{`use medius::{Device, MockBox};
 
 let device = Device::open_mock(MockBox::new())?;
 device.move_rel(5, 5)?;`}</code></pre>
@@ -129,7 +129,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, Health, MockBox, Version};
+          <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
     .with_version(Version { proto_ver: 2, fw_major: 5, fw_minor: 6, fw_patch: 7 })
@@ -176,7 +176,7 @@ assert!(device.query_health()?.mouse_attached);`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::time::Duration;
+          <pre><code class="language-rust">{`use std::time::Duration;
 use medius::{CatchEvent, CatchMask, Device, Key, KeyboardEvent, LogLevel, MockBox};
 
 let mock = MockBox::new();
@@ -245,7 +245,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Keyboard(k) if k.keys == vec![Key::
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Device, FrameType, MockBox};
+          <pre><code class="language-rust">{`use medius::{Button, Device, FrameType, MockBox};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -278,7 +278,7 @@ mock.clear_recorded(); // next assertions see a fresh log`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, Error, MockBox, Version};
+          <pre><code class="language-rust">{`use medius::{Device, Error, MockBox, Version};
 
 // A silent box answers nothing: no reply.
 let err = Device::open_mock(MockBox::new().silent()).unwrap_err();

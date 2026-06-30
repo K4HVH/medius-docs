@@ -14,9 +14,9 @@ const GuideTesting: Component = () => {
             <code>Device</code> with a <A href="/library/features/mock"><code>MockBox</code></A> and assert
             the queued frames.
           </p>
-          <pre><code>cargo add medius --features mock</code></pre>
+          <pre><code class="language-bash">cargo add medius --features mock</code></pre>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Device, FrameType, MockBox};
+          <pre><code class="language-rust">{`use medius::{Button, Device, FrameType, MockBox};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -44,7 +44,7 @@ assert_eq!(frame.payload, vec![0, 0, 0, 1]);`}</code></pre>
             <A href="/library/diagnostics#logs"><code>logs()</code></A> like a real one.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, LogLevel, MockBox};
+          <pre><code class="language-rust">{`use medius::{Device, LogLevel, MockBox};
 use std::time::Duration;
 
 #[test]
@@ -73,7 +73,7 @@ fn logs_reach_the_stream() {
             query to <code>Err(Error::QueryTimeout)</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use futures::executor::block_on;
+          <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::{Device, Error, MockBox, Version};
 
 let mock = MockBox::new().with_version(Version {

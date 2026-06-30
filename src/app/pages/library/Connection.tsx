@@ -55,7 +55,7 @@ const Connection: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 // auto-detect the box:
 let dev = Device::find()?;
@@ -91,7 +91,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE};
+          <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE};
 
 println!("query timeout:    {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code></pre>
@@ -115,9 +115,9 @@ println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code
             <code>into_async</code>; full surface on the{' '}
             <A href="/library/features/async">async feature</A> page.
           </p>
-          <pre><code>cargo add medius --features async</code></pre>
+          <pre><code class="language-bash">cargo add medius --features async</code></pre>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use futures::executor::block_on;
+          <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::AsyncDevice;
 
 // discover and open directly as async:

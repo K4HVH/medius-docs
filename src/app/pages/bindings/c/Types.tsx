@@ -824,7 +824,7 @@ const Types: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`MediusDevice *dev = NULL;
+          <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     char buf[256];
     medius_last_error_message(buf, sizeof buf);

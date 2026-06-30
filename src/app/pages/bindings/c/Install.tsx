@@ -65,13 +65,13 @@ const Install: Component = () => {
           <p>Build and run as normal. To skip the DLL, add <code>medius_capi.lib</code> in step 3 instead (static, nothing to copy).</p>
 
           <div class="api-response-label">WINDOWS · COMMAND LINE (x64 Native Tools Command Prompt)</div>
-          <pre><code>{`cl app.c /I include /link /LIBPATH:lib medius_capi.dll.lib
+          <pre><code class="language-bash">{`cl app.c /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: C++:  cl /std:c++17 app.cpp /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: then copy medius_capi.dll next to app.exe, and run:
 app.exe`}</code></pre>
 
           <div class="api-response-label">LINUX &amp; MACOS</div>
-          <pre><code>{`# C
+          <pre><code class="language-bash">{`# C
 cc  app.c   -I include -L lib -lmedius_capi -o app
 # C++ (same header, same library)
 g++ -std=c++17 app.cpp -I include -L lib -lmedius_capi -o app
@@ -103,7 +103,7 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
             <code>medius_version_string</code> and <code>medius_abi_version</code> are pure library
             calls. If this builds and prints a version, you're set.
           </p>
-          <pre><code>{`// app.c
+          <pre><code class="language-c">{`// app.c
 #include <stdio.h>
 #include <medius.h>
 
@@ -133,7 +133,7 @@ int main(void) {
             <A href="/bindings/c/api#connect"><code>medius_device_free</code></A> closes it. Full
             walk-through on <A href="/bindings/c/quickstart">First program</A>.
           </p>
-          <pre><code>{`MediusDevice *dev = NULL;
+          <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) { /* see Calls & errors */ }
 
 MediusVersion v;

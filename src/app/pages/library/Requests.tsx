@@ -35,7 +35,7 @@ const Requests: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
@@ -65,7 +65,7 @@ println!("proto {}", v.proto_ver);     // proto 2`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let h = device.query_health()?;
@@ -92,7 +92,7 @@ if h.link_up && h.mouse_attached && h.clone_configured {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let m = device.query_mouse_info()?;
@@ -124,7 +124,7 @@ if m.vid == 0 {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let caps = device.caps()?;
@@ -153,7 +153,7 @@ if caps.has_keyboard() && caps.keyboard.has_consumer {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let r = device.query_rate()?;
@@ -179,7 +179,7 @@ match r.native_hz() {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let s = device.query_stats()?;
@@ -204,7 +204,7 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, LockTarget, LockDirection};
 
 let device = Device::find()?;
 let locks = device.query_locks()?;
@@ -229,7 +229,7 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let c = device.query_catch()?;
@@ -252,7 +252,7 @@ if !c.mask.is_empty() {
           <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <pre><code>cargo add medius --features async</code></pre>
+          <pre><code class="language-bash">cargo add medius --features async</code></pre>
 
           <p>
             With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
@@ -267,7 +267,7 @@ if !c.mask.is_empty() {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use futures::executor::block_on;
+          <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::Device;
 
 let device = Device::find()?.into_async();

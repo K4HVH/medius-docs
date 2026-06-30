@@ -643,7 +643,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
                 <tr><td><code>proto_ver</code></td><td><code>int</code></td><td>offending version byte (bad-proto-version only)</td></tr>
               </tbody>
             </table>
-            <pre><code>{`from medius import Device, MediusError, NotFoundError
+            <pre><code class="language-python">{`from medius import Device, MediusError, NotFoundError
 
 try:
     dev = Device.find()
