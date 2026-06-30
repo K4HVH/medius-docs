@@ -9,28 +9,43 @@ const Option: Component = () => {
       <Card>
         <CardHeader title="Option" subtitle="Set a persistent box option by id" />
         <p>
-          <A href="/native/commands/option#option"><code>OPTION</code></A> sets one persistent box
-          option, named by an <code>id</code>. One command covers every box-level toggle, so a new
-          option is a new id, not a new opcode. There are three today:{' '}
-          <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> (clone an
-          over-capacity device anyway),{' '}
-          <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> (movement riding), and{' '}
-          <A href="/native/commands/option#emit"><code>EMIT</code></A> (emit-rate pacing).
-          All persist in NVS and are <A href="/native/injection#fire-and-forget">fire-and-forget</A>;
-          read a value back with{' '}
-          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, id)</code></A>.
+          One command (opcode <code>0x11</code>) sets every box-level toggle: an <code>id</code> byte
+          picks the option, the rest is its value. All persist in NVS, restore at boot, and are{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>. An unknown id is ignored.
         </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>Option</th><th><code>id</code></th><th>Value</th><th>Does</th><th>Default</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
+              <td><code>0</code></td>
+              <td><code>[allow u8]</code></td>
+              <td>Clone an over-capacity device anyway</td>
+              <td>off</td>
+            </tr>
+            <tr>
+              <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
+              <td><code>1</code></td>
+              <td><code>[timeout u16 LE]</code></td>
+              <td>Inject motion only on a real move</td>
+              <td>off</td>
+            </tr>
+            <tr>
+              <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
+              <td><code>2</code></td>
+              <td><code>[mode u8][rate_hz u16 LE]</code></td>
+              <td>Pick what paces injected motion</td>
+              <td>learnt</td>
+            </tr>
+          </tbody>
+        </table>
       </Card>
 
       <div id="option" data-search-target>
         <Card>
           <CardHeader title="OPTION" subtitle="One generic, persistent option" />
-          <p>
-            <code>OPTION</code> takes an <code>id</code> byte and an id-specific value. The value is
-            variable-length: the frame's <code>LEN</code> delimits it, like{' '}
-            <A href="/native/commands/admin#log"><code>LOG</code></A>, so a future option with a bigger
-            value needs no protocol change. <A href="/native/frame#opcodes">Opcode</A> <code>0x11</code>.
-          </p>
           <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
@@ -39,26 +54,13 @@ const Option: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>which option (see below)</td></tr>
-              <tr><td>1..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, variable-length</td></tr>
+              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>which option</td></tr>
+              <tr><td>1..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific; the frame <code>LEN</code> delimits it, so a new option needs no new opcode</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">OPTIONS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Option</th><th><code>id</code></th><th>Value</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td><td><code>0</code></td><td><code>[allow u8]</code></td></tr>
-              <tr><td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td><td><code>1</code></td><td><code>[timeout u16 LE]</code> ms</td></tr>
-              <tr><td><A href="/native/commands/option#emit"><code>EMIT</code></A></td><td><code>2</code></td><td><code>[mode u8][rate_hz u16 LE]</code></td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EFFECT</div>
           <p>
-            The box persists the value in NVS and restores it at boot. There's no reply; read a value
-            back with <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, id)</code></A>.
-            An unknown id is ignored, so an old box and a new control PC never misbehave.
+            No reply. Read any value back with{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, id)</code></A>.
           </p>
         </Card>
       </div>
@@ -66,20 +68,31 @@ const Option: Component = () => {
       <div id="imperfect" data-search-target>
         <Card>
           <CardHeader title="IMPERFECT" subtitle="Clone an over-capacity device anyway" />
+          <pre class="api-signature">id 0  ·  [allow u8]</pre>
+          <div class="api-response-label">ALLOW</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone exactly <em>(default)</em></td></tr>
+              <tr><td><code>1</code></td><td>Clone it anyway: every other interface byte-faithful, the over-capacity one dead</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              Some devices need more interrupt-IN endpoints than the box serves (the Wooting Two HE's
+              analog stream wants a sixth, past the ESP32-S3's five). Changing this for an{' '}
+              <em>attached</em> over-capacity device reboots the box to re-clone; a normal device is
+              unaffected.
+            </p>
+          </div>
           <p>
-            With <code>id = 0</code> the value is <code>[allow u8]</code>: <code>1</code> clones an
-            over-capacity device anyway (every other interface byte-faithful, the over-capacity one
-            dead), <code>0</code> is faithful-only and refuses it (the default). Some devices need more
-            interrupt-IN endpoints than the box can serve (the Wooting Two HE's analog stream wants a
-            sixth, past the ESP32-S3's five), so the box refuses them by default rather than present a
-            detectably-broken clone. When it changes for an attached over-capacity device the box reboots
-            itself to re-clone; a normal device is unaffected.{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 0)</code></A> reads the
-            opt-in plus the over-capacity and imperfect-clone flags. Library binding:{' '}
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 0)</code></A> (opt-in plus
+            the over-capacity and imperfect-clone flags) · Library{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Opt in (<code>id = 0</code>, <code>allow = 1</code>):</p>
+          <p>Opt in (<code>allow = 1</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 02 00  | 00     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
@@ -91,20 +104,34 @@ const Option: Component = () => {
       <div id="move-ride" data-search-target>
         <Card>
           <CardHeader title="MOVE_RIDE" subtitle="Inject motion only on a real move" />
+          <pre class="api-signature">id 1  ·  [timeout u16 LE] ms</pre>
+          <div class="api-response-label">TIMEOUT</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Off: injection emits via the frame clock <em>(default)</em></td></tr>
+              <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
+            </tbody>
+          </table>
           <p>
-            With <code>id = 1</code> the value is <code>[timeout u16 LE]</code> in milliseconds
-            (<code>0</code> = off, the default). When on, injected cursor and wheel motion only rides a
-            native cursor-motion report seen within the window; the box emits no synthetic motion frame
-            for injection, and motion left unridden is dropped, never dumped on the next move. That keeps
-            injected motion's report density and idle fraction identical to the real mouse's (a human
-            aims at ~270-360 Hz, idle 60-70% of the time, while gap-filling injection runs gapless near
-            990 Hz), erasing the report-density tell. Pure idle injection (moving the cursor while the
-            hand is still) stops working while it's on; button, key, and media injection are unaffected.
-            Library binding:{' '}
+            This keeps injected motion's report density identical to the real mouse's, erasing the
+            density tell (a human aims at ~270-360 Hz, idle 60-70% of the time; gap-filling injection
+            runs gapless near 990 Hz).
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              While on, pure idle injection (moving the cursor while the hand is still) stops working —
+              motion waits for a native move and is dropped if none comes. Button, key, and media
+              injection are unaffected.
+            </p>
+          </div>
+          <p>
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 1)</code></A> · Library{' '}
             <A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Turn it on with a 20 ms window (<code>id = 1</code>, <code>timeout = 0x0014</code>):</p>
+          <p>Turn it on with a 20 ms window (<code>timeout = 0x0014</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 03 00  | 01     | 14 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
@@ -116,25 +143,33 @@ const Option: Component = () => {
       <div id="emit" data-search-target>
         <Card>
           <CardHeader title="EMIT" subtitle="Pick what paces injected motion" />
+          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE]</pre>
+          <div class="api-response-label">MODE</div>
+          <table class="api-params">
+            <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>—</td><td>The rate the real mouse actually reports at</td></tr>
+              <tr><td><code>1</code></td><td>Interval</td><td>—</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
+              <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              Fixed snaps to <code>1000/n</code> Hz on the 1 ms frame clock and caps at 1 kHz, so 1000,
+              500, 333, 250… are exact and 750 lands on 1000 (<code>0</code> means 1000). Every mode
+              raises the ceiling only: the box still emits a frame solely when injection is pending, so
+              idle stays idle. Learnt keeps injection matched to the real mouse; the other modes are for
+              a host that shapes its own report density and wants the box to stop re-pacing it.
+            </p>
+          </div>
           <p>
-            With <code>id = 2</code> the value is <code>[mode u8][rate_hz u16 LE]</code>. It picks what
-            sets the emit-rate ceiling for injected motion. <code>mode 0</code> is <em>learnt</em> (the
-            default): the box paces injection to the rate the real mouse actually reports at.{' '}
-            <code>mode 1</code> is <em>interval</em>: pace to the cloned mouse's declared poll rate (its{' '}
-            <code>bInterval</code>). <code>mode 2</code> is <em>fixed</em>: pace to <code>rate_hz</code>
-            {' '}(read only in this mode). The 1 ms frame clock snaps a fixed rate to <code>1000/n</code>
-            {' '}Hz and caps it at 1 kHz, so 1000, 500, 333, 250… are exact and 750 lands on 1000.
-          </p>
-          <p>
-            It raises the ceiling only: the box still emits a frame solely when injection is pending, so
-            idle stays idle. The default learnt pace keeps injected motion's cadence matched to the real
-            mouse's. The other modes are for a host that models its own report density and wants the box
-            to stop re-pacing an already-shaped stream. Read the mode plus the rate in effect with{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A>. Library
-            binding: <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (mode plus the
+            rate in effect) · Library{' '}
+            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Fixed 1 kHz (<code>id = 2</code>, <code>mode = 2</code>, <code>rate_hz = 0x03E8</code>):</p>
+          <p>Fixed 1 kHz (<code>mode = 2</code>, <code>rate_hz = 0x03E8</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 04 00  | 02     | 02     | E8 03  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+
