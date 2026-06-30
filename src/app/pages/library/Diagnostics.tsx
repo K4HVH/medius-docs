@@ -23,7 +23,7 @@ const Diagnostics: Component = () => {
           <CardHeader title="logs" subtitle="Stream of box messages" />
           <pre class="api-signature">fn logs(&self) -&gt; LogStream</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
 
           <p>
@@ -132,7 +132,7 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
           <CardHeader title="counters" subtitle="Link statistics" />
           <pre class="api-signature">fn counters(&self) -&gt; CountersSnapshot</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
 
           <p>

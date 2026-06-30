@@ -32,9 +32,9 @@ const Async: Component = () => {
           <pre class="api-signature">fn find() -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">

@@ -54,7 +54,7 @@ pre.api-signature {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   border: var(--g-border-width) solid;
-  margin-bottom: var(--g-spacing);
+  vertical-align: middle;
 }
 
 .api-badge--executed {

@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup, onMount, Show, createMemo } from 'solid-js';
+import { createSignal, createEffect, onCleanup, onMount, Show, For, createMemo } from 'solid-js';
 import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Pane, type PaneState } from '../../components/navigation/Pane';
@@ -13,6 +13,7 @@ import {
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
+  BsBoxes, BsFiletypePy,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -22,6 +23,7 @@ import '../../styles/docs.css';
 const sectionTabs: TabOption[] = [
   { value: 'native', label: 'Native API', icon: BsTerminal },
   { value: 'library', label: 'Rust Library', icon: BsBook },
+  { value: 'bindings', label: 'Bindings', icon: BsBoxes },
   { value: 'dashboard', label: 'Dashboard', icon: BsBroadcast },
 ];
 
@@ -104,6 +106,41 @@ const allLibraryTabs = [
   ...libraryGuidesTabs, ...libraryReferenceTabs,
 ];
 
+const bindingsSwitcherTabs: TabOption[] = [
+  { value: '/bindings', label: 'Overview', icon: BsBoxes },
+  { value: '/bindings/c', label: 'C / C++', icon: BsFileCode },
+  { value: '/bindings/python', label: 'Python', icon: BsFiletypePy },
+];
+
+const makeBindingGroups = (root: string): { label: string; tabs: TabOption[] }[] => [
+  { label: 'Getting Started', tabs: [
+    { value: root, label: 'Install', icon: BsBoxArrowInDown },
+    { value: `${root}/quickstart`, label: 'First program', icon: BsLightning },
+  ] },
+  { label: 'Usage', tabs: [
+    { value: `${root}/usage`, label: 'Calls & errors', icon: BsTerminal },
+    { value: `${root}/streams`, label: 'Streams', icon: BsActivity },
+  ] },
+  { label: 'Reference', tabs: [
+    { value: `${root}/api`, label: 'API index', icon: BsList },
+    { value: `${root}/types`, label: 'Types & errors', icon: BsFileCode },
+  ] },
+  { label: 'Build', tabs: [
+    { value: `${root}/build`, label: 'Build & features', icon: BsWrench },
+  ] },
+];
+
+const bindingRoots = ['/bindings/c', '/bindings/python'];
+const bindingGroupsByRoot: Record<string, { label: string; tabs: TabOption[] }[]> = {
+  '/bindings/c': makeBindingGroups('/bindings/c'),
+  '/bindings/python': makeBindingGroups('/bindings/python'),
+};
+
+const allBindingsTabs: TabOption[] = [
+  { value: '/bindings', label: 'Overview', icon: BsBoxes },
+  ...bindingRoots.flatMap((root) => makeBindingGroups(root).flatMap((g) => g.tabs)),
+];
+
 const dashboardTabs: TabOption[] = [
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
@@ -175,12 +212,21 @@ const DocsLayout = (props: RouteSectionProps) => {
   const activeSection = () =>
     location.pathname.startsWith('/dashboard')
       ? 'dashboard'
-      : location.pathname.startsWith('/library')
-        ? 'library'
-        : 'native';
+      : location.pathname.startsWith('/bindings')
+        ? 'bindings'
+        : location.pathname.startsWith('/library')
+          ? 'library'
+          : 'native';
+
+  const bindingRoot = () => {
+    const p = location.pathname;
+    if (p.startsWith('/bindings/python')) return '/bindings/python';
+    if (p.startsWith('/bindings/c')) return '/bindings/c';
+    return '/bindings';
+  };
 
   const pageTitle = createMemo(() => {
-    const all = [...allNativeTabs, ...allLibraryTabs, ...dashboardTabs];
+    const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs];
     return all.find(t => t.value === location.pathname)?.label ?? '';
   });
 
@@ -225,7 +271,9 @@ const DocsLayout = (props: RouteSectionProps) => {
             disabled={flashing()}
             onChange={(value: string) => {
               const prefix =
-                value === 'dashboard' ? '/dashboard' : value === 'library' ? '/library' : '/native';
+                value === 'dashboard' ? '/dashboard'
+                  : value === 'bindings' ? '/bindings'
+                  : value === 'library' ? '/library' : '/native';
               if (!location.pathname.startsWith(prefix)) navigate(prefix);
             }}
             options={sectionTabs}
@@ -306,6 +354,30 @@ const DocsLayout = (props: RouteSectionProps) => {
               options={libraryReferenceTabs}
             />
           </Show>
+          <Show when={activeSection() === 'bindings'}>
+            <Divider spacing="compact" label="Bindings" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={bindingRoot()}
+              onChange={handlePageNav}
+              options={bindingsSwitcherTabs}
+            />
+            <For each={bindingGroupsByRoot[bindingRoot()] ?? []}>
+              {(group) => (
+                <>
+                  <Divider spacing="compact" label={group.label} labelAlign="start" />
+                  <Tabs
+                    orientation="vertical"
+                    variant="subtle"
+                    value={location.pathname}
+                    onChange={handlePageNav}
+                    options={group.tabs}
+                  />
+                </>
+              )}
+            </For>
+          </Show>
           <Show when={activeSection() === 'dashboard'}>
             <Divider spacing="compact" label="Dashboard" labelAlign="start" />
             <Tabs
@@ -324,9 +396,11 @@ const DocsLayout = (props: RouteSectionProps) => {
             title={
               activeSection() === 'dashboard'
                 ? 'Medius - Dashboard'
-                : activeSection() === 'library'
-                  ? 'Medius - Rust Library'
-                  : 'Medius - Native API'
+                : activeSection() === 'bindings'
+                  ? 'Medius - Bindings'
+                  : activeSection() === 'library'
+                    ? 'Medius - Rust Library'
+                    : 'Medius - Native API'
             }
             subtitle={pageTitle()}
             sticky

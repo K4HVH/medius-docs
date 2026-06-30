@@ -24,7 +24,7 @@ const Mock: Component = () => {
         <Card>
           <CardHeader title="Building a MockBox" subtitle="new, and why you clone it" />
           <pre class="api-signature">fn new() -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <p>
             <code>new()</code> records every command and auto-answers{' '}
@@ -46,7 +46,7 @@ let device = Device::with_mock(mock.clone());
         <Card>
           <CardHeader title="Wrapping it in a Device" subtitle="with_mock and open_mock" />
           <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
@@ -93,25 +93,25 @@ device.move_rel(5, 5)?;`}</code></pre>
         <Card>
           <CardHeader title="Scripting query answers" subtitle="Set the version, health, and device-info a query returns" />
           <pre class="api-signature">fn with_version(self, version: Version) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_mouse_info(self, mouse_info: MouseInfo) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_mouse_caps(self, mouse: MouseCaps) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_kbd_caps(self, keyboard: KbdCaps) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_stats(self, stats: Stats) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn set_version(&self, version: Version)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn set_health(&self, health: Health)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <p>
             The <code>with_*</code> builders set what each query returns:{' '}
@@ -150,15 +150,15 @@ assert!(device.query_health()?.mouse_attached);`}</code></pre>
         <Card>
           <CardHeader title="Injecting inbound traffic" subtitle="push_log and push_raw" />
           <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn push_event(&self, seq: u8, report: MouseEvent)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn push_kb_event(&self, seq: u8, event: &KeyboardEvent)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn push_cons_event(&self, seq: u8, event: &MediaEvent)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <p>
             All put bytes on the inbound stream as if the box emitted them.{' '}
@@ -198,9 +198,9 @@ assert!(matches!(stream.recv()?, CatchEvent::Keyboard(k) if k.keys == vec![Key::
         <Card>
           <CardHeader title="Asserting what was sent" subtitle="recorded_frames, saw, recorded, clear_recorded" />
           <pre class="api-signature">fn recorded_frames(&self) -&gt; Vec&lt;DecodedFrame&gt;</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn saw(&self, ty: FrameType) -&gt; bool</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <div class="api-response-label">METHODS</div>
           <table class="api-params">
@@ -268,7 +268,7 @@ mock.clear_recorded(); // next assertions see a fresh log`}</code></pre>
         <Card>
           <CardHeader title="Simulating a dead box" subtitle="silent, and the handshake failures" />
           <pre class="api-signature">fn silent(self) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <p>
             <code>silent()</code> records commands but never answers a query. The two{' '}

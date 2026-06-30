@@ -10,7 +10,7 @@ const TypesAndErrors: Component = () => {
         <Card>
           <CardHeader
             title="Types & errors"
-            subtitle="What you pass in, what you get back, and how calls fail"
+            subtitle="Arguments, results, and errors"
           />
           <p>
             Every public type is re-exported at the crate root: import from{' '}
