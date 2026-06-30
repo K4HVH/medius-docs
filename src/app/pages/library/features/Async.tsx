@@ -12,11 +12,11 @@ const Async: Component = () => {
           <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its
           queries as futures, behind the off-by-default <code>async</code> flag.
         </p>
-        <pre><code>cargo add medius --features async</code></pre>
+        <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <p>
           Reply waits use <a href="https://crates.io/crates/flume" target="_blank" rel="noreferrer"><code>flume</code></a>, so futures run under any executor, no <a href="https://tokio.rs" target="_blank" rel="noreferrer"><code>tokio</code></a>.
         </p>
-        <pre><code>cargo add futures</code></pre>
+        <pre><code class="language-bash">cargo add futures</code></pre>
         <p>
           <code>Result</code> is the fallible return type (see <A href="/library/types/errors">Errors</A>).
         </p>
@@ -32,9 +32,9 @@ const Async: Component = () => {
           <pre class="api-signature">fn find() -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
@@ -77,7 +77,7 @@ const Async: Component = () => {
           </table>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// discover and open in one call (runs the handshake, blocks)
+          <pre><code class="language-rust">{`// discover and open in one call (runs the handshake, blocks)
 let device = AsyncDevice::find()?;
 
 // or by path:
@@ -142,7 +142,7 @@ let device = Device::find()?.into_async();`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`async fn run(device: &AsyncDevice) -> medius::Result<()> {
+          <pre><code class="language-rust">{`async fn run(device: &AsyncDevice) -> medius::Result<()> {
     let v = device.query_version().await?;
     let h = device.query_health().await?;
     println!("{v}, link_up={}", h.link_up);

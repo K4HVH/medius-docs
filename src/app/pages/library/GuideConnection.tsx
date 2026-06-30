@@ -17,7 +17,7 @@ const GuideConnection: Component = () => {
             <A href="/library/connection#open"><code>open</code></A> the chosen one.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, find_medius};
+          <pre><code class="language-rust">{`use medius::{Device, find_medius};
 
 let ports = find_medius();
 for port in &ports {
@@ -40,7 +40,7 @@ let dev = Device::open(&port.path)?;`}</code></pre>
             doesn't reopen the port.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::thread;
+          <pre><code class="language-rust">{`use std::thread;
 
 let worker = device.clone();
 let handle = thread::spawn(move || {
@@ -59,7 +59,7 @@ handle.join().unwrap()?;`}</code></pre>
             <a href="https://docs.rs/futures/latest/futures/future/fn.join.html" target="_blank" rel="noreferrer"><code>futures::future::join</code></a>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let (v, h) = futures::future::join(
+          <pre><code class="language-rust">{`let (v, h) = futures::future::join(
     device.query_version(),
     device.query_health(),
 ).await;
@@ -94,7 +94,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.press(Button::Left)?;
+          <pre><code class="language-rust">{`device.press(Button::Left)?;
 
 // No further calls. The keepalive thread sends QUERY(HEALTH) on its own,
 // so the hold survives well past the 1000 ms silence window.
@@ -134,7 +134,7 @@ device.reset()?;`}</code></pre>
             For immediate hand-off call <A href="/library/admin#reset"><code>reset</code></A> before drop.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// hand the mouse back right now, not a second from now:
+          <pre><code class="language-rust">{`// hand the mouse back right now, not a second from now:
 device.reset()?;   // box returns to passthrough immediately
 drop(device);      // tears down threads and closes the port`}</code></pre>
         </Card>

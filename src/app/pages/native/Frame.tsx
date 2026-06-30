@@ -116,7 +116,7 @@ const Frame: Component = () => {
               <tr><td>Final XOR</td><td>None</td></tr>
             </tbody>
           </table>
-          <pre><code>{`def crc16_ccitt(data):
+          <pre><code class="language-python">{`def crc16_ccitt(data):
     crc = 0xFFFF
     for b in data:
         crc ^= b << 8

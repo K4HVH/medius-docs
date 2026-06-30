@@ -32,7 +32,7 @@ const Structs: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Version;
+          <pre><code class="language-rust">{`use medius::Version;
 
 let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 0, fw_patch: 3 };
 assert_eq!(v.to_string(), "fw 2.0.3"); // Display omits proto_ver
@@ -60,7 +60,7 @@ println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Health;
+          <pre><code class="language-rust">{`use medius::Health;
 
 let h = Health::from_flags(0b0000_0011); // link_up | mouse_attached
 assert!(h.link_up && h.mouse_attached);
@@ -88,7 +88,7 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code><
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::MouseInfo;
+          <pre><code class="language-rust">{`use medius::MouseInfo;
 
 let m = MouseInfo { vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201, has_serial: true, has_bos: true };
 assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
@@ -115,7 +115,7 @@ assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let caps = device.caps()?;
+          <pre><code class="language-rust">{`let caps = device.caps()?;
 if caps.has_keyboard() && caps.keyboard.has_consumer {
     // media injection is real on this board
 }
@@ -143,7 +143,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::MouseCaps;
+          <pre><code class="language-rust">{`use medius::MouseCaps;
 
 let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
@@ -170,7 +170,7 @@ assert!(!c.is_composite()); // single HID interface`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Rate;
+          <pre><code class="language-rust">{`use medius::Rate;
 
 let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true, change_driven: false };
 assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
@@ -217,7 +217,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{LockTarget, LockDirection};
 
 let locks = device.query_locks()?;
 if locks.is_locked(LockTarget::X, LockDirection::Positive) {
@@ -258,7 +258,7 @@ println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::CatchMask;
+          <pre><code class="language-rust">{`use medius::CatchMask;
 
 let mask = CatchMask::MOTION | CatchMask::BUTTONS;
 assert!(mask.contains(CatchMask::BUTTONS));
@@ -292,7 +292,7 @@ let stream = device.catch_events(mask)?;`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, CatchMask, CatchEvent};
+          <pre><code class="language-rust">{`use medius::{Button, CatchMask, CatchEvent};
 
 let stream = device.catch_events(CatchMask::all())?;
 if let CatchEvent::Mouse(m) = stream.recv()? {
@@ -358,7 +358,7 @@ if let CatchEvent::Mouse(m) = stream.recv()? {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Key;
+          <pre><code class="language-rust">{`use medius::Key;
 
 let a = Key::A;            // 0x04
 let custom = Key::new(0x04);
@@ -384,7 +384,7 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::MediaKey;
+          <pre><code class="language-rust">{`use medius::MediaKey;
 
 let vol_up = MediaKey::VOLUME_UP;   // 0x00E9
 let custom = MediaKey::new(0xE9);
@@ -509,25 +509,25 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
 
           <pre class="api-signature">fn recv(&self) -&gt; Result&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>Block until the next line arrives, or <code>Err(Disconnected)</code> if the link drops.</p>
 
           <pre class="api-signature">fn try_recv(&self) -&gt; Option&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>The next buffered line, or <code>None</code> if nothing is queued. Never blocks.</p>
 
           <pre class="api-signature">fn recv_timeout(&self, timeout: Duration) -&gt; Option&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>Block up to <code>timeout</code> for the next line; <code>None</code> on timeout.</p>
 
           <pre class="api-signature">fn try_iter(&self) -&gt; impl Iterator&lt;Item = LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>
             Drain every buffered line without blocking;{' '}
@@ -543,7 +543,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
 
           <pre class="api-signature">async fn recv_async(&self) -&gt; Result&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>
             Await the next line (<code>async</code> feature); <code>Err(Disconnected)</code> if the
@@ -551,7 +551,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let stream = device.logs();
+          <pre><code class="language-rust">{`let stream = device.logs();
 
 // Drain whatever has piled up so far, no blocking.
 for line in stream.try_iter() {
