@@ -39,7 +39,7 @@ const Flash: Component = () => {
             The four consts are public:
           </p>
           <pre class="api-signature">const ESPTOOL: &amp;str; const CHIP: &amp;str; const FLASH_ADDR: &amp;str; const ROM_SETTLE: Duration</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code>{`use medius::flash;
 
@@ -110,7 +110,7 @@ flash::flash("/dev/ttyACM0", "host.bin", true)?;`}</code></pre>
         <Card>
           <CardHeader title="Inspecting the command" subtitle="See exactly what esptool runs" />
           <pre class="api-signature">fn esptool_args(port: &amp;str, bin_path: &amp;Path) -&gt; Vec&lt;String&gt;</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Builds the exact argv <A href="#flash"><code>flash</code></A> passes to{' '}
             <code>esptool.py</code>, without running it. To debug, reboot the chip into download mode

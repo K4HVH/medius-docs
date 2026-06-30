@@ -113,7 +113,7 @@ assert!(after > before);`}</code></pre>
           <CardHeader title="On AsyncDevice" subtitle="reapply and reconnect, still direct" />
 
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
 
           <p>

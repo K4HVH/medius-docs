@@ -509,25 +509,25 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
 
           <pre class="api-signature">fn recv(&self) -&gt; Result&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>Block until the next line arrives, or <code>Err(Disconnected)</code> if the link drops.</p>
 
           <pre class="api-signature">fn try_recv(&self) -&gt; Option&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>The next buffered line, or <code>None</code> if nothing is queued. Never blocks.</p>
 
           <pre class="api-signature">fn recv_timeout(&self, timeout: Duration) -&gt; Option&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>Block up to <code>timeout</code> for the next line; <code>None</code> on timeout.</p>
 
           <pre class="api-signature">fn try_iter(&self) -&gt; impl Iterator&lt;Item = LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>
             Drain every buffered line without blocking;{' '}
@@ -543,7 +543,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
 
           <pre class="api-signature">async fn recv_async(&self) -&gt; Result&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            <span class="api-badge api-badge--executed">Fire-and-forget</span>
           </p>
           <p>
             Await the next line (<code>async</code> feature); <code>Err(Disconnected)</code> if the
