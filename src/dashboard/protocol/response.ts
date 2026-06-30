@@ -7,8 +7,11 @@ import {
   CAP_Y,
   CAPS_CD_KBD,
   CAPS_CD_MOUSE,
+  EmitMode,
+  emitModeFromU8,
   MI_HAS_BOS,
   MI_HAS_SERIAL,
+  OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -43,6 +46,15 @@ import {
   logLevelFromU8,
 } from './types';
 
+// Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, and the rate
+// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode). mode null is a
+// mode the box reported that this build doesn't know.
+export interface EmitPace {
+  mode: EmitMode | null;
+  fixedHz: number;
+  resolvedHz: number;
+}
+
 export type Resp =
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
@@ -53,7 +65,8 @@ export type Resp =
   | { kind: 'locks'; locks: Locks }
   | { kind: 'catch'; catch: CatchState }
   | { kind: 'imperfect'; imperfect: ImperfectStatus }
-  | { kind: 'movementRiding'; windowMs: number }; // 0 = off
+  | { kind: 'movementRiding'; windowMs: number } // 0 = off
+  | { kind: 'emitPace'; emit: EmitPace };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -169,6 +182,17 @@ export function parseResp(payload: Uint8Array): Resp | null {
           // [what=9][id=1][timeout u16 LE ms]
           if (payload.length < 4) return null;
           return { kind: 'movementRiding', windowMs: u16le(payload, 2) };
+        case OPT_EMIT:
+          // [what=9][id=2][mode u8][fixed_hz u16 LE][resolved_hz u16 LE]
+          if (payload.length < 7) return null;
+          return {
+            kind: 'emitPace',
+            emit: {
+              mode: emitModeFromU8(payload[2]),
+              fixedHz: u16le(payload, 3),
+              resolvedHz: u16le(payload, 5),
+            },
+          };
         default:
           return null;
       }

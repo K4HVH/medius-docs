@@ -25,6 +25,27 @@ export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> 
 // OPTION ids (§3.10): persistent box options set via OPTION, read via Q_OPTIONS. The value is id-specific.
 export const OPT_IMPERFECT = 0; // value [allow u8]
 export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
+export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
+
+// OPTION(EMIT) emit-rate pacing modes (§3.10). Fixed snaps to 1000/n Hz and is capped at 1000.
+export enum EmitMode {
+  Learned = 0, // pace to the mouse's learnt native report rate (default)
+  Interval = 1, // follow the cloned mouse's bInterval poll rate
+  Fixed = 2, // pace at a fixed rate_hz
+}
+
+export function emitModeFromU8(value: number): EmitMode | null {
+  switch (value) {
+    case 0:
+      return EmitMode.Learned;
+    case 1:
+      return EmitMode.Interval;
+    case 2:
+      return EmitMode.Fixed;
+    default:
+      return null;
+  }
+}
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;

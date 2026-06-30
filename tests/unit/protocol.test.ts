@@ -3,6 +3,7 @@ import {
   type DecodedFrame,
 
   CatchClass,
+  EmitMode,
   FrameDecoder,
   FrameType,
   LogLevel,
@@ -23,6 +24,7 @@ import {
   LockDirection,
   LockTarget,
   isComposite,
+  emitPayload,
   imperfectPayload,
   ledPayload,
   lockPayload,
@@ -494,9 +496,39 @@ describe('OPTION command (§3.10)', () => {
     expect(parseResp(new Uint8Array([9, 1, 0, 0]))).toEqual({ kind: 'movementRiding', windowMs: 0 });
   });
 
+  it('emitPayload packs [id=2][mode u8][rate_hz u16 LE]', () => {
+    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01]);
+  });
+
+  it('parses RESP(OPTIONS, EMIT) into mode / fixed_hz / resolved_hz', () => {
+    // Learned, nothing resolved yet: [9][2][mode=0][fixed=0][resolved=0].
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: EmitMode.Learned, fixedHz: 0, resolvedHz: 0 },
+    });
+    // Interval resolved to the 1000 Hz poll rate: [9][2][1][0,0][0xe8,0x03].
+    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: EmitMode.Interval, fixedHz: 0, resolvedHz: 1000 },
+    });
+    // Fixed 500 Hz, resolved to 500: [9][2][2][0xf4,0x01][0xf4,0x01].
+    expect(parseResp(new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 },
+    });
+    // A mode this build doesn't know -> mode null, the rates still decode.
+    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: null, fixedHz: 0, resolvedHz: 1000 },
+    });
+  });
+
   it('returns null for a truncated or unknown OPTIONS payload', () => {
     expect(parseResp(new Uint8Array([9, 0, 1, 1]))).toBeNull(); // imperfect needs 5 bytes
     expect(parseResp(new Uint8Array([9, 1, 0]))).toBeNull(); // move_ride needs 4 bytes
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0]))).toBeNull(); // emit needs 7 bytes
     expect(parseResp(new Uint8Array([9, 0xff, 0, 0]))).toBeNull(); // unknown option id
   });
 });

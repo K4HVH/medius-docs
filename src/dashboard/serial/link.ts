@@ -8,6 +8,7 @@ import {
   type Caps,
   type CatchState,
   type DecodedFrame,
+  type EmitPace,
   type Health,
   type ImperfectStatus,
   type Locks,
@@ -16,9 +17,11 @@ import {
   type Rate,
   type Stats,
   type Version,
+  EmitMode,
   FrameDecoder,
   FrameType,
   PROTO_VER,
+  OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -39,6 +42,7 @@ import {
   LockTarget,
   RebootTarget,
   catchPayload,
+  emitPayload,
   encode,
   imperfectPayload,
   injectPayload,
@@ -230,6 +234,13 @@ export class SerialLink {
     return resp.windowMs;
   }
 
+  // The emit-rate pacing option (§4.14): the mode, the configured fixed rate, and the rate in effect.
+  async queryEmitPace(timeoutMs?: number): Promise<EmitPace> {
+    const resp = parseResp(await this.queryOption(OPT_EMIT, timeoutMs));
+    if (resp?.kind !== 'emitPace') throw new Error('unexpected reply to OPTIONS(EMIT) query');
+    return resp.emit;
+  }
+
   reboot(target: RebootTarget): Promise<void> {
     return this.send(encode(FrameType.RebootDl, this.nextSeq(), rebootPayload(target)));
   }
@@ -286,6 +297,14 @@ export class SerialLink {
   // `queryMovementRiding`.
   setMovementRiding(windowMs: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
+  }
+
+  // Set emit-rate pacing (§3.10): the source the box paces injection to. Learned tracks the mouse's
+  // native report rate (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped
+  // to 1000/n, capped at 1000). rateHz only matters in Fixed mode. It raises the emit ceiling only; idle
+  // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
+  setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
   }
 
   async close(): Promise<void> {
