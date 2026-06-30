@@ -32,7 +32,7 @@ const Quickstart: Component = () => {
   move() / press()  ──▶  inject input          fire-and-forget
   catch_events()    ──▶  subscribe to input    blocks
   recv()            ──▶  next physical event   blocks
-  free()            ──▶  close, NULL-safe      —`}</pre>
+  free()            ──▶  close, NULL-safe      local`}</pre>
       </Card>
 
       <div id="program" data-search-target>
@@ -85,8 +85,8 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 2.2.0 (abi 1)
-firmware 2.2.0 (proto 2)
+          <pre><code class="language-c">{`medius-capi 2.2.1 (abi 1)
+firmware 2.2.1 (proto 2)
 mouse: dx=12 dy=-4 buttons=0x00`}</code></pre>
           <div class="callout callout--info">
             <p>

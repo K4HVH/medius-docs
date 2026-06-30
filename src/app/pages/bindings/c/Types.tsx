@@ -275,7 +275,7 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_LOG_LEVEL_ERROR</code></td><td><code>0</code></td><td>A failure the box could not recover from.</td></tr>
+              <tr><td><code>MEDIUS_LOG_LEVEL_ERROR</code></td><td><code>0</code></td><td>A failure the box couldn't recover from.</td></tr>
               <tr><td><code>MEDIUS_LOG_LEVEL_WARN</code></td><td><code>1</code></td><td>Something off that the box handled.</td></tr>
               <tr><td><code>MEDIUS_LOG_LEVEL_INFO</code></td><td><code>2</code></td><td>Normal operational notices.</td></tr>
               <tr><td><code>MEDIUS_LOG_LEVEL_DEBUG</code></td><td><code>3</code></td><td>Detail for diagnosing a problem.</td></tr>
@@ -571,7 +571,7 @@ const Types: Component = () => {
           <CardHeader title="MediusRate" subtitle="The native report rate and clone poll period" />
           <p>
             From <A href="/bindings/c/api#queries"><code>medius_device_query_rate</code></A>. Convert to Hz with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_rate_native_hz(rate, &amp;hz)</code></A> (returns false when there is no
+            <A href="/bindings/c/api#inspectors"><code>medius_rate_native_hz(rate, &amp;hz)</code></A> (returns false when there's no
             continuous cadence).
           </p>
           <table class="api-params">
@@ -795,7 +795,7 @@ const Types: Component = () => {
           <pre class="api-signature">{`enum MediusStatus : int32_t   /* MEDIUS_STATUS_OK == 0; everything else is a failure */`}</pre>
           <p>
             Every fallible call returns a <code>MediusStatus</code> and writes its result through an
-            out-param. On failure the detail lives in thread-local state — read it before the next
+            out-param. On failure the detail lives in thread-local state. Read it before the next
             call on that thread overwrites it. Canonical mapping on{' '}
             <A href="/library/types/errors">Errors</A>.
           </p>

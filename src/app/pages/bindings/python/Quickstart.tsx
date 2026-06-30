@@ -54,7 +54,7 @@ try:
                 print(f"event  {event.kind.name}")
         # stream + link are closed here, on block exit
 except NotFoundError:
-    raise SystemExit("no medius box found — check the control-port cable")`}</code></pre>
+    raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
           <div class="callout callout--info">
             <p>
               The cursor won't move and the click won't land on this machine, and that's by design:
@@ -100,7 +100,7 @@ except NotFoundError:
               </tr>
               <tr>
                 <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchMask.ALL)</code></A></td>
-                <td>—</td>
+                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Subscribe; returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
               </tr>
               <tr>
@@ -122,7 +122,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
           <pre><code class="language-bash">{`python first.py
-# firmware 2.2.0, proto 2
+# firmware 2.2.1, proto 2
 # mouse  buttons=1  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
             The second line appears once you move or click the real mouse within the 5-second window;

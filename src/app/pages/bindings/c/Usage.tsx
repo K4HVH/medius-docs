@@ -83,7 +83,7 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
           </div>
           <div class="callout callout--info">
             <p>
-              <strong>Disconnected.</strong> A device call returns{' '}
+              A device call returns{' '}
               <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> once the link drops, and a stream's blocking{' '}
               <code>recv</code> returns it when the stream closes (after a reset or link loss). Recover
               with <A href="/bindings/c/api#led-admin-options"><code>medius_device_reconnect</code></A> or by re-opening (see{' '}

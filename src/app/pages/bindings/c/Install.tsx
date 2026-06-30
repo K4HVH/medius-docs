@@ -10,7 +10,7 @@ const Install: Component = () => {
         <CardHeader title="Install" subtitle="One header and one prebuilt library" />
         <p>
           The binding is one header (<code>medius.h</code>) and one prebuilt library
-          (<code>libmedius_capi</code>). It's the same for C and C++ — the header compiles as both, so
+          (<code>libmedius_capi</code>). It's the same for C and C++. The header compiles as both, so
           a C++ program <code>#include</code>s it and calls the same functions. Nothing to build, no{' '}
           <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust</a> needed.
         </p>
@@ -85,10 +85,10 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
 
           <div class="callout callout--info">
             <p>
-              No download for your platform? Build it once: install the{' '}
+              If your platform isn't listed, build it once: install the{' '}
               <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>,{' '}
               <code>git clone https://github.com/K4HVH/medius</code>, then{' '}
-              <code>cargo build -p medius-capi --release</code> — the library lands in{' '}
+              <code>cargo build -p medius-capi --release</code>. The library lands in{' '}
               <code>target/release/</code> and the header is <code>medius-capi/include/medius.h</code>.
               See <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
@@ -116,7 +116,7 @@ int main(void) {
               A linker error (<code>cannot find -lmedius_capi</code> / <code>unresolved external</code>)
               means the library directory is wrong. A crash on start
               (<code>cannot open shared object</code> / a missing-DLL popup) means the loader can't find
-              the library at run time — fix the path or copy the file next to your program. More on{' '}
+              the library at run time. Fix the path or copy the file next to your program. More on{' '}
               <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
           </div>

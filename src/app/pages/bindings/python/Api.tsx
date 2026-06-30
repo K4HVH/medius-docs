@@ -16,7 +16,7 @@ const Api: Component = () => {
           <A href="/bindings/python/streams">Streams</A>.
         </p>
         <p>
-          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A> — they
+          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
           return once the frame is queued. The query reads and <code>Device.open</code> /{' '}
           <code>find</code> block for the <A href="/native/hardware">box</A>'s reply. Any call raises
           a <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
@@ -34,7 +34,7 @@ const Api: Component = () => {
               <tr><td><code>Device.find()</code></td><td>Open the first box found, or raise <A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A>.</td></tr>
               <tr><td><code>dev.clone()</code></td><td>Another handle to the same link; the connection is shared.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Free the handle. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
-              <tr><td><code>with Device.find() as dev:</code></td><td>Context manager — closes the link on block exit.</td></tr>
+              <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
               <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present boxes as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> without opening one.</td></tr>
             </tbody>
           </table>
@@ -58,7 +58,7 @@ const Api: Component = () => {
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject — buttons" subtitle="Press and release mouse buttons" />
+          <CardHeader title="Inject: buttons" subtitle="Press and release mouse buttons" />
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
             <A href="/native/injection">injection model</A> (press / soft-release / force-release).
@@ -88,7 +88,7 @@ const Api: Component = () => {
 
       <div id="keys" data-search-target>
         <Card>
-          <CardHeader title="Inject — keyboard" subtitle="Press and release keys" />
+          <CardHeader title="Inject: keyboard" subtitle="Press and release keys" />
           <p>See <A href="/library/inject">Inject</A>; HID keycodes on <A href="/native/commands/usage#keycodes">Usage IDs</A>. Pass a <A href="/bindings/python/types#key"><code>Key</code></A> or a raw keycode <code>int</code>.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
@@ -104,7 +104,7 @@ const Api: Component = () => {
 
       <div id="media" data-search-target>
         <Card>
-          <CardHeader title="Inject — media" subtitle="Consumer-control keys" />
+          <CardHeader title="Inject: media" subtitle="Consumer-control keys" />
           <p>See <A href="/library/inject">Inject</A>; Consumer usages on <A href="/native/commands/usage#consumer">Usage IDs</A>. Pass a <A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a raw 16-bit usage <code>int</code>.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
@@ -133,7 +133,7 @@ const Api: Component = () => {
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you — see <A href="/library/lock">Lock</A>.</p>
+            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>.</p>
           </div>
         </Card>
       </div>
@@ -158,7 +158,7 @@ const Api: Component = () => {
 
       <div id="queries" data-search-target>
         <Card>
-          <CardHeader title="Queries" subtitle="Read box state — each blocks for one reply" />
+          <CardHeader title="Queries" subtitle="Read box state, each blocks for one reply" />
           <p>
             See <A href="/library/requests">Requests</A>. Each blocks for the box's reply and returns
             a <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>{' '}
@@ -167,17 +167,17 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.query_version()</code></td><td><A href="/bindings/python/types#version"><code>Version</code></A> — protocol + firmware version.</td></tr>
-              <tr><td><code>dev.query_health()</code></td><td><A href="/bindings/python/types#health"><code>Health</code></A> — link, mouse, clone, injection flags.</td></tr>
-              <tr><td><code>dev.query_mouse_info()</code></td><td><A href="/bindings/python/types#mouseinfo"><code>MouseInfo</code></A> — the cloned mouse's USB identity.</td></tr>
-              <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A> — mouse/keyboard capabilities.</td></tr>
-              <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A> — native report rate and poll period.</td></tr>
-              <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A> — box-side telemetry.</td></tr>
-              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A> — active lock mask (<code>.is_locked(...)</code>).</td></tr>
-              <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A> — subscription mask + dropped count.</td></tr>
-              <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A> — imperfect-clone state.</td></tr>
+              <tr><td><code>dev.query_version()</code></td><td><A href="/bindings/python/types#version"><code>Version</code></A>: protocol + firmware version.</td></tr>
+              <tr><td><code>dev.query_health()</code></td><td><A href="/bindings/python/types#health"><code>Health</code></A>: link, mouse, clone, injection flags.</td></tr>
+              <tr><td><code>dev.query_mouse_info()</code></td><td><A href="/bindings/python/types#mouseinfo"><code>MouseInfo</code></A>: the cloned mouse's USB identity.</td></tr>
+              <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A>: mouse/keyboard capabilities.</td></tr>
+              <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
+              <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
+              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active lock mask (<code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
+              <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
-              <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A> — <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
+              <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
             </tbody>
           </table>
         </Card>

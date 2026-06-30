@@ -11,7 +11,7 @@ const Build: Component = () => {
         <p>
           Two files: the header <A href="/bindings/c"><code>medius.h</code></A> and the native
           library <A href="/bindings/c"><code>libmedius_capi</code></A>. Point the compiler at both
-          and link. C++ is identical — same header, add <code>-std=c++17</code>. For your first
+          and link. C++ is identical: same header, add <code>-std=c++17</code>. For your first
           program see the <A href="/bindings/c/quickstart">Quickstart</A>.
         </p>
       </Card>
@@ -96,7 +96,7 @@ cc app.c -DMEDIUS_FEATURE_MOCK -DMEDIUS_FEATURE_FLASH \\
             </thead>
             <tbody>
               <tr><td>Linux</td><td><code>libmedius_capi.so</code></td><td><code>libmedius_capi.a</code></td><td>add <code>-lpthread</code></td></tr>
-              <tr><td>macOS</td><td><code>libmedius_capi.dylib</code></td><td><code>libmedius_capi.a</code></td><td>—</td></tr>
+              <tr><td>macOS</td><td><code>libmedius_capi.dylib</code></td><td><code>libmedius_capi.a</code></td><td>none</td></tr>
               <tr><td>Windows</td><td><code>medius_capi.dll</code></td><td><code>medius_capi.lib</code></td><td>link <code>medius_capi.dll.lib</code> (import) or <code>.lib</code> (static); no <code>lib</code> prefix</td></tr>
             </tbody>
           </table>
@@ -111,10 +111,10 @@ int main(void) {
 }`}</code></pre>
           <pre><code class="language-bash">{`cc hello.c -I medius-capi/include -L target/release -lmedius_capi -lpthread -o hello
 LD_LIBRARY_PATH=target/release ./hello
-# medius 0.1.0, abi 1`}</code></pre>
+# medius 2.2.1, abi 1`}</code></pre>
           <div class="callout callout--info">
             <p>
-              <strong>Link time vs run time.</strong> <code>-L</code> only helps the linker. The shared
+              <code>-L</code> only helps the linker. The shared
               library must also be findable by the dynamic loader when the program <em>runs</em>:
               Linux <code>LD_LIBRARY_PATH</code> or an rpath, macOS <code>DYLD_LIBRARY_PATH</code> /{' '}
               <code>@rpath</code>, Windows the <code>.dll</code> next to the exe or on <code>PATH</code>.
