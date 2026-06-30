@@ -33,7 +33,7 @@ const Usage: Component = () => {
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Queues a <A href="/native/frame">frame</A> and returns at once. No reply is read.</td>
-                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>button</code></A>, <A href="/library/inject"><code>key</code></A>, <A href="/library/inject"><code>media</code></A>, <A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A> …</td>
+                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>button</code></A>, <A href="/library/inject"><code>key</code></A>, <A href="/library/inject"><code>media</code></A>, <A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
               </tr>
               <tr>
                 <td><span class="api-badge api-badge--responded">Blocks</span></td>

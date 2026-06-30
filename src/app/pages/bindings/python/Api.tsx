@@ -151,6 +151,7 @@ const Api: Component = () => {
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
+              <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -177,6 +178,7 @@ const Api: Component = () => {
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
+              <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
             </tbody>
           </table>

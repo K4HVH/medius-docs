@@ -586,6 +586,25 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
+          <div class="api-response-label">EMIT value</div>
+          <p>
+            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2): the
+            mode, the configured fixed rate, and the rate actually in effect.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>mode</code></td><td><code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
+              <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
+              <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+

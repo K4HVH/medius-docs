@@ -248,6 +248,22 @@ const Types: Component = () => {
         </Card>
       </div>
 
+      <div id="emit-mode" data-search-target>
+        <Card>
+          <CardHeader title="MediusEmitMode" subtitle="What paces injected motion" />
+          <pre class="api-signature">{`enum MediusEmitMode : uint8_t`}</pre>
+          <p>See <A href="/library/options">Options</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_EMIT_MODE_LEARNED</code></td><td><code>0</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
+              <tr><td><code>MEDIUS_EMIT_MODE_INTERVAL</code></td><td><code>1</code></td><td>Pace to the cloned mouse's declared poll rate (its bInterval).</td></tr>
+              <tr><td><code>MEDIUS_EMIT_MODE_FIXED</code></td><td><code>2</code></td><td>Pace to a fixed rate in Hz (snapped to 1000/n, capped 1 kHz).</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="catch-event-kind" data-search-target>
         <Card>
           <CardHeader title="MediusCatchEventKind" subtitle="Which arm of a MediusCatchEvent is set" />
@@ -647,6 +663,21 @@ const Types: Component = () => {
               <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning an over-capacity device is allowed.</td></tr>
               <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device needs an interrupt-IN endpoint the box can't service.</td></tr>
               <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is over-capacity and was cloned anyway, so one interface is dead.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="emit-pace-status" data-search-target>
+        <Card>
+          <CardHeader title="MediusEmitPaceStatus" subtitle="The emit-rate pacing state" />
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_emit_pace</code></A>. See <A href="/library/options">Options</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A></td><td>The selected mode.</td></tr>
+              <tr><td><code>fixed_hz</code></td><td><code>uint16_t</code></td><td>The rate requested for <code>FIXED</code> (0 otherwise).</td></tr>
+              <tr><td><code>resolved_hz</code></td><td><code>uint16_t</code></td><td>The ceiling in effect; 0 = learnt/adaptive, or no device yet in <code>INTERVAL</code>.</td></tr>
             </tbody>
           </table>
         </Card>

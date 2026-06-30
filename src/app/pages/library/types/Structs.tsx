@@ -447,6 +447,22 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           </table>
         </Card>
       </div>
+      <div id="emit-pace-status" data-search-target>
+        <Card>
+          <CardHeader title="EmitPaceStatus" subtitle="The emit-rate pacing state" />
+          <p>
+            The emit-rate pacing state from{' '}
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The selected mode; <code>Fixed</code> carries the requested rate.</td></tr>
+              <tr><td><code>resolved_hz</code></td><td><code>u16</code></td><td>The ceiling in effect (Hz); 0 = learnt/adaptive, or no device yet in <code>Interval</code>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="log-line" data-search-target>
         <Card>
           <CardHeader title="LogLine" subtitle="One line from the LOG stream" />

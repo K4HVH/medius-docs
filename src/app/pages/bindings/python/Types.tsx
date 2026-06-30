@@ -205,6 +205,35 @@ const Types: Component = () => {
         </Card>
       </div>
 
+      <div id="emit-pace" data-search-target>
+        <Card>
+          <CardHeader title="Emit pace" subtitle="EmitMode · EmitPace" />
+          <p>
+            Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_emit_pace()</code></A>.
+            See <A href="/library/options">Options</A>.
+          </p>
+          <div id="emitmode">
+            <div class="api-response-label">EmitMode</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>LEARNED</code></td><td><code>0</code></td></tr>
+                <tr><td><code>INTERVAL</code></td><td><code>1</code></td></tr>
+                <tr><td><code>FIXED</code></td><td><code>2</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="emitpace">
+            <div class="api-response-label">EmitPace</div>
+            <p>
+              A frozen dataclass carrying <code>mode</code> and <code>hz</code>. Build it with{' '}
+              <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
+              <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
+            </p>
+          </div>
+        </Card>
+      </div>
+
       <div id="stream-enums" data-search-target>
         <Card>
           <CardHeader title="Stream enums" subtitle="CatchMask · CatchEventKind · LogLevel" />
@@ -503,6 +532,18 @@ LockTarget.button(button) -> LockTarget`}</pre>
                 <tr><td><code>allowed</code></td><td><code>bool</code></td><td>imperfect clones opted in</td></tr>
                 <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>mouse exceeds clone capacity</td></tr>
                 <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>the live clone is imperfect</td></tr>
+              </tbody>
+            </table>
+            <p>See <A href="/library/options">Options</A>.</p>
+          </div>
+
+          <div id="emitpacestatus">
+            <div class="api-response-label">EmitPaceStatus (query_emit_pace())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>mode</code></td><td><A href="#emitpace"><code>EmitPace</code></A></td><td>the selected mode</td></tr>
+                <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learnt/adaptive or no device yet</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
