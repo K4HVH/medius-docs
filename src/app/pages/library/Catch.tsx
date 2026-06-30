@@ -51,7 +51,7 @@ const Catch: Component = () => {
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> command for the wire layout.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Device, CatchMask, CatchEvent, Button};
+          <pre><code class="language-rust">{`use medius::{Device, CatchMask, CatchEvent, Button};
 
 let device = Device::find()?;
 let events = device.catch_events(CatchMask::all())?;   // or MOTION | BUTTONS | KEYS
@@ -114,7 +114,7 @@ while let Ok(event) = events.recv() {
             future, like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{AsyncDevice, CatchMask};
+          <pre><code class="language-rust">{`use medius::{AsyncDevice, CatchMask};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 let events = device.catch_events(CatchMask::BUTTONS)?;   // sync, no await

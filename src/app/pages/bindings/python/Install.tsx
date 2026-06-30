@@ -12,7 +12,7 @@ const Install: Component = () => {
           Install with{' '}
           <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>. No compile step:
         </p>
-        <pre><code>pip install medius</code></pre>
+        <pre><code class="language-bash">pip install medius</code></pre>
         <p>
           Prebuilt{' '}
           <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/" target="_blank" rel="noreferrer">wheels</a>{' '}
@@ -54,7 +54,7 @@ const Install: Component = () => {
             If this prints a version, you're ready for your{' '}
             <A href="/bindings/python/quickstart">first program</A>.
           </p>
-          <pre><code>{`python -c "import medius; print(medius.version_string(), 'abi', medius.abi_version())"
+          <pre><code class="language-bash">{`python -c "import medius; print(medius.version_string(), 'abi', medius.abi_version())"
 # 2.2.0 abi 1`}</code></pre>
           <div class="callout callout--warning">
             <p>
@@ -78,7 +78,7 @@ const Install: Component = () => {
             <code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code>{' '}
             block closes the link on exit.
           </p>
-          <pre><code>{`from medius import Device
+          <pre><code class="language-python">{`from medius import Device
 
 with Device.find() as dev:
     v = dev.query_version()

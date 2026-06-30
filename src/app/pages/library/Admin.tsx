@@ -15,7 +15,7 @@ const Admin: Component = () => {
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>: send one frame, no reply.
         </p>
         <div class="api-response-label">EXAMPLE</div>
-        <pre><code>{`use medius::Device;
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;   // first box on the system, handshake done
 device.reset()?;                // back to passthrough`}</code></pre>
@@ -60,7 +60,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Button;
+          <pre><code class="language-rust">{`use medius::Button;
 
 device.move_rel(40, 0)?;        // nudge the cursor 40 right
 device.press(Button::Left)?;    // hold left down
@@ -83,7 +83,7 @@ device.reset()?;                // drop all of the above, back to passthrough`}<
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::RebootTarget;
+          <pre><code class="language-rust">{`use medius::RebootTarget;
 
 device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to`}</code></pre>
 
@@ -117,7 +117,7 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to
             Only the queries are async.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{AsyncDevice, RebootTarget};
+          <pre><code class="language-rust">{`use medius::{AsyncDevice, RebootTarget};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.reset()?;                          // sync, no await

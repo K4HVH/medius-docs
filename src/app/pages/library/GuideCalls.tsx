@@ -18,17 +18,17 @@ const GuideCalls: Component = () => {
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>Writes one frame, returns once the bytes are out, no reply.</p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.move_rel(100, -50)?; // one frame out, no reply`}</code></pre>
+          <pre><code class="language-rust">{`device.move_rel(100, -50)?; // one frame out, no reply`}</code></pre>
 
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>Sends a <code>QUERY</code> and waits for the correlated <code>RESP</code>.</p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let v = device.query_version()?; // waits for the box to reply`}</code></pre>
+          <pre><code class="language-rust">{`let v = device.query_version()?; // waits for the box to reply`}</code></pre>
 
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>Reads state the library already holds; can't fail on the link.</p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let c = device.counters(); // local snapshot, no network`}</code></pre>
+          <pre><code class="language-rust">{`let c = device.counters(); // local snapshot, no network`}</code></pre>
         </Card>
       </div>
 
@@ -94,7 +94,7 @@ const GuideCalls: Component = () => {
             runtime at all.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use futures::executor::block_on;
+          <pre><code class="language-rust">{`use futures::executor::block_on;
 
 let device = Device::find()?.into_async();
 let v = block_on(device.query_version())?;
@@ -121,7 +121,7 @@ println!("{v}");`}</code></pre>
             queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`match device.query_health() {
+          <pre><code class="language-rust">{`match device.query_health() {
     Ok(h) => println!("{h:?}"),
     Err(medius::Error::QueryTimeout) => eprintln!("no reply in time"),
     Err(e) => return Err(e),
@@ -144,7 +144,7 @@ println!("{v}");`}</code></pre>
             millisecond. There's no <code>move_smooth</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::thread::sleep;
+          <pre><code class="language-rust">{`use std::thread::sleep;
 use std::time::Duration;
 
 // Glide ~400 counts to the right over 200 steps (~200 ms at 1 kHz).
@@ -171,7 +171,7 @@ for _ in 0..200 {
             physical hold.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use std::{thread, time::Duration};
+          <pre><code class="language-rust">{`use std::{thread, time::Duration};
 use medius::Button;
 
 device.press(Button::Left)?;

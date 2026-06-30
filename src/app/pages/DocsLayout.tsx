@@ -18,6 +18,7 @@ import {
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
 import { useDashboard } from './dashboard/context';
+import Prism from '../prism';
 import '../../styles/docs.css';
 
 const sectionTabs: TabOption[] = [
@@ -242,6 +243,14 @@ const DocsLayout = (props: RouteSectionProps) => {
     const hash = location.hash?.replace('#', '');
     if (!hash || pendingHash) return;
     setTimeout(() => scrollToTarget(hash), 50);
+  });
+
+  // Syntax-highlight the page's code blocks after each route renders.
+  createEffect(() => {
+    location.pathname;
+    requestAnimationFrame(() => {
+      if (contentRef) Prism.highlightAllUnder(contentRef);
+    });
   });
 
   const handlePageNav = (value: string) => {

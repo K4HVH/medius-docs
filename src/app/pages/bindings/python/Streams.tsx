@@ -132,7 +132,7 @@ const Streams: Component = () => {
       <div id="example" data-search-target>
         <Card>
           <CardHeader title="Consume loop" subtitle="Subscribe, iterate, react" />
-          <pre><code>{`from medius import Device, CatchMask, CatchEventKind, Button
+          <pre><code class="language-python">{`from medius import Device, CatchMask, CatchEventKind, Button
 
 with Device.find() as dev:
     with dev.catch_events(CatchMask.MOTION | CatchMask.BUTTONS) as events:
@@ -144,7 +144,7 @@ with Device.find() as dev:
             if events.dropped:
                 print("fell behind:", events.dropped, "dropped")`}</code></pre>
           <div class="api-response-label">NON-BLOCKING POLL</div>
-          <pre><code>{`events = dev.catch_events()
+          <pre><code class="language-python">{`events = dev.catch_events()
 while running:
     ev = events.recv_timeout(50)   # wake every 50 ms to do other work
     if ev is None:

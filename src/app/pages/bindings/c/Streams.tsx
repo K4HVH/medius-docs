@@ -105,7 +105,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
             truncates. Those arrays hold raw{' '}
             <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage codes</a>.
           </p>
-          <pre><code>{`typedef struct MediusCatchEvent {
+          <pre><code class="language-c">{`typedef struct MediusCatchEvent {
     MediusCatchEventKind kind;          // MOUSE=0, KEYBOARD=1, MEDIA=2
     union MediusCatchEventData data;    // read the arm for kind
 } MediusCatchEvent;
@@ -142,7 +142,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
       <div id="example" data-search-target>
         <Card>
           <CardHeader title="Consume loop" subtitle="Subscribe, drain until disconnect, free" />
-          <pre><code>{`#include <medius.h>
+          <pre><code class="language-c">{`#include <medius.h>
 #include <stdio.h>
 
 MediusEventStream *events = NULL;

@@ -48,7 +48,7 @@ const Build: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">BUILD WITH THE SURFACES, THEN COMPILE AGAINST THEM</div>
-          <pre><code>{`# build the library with both surfaces
+          <pre><code class="language-bash">{`# build the library with both surfaces
 cargo build -p medius-capi --release --features mock,flash
 
 # define the matching macros when you compile your program
@@ -101,7 +101,7 @@ cc app.c -DMEDIUS_FEATURE_MOCK -DMEDIUS_FEATURE_FLASH \\
             </tbody>
           </table>
           <div class="api-response-label">COMPILE A ONE-LINE SANITY CHECK</div>
-          <pre><code>{`// hello.c: proves the library links and loads
+          <pre><code class="language-c">{`// hello.c: proves the library links and loads
 #include <medius.h>
 #include <stdio.h>
 
@@ -109,7 +109,7 @@ int main(void) {
     printf("medius %s, abi %u\\n", medius_version_string(), medius_abi_version());
     return 0;
 }`}</code></pre>
-          <pre><code>{`cc hello.c -I medius-capi/include -L target/release -lmedius_capi -lpthread -o hello
+          <pre><code class="language-bash">{`cc hello.c -I medius-capi/include -L target/release -lmedius_capi -lpthread -o hello
 LD_LIBRARY_PATH=target/release ./hello
 # medius 0.1.0, abi 1`}</code></pre>
           <div class="callout callout--info">

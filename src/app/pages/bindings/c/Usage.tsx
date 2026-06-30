@@ -61,7 +61,7 @@ const Usage: Component = () => {
           <div class="api-response-label">READING THE DETAIL</div>
           <pre class="api-signature">uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
 uint8_t   medius_last_error_proto_ver(void);</pre>
-          <pre><code>{`MediusDevice *dev = NULL;
+          <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     char buf[256];
     medius_last_error_message(buf, sizeof buf);   /* NUL-terminated, truncated to cap */
@@ -143,7 +143,7 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               </tr>
             </tbody>
           </table>
-          <pre><code>{`MediusDevice *dev = NULL;
+          <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) { return 1; }
 
 MediusDevice *worker = medius_device_clone(dev);  /* same link, ref-counted */
@@ -192,7 +192,7 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <tr><td><code>{'MediusLockTarget{ kind, button }'}</code> (struct literal)</td><td><code>MediusLockTarget</code></td><td><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
             </tbody>
           </table>
-          <pre><code>{`/* inject: build a target, then apply an Action */
+          <pre><code class="language-c">{`/* inject: build a target, then apply an Action */
 MediusInput lmb = medius_input_button(MEDIUS_BUTTON_LEFT);
 medius_device_inject(dev, lmb, MEDIUS_ACTION_PRESS);
 

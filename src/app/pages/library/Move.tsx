@@ -35,7 +35,7 @@ const Move: Component = () => {
             scroll. Backs the <A href="/native/commands/move#move"><code>MOVE</code></A> command.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Motion;
+          <pre><code class="language-rust">{`use medius::Motion;
 
 device.move_axis(Motion::Cursor { dx: 20, dy: 20 })?; // right and down
 device.move_axis(Motion::Wheel(1))?;                  // one notch up`}</code></pre>
@@ -66,7 +66,7 @@ device.move_axis(Motion::Wheel(1))?;                  // one notch up`}</code></
             curve. Both span the full <code>i16</code> range (<code>-32768 to 32767</code>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.move_rel(20, 20)?;  // right and down
+          <pre><code class="language-rust">{`device.move_rel(20, 20)?;  // right and down
 device.move_rel(-40, 0)?;  // left
 device.move_rel(0, -10)?;  // up`}</code></pre>
         </Card>
@@ -96,7 +96,7 @@ device.move_rel(0, -10)?;  // up`}</code></pre>
             large values across reports.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`device.wheel(3)?;   // up three notches
+          <pre><code class="language-rust">{`device.wheel(3)?;   // up three notches
 device.wheel(-1)?;  // down one notch`}</code></pre>
         </Card>
       </div>
@@ -112,7 +112,7 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
             pattern is only for async queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`let dev = Device::find()?.into_async();
+          <pre><code class="language-rust">{`let dev = Device::find()?.into_async();
 dev.move_rel(40, 0)?;  // no .await
 dev.wheel(1)?;`}</code></pre>
         </Card>

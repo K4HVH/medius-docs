@@ -21,7 +21,7 @@ const TypesAndErrors: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{Button, Action, Health, Version, Error, Result};
+          <pre><code class="language-rust">{`use medius::{Button, Action, Health, Version, Error, Result};
 
 // One flat namespace. This does NOT work:
 // use medius::types::Button;`}</code></pre>

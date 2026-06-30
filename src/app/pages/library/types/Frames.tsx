@@ -127,7 +127,7 @@ const Frames: Component = () => {
           </table>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::{FrameType, DecodedFrame};
+          <pre><code class="language-rust">{`use medius::{FrameType, DecodedFrame};
 
 // Byte -> variant is fallible; an unknown opcode is an Err.
 assert_eq!(FrameType::try_from(0x06), Ok(FrameType::Resp));

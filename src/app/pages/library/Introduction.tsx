@@ -55,9 +55,9 @@ const Introduction: Component = () => {
       <div id="installation" data-search-target>
         <Card>
           <CardHeader title="Installation" />
-          <pre><code>cargo add medius</code></pre>
+          <pre><code class="language-bash">cargo add medius</code></pre>
           <p>With optional features:</p>
-          <pre><code>cargo add medius --features async,mock</code></pre>
+          <pre><code class="language-bash">cargo add medius --features async,mock</code></pre>
           <table class="api-params">
             <thead>
               <tr>

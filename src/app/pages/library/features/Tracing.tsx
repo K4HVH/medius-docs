@@ -15,7 +15,7 @@ const Tracing: Component = () => {
           behavior. The sections below are what it emits; you read them by installing a{' '}
           <A href="#subscriber">subscriber</A>.
         </p>
-        <pre><code>cargo add medius --features tracing</code></pre>
+        <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
         <p>
           Off by default; with the feature off the macros expand to nothing, so there's no runtime cost.
         </p>
@@ -72,7 +72,7 @@ const Tracing: Component = () => {
             <A href="/library/types/structs#version"><code>Version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// With "medius=debug" and a box that answers on the second probe, the
+          <pre><code class="language-rust">{`// With "medius=debug" and a box that answers on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
 //   INFO  connect: medius::device: connected proto_ver=2 fw_major=1 fw_minor=3 fw_patch=0
@@ -94,7 +94,7 @@ const Tracing: Component = () => {
             <code>reason</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// medius::transport=trace, one line per frame:
+          <pre><code class="language-rust">{`// medius::transport=trace, one line per frame:
 //   TRACE medius::transport: dir="tx" opcode=1 seq=7 len=4
 // a box log, mirrored:
 //   WARN  medius::device: mouse detached device_log=true
@@ -113,9 +113,9 @@ const Tracing: Component = () => {
             subscriber writes lines to stderr; call <code>init()</code> once before opening. Without one,
             every span and event is dropped silently.
           </p>
-          <pre><code>cargo add tracing-subscriber</code></pre>
+          <pre><code class="language-bash">cargo add tracing-subscriber</code></pre>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::Device;
 
 tracing_subscriber::fmt::init();
 
@@ -135,7 +135,7 @@ device.move_rel(10, 0)?;
             (target names in <A href="#targets">targets</A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// Code-side: medius events at DEBUG, everything else at the default.
+          <pre><code class="language-rust">{`// Code-side: medius events at DEBUG, everything else at the default.
 tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
@@ -160,7 +160,7 @@ tracing_subscriber::fmt()
             <code>tracing-subscriber</code>'s <code>json</code> feature.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code>{`// cargo add tracing-subscriber --features json
+          <pre><code class="language-rust">{`// cargo add tracing-subscriber --features json
 tracing_subscriber::fmt()
     .json()
     .with_env_filter("medius=debug")
