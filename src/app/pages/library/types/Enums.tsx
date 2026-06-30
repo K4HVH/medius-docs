@@ -129,6 +129,26 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
+      <div id="emit-pace" data-search-target>
+        <Card>
+          <CardHeader title="EmitPace" subtitle="What paces injected motion" />
+          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
+          <p>
+            What sets the emit-rate ceiling for injected motion, passed to{' '}
+            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It raises
+            the ceiling only, so idle stays idle.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Learned</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
+              <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
+              <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="led-target" data-search-target>
         <Card>
           <CardHeader title="LedTarget" subtitle="Which chip's status LED to drive" />

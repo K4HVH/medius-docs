@@ -11,11 +11,12 @@ const Option: Component = () => {
         <p>
           <A href="/native/commands/option#option"><code>OPTION</code></A> sets one persistent box
           option, named by an <code>id</code>. One command covers every box-level toggle, so a new
-          option is a new id, not a new opcode. There are two today:{' '}
+          option is a new id, not a new opcode. There are three today:{' '}
           <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> (clone an
-          over-capacity device anyway) and{' '}
-          <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> (movement riding).
-          Both persist in NVS and are <A href="/native/injection#fire-and-forget">fire-and-forget</A>;
+          over-capacity device anyway),{' '}
+          <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> (movement riding), and{' '}
+          <A href="/native/commands/option#emit"><code>EMIT</code></A> (emit-rate pacing).
+          All persist in NVS and are <A href="/native/injection#fire-and-forget">fire-and-forget</A>;
           read a value back with{' '}
           <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, id)</code></A>.
         </p>
@@ -50,6 +51,7 @@ const Option: Component = () => {
             <tbody>
               <tr><td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td><td><code>0</code></td><td><code>[allow u8]</code></td></tr>
               <tr><td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td><td><code>1</code></td><td><code>[timeout u16 LE]</code> ms</td></tr>
+              <tr><td><A href="/native/commands/option#emit"><code>EMIT</code></A></td><td><code>2</code></td><td><code>[mode u8][rate_hz u16 LE]</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -108,6 +110,36 @@ const Option: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | timeout| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="emit" data-search-target>
+        <Card>
+          <CardHeader title="EMIT" subtitle="Pick what paces injected motion" />
+          <p>
+            With <code>id = 2</code> the value is <code>[mode u8][rate_hz u16 LE]</code>. It picks what
+            sets the emit-rate ceiling for injected motion. <code>mode 0</code> is <em>learnt</em> (the
+            default): the box paces injection to the rate the real mouse actually reports at.{' '}
+            <code>mode 1</code> is <em>interval</em>: pace to the cloned mouse's declared poll rate (its{' '}
+            <code>bInterval</code>). <code>mode 2</code> is <em>fixed</em>: pace to <code>rate_hz</code>
+            {' '}(read only in this mode). The 1 ms frame clock snaps a fixed rate to <code>1000/n</code>
+            {' '}Hz and caps it at 1 kHz, so 1000, 500, 333, 250… are exact and 750 lands on 1000.
+          </p>
+          <p>
+            It raises the ceiling only: the box still emits a frame solely when injection is pending, so
+            idle stays idle. The default learnt pace keeps injected motion's cadence matched to the real
+            mouse's. The other modes are for a host that models its own report density and wants the box
+            to stop re-pacing an already-shaped stream. Read the mode plus the rate in effect with{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A>. Library
+            binding: <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Fixed 1 kHz (<code>id = 2</code>, <code>mode = 2</code>, <code>rate_hz = 0x03E8</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 11     | 00     | 04 00  | 02     | 02     | E8 03  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz| CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
     </>
