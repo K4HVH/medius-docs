@@ -72,6 +72,26 @@ describe('SerialLink', () => {
     await link.close();
   });
 
+  it('flushes a wedged box decoder, then handshakes on retry', async () => {
+    const mock = new MockSerialPort();
+    const gotFlush = () =>
+      mock.written.some((c) => c.length >= 256 && c.every((b) => b === 0));
+    // A wedged box: it ignores QUERY(VERSION) until a flush (a long run of 0x00) has arrived.
+    mock.responder = (f) => {
+      if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
+        mock.push(
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+        );
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const version = await link.handshake();
+    expect(version.protoVer).toBe(2);
+    expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
+    await link.close();
+  });
+
   it('queries health and decodes the flag bits', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
