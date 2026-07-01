@@ -369,20 +369,44 @@ LockTarget.button(button) -> LockTarget`}</pre>
         </Card>
       </div>
 
+      <div id="device-enums" data-search-target>
+        <Card>
+          <CardHeader title="Device enums" subtitle="DeviceKind" />
+          <p>
+            The cloned device's kind, on <A href="#deviceinfo"><code>DeviceInfo.kind</code></A>, and what{' '}
+            <A href="/bindings/python/api#discovery"><code>Device.find_mouse_box()</code></A> /{' '}
+            <code>find_keyboard_box()</code> select on. See <A href="/library/types/enums#device-kind">DeviceKind</A>.
+          </p>
+          <div id="devicekind">
+            <div class="api-response-label">DeviceKind</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>UNKNOWN</code></td><td><code>0</code></td></tr>
+                <tr><td><code>KEYBOARD</code></td><td><code>1</code></td></tr>
+                <tr><td><code>MOUSE</code></td><td><code>2</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
       <div id="value-types" data-search-target>
         <Card>
-          <CardHeader title="Identity & capability types" subtitle="Version · Health · MouseInfo · Caps" />
+          <CardHeader title="Identity & capability types" subtitle="Version · Health · DeviceInfo · Caps" />
           <p><a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">Dataclasses</a> returned by the <A href="/bindings/python/api">queries</A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
           <div id="version">
             <div class="api-response-label">Version (query_version())</div>
             <table class="api-params">
-              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>proto_ver</code></td><td><code>int</code></td><td>control-protocol version</td></tr>
                 <tr><td><code>fw_major</code></td><td><code>int</code></td><td>firmware major</td></tr>
                 <tr><td><code>fw_minor</code></td><td><code>int</code></td><td>firmware minor</td></tr>
                 <tr><td><code>fw_patch</code></td><td><code>int</code></td><td>firmware patch</td></tr>
+                <tr><td><code>mac</code></td><td><code>bytes</code></td><td>the device chip's base MAC (6 bytes), a stable per-box id</td></tr>
+                <tr><td><code>mac_hex</code></td><td><code>str</code></td><td>the MAC as 12 lowercase hex digits</td></tr>
               </tbody>
             </table>
           </div>
@@ -404,8 +428,8 @@ LockTarget.button(button) -> LockTarget`}</pre>
             </table>
           </div>
 
-          <div id="mouseinfo">
-            <div class="api-response-label">MouseInfo (query_mouse_info())</div>
+          <div id="deviceinfo">
+            <div class="api-response-label">DeviceInfo (device_info())</div>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -415,6 +439,8 @@ LockTarget.button(button) -> LockTarget`}</pre>
                 <tr><td><code>bcd_usb</code></td><td><code>int</code></td><td>USB spec (BCD)</td></tr>
                 <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>exposes a serial string</td></tr>
                 <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>exposes a BOS descriptor</td></tr>
+                <tr><td><code>kind</code></td><td><A href="#devicekind"><code>DeviceKind</code></A></td><td>the device's primary kind (Boot-interface protocol)</td></tr>
+                <tr><td><code>product</code></td><td><code>str</code></td><td>the product string (empty when none)</td></tr>
               </tbody>
             </table>
           </div>
@@ -570,9 +596,25 @@ LockTarget.button(button) -> LockTarget`}</pre>
                 <tr><td><code>path</code></td><td><code>str</code></td><td>serial path, e.g. <code>/dev/ttyACM0</code> or <code>COM3</code></td></tr>
                 <tr><td><code>vid</code></td><td><code>int</code></td><td>USB vendor id</td></tr>
                 <tr><td><code>pid</code></td><td><code>int</code></td><td>USB product id</td></tr>
+                <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 adapter's serial, when it serves one</td></tr>
               </tbody>
             </table>
             <p>Pass <code>path</code> to <A href="/bindings/python/api#connect"><code>Device.open(path)</code></A>. Canonical: <A href="/library/types/structs#port-info">PortInfo</A>.</p>
+          </div>
+
+          <div id="boxinfo">
+            <div class="api-response-label">BoxInfo (list_boxes())</div>
+            <table class="api-params">
+              <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>port</code></td><td><A href="#portinfo"><code>PortInfo</code></A></td><td>the box's control port</td></tr>
+                <tr><td><code>version</code></td><td><A href="#version"><code>Version</code></A></td><td>its firmware version, with the box MAC</td></tr>
+                <tr><td><code>device</code></td><td><A href="#deviceinfo"><code>DeviceInfo</code></A></td><td>the device it clones</td></tr>
+                <tr><td><code>id</code></td><td><code>str</code></td><td>the box identity (the MAC hex)</td></tr>
+                <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>
+              </tbody>
+            </table>
+            <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/discovery#box-info">BoxInfo</A>.</p>
           </div>
         </Card>
       </div>

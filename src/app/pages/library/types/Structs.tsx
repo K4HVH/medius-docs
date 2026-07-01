@@ -16,11 +16,12 @@ const Structs: Component = () => {
       </div>
       <div id="version" data-search-target>
         <Card>
-          <CardHeader title="Version" subtitle="Firmware identity" />
+          <CardHeader title="Version" subtitle="Firmware identity and box id" />
           <p>
             Firmware identity from{' '}
             <A href="/library/requests#version"><code>query_version()</code></A>. <code>Display</code>{' '}
-            prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.
+            prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.{' '}
+            <code>mac</code> is the device chip's base MAC, a stable per-box id.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -29,14 +30,22 @@ const Structs: Component = () => {
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
+              <tr><td><code>mac</code></td><td><code>[u8; 6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mac_hex()</code></td><td><code>String</code></td><td>The MAC as 12 lowercase hex digits, the id used by <A href="/library/discovery#open-by-id"><code>open_by_id</code></A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 0, fw_patch: 3 };
-assert_eq!(v.to_string(), "fw 2.0.3"); // Display omits proto_ver
-println!("{v} (protocol {})", v.proto_ver);`}</code></pre>
+let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 3, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc] };
+assert_eq!(v.to_string(), "fw 2.3.0"); // Display omits proto_ver
+assert_eq!(v.mac_hex(), "123456789abc");
+println!("{v} (protocol {}, box {})", v.proto_ver, v.mac_hex());`}</code></pre>
         </Card>
       </div>
       <div id="health" data-search-target>
@@ -68,13 +77,14 @@ assert!(!h.clone_configured);
 assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code></pre>
         </Card>
       </div>
-      <div id="mouse-info" data-search-target>
+      <div id="device-info" data-search-target>
         <Card>
-          <CardHeader title="MouseInfo" subtitle="The cloned mouse's USB identity" />
+          <CardHeader title="DeviceInfo" subtitle="The cloned device's USB identity, kind, and product" />
           <p>
             USB identity from{' '}
-            <A href="/library/requests#query-mouse-info"><code>query_mouse_info()</code></A>. Every
-            field is zero when no mouse is cloned. <code>Display</code> prints <code>VVVV:PPPP</code>.
+            <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is
+            zero/empty when nothing is cloned. <code>Display</code> prints{' '}
+            <code>VVVV:PPPP product</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -85,13 +95,18 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code><
               <tr><td><code>bcd_usb</code></td><td><code>u16</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
               <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>The clone serves a serial string.</td></tr>
               <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>The clone serves a BOS descriptor.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The device's primary kind, from its Boot-interface protocol.</td></tr>
+              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves (empty when it serves none).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::MouseInfo;
+          <pre><code class="language-rust">{`use medius::{DeviceInfo, DeviceKind};
 
-let m = MouseInfo { vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201, has_serial: true, has_bos: true };
-assert_eq!(m.to_string(), "046D:C08B"); // Display is VVVV:PPPP`}</code></pre>
+let d = DeviceInfo {
+    vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201,
+    has_serial: true, has_bos: true, kind: DeviceKind::Mouse, product: "G502".into(),
+};
+assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product`}</code></pre>
         </Card>
       </div>
       <div id="caps" data-search-target>
@@ -484,7 +499,9 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="PortInfo" subtitle="A discovered serial port" />
           <p>
             A serial port that looks like a Medius box, from{' '}
-            <A href="/library/guides/connection#choosing-a-port"><code>find_medius()</code></A>.
+            <A href="/library/guides/connection#choosing-a-port"><code>find_medius()</code></A>.{' '}
+            <code>serial</code> is the CH343 adapter's serial string, part of the box{' '}
+            <A href="/library/discovery">identity</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -492,6 +509,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
               <tr><td><code>path</code></td><td><code>String</code></td><td>Serial port path.</td></tr>
               <tr><td><code>vid</code></td><td><code>u16</code></td><td>USB vendor id (<code>0x1A86</code>).</td></tr>
               <tr><td><code>pid</code></td><td><code>u16</code></td><td>USB product id (<code>0x55D3</code>).</td></tr>
+              <tr><td><code>serial</code></td><td><code>Option&lt;String&gt;</code></td><td>The CH343 adapter's serial string, when it serves one.</td></tr>
             </tbody>
           </table>
         </Card>

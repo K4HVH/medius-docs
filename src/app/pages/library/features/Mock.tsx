@@ -96,7 +96,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <pre class="api-signature">fn with_mouse_info(self, mouse_info: MouseInfo) -&gt; MockBox</pre>
+          <pre class="api-signature">fn with_device_info(self, device_info: DeviceInfo) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -117,7 +117,7 @@ device.move_rel(5, 5)?;`}</code></pre>
             The <code>with_*</code> builders set what each query returns:{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>, and the device-info queries{' '}
-            (<A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+            (<A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
             <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live

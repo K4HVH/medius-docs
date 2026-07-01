@@ -13,7 +13,7 @@ export const MOTION_WHEEL = 1;
 
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
-export const Q_MOUSE_INFO = 2;
+export const Q_DEVICE_INFO = 2;
 export const Q_CAPS = 3; // unified: mouse + keyboard + per-class change_driven
 export const Q_RATE = 4;
 export const Q_STATS = 5;
@@ -56,9 +56,14 @@ export const H_LOCK_ON = 0x20;
 export const H_CATCH_ON = 0x40;
 export const H_KBD_ATT = 0x80;
 
-// MOUSE_INFO flags (§4.3).
-export const MI_HAS_SERIAL = 0x01;
-export const MI_HAS_BOS = 0x02;
+// DEVICE_INFO flags (§4.3).
+export const DI_HAS_SERIAL = 0x01;
+export const DI_HAS_BOS = 0x02;
+
+// DEVICE_INFO primary_kind (§4.3): the cloned device's Boot-interface bInterfaceProtocol.
+export const DEVICE_KIND_UNKNOWN = 0;
+export const DEVICE_KIND_KEYBOARD = 1;
+export const DEVICE_KIND_MOUSE = 2;
 
 // CAPS axis_flags (§4.4).
 export const CAP_X = 0x01;

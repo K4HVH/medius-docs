@@ -53,13 +53,22 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 0, 1, 0])));
+        // [what=0][proto=2][major=0][minor=1][patch=0][mac 6B]
+        mock.push(
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+        );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version).toEqual({ protoVer: 2, fwMajor: 0, fwMinor: 1, fwPatch: 0 });
+    expect(version).toEqual({
+      protoVer: 2,
+      fwMajor: 0,
+      fwMinor: 1,
+      fwPatch: 0,
+      mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+    });
     await link.close();
   });
 
@@ -121,7 +130,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 9, 9, 9, 9])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -139,9 +148,17 @@ describe('SerialLink', () => {
       },
     });
     await link.open();
-    mock.push(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0])));
+    mock.push(
+      encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06])),
+    );
     await new Promise((r) => setTimeout(r, 10));
-    expect(hello).toEqual({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0 });
+    expect(hello).toEqual({
+      protoVer: 1,
+      fwMajor: 0,
+      fwMinor: 1,
+      fwPatch: 0,
+      mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
+    });
     await link.close();
   });
 
@@ -274,7 +291,7 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         // A stale VERSION reply on the same SEQ must be ignored; the HEALTH reply wins.
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 0, 1, 0])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0])));
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x0f])));
       }
     };
@@ -289,7 +306,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 2, 3, 4])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 2, 3, 4, 0, 0, 0, 0, 0, 0])));
       }
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x01])));
@@ -298,7 +315,7 @@ describe('SerialLink', () => {
     const link = new SerialLink(asPort(mock));
     await link.open();
     const [v, h] = await Promise.all([link.queryVersion(), link.queryHealth()]);
-    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4 });
+    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4, mac: [0, 0, 0, 0, 0, 0] });
     expect(h.linkUp).toBe(true);
     await link.close();
   });

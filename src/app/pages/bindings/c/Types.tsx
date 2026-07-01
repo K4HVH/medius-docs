@@ -50,6 +50,8 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_MEDIA_KEYS</code></td><td><code>256</code></td><td><A href="/bindings/c/types#media-event"><code>MediusMediaEvent.keys</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_PATH</code></td><td><code>512</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.path</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_LOG_TEXT</code></td><td><code>512</code></td><td><A href="/bindings/c/types#log-line"><code>MediusLogLine.text</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_PRODUCT</code></td><td><code>128</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo.product</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
             </tbody>
           </table>
         </Card>
@@ -65,6 +67,28 @@ const Types: Component = () => {
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>,{' '}
             <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>) is populated.
           </p>
+        </Card>
+      </div>
+
+      <div id="device-kind" data-search-target>
+        <Card>
+          <CardHeader title="MediusDeviceKind" subtitle="The cloned device's primary kind" />
+          <pre class="api-signature">{`enum MediusDeviceKind : uint8_t`}</pre>
+          <p>
+            The <code>kind</code> field of a{' '}
+            <A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A>, from the cloned
+            device's Boot-interface protocol. Also what{' '}
+            <A href="/bindings/c/api#discovery"><code>medius_device_find_mouse_box</code></A> /{' '}
+            <code>_find_keyboard_box</code> select on. See <A href="/library/types/enums#device-kind">DeviceKind</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_DEVICE_KIND_UNKNOWN</code></td><td><code>0</code></td><td>Neither a Boot keyboard nor mouse.</td></tr>
+              <tr><td><code>MEDIUS_DEVICE_KIND_KEYBOARD</code></td><td><code>1</code></td><td>The device is a keyboard.</td></tr>
+              <tr><td><code>MEDIUS_DEVICE_KIND_MOUSE</code></td><td><code>2</code></td><td>The device is a mouse.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
 
@@ -473,7 +497,7 @@ const Types: Component = () => {
       <div id="version" data-search-target>
         <Card>
           <CardHeader title="MediusVersion" subtitle="Decoded firmware version" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_version</code></A>.</p>
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_version</code></A>. <code>mac</code> is the device chip's base MAC, a stable per-box id.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -481,6 +505,7 @@ const Types: Component = () => {
               <tr><td><code>fw_major</code></td><td><code>uint8_t</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>uint8_t</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>uint8_t</code></td><td>Firmware patch version.</td></tr>
+              <tr><td><code>mac</code></td><td><code>uint8_t[6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -506,10 +531,10 @@ const Types: Component = () => {
         </Card>
       </div>
 
-      <div id="mouse-info" data-search-target>
+      <div id="device-info" data-search-target>
         <Card>
-          <CardHeader title="MediusMouseInfo" subtitle="The cloned mouse's USB identity" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_mouse_info</code></A>; all-zero when no mouse is cloned.</p>
+          <CardHeader title="MediusDeviceInfo" subtitle="The cloned device's USB identity, kind, and product" />
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_device_info</code></A>; all-zero/empty when nothing is cloned. <code>product</code> is a NUL-terminated UTF-8 string.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -519,6 +544,8 @@ const Types: Component = () => {
               <tr><td><code>bcd_usb</code></td><td><code>uint16_t</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
               <tr><td><code>has_serial</code></td><td><code>uint8_t</code></td><td>The clone serves a serial string.</td></tr>
               <tr><td><code>has_bos</code></td><td><code>uint8_t</code></td><td>The clone serves a BOS descriptor.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#device-kind"><code>MediusDeviceKind</code></A></td><td>The device's primary kind (Boot-interface protocol).</td></tr>
+              <tr><td><code>product</code></td><td><code>char[MEDIUS_MAX_PRODUCT]</code></td><td>The product string (NUL-terminated; empty when none).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -703,7 +730,7 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="MediusPortInfo" subtitle="A discovered medius serial port" />
           <p>
-            Filled by <A href="/bindings/c/api#connect"><code>medius_find_ports</code></A>; <code>path</code> is NUL-terminated. Canonical
+            Filled by <A href="/bindings/c/api#connect"><code>medius_find_ports</code></A>; <code>path</code> and <code>serial</code> are NUL-terminated. Canonical
             docs on <A href="/library/types/structs#port-info"><code>PortInfo</code></A>.
           </p>
           <table class="api-params">
@@ -712,6 +739,26 @@ const Types: Component = () => {
               <tr><td><code>path</code></td><td><code>char[MEDIUS_MAX_PATH]</code></td><td>Serial port path (NUL-terminated).</td></tr>
               <tr><td><code>vid</code></td><td><code>uint16_t</code></td><td>USB vendor id (<code>0x1A86</code>).</td></tr>
               <tr><td><code>pid</code></td><td><code>uint16_t</code></td><td>USB product id (<code>0x55D3</code>).</td></tr>
+              <tr><td><code>serial</code></td><td><code>char[MEDIUS_MAX_SERIAL]</code></td><td>The CH343 adapter's serial (NUL-terminated); empty when <code>has_serial == 0</code>.</td></tr>
+              <tr><td><code>has_serial</code></td><td><code>uint8_t</code></td><td>Whether the adapter serves a serial string.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="box-info" data-search-target>
+        <Card>
+          <CardHeader title="MediusBoxInfo" subtitle="One discovered box: port, version, and cloned device" />
+          <p>
+            Filled by <A href="/bindings/c/api#discovery"><code>medius_list</code></A>: one entry per
+            connected box, each opened and handshaked in turn. See <A href="/library/discovery#box-info"><code>BoxInfo</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>port</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A></td><td>The box's control port (path + CH343 serial).</td></tr>
+              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version, with the box MAC.</td></tr>
+              <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones.</td></tr>
             </tbody>
           </table>
         </Card>
