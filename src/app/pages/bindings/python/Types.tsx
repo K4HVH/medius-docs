@@ -456,7 +456,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
                 <tr><td><code>kbd_change_driven</code></td><td><code>bool</code></td><td>keyboard reports only on change</td></tr>
                 <tr><td><code>has_mouse()</code></td><td><code>bool</code></td><td>a mouse interface is present</td></tr>
                 <tr><td><code>has_keyboard()</code></td><td><code>bool</code></td><td>a keyboard interface is present</td></tr>
-                <tr><td><code>is_composite()</code></td><td><code>bool</code></td><td>both mouse and keyboard present</td></tr>
+                <tr><td><code>is_composite()</code></td><td><code>bool</code></td><td>the clone has more than one HID interface (<code>n_hid &gt; 1</code>)</td></tr>
               </tbody>
             </table>
           </div>
