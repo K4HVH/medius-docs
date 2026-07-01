@@ -79,11 +79,11 @@ export function deviceKindFromU8(value: number): DeviceKind {
 export function deviceKindLabel(kind: DeviceKind): string {
   switch (kind) {
     case DeviceKind.Keyboard:
-      return 'keyboard';
+      return 'Keyboard';
     case DeviceKind.Mouse:
-      return 'mouse';
+      return 'Mouse';
     default:
-      return 'unknown';
+      return 'Unknown';
   }
 }
 

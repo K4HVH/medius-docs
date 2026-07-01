@@ -126,6 +126,11 @@ const DeviceInfo = () => {
                   <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
                 </Row>
               </Show>
+              <Show when={dash.version?.()?.mac?.length}>
+                <Row label="Box id">
+                  <code>{macHex(dash.version()!)}</code>
+                </Row>
+              </Show>
 
               <Show when={hasMouse(c())}>
                 <div style={sectionLabel}>Mouse</div>
@@ -171,11 +176,6 @@ const DeviceInfo = () => {
                         {device()?.hasSerial ? 'Cloned' : 'None'}
                       </Chip>
                     </Row>
-                    <Show when={dash.version?.()?.mac?.length}>
-                      <Row label="Box id">
-                        <code>{macHex(dash.version()!)}</code>
-                      </Row>
-                    </Show>
                   </>
                 )}
               </Show>
