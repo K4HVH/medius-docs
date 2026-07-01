@@ -162,18 +162,17 @@ const DeviceOptions = () => {
           follows its USB poll rate, and Fixed pins it to a rate you pick. It only sets the ceiling, so
           the box still sends only when there's a move to send. Learned by default.
         </p>
-        <div style={controls}>
-          <RadioGroup
-            name="emit-mode"
-            orientation="horizontal"
-            value={emitMode()}
-            onChange={setEmitMode}
-            options={[
-              { value: 'learned', label: 'Learned' },
-              { value: 'interval', label: 'Interval' },
-              { value: 'fixed', label: 'Fixed' },
-            ]}
-          />
+        <RadioGroup
+          name="emit-mode"
+          value={emitMode()}
+          onChange={setEmitMode}
+          options={[
+            { value: 'learned', label: 'Learned' },
+            { value: 'interval', label: 'Interval' },
+            { value: 'fixed', label: 'Fixed' },
+          ]}
+        />
+        <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
           <Show when={emitMode() === 'fixed'}>
             <div style={{ 'max-width': '8rem' }}>
               <NumberInput
