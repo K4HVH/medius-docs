@@ -167,10 +167,26 @@ export class SerialLink {
         return version;
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
-        // Timeouts and transient unparseable replies retry; mirrors connect.rs.
+        // A first attempt that times out often means the box's frame decoder is wedged mid-frame by a
+        // prior client that disconnected mid-write, so it swallows our QUERY while still emitting
+        // unsolicited LOGs. Flush it before retrying. (Firmware >= 2.3.0 also self-heals on its own; this
+        // covers boxes on older firmware.) Timeouts and transient unparseable replies otherwise retry;
+        // mirrors connect.rs.
+        await this.flushPeerDecoder();
       }
     }
     throw new NoReplyError();
+  }
+
+  // Write a run of 0x00 to clear a wedged box decoder: enough bytes to complete the largest possible
+  // stuck frame (FRAME_MAX_PAYLOAD 512 + overhead), which then fails CRC and is dropped, and 0x00 is
+  // never a SOF, so the decoder ends up idle and ready for the next QUERY. Harmless on a healthy box.
+  private async flushPeerDecoder(): Promise<void> {
+    try {
+      await this.send(new Uint8Array(600));
+    } catch {
+      // Best-effort; the handshake retries regardless.
+    }
   }
 
   async queryVersion(timeoutMs?: number): Promise<Version> {
