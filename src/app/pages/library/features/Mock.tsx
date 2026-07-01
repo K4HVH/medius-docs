@@ -132,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 2, fw_major: 5, fw_minor: 6, fw_patch: 7 })
+    .with_version(Version { proto_ver: 2, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc] })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -290,6 +290,7 @@ let mock = MockBox::new().with_version(Version {
     fw_major: 0,
     fw_minor: 0,
     fw_patch: 0,
+    mac: [0; 6],
 });
 let err = Device::open_mock(mock).unwrap_err();
 assert!(matches!(err, Error::BadProtoVer { got: 9 }));`}</code></pre>
