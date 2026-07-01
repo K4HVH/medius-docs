@@ -57,7 +57,26 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_find(MediusDevice **out)</code></td><td>Open the first box found by USB id.</td></tr>
               <tr><td><code>medius_device_clone(const MediusDevice *dev)</code></td><td>Another handle to the same link (ref-counted); returns <code>MediusDevice *</code>. Null in &rarr; null out.</td></tr>
               <tr><td><code>medius_device_free(MediusDevice *dev)</code></td><td>Free a handle; joins the reader/<A href="/library/guides/connection#keepalive">keepalive</A> threads when the last clone drops. Null is a no-op.</td></tr>
-              <tr><td><code>medius_find_ports(MediusPortInfo *out, uintptr_t cap, uintptr_t *out_total)</code></td><td>List present boxes into <code>out</code> (up to <code>cap</code>); writes total to <code>*out_total</code>, returns the number written. See <A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A>.</td></tr>
+              <tr><td><code>medius_find_ports(MediusPortInfo *out, uintptr_t cap, uintptr_t *out_total)</code></td><td>List present ports into <code>out</code> (up to <code>cap</code>); writes total to <code>*out_total</code>, returns the number written. See <A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="discovery" data-search-target>
+        <Card>
+          <CardHeader title="Discovery" subtitle="Enumerate boxes and open one by identity" />
+          <p>
+            Pick a box out of several by a stable identity (device MAC or CH343 serial), or by the kind
+            of device it clones. See <A href="/library/discovery">Discovery</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_list(MediusBoxInfo *out, size_t cap, size_t *out_total)</code></td><td>Enumerate every connected box into <code>out</code> (up to <code>cap</code>): opens, handshakes, and reads each one's version + cloned-device info. Writes the total to <code>*out_total</code>, returns the number written. See <A href="/bindings/c/types#box-info"><code>MediusBoxInfo</code></A>.</td></tr>
+              <tr><td><code>medius_device_open_by_id(const char *id, MediusDevice **out)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake.</td></tr>
+              <tr><td><code>medius_device_find_mouse_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a mouse.</td></tr>
+              <tr><td><code>medius_device_find_keyboard_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a keyboard.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -173,6 +192,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_reboot(MediusDevice *dev, MediusRebootTarget target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>medius_device_allow_imperfect_clones(MediusDevice *dev, bool allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_movement_riding(MediusDevice *dev, bool enabled, uint32_t window_ms)</code></td><td>Set movement riding; <code>enabled == false</code> clears the window (rounded to whole ms).</td></tr>
+              <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, MediusEmitMode mode, uint16_t hz)</code></td><td>Pick what paces injected motion; <code>hz</code> is the target rate for <code>FIXED</code>. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -191,7 +211,7 @@ medius_device_free(dev);`}</code></pre>
             <tbody>
               <tr><td><code>medius_device_query_version(dev, MediusVersion *out)</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A>: protocol + firmware version.</td></tr>
               <tr><td><code>medius_device_query_health(dev, MediusHealth *out)</code></td><td><code>MediusHealth</code>: link, mouse, clone, injection flags.</td></tr>
-              <tr><td><code>medius_device_query_mouse_info(dev, MediusMouseInfo *out)</code></td><td><A href="/bindings/c/types#mouse-info"><code>MediusMouseInfo</code></A>: the cloned mouse's USB identity.</td></tr>
+              <tr><td><code>medius_device_device_info(dev, MediusDeviceInfo *out)</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A>: the cloned device's USB identity, kind, and product.</td></tr>
               <tr><td><code>medius_device_caps(dev, MediusCaps *out)</code></td><td><A href="/bindings/c/types#caps"><code>MediusCaps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>medius_device_query_stats(dev, MediusStats *out)</code></td><td><A href="/bindings/c/types#stats"><code>MediusStats</code></A>: box-side telemetry.</td></tr>
@@ -199,6 +219,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: subscription mask + dropped count.</td></tr>
               <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
+              <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
               <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
           </table>
@@ -297,7 +318,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_mock_clone</code> / <code>medius_mock_free(MediusMockBox *mock)</code></td><td>Share (same state) / free a mock handle.</td></tr>
               <tr><td><code>medius_device_with_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>without</em> a handshake.</td></tr>
               <tr><td><code>medius_device_open_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>and</em> run the handshake.</td></tr>
-              <tr><td><code>medius_mock_set_version / _health / _mouse_info / _caps / _mouse_caps / _kbd_caps / _rate / _stats / _locks / _catch_state / _imperfect_status</code></td><td>Set the value the mock answers to each query.</td></tr>
+              <tr><td><code>medius_mock_set_version / _health / _device_info / _caps / _mouse_caps / _kbd_caps / _rate / _stats / _locks / _catch_state / _imperfect_status</code></td><td>Set the value the mock answers to each query.</td></tr>
               <tr><td><code>medius_mock_set_movement_riding(mock, bool enabled, uint32_t window_ms)</code></td><td>Set the movement-riding window the mock reports.</td></tr>
               <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries for timeout tests (still records).</td></tr>
               <tr><td><code>medius_mock_push_raw(mock, const uint8_t *bytes, uintptr_t len)</code></td><td>Inject raw inbound bytes, as if the box sent them.</td></tr>

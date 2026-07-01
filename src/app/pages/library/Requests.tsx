@@ -14,7 +14,7 @@ const Requests: Component = () => {
             blocking: a question frame out, one answer frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
-            <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+            <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
             <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
@@ -77,31 +77,35 @@ if h.link_up && h.mouse_attached && h.clone_configured {
         </Card>
       </div>
 
-      <div id="query-mouse-info" data-search-target>
+      <div id="device-info" data-search-target>
         <Card>
-          <CardHeader title="query_mouse_info" subtitle="USB identity of the clone" />
-          <pre class="api-signature">fn query_mouse_info(&self) -&gt; Result&lt;MouseInfo&gt;</pre>
+          <CardHeader title="device_info" subtitle="USB identity, kind, and product of the clone" />
+          <pre class="api-signature">fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#mouse-info"><code>MouseInfo</code></A>: the{' '}
-            <code>vid</code>, <code>pid</code>, and USB version the box read off the real mouse. The
-            clone sits on the game PC's bus, so this is the only way to see it from the control link.
-            Every field is zero when no mouse is cloned. <code>Display</code> prints{' '}
-            <code>VVVV:PPPP</code>.
+            Returns a <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>: the{' '}
+            <code>vid</code>, <code>pid</code>, USB version, a{' '}
+            <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A>, and the{' '}
+            <code>product</code> string the box read off the real device. The clone sits on the game PC's
+            bus, so this is the only way to see it from the control link. Every field is zero/empty when
+            nothing is cloned. <code>Display</code> prints <code>VVVV:PPPP product</code>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::{Device, DeviceKind};
 
 let device = Device::find()?;
-let m = device.query_mouse_info()?;
-if m.vid == 0 {
-    eprintln!("no mouse cloned yet");
+let d = device.device_info()?;
+if d.vid == 0 {
+    eprintln!("nothing cloned yet");
 } else {
-    println!("{m}");                    // 046D:C08B
-    println!("usb {:#06x}", m.bcd_usb);
-    println!("serial={} bos={}", m.has_serial, m.has_bos);
+    println!("{d}");                    // 046D:C08B G502
+    println!("usb {:#06x}", d.bcd_usb);
+    println!("kind={} serial={} bos={}", d.kind, d.has_serial, d.has_bos);
+    if d.kind == DeviceKind::Mouse {
+        // the clone is a mouse
+    }
 }`}</code></pre>
         </Card>
       </div>
@@ -244,7 +248,7 @@ if !c.mask.is_empty() {
           <CardHeader title="Async queries" subtitle="The same queries on AsyncDevice" />
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
-          <pre class="api-signature">async fn query_mouse_info(&self) -&gt; Result&lt;MouseInfo&gt;</pre>
+          <pre class="api-signature">async fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>
           <pre class="api-signature">async fn caps(&self) -&gt; Result&lt;Caps&gt;</pre>
           <pre class="api-signature">async fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
           <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>

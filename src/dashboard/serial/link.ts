@@ -8,24 +8,27 @@ import {
   type Caps,
   type CatchState,
   type DecodedFrame,
+  type DeviceInfo,
+  type EmitPace,
   type Health,
   type ImperfectStatus,
   type Locks,
   type LogLine,
-  type MouseInfo,
   type Rate,
   type Stats,
   type Version,
+  EmitMode,
   FrameDecoder,
   FrameType,
   PROTO_VER,
+  OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
   Q_CATCH,
+  Q_DEVICE_INFO,
   Q_HEALTH,
   Q_LOCKS,
-  Q_MOUSE_INFO,
   Q_OPTIONS,
   Q_RATE,
   Q_STATS,
@@ -39,6 +42,7 @@ import {
   LockTarget,
   RebootTarget,
   catchPayload,
+  emitPayload,
   encode,
   imperfectPayload,
   injectPayload,
@@ -163,10 +167,26 @@ export class SerialLink {
         return version;
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
-        // Timeouts and transient unparseable replies retry; mirrors connect.rs.
+        // A first attempt that times out often means the box's frame decoder is wedged mid-frame by a
+        // prior client that disconnected mid-write, so it swallows our QUERY while still emitting
+        // unsolicited LOGs. Flush it before retrying. (Firmware >= 2.3.0 also self-heals on its own; this
+        // covers boxes on older firmware.) Timeouts and transient unparseable replies otherwise retry;
+        // mirrors connect.rs.
+        await this.flushPeerDecoder();
       }
     }
     throw new NoReplyError();
+  }
+
+  // Write a run of 0x00 to clear a wedged box decoder: enough bytes to complete the largest possible
+  // stuck frame (FRAME_MAX_PAYLOAD 512 + overhead), which then fails CRC and is dropped, and 0x00 is
+  // never a SOF, so the decoder ends up idle and ready for the next QUERY. Harmless on a healthy box.
+  private async flushPeerDecoder(): Promise<void> {
+    try {
+      await this.send(new Uint8Array(600));
+    } catch {
+      // Best-effort; the handshake retries regardless.
+    }
   }
 
   async queryVersion(timeoutMs?: number): Promise<Version> {
@@ -181,10 +201,10 @@ export class SerialLink {
     return resp.health;
   }
 
-  async queryMouseInfo(timeoutMs?: number): Promise<MouseInfo> {
-    const resp = parseResp(await this.query(Q_MOUSE_INFO, timeoutMs));
-    if (resp?.kind !== 'mouseInfo') throw new Error('unexpected reply to MOUSE_INFO query');
-    return resp.mouseInfo;
+  async queryDeviceInfo(timeoutMs?: number): Promise<DeviceInfo> {
+    const resp = parseResp(await this.query(Q_DEVICE_INFO, timeoutMs));
+    if (resp?.kind !== 'deviceInfo') throw new Error('unexpected reply to DEVICE_INFO query');
+    return resp.deviceInfo;
   }
 
   async queryCaps(timeoutMs?: number): Promise<Caps> {
@@ -228,6 +248,13 @@ export class SerialLink {
     const resp = parseResp(await this.queryOption(OPT_MOVE_RIDE, timeoutMs));
     if (resp?.kind !== 'movementRiding') throw new Error('unexpected reply to OPTIONS(MOVE_RIDE) query');
     return resp.windowMs;
+  }
+
+  // The emit-rate pacing option (§4.14): the mode, the configured fixed rate, and the rate in effect.
+  async queryEmitPace(timeoutMs?: number): Promise<EmitPace> {
+    const resp = parseResp(await this.queryOption(OPT_EMIT, timeoutMs));
+    if (resp?.kind !== 'emitPace') throw new Error('unexpected reply to OPTIONS(EMIT) query');
+    return resp.emit;
   }
 
   reboot(target: RebootTarget): Promise<void> {
@@ -286,6 +313,14 @@ export class SerialLink {
   // `queryMovementRiding`.
   setMovementRiding(windowMs: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
+  }
+
+  // Set emit-rate pacing (§3.10): the source the box paces injection to. Learned tracks the mouse's
+  // native report rate (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped
+  // to 1000/n, capped at 1000). rateHz only matters in Fixed mode. It raises the emit ceiling only; idle
+  // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
+  setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
   }
 
   async close(): Promise<void> {

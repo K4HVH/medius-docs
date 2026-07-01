@@ -13,7 +13,7 @@ export const MOTION_WHEEL = 1;
 
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
-export const Q_MOUSE_INFO = 2;
+export const Q_DEVICE_INFO = 2;
 export const Q_CAPS = 3; // unified: mouse + keyboard + per-class change_driven
 export const Q_RATE = 4;
 export const Q_STATS = 5;
@@ -25,6 +25,27 @@ export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> 
 // OPTION ids (§3.10): persistent box options set via OPTION, read via Q_OPTIONS. The value is id-specific.
 export const OPT_IMPERFECT = 0; // value [allow u8]
 export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
+export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
+
+// OPTION(EMIT) emit-rate pacing modes (§3.10). Fixed snaps to 1000/n Hz and is capped at 1000.
+export enum EmitMode {
+  Learned = 0, // pace to the mouse's learnt native report rate (default)
+  Interval = 1, // follow the cloned mouse's bInterval poll rate
+  Fixed = 2, // pace at a fixed rate_hz
+}
+
+export function emitModeFromU8(value: number): EmitMode | null {
+  switch (value) {
+    case 0:
+      return EmitMode.Learned;
+    case 1:
+      return EmitMode.Interval;
+    case 2:
+      return EmitMode.Fixed;
+    default:
+      return null;
+  }
+}
 
 export const H_LINK_UP = 0x01;
 export const H_MOUSE_ATT = 0x02;
@@ -35,9 +56,14 @@ export const H_LOCK_ON = 0x20;
 export const H_CATCH_ON = 0x40;
 export const H_KBD_ATT = 0x80;
 
-// MOUSE_INFO flags (§4.3).
-export const MI_HAS_SERIAL = 0x01;
-export const MI_HAS_BOS = 0x02;
+// DEVICE_INFO flags (§4.3).
+export const DI_HAS_SERIAL = 0x01;
+export const DI_HAS_BOS = 0x02;
+
+// DEVICE_INFO primary_kind (§4.3): the cloned device's Boot-interface bInterfaceProtocol.
+export const DEVICE_KIND_UNKNOWN = 0;
+export const DEVICE_KIND_KEYBOARD = 1;
+export const DEVICE_KIND_MOUSE = 2;
 
 // CAPS axis_flags (§4.4).
 export const CAP_X = 0x01;

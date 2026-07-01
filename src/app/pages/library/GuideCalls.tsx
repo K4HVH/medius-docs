@@ -56,7 +56,7 @@ const GuideCalls: Component = () => {
                 <td>
                   <A href="/library/requests#version"><code>query_version</code></A>,{' '}
                   <A href="/library/requests#health"><code>query_health</code></A>,{' '}
-                  <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+                  <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
                   <A href="/library/requests#caps"><code>caps</code></A>,{' '}
                   <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
                   <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}

@@ -14,7 +14,7 @@ const mock = vi.hoisted(() => ({
 vi.mock('../../src/app/pages/dashboard/context', () => {
   // One stable link object — the component bails if dash.link() identity changes between polls.
   const link = {
-    queryMouseInfo: async () => mock.mouse,
+    queryDeviceInfo: async () => mock.mouse,
     queryCaps: async () => mock.caps,
     queryRate: async () => mock.rate,
     queryStats: async () => mock.stats,
@@ -43,7 +43,8 @@ afterEach(cleanup);
 describe('DeviceInfo — one Capabilities card', () => {
   it('over-capacity keyboard: keyboard caps + a "Full clone: No" row, no prose card', async () => {
     mock.health = health({ kbdAttached: true });
-    mock.mouse = { vid: 0x31e3, pid: 0x1232, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: true, hasBos: false };
+    // kind 1 = keyboard.
+    mock.mouse = { vid: 0x31e3, pid: 0x1232, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: 1, product: 'Huntsman Mini' };
     mock.caps = {
       mouse: { nButtons: 0, hasX: false, hasY: false, hasWheel: false, hasReportId: false, nHid: 5 },
       keyboard: { nKeys: 0xff, nkro: true, hasConsumer: true, hasSystem: false, hasReportId: true },
@@ -52,10 +53,13 @@ describe('DeviceInfo — one Capabilities card', () => {
     mock.rate = rate; mock.stats = stats;
     mock.imperfect = { allowed: false, overCapacity: true, cloneImperfect: false };
 
-    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    const { findByText, queryByText, container } = render(() => <DeviceInfo />);
     await findByText('Capabilities');                 // one unified card
-    await findByText('Keyboard');                      // keyboard section on the Device tab
+    await findByText('Rollover');                      // keyboard section (rollover row is keyboard-only)
     await findByText('Media keys');                    // a capability chip
+    await findByText('Huntsman Mini');                  // the cloned device's product name
+    // the cloned device's kind, capitalized, shown as a chip (distinct from the section header):
+    expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Keyboard');
     await findByText(/31E3:1232/);                     // the cloned device's USB id
     await findByText('Full clone');                    // over-capacity as a terse row...
     await findByText(/1 input can't be copied/);       // ...not a prose card
@@ -68,7 +72,8 @@ describe('DeviceInfo — one Capabilities card', () => {
 
   it('plain mouse: Mouse row + "Full clone: Yes", no keyboard row', async () => {
     mock.health = health({ mouseAttached: true });
-    mock.mouse = { vid: 0x046d, pid: 0xc08b, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: false, hasBos: false };
+    // kind 2 = mouse.
+    mock.mouse = { vid: 0x046d, pid: 0xc08b, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: false, hasBos: false, kind: 2, product: 'G502 HERO' };
     mock.caps = {
       mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 1 },
       keyboard: { nKeys: 0, nkro: false, hasConsumer: false, hasSystem: false, hasReportId: false },
@@ -78,14 +83,16 @@ describe('DeviceInfo — one Capabilities card', () => {
     mock.stats = stats;
     mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
 
-    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    const { findByText, queryByText, container } = render(() => <DeviceInfo />);
     await findByText('Capabilities');
-    await findByText('Mouse');            // mouse section
-    await findByText('Buttons');
+    await findByText('Buttons');          // mouse section (buttons row is mouse-only)
     await findByText('Wheel');            // a capability chip
+    await findByText('G502 HERO');        // the cloned device's product name
+    // the cloned device's kind, capitalized, shown as a chip:
+    expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Mouse');
     await findByText(/046D:C08B/);
     await findByText('Full clone');
     await findByText('Yes');              // full-clone success chip
-    expect(queryByText('Keyboard')).toBeNull();   // no keyboard section
+    expect(queryByText('Keyboard')).toBeNull();   // no keyboard section, and the kind isn't keyboard
   });
 });
