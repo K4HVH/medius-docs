@@ -66,6 +66,7 @@ const allNativeTabs = [
 const libraryGettingStartedTabs: TabOption[] = [
   { value: '/library', label: 'Introduction', icon: BsInfoCircle },
   { value: '/library/connection', label: 'Connection', icon: BsLink45deg },
+  { value: '/library/discovery', label: 'Discovery', icon: BsBoxes },
 ];
 
 const libraryApiTabs: TabOption[] = [

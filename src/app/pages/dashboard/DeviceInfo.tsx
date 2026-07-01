@@ -3,13 +3,16 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import {
   type Caps,
+  type DeviceInfo as DeviceInfoValue,
   type ImperfectStatus,
-  type MouseInfo,
   type Rate,
   type Stats,
+  DeviceKind,
+  deviceKindLabel,
   hasKeyboard,
   hasMouse,
   isComposite,
+  macHex,
   nativeHz,
   vidPid,
 } from '../../../dashboard/protocol';
@@ -57,7 +60,7 @@ const CapChip = (props: { on: boolean; children: unknown }) => (
 const DeviceInfo = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
-  const [mouse, setMouse] = createSignal<MouseInfo | null>(null);
+  const [device, setDevice] = createSignal<DeviceInfoValue | null>(null);
   const [caps, setCaps] = createSignal<Caps | null>(null);
   const [rate, setRate] = createSignal<Rate | null>(null);
   const [stats, setStats] = createSignal<Stats | null>(null);
@@ -77,7 +80,7 @@ const DeviceInfo = () => {
     const link = dash.link();
     stop();
     if (dash.status() !== 'connected' || !link) {
-      setMouse(null);
+      setDevice(null);
       setCaps(null);
       setRate(null);
       setStats(null);
@@ -88,7 +91,7 @@ const DeviceInfo = () => {
     const tick = async () => {
       if (!running || dash.link() !== link) return;
       try {
-        setMouse(await link.queryMouseInfo());
+        setDevice(await link.queryDeviceInfo());
         setCaps(await link.queryCaps());
         setRate(await link.queryRate());
         setStats(await link.queryStats());
@@ -109,10 +112,23 @@ const DeviceInfo = () => {
         <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
           {(c) => (
             <>
-              <Show when={mouse()?.vid}>
+              <Show when={device()?.product}>
+                <Row label="Product">{device()!.product}</Row>
+              </Show>
+              <Show when={device() && device()!.kind !== DeviceKind.Unknown}>
+                <Row label="Kind">
+                  <Chip variant="neutral">{deviceKindLabel(device()!.kind)}</Chip>
+                </Row>
+              </Show>
+              <Show when={device()?.vid}>
                 <Row label="USB id">
-                  <code>{vidPid(mouse()!)}</code>
-                  <span style={muted}> · USB {bcd(mouse()!.bcdUsb)}</span>
+                  <code>{vidPid(device()!)}</code>
+                  <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
+                </Row>
+              </Show>
+              <Show when={dash.version?.()?.mac?.length}>
+                <Row label="Box id">
+                  <code>{macHex(dash.version()!)}</code>
                 </Row>
               </Show>
 
@@ -156,8 +172,8 @@ const DeviceInfo = () => {
                       </Show>
                     </Row>
                     <Row label="Serial number">
-                      <Chip variant={mouse()?.hasSerial ? 'success' : 'neutral'}>
-                        {mouse()?.hasSerial ? 'Cloned' : 'None'}
+                      <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
+                        {device()?.hasSerial ? 'Cloned' : 'None'}
                       </Chip>
                     </Row>
                   </>

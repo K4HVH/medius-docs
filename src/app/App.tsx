@@ -24,6 +24,7 @@ import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import LibIntroduction from './pages/library/Introduction';
 import LibConnection from './pages/library/Connection';
+import LibDiscovery from './pages/library/Discovery';
 import LibInject from './pages/library/Inject';
 import LibMove from './pages/library/Move';
 import LibRequests from './pages/library/Requests';
@@ -96,6 +97,7 @@ const App: Component = () => {
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
           <Route path="/library" component={LibIntroduction} />
           <Route path="/library/connection" component={LibConnection} />
+          <Route path="/library/discovery" component={LibDiscovery} />
           <Route path="/library/inject" component={LibInject} />
           <Route path="/library/move" component={LibMove} />
           <Route path="/library/requests" component={LibRequests} />

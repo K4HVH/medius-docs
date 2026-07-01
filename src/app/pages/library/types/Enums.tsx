@@ -14,6 +14,28 @@ const Enums: Component = () => {
           </p>
         </Card>
       </div>
+      <div id="device-kind" data-search-target>
+        <Card>
+          <CardHeader title="DeviceKind" subtitle="The cloned device's primary kind" />
+          <pre class="api-signature">enum DeviceKind {'{'} Unknown, Keyboard, Mouse {'}'}</pre>
+          <p>
+            The <code>kind</code> field of a{' '}
+            <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, read from the
+            cloned device's USB Boot-interface <code>bInterfaceProtocol</code>. It also drives{' '}
+            <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A> and{' '}
+            <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
+            <code>Display</code> prints the lowercase name.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a Boot keyboard nor a Boot mouse.</td></tr>
+              <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>The device is a keyboard.</td></tr>
+              <tr><td><code>Mouse</code></td><td><code>2</code></td><td>The device is a mouse.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="button" data-search-target>
         <Card>
           <CardHeader title="Button" subtitle="The button a command acts on" />
@@ -125,6 +147,26 @@ const Enums: Component = () => {
               <tr><td><code>HostDownload</code></td><td><code>1</code></td><td>Host chip into ROM download mode, ready to flash over its own USB.</td></tr>
               <tr><td><code>DeviceRun</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
               <tr><td><code>HostRun</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="emit-pace" data-search-target>
+        <Card>
+          <CardHeader title="EmitPace" subtitle="What paces injected motion" />
+          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
+          <p>
+            What sets the emit-rate ceiling for injected motion, passed to{' '}
+            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It raises
+            the ceiling only, so idle stays idle.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Learned</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
+              <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
+              <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
             </tbody>
           </table>
         </Card>

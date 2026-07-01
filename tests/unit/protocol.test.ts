@@ -3,6 +3,8 @@ import {
   type DecodedFrame,
 
   CatchClass,
+  DeviceKind,
+  EmitMode,
   FrameDecoder,
   FrameType,
   LogLevel,
@@ -23,6 +25,7 @@ import {
   LockDirection,
   LockTarget,
   isComposite,
+  emitPayload,
   imperfectPayload,
   ledPayload,
   lockPayload,
@@ -61,7 +64,8 @@ const VEC = {
   reboot_devdl: 'a5 07 00 01 00 00 e8 41',
   reboot_hostdl: 'a5 07 05 01 00 01 8c ed',
   empty_reset: 'a5 04 02 00 00 51 20',
-  resp_version: 'a5 06 00 05 00 00 01 00 01 00 d8 7e',
+  // RESP(VERSION): [what=0][proto=1][major=0][minor=1][patch=0][mac=12 34 56 78 9a bc] (11-byte payload).
+  resp_version: 'a5 06 00 0b 00 00 01 00 01 00 12 34 56 78 9a bc 91 d2',
   resp_health: 'a5 06 03 02 00 01 0f 95 42',
 };
 
@@ -96,7 +100,9 @@ describe('encode (vs Rust-crate vectors)', () => {
     expect(toHex(encode(FrameType.Reset, 2, new Uint8Array()))).toBe(VEC.empty_reset);
   });
   it('multi-byte payload (RESP VERSION shape)', () => {
-    expect(toHex(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0])))).toBe(VEC.resp_version);
+    expect(
+      toHex(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc]))),
+    ).toBe(VEC.resp_version);
   });
   it('multi-byte payload (RESP HEALTH shape)', () => {
     expect(toHex(encode(FrameType.Resp, 3, new Uint8Array([1, 0x0f])))).toBe(VEC.resp_health);
@@ -117,7 +123,13 @@ describe('FrameDecoder', () => {
     const resp = parseResp(frames[0].payload);
     expect(resp).toEqual({
       kind: 'version',
-      version: { protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0 },
+      version: {
+        protoVer: 1,
+        fwMajor: 0,
+        fwMinor: 1,
+        fwPatch: 0,
+        mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+      },
     });
   });
 
@@ -226,16 +238,24 @@ describe('FrameDecoder', () => {
 describe('parseResp / parseLog', () => {
   it('returns null for short or empty RESP payloads', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
-    expect(parseResp(new Uint8Array([0, 1, 0, 1]))).toBeNull(); // version needs 5 bytes
+    expect(parseResp(new Uint8Array([0, 1, 0, 1, 0]))).toBeNull(); // version needs 11 bytes (was 5, now carries the MAC)
     expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 2 bytes
     expect(parseResp(new Uint8Array([9]))).toBeNull(); // OPTIONS needs an id byte
     expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
 
   it('ignores trailing bytes past a complete RESP(VERSION)', () => {
-    expect(parseResp(new Uint8Array([0, 1, 2, 3, 4, 99, 99]))).toEqual({
+    expect(
+      parseResp(new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 99, 99])),
+    ).toEqual({
       kind: 'version',
-      version: { protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4 },
+      version: {
+        protoVer: 1,
+        fwMajor: 2,
+        fwMinor: 3,
+        fwPatch: 4,
+        mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+      },
     });
   });
 
@@ -340,7 +360,7 @@ describe('helpers', () => {
   });
 
   it('versionString formats major.minor.patch', () => {
-    expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0 })).toBe('0.1.0');
+    expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0, mac: [] })).toBe('0.1.0');
   });
 });
 
@@ -494,29 +514,82 @@ describe('OPTION command (§3.10)', () => {
     expect(parseResp(new Uint8Array([9, 1, 0, 0]))).toEqual({ kind: 'movementRiding', windowMs: 0 });
   });
 
+  it('emitPayload packs [id=2][mode u8][rate_hz u16 LE]', () => {
+    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01]);
+  });
+
+  it('parses RESP(OPTIONS, EMIT) into mode / fixed_hz / resolved_hz', () => {
+    // Learned, nothing resolved yet: [9][2][mode=0][fixed=0][resolved=0].
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: EmitMode.Learned, fixedHz: 0, resolvedHz: 0 },
+    });
+    // Interval resolved to the 1000 Hz poll rate: [9][2][1][0,0][0xe8,0x03].
+    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: EmitMode.Interval, fixedHz: 0, resolvedHz: 1000 },
+    });
+    // Fixed 500 Hz, resolved to 500: [9][2][2][0xf4,0x01][0xf4,0x01].
+    expect(parseResp(new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 },
+    });
+    // A mode this build doesn't know -> mode null, the rates still decode.
+    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03]))).toEqual({
+      kind: 'emitPace',
+      emit: { mode: null, fixedHz: 0, resolvedHz: 1000 },
+    });
+  });
+
   it('returns null for a truncated or unknown OPTIONS payload', () => {
     expect(parseResp(new Uint8Array([9, 0, 1, 1]))).toBeNull(); // imperfect needs 5 bytes
     expect(parseResp(new Uint8Array([9, 1, 0]))).toBeNull(); // move_ride needs 4 bytes
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0]))).toBeNull(); // emit needs 7 bytes
     expect(parseResp(new Uint8Array([9, 0xff, 0, 0]))).toBeNull(); // unknown option id
   });
 });
 
 describe('device-info RESP decoding (v1.4.0)', () => {
-  it('MOUSE_INFO (§4.3)', () => {
-    const p = new Uint8Array([2, 0x6d, 0x04, 0x8b, 0xc0, 0x10, 0x01, 0x00, 0x02, 0x03]);
+  it('DEVICE_INFO (§4.3): 11-byte header, kind, and the product tail', () => {
+    // vid 046D, pid C08B, bcdDevice 0110, bcdUSB 0200, flags = serial|bos, kind = mouse, product "G502".
+    const p = new Uint8Array([
+      2, 0x6d, 0x04, 0x8b, 0xc0, 0x10, 0x01, 0x00, 0x02, 0x03, 0x02, 0x47, 0x35, 0x30, 0x32,
+    ]);
     const resp = parseResp(p);
     expect(resp).toEqual({
-      kind: 'mouseInfo',
-      mouseInfo: {
+      kind: 'deviceInfo',
+      deviceInfo: {
         vid: 0x046d,
         pid: 0xc08b,
         bcdDevice: 0x0110,
         bcdUsb: 0x0200,
         hasSerial: true,
         hasBos: true,
+        kind: DeviceKind.Mouse,
+        product: 'G502',
       },
     });
-    if (resp?.kind === 'mouseInfo') expect(vidPid(resp.mouseInfo)).toBe('046D:C08B');
+    if (resp?.kind === 'deviceInfo') expect(vidPid(resp.deviceInfo)).toBe('046D:C08B');
+  });
+
+  it('DEVICE_INFO with an empty product tail (exactly the 11-byte header)', () => {
+    // A keyboard clone that serves no product string, no serial, no BOS.
+    const p = new Uint8Array([2, 0xe3, 0x31, 0x32, 0x12, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01]);
+    expect(parseResp(p)).toEqual({
+      kind: 'deviceInfo',
+      deviceInfo: {
+        vid: 0x31e3,
+        pid: 0x1232,
+        bcdDevice: 0x0000,
+        bcdUsb: 0x0200,
+        hasSerial: false,
+        hasBos: false,
+        kind: DeviceKind.Keyboard,
+        product: '',
+      },
+    });
   });
 
   it('CAPS (§4.4) unified mouse + keyboard', () => {
@@ -580,7 +653,8 @@ describe('device-info RESP decoding (v1.4.0)', () => {
   });
 
   it('returns null for truncated device-info payloads', () => {
-    expect(parseResp(new Uint8Array([2, 0, 0]))).toBeNull(); // MOUSE_INFO needs 10
+    expect(parseResp(new Uint8Array([2, 0, 0]))).toBeNull(); // DEVICE_INFO needs an 11-byte header
+    expect(parseResp(new Uint8Array([2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // 10 bytes, one short of the header
     expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
     expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
     expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 17

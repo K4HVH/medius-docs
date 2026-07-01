@@ -35,7 +35,26 @@ const Api: Component = () => {
               <tr><td><code>dev.clone()</code></td><td>Another handle to the same link; the connection is shared.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Free the handle. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
-              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present boxes as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> without opening one.</td></tr>
+              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> without opening one.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="discovery" data-search-target>
+        <Card>
+          <CardHeader title="Discovery" subtitle="Enumerate boxes and open one by identity" />
+          <p>
+            Pick a box out of several by a stable identity (device MAC or CH343 serial), or by the kind
+            of device it clones. See <A href="/library/discovery">Discovery</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius.list_boxes()</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A> (opens, handshakes, and reads each one's version + device info).</td></tr>
+              <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake.</td></tr>
+              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse.</td></tr>
+              <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -151,6 +170,7 @@ const Api: Component = () => {
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
+              <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -169,7 +189,7 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>dev.query_version()</code></td><td><A href="/bindings/python/types#version"><code>Version</code></A>: protocol + firmware version.</td></tr>
               <tr><td><code>dev.query_health()</code></td><td><A href="/bindings/python/types#health"><code>Health</code></A>: link, mouse, clone, injection flags.</td></tr>
-              <tr><td><code>dev.query_mouse_info()</code></td><td><A href="/bindings/python/types#mouseinfo"><code>MouseInfo</code></A>: the cloned mouse's USB identity.</td></tr>
+              <tr><td><code>dev.device_info()</code></td><td><A href="/bindings/python/types#deviceinfo"><code>DeviceInfo</code></A>: the cloned device's USB identity, kind, and product.</td></tr>
               <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
@@ -177,6 +197,7 @@ const Api: Component = () => {
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
+              <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
             </tbody>
           </table>
@@ -203,7 +224,8 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present medius ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A>.</td></tr>
+              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present medius ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> (now including the CH343 serial).</td></tr>
+              <tr><td><code>medius.list_boxes()</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. See <A href="/bindings/python/api#discovery">Discovery</A>.</td></tr>
               <tr><td><code>medius.default_query_timeout_ms()</code></td><td>The default query reply wait (1000 ms).</td></tr>
               <tr><td><code>medius.default_keepalive_cadence_ms()</code></td><td>The default keepalive interval (500 ms).</td></tr>
               <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes.</td></tr>
