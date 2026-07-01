@@ -51,7 +51,7 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius.list_boxes()</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A> (opens, handshakes, and reads each one's version + device info).</td></tr>
+              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A> (opens, handshakes, and reads each one's version + device info).</td></tr>
               <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake.</td></tr>
               <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse.</td></tr>
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard.</td></tr>
@@ -225,7 +225,7 @@ const Api: Component = () => {
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present medius ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> (now including the CH343 serial).</td></tr>
-              <tr><td><code>medius.list_boxes()</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. See <A href="/bindings/python/api#discovery">Discovery</A>.</td></tr>
+              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. See <A href="/bindings/python/api#discovery">Discovery</A>.</td></tr>
               <tr><td><code>medius.default_query_timeout_ms()</code></td><td>The default query reply wait (1000 ms).</td></tr>
               <tr><td><code>medius.default_keepalive_cadence_ms()</code></td><td>The default keepalive interval (500 ms).</td></tr>
               <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes.</td></tr>
