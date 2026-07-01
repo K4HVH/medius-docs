@@ -14,6 +14,28 @@ const Enums: Component = () => {
           </p>
         </Card>
       </div>
+      <div id="device-kind" data-search-target>
+        <Card>
+          <CardHeader title="DeviceKind" subtitle="The cloned device's primary kind" />
+          <pre class="api-signature">enum DeviceKind {'{'} Unknown, Keyboard, Mouse {'}'}</pre>
+          <p>
+            The <code>kind</code> field of a{' '}
+            <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, read from the
+            cloned device's USB Boot-interface <code>bInterfaceProtocol</code>. It also drives{' '}
+            <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A> and{' '}
+            <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
+            <code>Display</code> prints the lowercase name.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a Boot keyboard nor a Boot mouse.</td></tr>
+              <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>The device is a keyboard.</td></tr>
+              <tr><td><code>Mouse</code></td><td><code>2</code></td><td>The device is a mouse.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="button" data-search-target>
         <Card>
           <CardHeader title="Button" subtitle="The button a command acts on" />

@@ -7,18 +7,18 @@ import {
   CAP_Y,
   CAPS_CD_KBD,
   CAPS_CD_MOUSE,
+  DI_HAS_BOS,
+  DI_HAS_SERIAL,
   EmitMode,
   emitModeFromU8,
-  MI_HAS_BOS,
-  MI_HAS_SERIAL,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
   Q_CATCH,
+  Q_DEVICE_INFO,
   Q_HEALTH,
   Q_LOCKS,
-  Q_MOUSE_INFO,
   Q_OPTIONS,
   Q_RATE,
   Q_STATS,
@@ -30,17 +30,18 @@ import {
   type Caps,
   type CatchState,
   type ConsumerReport,
+  type DeviceInfo,
   type Health,
   type ImperfectStatus,
   type KeyboardReport,
   type Locks,
   type LogLine,
-  type MouseInfo,
   type MouseReport,
   type Rate,
   type Stats,
   type Version,
   LogLevel,
+  deviceKindFromU8,
   healthFromFlags,
   kbdCapsFromBytes,
   logLevelFromU8,
@@ -58,7 +59,7 @@ export interface EmitPace {
 export type Resp =
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
-  | { kind: 'mouseInfo'; mouseInfo: MouseInfo }
+  | { kind: 'deviceInfo'; deviceInfo: DeviceInfo }
   | { kind: 'caps'; caps: Caps }
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
@@ -79,7 +80,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
   const what = payload[0];
   switch (what) {
     case Q_VERSION:
-      if (payload.length < 5) return null;
+      // [0][proto][major][minor][patch][mac 6B] = 11 bytes.
+      if (payload.length < 11) return null;
       return {
         kind: 'version',
         version: {
@@ -87,23 +89,27 @@ export function parseResp(payload: Uint8Array): Resp | null {
           fwMajor: payload[2],
           fwMinor: payload[3],
           fwPatch: payload[4],
+          mac: Array.from(payload.subarray(5, 11)),
         },
       };
     case Q_HEALTH:
       if (payload.length < 2) return null;
       return { kind: 'health', health: healthFromFlags(payload[1]) };
-    case Q_MOUSE_INFO: {
-      if (payload.length < 10) return null;
+    case Q_DEVICE_INFO: {
+      // [2][vid][pid][bcd_device][bcd_usb][flags][primary_kind] = 11-byte header, then the product tail.
+      if (payload.length < 11) return null;
       const flags = payload[9];
       return {
-        kind: 'mouseInfo',
-        mouseInfo: {
+        kind: 'deviceInfo',
+        deviceInfo: {
           vid: u16le(payload, 1),
           pid: u16le(payload, 3),
           bcdDevice: u16le(payload, 5),
           bcdUsb: u16le(payload, 7),
-          hasSerial: (flags & MI_HAS_SERIAL) !== 0,
-          hasBos: (flags & MI_HAS_BOS) !== 0,
+          hasSerial: (flags & DI_HAS_SERIAL) !== 0,
+          hasBos: (flags & DI_HAS_BOS) !== 0,
+          kind: deviceKindFromU8(payload[10]),
+          product: textDecoder.decode(payload.subarray(11)),
         },
       };
     }
@@ -233,7 +239,7 @@ export function parseConsEvent(payload: Uint8Array): ConsumerReport | null {
   return { usages };
 }
 
-const logDecoder = new TextDecoder('utf-8', { fatal: false });
+const textDecoder = new TextDecoder('utf-8', { fatal: false });
 
 // Parse a LOG payload: [level u8][text UTF-8 (LEN-1)].
 export function parseLog(payload: Uint8Array): LogLine {
@@ -242,6 +248,6 @@ export function parseLog(payload: Uint8Array): LogLine {
   }
   return {
     level: logLevelFromU8(payload[0]),
-    text: logDecoder.decode(payload.subarray(1)),
+    text: textDecoder.decode(payload.subarray(1)),
   };
 }

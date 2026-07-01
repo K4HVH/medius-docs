@@ -14,7 +14,7 @@ const Requests: Component = () => {
           read with the <code>what</code> selector: the firmware{' '}
           <A href="/native/commands/requests#version">version</A>, the box's{' '}
           <A href="/native/commands/requests#health">health</A>, the cloned{' '}
-          <A href="/native/commands/requests#mouse-info">mouse info</A>,{' '}
+          <A href="/native/commands/requests#device-info">device info</A>,{' '}
           <A href="/native/commands/requests#caps">device capabilities</A>,{' '}
           <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
           <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
@@ -51,7 +51,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td><code>0</code></td><td>The firmware version.</td><td><A href="/native/commands/requests#version"><code>VERSION</code></A></td></tr>
               <tr><td><code>1</code></td><td>The box's health.</td><td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td></tr>
-              <tr><td><code>2</code></td><td>The cloned mouse's USB identity.</td><td><A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A></td></tr>
+              <tr><td><code>2</code></td><td>The cloned device's USB identity, kind, and product.</td><td><A href="/native/commands/requests#device-info"><code>DEVICE_INFO</code></A></td></tr>
               <tr><td><code>3</code></td><td>The whole device's capabilities (mouse + keyboard).</td><td><A href="/native/commands/requests#caps"><code>CAPS</code></A></td></tr>
               <tr><td><code>4</code></td><td>The native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
@@ -68,7 +68,7 @@ const Requests: Component = () => {
             <A href="/native/injection#fire-and-forget">fire-and-forget</A>. Library bindings:{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
-            <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>,{' '}
+            <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
             <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
@@ -115,7 +115,7 @@ const Requests: Component = () => {
             which kind it is. Each selector's payload is laid out below, with an example frame:{' '}
             <A href="/native/commands/requests#version"><code>VERSION</code></A>,{' '}
             <A href="/native/commands/requests#health"><code>HEALTH</code></A>,{' '}
-            <A href="/native/commands/requests#mouse-info"><code>MOUSE_INFO</code></A>,{' '}
+            <A href="/native/commands/requests#device-info"><code>DEVICE_INFO</code></A>,{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
             <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
             <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
@@ -132,8 +132,11 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
-            describes <code>2</code>); the box reports its own firmware version in the bytes that follow.
+            describes <code>2</code>); the box reports its own firmware version, then its base{' '}
+            <code>mac</code>, a stable per-box id.
           </p>
+          <pre class="api-signature">QUERY  what = 0  ·  RESP 11 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
             <thead>
@@ -145,21 +148,23 @@ const Requests: Component = () => {
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
+              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the device chip's base MAC; the stable per-box id, rendered as 12 lowercase hex digits</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             The box also sends this unprompted at startup, as a{' '}
-            <A href="/native/connection#hello">ready signal</A>. Library binding:{' '}
+            <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> stays fixed for a
+            box, so it identifies the same box across replugs and port renumbering. Library binding:{' '}
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>2.2.1</code>, protocol <code>2</code>:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 00     | 02     | 02     | 02     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>Firmware <code>2.3.0</code>, protocol <code>2</code>, MAC <code>123456789abc</code>:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
+| A5     | 06     | 00     | 0B 00  | 00     | 02     | 02     | 03     | 00     | 12 34 56 78 9A BC  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | mac (6 bytes)     | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+`}</pre>
         </Card>
       </div>
 
@@ -211,16 +216,17 @@ const Requests: Component = () => {
         </Card>
       </div>
 
-      <div id="mouse-info" data-search-target>
+      <div id="device-info" data-search-target>
         <Card>
-          <CardHeader title="MOUSE_INFO" subtitle="RESP payload, what = 2" />
+          <CardHeader title="DEVICE_INFO" subtitle="RESP payload, what = 2" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 2</code>: the USB identity the box read from the real mouse. The clone shows up
-            on the game PC, not here, so this is the only way the control PC can read it. Every field is
-            zero when no mouse is attached.
+            <code>what = 2</code>: the USB identity, kind, and product string the box read from the real
+            device. The clone shows up on the game PC, not here, so this is the only way the control PC can
+            read it. The header is fixed at 11 bytes, then a length-delimited UTF-8 <code>product</code>{' '}
+            tail (which may be empty). Every field is zero when nothing is attached.
           </p>
-          <pre class="api-signature">QUERY  what = 2  ·  RESP 10 bytes</pre>
+          <pre class="api-signature">QUERY  what = 2  ·  RESP 11-byte header + product</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -234,6 +240,8 @@ const Requests: Component = () => {
               <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
               <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>the cloned device's kind, from its Boot-interface protocol (see below)</td></tr>
+              <tr><td>11..</td><td><code>product</code></td><td><code>UTF-8</code></td><td>the product string, filling the rest of the payload; may be empty</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -246,22 +254,33 @@ const Requests: Component = () => {
               <tr><td>b1</td><td><code>0x02</code></td><td><code>HAS_BOS</code>: the clone serves a BOS descriptor</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">PRIMARY_KIND</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>Kind</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>unknown</td></tr>
+              <tr><td><code>1</code></td><td>keyboard</td></tr>
+              <tr><td><code>2</code></td><td>mouse</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             A <code>vid</code> of <code>0</code> means nothing is attached yet. Library binding:{' '}
-            <A href="/library/requests#query-mouse-info"><code>query_mouse_info</code></A>.
+            <A href="/library/requests#device-info"><code>device_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>A Logitech G502 (<code>046D:C08B</code>), USB 2.01, serial and BOS served:</p>
+          <p>A Logitech G502 (<code>046D:C08B</code>), USB 2.01, serial and BOS served, kind mouse, product "G502":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0A 00  | 02     | 6D 04  | 8B C0  | ...    |
+| A5     | 06     | 00     | 0F 00  | 02     | 6D 04  | 8B C0  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | vid    | pid    | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+
-| ...    | 00 00  | 01 02  | 03     | lo hi  |
-+--------+--------+--------+--------+--------+
-| ...    | bcdDev | bcdUSB | flags  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+| ...    | 10 01  | 01 02  | 03     | 02     | 47 35 30 32  | lo hi  |
++--------+--------+--------+--------+--------+--------------+--------+
+| ...    | bcdDev | bcdUSB | flags  | kind   | "G502"       | CRC16  |
++--------+--------+--------+--------+--------+--------------+--------+`}</pre>
         </Card>
       </div>
 

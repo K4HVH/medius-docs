@@ -1,6 +1,8 @@
 // Decoded protocol value types, mirroring the medius crate.
 
 import {
+  DEVICE_KIND_KEYBOARD,
+  DEVICE_KIND_MOUSE,
   H_CATCH_ON,
   H_CLONE_CFG,
   H_INJECT_ON,
@@ -20,10 +22,16 @@ export interface Version {
   fwMajor: number;
   fwMinor: number;
   fwPatch: number;
+  mac: number[]; // the device chip's base MAC (6 bytes), a stable per-box id
 }
 
 export function versionString(v: Version): string {
   return `${v.fwMajor}.${v.fwMinor}.${v.fwPatch}`;
+}
+
+// The box MAC as 12 lowercase hex digits, e.g. "123456789abc".
+export function macHex(v: Version): string {
+  return v.mac.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export interface Health {
@@ -50,20 +58,51 @@ export function healthFromFlags(flags: number): Health {
   };
 }
 
-// The cloned mouse's USB identity (§4.3). All-zero when no mouse is cloned.
-export interface MouseInfo {
+// The cloned device's primary kind (§4.3), from its Boot-interface bInterfaceProtocol.
+export enum DeviceKind {
+  Unknown = 0,
+  Keyboard = 1,
+  Mouse = 2,
+}
+
+export function deviceKindFromU8(value: number): DeviceKind {
+  switch (value) {
+    case DEVICE_KIND_KEYBOARD:
+      return DeviceKind.Keyboard;
+    case DEVICE_KIND_MOUSE:
+      return DeviceKind.Mouse;
+    default:
+      return DeviceKind.Unknown;
+  }
+}
+
+export function deviceKindLabel(kind: DeviceKind): string {
+  switch (kind) {
+    case DeviceKind.Keyboard:
+      return 'keyboard';
+    case DeviceKind.Mouse:
+      return 'mouse';
+    default:
+      return 'unknown';
+  }
+}
+
+// The cloned device's USB identity, kind, and product string (§4.3). All-zero when nothing is cloned.
+export interface DeviceInfo {
   vid: number;
   pid: number;
   bcdDevice: number;
   bcdUsb: number;
   hasSerial: boolean;
   hasBos: boolean;
+  kind: DeviceKind;
+  product: string;
 }
 
 // vid:pid formatted as the familiar 04X:04X, e.g. "046D:C08B".
-export function vidPid(m: MouseInfo): string {
+export function vidPid(d: DeviceInfo): string {
   const hex = (n: number) => n.toString(16).toUpperCase().padStart(4, '0');
-  return `${hex(m.vid)}:${hex(m.pid)}`;
+  return `${hex(d.vid)}:${hex(d.pid)}`;
 }
 
 // Semantic capabilities of the emulated mouse (§4.4). Counts and booleans only.

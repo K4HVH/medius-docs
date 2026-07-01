@@ -8,12 +8,12 @@ import {
   type Caps,
   type CatchState,
   type DecodedFrame,
+  type DeviceInfo,
   type EmitPace,
   type Health,
   type ImperfectStatus,
   type Locks,
   type LogLine,
-  type MouseInfo,
   type Rate,
   type Stats,
   type Version,
@@ -26,9 +26,9 @@ import {
   OPT_MOVE_RIDE,
   Q_CAPS,
   Q_CATCH,
+  Q_DEVICE_INFO,
   Q_HEALTH,
   Q_LOCKS,
-  Q_MOUSE_INFO,
   Q_OPTIONS,
   Q_RATE,
   Q_STATS,
@@ -185,10 +185,10 @@ export class SerialLink {
     return resp.health;
   }
 
-  async queryMouseInfo(timeoutMs?: number): Promise<MouseInfo> {
-    const resp = parseResp(await this.query(Q_MOUSE_INFO, timeoutMs));
-    if (resp?.kind !== 'mouseInfo') throw new Error('unexpected reply to MOUSE_INFO query');
-    return resp.mouseInfo;
+  async queryDeviceInfo(timeoutMs?: number): Promise<DeviceInfo> {
+    const resp = parseResp(await this.query(Q_DEVICE_INFO, timeoutMs));
+    if (resp?.kind !== 'deviceInfo') throw new Error('unexpected reply to DEVICE_INFO query');
+    return resp.deviceInfo;
   }
 
   async queryCaps(timeoutMs?: number): Promise<Caps> {
