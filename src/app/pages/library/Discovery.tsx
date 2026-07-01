@@ -25,7 +25,7 @@ const Discovery: Component = () => {
 
       <div id="list" data-search-target>
         <Card>
-          <CardHeader title="Device::list" subtitle="Enumerate every connected box" />
+          <CardHeader title="list" subtitle="Enumerate every connected box" />
           <pre class="api-signature">fn list() -&gt; Vec&lt;BoxInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -47,7 +47,7 @@ for b in Device::list() {
 
       <div id="open-by-id" data-search-target>
         <Card>
-          <CardHeader title="Device::open_by_id" subtitle="Open the box with a given identity" />
+          <CardHeader title="open_by_id" subtitle="Open the box with a given identity" />
           <pre class="api-signature">fn open_by_id(id: &amp;str) -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -67,7 +67,7 @@ let device = Device::open_by_id("123456789abc")?;`}</code></pre>
 
       <div id="find-mouse-box" data-search-target>
         <Card>
-          <CardHeader title="Device::find_mouse_box" subtitle="Open the first box cloning a mouse" />
+          <CardHeader title="find_mouse_box" subtitle="Open the first box cloning a mouse" />
           <pre class="api-signature">fn find_mouse_box() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -87,7 +87,7 @@ mouse_box.move_rel(10, 0)?;`}</code></pre>
 
       <div id="find-keyboard-box" data-search-target>
         <Card>
-          <CardHeader title="Device::find_keyboard_box" subtitle="Open the first box cloning a keyboard" />
+          <CardHeader title="find_keyboard_box" subtitle="Open the first box cloning a keyboard" />
           <pre class="api-signature">fn find_keyboard_box() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -105,7 +105,7 @@ kbd_box.key_down(Key::A)?;`}</code></pre>
 
       <div id="find-where" data-search-target>
         <Card>
-          <CardHeader title="Device::find_where" subtitle="Open the first box matching a predicate" />
+          <CardHeader title="find_where" subtitle="Open the first box matching a predicate" />
           <pre class="api-signature">fn find_where(pred: impl Fn(&amp;BoxInfo) -&gt; bool) -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>

@@ -52,7 +52,7 @@ println!("settle:  {:?}", flash::ROM_SETTLE); // 2s`}</code></pre>
 
       <div id="flash" data-search-target>
         <Card>
-          <CardHeader title="medius::flash" subtitle="Reboot into download mode, then write the image" />
+          <CardHeader title="flash" subtitle="Reboot into download mode, then write the image" />
           <pre class="api-signature">fn flash(port: &amp;str, bin_path: impl AsRef&lt;Path&gt;, host: bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <div class="api-response-label">PARAMETERS</div>
