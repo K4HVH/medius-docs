@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 3, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc] };
-assert_eq!(v.to_string(), "fw 2.3.0"); // Display omits proto_ver
+let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 3, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc] };
+assert_eq!(v.to_string(), "fw 2.3.1"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {})", v.proto_ver, v.mac_hex());`}</code></pre>
         </Card>
