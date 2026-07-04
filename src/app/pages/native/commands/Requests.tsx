@@ -159,9 +159,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>2.3.1</code>, protocol <code>2</code>, MAC <code>123456789abc</code>:</p>
+          <p>Firmware <code>2.3.2</code>, protocol <code>2</code>, MAC <code>123456789abc</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
-| A5     | 06     | 00     | 0B 00  | 00     | 02     | 02     | 03     | 01     | 12 34 56 78 9A BC  | lo hi  |
+| A5     | 06     | 00     | 0B 00  | 00     | 02     | 02     | 03     | 02     | 12 34 56 78 9A BC  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | mac (6 bytes)     | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+`}</pre>
