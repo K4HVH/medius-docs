@@ -74,7 +74,7 @@ const Enums: Component = () => {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Clear the box's own press; a physical hold stays down.</td></tr>
+              <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force; a physical hold stays down.</td></tr>
               <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
             </tbody>

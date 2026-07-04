@@ -79,7 +79,7 @@ device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Override a mouse <A href="/library/types/enums#button"><code>Button</code></A> on the clone.{' '}
-            <code>press</code> holds it down, <code>soft_release</code> clears your press while a
+            <code>press</code> holds it down, <code>soft_release</code> clears your press or force while a
             physical hold stays down, and <code>force_release</code> forces it up over a physical press.{' '}
             <code>button</code> is the generic form taking an{' '}
             <A href="/library/types/enums#action"><code>Action</code></A>. All four are wrappers over{' '}
