@@ -86,7 +86,7 @@ int main(void) {
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
           <pre><code class="language-c">{`medius-capi 2.3.0 (abi 1)
-firmware 2.3.1 (proto 2)
+firmware 2.3.2 (proto 2)
 mouse: dx=12 dy=-4 buttons=0x00`}</code></pre>
           <div class="callout callout--info">
             <p>
