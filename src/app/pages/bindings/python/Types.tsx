@@ -234,6 +234,46 @@ const Types: Component = () => {
         </Card>
       </div>
 
+      <div id="clip-status" data-search-target>
+        <Card>
+          <CardHeader title="Clip" subtitle="ClipState · ClipStatus · ClipEdge" />
+          <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
+          <div id="clipstate">
+            <div class="api-response-label">ClipState</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>IDLE</code></td><td><code>0</code></td></tr>
+                <tr><td><code>ARMED</code></td><td><code>1</code></td></tr>
+                <tr><td><code>PLAYING</code></td><td><code>2</code></td></tr>
+                <tr><td><code>FAULTED</code></td><td><code>3</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="clipstatus">
+            <div class="api-response-label">ClipStatus (clip.status())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>state</code></td><td><A href="#clipstate"><code>ClipState</code></A></td><td>the lifecycle state</td></tr>
+                <tr><td><code>free</code> / <code>used</code></td><td><code>int</code></td><td>ring bytes free / buffered (pace top-ups off <code>free</code>)</td></tr>
+                <tr><td><code>ticks</code></td><td><code>int</code></td><td>entries played since the last start</td></tr>
+                <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
+                <tr><td><code>held</code></td><td><code>bool</code></td><td>a catch-trigger button is held</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="clipedge">
+            <div class="api-response-label">ClipEdge</div>
+            <p>
+              An edge for <code>ClipBuilder.frame(...)</code>. Build with <code>ClipEdge.button(button,
+              action)</code>, <code>ClipEdge.key(usage, action)</code>, or <code>ClipEdge.media(usage,
+              action)</code>.
+            </p>
+          </div>
+        </Card>
+      </div>
+
       <div id="stream-enums" data-search-target>
         <Card>
           <CardHeader title="Stream enums" subtitle="CatchMask · CatchEventKind · LogLevel" />
@@ -328,7 +368,8 @@ const Types: Component = () => {
                 <tr><td><code>RESP</code></td><td><code>6</code></td><td><code>MOUSE_EVENT</code></td><td><code>12</code></td></tr>
                 <tr><td><code>REBOOT_DL</code></td><td><code>7</code></td><td><code>KB_EVENT</code></td><td><code>15</code></td></tr>
                 <tr><td></td><td></td><td><code>CONS_EVENT</code></td><td><code>16</code></td></tr>
-                <tr><td></td><td></td><td><code>OPTION</code></td><td><code>17</code></td></tr>
+                <tr><td><code>CLIP_APPEND</code></td><td><code>18</code></td><td><code>OPTION</code></td><td><code>17</code></td></tr>
+                <tr><td><code>CLIP_CTRL</code></td><td><code>19</code></td><td></td><td></td></tr>
               </tbody>
             </table>
           </div>

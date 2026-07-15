@@ -58,7 +58,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x11</code>. Three values are reserved,
+            The opcodes run from <code>0x01</code> to <code>0x13</code>. Three values are reserved,
             retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
             keeps newer and older firmware compatible.
           </p>
@@ -84,6 +84,8 @@ const Frame: Component = () => {
               <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#kb-event"><code>KB_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x10</code></td><td><A href="/native/commands/catch#cons-event"><code>CONS_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x11</code></td><td><A href="/native/commands/option#option"><code>OPTION</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
           <p>

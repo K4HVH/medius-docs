@@ -95,6 +95,16 @@ const Frames: Component = () => {
                 <td><code>0x11</code></td>
                 <td>Set a persistent box option by id, e.g. imperfect-clone opt-in or movement riding (PC to box).</td>
               </tr>
+              <tr>
+                <td><code>ClipAppend</code></td>
+                <td><code>0x12</code></td>
+                <td>Append buffered-clip entries to the device ring; seq = append seq (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipCtrl</code></td>
+                <td><code>0x13</code></td>
+                <td>Start/stop/arm/config buffered clip playback (PC to box).</td>
+              </tr>
             </tbody>
           </table>
 

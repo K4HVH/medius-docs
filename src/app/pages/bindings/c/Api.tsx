@@ -250,6 +250,43 @@ medius_device_free(dev);`}</code></pre>
         </Card>
       </div>
 
+      <div id="clip" data-search-target>
+        <Card>
+          <CardHeader title="Buffered clip playback" subtitle="Preload a per-frame stream, box-clocked" />
+          <p>
+            Build an entry stream with an opaque <code>MediusClipBuilder</code>, then drive playback through
+            an opaque <code>MediusClip</code> handle from <code>medius_device_clip</code>. Each owns its
+            allocation — free the builder with <code>medius_clip_builder_free</code> and the handle with{' '}
+            <code>medius_clip_free</code>. Concept on <A href="/library/clip">Clip</A>.
+          </p>
+          <div class="api-response-label">BUILDER</div>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Appends</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_clip_builder_new()</code> / <code>_free(b)</code> / <code>_clear(b)</code></td><td>Allocate / free / reset a builder.</td></tr>
+              <tr><td><code>medius_clip_builder_gap(b, uint16_t frames)</code></td><td>A gap run (0 = no-op).</td></tr>
+              <tr><td><code>medius_clip_builder_move(b, int16_t dx, int16_t dy)</code> / <code>_wheel(b, int16_t dz)</code></td><td>A motion frame.</td></tr>
+              <tr><td><code>medius_clip_builder_press / _release / _force_release(b, MediusButton)</code></td><td>A one-button frame.</td></tr>
+              <tr><td><code>medius_clip_builder_key(b, MediusKey, MediusAction)</code> / <code>_media(b, MediusMediaKey, MediusAction)</code></td><td>A one-key / one-media frame.</td></tr>
+              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, const MediusClipEdge *edges, size_t n)</code></td><td>A motion delta plus up to 8 edges on one frame.</td></tr>
+              <tr><td><code>medius_clip_edge_button / _key / _media(...)</code></td><td>Build a <A href="/bindings/c/types#clip-edge"><code>MediusClipEdge</code></A> for the frame call.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">HANDLE</div>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_device_clip(dev, MediusClip **out)</code> / <code>medius_clip_free(clip)</code></td><td>Open / free a clip handle.</td></tr>
+              <tr><td><code>medius_clip_append(clip, const MediusClipBuilder *b)</code></td><td>Append the builder's entries to the ring.</td></tr>
+              <tr><td><code>medius_clip_start(clip)</code> / <code>medius_clip_start_autolock(clip, uint16_t lock_mask)</code></td><td>Begin playback (optionally clip-owned auto-lock).</td></tr>
+              <tr><td><code>medius_clip_stop(clip)</code> / <code>medius_clip_config(clip, bool autolock, uint16_t lock_mask)</code></td><td>Stop + flush; or set auto-lock options.</td></tr>
+              <tr><td><code>medius_clip_arm_catch(clip, MediusButton)</code> / <code>_arm_catch_any(clip)</code> / <code>_disarm(clip)</code></td><td>Arm / disarm an on-device catch trigger.</td></tr>
+              <tr><td><code>medius_clip_status(clip, MediusClipStatus *out)</code></td><td><A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth + playback state.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="builders" data-search-target>
         <Card>
           <CardHeader title="Input & motion builders" subtitle="Make the value structs the calls take" />
