@@ -621,13 +621,13 @@ if let Ok(line) = stream.recv() {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>The lifecycle state (idle / armed / playing / faulted).</td></tr>
-              <tr><td><code>free</code></td><td><code>u32</code></td><td>Free bytes in the ring — headroom for the next append.</td></tr>
+              <tr><td><code>free</code></td><td><code>u32</code></td><td>Free bytes in the ring, the headroom for the next append.</td></tr>
               <tr><td><code>used</code></td><td><code>u32</code></td><td>Buffered bytes not yet drained.</td></tr>
-              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Entries played since the last start.</td></tr>
+              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
-              <tr><td><code>held</code></td><td><code>bool</code></td><td>Whether a catch-trigger button is currently held.</td></tr>
+              <tr><td><code>held</code></td><td><code>u8</code></td><td>Bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>).</td></tr>
             </tbody>
           </table>
         </Card>

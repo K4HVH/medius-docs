@@ -925,11 +925,11 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               <tr><td><code>state</code></td><td><code>MediusClipState</code></td><td>The lifecycle state.</td></tr>
               <tr><td><code>free</code></td><td><code>uint32_t</code></td><td>Ring bytes free; pace top-ups off this.</td></tr>
               <tr><td><code>used</code></td><td><code>uint32_t</code></td><td>Ring bytes buffered, not yet drained.</td></tr>
-              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Entries played since the last start.</td></tr>
+              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
-              <tr><td><code>held</code></td><td><code>bool</code></td><td>Whether a catch-trigger button is held.</td></tr>
+              <tr><td><code>held</code></td><td><code>uint8_t</code></td><td>Bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>).</td></tr>
             </tbody>
           </table>
         </Card>
