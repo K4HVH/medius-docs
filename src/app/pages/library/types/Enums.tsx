@@ -338,6 +338,27 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
+
+      <div id="clip-state" data-search-target>
+        <Card>
+          <CardHeader title="ClipState" subtitle="The buffered-clip lifecycle state" />
+          <pre class="api-signature">enum ClipState {'{'} Idle, Armed, Playing, Faulted {'}'}</pre>
+          <p>
+            The device-side clip state on{' '}
+            <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
+            <A href="/library/clip#status"><code>ClipHandle::status()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Idle</code></td><td>No clip active.</td></tr>
+              <tr><td><code>Armed</code></td><td>A catch-trigger is armed; playback starts on the physical button edge.</td></tr>
+              <tr><td><code>Playing</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+              <tr><td><code>Faulted</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
     </>
   );
 };

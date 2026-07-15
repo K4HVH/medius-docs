@@ -220,6 +220,40 @@ const Api: Component = () => {
         </Card>
       </div>
 
+      <div id="clip" data-search-target>
+        <Card>
+          <CardHeader title="Buffered clip playback" subtitle="Preload a per-frame stream, box-clocked" />
+          <p>
+            Build a stream with <code>ClipBuilder</code>, then drive it with the <code>ClipHandle</code>{' '}
+            from <code>dev.clip()</code>. Concept on <A href="/library/clip">Clip</A>.
+          </p>
+          <div class="api-response-label">CLIPBUILDER</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Appends</th></tr></thead>
+            <tbody>
+              <tr><td><code>ClipBuilder()</code> · <code>.clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
+              <tr><td><code>.gap(frames)</code></td><td>A gap run (0 = no-op).</td></tr>
+              <tr><td><code>.move(dx, dy)</code> · <code>.wheel(dz)</code></td><td>A motion frame.</td></tr>
+              <tr><td><code>.press(button)</code> · <code>.release(button)</code> · <code>.force_release(button)</code></td><td>A one-button frame.</td></tr>
+              <tr><td><code>.key(usage, action=Action.PRESS)</code> · <code>.media(usage, action=Action.PRESS)</code></td><td>A one-key / one-media frame.</td></tr>
+              <tr><td><code>.frame(dx, dy, wheel, edges=[ClipEdge…])</code></td><td>A motion delta plus up to 8 edges on one frame.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">CLIPHANDLE</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev.clip()</code></td><td>A <code>ClipHandle</code> (owns the append-seq counter).</td></tr>
+              <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
+              <tr><td><code>clip.start()</code> · <code>clip.start_autolock(lock_mask=0)</code></td><td>Begin playback (optionally clip-owned auto-lock).</td></tr>
+              <tr><td><code>clip.stop()</code> · <code>clip.config(autolock, lock_mask=0)</code></td><td>Stop + flush; or set auto-lock options.</td></tr>
+              <tr><td><code>clip.arm_catch(button=None)</code> · <code>clip.disarm()</code></td><td>Arm / disarm an on-device catch trigger (<code>None</code> = any button).</td></tr>
+              <tr><td><code>clip.status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth + playback state.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="module" data-search-target>
         <Card>
           <CardHeader title="Module functions" subtitle="Top-level helpers on medius" />

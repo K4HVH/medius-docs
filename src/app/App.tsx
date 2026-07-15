@@ -20,6 +20,7 @@ import CmdLed from './pages/native/commands/Led';
 import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
 import CmdOption from './pages/native/commands/Option';
+import CmdClip from './pages/native/commands/Clip';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import LibIntroduction from './pages/library/Introduction';
@@ -33,6 +34,7 @@ import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
 import LibOptions from './pages/library/Options';
+import LibClip from './pages/library/Clip';
 import LibLifecycle from './pages/library/Lifecycle';
 import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
@@ -92,6 +94,7 @@ const App: Component = () => {
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
           <Route path="/native/commands/option" component={CmdOption} />
+          <Route path="/native/commands/clip" component={CmdClip} />
           <Route path="/native/commands/usage" component={CmdUsage} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
@@ -106,6 +109,7 @@ const App: Component = () => {
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
           <Route path="/library/options" component={LibOptions} />
+          <Route path="/library/clip" component={LibClip} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
           <Route path="/library/diagnostics" component={LibDiagnostics} />
           <Route path="/library/features/async" component={FeatAsync} />

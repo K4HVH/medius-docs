@@ -58,6 +58,7 @@ const Requests: Component = () => {
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
+              <tr><td><code>10</code></td><td>The buffered-clip ring depth and playback state.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -120,8 +121,9 @@ const Requests: Component = () => {
             <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
             <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
             <A href="/native/commands/requests#locks"><code>LOCKS</code></A>,{' '}
-            <A href="/native/commands/requests#catch"><code>CATCH</code></A>, and{' '}
-            <A href="/native/commands/requests#options"><code>OPTIONS</code></A>.
+            <A href="/native/commands/requests#catch"><code>CATCH</code></A>,{' '}
+            <A href="/native/commands/requests#options"><code>OPTIONS</code></A>, and{' '}
+            <A href="/native/commands/requests#clip"><code>CLIP</code></A>.
           </p>
         </Card>
       </div>
@@ -639,6 +641,37 @@ const Requests: Component = () => {
 | A5     | 06     | 00     | 05 00  | 09     | 00     | 01     | 01     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |`}</pre>
+        </Card>
+      </div>
+
+      <div id="clip" data-search-target>
+        <Card>
+          <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
+          <p>
+            <code>what = 10</code>: the buffered-clip ring depth and playback state, for host flow-control.
+            Fixed 21-byte payload. Read <code>free</code> before a{' '}
+            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun, and{' '}
+            <code>state</code> to see a fault or that playback finished. Backs{' '}
+            <A href="/library/clip#status"><code>ClipHandle::status</code></A>.
+          </p>
+          <pre class="api-signature">QUERY  what = 10  ·  RESP 21 bytes</pre>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0A</td></tr>
+              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 armed (catch) / 2 playing / 3 faulted (an append was dropped — re-sync)</td></tr>
+              <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this, little-endian</td></tr>
+              <tr><td>6</td><td><code>used</code></td><td><code>u32</code></td><td>ring bytes buffered, not yet drained</td></tr>
+              <tr><td>10</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks emitted since start (diagnostic)</td></tr>
+              <tr><td>14</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
+              <tr><td>16</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
+              <tr><td>18</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
+              <tr><td>20</td><td><code>held</code></td><td><code>u8</code></td><td>currently-held clip buttons (bit i = button i)</td></tr>
+            </tbody>
+          </table>
+          <p>Library binding: <A href="/library/clip#status"><code>status</code></A>.</p>
         </Card>
       </div>
 

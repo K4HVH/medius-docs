@@ -607,6 +607,44 @@ if let Ok(line) = stream.recv() {
           </div>
         </Card>
       </div>
+
+      <div id="clip-status" data-search-target>
+        <Card>
+          <CardHeader title="ClipStatus" subtitle="The buffered-clip ring and playback state" />
+          <p>
+            The clip ring depth and playback counters from{' '}
+            <A href="/library/clip#status"><code>ClipHandle::status()</code></A>. Pace top-ups off{' '}
+            <code>free</code>; a <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>{' '}
+            state means re-sync (stop, then rebuild).
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>The lifecycle state (idle / armed / playing / faulted).</td></tr>
+              <tr><td><code>free</code></td><td><code>u32</code></td><td>Free bytes in the ring — headroom for the next append.</td></tr>
+              <tr><td><code>used</code></td><td><code>u32</code></td><td>Buffered bytes not yet drained.</td></tr>
+              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Entries played since the last start.</td></tr>
+              <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
+              <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
+              <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
+              <tr><td><code>held</code></td><td><code>bool</code></td><td>Whether a catch-trigger button is currently held.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="clip-edge" data-search-target>
+        <Card>
+          <CardHeader title="ClipEdge" subtitle="One edge on a clip frame" />
+          <p>
+            An injection <A href="/library/types/enums#action"><code>Action</code></A> on a class/id, for{' '}
+            <A href="/library/clip#builder"><code>ClipBuilder::frame</code></A>. Build with{' '}
+            <code>ClipEdge::button(button, action)</code>, <code>::key(key, action)</code>, or{' '}
+            <code>::media(media, action)</code>. Sticky until a later frame changes it, exactly like{' '}
+            <A href="/library/inject#inject"><code>inject</code></A>.
+          </p>
+        </Card>
+      </div>
     </>
   );
 };

@@ -412,6 +412,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_FRAME_TYPE_RESP</code></td><td><code>6</code></td><td><code>MEDIUS_FRAME_TYPE_KB_EVENT</code></td><td><code>15</code></td></tr>
               <tr><td><code>MEDIUS_FRAME_TYPE_REBOOT_DL</code></td><td><code>7</code></td><td><code>MEDIUS_FRAME_TYPE_CONS_EVENT</code></td><td><code>16</code></td></tr>
               <tr><td><code>MEDIUS_FRAME_TYPE_LOG</code></td><td><code>8</code></td><td><code>MEDIUS_FRAME_TYPE_OPTION</code></td><td><code>17</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_CLIP_APPEND</code></td><td><code>18</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_CTRL</code></td><td><code>19</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -911,6 +912,41 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     fprintf(stderr, "open failed: %s\\n", buf);
     return 1;
 }`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-status" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipStatus & MediusClipState" subtitle="Buffered-clip ring and playback state" />
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_status</code></A>. <code>state</code> is a <code>MediusClipState</code>: <code>MEDIUS_CLIP_STATE_IDLE</code> (0), <code>_ARMED</code> (1), <code>_PLAYING</code> (2), <code>_FAULTED</code> (3). Concept on <A href="/library/clip">Clip</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>state</code></td><td><code>MediusClipState</code></td><td>The lifecycle state.</td></tr>
+              <tr><td><code>free</code></td><td><code>uint32_t</code></td><td>Ring bytes free; pace top-ups off this.</td></tr>
+              <tr><td><code>used</code></td><td><code>uint32_t</code></td><td>Ring bytes buffered, not yet drained.</td></tr>
+              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Entries played since the last start.</td></tr>
+              <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
+              <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
+              <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
+              <tr><td><code>held</code></td><td><code>bool</code></td><td>Whether a catch-trigger button is held.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="clip-edge" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipEdge" subtitle="One edge for medius_clip_builder_frame" />
+          <p>Build with <A href="/bindings/c/api#clip"><code>medius_clip_edge_button / _key / _media</code></A>; pass an array to <code>medius_clip_builder_frame</code>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The class-specific usage id.</td></tr>
+              <tr><td><code>class_</code></td><td><code>uint8_t</code></td><td>0 button / 1 key / 2 media.</td></tr>
+              <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>The <A href="/bindings/c/types#action"><code>MediusAction</code></A> byte.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
     </>
