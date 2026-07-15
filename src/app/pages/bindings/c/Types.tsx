@@ -52,6 +52,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_LOG_TEXT</code></td><td><code>512</code></td><td><A href="/bindings/c/types#log-line"><code>MediusLogLine.text</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_PRODUCT</code></td><td><code>128</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo.product</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_NAME</code></td><td><code>33</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion.name</code></A></td></tr>
             </tbody>
           </table>
         </Card>
@@ -496,8 +497,8 @@ const Types: Component = () => {
 
       <div id="version" data-search-target>
         <Card>
-          <CardHeader title="MediusVersion" subtitle="Decoded firmware version" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_version</code></A>. <code>mac</code> is the device chip's base MAC, a stable per-box id.</p>
+          <CardHeader title="MediusVersion" subtitle="Decoded firmware version and box name" />
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_version</code></A>. <code>mac</code> is the device chip's base MAC, a stable per-box id; <code>name</code> is the box's readable label, set with <A href="/bindings/c/api#led-admin-options"><code>medius_device_set_name</code></A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -506,6 +507,7 @@ const Types: Component = () => {
               <tr><td><code>fw_minor</code></td><td><code>uint8_t</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>uint8_t</code></td><td>Firmware patch version.</td></tr>
               <tr><td><code>mac</code></td><td><code>uint8_t[6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
+              <tr><td><code>name</code></td><td><code>char[MEDIUS_MAX_NAME]</code></td><td>The box's human-readable name (NUL-terminated; a synthesized default when unset).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -757,7 +759,7 @@ const Types: Component = () => {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>port</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A></td><td>The box's control port (path + CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version, with the box MAC.</td></tr>
+              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version, with the box MAC and name.</td></tr>
               <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones.</td></tr>
             </tbody>
           </table>

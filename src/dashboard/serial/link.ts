@@ -42,6 +42,7 @@ import {
   LockTarget,
   RebootTarget,
   catchPayload,
+  clearNamePayload,
   emitPayload,
   encode,
   imperfectPayload,
@@ -49,6 +50,7 @@ import {
   ledPayload,
   lockPayload,
   moveRidePayload,
+  namePayload,
   parseConsEvent,
   parseKbEvent,
   parseLog,
@@ -321,6 +323,19 @@ export class SerialLink {
   // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
   setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
+  }
+
+  // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.
+  // Persisted in NVS, no reboot. Fire-and-forget. Read it back on RESP(VERSION) as the name tail after
+  // the MAC (there is no Q_OPTIONS readback for it).
+  setName(name: string): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), namePayload(name)));
+  }
+
+  // Clear the box name (§3.10): reverts to the firmware-synthesized "Medius-XXXX" default. Persisted
+  // in NVS. Fire-and-forget.
+  clearName(): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
   }
 
   async close(): Promise<void> {

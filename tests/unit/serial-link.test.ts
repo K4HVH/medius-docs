@@ -68,6 +68,7 @@ describe('SerialLink', () => {
       fwMinor: 1,
       fwPatch: 0,
       mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+      name: '',
     });
     await link.close();
   });
@@ -178,6 +179,7 @@ describe('SerialLink', () => {
       fwMinor: 1,
       fwPatch: 0,
       mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
+      name: '',
     });
     await link.close();
   });
@@ -335,7 +337,7 @@ describe('SerialLink', () => {
     const link = new SerialLink(asPort(mock));
     await link.open();
     const [v, h] = await Promise.all([link.queryVersion(), link.queryHealth()]);
-    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4, mac: [0, 0, 0, 0, 0, 0] });
+    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4, mac: [0, 0, 0, 0, 0, 0], name: '' });
     expect(h.linkUp).toBe(true);
     await link.close();
   });

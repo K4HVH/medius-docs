@@ -31,7 +31,8 @@ const Requests: Component = () => {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#version"><code>Version</code></A>.
+            Returns a <A href="/library/types/structs#version"><code>Version</code></A>. The box's{' '}
+            <A href="/library/options#set-name">name</A> rides on it, in the <code>name</code> field.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -39,8 +40,9 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 2.3.2
-println!("proto {}", v.proto_ver);     // proto 2`}</code></pre>
+println!("{v}");                       // fw 2.4.0
+println!("proto {}", v.proto_ver);     // proto 2
+println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
             <p>

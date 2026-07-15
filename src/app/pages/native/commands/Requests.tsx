@@ -133,9 +133,12 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
             describes <code>2</code>); the box reports its own firmware version, then its base{' '}
-            <code>mac</code>, a stable per-box id.
+            <code>mac</code>, a stable per-box id, then a length-delimited ASCII{' '}
+            <A href="/native/commands/option#name"><code>name</code></A> tail (a synthesized default
+            when unset). The <code>name</code> is additive, so <code>proto_ver</code> stays{' '}
+            <code>2</code>: an older box just sends an empty tail.
           </p>
-          <pre class="api-signature">QUERY  what = 0  ·  RESP 11 bytes</pre>
+          <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -149,22 +152,28 @@ const Requests: Component = () => {
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
               <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the device chip's base MAC; the stable per-box id, rendered as 12 lowercase hex digits</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name, filling the rest of the payload (the frame <code>LEN</code> delimits it); a synthesized <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             The box also sends this unprompted at startup, as a{' '}
             <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> stays fixed for a
-            box, so it identifies the same box across replugs and port renumbering. Library binding:{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>.
+            box, so it identifies the same box across replugs and port renumbering; the{' '}
+            <A href="/native/commands/option#name"><code>name</code></A> is its readable label. Library
+            binding: <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>2.3.2</code>, protocol <code>2</code>, MAC <code>123456789abc</code>:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
-| A5     | 06     | 00     | 0B 00  | 00     | 02     | 02     | 03     | 02     | 12 34 56 78 9A BC  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | mac (6 bytes)     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+`}</pre>
+          <p>Firmware <code>2.4.0</code>, protocol <code>2</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 0F 00  | 00     | 02     | 02     | 04     | 00     | ...    |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| ...    | 12 34 56 78 9A BC  | 4C 6F 6B 69  | lo hi  |
++--------+--------------------+--------------+--------+
+| ...    | mac (6 bytes)      | "Loki"       | CRC16  |
++--------+--------------------+--------------+--------+`}</pre>
         </Card>
       </div>
 

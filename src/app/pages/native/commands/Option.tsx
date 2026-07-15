@@ -39,6 +39,13 @@ const Option: Component = () => {
               <td>Pick what paces injected motion</td>
               <td>learnt</td>
             </tr>
+            <tr>
+              <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
+              <td><code>3</code></td>
+              <td><code>[name ascii 0..32]</code></td>
+              <td>Give the box a human-readable name</td>
+              <td>Medius-XXXX</td>
+            </tr>
           </tbody>
         </table>
       </Card>
@@ -175,6 +182,43 @@ const Option: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="name" data-search-target>
+        <Card>
+          <CardHeader title="NAME" subtitle="Give the box a human-readable name" />
+          <pre class="api-signature">id 3  ·  [name ascii 1..32]  (0 bytes = clear)</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <div class="api-response-label">VALUE</div>
+          <table class="api-params">
+            <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>1..32</code> printable ASCII</td><td>Sets the box's name to those bytes.</td></tr>
+              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the synthesized <code>Medius-XXXX</code> default derived from the MAC.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              The name is the readable partner to the box{' '}
+              <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
+              rides on <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> as the
+              ASCII tail after the MAC, so it is read there, not through{' '}
+              <code>QUERY(OPTIONS)</code>.
+            </p>
+          </div>
+          <p>
+            Read it back on{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> · Library{' '}
+            <A href="/library/options#set-name"><code>set_name</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Name the box "Loki" (<code>id = 3</code>, ascii <code>4C 6F 6B 69</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
+| A5     | 11     | 00     | 05 00  | 03     | 4C 6F 6B 69  | lo hi  |
++--------+--------+--------+--------+--------+--------------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | name ascii   | CRC16  |
++--------+--------+--------+--------+--------+--------------+--------+`}</pre>
         </Card>
       </div>
     </>
