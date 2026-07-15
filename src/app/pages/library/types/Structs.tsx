@@ -633,18 +633,6 @@ if let Ok(line) = stream.recv() {
         </Card>
       </div>
 
-      <div id="clip-edge" data-search-target>
-        <Card>
-          <CardHeader title="ClipEdge" subtitle="One edge on a clip frame" />
-          <p>
-            An injection <A href="/library/types/enums#action"><code>Action</code></A> on a class/id, for{' '}
-            <A href="/library/clip#builder"><code>ClipBuilder::frame</code></A>. Build with{' '}
-            <code>ClipEdge::button(button, action)</code>, <code>::key(key, action)</code>, or{' '}
-            <code>::media(media, action)</code>. Sticky until a later frame changes it, exactly like{' '}
-            <A href="/library/inject#inject"><code>inject</code></A>.
-          </p>
-        </Card>
-      </div>
     </>
   );
 };

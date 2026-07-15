@@ -935,20 +935,6 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
         </Card>
       </div>
 
-      <div id="clip-edge" data-search-target>
-        <Card>
-          <CardHeader title="MediusClipEdge" subtitle="One edge for medius_clip_builder_frame" />
-          <p>Build with <A href="/bindings/c/api#clip"><code>medius_clip_edge_button / _key / _media</code></A>; pass an array to <code>medius_clip_builder_frame</code>.</p>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The class-specific usage id.</td></tr>
-              <tr><td><code>class_</code></td><td><code>uint8_t</code></td><td>0 button / 1 key / 2 media.</td></tr>
-              <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>The <A href="/bindings/c/types#action"><code>MediusAction</code></A> byte.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
     </>
   );
 };
