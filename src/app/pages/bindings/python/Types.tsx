@@ -236,7 +236,7 @@ const Types: Component = () => {
 
       <div id="clip-status" data-search-target>
         <Card>
-          <CardHeader title="Clip" subtitle="ClipState · ClipStatus · ClipEdge" />
+          <CardHeader title="Clip" subtitle="ClipState · ClipStatus" />
           <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
           <div id="clipstate">
             <div class="api-response-label">ClipState</div>
@@ -262,14 +262,6 @@ const Types: Component = () => {
                 <tr><td><code>held</code></td><td><code>bool</code></td><td>a catch-trigger button is held</td></tr>
               </tbody>
             </table>
-          </div>
-          <div id="clipedge">
-            <div class="api-response-label">ClipEdge</div>
-            <p>
-              An edge for <code>ClipBuilder.frame(...)</code>. Build with <code>ClipEdge.button(button,
-              action)</code>, <code>ClipEdge.key(usage, action)</code>, or <code>ClipEdge.media(usage,
-              action)</code>.
-            </p>
           </div>
         </Card>
       </div>

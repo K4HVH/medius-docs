@@ -268,8 +268,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_builder_move(b, int16_t dx, int16_t dy)</code> / <code>_wheel(b, int16_t dz)</code></td><td>A motion frame.</td></tr>
               <tr><td><code>medius_clip_builder_press / _release / _force_release(b, MediusButton)</code></td><td>A one-button frame.</td></tr>
               <tr><td><code>medius_clip_builder_key(b, MediusKey, MediusAction)</code> / <code>_media(b, MediusMediaKey, MediusAction)</code></td><td>A one-key / one-media frame.</td></tr>
-              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, const MediusClipEdge *edges, size_t n)</code></td><td>A motion delta plus up to 8 edges on one frame.</td></tr>
-              <tr><td><code>medius_clip_edge_button / _key / _media(...)</code></td><td>Build a <A href="/bindings/c/types#clip-edge"><code>MediusClipEdge</code></A> for the frame call.</td></tr>
+              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, const MediusInput *inputs, const MediusAction *actions, size_t n)</code></td><td>A motion delta plus up to 8 edges (parallel <code>inputs</code>/<code>actions</code>) on one frame; build the inputs with <code>medius_input_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">HANDLE</div>
@@ -278,8 +277,8 @@ medius_device_free(dev);`}</code></pre>
             <tbody>
               <tr><td><code>medius_device_clip(dev, MediusClip **out)</code> / <code>medius_clip_free(clip)</code></td><td>Open / free a clip handle.</td></tr>
               <tr><td><code>medius_clip_append(clip, const MediusClipBuilder *b)</code></td><td>Append the builder's entries to the ring.</td></tr>
-              <tr><td><code>medius_clip_start(clip)</code> / <code>medius_clip_start_autolock(clip, uint16_t lock_mask)</code></td><td>Begin playback (optionally clip-owned auto-lock).</td></tr>
-              <tr><td><code>medius_clip_stop(clip)</code> / <code>medius_clip_config(clip, bool autolock, uint16_t lock_mask)</code></td><td>Stop + flush; or set auto-lock options.</td></tr>
+              <tr><td><code>medius_clip_start(clip)</code> / <code>medius_clip_start_autolock(clip)</code></td><td>Begin playback; the autolock form locks all input, released on stop.</td></tr>
+              <tr><td><code>medius_clip_stop(clip)</code> / <code>medius_clip_config(clip, bool autolock)</code></td><td>Stop + flush; or set whether a later start auto-locks.</td></tr>
               <tr><td><code>medius_clip_arm_catch(clip, MediusButton)</code> / <code>_arm_catch_any(clip)</code> / <code>_disarm(clip)</code></td><td>Arm / disarm an on-device catch trigger.</td></tr>
               <tr><td><code>medius_clip_status(clip, MediusClipStatus *out)</code></td><td><A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth + playback state.</td></tr>
             </tbody>
