@@ -257,9 +257,9 @@ const Types: Component = () => {
               <tbody>
                 <tr><td><code>state</code></td><td><A href="#clipstate"><code>ClipState</code></A></td><td>the lifecycle state</td></tr>
                 <tr><td><code>free</code> / <code>used</code></td><td><code>int</code></td><td>ring bytes free / buffered (pace top-ups off <code>free</code>)</td></tr>
-                <tr><td><code>ticks</code></td><td><code>int</code></td><td>entries played since the last start</td></tr>
+                <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames drained since the last start (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
-                <tr><td><code>held</code></td><td><code>bool</code></td><td>a catch-trigger button is held</td></tr>
+                <tr><td><code>held</code></td><td><code>int</code></td><td>bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>)</td></tr>
               </tbody>
             </table>
           </div>

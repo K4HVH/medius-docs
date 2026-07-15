@@ -163,9 +163,9 @@ handle.stop()?;`}</code></pre>
             <tbody>
               <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>idle / armed / playing / faulted.</td></tr>
               <tr><td><code>free</code> / <code>used</code></td><td><code>u32</code></td><td>ring bytes free (pace top-ups off this) / buffered.</td></tr>
-              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>entries played since the last start.</td></tr>
+              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>content frames drained since the last start (gap runs excluded).</td></tr>
               <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>u16</code></td><td>ran dry / append didn't fit / dropped append frames.</td></tr>
-              <tr><td><code>held</code></td><td><code>bool</code></td><td>a catch-trigger button is currently held.</td></tr>
+              <tr><td><code>held</code></td><td><code>u8</code></td><td>bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>).</td></tr>
             </tbody>
           </table>
         </Card>
