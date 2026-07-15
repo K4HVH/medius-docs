@@ -21,7 +21,8 @@ const Structs: Component = () => {
             Firmware identity from{' '}
             <A href="/library/requests#version"><code>query_version()</code></A>. <code>Display</code>{' '}
             prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.{' '}
-            <code>mac</code> is the device chip's base MAC, a stable per-box id.
+            <code>mac</code> is the device chip's base MAC, a stable per-box id, and{' '}
+            <A href="/library/options#set-name"><code>name</code></A> is the box's readable label.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -31,6 +32,7 @@ const Structs: Component = () => {
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
               <tr><td><code>mac</code></td><td><code>[u8; 6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
+              <tr><td><code>name</code></td><td><code>String</code></td><td>The box's human-readable name (a synthesized default when unset), set via <A href="/library/options#set-name"><code>set_name</code></A>.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -42,10 +44,10 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 3, fw_patch: 2, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc] };
-assert_eq!(v.to_string(), "fw 2.3.2"); // Display omits proto_ver
+let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 2.4.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
-println!("{v} (protocol {}, box {})", v.proto_ver, v.mac_hex());`}</code></pre>
+println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
       </div>
       <div id="health" data-search-target>

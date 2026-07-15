@@ -25,11 +25,13 @@ import {
   LockDirection,
   LockTarget,
   isComposite,
+  clearNamePayload,
   emitPayload,
   imperfectPayload,
   ledPayload,
   lockPayload,
   moveRidePayload,
+  namePayload,
   lockSet,
   logLevelFromU8,
   nativeHz,
@@ -129,6 +131,7 @@ describe('FrameDecoder', () => {
         fwMinor: 1,
         fwPatch: 0,
         mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+        name: '', // no name tail past the 11-byte header
       },
     });
   });
@@ -244,9 +247,12 @@ describe('parseResp / parseLog', () => {
     expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
 
-  it('ignores trailing bytes past a complete RESP(VERSION)', () => {
+  it('decodes the ASCII name tail after the RESP(VERSION) header', () => {
+    // Bytes past the 11-byte header are the box name (ASCII, LEN-delimited), not trailing garbage.
     expect(
-      parseResp(new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 99, 99])),
+      parseResp(
+        new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x42, 0x6f, 0x78]),
+      ),
     ).toEqual({
       kind: 'version',
       version: {
@@ -255,6 +261,7 @@ describe('parseResp / parseLog', () => {
         fwMinor: 3,
         fwPatch: 4,
         mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+        name: 'Box',
       },
     });
   });
@@ -518,6 +525,15 @@ describe('OPTION command (§3.10)', () => {
     expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01]);
+  });
+
+  it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
+    expect(Array.from(namePayload('AB'))).toEqual([3, 0x41, 0x42]);
+    expect(Array.from(clearNamePayload())).toEqual([3]); // clear = OPTION(NAME) with no value
+    // non-printable / non-ASCII bytes are dropped so only a valid name reaches the wire
+    expect(Array.from(namePayload('A\tB\u{1f600}C'))).toEqual([3, 0x41, 0x42, 0x43]);
+    // capped at 32 bytes
+    expect(namePayload('x'.repeat(40)).length).toBe(1 + 32);
   });
 
   it('parses RESP(OPTIONS, EMIT) into mode / fixed_hz / resolved_hz', () => {

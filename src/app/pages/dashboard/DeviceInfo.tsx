@@ -131,6 +131,11 @@ const DeviceInfo = () => {
                   <code>{macHex(dash.version()!)}</code>
                 </Row>
               </Show>
+              <Show when={dash.version?.()?.name}>
+                <Row label="Box name">
+                  <code>{dash.version()!.name}</code>
+                </Row>
+              </Show>
 
               <Show when={hasMouse(c())}>
                 <div style={sectionLabel}>Mouse</div>

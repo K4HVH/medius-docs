@@ -407,6 +407,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
                 <tr><td><code>fw_patch</code></td><td><code>int</code></td><td>firmware patch</td></tr>
                 <tr><td><code>mac</code></td><td><code>bytes</code></td><td>the device chip's base MAC (6 bytes), a stable per-box id</td></tr>
                 <tr><td><code>mac_hex</code></td><td><code>str</code></td><td>the MAC as 12 lowercase hex digits</td></tr>
+                <tr><td><code>name</code></td><td><code>str</code></td><td>the box's human-readable name (a synthesized default when unset), set with <A href="/bindings/python/api#led-admin-options"><code>set_name</code></A></td></tr>
               </tbody>
             </table>
           </div>
@@ -608,7 +609,7 @@ LockTarget.button(button) -> LockTarget`}</pre>
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>port</code></td><td><A href="#portinfo"><code>PortInfo</code></A></td><td>the box's control port</td></tr>
-                <tr><td><code>version</code></td><td><A href="#version"><code>Version</code></A></td><td>its firmware version, with the box MAC</td></tr>
+                <tr><td><code>version</code></td><td><A href="#version"><code>Version</code></A></td><td>its firmware version, with the box MAC and name</td></tr>
                 <tr><td><code>device</code></td><td><A href="#deviceinfo"><code>DeviceInfo</code></A></td><td>the device it clones</td></tr>
                 <tr><td><code>id</code></td><td><code>str</code></td><td>the box identity (the MAC hex)</td></tr>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>

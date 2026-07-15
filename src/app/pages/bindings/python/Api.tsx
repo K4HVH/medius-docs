@@ -171,6 +171,8 @@ const Api: Component = () => {
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
+              <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#value-types"><code>Version.name</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>

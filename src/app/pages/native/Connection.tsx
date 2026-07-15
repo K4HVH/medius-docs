@@ -55,9 +55,9 @@ const Connection: Component = () => {
           </table>
           <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
           <p>
-            Five payload bytes. The first echoes the <code>what</code> selector you asked for (the
-            byte that chose which thing to query), then the protocol and firmware version follow. Full
-            detail on the <A href="/native/commands/requests#version">Requests</A> page.
+            The first byte echoes the <code>what</code> selector you asked for (the byte that chose which
+            thing to query), then the protocol and firmware version, the box MAC, and the box name follow.
+            Full detail on the <A href="/native/commands/requests#version">Requests</A> page.
           </p>
           <table class="byte-table">
             <thead>
@@ -69,6 +69,8 @@ const Connection: Component = () => {
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
+              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the box MAC, a stable per-box id</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name (may be empty), delimited by the frame <code>LEN</code></td></tr>
             </tbody>
           </table>
         </Card>

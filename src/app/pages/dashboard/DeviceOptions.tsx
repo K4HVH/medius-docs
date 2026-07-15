@@ -4,7 +4,8 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { EmitMode } from '../../../dashboard/protocol';
+import { TextField } from '../../../components/inputs/TextField';
+import { EmitMode, NAME_MAX } from '../../../dashboard/protocol';
 import type { EmitPace, ImperfectStatus } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 
@@ -55,6 +56,8 @@ const DeviceOptions = () => {
   const [emit, setEmit] = createSignal<EmitPace | null>(null);
   const [emitMode, setEmitMode] = createSignal('learned');
   const [hz, setHz] = createSignal(500);
+  const [boxName, setBoxName] = createSignal<string | null>(null); // the box's live name, read from RESP(VERSION)
+  const [nameDraft, setNameDraft] = createSignal('');
 
   const refresh = async () => {
     try {
@@ -63,9 +66,24 @@ const DeviceOptions = () => {
       setImperfect(await link.queryImperfect());
       setRide(await link.queryMovementRiding());
       setEmit(await link.queryEmitPace());
+      // The name rides on RESP(VERSION) (the ASCII tail after the MAC), not a Q_OPTIONS readback.
+      setBoxName((await link.queryVersion()).name);
     } catch {
       // A transient miss is fine; the next refresh tries again.
     }
+  };
+
+  const applyName = async () => {
+    const name = nameDraft().trim();
+    if (name.length === 0) return;
+    await dash.link()?.setName(name);
+    await refresh();
+  };
+
+  const clearName = async () => {
+    await dash.link()?.clearName();
+    setNameDraft('');
+    await refresh();
   };
 
   const allowImperfect = async (allow: boolean) => {
@@ -86,6 +104,8 @@ const DeviceOptions = () => {
 
   let timer: ReturnType<typeof setInterval> | null = null;
   onMount(() => {
+    // Seed the editable draft from the name known at handshake, so the field opens on the current name.
+    setNameDraft(dash.version()?.name ?? '');
     void refresh();
     timer = setInterval(() => void refresh(), 1000);
   });
@@ -97,6 +117,34 @@ const DeviceOptions = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
+
+        <div style={sectionLabel}>Box name</div>
+        <p>
+          A human-readable name for the box, the readable partner to its id. Leave it unset and the box
+          makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters and numbers.
+        </p>
+        <div style={controls}>
+          <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
+            <TextField
+              label="Name"
+              value={nameDraft()}
+              maxLength={NAME_MAX}
+              placeholder="Medius-1A2B"
+              onInput={setNameDraft}
+            />
+          </div>
+          <Button variant="primary" onClick={() => void applyName()}>
+            Set
+          </Button>
+          <Button variant="secondary" onClick={() => void clearName()}>
+            Clear
+          </Button>
+        </div>
+        <Show when={boxName() !== null} fallback={<p style={status}>Reading status...</p>}>
+          <div style={status}>
+            <Chip variant="neutral">{boxName()}</Chip>
+          </div>
+        </Show>
 
         <div style={sectionLabel}>Imperfect clone</div>
         <p>

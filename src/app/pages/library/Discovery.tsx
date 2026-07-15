@@ -30,7 +30,7 @@ const Discovery: Component = () => {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Opens each connected box in turn, handshakes, reads its{' '}
-            <A href="/library/requests#version"><code>Version</code></A> (with the box MAC) and cloned{' '}
+            <A href="/library/requests#version"><code>Version</code></A> (with the box MAC and name) and cloned{' '}
             <A href="/library/requests#device-info"><code>DeviceInfo</code></A>, then closes it,
             returning one <A href="/library/discovery#box-info"><code>BoxInfo</code></A> per box. Use it
             to show a picker, or to choose a box yourself.
@@ -39,8 +39,8 @@ const Discovery: Component = () => {
           <pre><code class="language-rust">{`use medius::Device;
 
 for b in Device::list() {
-    // id() is the box MAC hex; b.device Displays as "VVVV:PPPP product".
-    println!("{}  {}  {}", b.id(), b.device, b.port.path);
+    // id() is the box MAC hex; name() is its readable label; b.device Displays as "VVVV:PPPP product".
+    println!("{}  {}  {}  {}", b.id(), b.name(), b.device, b.port.path);
 }`}</code></pre>
         </Card>
       </div>
@@ -134,7 +134,7 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>port</code></td><td><A href="/library/types/structs#port-info"><code>PortInfo</code></A></td><td>The control port (path + CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version, with the box MAC.</td></tr>
+              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
               <tr><td><code>device</code></td><td><A href="/library/types/structs#device-info"><code>DeviceInfo</code></A></td><td>The device it clones.</td></tr>
             </tbody>
           </table>
@@ -142,6 +142,7 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>id()</code></td><td><code>String</code></td><td>The box identity: the MAC hex, as passed to <A href="/library/discovery#open-by-id"><code>open_by_id</code></A>.</td></tr>
+              <tr><td><code>name()</code></td><td><code>&amp;str</code></td><td>The box's human-readable <A href="/library/options#set-name">name</A> (from <code>version.name</code>), a display label rather than an opener key.</td></tr>
               <tr><td><code>serial()</code></td><td><code>Option&lt;&amp;str&gt;</code></td><td>The CH343 adapter's serial, when it serves one.</td></tr>
             </tbody>
           </table>
@@ -162,6 +163,12 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
             Opening a box anchors <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> to that
             identity. An automatic reconnect re-finds the <em>same</em> physical box even if the ports
             renumbered, and never adopts a different box that happens to be plugged in.
+          </p>
+          <p>
+            The readable partner to that MAC is the box's{' '}
+            <A href="/library/options#set-name">name</A> (from{' '}
+            <A href="/library/types/structs#version"><code>Version::name</code></A>), a display label for
+            telling boxes apart, not an opener key.
           </p>
         </Card>
       </div>

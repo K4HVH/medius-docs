@@ -80,7 +80,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
   const what = payload[0];
   switch (what) {
     case Q_VERSION:
-      // [0][proto][major][minor][patch][mac 6B] = 11 bytes.
+      // [0][proto][major][minor][patch][mac 6B] = 11-byte header, then the box name tail (ASCII,
+      // LEN-delimited, may be empty). proto_ver stays 2; the name is additive.
       if (payload.length < 11) return null;
       return {
         kind: 'version',
@@ -90,6 +91,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           fwMinor: payload[3],
           fwPatch: payload[4],
           mac: Array.from(payload.subarray(5, 11)),
+          name: textDecoder.decode(payload.subarray(11)),
         },
       };
     case Q_HEALTH:
