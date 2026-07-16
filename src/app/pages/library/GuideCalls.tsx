@@ -25,7 +25,7 @@ const GuideCalls: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let v = device.query_version()?; // waits for the box to reply`}</code></pre>
 
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>Reads state the library already holds; can't fail on the link.</p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let c = device.counters(); // local snapshot, no network`}</code></pre>

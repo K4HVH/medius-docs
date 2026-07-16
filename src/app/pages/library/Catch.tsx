@@ -15,7 +15,7 @@ const Catch: Component = () => {
           <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> snapshots, relative
           motion and held-usage sets, captured before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
-          <A href="/library/move">injection</A>. Drop the stream to unsubscribe.
+          <A href="/library/inject">injection</A>. Drop the stream to unsubscribe.
         </p>
       </Card>
 

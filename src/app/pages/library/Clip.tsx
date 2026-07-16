@@ -66,7 +66,7 @@ const Clip: Component = () => {
               <tr><td><code>gap(frames)</code></td><td>N idle frames (0 is a no-op).</td></tr>
               <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
               <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
-              <tr><td><code>press / release / force_release(button)</code></td><td>a one-frame press, soft-release, or force-release of a <A href="/library/types/enums#button"><code>Button</code></A>.</td></tr>
+              <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/enums#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
               <tr><td><code>key(key, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#key"><code>Key</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
               <tr><td><code>media(media, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#media-key"><code>MediaKey</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
               <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#usage"><code>Usage</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>

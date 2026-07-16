@@ -282,6 +282,25 @@ device.press(from_button)?;                         // press takes any impl Into
           </table>
         </Card>
       </div>
+      <div id="lock-scope" data-search-target>
+        <Card>
+          <CardHeader title="LockScope" subtitle="What a reported lock covers" />
+          <pre class="api-signature">enum LockScope {'{'} Target(LockTarget), Blanket(Class) {'}'}</pre>
+          <p>
+            What a <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> in a{' '}
+            <A href="/library/requests#query-locks"><code>query_locks</code></A> reply covers: one specific{' '}
+            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A>, or a whole-class blanket
+            that locks every usage of a <A href="/library/types/enums#class"><code>Class</code></A> at once.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Covers</th></tr></thead>
+            <tbody>
+              <tr><td><code>Target</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>A specific axis or usage.</td></tr>
+              <tr><td><code>Blanket</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>Every button, key, or media usage of the class.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="lock-direction" data-search-target>
         <Card>
           <CardHeader title="LockDirection" subtitle="Which way or which edge to block" />

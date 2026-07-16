@@ -101,7 +101,7 @@ medius_device_free(dev);`}</code></pre>
         <Card>
           <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
           <p>
-            One verb set over a <A href="/bindings/c/types#input"><code>MediusInput</code></A> (button, key,
+            One verb set over a <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (button, key,
             or media). Build it with the <A href="#builders">input helpers</A>; see{' '}
             <A href="/library/inject">Inject</A>, the <A href="/native/injection">injection model</A>, and
             the id spaces on <A href="/native/commands/usage">Usage IDs</A>.
@@ -109,16 +109,16 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_inject(MediusDevice *dev, MediusInput input, MediusAction action)</code></td><td>Apply an <A href="/bindings/c/types#action"><code>MediusAction</code></A> to a usage. The one injection verb.</td></tr>
-              <tr><td><code>medius_device_press(MediusDevice *dev, MediusInput input)</code></td><td>Hold the usage down (<code>MEDIUS_ACTION_PRESS</code>).</td></tr>
-              <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusInput input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
-              <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusInput input)</code></td><td>Release even against a physical hold.</td></tr>
+              <tr><td><code>medius_device_inject(MediusDevice *dev, MediusUsage input, MediusAction action)</code></td><td>Apply an <A href="/bindings/c/types#action"><code>MediusAction</code></A> to a usage. The one injection verb.</td></tr>
+              <tr><td><code>medius_device_press(MediusDevice *dev, MediusUsage input)</code></td><td>Hold the usage down (<code>MEDIUS_ACTION_PRESS</code>).</td></tr>
+              <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusUsage input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
+              <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusUsage input)</code></td><td>Release even against a physical hold.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              Build the target with <code>medius_input_button</code> / <code>_key</code> / <code>_media</code>{' '}
-              (see <A href="#builders">Input builders</A>); a <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
+              Build the target with <code>medius_usage_button</code> / <code>_key</code> / <code>_media</code>{' '}
+              (see <A href="#builders">Usage builders</A>); a <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
               or <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a raw HID usage.
             </p>
           </div>
@@ -177,7 +177,7 @@ medius_device_free(dev);`}</code></pre>
             <thead><tr><th>Function</th><th>Writes to <code>*out</code></th></tr></thead>
             <tbody>
               <tr><td><code>medius_device_query_version(dev, MediusVersion *out)</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A>: protocol + firmware version.</td></tr>
-              <tr><td><code>medius_device_query_health(dev, MediusHealth *out)</code></td><td><code>MediusHealth</code>: link, mouse, clone, injection flags.</td></tr>
+              <tr><td><code>medius_device_query_health(dev, MediusHealth *out)</code></td><td><A href="/bindings/c/types#health"><code>MediusHealth</code></A>: link, mouse, clone, injection flags.</td></tr>
               <tr><td><code>medius_device_device_info(dev, MediusDeviceInfo *out)</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A>: the cloned device's USB identity, kind, and product.</td></tr>
               <tr><td><code>medius_device_caps(dev, MediusCaps *out)</code></td><td><A href="/bindings/c/types#caps"><code>MediusCaps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A>: native report rate and poll period.</td></tr>
@@ -233,8 +233,8 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_builder_move(b, dx, dy) / _wheel(b, dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
               <tr><td><code>medius_clip_builder_press / _release / _force_release(b, button)</code></td><td>A one-button frame; <code>button</code> is a <A href="/bindings/c/types#button"><code>MediusButton</code></A>.</td></tr>
               <tr><td><code>medius_clip_builder_key(b, key, action) / _media(b, media, action)</code></td><td>A one-key / one-media frame: a <A href="/bindings/c/types#key"><code>MediusKey</code></A> / <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
-              <tr><td><code>medius_clip_builder_edge(b, input, action)</code></td><td>A one-edge frame for any <A href="/bindings/c/types#input"><code>MediusInput</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
-              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusInput</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_input_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
+              <tr><td><code>medius_clip_builder_edge(b, input, action)</code></td><td>A one-edge frame for any <A href="/bindings/c/types#input"><code>MediusUsage</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
+              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusUsage</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">HANDLE</div>
@@ -245,7 +245,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>medius_clip_start(clip, config)</code></td><td>Begin playback with a <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> (its auto-lock scope); a zero-length <code>autolock</code> plays with no lock.</td></tr>
               <tr><td><code>medius_clip_stop(clip)</code></td><td>Stop playback, flush the ring, release the clip's lock.</td></tr>
-              <tr><td><code>medius_clip_arm_catch(clip, input, config)</code></td><td>Arm a trigger on a physical press of <code>input</code>, any <A href="/bindings/c/types#input"><code>MediusInput</code></A> (build it with <code>medius_input_button</code>/<code>_key</code>/<code>_media</code>), starting with <A href="/bindings/c/types#clip-config"><code>config</code></A>.</td></tr>
+              <tr><td><code>medius_clip_arm_catch(clip, input, config)</code></td><td>Arm a trigger on a physical press of <code>input</code>, any <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (build it with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>), starting with <A href="/bindings/c/types#clip-config"><code>config</code></A>.</td></tr>
               <tr><td><code>medius_clip_arm_catch_any(clip, config) / medius_clip_disarm(clip)</code></td><td>Arm on any physical input (with <code>config</code>) / clear a pending arm.</td></tr>
               <tr><td><code>medius_clip_status(clip, out)</code></td><td>Fill a <A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth + playback state.</td></tr>
             </tbody>
@@ -255,18 +255,18 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Input, motion & lock-target builders" subtitle="Make the value structs the calls take" />
+          <CardHeader title="Usage, motion & lock-target builders" subtitle="Make the value structs the calls take" />
           <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A>, <A href="/library/move">Move</A>, and <A href="/library/lock">Lock</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_input_button(MediusButton button)</code></td><td><code>MediusInput</code> for <code>medius_device_inject</code>.</td></tr>
-              <tr><td><code>medius_input_key(MediusKey key)</code></td><td><code>MediusInput</code> addressing a keyboard key.</td></tr>
-              <tr><td><code>medius_input_media(MediusMediaKey media)</code></td><td><code>MediusInput</code> addressing a media key.</td></tr>
+              <tr><td><code>medius_usage_button(MediusButton button)</code></td><td><code>MediusUsage</code> for <code>medius_device_inject</code>.</td></tr>
+              <tr><td><code>medius_usage_key(MediusKey key)</code></td><td><code>MediusUsage</code> addressing a keyboard key.</td></tr>
+              <tr><td><code>medius_usage_media(MediusMediaKey media)</code></td><td><code>MediusUsage</code> addressing a media key.</td></tr>
               <tr><td><code>medius_motion_cursor(int16_t dx, int16_t dy)</code></td><td><A href="/bindings/c/types#motion"><code>MediusMotion</code></A> for <code>medius_device_move_axis</code>.</td></tr>
               <tr><td><code>medius_motion_wheel(int16_t delta)</code></td><td><code>MediusMotion</code> for a wheel scroll.</td></tr>
               <tr><td><code>medius_lock_target_axis(MediusLockTargetKind kind)</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> for an axis (<code>X</code> / <code>Y</code> / <code>Wheel</code>).</td></tr>
-              <tr><td><code>medius_lock_target_usage(MediusInput usage)</code></td><td><code>MediusLockTarget</code> for a usage (button, key, or media).</td></tr>
+              <tr><td><code>medius_lock_target_usage(MediusUsage usage)</code></td><td><code>MediusLockTarget</code> for a usage (button, key, or media).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -281,8 +281,8 @@ medius_device_free(dev);`}</code></pre>
             <tbody>
               <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, MediusLockDirection dir)</code></td><td><code>bool</code>: is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
               <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
-              <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusInput usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>
-              <tr><td><code>medius_clip_status_is_held(const MediusClipStatus *status, MediusInput usage)</code></td><td><code>bool</code>: is the clip holding that usage down.</td></tr>
+              <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusUsage usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>
+              <tr><td><code>medius_clip_status_is_held(const MediusClipStatus *status, MediusUsage usage)</code></td><td><code>bool</code>: is the clip holding that usage down.</td></tr>
               <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code>: a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
               <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code>: a keyboard interface is bound.</td></tr>
               <tr><td><code>medius_caps_is_composite(MediusCaps caps)</code></td><td><code>bool</code>: the clone is multi-HID-interface.</td></tr>

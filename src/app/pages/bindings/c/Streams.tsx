@@ -103,7 +103,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
             The usage list is length-prefixed by an inline <code>n</code> count; the backing array is
             fixed at{' '}
             <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> (256), so nothing
-            truncates. It holds class-tagged <A href="/bindings/c/types#input"><code>MediusInput</code></A> usages
+            truncates. It holds class-tagged <A href="/bindings/c/types#input"><code>MediusUsage</code></A> usages
             (a button, key, or media <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage</a>).
           </p>
           <pre><code class="language-c">{`typedef struct MediusCatchEvent {
@@ -112,7 +112,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
 } MediusCatchEvent;
 
 struct MediusMotionEvent { int16_t dx, dy, dz; };                     // cursor + wheel deltas
-struct MediusUsageEvent  { uint16_t n; MediusInput usages[256]; };    // class-tagged held usages
+struct MediusUsageEvent  { uint16_t n; MediusUsage usages[256]; };    // class-tagged held usages
 
 typedef struct MediusLogLine {          // from medius_log_stream_recv
     MediusLogLevel level;               // ERROR=0, WARN=1, INFO=2, DEBUG=3, VERBOSE=4
@@ -122,14 +122,14 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
             <thead><tr><th>When <code>kind</code> is</th><th>Read</th><th>Fields</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code> (cursor and wheel deltas)</td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <A href="/bindings/c/types#input"><code>MediusInput</code></A></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <A href="/bindings/c/types#input"><code>MediusUsage</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">INSPECTORS (test one usage without walking the array)</div>
           <table class="api-params">
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that <A href="/bindings/c/types#input"><code>MediusInput</code></A> usage (button, key, or media) is held.</td></tr>
+              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that <A href="/bindings/c/types#input"><code>MediusUsage</code></A> usage (button, key, or media) is held.</td></tr>
               <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
             </tbody>
           </table>
@@ -159,8 +159,8 @@ while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
         break;
     case MEDIUS_CATCH_EVENT_KIND_USAGES:
         printf("held usages=%u  LMB=%d  W=%d\\n", ev.data.usages.n,
-               medius_usage_event_is_held(&ev.data.usages, medius_input_button(MEDIUS_BUTTON_LEFT)),
-               medius_usage_event_is_held(&ev.data.usages, medius_input_key(MEDIUS_KEY_W)));
+               medius_usage_event_is_held(&ev.data.usages, medius_usage_button(MEDIUS_BUTTON_LEFT)),
+               medius_usage_event_is_held(&ev.data.usages, medius_usage_key(MEDIUS_KEY_W)));
         break;
     }
 }

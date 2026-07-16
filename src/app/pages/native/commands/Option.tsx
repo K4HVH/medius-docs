@@ -87,7 +87,9 @@ const Option: Component = () => {
           <div class="callout callout--info">
             <p>
               Some devices need more interrupt-IN endpoints than the box serves (the Wooting Two HE's
-              analog stream wants a sixth, past the ESP32-S3's five). Changing this for an{' '}
+              analog stream wants a sixth, past the{' '}
+              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
+              five). Changing this for an{' '}
               <em>attached</em> over-capacity device reboots the box to re-clone; a normal device is
               unaffected.
             </p>
@@ -127,7 +129,7 @@ const Option: Component = () => {
           </p>
           <div class="callout callout--warning">
             <p>
-              While on, pure idle injection (moving the cursor while the hand is still) stops working —
+              While on, pure idle injection (moving the cursor while the hand is still) stops working:
               motion waits for a native move and is dropped if none comes. Button, key, and media
               injection are unaffected.
             </p>
@@ -155,8 +157,8 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>—</td><td>The rate the real mouse actually reports at</td></tr>
-              <tr><td><code>1</code></td><td>Interval</td><td>—</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
+              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
+              <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
             </tbody>
           </table>

@@ -108,7 +108,7 @@ const Streams: Component = () => {
             <thead><tr><th>Payload</th><th>Fields</th><th>Held test</th></tr></thead>
             <tbody>
               <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
-              <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Input]</code> (buttons, keys, and media, one shape)</td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Input</code></A> is in the snapshot</td></tr>
+              <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape)</td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
               <tr><td><code>LogLine</code></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
           </table>
@@ -130,7 +130,7 @@ const Streams: Component = () => {
       <div id="example" data-search-target>
         <Card>
           <CardHeader title="Consume loop" subtitle="Subscribe, iterate, react" />
-          <pre><code class="language-python">{`from medius import Device, CatchMask, CatchEventKind, Input, Button
+          <pre><code class="language-python">{`from medius import Device, CatchMask, CatchEventKind, Usage, Button
 
 with Device.find() as dev:
     with dev.catch_events(CatchMask.MOTION | CatchMask.BUTTONS) as events:
@@ -139,7 +139,7 @@ with Device.find() as dev:
                 m = ev.motion
                 print(f"moved {m.dx},{m.dy}  wheel {m.dz}")
             elif ev.kind == CatchEventKind.USAGES:
-                if ev.usages.is_held(Input.button(Button.LEFT)):
+                if ev.usages.is_held(Usage.button(Button.LEFT)):
                     print("left held")
             if events.dropped:
                 print("fell behind:", events.dropped, "dropped")`}</code></pre>

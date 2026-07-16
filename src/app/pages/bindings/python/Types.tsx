@@ -101,13 +101,14 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Class</th></tr></thead>
               <tbody>
-                <tr><td><code>KEYS</code></td><td><code>0</code></td><td>every keyboard key and modifier</td></tr>
-                <tr><td><code>MEDIA</code></td><td><code>1</code></td><td>every media usage</td></tr>
+                <tr><td><code>AIM</code></td><td><code>0</code></td><td>the X and Y cursor axes</td></tr>
+                <tr><td><code>WHEEL</code></td><td><code>1</code></td><td>the wheel</td></tr>
                 <tr><td><code>BUTTONS</code></td><td><code>2</code></td><td>every mouse button</td></tr>
-                <tr><td><code>AIM</code></td><td><code>3</code></td><td>the X and Y cursor axes</td></tr>
-                <tr><td><code>WHEEL</code></td><td><code>4</code></td><td>the wheel</td></tr>
+                <tr><td><code>KEYS</code></td><td><code>3</code></td><td>every keyboard key and modifier</td></tr>
+                <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td></tr>
               </tbody>
             </table>
+            <p>These are ABI-local ordinals, not the <A href="#catchmask"><code>CatchMask</code></A> wire bits.</p>
           </div>
         </Card>
       </div>
@@ -265,8 +266,8 @@ const Types: Component = () => {
                 <tr><td><code>free</code> / <code>used</code></td><td><code>int</code></td><td>ring bytes free / buffered (pace top-ups off <code>free</code>)</td></tr>
                 <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames drained since the last start (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
-                <tr><td><code>held</code></td><td><code>List[Input]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
-                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test one <A href="#input"><code>Input</code></A> in <code>held</code></td></tr>
+                <tr><td><code>held</code></td><td><code>List[Usage]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
+                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test one <A href="#input"><code>Usage</code></A> in <code>held</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -323,10 +324,10 @@ const Types: Component = () => {
 
       <div id="wire-enums" data-search-target>
         <Card>
-          <CardHeader title="Wire enums" subtitle="MotionKind · InputKind · FrameType" />
+          <CardHeader title="Wire enums" subtitle="MotionKind · Class · FrameType" />
           <p>
-            Mostly internal. <code>MotionKind</code> and <code>InputKind</code> tag the structs the{' '}
-            <A href="#input">Input</A> and <A href="#motion">Motion</A> builders produce; <code>FrameType</code> names a wire
+            Mostly internal. <code>MotionKind</code> and <code>Class</code> tag the structs the{' '}
+            <A href="#input">Usage</A> and <A href="#motion">Motion</A> builders produce; <code>FrameType</code> names a wire
             frame for <A href="/library/features/mock"><code>MockBox.saw()</code></A> and{' '}
             <A href="#recordedframe"><code>RecordedFrame.type</code></A>. Frame semantics are on{' '}
             <A href="/native/frame">Frames</A> and <A href="/library/types/frames">Library frames</A>.
@@ -344,7 +345,7 @@ const Types: Component = () => {
           </div>
 
           <div id="inputkind">
-            <div class="api-response-label">InputKind</div>
+            <div class="api-response-label">Class</div>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -376,17 +377,17 @@ const Types: Component = () => {
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Parameter builders" subtitle="Input · Motion · LockTarget" />
+          <CardHeader title="Parameter builders" subtitle="Usage · Motion · LockTarget" />
           <p>
             Small classes that wrap a native struct. Build them with their class methods and pass
             the result to the matching call. Never construct one field by field.
           </p>
 
           <div id="input">
-            <div class="api-response-label">Input</div>
-            <pre class="api-signature">{`Input.button(button) -> Input
-Input.key(key)       -> Input
-Input.media(media)   -> Input`}</pre>
+            <div class="api-response-label">Usage</div>
+            <pre class="api-signature">{`Usage.button(button) -> Usage
+Usage.key(key)       -> Usage
+Usage.media(media)   -> Usage`}</pre>
             <p>An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>. See <A href="/library/inject">Inject</A>.</p>
           </div>
 
@@ -402,7 +403,7 @@ Motion.wheel(delta)   -> Motion`}</pre>
             <pre class="api-signature">{`LockTarget.x()            -> LockTarget
 LockTarget.y()            -> LockTarget
 LockTarget.wheel()        -> LockTarget
-LockTarget.usage(input)   -> LockTarget
+LockTarget.usage(usage)   -> LockTarget
 LockTarget.button(button) -> LockTarget
 LockTarget.key(key)       -> LockTarget
 LockTarget.media(media)   -> LockTarget`}</pre>
@@ -577,7 +578,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="#lockentry"><code>LockEntry</code></A> per active lock</td></tr>
-                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>test one <A href="#locktarget"><code>LockTarget</code></A> + <A href="#lockdirection"><code>LockDirection</code></A></td></tr>
+                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>test one <A href="#locktarget"><code>LockTarget</code></A> + <A href="#lockdirection"><code>LockDirection</code></A>; also true when a whole-class blanket covers it</td></tr>
               </tbody>
             </table>
           </div>
@@ -715,8 +716,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>usages</code></td><td><code>List[Input]</code></td><td>every held <A href="#input"><code>Input</code></A> (button, key, or media; modifiers are key usages <code>0xE0</code> to <code>0xE7</code>)</td></tr>
-                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test an <A href="#input"><code>Input</code></A> in the snapshot</td></tr>
+                <tr><td><code>usages</code></td><td><code>List[Usage]</code></td><td>every held <A href="#input"><code>Usage</code></A> (button, key, or media; modifiers are key usages <code>0xE0</code> to <code>0xE7</code>)</td></tr>
+                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test an <A href="#input"><code>Usage</code></A> in the snapshot</td></tr>
               </tbody>
             </table>
           </div>

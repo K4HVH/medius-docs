@@ -230,8 +230,8 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every active lock, one entry per locked target.</td></tr>
-              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether that target and direction is locked; <code>target</code> is any <code>impl Into&lt;LockTarget&gt;</code>.</td></tr>
+              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every active lock, one entry per locked target or whole-class blanket.</td></tr>
+              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether that target and direction is locked, by a specific entry or a covering whole-class blanket; <code>target</code> is any <code>impl Into&lt;LockTarget&gt;</code>.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
           </table>
@@ -251,15 +251,15 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
       <div id="lock-entry" data-search-target>
         <Card>
           <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
+          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, positive: bool, negative: bool {'}'}</pre>
           <p>
-            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list: the
-            target and which edges are locked.
+            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list: what is
+            locked (its <A href="/library/types/enums#lock-scope"><code>LockScope</code></A>) and which edges.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>target</code></td><td><code>Option&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>What is locked; <code>None</code> for a whole-class blanket.</td></tr>
-              <tr><td><code>blanket</code></td><td><code>Option&lt;<A href="/library/types/enums#class">Class</A>&gt;</code></td><td>The blanket class, when this entry locks a whole class.</td></tr>
+              <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
               <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive/press edge is locked.</td></tr>
               <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative/release edge is locked.</td></tr>
             </tbody>
@@ -560,30 +560,9 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             <A href="/library/diagnostics#logs"><code>device.logs()</code></A>.
           </p>
 
-          <pre class="api-signature">fn recv(&self) -&gt; Result&lt;LogLine&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
-          <p>Block until the next line arrives, or <code>Err(Disconnected)</code> if the link drops.</p>
-
-          <pre class="api-signature">fn try_recv(&self) -&gt; Option&lt;LogLine&gt;</pre>
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
-          <p>The next buffered line, or <code>None</code> if nothing is queued. Never blocks.</p>
-
-          <pre class="api-signature">fn recv_timeout(&self, timeout: Duration) -&gt; Option&lt;LogLine&gt;</pre>
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
-          <p>Block up to <code>timeout</code> for the next line; <code>None</code> on timeout.</p>
-
-          <pre class="api-signature">fn try_iter(&self) -&gt; impl Iterator&lt;Item = LogLine&gt;</pre>
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
-          <p>
-            Drain every buffered line without blocking;{' '}
+            Pull lines with whichever method fits your loop; none touch the wire (they read a local
+            channel), so cloning shares the same queue. See{' '}
             <a
               href="https://doc.rust-lang.org/std/iter/trait.IntoIterator.html"
               target="_blank"
@@ -591,17 +570,22 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             >
               <code>IntoIterator</code>
             </a>{' '}
-            lets <code>for line in stream</code> block per line until the link closes.
+            for looping the stream directly with <code>for line in stream</code> (blocks per line until
+            the link closes).
           </p>
-
-          <pre class="api-signature">async fn recv_async(&self) -&gt; Result&lt;LogLine&gt;</pre>
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
-          <p>
-            Await the next line (<code>async</code> feature); <code>Err(Disconnected)</code> if the
-            link drops. Runtime-agnostic.
-          </p>
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>recv()</code></td><td><code>Result&lt;LogLine&gt;</code></td><td>Block until the next line, or <code>Err(Disconnected)</code> if the link drops.</td></tr>
+              <tr><td><code>try_recv()</code></td><td><code>Option&lt;LogLine&gt;</code></td><td>The next buffered line, or <code>None</code> (never blocks).</td></tr>
+              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;LogLine&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>try_iter()</code></td><td><code>impl Iterator</code></td><td>Drain every buffered line without blocking.</td></tr>
+              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;LogLine&gt;</code></td><td>Await the next line (<code>async</code> feature), runtime-agnostic.</td></tr>
+            </tbody>
+          </table>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let stream = device.logs();
@@ -643,8 +627,8 @@ if let Ok(line) = stream.recv() {
           <pre><code class="language-rust">{`use medius::{Blanket, Button, ClipConfig};
 
 let cfg = ClipConfig::new().autolock(&[Blanket::Aim, Blanket::Buttons]);
-clip.start(&cfg)?;                       // play, locking aim + clicks (keyboard stays free)
-clip.arm_catch(Button::Side1, &cfg)?;    // or: fire that same config on a Side1 press`}</code></pre>
+handle.start(&cfg)?;                       // play, locking aim + clicks (keyboard stays free)
+handle.arm_catch(Button::Side1, &cfg)?;    // or: fire that same config on a Side1 press`}</code></pre>
         </Card>
       </div>
 

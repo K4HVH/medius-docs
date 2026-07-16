@@ -81,14 +81,14 @@ const Api: Component = () => {
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
             <A href="/native/injection">injection model</A> (press / soft-release / force-release). One
-            usage vocabulary drives every verb; build an <A href="/bindings/python/types#input"><code>Input</code></A>{' '}
-            with <code>Input.button</code> / <code>key</code> / <code>media</code>. Ids are on{' '}
+            usage vocabulary drives every verb; build a <A href="/bindings/python/types#input"><code>Usage</code></A>{' '}
+            with <code>Usage.button</code> / <code>key</code> / <code>media</code>. Ids are on{' '}
             <A href="/native/commands/usage">Usage IDs</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Input</code></A> (button, key, or media usage).</td></tr>
+              <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media usage).</td></tr>
               <tr><td><code>dev.press(input)</code></td><td>Hold a usage down (<code>Action.PRESS</code>).</td></tr>
               <tr><td><code>dev.soft_release(input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
               <tr><td><code>dev.force_release(input)</code></td><td>Release even against a physical hold.</td></tr>
@@ -96,10 +96,10 @@ const Api: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              Every verb takes an <code>Input</code>, so a button, key, and media usage inject the
-              same way: <code>dev.press(Input.button(Button.LEFT))</code>,{' '}
-              <code>dev.press(Input.key(Key.W))</code>,{' '}
-              <code>dev.press(Input.media(MediaKey.MUTE))</code>.
+              Every verb takes a <code>Usage</code>, so a button, key, and media usage inject the
+              same way: <code>dev.press(Usage.button(Button.LEFT))</code>,{' '}
+              <code>dev.press(Usage.key(Key.W))</code>,{' '}
+              <code>dev.press(Usage.media(MediaKey.MUTE))</code>.
             </p>
           </div>
         </Card>
@@ -138,7 +138,7 @@ const Api: Component = () => {
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
-              <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#value-types"><code>Version.name</code></A>.</td></tr>
+              <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -202,8 +202,8 @@ const Api: Component = () => {
               <tr><td><code>.move(dx, dy) / .wheel(dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
               <tr><td><code>.press(button) / .release(button) / .force_release(button)</code></td><td>A one-button frame; <code>button</code> is a <A href="/bindings/python/types#button"><code>Button</code></A>.</td></tr>
               <tr><td><code>.key(usage, action) / .media(usage, action)</code></td><td>A one-key / one-media frame; <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
-              <tr><td><code>.edge(input, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Input</code></A> with an <A href="/bindings/python/types#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Input</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
+              <tr><td><code>.edge(input, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an <A href="/bindings/python/types#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Usage</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CLIPHANDLE</div>
@@ -214,7 +214,7 @@ const Api: Component = () => {
               <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>clip.start(config=None)</code></td><td>Begin playback with a <A href="/bindings/python/types#clip-config"><code>ClipConfig</code></A> (its auto-lock scope); no <code>config</code> plays with no lock.</td></tr>
               <tr><td><code>clip.stop()</code></td><td>Stop playback, flush the ring, release the clip's lock.</td></tr>
-              <tr><td><code>clip.arm_catch(trigger, config=None)</code></td><td>Arm a trigger on a physical press of <code>trigger</code>, any <A href="/bindings/python/types#input"><code>Input</code></A> (<code>Input.button</code>/<code>.key</code>/<code>.media</code>), starting with <A href="/bindings/python/types#clip-config"><code>config</code></A>.</td></tr>
+              <tr><td><code>clip.arm_catch(trigger, config=None)</code></td><td>Arm a trigger on a physical press of <code>trigger</code>, any <A href="/bindings/python/types#input"><code>Usage</code></A> (<code>Usage.button</code>/<code>.key</code>/<code>.media</code>), starting with <A href="/bindings/python/types#clip-config"><code>config</code></A>.</td></tr>
               <tr><td><code>clip.arm_catch_any(config=None) / clip.disarm()</code></td><td>Arm on any physical input (with <code>config</code>) / clear a pending arm.</td></tr>
               <tr><td><code>clip.status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth + playback state.</td></tr>
             </tbody>
