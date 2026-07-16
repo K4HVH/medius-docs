@@ -209,15 +209,17 @@ const Types: Component = () => {
 
       <div id="blanket" data-search-target>
         <Card>
-          <CardHeader title="MediusBlanket" subtitle="A whole-class lock selector" />
+          <CardHeader title="MediusBlanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">{`enum MediusBlanket : uint8_t`}</pre>
-          <p>Which class <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call. See <A href="/library/lock">Lock</A>.</p>
+          <p>A whole input group: which one <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the members of a clip's <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> auto-lock. See <A href="/library/lock">Lock</A>.</p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_BLANKET_KEYS</code></td><td><code>0</code></td><td>Every physical keyboard key.</td></tr>
-              <tr><td><code>MEDIUS_BLANKET_MEDIA</code></td><td><code>1</code></td><td>Every physical media usage.</td></tr>
-              <tr><td><code>MEDIUS_BLANKET_BUTTONS</code></td><td><code>2</code></td><td>Every physical mouse button.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_KEYS</code></td><td><code>0</code></td><td>Every keyboard key and modifier.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_MEDIA</code></td><td><code>1</code></td><td>Every media (Consumer) usage.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_BUTTONS</code></td><td><code>2</code></td><td>Every mouse button.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_AIM</code></td><td><code>3</code></td><td>The X and Y cursor axes.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_WHEEL</code></td><td><code>4</code></td><td>The wheel.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -915,6 +917,21 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
         </Card>
       </div>
 
+      <div id="clip-config" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipConfig" subtitle="Playback options for a clip start or catch trigger" />
+          <pre class="api-signature">{`typedef struct MediusClipConfig`}</pre>
+          <p>The options a clip <A href="/bindings/c/api#clip"><code>medius_clip_start</code></A> / <code>medius_clip_arm_catch</code> plays with; extensible as more are added. Fill it inline; a zero-length <code>autolock</code> means no auto-lock. Concept on <A href="/library/clip">Clip</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>autolock</code></td><td><code>const MediusBlanket *</code></td><td>The <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> input groups to auto-lock while playing (NULL for none).</td></tr>
+              <tr><td><code>autolock_len</code></td><td><code>size_t</code></td><td>How many groups <code>autolock</code> points at (0 = none).</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="MediusClipStatus & MediusClipState" subtitle="Buffered-clip ring and playback state" />
@@ -929,7 +946,7 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
-              <tr><td><code>held</code></td><td><code>uint8_t</code></td><td>Bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>).</td></tr>
+              <tr><td><code>held</code></td><td><code>uint8_t</code></td><td>Held-input flags: bits 0-4 the held mouse buttons (bit <code>b</code> = button id <code>b</code>), bit 5 a key held, bit 6 a media usage held.</td></tr>
             </tbody>
           </table>
         </Card>

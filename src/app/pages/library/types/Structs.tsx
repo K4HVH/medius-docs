@@ -608,6 +608,29 @@ if let Ok(line) = stream.recv() {
         </Card>
       </div>
 
+      <div id="clip-config" data-search-target>
+        <Card>
+          <CardHeader title="ClipConfig" subtitle="Playback options for a clip start or catch trigger" />
+          <p>
+            The options a clip <A href="/library/clip#handle"><code>start</code></A> or
+            <A href="/library/clip#handle"><code>arm_catch</code></A> plays with. The single place clip
+            settings live, extensible as more are added. Build with the chained setters:
+          </p>
+          <pre class="api-signature">fn new() -&gt; ClipConfig</pre>
+          <table class="api-params">
+            <thead><tr><th>Setter</th><th>Sets</th></tr></thead>
+            <tbody>
+              <tr><td><code>autolock(scope: &amp;[Blanket])</code></td><td>Auto-lock these <A href="/library/types/enums#blanket"><code>Blanket</code></A> groups while playing (clip-owned, released on stop). <code>Blanket::ALL</code> for every class, or a subset like <code>&amp;[Blanket::Aim, Blanket::Buttons]</code>. Default: no auto-lock.</td></tr>
+            </tbody>
+          </table>
+          <pre><code class="language-rust">{`use medius::{Blanket, Button, ClipConfig};
+
+let cfg = ClipConfig::new().autolock(&[Blanket::Aim, Blanket::Buttons]);
+clip.start(&cfg)?;                       // play, locking aim + clicks (keyboard stays free)
+clip.arm_catch(Button::Side1, &cfg)?;    // or: fire that same config on a Side1 press`}</code></pre>
+        </Card>
+      </div>
+
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="ClipStatus" subtitle="The buffered-clip ring and playback state" />
@@ -627,7 +650,7 @@ if let Ok(line) = stream.recv() {
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
-              <tr><td><code>held</code></td><td><code>u8</code></td><td>Bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>).</td></tr>
+              <tr><td><code>held</code></td><td><code>u8</code></td><td>Held-input flags: bits 0-4 the held mouse buttons (bit <code>b</code> = button id <code>b</code>), bit 5 a key held, bit 6 a media usage held. Read with <code>buttons_held()</code> / <code>keys_held()</code> / <code>media_held()</code>.</td></tr>
             </tbody>
           </table>
         </Card>

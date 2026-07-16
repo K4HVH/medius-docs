@@ -13,17 +13,16 @@ const Clip: Component = () => {
           <A href="/library/clip#builder"><code>ClipBuilder</code></A>, hand it to the{' '}
           <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
           <A href="/library/clip#clip"><code>Device::clip()</code></A>, and the box drains one entry per native
-          frame into the same injection state your live <A href="/library/move">move</A> and{' '}
-          <A href="/library/inject">inject</A> calls feed. Playback is clocked by the box, so it carries none of
-          the host's scheduling jitter and none of the per-command send floor: this is how you play a{' '}
-          frame-exact motion path or a canned macro. It is field-generic (mouse, keyboard, and media in one
-          clip) and backs the <A href="/native/commands/clip"><code>CLIP</code></A> commands.
+          frame into the same injection state your live <A href="/library/move"><code>move</code></A> and{' '}
+          <A href="/library/inject"><code>inject</code></A> calls feed. Playback is box-clocked, so it carries
+          no host scheduling jitter. It is field-generic (mouse, keyboard, and media in one clip) and backs
+          the <A href="/native/commands/clip"><code>CLIP</code></A> commands.
         </p>
-        <pre class="diagram">{`  ClipBuilder                 ClipHandle = device.clip()          box
-  ------------                 -------------------------           ---
-  clip.move_by(10, 0)          handle.append(&clip)   --------->  ring fills
-  clip.press(Button::Left)     handle.start()         --------->  plays 1 / frame
-  clip.gap(20)          -->     handle.status()        <---------  free / used / state
+        <pre class="diagram">{`  ClipBuilder                  ClipHandle = device.clip()              box
+  -----------                  --------------------------              ---
+  clip.move_by(10, 0)          handle.append(&clip)          ------->  ring fills
+  clip.press(Button::Left)     handle.start()                ------->  plays 1 / frame
+  clip.gap(20)                 handle.status()               <-------  free / used / state
   clip.release(...)            handle.stop()`}</pre>
       </Card>
 
@@ -31,14 +30,18 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="clip" subtitle="Open a clip handle" />
           <pre class="api-signature">fn clip(&self) -&gt; ClipHandle</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Returns a <A href="/library/clip#handle"><code>ClipHandle</code></A> bound to this box. The handle
             owns the append-sequence counter the box uses to spot a dropped append, so keep one handle for a
-            clip session (top it up through that handle) rather than reopening one per append. Playback lives
-            in the box's RAM: a reboot or reconnect drops it, so re-preload after one. A clip needs a cloned
-            mouse (its frame clock is the mouse's report tick); keyboard and media edges ride that tick.
+            clip session (top it up through that handle) rather than reopening one per append.
           </p>
+          <div class="callout callout--info">
+            <p>
+              Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or reconnect drops
+              it, so re-preload after one. A clip needs a cloned mouse, since its frame clock is the mouse's
+              report tick; keyboard and media edges ride that tick.
+            </p>
+          </div>
         </Card>
       </div>
 
@@ -60,14 +63,14 @@ const Clip: Component = () => {
               <tr><th>Method</th><th>Appends</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>gap(frames: u16)</code></td><td>N idle frames (0 is a no-op).</td></tr>
+              <tr><td><code>gap(frames)</code></td><td>N idle frames (0 is a no-op).</td></tr>
               <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
               <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
-              <tr><td><code>press / release / force_release(button: Button)</code></td><td>a one-button frame (press, soft-release, force-release).</td></tr>
-              <tr><td><code>key(key: Key, action: Action)</code></td><td>a one-key frame.</td></tr>
-              <tr><td><code>media(media: MediaKey, action: Action)</code></td><td>a one-media frame.</td></tr>
-              <tr><td><code>edge(input, action: Action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#input"><code>Input</code></A> class.</td></tr>
-              <tr><td><code>frame(dx, dy, wheel, &amp;[(Input, Action)])</code></td><td>a motion delta plus up to 8 edges, all on one frame.</td></tr>
+              <tr><td><code>press / release / force_release(button)</code></td><td>a one-frame press, soft-release, or force-release of a <A href="/library/types/enums#button"><code>Button</code></A>.</td></tr>
+              <tr><td><code>key(key, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#key"><code>Key</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>media(media, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#media-key"><code>MediaKey</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>edge(input, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#input"><code>Input</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/enums#input"><code>Input</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
           <p>
@@ -104,14 +107,13 @@ clip.key(Key::A, Action::Press)            // then type 'a'
               <tr><th>Method</th><th>Does</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>append(&amp;ClipBuilder)</code></td><td>Send the builder's entries to the ring; splits a large clip into whole-entry frames with contiguous append seqs.</td></tr>
-              <tr><td><code>start()</code></td><td>Play from the ring head.</td></tr>
-              <tr><td><code>start_autolock()</code></td><td>Play, and lock all physical input the host hasn't already locked, released on <code>stop</code>.</td></tr>
+              <tr><td><code>append(clip: &amp;ClipBuilder)</code></td><td>Send a <A href="/library/clip#builder"><code>ClipBuilder</code></A>'s entries to the ring; splits a large clip into whole-entry frames with contiguous append seqs.</td></tr>
+              <tr><td><code>start(config: &amp;ClipConfig)</code></td><td>Play from the ring head with a <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A> (its <A href="/library/lock">auto-lock</A> scope); <code>&amp;ClipConfig::new()</code> for no lock.</td></tr>
               <tr><td><code>stop()</code></td><td>Stop, flush the ring, release the clip's lock.</td></tr>
-              <tr><td><code>config(autolock: bool)</code></td><td>Set whether a catch-triggered <code>start</code> auto-locks, without starting.</td></tr>
-              <tr><td><code>arm_catch(Option&lt;Button&gt;)</code></td><td>Fire <code>start</code> on the box on a physical press of that button (any if <code>None</code>), no host round-trip.</td></tr>
+              <tr><td><code>arm_catch(trigger: impl Into&lt;Input&gt;, config: &amp;ClipConfig)</code></td><td>Fire <code>start(config)</code> on a physical press of <code>trigger</code>, any <A href="/library/types/enums#input"><code>Input</code></A> (a button, key, or media usage), no host round-trip.</td></tr>
+              <tr><td><code>arm_catch_any(config: &amp;ClipConfig)</code></td><td>Fire on any physical input, starting with the given <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A>.</td></tr>
               <tr><td><code>disarm()</code></td><td>Clear a pending catch-arm.</td></tr>
-              <tr><td><code>status()</code></td><td>Read the ring depth and playback state (blocks); see <A href="/library/clip#status">below</A>.</td></tr>
+              <tr><td><code>status() -&gt; ClipStatus</code></td><td>Read the ring depth and playback state (blocks); see <A href="/library/clip#status">below</A>.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -123,12 +125,12 @@ clip.key(Key::A, Action::Press)            // then type 'a'
           </div>
           <div class="api-response-label">EXAMPLE</div>
           <p>Preload, play with auto-lock, and top up in real time, pacing against <code>free</code>:</p>
-          <pre><code class="language-rust">{`use medius::ClipState;
+          <pre><code class="language-rust">{`use medius::{Blanket, ClipConfig, ClipState};
 use std::time::Duration;
 
-let handle = device.clip();     // device: an open Device
-handle.append(&clip)?;          // preload (clip, next_chunk: ClipBuilders you built)
-handle.start_autolock()?;       // play, and block the user's hand for the duration
+let handle = device.clip();       // device: an open Device
+handle.append(&clip)?;            // preload (clip, next_chunk: ClipBuilders you built)
+handle.start(&ClipConfig::new().autolock(Blanket::ALL))?;   // play, blocking every physical input
 
 loop {
     let s = handle.status()?;
@@ -162,10 +164,13 @@ handle.stop()?;`}</code></pre>
             </thead>
             <tbody>
               <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>idle / armed / playing / faulted.</td></tr>
-              <tr><td><code>free</code> / <code>used</code></td><td><code>u32</code></td><td>ring bytes free (pace top-ups off this) / buffered.</td></tr>
+              <tr><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this.</td></tr>
+              <tr><td><code>used</code></td><td><code>u32</code></td><td>ring bytes buffered, not yet drained.</td></tr>
               <tr><td><code>ticks</code></td><td><code>u32</code></td><td>content frames drained since the last start (gap runs excluded).</td></tr>
-              <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>u16</code></td><td>ran dry / append didn't fit / dropped append frames.</td></tr>
-              <tr><td><code>held</code></td><td><code>u8</code></td><td>bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>).</td></tr>
+              <tr><td><code>underruns</code></td><td><code>u16</code></td><td>times the ring ran dry mid-playback.</td></tr>
+              <tr><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped because the ring was full.</td></tr>
+              <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped append frames detected.</td></tr>
+              <tr><td><code>held</code></td><td><code>u8</code></td><td>held-input flags: bits 0-4 the held mouse buttons, bit 5 a key held, bit 6 a media usage held. Read with <code>buttons_held() / keys_held() / media_held()</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -182,9 +187,9 @@ handle.stop()?;`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let device = Device::find()?.into_async();
 let handle = device.clip();
-handle.append(&clip)?;          // sync, no await
-handle.start()?;
-let s = handle.status().await?; // the query awaits`}</code></pre>
+handle.append(&clip)?;              // sync, no await
+handle.start(&ClipConfig::new())?;  // sync
+let s = handle.status().await?;     // the query awaits`}</code></pre>
         </Card>
       </div>
     </>

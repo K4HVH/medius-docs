@@ -101,9 +101,11 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Class</th></tr></thead>
               <tbody>
-                <tr><td><code>KEYS</code></td><td><code>0</code></td><td>every keyboard key</td></tr>
-                <tr><td><code>MEDIA</code></td><td><code>1</code></td><td>every media key</td></tr>
+                <tr><td><code>KEYS</code></td><td><code>0</code></td><td>every keyboard key and modifier</td></tr>
+                <tr><td><code>MEDIA</code></td><td><code>1</code></td><td>every media usage</td></tr>
                 <tr><td><code>BUTTONS</code></td><td><code>2</code></td><td>every mouse button</td></tr>
+                <tr><td><code>AIM</code></td><td><code>3</code></td><td>the X and Y cursor axes</td></tr>
+                <tr><td><code>WHEEL</code></td><td><code>4</code></td><td>the wheel</td></tr>
               </tbody>
             </table>
           </div>
@@ -236,8 +238,12 @@ const Types: Component = () => {
 
       <div id="clip-status" data-search-target>
         <Card>
-          <CardHeader title="Clip" subtitle="ClipState · ClipStatus" />
+          <CardHeader title="Clip" subtitle="ClipConfig · ClipState · ClipStatus" />
           <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
+          <div id="clip-config">
+            <div class="api-response-label">ClipConfig</div>
+            <p>Playback options for <code>clip.start</code> / <code>clip.arm_catch</code>; extensible as more are added. <code>ClipConfig(autolock=[Blanket, ...])</code> auto-locks those <A href="/bindings/python/types#blanket"><code>Blanket</code></A> groups while playing (<code>None</code> / <code>[]</code> = none, <code>list(Blanket)</code> for every class).</p>
+          </div>
           <div id="clipstate">
             <div class="api-response-label">ClipState</div>
             <table class="api-params">
@@ -259,7 +265,7 @@ const Types: Component = () => {
                 <tr><td><code>free</code> / <code>used</code></td><td><code>int</code></td><td>ring bytes free / buffered (pace top-ups off <code>free</code>)</td></tr>
                 <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames drained since the last start (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
-                <tr><td><code>held</code></td><td><code>int</code></td><td>bitmask of clip-injected mouse buttons the clip is holding down (bit <code>b</code> = button id <code>b</code>)</td></tr>
+                <tr><td><code>held</code></td><td><code>int</code></td><td>held-input flags: bits 0-4 the held mouse buttons (bit <code>b</code> = button id <code>b</code>), bit 5 a key held, bit 6 a media usage held</td></tr>
               </tbody>
             </table>
           </div>

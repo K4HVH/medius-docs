@@ -283,18 +283,21 @@ const Enums: Component = () => {
       </div>
       <div id="blanket" data-search-target>
         <Card>
-          <CardHeader title="Blanket" subtitle="A whole-class lock selector" />
-          <pre class="api-signature">enum Blanket {'{'} Keys, Media, Buttons {'}'}</pre>
+          <CardHeader title="Blanket" subtitle="A whole-group lock selector" />
+          <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
           <p>
-            Which whole class <A href="/library/lock#lock-all"><code>lock_all</code></A> and{' '}
-            <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call.
+            A whole input group: which one <A href="/library/lock#lock-all"><code>lock_all</code></A> /{' '}
+            <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call, and the members of a
+            clip's <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A> auto-lock.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Keys</code></td><td>Every physical keyboard key.</td></tr>
-              <tr><td><code>Media</code></td><td>Every physical media usage.</td></tr>
-              <tr><td><code>Buttons</code></td><td>Every physical mouse button.</td></tr>
+              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td></tr>
+              <tr><td><code>Wheel</code></td><td>The wheel.</td></tr>
+              <tr><td><code>Buttons</code></td><td>Every mouse button.</td></tr>
+              <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td></tr>
+              <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td></tr>
             </tbody>
           </table>
         </Card>
