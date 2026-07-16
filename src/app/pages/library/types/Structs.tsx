@@ -27,7 +27,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>2</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>3</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -44,7 +44,7 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 2, fw_major: 2, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+let v = Version { proto_ver: 3, fw_major: 2, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
 assert_eq!(v.to_string(), "fw 2.4.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
@@ -221,26 +221,49 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <CardHeader title="Locks" subtitle="The active input locks" />
           <p>
             Active locks from <A href="/library/requests#query-locks"><code>query_locks()</code></A>, a
-            16-bit mask wrapped in a value type.{' '}
-            <code>is_locked(target, direction)</code> answers whether one particular lock is set, and{' '}
-            <code>mask()</code> hands back the raw bits. See the native{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the bit layout.
+            list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across every
+            class, so mouse, key, and media locks read the same way.{' '}
+            <code>is_locked(target, dir)</code> tests one lock; <code>entries()</code> is the whole list.
+            See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the
+            wire format.
           </p>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>is_locked(LockTarget, LockDirection)</code></td><td><code>bool</code></td><td>Whether that target+direction is locked.</td></tr>
-              <tr><td><code>mask()</code></td><td><code>u16</code></td><td>The raw mask, 2 bits per target.</td></tr>
+              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every active lock, one entry per locked target.</td></tr>
+              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether that target and direction is locked; <code>target</code> is any <code>impl Into&lt;LockTarget&gt;</code>.</td></tr>
+              <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Axis, Button, LockDirection};
 
 let locks = device.query_locks()?;
-if locks.is_locked(LockTarget::X, LockDirection::Positive) {
+if locks.is_locked(Axis::X, LockDirection::Positive) {
     // the real mouse can't move right
 }
-println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
+if locks.is_locked(Button::Left, LockDirection::Negative) {
+    // a left-click is latched down: the hand can't release it
+}
+println!("{} locks active", locks.entries().len());`}</code></pre>
+        </Card>
+      </div>
+      <div id="lock-entry" data-search-target>
+        <Card>
+          <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
+          <p>
+            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list: the
+            target and which edges are locked.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><code>Option&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>What is locked; <code>None</code> for a whole-class blanket.</td></tr>
+              <tr><td><code>blanket</code></td><td><code>Option&lt;<A href="/library/types/enums#class">Class</A>&gt;</code></td><td>The blanket class, when this entry locks a whole class.</td></tr>
+              <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive/press edge is locked.</td></tr>
+              <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative/release edge is locked.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
       <div id="catch-mask" data-search-target>
@@ -260,14 +283,15 @@ println!("raw mask: {:#06x}", locks.mask());`}</code></pre>
               <tr><td><code>MOTION</code></td><td><code>0x01</code></td><td>The mouse moved (dx/dy).</td></tr>
               <tr><td><code>WHEEL</code></td><td><code>0x02</code></td><td>The wheel turned.</td></tr>
               <tr><td><code>BUTTONS</code></td><td><code>0x04</code></td><td>A button changed.</td></tr>
-              <tr><td><code>KEYS</code></td><td><code>0x08</code></td><td>A keyboard or media key changed.</td></tr>
+              <tr><td><code>KEYS</code></td><td><code>0x08</code></td><td>A keyboard key or modifier changed.</td></tr>
+              <tr><td><code>MEDIA</code></td><td><code>0x10</code></td><td>A media (Consumer) usage changed.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>empty()</code></td><td><code>CatchMask</code></td><td>No bits set (unsubscribe).</td></tr>
-              <tr><td><code>all()</code></td><td><code>CatchMask</code></td><td>Every bit set (<code>0x0F</code>).</td></tr>
+              <tr><td><code>all()</code></td><td><code>CatchMask</code></td><td>Every class set (<code>0x1F</code>).</td></tr>
               <tr><td><code>bits()</code></td><td><code>u8</code></td><td>The raw mask byte.</td></tr>
               <tr><td><code>is_empty()</code></td><td><code>bool</code></td><td>No bits set.</td></tr>
               <tr><td><code>contains(other)</code></td><td><code>bool</code></td><td>Every bit in <code>other</code> is set here.</td></tr>
@@ -283,77 +307,66 @@ assert_eq!(mask.bits(), 0x05);
 let stream = device.catch_events(mask)?;`}</code></pre>
         </Card>
       </div>
-      <div id="mouse-event" data-search-target>
+      <div id="motion-event" data-search-target>
         <Card>
-          <CardHeader title="MouseEvent" subtitle="One physical mouse snapshot" />
+          <CardHeader title="MotionEvent" subtitle="One physical relative-axis event" />
           <p>
-            The mouse payload of a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Mouse</code></A>, read off an{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>. It's captured{' '}
-            <em>before</em> lock suppression or injection, so a locked or injected target still reports
-            the real hand value. Diff <code>buttons</code> across events to find press/release edges.
+            The payload of a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A>, read off an{' '}
+            <A href="/library/catch#event-stream"><code>EventStream</code></A>. The real hand motion at
+            the merge point, <em>before</em> lock suppression or injection, so a locked or injected axis
+            still reports the true delta.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>buttons</code></td><td><code>u8</code></td><td>Bit <code>b</code> = button id <code>b</code> (<code>0</code>=Left .. <code>4</code>=Side2).</td></tr>
-              <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report.</td></tr>
-              <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report.</td></tr>
-              <tr><td><code>wheel</code></td><td><code>i16</code></td><td>Wheel movement this report.</td></tr>
+              <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
+              <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
+              <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{CatchMask, CatchEvent};
+
+let stream = device.catch_events(CatchMask::MOTION | CatchMask::WHEEL)?;
+if let CatchEvent::Motion(m) = stream.recv()? {
+    println!("moved {} {}, wheel {}", m.dx, m.dy, m.dz);
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="usage-snapshot" data-search-target>
+        <Card>
+          <CardHeader title="UsageSnapshot" subtitle="One physical held-usage snapshot" />
+          <p>
+            The payload of a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A>: every held{' '}
+            <A href="/library/types/enums#usage"><code>Usage</code></A> of one class (buttons, keys, or
+            media, all one shape), captured before injection. Diff successive snapshots for press/release
+            edges, or test one with <code>is_held</code>; a dropped frame self-corrects on the next.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>The currently-held usages, all of one class per event.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>is_pressed(Button)</code></td><td><code>bool</code></td><td>Whether that button's bit is set.</td></tr>
+              <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>Whether <code>usage</code> is held; takes any <code>impl Into&lt;Usage&gt;</code>.</td></tr>
+              <tr><td><code>class()</code></td><td><code>Option&lt;<A href="/library/types/enums#class">Class</A>&gt;</code></td><td>The class of this snapshot, from its first usage, or <code>None</code> when empty.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, CatchMask, CatchEvent};
 
-let stream = device.catch_events(CatchMask::all())?;
-if let CatchEvent::Mouse(m) = stream.recv()? {
-    if m.is_pressed(Button::Left) {
-        println!("left held, moved {} {}", m.dx, m.dy);
+let stream = device.catch_events(CatchMask::BUTTONS)?;
+if let CatchEvent::Usages(s) = stream.recv()? {
+    if s.is_held(Button::Left) {
+        println!("left button held");
     }
 }`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="keyboard-event" data-search-target>
-        <Card>
-          <CardHeader title="KeyboardEvent" subtitle="One physical keyboard snapshot" />
-          <p>
-            The keyboard payload of a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Keyboard</code></A>. A full
-            snapshot of the keys held, captured before injection; diff successive snapshots for down /
-            up edges.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>modifiers</code></td><td><code>u8</code></td><td>Modifier bitmap: bit <code>m</code> = the modifier at usage <code>0xE0 + m</code>.</td></tr>
-              <tr><td><code>keys</code></td><td><code>Vec&lt;<A href="/library/types/structs#key">Key</A>&gt;</code></td><td>The currently-pressed keycodes.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-
-      <div id="media-event" data-search-target>
-        <Card>
-          <CardHeader title="MediaEvent" subtitle="One physical media snapshot" />
-          <p>
-            The media payload of a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Media</code></A>: the active
-            Consumer usages, self-correcting like{' '}
-            <A href="/library/types/structs#keyboard-event"><code>KeyboardEvent</code></A>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>keys</code></td><td><code>Vec&lt;<A href="/library/types/structs#media-key">MediaKey</A>&gt;</code></td><td>The currently-active media usages.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 
@@ -361,8 +374,10 @@ if let CatchEvent::Mouse(m) = stream.recv()? {
         <Card>
           <CardHeader title="Key" subtitle="A HID keyboard keycode" />
           <p>
-            A newtype over a HID keyboard/keypad usage, passed to{' '}
-            <A href="/library/inject#key"><code>key()</code></A>. Named consts cover the common keys
+            A newtype over a HID keyboard/keypad usage. It converts{' '}
+            <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code>, so you pass one
+            straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
+            <A href="/library/inject#inject"><code>press</code></A>. Named consts cover the common keys
             (<code>Key::A</code>, <code>Key::ENTER</code>, <code>Key::LEFT_SHIFT</code>); build any
             other with <code>Key::new(u8)</code>. Modifiers are the usages <code>0xE0</code>-<code>0xE7</code>.
           </p>
@@ -387,8 +402,10 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
         <Card>
           <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
           <p>
-            A newtype over a 16-bit Consumer usage, passed to{' '}
-            <A href="/library/inject#media"><code>media()</code></A>. Named consts cover the common
+            A newtype over a 16-bit Consumer usage. It converts{' '}
+            <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code>, so you pass one
+            straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
+            <A href="/library/inject#inject"><code>press</code></A>. Named consts cover the common
             media keys (<code>MediaKey::VOLUME_UP</code>, <code>MediaKey::PLAY_PAUSE</code>,{' '}
             <code>MediaKey::MUTE</code>); build any other with <code>MediaKey::new(u16)</code>.
           </p>
@@ -416,7 +433,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             Semantic capabilities from{' '}
             <A href="/library/requests#caps"><code>caps()</code></A>. Every field is
             zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
-            <A href="/library/inject#media"><code>media</code></A> injection.
+            <A href="/library/inject#inject">media injection</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -650,7 +667,7 @@ clip.arm_catch(Button::Side1, &cfg)?;    // or: fire that same config on a Side1
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
-              <tr><td><code>held</code></td><td><code>u8</code></td><td>Held-input flags: bits 0-4 the held mouse buttons (bit <code>b</code> = button id <code>b</code>), bit 5 a key held, bit 6 a media usage held. Read with <code>buttons_held()</code> / <code>keys_held()</code> / <code>media_held()</code>.</td></tr>
+              <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
           </table>
         </Card>

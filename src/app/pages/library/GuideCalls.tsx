@@ -66,12 +66,10 @@ const GuideCalls: Component = () => {
                 <td>
                   <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}
                   <A href="/library/move#wheel"><code>wheel</code></A>,{' '}
-                  <A href="/library/inject#button"><code>button</code></A>,{' '}
-                  <A href="/library/inject#button"><code>press</code></A>,{' '}
-                  <A href="/library/inject#button"><code>soft_release</code></A>,{' '}
-                  <A href="/library/inject#button"><code>force_release</code></A>,{' '}
-                  <A href="/library/inject#key"><code>key</code></A>,{' '}
-                  <A href="/library/inject#media"><code>media</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>inject</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>press</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>release</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>force_release</code></A>,{' '}
                   <A href="/library/admin#reset"><code>reset</code></A>,{' '}
                   <A href="/library/admin#reboot"><code>reboot</code></A>,{' '}
                   <A href="/library/led#led"><code>led</code></A>,{' '}
@@ -166,8 +164,8 @@ for _ in 0..200 {
           <CardHeader title="Making a click" subtitle="Press, wait, release" />
           <p>
             There's no one-shot <code>click</code>:{' '}
-            <A href="/library/inject#button"><code>press</code></A>, wait, then release with{' '}
-            <A href="/library/inject#button"><code>soft_release</code></A> so you don't stomp a
+            <A href="/library/inject#inject"><code>press</code></A>, wait, then release with{' '}
+            <A href="/library/inject#inject"><code>release</code></A> so you don't stomp a
             physical hold.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -176,7 +174,7 @@ use medius::Button;
 
 device.press(Button::Left)?;
 thread::sleep(Duration::from_millis(20));
-device.soft_release(Button::Left)?;`}</code></pre>
+device.release(Button::Left)?;`}</code></pre>
           <p>
             <A href="/library/admin#reset"><code>reset</code></A> drops every override at once; a held
             press is re-asserted on reconnect via{' '}

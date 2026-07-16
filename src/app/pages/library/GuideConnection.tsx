@@ -78,7 +78,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
         <Card>
           <CardHeader title="Keepalive and holds" subtitle="Holding injected input past the silence window" />
           <p>
-            The box clears every injected button and pending move once no frame arrives for its{' '}
+            The box clears every injected input and pending move once no frame arrives for its{' '}
             <A href="/native/injection#safety">silence window</A>. A live <code>Device</code> holds your
             overrides past that on its own: a background thread (<code>medius-keepalive</code>) sends a{' '}
             <code>QUERY(HEALTH)</code> every <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while
@@ -102,9 +102,9 @@ std::thread::sleep(std::time::Duration::from_secs(5));
 
 device.reset()?;`}</code></pre>
           <p>
-            An <em>override</em> is the box holding a button down or up itself, set by{' '}
-            <A href="/library/inject#button"><code>press</code></A> or{' '}
-            <A href="/library/inject#button"><code>force_release</code></A>; the library keeps a
+            An <em>override</em> is the box holding an input down or up itself, set by{' '}
+            <A href="/library/inject#inject"><code>press</code></A> or{' '}
+            <A href="/library/inject#inject"><code>force_release</code></A>; the library keeps a
             copy. After a dropped link, <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it.
           </p>

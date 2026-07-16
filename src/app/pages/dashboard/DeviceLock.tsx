@@ -4,18 +4,27 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { Combobox } from '../../../components/inputs/Combobox';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { LockDirection, LockTarget, lockSet } from '../../../dashboard/protocol';
+import {
+  type Locks,
+  type LockTarget,
+  LOCK_ID_ALL,
+  LockAxis,
+  LockClass,
+  LockDirection,
+  lockAxis,
+  lockButton,
+} from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 
 const TARGETS: { value: string; label: string; target: LockTarget }[] = [
-  { value: 'x', label: 'Move left/right (X)', target: LockTarget.X },
-  { value: 'y', label: 'Move up/down (Y)', target: LockTarget.Y },
-  { value: 'wheel', label: 'Scroll wheel', target: LockTarget.Wheel },
-  { value: 'left', label: 'Left button', target: LockTarget.Left },
-  { value: 'right', label: 'Right button', target: LockTarget.Right },
-  { value: 'middle', label: 'Middle button', target: LockTarget.Middle },
-  { value: 'side1', label: 'Side button 1', target: LockTarget.Side1 },
-  { value: 'side2', label: 'Side button 2', target: LockTarget.Side2 },
+  { value: 'x', label: 'Move left/right (X)', target: lockAxis(LockAxis.X) },
+  { value: 'y', label: 'Move up/down (Y)', target: lockAxis(LockAxis.Y) },
+  { value: 'wheel', label: 'Scroll wheel', target: lockAxis(LockAxis.Wheel) },
+  { value: 'left', label: 'Left button', target: lockButton(0) },
+  { value: 'right', label: 'Right button', target: lockButton(1) },
+  { value: 'middle', label: 'Middle button', target: lockButton(2) },
+  { value: 'side1', label: 'Side button 1', target: lockButton(3) },
+  { value: 'side2', label: 'Side button 2', target: lockButton(4) },
 ];
 
 const DIRECTIONS: Record<string, LockDirection> = {
@@ -24,17 +33,23 @@ const DIRECTIONS: Record<string, LockDirection> = {
   negative: LockDirection.Negative,
 };
 
+const BLANKET_NAMES = ['buttons', 'keys', 'media', 'axes'];
+
 const dirLabel = (d: LockDirection): string =>
-  d === LockDirection.Positive ? '+' : d === LockDirection.Negative ? '−' : '';
+  d === LockDirection.Positive ? '+' : d === LockDirection.Negative ? '-' : '';
 
-// Buttons lock by edge (press/release); axes and the wheel lock by sign (+/−).
+// Axes and the wheel lock by sign (+/-); buttons, keys, and media lock by edge (press/release).
 const dirChipLabel = (t: LockTarget, d: LockDirection): string =>
-  t >= LockTarget.Left
-    ? d === LockDirection.Positive ? 'press' : 'release'
-    : dirLabel(d);
+  t.cls === LockClass.Axis
+    ? dirLabel(d)
+    : d === LockDirection.Positive ? 'press' : 'release';
 
-const targetName = (t: LockTarget): string =>
-  TARGETS.find((o) => o.target === t)?.label ?? `target ${t}`;
+const targetName = (t: LockTarget): string => {
+  const known = TARGETS.find((o) => o.target.cls === t.cls && o.target.id === t.id);
+  if (known) return known.label;
+  if (t.id === LOCK_ID_ALL) return `all ${BLANKET_NAMES[t.cls] ?? 'inputs'}`;
+  return `${BLANKET_NAMES[t.cls]?.replace(/s$/, '') ?? 'input'} ${t.id}`;
+};
 
 const label = {
   color: 'var(--g-text-muted, #8a8a8a)',
@@ -46,15 +61,16 @@ const DeviceLock = () => {
   const dash = useDashboard();
   const [target, setTarget] = createSignal('x');
   const [direction, setDirection] = createSignal('both');
-  const [mask, setMask] = createSignal(0);
+  const [locks, setLocks] = createSignal<Locks>({ entries: [] });
 
-  const targetEnum = () => TARGETS.find((o) => o.value === target())?.target ?? LockTarget.X;
+  const targetEnum = (): LockTarget =>
+    TARGETS.find((o) => o.value === target())?.target ?? lockAxis(LockAxis.X);
   const dirEnum = () => DIRECTIONS[direction()];
 
   const refresh = async () => {
     try {
-      const locks = await dash.link()?.queryLocks();
-      if (locks) setMask(locks.mask);
+      const l = await dash.link()?.queryLocks();
+      if (l) setLocks(l);
     } catch {
       // A transient miss is fine; the next refresh tries again.
     }
@@ -70,14 +86,13 @@ const DeviceLock = () => {
     await refresh();
   };
 
-  // List every locked target+direction in the current mask.
+  // List every locked target+direction in the current set.
   const active = () => {
     const out: string[] = [];
-    const m = { mask: mask() };
-    for (const { target: t } of TARGETS) {
-      for (const d of [LockDirection.Positive, LockDirection.Negative]) {
-        if (lockSet(m, t, d)) out.push(`${targetName(t)} ${dirChipLabel(t, d)}`.trim());
-      }
+    for (const e of locks().entries) {
+      const t: LockTarget = { cls: e.cls, id: e.id };
+      if (e.positive) out.push(`${targetName(t)} ${dirChipLabel(t, LockDirection.Positive)}`.trim());
+      if (e.negative) out.push(`${targetName(t)} ${dirChipLabel(t, LockDirection.Negative)}`.trim());
     }
     return out;
   };

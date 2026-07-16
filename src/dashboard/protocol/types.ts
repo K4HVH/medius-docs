@@ -140,8 +140,8 @@ export function kbdCapsFromBytes(nKeys: number, flags: number): KbdCaps {
   };
 }
 
-// Unified device capabilities (§4.4): one query describes the whole cloned device — mouse + keyboard +
-// per-class change_driven. A class that is not present reads all-zero/false.
+// Unified device capabilities (§4.4): one query describes the whole cloned device (mouse + keyboard +
+// per-class change_driven). A class that is not present reads all-zero/false.
 export interface Caps {
   mouse: MouseCaps;
   keyboard: KbdCaps;
@@ -184,7 +184,7 @@ export interface Stats {
   configCount: number;
 }
 
-// Injection override action, shared by BUTTON, KEY (§3.10), and CONSUMER (§3.11). Wire values
+// Injection override action, shared by INJECT across buttons, keys, and media (§3.2). Wire values
 // match ctrl_proto.h CTRL_ACT_*.
 export enum Action {
   SoftRelease = 0,
@@ -213,26 +213,20 @@ export enum LedMode {
   Blink = 3,
 }
 
-// LOCK command (§3.8): which input to lock, and which direction/edge. Wire values match ctrl_proto.h.
-export enum LockTarget {
+// LOCK class (§3.8): which input class a lock addresses. A momentary usage shares INJECT's (class, id)
+// space (button / key / media); a relative axis is its own class. Wire values match ctrl_proto.h.
+export enum LockClass {
+  Button = 0,
+  Key = 1,
+  Media = 2,
+  Axis = 3,
+}
+
+// LOCK axis id (§3.8): for an Axis-class lock, id picks the axis and direction carries the sign.
+export enum LockAxis {
   X = 0,
   Y = 1,
   Wheel = 2,
-  Left = 3,
-  Right = 4,
-  Middle = 5,
-  Side1 = 6,
-  Side2 = 7,
-}
-
-// LOCK class (§3.8): which input class a lock addresses. usage is class-specific.
-export enum LockClass {
-  Mouse = 0,
-  Key = 1,
-  Media = 2,
-  AllKeys = 3,
-  AllMedia = 4,
-  AllButtons = 5,
 }
 
 export enum LockDirection {
@@ -241,23 +235,42 @@ export enum LockDirection {
   Negative = 2,
 }
 
-// Active input locks (§4.8): a 16-bit mask, 2 bits per target. bit(target*2) is the
-// positive/press direction, bit(target*2+1) the negative/release direction.
+// The id sentinel that blanket-locks a whole class (§3.8), e.g. every button or every key.
+export const LOCK_ID_ALL = 0xffff;
+
+// One lock target: a class plus its class-specific id (axis id, button id, HID keycode, or media
+// usage; LOCK_ID_ALL for a blanket). A button locks as class Button, id = button id, like a key.
+export interface LockTarget {
+  cls: LockClass;
+  id: number;
+}
+
+export const lockAxis = (axis: LockAxis): LockTarget => ({ cls: LockClass.Axis, id: axis });
+export const lockButton = (id: number): LockTarget => ({ cls: LockClass.Button, id });
+export const lockKey = (usage: number): LockTarget => ({ cls: LockClass.Key, id: usage });
+export const lockMedia = (usage: number): LockTarget => ({ cls: LockClass.Media, id: usage });
+export const lockBlanket = (cls: LockClass): LockTarget => ({ cls, id: LOCK_ID_ALL });
+
+// One active lock (§4.8): a target plus which directions it covers. dirbits b0 = positive/press,
+// b1 = negative/release.
+export interface LockEntry {
+  cls: LockClass;
+  id: number;
+  positive: boolean;
+  negative: boolean;
+}
+
+// The active input-lock set (§4.8): a list of entries, one per locked field across every class.
 export interface Locks {
-  mask: number;
+  entries: LockEntry[];
 }
 
-// True when the given target+direction lock is set in the mask.
-export function lockSet(locks: Locks, target: LockTarget, direction: LockDirection): boolean {
-  if (direction === LockDirection.Both) {
-    return locksBit(locks, target, true) && locksBit(locks, target, false);
-  }
-  return locksBit(locks, target, direction === LockDirection.Positive);
-}
-
-function locksBit(locks: Locks, target: LockTarget, positive: boolean): boolean {
-  const bit = target * 2 + (positive ? 0 : 1);
-  return (locks.mask & (1 << bit)) !== 0;
+// True when the given target+direction is locked in the set.
+export function isLocked(locks: Locks, target: LockTarget, direction: LockDirection): boolean {
+  const e = locks.entries.find((x) => x.cls === target.cls && x.id === target.id);
+  if (!e) return false;
+  if (direction === LockDirection.Both) return e.positive && e.negative;
+  return direction === LockDirection.Positive ? e.positive : e.negative;
 }
 
 // CATCH subscription classes (§3.9): which physical-input changes stream as event frames. Combine
@@ -268,41 +281,47 @@ export enum CatchClass {
   Wheel = 0x02,
   Buttons = 0x04,
   Keys = 0x08,
-  All = 0x0f,
+  Media = 0x10,
+  All = 0x1f,
 }
 
-// One mouse snapshot from the CATCH stream (a MOUSE_EVENT frame, §4.10), captured at the merge
-// point before any lock suppression or injection.
-export interface MouseReport {
-  buttons: number; // bit b set = button id b held (0=Left .. 4=Side2)
+// A momentary usage: a class plus its class-specific id. Buttons, keys, and media share one shape
+// (class = INJ_BTN / INJ_KEY / INJ_MEDIA; id = button id, HID keycode with 0xE0-0xE7 modifiers, or
+// a 16-bit Consumer usage).
+export interface Usage {
+  cls: number;
+  id: number;
+}
+
+// The relative axes from the CATCH stream (a MOTION_EVENT frame, §4.10), captured at the merge point
+// before any lock suppression or injection.
+export interface MotionEvent {
   dx: number;
   dy: number;
-  wheel: number;
+  dz: number;
 }
 
-// True when button id `button` (0=Left .. 4=Side2) is held in this snapshot.
-export function mouseReportPressed(r: MouseReport, button: number): boolean {
-  return (r.buttons & (1 << button)) !== 0;
+// A class-tagged held-usage snapshot from the CATCH stream (a USAGE_EVENT frame, §4.10). One event
+// carries usages of a single class (buttons, keys, or media). A snapshot, not edge deltas.
+export interface UsageSnapshot {
+  usages: Usage[];
 }
 
-// One keyboard snapshot from the CATCH stream (a KB_EVENT frame, §4.12): the modifier bitmap plus
-// every currently-pressed keycode (ascending). A snapshot, not edge deltas.
-export interface KeyboardReport {
-  modifiers: number; // bit m set = the modifier at usage 0xE0 + m
-  keys: number[]; // pressed HID keycodes
+// True when the given usage is held in this snapshot.
+export function usageHeld(snap: UsageSnapshot, cls: number, id: number): boolean {
+  return snap.usages.some((u) => u.cls === cls && u.id === id);
 }
 
-// One media snapshot from the CATCH stream (a CONS_EVENT frame, §4.13): the active Consumer usages.
-export interface ConsumerReport {
-  usages: number[];
+// The class every usage in this snapshot shares (one report is one class), or null when empty.
+export function snapshotClass(snap: UsageSnapshot): number | null {
+  return snap.usages.length > 0 ? snap.usages[0].cls : null;
 }
 
-// One decoded frame from the CATCH stream, tagged by source. The dashboard's `mouse`/`keyboard`/
-// `media` kinds avoid shadowing the DOM `MouseEvent` / `KeyboardEvent` globals.
+// One decoded frame from the CATCH stream. A `motion` frame carries the relative axes; a `usages`
+// frame carries a class-tagged held-usage snapshot (buttons, keys, or media).
 export type CatchEvent =
-  | { kind: 'mouse'; report: MouseReport }
-  | { kind: 'keyboard'; report: KeyboardReport }
-  | { kind: 'media'; report: ConsumerReport };
+  | { kind: 'motion'; motion: MotionEvent }
+  | { kind: 'usages'; snapshot: UsageSnapshot };
 
 // Decoded RESP(CATCH) (§4.9): the active subscription mask + box-side dropped-event count.
 export interface CatchState {

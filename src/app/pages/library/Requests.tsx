@@ -41,7 +41,7 @@ const Requests: Component = () => {
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
 println!("{v}");                       // fw 2.4.0
-println!("proto {}", v.proto_ver);     // proto 2
+println!("proto {}", v.proto_ver);     // proto 3
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -139,7 +139,7 @@ if caps.mouse.has_wheel {
     device.wheel(1)?;
 }
 if caps.has_keyboard() && caps.keyboard.has_consumer {
-    device.media_down(medius::MediaKey::MUTE)?;
+    device.press(medius::MediaKey::MUTE)?;
 }`}</code></pre>
         </Card>
       </div>
@@ -203,18 +203,19 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the inputs
+            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the list of inputs
             currently blocked by <A href="/library/lock#lock"><code>lock</code></A>.{' '}
-            <code>is_locked(target, direction)</code> answers whether one particular lock is set. Read
-            it to confirm a lock landed, or to mirror the box's lock state in a UI.
+            <code>entries()</code> walks them and <code>is_locked(target, direction)</code> answers
+            whether one particular lock is set. Read it to confirm a lock landed, or to mirror the box's
+            lock state in a UI.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
 
 let device = Device::find()?;
 let locks = device.query_locks()?;
-if locks.is_locked(LockTarget::X, LockDirection::Both) {
+if locks.is_locked(Axis::X, LockDirection::Both) {
     println!("horizontal motion is frozen");
 }`}</code></pre>
         </Card>

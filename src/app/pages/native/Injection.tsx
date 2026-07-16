@@ -9,25 +9,26 @@ const Injection: Component = () => {
       <Card>
         <CardHeader title="Injection model" subtitle="One device of fields, two verbs, added on top of the user" />
         <p>
-          A connected device is a set of <em>fields</em>. Every field is one of two kinds, and each
-          kind has exactly one verb:
+          A connected device is a set of <em>fields</em>: each is an <em>Axis</em> (relative motion: X,
+          Y, wheel) or a <em>Usage</em> (a momentary button, key, or media control).{' '}
+          <A href="/native/commands/move#move"><code>MOVE</code></A> drives an Axis,{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A> drives a Usage, and a Usage is
+          one <code>(class, id)</code> shape for buttons, keys, and media alike.
         </p>
-        <pre class="diagram">{`  relative axis    →  MOVE     cursor X/Y, wheel
-  momentary usage  →  INJECT   buttons, keys, media`}</pre>
+        <pre class="diagram">{`  Axis  (relative)   →  MOVE     cursor X/Y, wheel
+  Usage (momentary)  →  INJECT   buttons, keys, media`}</pre>
         <table class="api-params">
           <thead>
             <tr><th>Device</th><th>Axes (<A href="/native/commands/move#move"><code>MOVE</code></A>)</th><th>Momentary (<A href="/native/commands/inject#inject"><code>INJECT</code></A>)</th></tr>
           </thead>
           <tbody>
             <tr><td>mouse</td><td>cursor X/Y, wheel</td><td>buttons</td></tr>
-            <tr><td>keyboard</td><td>—</td><td>keys, modifiers</td></tr>
-            <tr><td>media</td><td>—</td><td>volume, play/pause, ...</td></tr>
+            <tr><td>keyboard</td><td>none</td><td>keys, modifiers</td></tr>
+            <tr><td>media</td><td>none</td><td>volume, play/pause, ...</td></tr>
           </tbody>
         </table>
         <p>
-          A mouse and a keyboard aren't special cases; they're the same machine with different fields,
-          driven by the same two verbs. Whatever you send is <em>added on top of</em> the user's own
-          input, never replacing it:
+          Whatever you send is <em>added on top of</em> the user's own input, never replacing it:
         </p>
         <pre class="diagram">{`  physical input  (real device)  --+
                                    +-->  one combined report  -->  game PC
@@ -42,6 +43,15 @@ const Injection: Component = () => {
             <tr><td>nothing</td><td>Only the real device.</td></tr>
           </tbody>
         </table>
+        <div class="callout callout--info">
+          <p>
+            <A href="/native/commands/inject#inject"><code>INJECT</code></A>,{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A>, and{' '}
+            <A href="/native/commands/catch#catch"><code>CATCH</code></A> all name an input with the same
+            Axis and Usage vocabulary, so one <code>(class, id)</code> works across inject, lock, and
+            catch.
+          </p>
+        </div>
       </Card>
 
       <div id="fire-and-forget" data-search-target>
@@ -79,7 +89,7 @@ const Injection: Component = () => {
 
       <div id="state" data-search-target>
         <Card>
-          <CardHeader title="What the box tracks" subtitle="Pending motion and held buttons" />
+          <CardHeader title="What the box tracks" subtitle="Pending motion and held usages" />
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>What it holds</th></tr>
@@ -94,12 +104,12 @@ const Injection: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td>button override</td>
+                <td>usage override</td>
                 <td>
-                  Per button, whether the box forces it down, forces it up, or leaves it to the real
-                  mouse. Set by the{' '}
-                  <A href="/native/commands/inject#button"><code>INJECT</code></A> actions: press
-                  forces down, force-release forces up, soft-release hands it back.
+                  Per usage (button, key, or media), whether the box forces it active, forces it
+                  inactive, or leaves it to the real device. Set by the{' '}
+                  <A href="/native/commands/inject#inject"><code>INJECT</code></A> actions: press
+                  forces active, force-release forces inactive, soft-release hands it back.
                 </td>
               </tr>
             </tbody>
@@ -129,25 +139,25 @@ const Injection: Component = () => {
                 <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond).</td>
               </tr>
               <tr>
-                <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a button</td>
-                <td>One report reflecting the new button state.</td>
+                <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>
+                <td>One report reflecting the new state.</td>
               </tr>
             </tbody>
           </table>
           <p>
-            Otherwise the box sends nothing, like a real mouse sitting idle. A held button is a
-            single report (the press), then silence until it changes.
+            Otherwise the box sends nothing, like a real mouse sitting idle. A held usage is a
+            single report (the edge), then silence until it changes.
           </p>
         </Card>
       </div>
 
       <div id="safety" data-search-target>
         <Card>
-          <CardHeader title="Safety" subtitle="Injected state can't trap the real mouse" />
+          <CardHeader title="Safety" subtitle="Injected state can't trap the real device" />
           <p>
-            A <A href="/native/commands/inject#button">force-release</A> always wins: it clears an
-            injected hold and masks a physical press, so there's always a way to put a button back to
-            up.
+            A <A href="/native/commands/inject#inject">force-release</A> always wins: it clears an
+            injected hold and masks a physical press, so any held input can always be forced back to
+            inactive.
           </p>
           <p>
             The box also clears all injection if your program goes quiet, dropping every override and

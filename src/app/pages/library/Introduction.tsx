@@ -106,7 +106,7 @@ const Introduction: Component = () => {
           <div class="docs-grid">
             <A href="/library/inject" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Inject" subtitle="press, key, media" />
+                <CardHeader title="Inject" subtitle="press, release, force_release" />
               </Card>
             </A>
             <A href="/library/move" style={{ "text-decoration": "none" }}>
@@ -116,7 +116,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lock" subtitle="lock, lock_key, lock_all" />
+                <CardHeader title="Lock" subtitle="lock, lock_axis, lock_all" />
               </Card>
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>

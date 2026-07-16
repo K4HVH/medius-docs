@@ -59,8 +59,9 @@ const Streams: Component = () => {
               <tr><td><code>CatchMask.MOTION</code></td><td><code>1</code></td><td>cursor movement (dx / dy)</td></tr>
               <tr><td><code>CatchMask.WHEEL</code></td><td><code>2</code></td><td>wheel ticks</td></tr>
               <tr><td><code>CatchMask.BUTTONS</code></td><td><code>4</code></td><td>mouse buttons</td></tr>
-              <tr><td><code>CatchMask.KEYS</code></td><td><code>8</code></td><td>keyboard and media keys</td></tr>
-              <tr><td><code>CatchMask.ALL</code></td><td><code>15</code></td><td>every category (the default)</td></tr>
+              <tr><td><code>CatchMask.KEYS</code></td><td><code>8</code></td><td>keyboard keys</td></tr>
+              <tr><td><code>CatchMask.MEDIA</code></td><td><code>16</code></td><td>media keys</td></tr>
+              <tr><td><code>CatchMask.ALL</code></td><td><code>31</code></td><td>every category (the default)</td></tr>
             </tbody>
           </table>
           <p>Exactly what each bit selects is on <A href="/library/catch">Catch</A>.</p>
@@ -99,24 +100,21 @@ const Streams: Component = () => {
             <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>.
           </p>
           <pre class="diagram">{`CatchEvent
- ├─ kind : CatchEventKind             (MOUSE = 0 · KEYBOARD = 1 · MEDIA = 2)
- ├─ payload : MouseEvent | KeyboardEvent | MediaEvent
- ├─ .mouse     → MouseEvent | None    (None unless kind == MOUSE)
- ├─ .keyboard  → KeyboardEvent | None
- ├─ .media     → MediaEvent | None
- └─ .is_pressed(target) → bool        (delegates to the payload)`}</pre>
+ ├─ kind : CatchEventKind             (MOTION = 0 · USAGES = 1)
+ ├─ payload : MotionEvent | UsageSnapshot
+ ├─ .motion  → MotionEvent | None     (None unless kind == MOTION)
+ └─ .usages  → UsageSnapshot | None   (None unless kind == USAGES)`}</pre>
           <table class="api-params">
-            <thead><tr><th>Payload</th><th>Fields</th><th>is_pressed(target)</th></tr></thead>
+            <thead><tr><th>Payload</th><th>Fields</th><th>Held test</th></tr></thead>
             <tbody>
-              <tr><td><A href="/bindings/python/types#mouseevent"><code>MouseEvent</code></A></td><td><code>buttons: int</code>, <code>dx: int</code>, <code>dy: int</code>, <code>wheel: int</code></td><td><code>is_pressed(button)</code> tests the <A href="/bindings/python/types#button"><code>Button</code></A> bit (<A href="/native/commands/usage#buttons">button ids</A>) in <code>buttons</code></td></tr>
-              <tr><td><A href="/bindings/python/types#keyboardevent"><code>KeyboardEvent</code></A></td><td><code>modifiers: int</code>, <code>keys: List[int]</code> (<A href="/native/commands/usage#keycodes">HID keycodes</A>)</td><td><code>is_pressed(key)</code>: modifier bit for <code>0xE0–0xE7</code>, else membership in <code>keys</code></td></tr>
-              <tr><td><A href="/bindings/python/types#mediaevent"><code>MediaEvent</code></A></td><td><code>keys: List[int]</code> (<A href="/native/commands/usage#consumer">Consumer usages</A>)</td><td><code>is_pressed(media)</code>: membership in <code>keys</code></td></tr>
+              <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
+              <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Input]</code> (buttons, keys, and media, one shape)</td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Input</code></A> is in the snapshot</td></tr>
               <tr><td><code>LogLine</code></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
           </table>
           <p>
-            Field meanings and the full enum tables are on <A href="/bindings/python/types">Types &amp; errors</A>.
-            The raw key and media ids come from the{' '}
+            Field meanings and the full type tables are on <A href="/bindings/python/types">Types &amp; errors</A>.
+            Held <A href="/native/commands/usage">usage ids</A> come from the{' '}
             <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>.
           </p>
           <div class="callout callout--info">
@@ -132,15 +130,17 @@ const Streams: Component = () => {
       <div id="example" data-search-target>
         <Card>
           <CardHeader title="Consume loop" subtitle="Subscribe, iterate, react" />
-          <pre><code class="language-python">{`from medius import Device, CatchMask, CatchEventKind, Button
+          <pre><code class="language-python">{`from medius import Device, CatchMask, CatchEventKind, Input, Button
 
 with Device.find() as dev:
     with dev.catch_events(CatchMask.MOTION | CatchMask.BUTTONS) as events:
         for ev in events:                      # ends when the link drops
-            if ev.kind == CatchEventKind.MOUSE:
-                m = ev.mouse
-                if m.is_pressed(Button.LEFT):
-                    print(f"left held, moved {m.dx},{m.dy}")
+            if ev.kind == CatchEventKind.MOTION:
+                m = ev.motion
+                print(f"moved {m.dx},{m.dy}  wheel {m.dz}")
+            elif ev.kind == CatchEventKind.USAGES:
+                if ev.usages.is_held(Input.button(Button.LEFT)):
+                    print("left held")
             if events.dropped:
                 print("fell behind:", events.dropped, "dropped")`}</code></pre>
           <div class="api-response-label">NON-BLOCKING POLL</div>

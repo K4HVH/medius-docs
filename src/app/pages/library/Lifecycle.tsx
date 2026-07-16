@@ -53,10 +53,11 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <div class="callout callout--info">
             <p>
               Overrides are keyed by their{' '}
-              <A href="/library/types/enums#button"><code>Button</code></A> values.{' '}
-              <A href="/library/inject#button"><code>press</code></A> and{' '}
-              <A href="/library/inject#button"><code>force_release</code></A> add a held override;{' '}
-              <A href="/library/inject#button"><code>soft_release</code></A> and{' '}
+              <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media
+              usage).{' '}
+              <A href="/library/inject#inject"><code>press</code></A> and{' '}
+              <A href="/library/inject#inject"><code>force_release</code></A> add a held override;{' '}
+              <A href="/library/inject#inject"><code>release</code></A> and{' '}
               <A href="/library/admin#reset"><code>reset</code></A> clear them.
             </p>
           </div>
@@ -101,7 +102,7 @@ assert!(after > before);`}</code></pre>
             <p>
               The reconnect count is the <code>reconnects</code> field in{' '}
               <A href="/library/diagnostics#counters">diagnostics</A>. Held state is keyed by{' '}
-              <A href="/library/types/enums#button"><code>Button</code></A> value, so the right buttons come
+              <A href="/library/types/enums#usage"><code>Usage</code></A>, so the right inputs come
               back after a reopen.
             </p>
           </div>

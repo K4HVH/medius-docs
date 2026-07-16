@@ -55,7 +55,8 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
               <tr><td><code>MEDIUS_CATCH_MASK_WHEEL</code></td><td><code>2</code></td><td>wheel</td></tr>
               <tr><td><code>MEDIUS_CATCH_MASK_BUTTONS</code></td><td><code>4</code></td><td>mouse buttons</td></tr>
               <tr><td><code>MEDIUS_CATCH_MASK_KEYS</code></td><td><code>8</code></td><td>keyboard keys</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_ALL</code></td><td><code>15</code></td><td>everything (<code>1 | 2 | 4 | 8</code>)</td></tr>
+              <tr><td><code>MEDIUS_CATCH_MASK_MEDIA</code></td><td><code>16</code></td><td>media keys</td></tr>
+              <tr><td><code>MEDIUS_CATCH_MASK_ALL</code></td><td><code>31</code></td><td>everything (<code>1 | 2 | 4 | 8 | 16</code>)</td></tr>
             </tbody>
           </table>
         </Card>
@@ -99,20 +100,19 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
             <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>: a{' '}
             <code>kind</code> tag plus a{' '}
             <a href="https://en.cppreference.com/w/c/language/union" target="_blank" rel="noreferrer">union</a>. Read the union arm that matches <code>kind</code>.
-            Key and media lists are length-prefixed by an inline <code>n_keys</code> count; the
-            backing arrays are fixed at{' '}
-            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_KEYS</code></A> (256), so nothing
-            truncates. Those arrays hold raw{' '}
-            <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage codes</a>.
+            The usage list is length-prefixed by an inline <code>n</code> count; the backing array is
+            fixed at{' '}
+            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> (256), so nothing
+            truncates. It holds class-tagged <A href="/bindings/c/types#input"><code>MediusInput</code></A> usages
+            (a button, key, or media <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage</a>).
           </p>
           <pre><code class="language-c">{`typedef struct MediusCatchEvent {
-    MediusCatchEventKind kind;          // MOUSE=0, KEYBOARD=1, MEDIA=2
+    MediusCatchEventKind kind;          // MOTION=0, USAGES=1
     union MediusCatchEventData data;    // read the arm for kind
 } MediusCatchEvent;
 
-struct MediusMouseEvent    { uint8_t buttons; int16_t dx, dy, wheel; };
-struct MediusKeyboardEvent { uint8_t modifiers; uint8_t n_keys; uint8_t  keys[256]; };
-struct MediusMediaEvent    {                    uint8_t n_keys; uint16_t keys[256]; };
+struct MediusMotionEvent { int16_t dx, dy, dz; };                     // cursor + wheel deltas
+struct MediusUsageEvent  { uint16_t n; MediusInput usages[256]; };    // class-tagged held usages
 
 typedef struct MediusLogLine {          // from medius_log_stream_recv
     MediusLogLevel level;               // ERROR=0, WARN=1, INFO=2, DEBUG=3, VERBOSE=4
@@ -121,18 +121,15 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <table class="api-params">
             <thead><tr><th>When <code>kind</code> is</th><th>Read</th><th>Fields</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOUSE</code></td><td><code>data.mouse</code></td><td><code>buttons</code> bitmask, <code>dx</code>, <code>dy</code>, <code>wheel</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_KEYBOARD</code></td><td><code>data.keyboard</code></td><td><code>modifiers</code> bitmap, <code>keys[0..n_keys]</code> <A href="/native/commands/usage#keycodes">keycodes</A></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MEDIA</code></td><td><code>data.media</code></td><td><code>keys[0..n_keys]</code> <A href="/native/commands/usage#consumer">Consumer usages</A></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code> (cursor and wheel deltas)</td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <A href="/bindings/c/types#input"><code>MediusInput</code></A></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">INSPECTORS (test one usage without walking the arrays)</div>
+          <div class="api-response-label">INSPECTORS (test one usage without walking the array)</div>
           <table class="api-params">
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_mouse_event_is_pressed(&amp;ev, button)</code></td><td><code>bool</code>: true if that <A href="/bindings/c/types#button"><code>MediusButton</code></A> is held in the snapshot.</td></tr>
-              <tr><td><code>medius_keyboard_event_is_pressed(&amp;ev, key)</code></td><td><code>bool</code>: from the modifier bitmap, else searched in the keycode list.</td></tr>
-              <tr><td><code>medius_media_event_is_pressed(&amp;ev, media)</code></td><td><code>bool</code>: true if that Consumer usage is active.</td></tr>
+              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that <A href="/bindings/c/types#input"><code>MediusInput</code></A> usage (button, key, or media) is held.</td></tr>
               <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
             </tbody>
           </table>
@@ -156,17 +153,14 @@ if (medius_device_catch_events(dev, MEDIUS_CATCH_MASK_ALL, &events) != MEDIUS_ST
 MediusCatchEvent ev;
 while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
     switch (ev.kind) {
-    case MEDIUS_CATCH_EVENT_KIND_MOUSE:
-        printf("mouse dx=%d dy=%d wheel=%d  L=%d\\n",
-               ev.data.mouse.dx, ev.data.mouse.dy, ev.data.mouse.wheel,
-               medius_mouse_event_is_pressed(&ev.data.mouse, MEDIUS_BUTTON_LEFT));
+    case MEDIUS_CATCH_EVENT_KIND_MOTION:
+        printf("motion dx=%d dy=%d dz=%d\\n",
+               ev.data.motion.dx, ev.data.motion.dy, ev.data.motion.dz);
         break;
-    case MEDIUS_CATCH_EVENT_KIND_KEYBOARD:
-        printf("keys held=%u  W=%d\\n", ev.data.keyboard.n_keys,
-               medius_keyboard_event_is_pressed(&ev.data.keyboard, MEDIUS_KEY_W));
-        break;
-    case MEDIUS_CATCH_EVENT_KIND_MEDIA:
-        printf("media usages=%u\\n", ev.data.media.n_keys);
+    case MEDIUS_CATCH_EVENT_KIND_USAGES:
+        printf("held usages=%u  LMB=%d  W=%d\\n", ev.data.usages.n,
+               medius_usage_event_is_held(&ev.data.usages, medius_input_button(MEDIUS_BUTTON_LEFT)),
+               medius_usage_event_is_held(&ev.data.usages, medius_input_key(MEDIUS_KEY_W)));
         break;
     }
 }

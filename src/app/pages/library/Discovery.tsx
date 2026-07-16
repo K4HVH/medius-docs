@@ -99,7 +99,7 @@ mouse_box.move_rel(10, 0)?;`}</code></pre>
           <pre><code class="language-rust">{`use medius::{Device, Key};
 
 let kbd_box = Device::find_keyboard_box()?;
-kbd_box.key_down(Key::A)?;`}</code></pre>
+kbd_box.press(Key::A)?;`}</code></pre>
         </Card>
       </div>
 

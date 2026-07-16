@@ -90,10 +90,10 @@ const Types: Component = () => {
                 <tr><td><code>X</code></td><td><code>0</code></td></tr>
                 <tr><td><code>Y</code></td><td><code>1</code></td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>2</code></td></tr>
-                <tr><td><code>BUTTON</code></td><td><code>3</code></td></tr>
+                <tr><td><code>USAGE</code></td><td><code>3</code></td></tr>
               </tbody>
             </table>
-            <p>Built for you by <A href="#locktarget"><code>LockTarget.x/y/wheel/button</code></A>; you rarely name it directly.</p>
+            <p>Built for you by <A href="#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); you rarely name it directly.</p>
           </div>
 
           <div id="blanket">
@@ -129,15 +129,15 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Members</th><th>Values</th></tr></thead>
               <tbody>
-                <tr><td><code>A</code> … <code>Z</code></td><td><code>4</code>–<code>29</code></td></tr>
-                <tr><td><code>N1</code> … <code>N9</code>, <code>N0</code></td><td><code>30</code>–<code>39</code></td></tr>
-                <tr><td><code>ENTER</code> <code>ESCAPE</code> <code>BACKSPACE</code> <code>TAB</code> <code>SPACE</code></td><td><code>40</code>–<code>44</code></td></tr>
+                <tr><td><code>A</code> … <code>Z</code></td><td><code>4</code> to <code>29</code></td></tr>
+                <tr><td><code>N1</code> … <code>N9</code>, <code>N0</code></td><td><code>30</code> to <code>39</code></td></tr>
+                <tr><td><code>ENTER</code> <code>ESCAPE</code> <code>BACKSPACE</code> <code>TAB</code> <code>SPACE</code></td><td><code>40</code> to <code>44</code></td></tr>
                 <tr><td><code>CAPS_LOCK</code></td><td><code>57</code></td></tr>
-                <tr><td><code>F1</code> … <code>F12</code></td><td><code>58</code>–<code>69</code></td></tr>
-                <tr><td><code>INSERT</code> <code>HOME</code> <code>PAGE_UP</code> <code>DELETE</code> <code>END</code> <code>PAGE_DOWN</code></td><td><code>73</code>–<code>78</code></td></tr>
-                <tr><td><code>RIGHT</code> <code>LEFT</code> <code>DOWN</code> <code>UP</code> (arrows)</td><td><code>79</code>–<code>82</code></td></tr>
-                <tr><td><code>LEFT_CTRL</code> <code>LEFT_SHIFT</code> <code>LEFT_ALT</code> <code>LEFT_GUI</code></td><td><code>224</code>–<code>227</code></td></tr>
-                <tr><td><code>RIGHT_CTRL</code> <code>RIGHT_SHIFT</code> <code>RIGHT_ALT</code> <code>RIGHT_GUI</code></td><td><code>228</code>–<code>231</code></td></tr>
+                <tr><td><code>F1</code> … <code>F12</code></td><td><code>58</code> to <code>69</code></td></tr>
+                <tr><td><code>INSERT</code> <code>HOME</code> <code>PAGE_UP</code> <code>DELETE</code> <code>END</code> <code>PAGE_DOWN</code></td><td><code>73</code> to <code>78</code></td></tr>
+                <tr><td><code>RIGHT</code> <code>LEFT</code> <code>DOWN</code> <code>UP</code> (arrows)</td><td><code>79</code> to <code>82</code></td></tr>
+                <tr><td><code>LEFT_CTRL</code> <code>LEFT_SHIFT</code> <code>LEFT_ALT</code> <code>LEFT_GUI</code></td><td><code>224</code> to <code>227</code></td></tr>
+                <tr><td><code>RIGHT_CTRL</code> <code>RIGHT_SHIFT</code> <code>RIGHT_ALT</code> <code>RIGHT_GUI</code></td><td><code>228</code> to <code>231</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -259,13 +259,14 @@ const Types: Component = () => {
           <div id="clipstatus">
             <div class="api-response-label">ClipStatus (clip.status())</div>
             <table class="api-params">
-              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>state</code></td><td><A href="#clipstate"><code>ClipState</code></A></td><td>the lifecycle state</td></tr>
                 <tr><td><code>free</code> / <code>used</code></td><td><code>int</code></td><td>ring bytes free / buffered (pace top-ups off <code>free</code>)</td></tr>
                 <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames drained since the last start (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
-                <tr><td><code>held</code></td><td><code>int</code></td><td>held-input flags: bits 0-4 the held mouse buttons (bit <code>b</code> = button id <code>b</code>), bit 5 a key held, bit 6 a media usage held</td></tr>
+                <tr><td><code>held</code></td><td><code>List[Input]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
+                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test one <A href="#input"><code>Input</code></A> in <code>held</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -285,8 +286,9 @@ const Types: Component = () => {
                 <tr><td><code>MOTION</code></td><td><code>1</code></td><td>cursor motion</td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>2</code></td><td>wheel</td></tr>
                 <tr><td><code>BUTTONS</code></td><td><code>4</code></td><td>mouse buttons</td></tr>
-                <tr><td><code>KEYS</code></td><td><code>8</code></td><td>keyboard + media</td></tr>
-                <tr><td><code>ALL</code></td><td><code>15</code></td><td>everything (default)</td></tr>
+                <tr><td><code>KEYS</code></td><td><code>8</code></td><td>keyboard keys</td></tr>
+                <tr><td><code>MEDIA</code></td><td><code>16</code></td><td>media keys</td></tr>
+                <tr><td><code>ALL</code></td><td><code>31</code></td><td>everything (default)</td></tr>
               </tbody>
             </table>
             <p>Combine with <code>|</code>, e.g. <code>CatchMask.BUTTONS | CatchMask.KEYS</code>.</p>
@@ -297,9 +299,8 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th><A href="#catchevent"><code>CatchEvent.payload</code></A> type</th></tr></thead>
               <tbody>
-                <tr><td><code>MOUSE</code></td><td><code>0</code></td><td><A href="#mouseevent"><code>MouseEvent</code></A></td></tr>
-                <tr><td><code>KEYBOARD</code></td><td><code>1</code></td><td><A href="#keyboardevent"><code>KeyboardEvent</code></A></td></tr>
-                <tr><td><code>MEDIA</code></td><td><code>2</code></td><td><A href="#mediaevent"><code>MediaEvent</code></A></td></tr>
+                <tr><td><code>MOTION</code></td><td><code>0</code></td><td><A href="#motionevent"><code>MotionEvent</code></A></td></tr>
+                <tr><td><code>USAGES</code></td><td><code>1</code></td><td><A href="#usagesnapshot"><code>UsageSnapshot</code></A></td></tr>
               </tbody>
             </table>
           </div>
@@ -359,15 +360,14 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Member</th><th>Value</th></tr></thead>
               <tbody>
-                <tr><td><code>MOVE</code></td><td><code>1</code></td><td><code>LOG</code></td><td><code>8</code></td></tr>
-                <tr><td><code>INJECT</code></td><td><code>3</code></td><td><code>LED</code></td><td><code>9</code></td></tr>
-                <tr><td><code>RESET</code></td><td><code>4</code></td><td><code>LOCK</code></td><td><code>10</code></td></tr>
-                <tr><td><code>QUERY</code></td><td><code>5</code></td><td><code>CATCH</code></td><td><code>11</code></td></tr>
-                <tr><td><code>RESP</code></td><td><code>6</code></td><td><code>MOUSE_EVENT</code></td><td><code>12</code></td></tr>
-                <tr><td><code>REBOOT_DL</code></td><td><code>7</code></td><td><code>KB_EVENT</code></td><td><code>15</code></td></tr>
-                <tr><td></td><td></td><td><code>CONS_EVENT</code></td><td><code>16</code></td></tr>
-                <tr><td><code>CLIP_APPEND</code></td><td><code>18</code></td><td><code>OPTION</code></td><td><code>17</code></td></tr>
-                <tr><td><code>CLIP_CTRL</code></td><td><code>19</code></td><td></td><td></td></tr>
+                <tr><td><code>MOVE</code></td><td><code>1</code></td><td><code>LOCK</code></td><td><code>10</code></td></tr>
+                <tr><td><code>INJECT</code></td><td><code>3</code></td><td><code>CATCH</code></td><td><code>11</code></td></tr>
+                <tr><td><code>RESET</code></td><td><code>4</code></td><td><code>MOTION_EVENT</code></td><td><code>12</code></td></tr>
+                <tr><td><code>QUERY</code></td><td><code>5</code></td><td><code>USAGE_EVENT</code></td><td><code>15</code></td></tr>
+                <tr><td><code>RESP</code></td><td><code>6</code></td><td><code>OPTION</code></td><td><code>17</code></td></tr>
+                <tr><td><code>REBOOT_DL</code></td><td><code>7</code></td><td><code>CLIP_APPEND</code></td><td><code>18</code></td></tr>
+                <tr><td><code>LOG</code></td><td><code>8</code></td><td><code>CLIP_CTRL</code></td><td><code>19</code></td></tr>
+                <tr><td><code>LED</code></td><td><code>9</code></td><td></td><td></td></tr>
               </tbody>
             </table>
           </div>
@@ -402,8 +402,11 @@ Motion.wheel(delta)   -> Motion`}</pre>
             <pre class="api-signature">{`LockTarget.x()            -> LockTarget
 LockTarget.y()            -> LockTarget
 LockTarget.wheel()        -> LockTarget
-LockTarget.button(button) -> LockTarget`}</pre>
-            <p>An axis or button to lock for <A href="/bindings/python/api#lock"><code>dev.lock(target, direction)</code></A>. See <A href="/library/lock">Lock</A>.</p>
+LockTarget.usage(input)   -> LockTarget
+LockTarget.button(button) -> LockTarget
+LockTarget.key(key)       -> LockTarget
+LockTarget.media(media)   -> LockTarget`}</pre>
+            <p>An axis or usage to lock for <A href="/bindings/python/api#lock"><code>dev.lock(target, direction)</code></A>; the <code>button</code>/<code>key</code>/<code>media</code> shortcuts wrap <code>usage()</code>. See <A href="/library/lock">Lock</A>.</p>
           </div>
         </Card>
       </div>
@@ -573,8 +576,21 @@ LockTarget.button(button) -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>mask</code></td><td><code>int</code></td><td>packed active-lock bitmask</td></tr>
+                <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="#lockentry"><code>LockEntry</code></A> per active lock</td></tr>
                 <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>test one <A href="#locktarget"><code>LockTarget</code></A> + <A href="#lockdirection"><code>LockDirection</code></A></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="lockentry">
+            <div class="api-response-label">LockEntry</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>target</code></td><td><A href="#locktarget"><code>LockTarget</code></A></td><td>what is locked (an axis or a usage)</td></tr>
+                <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class lock, where <code>target</code> names only the class</td></tr>
+                <tr><td><code>positive</code></td><td><code>bool</code></td><td>the +x / +y / wheel-up / press edge is locked</td></tr>
+                <tr><td><code>negative</code></td><td><code>bool</code></td><td>the -x / -y / wheel-down / release edge is locked</td></tr>
               </tbody>
             </table>
           </div>
@@ -675,48 +691,32 @@ LockTarget.button(button) -> LockTarget`}</pre>
               <thead><tr><th>Field / member</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>kind</code></td><td><A href="#catcheventkind"><code>CatchEventKind</code></A></td><td>which payload is set</td></tr>
-                <tr><td><code>payload</code></td><td><code>MouseEvent | KeyboardEvent | MediaEvent</code></td><td>the decoded event</td></tr>
-                <tr><td><code>mouse</code></td><td><A href="#mouseevent"><code>MouseEvent</code></A><code> | None</code></td><td>payload when <code>kind == MOUSE</code></td></tr>
-                <tr><td><code>keyboard</code></td><td><A href="#keyboardevent"><code>KeyboardEvent</code></A><code> | None</code></td><td>payload when <code>kind == KEYBOARD</code></td></tr>
-                <tr><td><code>media</code></td><td><A href="#mediaevent"><code>MediaEvent</code></A><code> | None</code></td><td>payload when <code>kind == MEDIA</code></td></tr>
-                <tr><td><code>is_pressed(target)</code></td><td><code>bool</code></td><td>delegates to the payload</td></tr>
+                <tr><td><code>payload</code></td><td><code>MotionEvent | UsageSnapshot</code></td><td>the decoded event</td></tr>
+                <tr><td><code>motion</code></td><td><A href="#motionevent"><code>MotionEvent</code></A><code> | None</code></td><td>payload when <code>kind == MOTION</code></td></tr>
+                <tr><td><code>usages</code></td><td><A href="#usagesnapshot"><code>UsageSnapshot</code></A><code> | None</code></td><td>payload when <code>kind == USAGES</code></td></tr>
               </tbody>
             </table>
           </div>
 
-          <div id="mouseevent">
-            <div class="api-response-label">MouseEvent</div>
+          <div id="motionevent">
+            <div class="api-response-label">MotionEvent</div>
             <table class="api-params">
-              <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>buttons</code></td><td><code>int</code></td><td>button bitmask</td></tr>
                 <tr><td><code>dx</code></td><td><code>int</code></td><td>X delta</td></tr>
                 <tr><td><code>dy</code></td><td><code>int</code></td><td>Y delta</td></tr>
-                <tr><td><code>wheel</code></td><td><code>int</code></td><td>wheel delta</td></tr>
-                <tr><td><code>is_pressed(button)</code></td><td><code>bool</code></td><td>test a <A href="#button"><code>Button</code></A> in <code>buttons</code></td></tr>
+                <tr><td><code>dz</code></td><td><code>int</code></td><td>wheel delta</td></tr>
               </tbody>
             </table>
           </div>
 
-          <div id="keyboardevent">
-            <div class="api-response-label">KeyboardEvent</div>
+          <div id="usagesnapshot">
+            <div class="api-response-label">UsageSnapshot</div>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>modifiers</code></td><td><code>int</code></td><td>modifier bitmask</td></tr>
-                <tr><td><code>keys</code></td><td><code>list[int]</code></td><td>held keycodes</td></tr>
-                <tr><td><code>is_pressed(key)</code></td><td><code>bool</code></td><td>test a <A href="#key"><code>Key</code></A> (handles modifiers)</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div id="mediaevent">
-            <div class="api-response-label">MediaEvent</div>
-            <table class="api-params">
-              <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
-              <tbody>
-                <tr><td><code>keys</code></td><td><code>list[int]</code></td><td>held Consumer usages</td></tr>
-                <tr><td><code>is_pressed(media)</code></td><td><code>bool</code></td><td>test a <A href="#mediakey"><code>MediaKey</code></A></td></tr>
+                <tr><td><code>usages</code></td><td><code>List[Input]</code></td><td>every held <A href="#input"><code>Input</code></A> (button, key, or media; modifiers are key usages <code>0xE0</code> to <code>0xE7</code>)</td></tr>
+                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test an <A href="#input"><code>Input</code></A> in the snapshot</td></tr>
               </tbody>
             </table>
           </div>
