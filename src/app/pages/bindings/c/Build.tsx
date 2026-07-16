@@ -111,7 +111,7 @@ int main(void) {
 }`}</code></pre>
           <pre><code class="language-bash">{`cc hello.c -I medius-capi/include -L target/release -lmedius_capi -lpthread -o hello
 LD_LIBRARY_PATH=target/release ./hello
-# medius 2.3.0, abi 1`}</code></pre>
+# medius 3.0.0, abi 3`}</code></pre>
           <div class="callout callout--info">
             <p>
               <code>-L</code> only helps the linker. The shared
