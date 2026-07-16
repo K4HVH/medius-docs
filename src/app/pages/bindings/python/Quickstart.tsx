@@ -124,7 +124,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
           <pre><code class="language-bash">{`python first.py
-# firmware 2.3.2, proto 3
+# firmware 3.0.0, proto 3
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
             The second line appears once you move or click the real mouse within the 5-second window;

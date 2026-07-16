@@ -75,7 +75,7 @@ const Quickstart: Component = () => {
               protocol version the firmware speaks.
             </li>
             <li>
-              Check <code>proto_ver == 2</code> before trusting the commands here. This documents
+              Check <code>proto_ver == 3</code> before trusting the commands here. This documents
               version <code>2</code>.
             </li>
           </ol>
