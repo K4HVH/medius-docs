@@ -200,9 +200,8 @@ const Api: Component = () => {
               <tr><td><code>ClipBuilder() / .clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
               <tr><td><code>.gap(frames)</code></td><td>A gap run (0 = no-op).</td></tr>
               <tr><td><code>.move(dx, dy) / .wheel(dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
-              <tr><td><code>.press(button) / .release(button) / .force_release(button)</code></td><td>A one-button frame; <code>button</code> is a <A href="/bindings/python/types#button"><code>Button</code></A>.</td></tr>
-              <tr><td><code>.key(usage, action) / .media(usage, action)</code></td><td>A one-key / one-media frame; <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
-              <tr><td><code>.edge(input, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an <A href="/bindings/python/types#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
+              <tr><td><code>.edge(usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an explicit <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
               <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Usage</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>

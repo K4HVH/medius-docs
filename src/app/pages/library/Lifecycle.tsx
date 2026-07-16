@@ -70,12 +70,13 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
 
           <pre class="api-signature">fn reconnect(&self) -&gt; Result&lt;()&gt;</pre>
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
+            <span class="api-badge api-badge--executed">No round-trip</span>
           </p>
 
           <p>
             The reader thread auto-reconnects on any read error; call this by hand only to force a
-            rescan.
+            rescan. It blocks while it rescans and reopens the port, and returns an error if the box
+            can't be found or opened, but it never waits on a box reply.
           </p>
           <p>On each call:</p>
           <ol>
