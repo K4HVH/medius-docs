@@ -146,9 +146,9 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CLASS_BUTTON</code></td><td><code>0</code></td><td><code>value</code> is a mouse button id.</td></tr>
-              <tr><td><code>MEDIUS_CLASS_KEY</code></td><td><code>1</code></td><td><code>value</code> is a HID keyboard usage.</td></tr>
-              <tr><td><code>MEDIUS_CLASS_MEDIA</code></td><td><code>2</code></td><td><code>value</code> is a 16-bit Consumer usage.</td></tr>
+              <tr><td><code>MEDIUS_CLASS_BUTTON</code></td><td><code>0</code></td><td><code>id</code> is a mouse button id.</td></tr>
+              <tr><td><code>MEDIUS_CLASS_KEY</code></td><td><code>1</code></td><td><code>id</code> is a HID keyboard usage.</td></tr>
+              <tr><td><code>MEDIUS_CLASS_MEDIA</code></td><td><code>2</code></td><td><code>id</code> is a 16-bit Consumer usage.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -438,14 +438,14 @@ const Types: Component = () => {
           <p>
             What <A href="/bindings/c/api#inject"><code>medius_device_inject</code></A> drives. Build with{' '}
             <A href="/bindings/c/api#builders"><code>medius_usage_button(...)</code></A>, <code>_key(...)</code>, or <code>_media(...)</code>;{' '}
-            <code>value</code> holds the id/usage per <A href="/bindings/c/types#input-kind"><code>kind</code></A>.
+            <code>id</code> holds the button id or usage per <A href="/bindings/c/types#input-kind"><code>kind</code></A>.
             See <A href="/library/inject">Inject</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#input-kind"><code>MediusClass</code></A></td><td>Which class <code>value</code> names.</td></tr>
-              <tr><td><code>value</code></td><td><code>uint16_t</code></td><td>Button id, key usage, or media usage.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#input-kind"><code>MediusClass</code></A></td><td>Which class <code>id</code> names.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>Button id, key usage, or media usage.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -677,7 +677,7 @@ const Types: Component = () => {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The locked axis or usage.</td></tr>
-              <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The lock covers a whole class; <code>target.usage.kind</code> names it and <code>value</code> is unused.</td></tr>
+              <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The lock covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
               <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive edge (axis <code>+</code>, or press) is locked.</td></tr>
               <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative edge (axis <code>-</code>, or release) is locked.</td></tr>
             </tbody>
@@ -929,7 +929,18 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="MediusClipStatus & MediusClipState" subtitle="Buffered-clip ring and playback state" />
-          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_status</code></A>. <code>state</code> is a <code>MediusClipState</code>: <code>MEDIUS_CLIP_STATE_IDLE</code> (0), <code>_ARMED</code> (1), <code>_PLAYING</code> (2), <code>_FAULTED</code> (3). Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_status</code></A>; <code>state</code> is a <code>MediusClipState</code>. Concept on <A href="/library/clip">Clip</A>.</p>
+          <div class="api-response-label">MEDIUSCLIPSTATE</div>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CLIP_STATE_IDLE</code></td><td><code>0</code></td><td>No clip active.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_ARMED</code></td><td><code>1</code></td><td>A catch-trigger is armed; playback starts on the physical press edge.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_PLAYING</code></td><td><code>2</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_FAULTED</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MEDIUSCLIPSTATUS</div>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>

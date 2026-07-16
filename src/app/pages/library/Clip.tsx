@@ -67,29 +67,27 @@ const Clip: Component = () => {
               <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
               <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
               <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/enums#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
-              <tr><td><code>key(key, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#key"><code>Key</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>media(media, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#media-key"><code>MediaKey</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#usage"><code>Usage</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#usage"><code>Usage</code></A> with an explicit <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
               <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/enums#usage"><code>Usage</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
           <p>
-            <code>press</code>/<code>release</code>/<code>key</code>/<code>media</code> are wrappers over{' '}
+            <code>press</code>/<code>release</code>/<code>force_release</code> are wrappers over{' '}
             <code>edge</code>, which is a wrapper over <code>frame</code>. Reach for <code>frame</code> only
             when you need motion and edges (or several edges) on the same frame, e.g. moving while a button is
             held, which is how a faithful recording of "aim and hold fire" looks.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{ClipBuilder, Button, Key, Action};
+          <pre><code class="language-rust">{`use medius::{ClipBuilder, Button, Key};
 
 let mut clip = ClipBuilder::new();
 for _ in 0..200 { clip.move_by(10, 0); }   // 200 box-timed frames of +10 dx
 clip.press(Button::Left)                   // a click, held for 20 frames
     .gap(20)
     .release(Button::Left);
-clip.key(Key::A, Action::Press)            // then type 'a'
+clip.press(Key::A)                         // then type 'a'
     .gap(3)
-    .key(Key::A, Action::SoftRelease);`}</code></pre>
+    .release(Key::A);`}</code></pre>
         </Card>
       </div>
 

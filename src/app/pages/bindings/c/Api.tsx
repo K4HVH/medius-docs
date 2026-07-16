@@ -231,9 +231,8 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_builder_new() / _free(b) / _clear(b)</code></td><td>Allocate / free / reset a builder.</td></tr>
               <tr><td><code>medius_clip_builder_gap(b, uint16_t frames)</code></td><td>A gap run (0 = no-op).</td></tr>
               <tr><td><code>medius_clip_builder_move(b, dx, dy) / _wheel(b, dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
-              <tr><td><code>medius_clip_builder_press / _release / _force_release(b, button)</code></td><td>A one-button frame; <code>button</code> is a <A href="/bindings/c/types#button"><code>MediusButton</code></A>.</td></tr>
-              <tr><td><code>medius_clip_builder_key(b, key, action) / _media(b, media, action)</code></td><td>A one-key / one-media frame: a <A href="/bindings/c/types#key"><code>MediusKey</code></A> / <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
-              <tr><td><code>medius_clip_builder_edge(b, input, action)</code></td><td>A one-edge frame for any <A href="/bindings/c/types#input"><code>MediusUsage</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
+              <tr><td><code>medius_clip_builder_press / _release / _force_release(b, usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (button, key, or media).</td></tr>
+              <tr><td><code>medius_clip_builder_edge(b, usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/c/types#input"><code>MediusUsage</code></A> with an explicit <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
               <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusUsage</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>

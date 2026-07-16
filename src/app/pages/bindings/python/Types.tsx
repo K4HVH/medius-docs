@@ -248,12 +248,12 @@ const Types: Component = () => {
           <div id="clipstate">
             <div class="api-response-label">ClipState</div>
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>IDLE</code></td><td><code>0</code></td></tr>
-                <tr><td><code>ARMED</code></td><td><code>1</code></td></tr>
-                <tr><td><code>PLAYING</code></td><td><code>2</code></td></tr>
-                <tr><td><code>FAULTED</code></td><td><code>3</code></td></tr>
+                <tr><td><code>IDLE</code></td><td><code>0</code></td><td>No clip active.</td></tr>
+                <tr><td><code>ARMED</code></td><td><code>1</code></td><td>A catch-trigger is armed; playback starts on the physical press edge.</td></tr>
+                <tr><td><code>PLAYING</code></td><td><code>2</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+                <tr><td><code>FAULTED</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
               </tbody>
             </table>
           </div>
