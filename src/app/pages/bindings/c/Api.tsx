@@ -256,31 +256,33 @@ medius_device_free(dev);`}</code></pre>
           <p>
             Build an entry stream with an opaque <code>MediusClipBuilder</code>, then drive playback through
             an opaque <code>MediusClip</code> handle from <code>medius_device_clip</code>. Each owns its
-            allocation — free the builder with <code>medius_clip_builder_free</code> and the handle with{' '}
+            allocation: free the builder with <code>medius_clip_builder_free</code> and the handle with{' '}
             <code>medius_clip_free</code>. Concept on <A href="/library/clip">Clip</A>.
           </p>
           <div class="api-response-label">BUILDER</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Appends</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_clip_builder_new()</code> / <code>_free(b)</code> / <code>_clear(b)</code></td><td>Allocate / free / reset a builder.</td></tr>
+              <tr><td><code>medius_clip_builder_new() / _free(b) / _clear(b)</code></td><td>Allocate / free / reset a builder.</td></tr>
               <tr><td><code>medius_clip_builder_gap(b, uint16_t frames)</code></td><td>A gap run (0 = no-op).</td></tr>
-              <tr><td><code>medius_clip_builder_move(b, int16_t dx, int16_t dy)</code> / <code>_wheel(b, int16_t dz)</code></td><td>A motion frame.</td></tr>
-              <tr><td><code>medius_clip_builder_press / _release / _force_release(b, MediusButton)</code></td><td>A one-button frame.</td></tr>
-              <tr><td><code>medius_clip_builder_key(b, MediusKey, MediusAction)</code> / <code>_media(b, MediusMediaKey, MediusAction)</code></td><td>A one-key / one-media frame.</td></tr>
-              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, const MediusInput *inputs, const MediusAction *actions, size_t n)</code></td><td>A motion delta plus up to 8 edges (parallel <code>inputs</code>/<code>actions</code>) on one frame; build the inputs with <code>medius_input_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
+              <tr><td><code>medius_clip_builder_move(b, dx, dy) / _wheel(b, dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
+              <tr><td><code>medius_clip_builder_press / _release / _force_release(b, button)</code></td><td>A one-button frame; <code>button</code> is a <A href="/bindings/c/types#button"><code>MediusButton</code></A>.</td></tr>
+              <tr><td><code>medius_clip_builder_key(b, key, action) / _media(b, media, action)</code></td><td>A one-key / one-media frame: a <A href="/bindings/c/types#key"><code>MediusKey</code></A> / <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
+              <tr><td><code>medius_clip_builder_edge(b, input, action)</code></td><td>A one-edge frame for any <A href="/bindings/c/types#input"><code>MediusInput</code></A> with a <A href="/bindings/c/types#action"><code>MediusAction</code></A>.</td></tr>
+              <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusInput</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_input_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">HANDLE</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_clip(dev, MediusClip **out)</code> / <code>medius_clip_free(clip)</code></td><td>Open / free a clip handle.</td></tr>
-              <tr><td><code>medius_clip_append(clip, const MediusClipBuilder *b)</code></td><td>Append the builder's entries to the ring.</td></tr>
-              <tr><td><code>medius_clip_start(clip)</code> / <code>medius_clip_start_autolock(clip)</code></td><td>Begin playback; the autolock form locks all input, released on stop.</td></tr>
-              <tr><td><code>medius_clip_stop(clip)</code> / <code>medius_clip_config(clip, bool autolock)</code></td><td>Stop + flush; or set whether a later start auto-locks.</td></tr>
-              <tr><td><code>medius_clip_arm_catch(clip, MediusButton)</code> / <code>_arm_catch_any(clip)</code> / <code>_disarm(clip)</code></td><td>Arm / disarm an on-device catch trigger.</td></tr>
-              <tr><td><code>medius_clip_status(clip, MediusClipStatus *out)</code></td><td><A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth + playback state.</td></tr>
+              <tr><td><code>medius_device_clip(dev, out) / medius_clip_free(clip)</code></td><td>Open / free a clip handle.</td></tr>
+              <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring.</td></tr>
+              <tr><td><code>medius_clip_start(clip, config)</code></td><td>Begin playback with a <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> (its auto-lock scope); a zero-length <code>autolock</code> plays with no lock.</td></tr>
+              <tr><td><code>medius_clip_stop(clip)</code></td><td>Stop playback, flush the ring, release the clip's lock.</td></tr>
+              <tr><td><code>medius_clip_arm_catch(clip, input, config)</code></td><td>Arm a trigger on a physical press of <code>input</code>, any <A href="/bindings/c/types#input"><code>MediusInput</code></A> (build it with <code>medius_input_button</code>/<code>_key</code>/<code>_media</code>), starting with <A href="/bindings/c/types#clip-config"><code>config</code></A>.</td></tr>
+              <tr><td><code>medius_clip_arm_catch_any(clip, config) / medius_clip_disarm(clip)</code></td><td>Arm on any physical input (with <code>config</code>) / clear a pending arm.</td></tr>
+              <tr><td><code>medius_clip_status(clip, out)</code></td><td>Fill a <A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth + playback state.</td></tr>
             </tbody>
           </table>
         </Card>

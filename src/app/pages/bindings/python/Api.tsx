@@ -231,12 +231,13 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Appends</th></tr></thead>
             <tbody>
-              <tr><td><code>ClipBuilder()</code> · <code>.clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
+              <tr><td><code>ClipBuilder() / .clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
               <tr><td><code>.gap(frames)</code></td><td>A gap run (0 = no-op).</td></tr>
-              <tr><td><code>.move(dx, dy)</code> · <code>.wheel(dz)</code></td><td>A motion frame.</td></tr>
-              <tr><td><code>.press(button)</code> · <code>.release(button)</code> · <code>.force_release(button)</code></td><td>A one-button frame.</td></tr>
-              <tr><td><code>.key(usage, action=Action.PRESS)</code> · <code>.media(usage, action=Action.PRESS)</code></td><td>A one-key / one-media frame.</td></tr>
-              <tr><td><code>.frame(dx, dy, wheel, edges=[(Input, Action)…])</code></td><td>A motion delta plus up to 8 edges on one frame.</td></tr>
+              <tr><td><code>.move(dx, dy) / .wheel(dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
+              <tr><td><code>.press(button) / .release(button) / .force_release(button)</code></td><td>A one-button frame; <code>button</code> is a <A href="/bindings/python/types#button"><code>Button</code></A>.</td></tr>
+              <tr><td><code>.key(usage, action) / .media(usage, action)</code></td><td>A one-key / one-media frame; <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
+              <tr><td><code>.edge(input, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Input</code></A> with an <A href="/bindings/python/types#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Input</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CLIPHANDLE</div>
@@ -245,9 +246,10 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>dev.clip()</code></td><td>A <code>ClipHandle</code> (owns the append-seq counter).</td></tr>
               <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
-              <tr><td><code>clip.start()</code> · <code>clip.start_autolock()</code></td><td>Begin playback; the autolock form locks all input, released on stop.</td></tr>
-              <tr><td><code>clip.stop()</code> · <code>clip.config(autolock)</code></td><td>Stop + flush; or set whether a later start auto-locks.</td></tr>
-              <tr><td><code>clip.arm_catch(button=None)</code> · <code>clip.disarm()</code></td><td>Arm / disarm an on-device catch trigger (<code>None</code> = any button).</td></tr>
+              <tr><td><code>clip.start(config=None)</code></td><td>Begin playback with a <A href="/bindings/python/types#clip-config"><code>ClipConfig</code></A> (its auto-lock scope); no <code>config</code> plays with no lock.</td></tr>
+              <tr><td><code>clip.stop()</code></td><td>Stop playback, flush the ring, release the clip's lock.</td></tr>
+              <tr><td><code>clip.arm_catch(trigger, config=None)</code></td><td>Arm a trigger on a physical press of <code>trigger</code>, any <A href="/bindings/python/types#input"><code>Input</code></A> (<code>Input.button</code>/<code>.key</code>/<code>.media</code>), starting with <A href="/bindings/python/types#clip-config"><code>config</code></A>.</td></tr>
+              <tr><td><code>clip.arm_catch_any(config=None) / clip.disarm()</code></td><td>Arm on any physical input (with <code>config</code>) / clear a pending arm.</td></tr>
               <tr><td><code>clip.status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth + playback state.</td></tr>
             </tbody>
           </table>
