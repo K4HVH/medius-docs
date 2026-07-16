@@ -467,11 +467,11 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 6</code>: which physical inputs are currently locked by{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>, as a 16-bit <code>mask</code>. Two
-            bits per target, one for each direction, so you can read back a per-direction lock exactly
-            as you set it. A zero mask means nothing is locked.
+            <A href="/native/commands/lock"><code>LOCK</code></A>, as a variable list of entries, one
+            per locked field across every class, so keyboard and media locks read the same as mouse
+            ones. An empty list (<code>n = 0</code>) means nothing is locked.
           </p>
-          <pre class="api-signature">QUERY  what = 6  ·  RESP 3 bytes</pre>
+          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 4n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -480,26 +480,21 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-              <tr><td>1</td><td><code>mask</code></td><td><code>u16</code></td><td>active locks, little-endian; bit layout below</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of lock entries that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the locked field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
+              <tr><td>+</td><td><code>dirbits</code></td><td><code>u8</code></td><td>which edges are locked, the bits below</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">BIT LAYOUT</div>
-          <p>
-            Each <A href="/native/commands/lock"><code>target</code></A> owns two bits: bit{' '}
-            <code>target*2</code> is the positive/press direction, bit <code>target*2 + 1</code> the
-            negative/release direction.
-          </p>
+          <div class="api-response-label">DIRBITS</div>
+          <p>Each entry is 4 bytes (<code>class</code>, <code>id</code>, <code>dirbits</code>); the list is <code>n</code> of them.</p>
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
             </thead>
             <tbody>
-              <tr><td>b0</td><td><code>0x0001</code></td><td><code>X</code> positive is locked</td></tr>
-              <tr><td>b1</td><td><code>0x0002</code></td><td><code>X</code> negative is locked</td></tr>
-              <tr><td>b2 / b3</td><td><code>0x0004</code> / <code>0x0008</code></td><td><code>Y</code> positive / negative</td></tr>
-              <tr><td>b4 / b5</td><td><code>0x0010</code> / <code>0x0020</code></td><td><code>Wheel</code> up / down</td></tr>
-              <tr><td>b6 / b7</td><td><code>0x0040</code> / <code>0x0080</code></td><td><code>Left</code> press / release</td></tr>
-              <tr><td>b8..b15</td><td><code>0x0100</code>+</td><td><code>Right</code>, <code>Middle</code>, <code>Side1</code>, <code>Side2</code>, press then release</td></tr>
+              <tr><td>b0</td><td><code>0x01</code></td><td>the positive / press edge is locked</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td>the negative / release edge is locked</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -508,12 +503,12 @@ const Requests: Component = () => {
             binding: <A href="/library/requests#query-locks"><code>query_locks</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Only the wheel's negative (scroll-down) direction locked (<code>mask = 0x0020</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 03 00  | 06     | 20 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | mask   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>One entry: the wheel's negative (scroll-down) sign locked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>dirbits = 0x02</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 06 00  | 06     | 01     | 03     | 02 00  | 02     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dirbits| CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
@@ -536,7 +531,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
-              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04, Keys 0x08</td></tr>
+              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04, Keys 0x08, Media 0x10</td></tr>
               <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>events dropped box-side under back-pressure, little-endian</td></tr>
             </tbody>
           </table>
@@ -649,29 +644,38 @@ const Requests: Component = () => {
           <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
           <p>
             <code>what = 10</code>: the buffered-clip ring depth and playback state, for host flow-control.
-            Fixed 21-byte payload. Read <code>free</code> before a{' '}
+            A fixed 21-byte prefix, then the clip's held-usage snapshot (the same class-tagged list a{' '}
+            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries). Read{' '}
+            <code>free</code> before a{' '}
             <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun, and{' '}
             <code>state</code> to see a fault or that playback finished. Backs{' '}
             <A href="/library/clip#status"><code>ClipHandle::status</code></A>.
           </p>
-          <pre class="api-signature">QUERY  what = 10  ·  RESP 21 bytes</pre>
+          <pre class="api-signature">QUERY  what = 10  ·  RESP 21-byte prefix + held usages</pre>
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0A</td></tr>
-              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 armed (catch) / 2 playing / 3 faulted (an append was dropped — re-sync)</td></tr>
+              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 armed (catch) / 2 playing / 3 faulted (an append was dropped, re-sync)</td></tr>
               <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this, little-endian</td></tr>
               <tr><td>6</td><td><code>used</code></td><td><code>u32</code></td><td>ring bytes buffered, not yet drained</td></tr>
               <tr><td>10</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks emitted since start (diagnostic)</td></tr>
               <tr><td>14</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
               <tr><td>16</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
               <tr><td>18</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
-              <tr><td>20</td><td><code>held</code></td><td><code>u8</code></td><td>currently-held clip buttons (bit i = button i)</td></tr>
+              <tr><td>20</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
             </tbody>
           </table>
-          <p>Library binding: <A href="/library/clip#status"><code>status</code></A>.</p>
+          <p>
+            The held snapshot lists the usages the clip is currently forcing down, one class-tagged
+            entry each (3 bytes), so buttons, keys, and media are reported one way. Library binding:{' '}
+            <A href="/library/clip#status"><code>status</code></A>{' '}
+            (<A href="/library/clip#status"><code>ClipStatus::held</code></A>).
+          </p>
         </Card>
       </div>
 

@@ -58,7 +58,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x13</code>. Three values are reserved,
+            The opcodes run from <code>0x01</code> to <code>0x13</code>. Four values are reserved,
             retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
             keeps newer and older firmware compatible.
           </p>
@@ -68,7 +68,7 @@ const Frame: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>3 or 5 bytes</td><td>none</td></tr>
-              <tr><td><code>0x02</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
               <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>0 bytes</td><td>none</td></tr>
               <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 byte</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
@@ -78,11 +78,11 @@ const Frame: Component = () => {
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
               <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>5 bytes</td><td>none</td></tr>
               <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#mouse-event"><code>MOUSE_EVENT</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0D</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
-              <tr><td><code>0x0E</code></td><td>reserved</td><td>—</td><td>—</td><td>—</td></tr>
-              <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#kb-event"><code>KB_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x10</code></td><td><A href="/native/commands/catch#cons-event"><code>CONS_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0D</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
+              <tr><td><code>0x0E</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
+              <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x10</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x11</code></td><td><A href="/native/commands/option#option"><code>OPTION</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
@@ -90,10 +90,12 @@ const Frame: Component = () => {
           </table>
           <p>
             <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were the old <code>WHEEL</code>,{' '}
-            <code>KEY</code>, and <code>CONSUMER</code> opcodes. They folded into{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A> (now motion-tagged) and{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A> (now class-tagged), and the
-            old numbers are never reused.
+            <code>KEY</code>, and <code>CONSUMER</code> commands, folded into{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A> (motion-tagged) and{' '}
+            <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged). <code>0x10</code>{' '}
+            was <code>CONS_EVENT</code>, folded into the class-tagged{' '}
+            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>. The old numbers are
+            never reused.
           </p>
         </Card>
       </div>

@@ -33,7 +33,7 @@ const Usage: Component = () => {
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Queues a <A href="/native/frame">frame</A> and returns at once. No reply is read.</td>
-                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>button</code></A>, <A href="/library/inject"><code>key</code></A>, <A href="/library/inject"><code>media</code></A>, <A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
+                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
               </tr>
               <tr>
                 <td><span class="api-badge api-badge--responded">Blocks</span></td>
@@ -168,21 +168,20 @@ dev.close()`}</code></pre>
         <Card>
           <CardHeader title="Building targets" subtitle="Input · Motion · LockTarget" />
           <p>
-            The generic <A href="/library/inject"><code>inject</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> calls take a{' '}
-            <em>target object</em>, not a generic type parameter. Build it with a classmethod, then
-            pass it in. (The direct verbs like <A href="/library/inject"><code>press</code></A> / <A href="/library/inject"><code>key_down</code></A> skip the
-            builder and take the value straight.)
+            The <A href="/library/inject"><code>inject</code></A> / <A href="/library/inject"><code>press</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> calls take a{' '}
+            <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in. One
+            <A href="/bindings/python/types#input"><code>Input</code></A> (button, key, or media) feeds every inject verb.
           </p>
           <table class="api-params">
             <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
             <tbody>
-              <tr><td><A href="/bindings/python/types#input"><code>Input.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button injection target</td></tr>
-              <tr><td><code>Input.key(key)</code></td><td>a keyboard-key target (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
-              <tr><td><code>Input.media(media)</code></td><td>a consumer/media target (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
+              <tr><td><A href="/bindings/python/types#input"><code>Input.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
+              <tr><td><code>Input.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
+              <tr><td><code>Input.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
               <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
               <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, dir)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
-              <tr><td><code>LockTarget.button(button)</code></td><td>a single-button lock target</td></tr>
+              <tr><td><code>LockTarget.usage(input)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -197,9 +196,9 @@ with Device.find() as dev:
               <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
               <code>SOFT_RELEASE</code> / <code>FORCE_RELEASE</code>); the{' '}
               <A href="/native/injection">injection model</A> defines what each does.{' '}
-              <code>button</code> takes a{' '}
+              <code>Input.button</code> takes a{' '}
               <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
-              <code>key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
+              <code>Input.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
               raw <code>int</code>.
             </p>
           </div>

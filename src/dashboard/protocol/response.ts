@@ -29,16 +29,17 @@ import {
 import {
   type Caps,
   type CatchState,
-  type ConsumerReport,
   type DeviceInfo,
   type Health,
   type ImperfectStatus,
-  type KeyboardReport,
+  type LockEntry,
   type Locks,
   type LogLine,
-  type MouseReport,
+  type MotionEvent,
   type Rate,
   type Stats,
+  type Usage,
+  type UsageSnapshot,
   type Version,
   LogLevel,
   deviceKindFromU8,
@@ -81,7 +82,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
   switch (what) {
     case Q_VERSION:
       // [0][proto][major][minor][patch][mac 6B] = 11-byte header, then the box name tail (ASCII,
-      // LEN-delimited, may be empty). proto_ver stays 2; the name is additive.
+      // LEN-delimited, may be empty). The name tail is additive.
       if (payload.length < 11) return null;
       return {
         kind: 'version',
@@ -165,8 +166,22 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_LOCKS: {
-      if (payload.length < 3) return null;
-      return { kind: 'locks', locks: { mask: u16le(payload, 1) } };
+      // [what][n u8] then n × [class u8][id u16 LE][dirbits u8] (dirbits b0 = pos, b1 = neg).
+      if (payload.length < 2) return null;
+      const n = payload[1];
+      if (payload.length < 2 + 4 * n) return null;
+      const entries: LockEntry[] = [];
+      for (let i = 0; i < n; i++) {
+        const off = 2 + 4 * i;
+        const dirbits = payload[off + 3];
+        entries.push({
+          cls: payload[off],
+          id: u16le(payload, off + 1),
+          positive: (dirbits & 0x01) !== 0,
+          negative: (dirbits & 0x02) !== 0,
+        });
+      }
+      return { kind: 'locks', locks: { entries } };
     }
     case Q_CATCH: {
       if (payload.length < 6) return null;
@@ -210,34 +225,27 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse a MOUSE_EVENT payload (§4.10): [buttons u8][dx i16][dy i16][wheel i16]. Unsolicited.
-export function parseMouseEvent(payload: Uint8Array): MouseReport | null {
-  if (payload.length < 7) return null;
+// Parse a MOTION_EVENT payload (§4.10): [dx i16][dy i16][dz i16]. Unsolicited.
+export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
+  if (payload.length < 6) return null;
   return {
-    buttons: payload[0],
-    dx: i16le(payload, 1),
-    dy: i16le(payload, 3),
-    wheel: i16le(payload, 5),
+    dx: i16le(payload, 0),
+    dy: i16le(payload, 2),
+    dz: i16le(payload, 4),
   };
 }
 
-// Parse a KB_EVENT payload (§4.12): [modifiers u8][n u8][keycode u8 x n]. Unsolicited.
-export function parseKbEvent(payload: Uint8Array): KeyboardReport | null {
-  if (payload.length < 2) return null;
-  const n = payload[1];
-  if (payload.length < 2 + n) return null;
-  const keys: number[] = [];
-  for (let i = 0; i < n; i++) keys.push(payload[2 + i]);
-  return { modifiers: payload[0], keys };
-}
-
-// Parse a CONS_EVENT payload (§4.13): [n u8][usage u16 LE x n]. Unsolicited.
-export function parseConsEvent(payload: Uint8Array): ConsumerReport | null {
+// Parse a USAGE_EVENT payload (§4.10): [n u8] then n × [class u8][id u16 LE]. A class-tagged held-usage
+// snapshot (buttons, keys, or media, one class per event). Unsolicited.
+export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
   if (payload.length < 1) return null;
   const n = payload[0];
-  if (payload.length < 1 + 2 * n) return null;
-  const usages: number[] = [];
-  for (let i = 0; i < n; i++) usages.push(u16le(payload, 1 + 2 * i));
+  if (payload.length < 1 + 3 * n) return null;
+  const usages: Usage[] = [];
+  for (let i = 0; i < n; i++) {
+    const off = 1 + 3 * i;
+    usages.push({ cls: payload[off], id: u16le(payload, off + 1) });
+  }
   return { usages };
 }
 

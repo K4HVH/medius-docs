@@ -77,78 +77,44 @@ const Api: Component = () => {
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject: buttons" subtitle="Press and release mouse buttons" />
+          <CardHeader title="Inject" subtitle="Press and release any usage: button, key, or media" />
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
-            <A href="/native/injection">injection model</A> (press / soft-release / force-release).
-            Button ids are on <A href="/native/commands/usage#buttons">Usage IDs</A>.
+            <A href="/native/injection">injection model</A> (press / soft-release / force-release). One
+            usage vocabulary drives every verb; build an <A href="/bindings/python/types#input"><code>Input</code></A>{' '}
+            with <code>Input.button</code> / <code>key</code> / <code>media</code>. Ids are on{' '}
+            <A href="/native/commands/usage">Usage IDs</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Input</code></A> (button, key, or media).</td></tr>
-              <tr><td><code>dev.button(button, action)</code></td><td>Apply an <code>Action</code> to a <A href="/bindings/python/types#button"><code>Button</code></A> directly.</td></tr>
-              <tr><td><code>dev.press(button)</code></td><td>Hold a button down (<code>Action.PRESS</code>).</td></tr>
-              <tr><td><code>dev.soft_release(button)</code></td><td>Release, unless the user is physically holding it.</td></tr>
-              <tr><td><code>dev.force_release(button)</code></td><td>Release even against a physical hold.</td></tr>
+              <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Input</code></A> (button, key, or media usage).</td></tr>
+              <tr><td><code>dev.press(input)</code></td><td>Hold a usage down (<code>Action.PRESS</code>).</td></tr>
+              <tr><td><code>dev.soft_release(input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
+              <tr><td><code>dev.force_release(input)</code></td><td>Release even against a physical hold.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              The generic <code>inject()</code> takes a built target, not a generic argument. Build it
-              with <code>Input.button</code>/<code>key</code>/<code>media</code>, as in{' '}
-              <code>dev.inject(Input.button(Button.LEFT), Action.PRESS)</code>. The direct verbs
-              (<code>press</code>, <code>key_down</code>, <code>media_down</code>) take the target
-              directly, so <code>Input</code> is only needed on the generic path.
+              Every verb takes an <code>Input</code>, so a button, key, and media usage inject the
+              same way: <code>dev.press(Input.button(Button.LEFT))</code>,{' '}
+              <code>dev.press(Input.key(Key.W))</code>,{' '}
+              <code>dev.press(Input.media(MediaKey.MUTE))</code>.
             </p>
           </div>
-        </Card>
-      </div>
-
-      <div id="keys" data-search-target>
-        <Card>
-          <CardHeader title="Inject: keyboard" subtitle="Press and release keys" />
-          <p>See <A href="/library/inject">Inject</A>; HID keycodes on <A href="/native/commands/usage#keycodes">Usage IDs</A>. Pass a <A href="/bindings/python/types#key"><code>Key</code></A> or a raw keycode <code>int</code>.</p>
-          <table class="api-params">
-            <thead><tr><th>Call</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>dev.key(key, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a key.</td></tr>
-              <tr><td><code>dev.key_down(key)</code></td><td>Hold a key down.</td></tr>
-              <tr><td><code>dev.key_up(key)</code></td><td>Soft-release a key.</td></tr>
-              <tr><td><code>dev.key_force_release(key)</code></td><td>Force-release a key.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-
-      <div id="media" data-search-target>
-        <Card>
-          <CardHeader title="Inject: media" subtitle="Consumer-control keys" />
-          <p>See <A href="/library/inject">Inject</A>; Consumer usages on <A href="/native/commands/usage#consumer">Usage IDs</A>. Pass a <A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a raw 16-bit usage <code>int</code>.</p>
-          <table class="api-params">
-            <thead><tr><th>Call</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>dev.media(media, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a media key.</td></tr>
-              <tr><td><code>dev.media_down(media)</code></td><td>Hold a media key down.</td></tr>
-              <tr><td><code>dev.media_up(media)</code></td><td>Soft-release a media key.</td></tr>
-              <tr><td><code>dev.media_force_release(media)</code></td><td>Force-release a media key.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/button targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/button</code></A>; a <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A> picks an edge.</p>
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A> picks an edge.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.lock(target, direction)</code></td><td>Lock an axis or button (e.g. <code>LockTarget.button(Button.LEFT)</code>).</td></tr>
-              <tr><td><code>dev.unlock(target, direction)</code></td><td>Unlock an axis or button.</td></tr>
-              <tr><td><code>dev.lock_key(key, direction)</code> / <code>unlock_key</code></td><td>Lock / unlock one keyboard key.</td></tr>
-              <tr><td><code>dev.lock_media(media)</code> / <code>unlock_media</code></td><td>Lock / unlock one media key.</td></tr>
-              <tr><td><code>dev.lock_all(what)</code> / <code>unlock_all</code></td><td>Blanket lock / unlock a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (keys, media, buttons).</td></tr>
+              <tr><td><code>dev.lock(target, direction)</code></td><td>Lock an axis or usage (e.g. <code>LockTarget.button(Button.LEFT)</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
+              <tr><td><code>dev.unlock(target, direction)</code></td><td>Unlock an axis or usage.</td></tr>
+              <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket lock / unlock a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
@@ -195,7 +161,7 @@ const Api: Component = () => {
               <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
-              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active lock mask (<code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active locks (<code>.entries</code>, <code>.is_locked(...)</code>).</td></tr>
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>

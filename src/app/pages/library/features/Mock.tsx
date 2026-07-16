@@ -132,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 2, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 3, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -153,11 +153,9 @@ assert!(device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <pre class="api-signature">fn push_event(&self, seq: u8, report: MouseEvent)</pre>
+          <pre class="api-signature">fn push_motion(&self, seq: u8, dx: i16, dy: i16, dz: i16)</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <pre class="api-signature">fn push_kb_event(&self, seq: u8, event: &KeyboardEvent)</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <pre class="api-signature">fn push_cons_event(&self, seq: u8, event: &MediaEvent)</pre>
+          <pre class="api-signature">fn push_usages(&self, seq: u8, usages: &[Usage])</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <p>
@@ -166,18 +164,20 @@ assert!(device.query_health()?.mouse_attached);`}</code></pre>
             <A href="/library/diagnostics#logs"><code>logs()</code></A> as a{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> ({' '}
             <A href="/library/types/enums#log-level"><code>LogLevel</code></A> plus <code>text</code>);{' '}
-            <code>push_raw</code> sends arbitrary bytes. The three <code>push_*_event</code> calls feed the{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>: a{' '}
-            <A href="/library/types/structs#mouse-event"><code>MouseEvent</code></A>,{' '}
-            <A href="/library/types/structs#keyboard-event"><code>KeyboardEvent</code></A>, or{' '}
-            <A href="/library/types/structs#media-event"><code>MediaEvent</code></A> arrives as the matching{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant, with <code>seq</code> as
-            the rolling counter so a test can assert gap detection.
+            <code>push_raw</code> sends arbitrary bytes. The two event calls feed the{' '}
+            <A href="/library/catch#event-stream"><code>EventStream</code></A>: <code>push_motion</code>{' '}
+            arrives as a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A> (a{' '}
+            <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A>) and{' '}
+            <code>push_usages</code> as a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A> (a{' '}
+            <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>), with{' '}
+            <code>seq</code> as the rolling counter so a test can assert gap detection.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;
-use medius::{CatchEvent, CatchMask, Device, Key, KeyboardEvent, LogLevel, MockBox};
+use medius::{CatchEvent, CatchMask, Device, Key, LogLevel, MockBox, Usage};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -189,8 +189,8 @@ assert_eq!(line.text, "overheating");
 
 // Fake a catch subscription seeing the user hold A.
 let stream = device.catch_events(CatchMask::KEYS)?;
-mock.push_kb_event(0, &KeyboardEvent { modifiers: 0, keys: vec![Key::A] });
-assert!(matches!(stream.recv()?, CatchEvent::Keyboard(k) if k.keys == vec![Key::A]));`}</code></pre>
+mock.push_usages(0, &[Usage::from(Key::A)]);
+assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));`}</code></pre>
         </Card>
       </div>
 

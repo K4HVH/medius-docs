@@ -39,15 +39,15 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="Sizing constants" subtitle="Fixed-cap arrays sized to the wire limits" />
           <p>
-            The event and log PODs embed fixed-cap arrays sized to the protocol's own limits, with a{' '}
-            <code>uint8_t</code> count saying how many slots are live. <code>char</code> arrays are
+            The event, lock, and log PODs embed fixed-cap arrays sized to the protocol's own limits,
+            with a count field saying how many slots are live. <code>char</code> arrays are
             NUL-terminated.
           </p>
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Caps</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_MAX_KEYS</code></td><td><code>256</code></td><td><A href="/bindings/c/types#keyboard-event"><code>MediusKeyboardEvent.keys</code></A></td></tr>
-              <tr><td><code>MEDIUS_MAX_MEDIA_KEYS</code></td><td><code>256</code></td><td><A href="/bindings/c/types#media-event"><code>MediusMediaEvent.keys</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_USAGES</code></td><td><code>256</code></td><td><A href="/bindings/c/types#usage-event"><code>MediusUsageEvent.usages</code></A>, <A href="/bindings/c/types#clip-status"><code>MediusClipStatus.held</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_LOCKS</code></td><td><code>256</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks.entries</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_PATH</code></td><td><code>512</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.path</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_LOG_TEXT</code></td><td><code>512</code></td><td><A href="/bindings/c/types#log-line"><code>MediusLogLine.text</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_PRODUCT</code></td><td><code>128</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo.product</code></A></td></tr>
@@ -185,7 +185,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_X</code></td><td><code>0</code></td><td>Horizontal movement.</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_Y</code></td><td><code>1</code></td><td>Vertical movement.</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_WHEEL</code></td><td><code>2</code></td><td>Scroll wheel.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_BUTTON</code></td><td><code>3</code></td><td>A button (the struct's <code>button</code> field selects which).</td></tr>
+              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_USAGE</code></td><td><code>3</code></td><td>A momentary usage (the struct's <code>usage</code> field selects which).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -195,13 +195,13 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="MediusLockDirection" subtitle="Which edge a lock applies to" />
           <pre class="api-signature">{`enum MediusLockDirection : uint8_t`}</pre>
-          <p>For an axis or wheel it's a sign; for a button it's an edge. See <A href="/native/commands/lock">LOCK</A>.</p>
+          <p>For an axis or wheel it's a sign; for a usage it's an edge. See <A href="/native/commands/lock">LOCK</A>.</p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_LOCK_DIRECTION_BOTH</code></td><td><code>0</code></td><td>Both signs, or press and release.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_DIRECTION_POSITIVE</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or button press.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_DIRECTION_NEGATIVE</code></td><td><code>2</code></td><td>Axis negative (<code>−</code>), or button release.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_DIRECTION_POSITIVE</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or a usage press.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_DIRECTION_NEGATIVE</code></td><td><code>2</code></td><td>Axis negative (<code>-</code>), or a usage release.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -302,9 +302,8 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Read</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOUSE</code></td><td><code>0</code></td><td><code>data.mouse</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_KEYBOARD</code></td><td><code>1</code></td><td><code>data.keyboard</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MEDIA</code></td><td><code>2</code></td><td><code>data.media</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>0</code></td><td><code>data.motion</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>1</code></td><td><code>data.usages</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -342,8 +341,9 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_MASK_MOTION</code></td><td><code>0x01</code></td><td>The mouse moved (dx/dy).</td></tr>
               <tr><td><code>MEDIUS_CATCH_MASK_WHEEL</code></td><td><code>0x02</code></td><td>The wheel turned.</td></tr>
               <tr><td><code>MEDIUS_CATCH_MASK_BUTTONS</code></td><td><code>0x04</code></td><td>A button changed.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_KEYS</code></td><td><code>0x08</code></td><td>A keyboard or media key changed.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_ALL</code></td><td><code>0x0F</code></td><td>Every class.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_MASK_KEYS</code></td><td><code>0x08</code></td><td>A keyboard key changed.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_MASK_MEDIA</code></td><td><code>0x10</code></td><td>A media key changed.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_MASK_ALL</code></td><td><code>0x1F</code></td><td>Every class.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -363,11 +363,11 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Macro group</th><th>Example</th><th>Usage</th></tr></thead>
             <tbody>
-              <tr><td>Letters</td><td><code>MEDIUS_KEY_A</code> .. <code>MEDIUS_KEY_Z</code></td><td><code>4</code>–<code>29</code></td></tr>
-              <tr><td>Digits</td><td><code>MEDIUS_KEY_1</code> .. <code>MEDIUS_KEY_0</code></td><td><code>30</code>–<code>39</code></td></tr>
-              <tr><td>Function</td><td><code>MEDIUS_KEY_F1</code> .. <code>MEDIUS_KEY_F12</code></td><td><code>58</code>–<code>69</code></td></tr>
+              <tr><td>Letters</td><td><code>MEDIUS_KEY_A</code> .. <code>MEDIUS_KEY_Z</code></td><td><code>4</code> to <code>29</code></td></tr>
+              <tr><td>Digits</td><td><code>MEDIUS_KEY_1</code> .. <code>MEDIUS_KEY_0</code></td><td><code>30</code> to <code>39</code></td></tr>
+              <tr><td>Function</td><td><code>MEDIUS_KEY_F1</code> .. <code>MEDIUS_KEY_F12</code></td><td><code>58</code> to <code>69</code></td></tr>
               <tr><td>Editing / nav</td><td><code>MEDIUS_KEY_ENTER</code>, <code>_ESCAPE</code>, <code>_TAB</code>, <code>_SPACE</code>, <code>_INSERT</code>, <code>_HOME</code>, <code>_DELETE</code>, arrows</td><td>various</td></tr>
-              <tr><td>Modifiers</td><td><code>MEDIUS_KEY_LEFT_CTRL</code> .. <code>MEDIUS_KEY_RIGHT_GUI</code></td><td><code>224</code>–<code>231</code> (<code>0xE0</code>–<code>0xE7</code>)</td></tr>
+              <tr><td>Modifiers</td><td><code>MEDIUS_KEY_LEFT_CTRL</code> .. <code>MEDIUS_KEY_RIGHT_GUI</code></td><td><code>224</code> to <code>231</code> (<code>0xE0</code> to <code>0xE7</code>)</td></tr>
             </tbody>
           </table>
         </Card>
@@ -407,14 +407,14 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Enumerator</th><th>Value</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_FRAME_TYPE_MOVE</code></td><td><code>1</code></td><td><code>MEDIUS_FRAME_TYPE_LED</code></td><td><code>9</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_INJECT</code></td><td><code>3</code></td><td><code>MEDIUS_FRAME_TYPE_LOCK</code></td><td><code>10</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_RESET</code></td><td><code>4</code></td><td><code>MEDIUS_FRAME_TYPE_CATCH</code></td><td><code>11</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_QUERY</code></td><td><code>5</code></td><td><code>MEDIUS_FRAME_TYPE_MOUSE_EVENT</code></td><td><code>12</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_RESP</code></td><td><code>6</code></td><td><code>MEDIUS_FRAME_TYPE_KB_EVENT</code></td><td><code>15</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_REBOOT_DL</code></td><td><code>7</code></td><td><code>MEDIUS_FRAME_TYPE_CONS_EVENT</code></td><td><code>16</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_LOG</code></td><td><code>8</code></td><td><code>MEDIUS_FRAME_TYPE_OPTION</code></td><td><code>17</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_CLIP_APPEND</code></td><td><code>18</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_CTRL</code></td><td><code>19</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_MOVE</code></td><td><code>1</code></td><td><code>MEDIUS_FRAME_TYPE_LOCK</code></td><td><code>10</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_INJECT</code></td><td><code>3</code></td><td><code>MEDIUS_FRAME_TYPE_CATCH</code></td><td><code>11</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_RESET</code></td><td><code>4</code></td><td><code>MEDIUS_FRAME_TYPE_MOTION_EVENT</code></td><td><code>12</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_QUERY</code></td><td><code>5</code></td><td><code>MEDIUS_FRAME_TYPE_USAGE_EVENT</code></td><td><code>15</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_RESP</code></td><td><code>6</code></td><td><code>MEDIUS_FRAME_TYPE_OPTION</code></td><td><code>17</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_REBOOT_DL</code></td><td><code>7</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_APPEND</code></td><td><code>18</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_LOG</code></td><td><code>8</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_CTRL</code></td><td><code>19</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_LED</code></td><td><code>9</code></td><td></td><td></td></tr>
             </tbody>
           </table>
         </Card>
@@ -473,14 +473,15 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="MediusLockTarget" subtitle="What a lock acts on" />
           <p>
-            Passed to <A href="/bindings/c/api#lock"><code>medius_device_lock</code></A> / <code>_unlock</code>. <code>button</code> is
-            meaningful only when <code>kind</code> is <code>BUTTON</code>. See <A href="/library/lock">Lock</A>.
+            Passed to <A href="/bindings/c/api#lock"><code>medius_device_lock</code></A> / <code>_unlock</code>. Build it with{' '}
+            <A href="/bindings/c/api#builders"><code>medius_lock_target_axis</code></A> or <code>medius_lock_target_usage</code>;{' '}
+            <code>usage</code> is read only when <code>kind</code> is <code>USAGE</code>. See <A href="/library/lock">Lock</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#lock-target-kind"><code>MediusLockTargetKind</code></A></td><td>X, Y, Wheel, or Button.</td></tr>
-              <tr><td><code>button</code></td><td><A href="/bindings/c/types#button"><code>MediusButton</code></A></td><td>Which button, when <code>kind == BUTTON</code>.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#lock-target-kind"><code>MediusLockTargetKind</code></A></td><td>X, Y, Wheel, or Usage.</td></tr>
+              <tr><td><code>usage</code></td><td><A href="/bindings/c/types#input"><code>MediusInput</code></A></td><td>The button, key, or media usage, when <code>kind == USAGE</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -656,16 +657,27 @@ const Types: Component = () => {
 
       <div id="locks" data-search-target>
         <Card>
-          <CardHeader title="MediusLocks" subtitle="The active lock bitmask" />
+          <CardHeader title="MediusLocks & MediusLockEntry" subtitle="The active locks, as an entry list" />
           <p>
-            From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>. Test a target/direction with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked(locks, target, dir)</code></A>. Bit layout on the native{' '}
+            From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>: <code>entries[0..n]</code>, one per locked target. Test a target/direction with{' '}
+            <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked(&amp;locks, target, dir)</code></A>. Wire layout on the native{' '}
             <A href="/native/commands/requests#requests">LOCKS</A> reply.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mask</code></td><td><code>uint16_t</code></td><td>The raw mask, 2 bits per target.</td></tr>
+              <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Live entries in <code>entries</code>.</td></tr>
+              <tr><td><code>entries</code></td><td><code>MediusLockEntry[MEDIUS_MAX_LOCKS]</code></td><td>One per locked axis or usage.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MEDIUSLOCKENTRY</div>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The locked axis or usage.</td></tr>
+              <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The lock covers a whole class; <code>target.usage.kind</code> names it and <code>value</code> is unused.</td></tr>
+              <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive edge (axis <code>+</code>, or press) is locked.</td></tr>
+              <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative edge (axis <code>-</code>, or release) is locked.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -780,56 +792,38 @@ const Types: Component = () => {
         </Card>
       </div>
 
-      <div id="mouse-event" data-search-target>
+      <div id="motion-event" data-search-target>
         <Card>
-          <CardHeader title="MediusMouseEvent" subtitle="One physical mouse snapshot" />
+          <CardHeader title="MediusMotionEvent" subtitle="One physical relative-axis snapshot" />
           <p>
-            Captured before lock suppression or injection. Test a button with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_mouse_event_is_pressed(&amp;event, button)</code></A>; diff <code>buttons</code>{' '}
-            across events for press/release edges.
+            The user's real motion at the merge point, before any lock suppression or injection. Surfaces
+            as the <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>buttons</code></td><td><code>uint8_t</code></td><td>Bit <code>b</code> = button id <code>b</code> (<code>0</code>=Left .. <code>4</code>=Side2).</td></tr>
-              <tr><td><code>dx</code></td><td><code>int16_t</code></td><td>X movement this report.</td></tr>
-              <tr><td><code>dy</code></td><td><code>int16_t</code></td><td>Y movement this report.</td></tr>
-              <tr><td><code>wheel</code></td><td><code>int16_t</code></td><td>Wheel movement this report.</td></tr>
+              <tr><td><code>dx</code></td><td><code>int16_t</code></td><td>Relative X this report (right positive).</td></tr>
+              <tr><td><code>dy</code></td><td><code>int16_t</code></td><td>Relative Y this report (down positive).</td></tr>
+              <tr><td><code>dz</code></td><td><code>int16_t</code></td><td>Wheel delta this report (up positive).</td></tr>
             </tbody>
           </table>
         </Card>
       </div>
 
-      <div id="keyboard-event" data-search-target>
+      <div id="usage-event" data-search-target>
         <Card>
-          <CardHeader title="MediusKeyboardEvent" subtitle="One physical keyboard snapshot" />
+          <CardHeader title="MediusUsageEvent" subtitle="One held-usage snapshot for a class" />
           <p>
-            A modifier bitmap plus the pressed non-modifier keycodes in <code>keys[0..n_keys]</code>.
-            Test a key with <A href="/bindings/c/api#inspectors"><code>medius_keyboard_event_is_pressed(&amp;event, key)</code></A>.
+            The held usages of one class (button, key, or media; modifiers are key usages{' '}
+            <code>0xE0..0xE7</code>) in <code>usages[0..n]</code>, buttons and keys the same shape. Test
+            one with <A href="/bindings/c/api#inspectors"><code>medius_usage_event_is_held(&amp;event, usage)</code></A>, or diff
+            successive snapshots for edges.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>modifiers</code></td><td><code>uint8_t</code></td><td>Modifier bitmap: bit <code>m</code> = the modifier at usage <code>0xE0 + m</code>.</td></tr>
-              <tr><td><code>n_keys</code></td><td><code>uint8_t</code></td><td>Live keycodes in <code>keys</code>.</td></tr>
-              <tr><td><code>keys</code></td><td><code>uint8_t[MEDIUS_MAX_KEYS]</code></td><td>The pressed non-modifier keycodes.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-
-      <div id="media-event" data-search-target>
-        <Card>
-          <CardHeader title="MediusMediaEvent" subtitle="One physical media snapshot" />
-          <p>
-            The active Consumer usages in <code>keys[0..n_keys]</code>. Test one with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_media_event_is_pressed(&amp;event, media)</code></A>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>n_keys</code></td><td><code>uint8_t</code></td><td>Live usages in <code>keys</code>.</td></tr>
-              <tr><td><code>keys</code></td><td><code>uint16_t[MEDIUS_MAX_MEDIA_KEYS]</code></td><td>The active Consumer usages.</td></tr>
+              <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Live usages in <code>usages</code>.</td></tr>
+              <tr><td><code>usages</code></td><td><code>MediusInput[MEDIUS_MAX_USAGES]</code></td><td>The held <A href="/bindings/c/types#input"><code>MediusInput</code></A> usages (button, key, or media).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -840,7 +834,7 @@ const Types: Component = () => {
           <CardHeader title="MediusCatchEvent" subtitle="One catch-stream event (a tagged union)" />
           <pre class="api-signature">{`struct MediusCatchEvent {
     MediusCatchEventKind kind;
-    union MediusCatchEventData { MediusMouseEvent mouse; MediusKeyboardEvent keyboard; MediusMediaEvent media; } data;
+    union MediusCatchEventData { MediusMotionEvent motion; MediusUsageEvent usages; } data;
 }`}</pre>
           <p>
             Written by <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> and friends. Read the union member named
@@ -850,9 +844,8 @@ const Types: Component = () => {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#catch-event-kind"><code>MediusCatchEventKind</code></A></td><td>Which union member is live.</td></tr>
-              <tr><td><code>data.mouse</code></td><td><A href="/bindings/c/types#mouse-event"><code>MediusMouseEvent</code></A></td><td>Read when <code>kind == MOUSE</code>.</td></tr>
-              <tr><td><code>data.keyboard</code></td><td><A href="/bindings/c/types#keyboard-event"><code>MediusKeyboardEvent</code></A></td><td>Read when <code>kind == KEYBOARD</code>.</td></tr>
-              <tr><td><code>data.media</code></td><td><A href="/bindings/c/types#media-event"><code>MediusMediaEvent</code></A></td><td>Read when <code>kind == MEDIA</code>.</td></tr>
+              <tr><td><code>data.motion</code></td><td><A href="/bindings/c/types#motion-event"><code>MediusMotionEvent</code></A></td><td>Read when <code>kind == MOTION</code>.</td></tr>
+              <tr><td><code>data.usages</code></td><td><A href="/bindings/c/types#usage-event"><code>MediusUsageEvent</code></A></td><td>Read when <code>kind == USAGES</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -946,7 +939,8 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
-              <tr><td><code>held</code></td><td><code>uint8_t</code></td><td>Held-input flags: bits 0-4 the held mouse buttons (bit <code>b</code> = button id <code>b</code>), bit 5 a key held, bit 6 a media usage held.</td></tr>
+              <tr><td><code>held_n</code></td><td><code>uint16_t</code></td><td>Held usages in <code>held</code>.</td></tr>
+              <tr><td><code>held</code></td><td><code>MediusInput[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>

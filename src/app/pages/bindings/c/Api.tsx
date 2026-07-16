@@ -99,78 +99,43 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject: buttons" subtitle="Press and release mouse buttons" />
+          <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
           <p>
-            See <A href="/library/inject">Inject</A> and the{' '}
-            <A href="/native/injection">injection model</A> (press / soft-release / force-release).
-            Button ids are on <A href="/native/commands/usage#buttons">Usage IDs</A>.
+            One verb set over a <A href="/bindings/c/types#input"><code>MediusInput</code></A> (button, key,
+            or media). Build it with the <A href="#builders">input helpers</A>; see{' '}
+            <A href="/library/inject">Inject</A>, the <A href="/native/injection">injection model</A>, and
+            the id spaces on <A href="/native/commands/usage">Usage IDs</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_inject(MediusDevice *dev, MediusInput input, MediusAction action)</code></td><td>Apply an action to a built <A href="/bindings/c/types#input"><code>MediusInput</code></A> (button, key, or media).</td></tr>
-              <tr><td><code>medius_device_button(MediusDevice *dev, MediusButton button, MediusAction action)</code></td><td>Apply an action to a button directly.</td></tr>
-              <tr><td><code>medius_device_press(MediusDevice *dev, MediusButton button)</code></td><td>Hold a button down (<code>MEDIUS_ACTION_PRESS</code>).</td></tr>
-              <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusButton button)</code></td><td>Release, unless the user is physically holding it.</td></tr>
-              <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusButton button)</code></td><td>Release even against a physical hold.</td></tr>
+              <tr><td><code>medius_device_inject(MediusDevice *dev, MediusInput input, MediusAction action)</code></td><td>Apply an <A href="/bindings/c/types#action"><code>MediusAction</code></A> to a usage. The one injection verb.</td></tr>
+              <tr><td><code>medius_device_press(MediusDevice *dev, MediusInput input)</code></td><td>Hold the usage down (<code>MEDIUS_ACTION_PRESS</code>).</td></tr>
+              <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusInput input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
+              <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusInput input)</code></td><td>Release even against a physical hold.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              <code>medius_device_inject</code> takes a value you build with{' '}
-              <code>medius_input_button</code>, <code>medius_input_key</code>, or{' '}
-              <code>medius_input_media</code> (see <A href="#builders">Input builders</A>). The direct
-              verbs (<code>medius_device_press</code>, <A href="#keys"><code>medius_device_key_down</code></A>,{' '}
-              <A href="#media"><code>medius_device_media_down</code></A>) take the target on their own.
+              Build the target with <code>medius_input_button</code> / <code>_key</code> / <code>_media</code>{' '}
+              (see <A href="#builders">Input builders</A>); a <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
+              or <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a raw HID usage.
             </p>
           </div>
-        </Card>
-      </div>
-
-      <div id="keys" data-search-target>
-        <Card>
-          <CardHeader title="Inject: keyboard" subtitle="Press and release keys" />
-          <p>See <A href="/library/inject">Inject</A>; HID keycodes (the <code>MEDIUS_KEY_*</code> constants) on <A href="/native/commands/usage#keycodes">Usage IDs</A>. A <A href="/bindings/c/types#key"><code>MediusKey</code></A> is a <code>uint8_t</code> usage.</p>
-          <table class="api-params">
-            <thead><tr><th>Function</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>medius_device_key(MediusDevice *dev, MediusKey key, MediusAction action)</code></td><td>Apply an action to a key.</td></tr>
-              <tr><td><code>medius_device_key_down(MediusDevice *dev, MediusKey key)</code></td><td>Hold a key down.</td></tr>
-              <tr><td><code>medius_device_key_up(MediusDevice *dev, MediusKey key)</code></td><td>Soft-release a key.</td></tr>
-              <tr><td><code>medius_device_key_force_release(MediusDevice *dev, MediusKey key)</code></td><td>Force-release a key.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-
-      <div id="media" data-search-target>
-        <Card>
-          <CardHeader title="Inject: media" subtitle="Consumer-control keys" />
-          <p>See <A href="/library/inject">Inject</A>; Consumer usages (the <code>MEDIUS_MEDIA_*</code> constants) on <A href="/native/commands/usage#consumer">Usage IDs</A>. A <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a <code>uint16_t</code> usage.</p>
-          <table class="api-params">
-            <thead><tr><th>Function</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>medius_device_media(MediusDevice *dev, MediusMediaKey media, MediusAction action)</code></td><td>Apply an action to a media key.</td></tr>
-              <tr><td><code>medius_device_media_down(MediusDevice *dev, MediusMediaKey media)</code></td><td>Hold a media key down.</td></tr>
-              <tr><td><code>medius_device_media_up(MediusDevice *dev, MediusMediaKey media)</code></td><td>Soft-release a media key.</td></tr>
-              <tr><td><code>medius_device_media_force_release(MediusDevice *dev, MediusMediaKey media)</code></td><td>Force-release a media key.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or button and a <A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A> picks an edge. Read a returned mask with <A href="#inspectors"><code>medius_locks_is_locked</code></A>.</p>
+          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A> picks an edge. Read the returned entries with <A href="#inspectors"><code>medius_locks_is_locked</code></A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, MediusLockDirection dir)</code></td><td>Lock an axis or button.</td></tr>
-              <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, MediusLockDirection dir)</code></td><td>Unlock an axis or button.</td></tr>
-              <tr><td><code>medius_device_lock_key(...)</code> / <code>medius_device_unlock_key(MediusDevice *dev, MediusKey key, MediusLockDirection dir)</code></td><td>Lock / unlock one keyboard key.</td></tr>
-              <tr><td><code>medius_device_lock_media(...)</code> / <code>medius_device_unlock_media(MediusDevice *dev, MediusMediaKey media)</code></td><td>Lock / unlock one media key.</td></tr>
-              <tr><td><code>medius_device_lock_all(...)</code> / <code>medius_device_unlock_all(MediusDevice *dev, MediusBlanket what)</code></td><td>Blanket lock / unlock a class (keys, media, buttons).</td></tr>
+              <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, MediusLockDirection dir)</code></td><td>Lock an axis or usage on an edge.</td></tr>
+              <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, MediusLockDirection dir)</code></td><td>Release a lock.</td></tr>
+              <tr><td><code>medius_device_lock_all(MediusDevice *dev, MediusBlanket what, MediusLockDirection dir)</code></td><td>Blanket lock a whole class (aim, wheel, buttons, keys, or media).</td></tr>
+              <tr><td><code>medius_device_unlock_all(MediusDevice *dev, MediusBlanket what, MediusLockDirection dir)</code></td><td>Release a blanket lock.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
@@ -217,7 +182,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_caps(dev, MediusCaps *out)</code></td><td><A href="/bindings/c/types#caps"><code>MediusCaps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>medius_device_query_stats(dev, MediusStats *out)</code></td><td><A href="/bindings/c/types#stats"><code>MediusStats</code></A>: box-side telemetry.</td></tr>
-              <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A>: active lock mask.</td></tr>
+              <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A>: the active locks (entry list).</td></tr>
               <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: subscription mask + dropped count.</td></tr>
               <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
@@ -290,8 +255,8 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Input & motion builders" subtitle="Make the value structs the calls take" />
-          <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A> and <A href="/library/move">Move</A>.</p>
+          <CardHeader title="Input, motion & lock-target builders" subtitle="Make the value structs the calls take" />
+          <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A>, <A href="/library/move">Move</A>, and <A href="/library/lock">Lock</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
@@ -300,6 +265,8 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_input_media(MediusMediaKey media)</code></td><td><code>MediusInput</code> addressing a media key.</td></tr>
               <tr><td><code>medius_motion_cursor(int16_t dx, int16_t dy)</code></td><td><A href="/bindings/c/types#motion"><code>MediusMotion</code></A> for <code>medius_device_move_axis</code>.</td></tr>
               <tr><td><code>medius_motion_wheel(int16_t delta)</code></td><td><code>MediusMotion</code> for a wheel scroll.</td></tr>
+              <tr><td><code>medius_lock_target_axis(MediusLockTargetKind kind)</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> for an axis (<code>X</code> / <code>Y</code> / <code>Wheel</code>).</td></tr>
+              <tr><td><code>medius_lock_target_usage(MediusInput usage)</code></td><td><code>MediusLockTarget</code> for a usage (button, key, or media).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -312,11 +279,10 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_is_locked(MediusLocks locks, MediusLockTarget target, MediusLockDirection dir)</code></td><td><code>bool</code>: is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
+              <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, MediusLockDirection dir)</code></td><td><code>bool</code>: is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
               <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
-              <tr><td><code>medius_mouse_event_is_pressed(const MediusMouseEvent *event, MediusButton button)</code></td><td><code>bool</code>: is that button held in the snapshot.</td></tr>
-              <tr><td><code>medius_keyboard_event_is_pressed(const MediusKeyboardEvent *event, MediusKey key)</code></td><td><code>bool</code>: is that key held (modifier bitmap or keycode list).</td></tr>
-              <tr><td><code>medius_media_event_is_pressed(const MediusMediaEvent *event, MediusMediaKey media)</code></td><td><code>bool</code>: is that media usage active.</td></tr>
+              <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusInput usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>
+              <tr><td><code>medius_clip_status_is_held(const MediusClipStatus *status, MediusInput usage)</code></td><td><code>bool</code>: is the clip holding that usage down.</td></tr>
               <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code>: a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
               <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code>: a keyboard interface is bound.</td></tr>
               <tr><td><code>medius_caps_is_composite(MediusCaps caps)</code></td><td><code>bool</code>: the clone is multi-HID-interface.</td></tr>
@@ -363,7 +329,8 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries for timeout tests (still records).</td></tr>
               <tr><td><code>medius_mock_push_raw(mock, const uint8_t *bytes, uintptr_t len)</code></td><td>Inject raw inbound bytes, as if the box sent them.</td></tr>
               <tr><td><code>medius_mock_push_log(mock, MediusLogLevel level, const char *text)</code></td><td>Push a LOG line onto the device's log stream.</td></tr>
-              <tr><td><code>medius_mock_push_event / _push_kb_event / _push_cons_event(mock, uint8_t seq, …)</code></td><td>Push a mouse / keyboard / media report as a catch event.</td></tr>
+              <tr><td><code>medius_mock_push_motion(mock, uint8_t seq, MediusMotionEvent event)</code></td><td>Push a <A href="/bindings/c/types#motion-event"><code>MediusMotionEvent</code></A> as a <code>Motion</code> catch event.</td></tr>
+              <tr><td><code>medius_mock_push_usages(mock, uint8_t seq, const MediusUsageEvent *event)</code></td><td>Push a <A href="/bindings/c/types#usage-event"><code>MediusUsageEvent</code></A> as a <code>Usages</code> catch event.</td></tr>
               <tr><td><code>medius_mock_recorded(MediusMockBox *mock)</code></td><td>How many commands the host has sent.</td></tr>
               <tr><td><code>medius_mock_saw(mock, MediusFrameType ty)</code></td><td>Whether at least one frame of that type was sent.</td></tr>
               <tr><td><code>medius_mock_clear_recorded(MediusMockBox *mock)</code></td><td>Clear the recorded-command log.</td></tr>

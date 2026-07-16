@@ -23,21 +23,22 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="Button ids" subtitle="Mouse buttons (class = button)" />
           <p>
-            A small semantic id, bound at clone time to the real mouse's buttons. A command for an id
-            the mouse lacks is a no-op, so read{' '}
+            A small semantic id, bound at clone time to the real mouse's buttons, and the same id for{' '}
+            <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A> (a button locks as{' '}
+            <code>class = 0</code>, <code>id = button id</code>, exactly like a key). A command for an
+            id the mouse lacks is a no-op, so read{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
-            <code>n_buttons</code> first. The same button has two numbers: an{' '}
-            <A href="/native/commands/inject#button"><code>INJECT</code></A> id and a{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> target, offset by 3.
+            <code>n_buttons</code> first.
           </p>
           <table class="api-params">
-            <thead><tr><th>Button</th><th>INJECT id</th><th>LOCK target</th></tr></thead>
+            <thead><tr><th>Button</th><th><code>id</code></th></tr></thead>
             <tbody>
-              <tr><td>Left</td><td><code>0</code></td><td><code>3</code></td></tr>
-              <tr><td>Right</td><td><code>1</code></td><td><code>4</code></td></tr>
-              <tr><td>Middle</td><td><code>2</code></td><td><code>5</code></td></tr>
-              <tr><td>Side1 (first thumb)</td><td><code>3</code></td><td><code>6</code></td></tr>
-              <tr><td>Side2 (second thumb)</td><td><code>4</code></td><td><code>7</code></td></tr>
+              <tr><td>Left</td><td><code>0</code></td></tr>
+              <tr><td>Right</td><td><code>1</code></td></tr>
+              <tr><td>Middle</td><td><code>2</code></td></tr>
+              <tr><td>Side1 (first thumb)</td><td><code>3</code></td></tr>
+              <tr><td>Side2 (second thumb)</td><td><code>4</code></td></tr>
             </tbody>
           </table>
         </Card>

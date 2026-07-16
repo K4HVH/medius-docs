@@ -69,8 +69,8 @@ const Clip: Component = () => {
               <tr><td><code>press / release / force_release(button)</code></td><td>a one-frame press, soft-release, or force-release of a <A href="/library/types/enums#button"><code>Button</code></A>.</td></tr>
               <tr><td><code>key(key, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#key"><code>Key</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
               <tr><td><code>media(media, action)</code></td><td>a one-frame edge on a <A href="/library/types/structs#media-key"><code>MediaKey</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>edge(input, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#input"><code>Input</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/enums#input"><code>Input</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
+              <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#usage"><code>Usage</code></A> with an <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/enums#usage"><code>Usage</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
           <p>
@@ -110,7 +110,7 @@ clip.key(Key::A, Action::Press)            // then type 'a'
               <tr><td><code>append(clip: &amp;ClipBuilder)</code></td><td>Send a <A href="/library/clip#builder"><code>ClipBuilder</code></A>'s entries to the ring; splits a large clip into whole-entry frames with contiguous append seqs.</td></tr>
               <tr><td><code>start(config: &amp;ClipConfig)</code></td><td>Play from the ring head with a <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A> (its <A href="/library/lock">auto-lock</A> scope); <code>&amp;ClipConfig::new()</code> for no lock.</td></tr>
               <tr><td><code>stop()</code></td><td>Stop, flush the ring, release the clip's lock.</td></tr>
-              <tr><td><code>arm_catch(trigger: impl Into&lt;Input&gt;, config: &amp;ClipConfig)</code></td><td>Fire <code>start(config)</code> on a physical press of <code>trigger</code>, any <A href="/library/types/enums#input"><code>Input</code></A> (a button, key, or media usage), no host round-trip.</td></tr>
+              <tr><td><code>arm_catch(trigger: impl Into&lt;Usage&gt;, config: &amp;ClipConfig)</code></td><td>Fire <code>start(config)</code> on a physical press of <code>trigger</code>, any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage), no host round-trip.</td></tr>
               <tr><td><code>arm_catch_any(config: &amp;ClipConfig)</code></td><td>Fire on any physical input, starting with the given <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A>.</td></tr>
               <tr><td><code>disarm()</code></td><td>Clear a pending catch-arm.</td></tr>
               <tr><td><code>status() -&gt; ClipStatus</code></td><td>Read the ring depth and playback state (blocks); see <A href="/library/clip#status">below</A>.</td></tr>
@@ -170,7 +170,7 @@ handle.stop()?;`}</code></pre>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>times the ring ran dry mid-playback.</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped append frames detected.</td></tr>
-              <tr><td><code>held</code></td><td><code>u8</code></td><td>held-input flags: bits 0-4 the held mouse buttons, bit 5 a key held, bit 6 a media usage held. Read with <code>buttons_held() / keys_held() / media_held()</code>.</td></tr>
+              <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>the usages the clip is holding down (buttons, keys, and media in one list); test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
           </table>
         </Card>

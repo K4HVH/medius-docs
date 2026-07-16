@@ -3,7 +3,15 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { CatchClass, mouseReportPressed } from '../../../dashboard/protocol';
+import {
+  type UsageSnapshot,
+  CatchClass,
+  INJ_BTN,
+  INJ_KEY,
+  INJ_MEDIA,
+  snapshotClass,
+  usageHeld,
+} from '../../../dashboard/protocol';
 import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
 
@@ -11,26 +19,29 @@ const PRESETS: Record<string, number> = {
   all: CatchClass.All,
   buttons: CatchClass.Buttons,
   motion: CatchClass.Motion | CatchClass.Wheel,
-  keys: CatchClass.Keys,
+  keys: CatchClass.Keys | CatchClass.Media,
 };
 
 const BUTTON_NAMES = ['Left', 'Right', 'Middle', 'Side 1', 'Side 2'];
 
-const hex2 = (n: number) => n.toString(16).padStart(2, '0');
+// A usages snapshot carries one class; name the log line by that class.
+const CLASS_NAMES: Record<number, string> = {
+  [INJ_BTN]: 'buttons',
+  [INJ_KEY]: 'keys',
+  [INJ_MEDIA]: 'media',
+};
 
 // One line of the event log, per CATCH event kind.
 const eventLine = (e: InputEventEntry): string => {
-  if (e.ev.kind === 'mouse') {
-    const r = e.ev.report;
-    return `#${e.seq} mouse btns=0x${hex2(r.buttons)} dx=${r.dx} dy=${r.dy} wheel=${r.wheel}`;
+  if (e.ev.kind === 'motion') {
+    const m = e.ev.motion;
+    return `#${e.seq} motion dx=${m.dx} dy=${m.dy} dz=${m.dz}`;
   }
-  if (e.ev.kind === 'keyboard') {
-    const r = e.ev.report;
-    const keys = r.keys.map(hex2).join(' ') || '(none)';
-    return `#${e.seq} keys mod=0x${hex2(r.modifiers)} [${keys}]`;
-  }
-  const usages = e.ev.report.usages.map((u) => `0x${u.toString(16)}`).join(' ') || '(none)';
-  return `#${e.seq} media [${usages}]`;
+  const snap = e.ev.snapshot;
+  const cls = snapshotClass(snap);
+  const name = (cls !== null && CLASS_NAMES[cls]) || 'usages';
+  const ids = snap.usages.map((u) => `0x${u.id.toString(16)}`).join(' ') || '(none)';
+  return `#${e.seq} ${name} [${ids}]`;
 };
 
 const label = {
@@ -90,25 +101,39 @@ const DeviceEventCatch = () => {
   });
 
   const events = () => dash.inputEvents();
-  // The most recent mouse snapshot, for the "buttons held now" readout.
-  const latestMouse = () => {
+  // The most recent button snapshot, for the "buttons held now" readout. An all-released snapshot
+  // has no class byte (n=0), so treat an empty snapshot as a button clear only when buttons are
+  // subscribed; otherwise it might be a key or media release.
+  const latestButtons = (): UsageSnapshot | null => {
+    const watchingButtons = (PRESETS[preset()] & CatchClass.Buttons) !== 0;
     const e = events();
     for (let i = e.length - 1; i >= 0; i--) {
       const ev = e[i].ev;
-      if (ev.kind === 'mouse') return ev.report;
+      if (ev.kind !== 'usages') continue;
+      const cls = snapshotClass(ev.snapshot);
+      if (cls === INJ_BTN || (cls === null && watchingButtons)) return ev.snapshot;
     }
     return null;
   };
   const held = () => {
-    const r = latestMouse();
-    return r ? BUTTON_NAMES.filter((_, i) => mouseReportPressed(r, i)) : [];
+    const snap = latestButtons();
+    return snap ? BUTTON_NAMES.filter((_, i) => usageHeld(snap, INJ_BTN, i)) : [];
   };
 
-  // Per-kind counts, so the mouse / keyboard / media asymmetry shows at a glance. A keyboard that
-  // never binds reads media events but zero key events; that count makes the gap obvious.
+  // Per-class counts, so the motion / buttons / keys / media asymmetry shows at a glance. A keyboard
+  // that never binds reads media events but zero key events; that count makes the gap obvious.
   const kindCounts = () => {
-    const c = { mouse: 0, keyboard: 0, media: 0 };
-    for (const e of events()) c[e.ev.kind]++;
+    const c = { motion: 0, buttons: 0, keys: 0, media: 0 };
+    for (const e of events()) {
+      if (e.ev.kind === 'motion') {
+        c.motion++;
+        continue;
+      }
+      const cls = snapshotClass(e.ev.snapshot);
+      if (cls === INJ_BTN) c.buttons++;
+      else if (cls === INJ_KEY) c.keys++;
+      else if (cls === INJ_MEDIA) c.media++;
+    }
     return c;
   };
 
@@ -155,7 +180,7 @@ const DeviceEventCatch = () => {
           </Show>
         </div>
         <Show when={streaming()}>
-          <Show when={latestMouse()}>
+          <Show when={latestButtons()}>
             <div style={{ 'margin-top': 'var(--g-spacing)' }}>
               <div style={label}>Buttons held now</div>
               <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
@@ -168,11 +193,14 @@ const DeviceEventCatch = () => {
           <div style={{ 'margin-top': 'var(--g-spacing)' }}>
             <div style={label}>Events by kind</div>
             <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
-              <Chip variant={kindCounts().mouse > 0 ? 'info' : 'neutral'}>
-                Mouse {kindCounts().mouse}
+              <Chip variant={kindCounts().motion > 0 ? 'info' : 'neutral'}>
+                Motion {kindCounts().motion}
               </Chip>
-              <Chip variant={kindCounts().keyboard > 0 ? 'info' : 'neutral'}>
-                Keyboard {kindCounts().keyboard}
+              <Chip variant={kindCounts().buttons > 0 ? 'info' : 'neutral'}>
+                Buttons {kindCounts().buttons}
+              </Chip>
+              <Chip variant={kindCounts().keys > 0 ? 'info' : 'neutral'}>
+                Keys {kindCounts().keys}
               </Chip>
               <Chip variant={kindCounts().media > 0 ? 'info' : 'neutral'}>
                 Media {kindCounts().media}

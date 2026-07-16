@@ -12,8 +12,8 @@ const Catch: Component = () => {
           <A href="/library/catch#catch-events"><code>catch_events</code></A> subscribes to the user's
           real input and hands back an{' '}
           <A href="/library/catch#event-stream"><code>EventStream</code></A> of{' '}
-          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> snapshots, mouse,
-          keyboard, and media as the user makes them, captured before any{' '}
+          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> snapshots, relative
+          motion and held-usage sets, captured before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
           <A href="/library/move">injection</A>. Drop the stream to unsubscribe.
         </p>
@@ -27,8 +27,8 @@ const Catch: Component = () => {
           <p>
             <A href="/library/types/structs#catch-mask"><code>CatchMask</code></A> picks which classes
             of change emit an event: <code>MOTION</code>, <code>WHEEL</code>, <code>BUTTONS</code>,
-            <code>KEYS</code>, combined with <code>|</code>, or <code>CatchMask::all()</code> for the
-            full mirror. The returned{' '}
+            <code>KEYS</code>, <code>MEDIA</code>, combined with <code>|</code>, or{' '}
+            <code>CatchMask::all()</code> for the full mirror. The returned{' '}
             <A href="/library/catch#event-stream"><code>EventStream</code></A> receives every event;
             the subscribe itself sends one frame and doesn't wait for a reply.
           </p>
@@ -38,7 +38,7 @@ const Catch: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>mask</code></td><td><A href="/library/types/structs#catch-mask"><code>CatchMask</code></A></td><td>Which classes to stream. <code>MOTION</code> / <code>WHEEL</code> / <code>BUTTONS</code> / <code>KEYS</code> or <code>all()</code>.</td></tr>
+              <tr><td><code>mask</code></td><td><A href="/library/types/structs#catch-mask"><code>CatchMask</code></A></td><td>Which classes to stream. <code>MOTION</code> / <code>WHEEL</code> / <code>BUTTONS</code> / <code>KEYS</code> / <code>MEDIA</code> or <code>all()</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -54,15 +54,14 @@ const Catch: Component = () => {
           <pre><code class="language-rust">{`use medius::{Device, CatchMask, CatchEvent, Button};
 
 let device = Device::find()?;
-let events = device.catch_events(CatchMask::all())?;   // or MOTION | BUTTONS | KEYS
+let events = device.catch_events(CatchMask::all())?;   // or MOTION | BUTTONS | KEYS | MEDIA
 while let Ok(event) = events.recv() {
     match event {
-        CatchEvent::Mouse(m) if m.is_pressed(Button::Side1) => {
-            // the side button was pressed; rebind it...
+        CatchEvent::Motion(m) => println!("dx={} dy={} dz={}", m.dx, m.dy, m.dz),
+        CatchEvent::Usages(u) if u.is_held(Button::Side1) => {
+            // the side button is held; rebind it...
         }
-        CatchEvent::Keyboard(k) => println!("{} keys down", k.keys.len()),
-        CatchEvent::Media(c)    => println!("{} media keys", c.keys.len()),
-        _ => {}
+        CatchEvent::Usages(u) => println!("{} usages held", u.usages.len()),
     }
 }
 // dropping \`events\` unsubscribes`}</code></pre>

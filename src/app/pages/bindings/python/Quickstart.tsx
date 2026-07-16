@@ -31,7 +31,7 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="The program" subtitle="The full listing" />
           <pre><code class="language-python">{`import time
-from medius import Device, Button, CatchMask, NotFoundError
+from medius import Device, Input, Button, CatchMask, NotFoundError
 
 try:
     with Device.find() as dev:                       # open first box + handshake
@@ -39,17 +39,19 @@ try:
         print(f"firmware {v.fw_major}.{v.fw_minor}.{v.fw_patch}, proto {v.proto_ver}")
 
         dev.move_rel(100, 0)                         # nudge cursor 100 right
-        dev.press(Button.LEFT)                       # hold left down
+        dev.press(Input.button(Button.LEFT))         # hold left down
         time.sleep(0.02)
-        dev.soft_release(Button.LEFT)                # let it back up
+        dev.soft_release(Input.button(Button.LEFT))  # let it back up
 
         with dev.catch_events(CatchMask.ALL) as stream:   # subscribe to physical input
             event = stream.recv_timeout(5000)             # one event, or None after 5 s
             if event is None:
                 print("no physical input within 5 s")
-            elif event.mouse:
-                m = event.mouse
-                print(f"mouse  buttons={m.buttons}  dx={m.dx} dy={m.dy} wheel={m.wheel}")
+            elif event.motion:
+                m = event.motion
+                print(f"motion  dx={m.dx} dy={m.dy} wheel={m.dz}")
+            elif event.usages and event.usages.is_held(Input.button(Button.LEFT)):
+                print("left button held")
             else:
                 print(f"event  {event.kind.name}")
         # stream + link are closed here, on block exit
@@ -89,12 +91,12 @@ except NotFoundError:
                 <td>Relative cursor move. See <A href="/native/commands/move#move">MOVE</A> / <A href="/library/move">Move</A>.</td>
               </tr>
               <tr>
-                <td><A href="/bindings/python/api#inject"><code>dev.press(Button.LEFT)</code></A></td>
+                <td><A href="/bindings/python/api#inject"><code>dev.press(Input.button(Button.LEFT))</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Hold a button. See the <A href="/native/injection#fire-and-forget">injection model</A> / <A href="/library/inject">Inject</A>.</td>
               </tr>
               <tr>
-                <td><A href="/bindings/python/api#inject"><code>dev.soft_release(Button.LEFT)</code></A></td>
+                <td><A href="/bindings/python/api#inject"><code>dev.soft_release(Input.button(Button.LEFT))</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Release, unless the user is physically holding it. See <A href="/native/injection">Injection</A>.</td>
               </tr>
@@ -122,8 +124,8 @@ except NotFoundError:
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
           <pre><code class="language-bash">{`python first.py
-# firmware 2.3.2, proto 2
-# mouse  buttons=1  dx=8 dy=-3 wheel=0`}</code></pre>
+# firmware 2.3.2, proto 3
+# motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
             The second line appears once you move or click the real mouse within the 5-second window;
             otherwise you get <code>no physical input within 5 s</code>.
@@ -150,9 +152,10 @@ except NotFoundError:
             </tbody>
           </table>
           <p>
-            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of <code>.mouse</code> / <code>.keyboard</code> /{' '}
-            <code>.media</code> (the others are <code>None</code>), plus{' '}
-            <code>event.is_pressed(Button.LEFT)</code>. Full payload shapes on{' '}
+            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of <code>.motion</code> /{' '}
+            <code>.usages</code> (the other is <code>None</code>); a{' '}
+            <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
+            <code>is_held(usage)</code> for any built <code>Input</code>. Full payload shapes on{' '}
             <A href="/bindings/python/streams">Streams</A>.
           </p>
         </Card>

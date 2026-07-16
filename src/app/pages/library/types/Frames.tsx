@@ -76,19 +76,14 @@ const Frames: Component = () => {
                 <td>Subscribe to physical-input events (PC to box).</td>
               </tr>
               <tr>
-                <td><code>Event</code></td>
+                <td><code>MotionEvent</code></td>
                 <td><code>0x0C</code></td>
-                <td>A physical mouse snapshot (box to PC).</td>
+                <td>An unsolicited relative-axis catch event, dx/dy/dz (box to PC).</td>
               </tr>
               <tr>
-                <td><code>KbEvent</code></td>
+                <td><code>UsageEvent</code></td>
                 <td><code>0x0F</code></td>
-                <td>A physical keyboard snapshot (box to PC).</td>
-              </tr>
-              <tr>
-                <td><code>ConsEvent</code></td>
-                <td><code>0x10</code></td>
-                <td>A physical media snapshot (box to PC).</td>
+                <td>An unsolicited held-usage snapshot: button, key, or media (box to PC).</td>
               </tr>
               <tr>
                 <td><code>Option</code></td>
@@ -146,8 +141,8 @@ assert!(FrameType::try_from(0xFF).is_err());
 // Variant -> byte always works.
 assert_eq!(u8::from(FrameType::Log), 0x08);
 
-// Read a decoded frame by field.
-let frame = DecodedFrame { ty: FrameType::Resp, seq: 7, payload: vec![1, 0x0B] };
+// Read a decoded frame by field: a MOTION_EVENT carrying dx=5, dy=-5, dz=1.
+let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![5, 0, 0xFB, 0xFF, 1, 0] };
 println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</code></pre>
 
           <div class="callout callout--info">

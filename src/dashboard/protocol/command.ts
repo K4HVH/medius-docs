@@ -16,15 +16,15 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
   return new Uint8Array([target, mode, level & 0xff]);
 }
 
-// LOCK (§3.8): [class u8][usage u16 LE][direction u8][state u8]. state 0 = unlock, 1 = lock.
-// usage is class-specific (mouse target / keyboard usage / media usage; ignored for blanket classes).
+// LOCK (§3.8): [class u8][id u16 LE][direction u8][state u8]. state 0 = unlock, 1 = lock. id is
+// class-specific (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
 export function lockPayload(
   cls: LockClass,
-  usage: number,
+  id: number,
   direction: LockDirection,
   state: number,
 ): Uint8Array {
-  return new Uint8Array([cls, usage & 0xff, (usage >> 8) & 0xff, direction, state & 0xff]);
+  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, state & 0xff]);
 }
 
 // CATCH (§3.9): [mask u8] - subscribe to physical-input event classes (0 = unsubscribe).
