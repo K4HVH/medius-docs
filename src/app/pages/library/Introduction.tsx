@@ -96,6 +96,11 @@ const Introduction: Component = () => {
                 <CardHeader title="Connection" subtitle="Open, find, handshake" />
               </Card>
             </A>
+            <A href="/library/discovery" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Discovery" subtitle="List boxes, open by identity" />
+              </Card>
+            </A>
           </div>
         </Card>
       </div>
@@ -122,6 +127,11 @@ const Introduction: Component = () => {
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Catch" subtitle="Stream physical input" />
+              </Card>
+            </A>
+            <A href="/library/clip" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Clip" subtitle="Preload input, box-clocked playback" />
               </Card>
             </A>
             <A href="/library/requests" style={{ "text-decoration": "none" }}>

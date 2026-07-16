@@ -166,29 +166,29 @@ dev.close()`}</code></pre>
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Input · Motion · LockTarget" />
+          <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget" />
           <p>
             The <A href="/library/inject"><code>inject</code></A> / <A href="/library/inject"><code>press</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> calls take a{' '}
             <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in. One
-            <A href="/bindings/python/types#input"><code>Input</code></A> (button, key, or media) feeds every inject verb.
+            <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media) feeds every inject verb.
           </p>
           <table class="api-params">
             <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
             <tbody>
-              <tr><td><A href="/bindings/python/types#input"><code>Input.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
-              <tr><td><code>Input.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
-              <tr><td><code>Input.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
+              <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
+              <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
+              <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
               <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
               <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, dir)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
-              <tr><td><code>LockTarget.usage(input)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
+              <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import Device, Input, Motion, LockTarget, Button, Action, LockDirection
+          <pre><code class="language-python">{`from medius import Device, Usage, Motion, LockTarget, Button, Action, LockDirection
 
 with Device.find() as dev:
-    dev.inject(Input.button(Button.LEFT), Action.PRESS)        # generic inject
+    dev.inject(Usage.button(Button.LEFT), Action.PRESS)        # generic inject
     dev.move_axis(Motion.cursor(10, -4))                       # generic move
     dev.lock(LockTarget.button(Button.LEFT), LockDirection.BOTH)`}</code></pre>
           <div class="callout callout--info">
@@ -196,9 +196,9 @@ with Device.find() as dev:
               <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
               <code>SOFT_RELEASE</code> / <code>FORCE_RELEASE</code>); the{' '}
               <A href="/native/injection">injection model</A> defines what each does.{' '}
-              <code>Input.button</code> takes a{' '}
+              <code>Usage.button</code> takes a{' '}
               <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
-              <code>Input.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
+              <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
               raw <code>int</code>.
             </p>
           </div>

@@ -6,7 +6,7 @@ Guidance for Claude Code when working in this repository. This is the **Medius d
 
 A static documentation site for Medius: replacement firmware for MAKCU-class mouse-passthrough boxes, its open binary control protocol, and the `medius` Rust library. Two sections:
 
-- **Native API** -- The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x08`).
+- **Native API** -- The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x13`).
 - **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` features.
 
 The site uses **MidnightUI** as its component library. MidnightUI components live in `src/components/` and `src/styles/` and are synced from an upstream repo. Do not modify MidnightUI component source files.
@@ -50,22 +50,32 @@ src/
         Frame.tsx                     # Frame format, CRC16, opcodes
         Injection.tsx                 # Injection model, carry, emission, safety
         commands/                     # one page per command GROUP (not per opcode)
-          Movement.tsx                # MOVE 0x01, WHEEL 0x02
-          Buttons.tsx                 # BUTTON 0x03
+          Move.tsx                    # MOVE 0x01 (cursor + wheel)
+          Inject.tsx                  # INJECT 0x03 (button/key/media)
           Requests.tsx                # QUERY 0x05, RESP 0x06, with VERSION/HEALTH layouts
           Admin.tsx                   # RESET 0x04, REBOOT 0x07, LOG 0x08
+          Led.tsx                     # LED 0x09
+          Lock.tsx                    # LOCK 0x0A
+          Catch.tsx                   # CATCH 0x0B, MOTION_EVENT 0x0C, USAGE_EVENT 0x0F
+          Option.tsx                  # OPTION 0x11
+          Clip.tsx                    # CLIP_APPEND 0x12, CLIP_CTRL 0x13
+          Usage.tsx                   # button/keycode/consumer usage id reference
         Flashing.tsx                  # Firmware updates over REBOOT
         Troubleshooting.tsx           # Common problems and fixes
       library/
         Introduction.tsx              # Rust library overview, install, features
         Connection.tsx                # open, find, handshake, threading
-        Movement.tsx                  # move_rel, wheel
-        Buttons.tsx                   # press, soft_release, force_release, button
+        Move.tsx                      # move_axis, move_rel, wheel
+        Inject.tsx                    # inject, press, soft_release, force_release
         Requests.tsx                  # query_version, query_health
         Admin.tsx                     # reset, reboot
         Lifecycle.tsx                 # keepalive, reapply, reconnect
         Diagnostics.tsx               # logs(), counters()
-        TypesAndErrors.tsx            # public types and the Error enum
+        types/                        # split reference (was TypesAndErrors.tsx)
+          Enums.tsx                   # DeviceKind, Button, Action, Class, Usage, Axis, and more
+          Structs.tsx                 # Version, Health, DeviceInfo, Caps, ClipStatus, and more
+          Frames.tsx                  # FrameType, DecodedFrame
+          Errors.tsx                  # the Error enum and Result alias
         features/
           Async.tsx                   # AsyncDevice (async feature)
           Mock.tsx                    # MockBox (mock feature)
@@ -116,8 +126,8 @@ Each fact set lives in exactly ONE place; every other page links to it, it does 
 - Opcode list: only on `Frame.tsx` (`#opcodes`).
 - Chip roles: only on `Architecture.tsx`; elsewhere link the words "device chip" / "host chip".
 
-Library enum and struct definitions live ONCE, as proper per-type tables on `library/TypesAndErrors.tsx` (one row per variant or field, not a comma-list crammed in a cell). Method pages link to Types for the type and show usage in an example; they do NOT re-table variants or fields.
-- Enums `Button`, `ButtonAction`, `RebootTarget`, `LogLevel`: proper tables only on `library/types` (`#enums`).
+Library enum and struct definitions live ONCE, as proper per-type tables under `library/types/` (`Enums.tsx`, `Structs.tsx`, `Frames.tsx`, `Errors.tsx`; one row per variant or field, not a comma-list crammed in a cell). Method pages link to Types for the type and show usage in an example; they do NOT re-table variants or fields.
+- Enums `Button`, `Action`, `Class`, `Usage`, `Axis`, `RebootTarget`, `LogLevel`: proper tables only on `library/types` (`#enums`).
 - Structs `Version`, `Health`, `LogLine`, `PortInfo`, `CountersSnapshot`: proper tables only on `library/types` (`#structs`).
 - `FrameType` / `DecodedFrame`: only on `library/types` (`#frames`). `Error` variants: only on `library/types` (`#errors`).
 - A method states what it returns in one sentence with a link to `library/types`, plus an example (see `library/Requests.tsx`, `library/Diagnostics.tsx`). It does not repeat the field/variant table.
@@ -126,11 +136,11 @@ If you need to reference one of these, link to it. Do not paste a second copy wi
 
 ### Command section template
 
-Every native opcode section uses the same element order (gold references: `commands/Movement.tsx`, `commands/Admin.tsx`):
+Every native opcode section uses the same element order (gold references: `commands/Move.tsx`, `commands/Admin.tsx`):
 
 `CardHeader` -> intro `<p>` (one sentence, ends "Opcode `0xNN`.") -> `pre.api-signature` -> badge `<p>` -> `PAYLOAD` label + `byte-table` (or `<p>No payload (...).</p>`) -> optional detail table (`ACTIONS`/`TARGETS`/`LEVELS`/`SELECTORS`/`FLAGS`) -> `EFFECT` label + `<p>` (ends "Library binding: ...") -> `EXAMPLE` label + `pre.diagram` byte grid.
 
-Library method sections (gold reference: `library/Movement.tsx`): `pre.api-signature` (bare `fn name(...) -> T`) -> badge `<p>` under each signature -> a primary table under its ALL-CAPS semantic label -> description `<p>` -> `EXAMPLE` label + `<pre><code>`. Every table in a method section carries a label, and every code example carries `EXAMPLE`. The label names what the table holds: `PARAMETERS` (args), `RETURNS` (a returned struct's fields), `EFFECT` (state changes), `ACTIONS`/`BUTTONS`/`TARGETS`/`LEVELS` (enum detail), `FUNCTIONS`/`CONSTRUCTORS`/`QUERIES` (a grouped section's calls). Index and concept cards (Introduction, the Types page, `Connection#handshake`/`#zero-config`, `Lifecycle#keepalive`) use unlabeled tables and are not method sections.
+Library method sections (gold reference: `library/Move.tsx`): `pre.api-signature` (bare `fn name(...) -> T`) -> badge `<p>` under each signature -> a primary table under its ALL-CAPS semantic label -> description `<p>` -> `EXAMPLE` label + `<pre><code>`. Every table in a method section carries a label, and every code example carries `EXAMPLE`. The label names what the table holds: `PARAMETERS` (args), `RETURNS` (a returned struct's fields), `EFFECT` (state changes), `ACTIONS`/`BUTTONS`/`TARGETS`/`LEVELS` (enum detail), `FUNCTIONS`/`CONSTRUCTORS`/`QUERIES` (a grouped section's calls). Index and concept cards (Introduction, the Types page, `Connection#handshake`/`#zero-config`, `Lifecycle#keepalive`) use unlabeled tables and are not method sections.
 
 ### Capitalization
 

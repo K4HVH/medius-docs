@@ -68,8 +68,8 @@ int main(void) {
         printf("firmware %u.%u.%u (proto %u)\\n", v.fw_major, v.fw_minor, v.fw_patch, v.proto_ver);
 
     check(medius_device_move_rel(dev, 100, -50), "move_rel");   /* fire-and-forget */
-    check(medius_device_press(dev, medius_input_button(MEDIUS_BUTTON_LEFT)), "press");
-    check(medius_device_soft_release(dev, medius_input_button(MEDIUS_BUTTON_LEFT)), "release");
+    check(medius_device_press(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "press");
+    check(medius_device_soft_release(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "release");
 
     MediusEventStream *events = NULL;
     if (!check(medius_device_catch_events(dev, MEDIUS_CATCH_MASK_ALL, &events), "catch_events")) {

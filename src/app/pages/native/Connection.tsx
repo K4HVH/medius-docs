@@ -41,7 +41,7 @@ const Connection: Component = () => {
           </ol>
           <p>
             <code>proto_ver</code> is the protocol version the firmware speaks, one byte. These pages
-            describe version <code>2</code>.
+            describe version <code>3</code>.
           </p>
           <table class="api-params">
             <thead>

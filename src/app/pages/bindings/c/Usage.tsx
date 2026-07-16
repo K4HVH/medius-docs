@@ -164,14 +164,14 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Input, Motion, LockTarget for the generic verbs" />
+          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget for the generic verbs" />
           <p>
             Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
             <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
-            targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusInput</code></A>,{' '}
+            targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
             <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, each with a helper
-            constructor. A <code>MediusInput</code> holds a{' '}
+            constructor. A <code>MediusUsage</code> holds a{' '}
             <A href="/native/commands/usage#buttons">button id</A>,{' '}
             <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
             <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
@@ -182,19 +182,19 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <tr><th>Builder</th><th>Returns</th><th>For</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>medius_input_button(MediusButton)</code></td><td><code>MediusInput</code></td><td rowspan="3"><A href="/library/inject">inject</A> / <A href="/native/injection">injection model</A></td></tr>
-              <tr><td><code>medius_input_key(MediusKey)</code></td><td><code>MediusInput</code></td></tr>
-              <tr><td><code>medius_input_media(MediusMediaKey)</code></td><td><code>MediusInput</code></td></tr>
+              <tr><td><code>medius_usage_button(MediusButton)</code></td><td><code>MediusUsage</code></td><td rowspan="3"><A href="/library/inject">inject</A> / <A href="/native/injection">injection model</A></td></tr>
+              <tr><td><code>medius_usage_key(MediusKey)</code></td><td><code>MediusUsage</code></td></tr>
+              <tr><td><code>medius_usage_media(MediusMediaKey)</code></td><td><code>MediusUsage</code></td></tr>
               <tr><td><code>medius_motion_cursor(dx, dy)</code></td><td><code>MediusMotion</code></td><td rowspan="2"><A href="/library/move">move</A> / <A href="/native/commands/move#move">MOVE</A></td></tr>
               <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
               <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
-              <tr><td><code>medius_lock_target_usage(MediusInput)</code></td><td><code>MediusLockTarget</code></td></tr>
+              <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
             </tbody>
           </table>
           <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
-MediusInput lmb = medius_input_button(MEDIUS_BUTTON_LEFT);
+MediusUsage lmb = medius_usage_button(MEDIUS_BUTTON_LEFT);
 medius_device_inject(dev, lmb, MEDIUS_ACTION_PRESS);
-medius_device_press(dev, medius_input_key(MEDIUS_KEY_W));   /* keys and media inject the same way */
+medius_device_press(dev, medius_usage_key(MEDIUS_KEY_W));   /* keys and media inject the same way */
 
 /* move: build a motion arm */
 MediusMotion m = medius_motion_cursor(100, -50);
@@ -204,12 +204,12 @@ medius_device_move_axis(dev, m);
 MediusLockTarget x = medius_lock_target_axis(MEDIUS_LOCK_TARGET_KIND_X);
 medius_device_lock(dev, x, MEDIUS_LOCK_DIRECTION_BOTH);
 
-MediusLockTarget side = medius_lock_target_usage(medius_input_button(MEDIUS_BUTTON_SIDE1));
+MediusLockTarget side = medius_lock_target_usage(medius_usage_button(MEDIUS_BUTTON_SIDE1));
 medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
           <div class="callout callout--info">
             <p>
               A button, key, and media usage all lock the same way:{' '}
-              <code>medius_lock_target_usage(medius_input_key(...))</code> locks a key,{' '}
+              <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
               <code>medius_lock_target_axis(...)</code> an axis or the wheel. The struct fields are on{' '}
               <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
             </p>

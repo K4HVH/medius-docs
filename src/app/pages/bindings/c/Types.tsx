@@ -63,8 +63,9 @@ const Types: Component = () => {
           <CardHeader title="Enums" subtitle="uint8_t-backed selectors (MediusStatus is int32_t)" />
           <p>
             Each value is a wire byte; the canonical meaning lives on{' '}
-            <A href="/library/types/enums">Enums</A>. The <code>*Kind</code> enums tag which arm of a
-            built value (<A href="/bindings/c/types#input"><code>MediusInput</code></A>,{' '}
+            <A href="/library/types/enums">Enums</A>. The <code>*Kind</code> enums (and{' '}
+            <A href="/bindings/c/types#input-kind"><code>MediusClass</code></A>) tag which arm of a
+            built value (<A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>,{' '}
             <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>) is populated.
           </p>
@@ -136,18 +137,18 @@ const Types: Component = () => {
 
       <div id="input-kind" data-search-target>
         <Card>
-          <CardHeader title="MediusInputKind" subtitle="Which arm of a MediusInput is set" />
-          <pre class="api-signature">{`enum MediusInputKind : uint8_t`}</pre>
+          <CardHeader title="MediusClass" subtitle="Which arm of a MediusUsage is set" />
+          <pre class="api-signature">{`enum MediusClass : uint8_t`}</pre>
           <p>
-            Tags the <A href="/bindings/c/types#input"><code>MediusInput</code></A> you build with{' '}
-            <A href="/bindings/c/api#builders"><code>medius_input_button/_key/_media</code></A>.
+            The <code>kind</code> tag of a <A href="/bindings/c/types#input"><code>MediusUsage</code></A> you build with{' '}
+            <A href="/bindings/c/api#builders"><code>medius_usage_button/_key/_media</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_INPUT_KIND_BUTTON</code></td><td><code>0</code></td><td><code>value</code> is a mouse button id.</td></tr>
-              <tr><td><code>MEDIUS_INPUT_KIND_KEY</code></td><td><code>1</code></td><td><code>value</code> is a HID keyboard usage.</td></tr>
-              <tr><td><code>MEDIUS_INPUT_KIND_MEDIA</code></td><td><code>2</code></td><td><code>value</code> is a 16-bit Consumer usage.</td></tr>
+              <tr><td><code>MEDIUS_CLASS_BUTTON</code></td><td><code>0</code></td><td><code>value</code> is a mouse button id.</td></tr>
+              <tr><td><code>MEDIUS_CLASS_KEY</code></td><td><code>1</code></td><td><code>value</code> is a HID keyboard usage.</td></tr>
+              <tr><td><code>MEDIUS_CLASS_MEDIA</code></td><td><code>2</code></td><td><code>value</code> is a 16-bit Consumer usage.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -212,14 +213,15 @@ const Types: Component = () => {
           <CardHeader title="MediusBlanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">{`enum MediusBlanket : uint8_t`}</pre>
           <p>A whole input group: which one <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the members of a clip's <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> auto-lock. See <A href="/library/lock">Lock</A>.</p>
+          <p>The values are ABI-local ordinals (matching the crate's <code>Blanket</code> order), not the <code>CLIP_LOCK_*</code> wire bits.</p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_BLANKET_KEYS</code></td><td><code>0</code></td><td>Every keyboard key and modifier.</td></tr>
-              <tr><td><code>MEDIUS_BLANKET_MEDIA</code></td><td><code>1</code></td><td>Every media (Consumer) usage.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_AIM</code></td><td><code>0</code></td><td>The X and Y cursor axes.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_WHEEL</code></td><td><code>1</code></td><td>The wheel.</td></tr>
               <tr><td><code>MEDIUS_BLANKET_BUTTONS</code></td><td><code>2</code></td><td>Every mouse button.</td></tr>
-              <tr><td><code>MEDIUS_BLANKET_AIM</code></td><td><code>3</code></td><td>The X and Y cursor axes.</td></tr>
-              <tr><td><code>MEDIUS_BLANKET_WHEEL</code></td><td><code>4</code></td><td>The wheel.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_KEYS</code></td><td><code>3</code></td><td>Every keyboard key and modifier.</td></tr>
+              <tr><td><code>MEDIUS_BLANKET_MEDIA</code></td><td><code>4</code></td><td>Every media (Consumer) usage.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -432,17 +434,17 @@ const Types: Component = () => {
 
       <div id="input" data-search-target>
         <Card>
-          <CardHeader title="MediusInput" subtitle="A momentary usage for inject" />
+          <CardHeader title="MediusUsage" subtitle="A momentary usage for inject" />
           <p>
             What <A href="/bindings/c/api#inject"><code>medius_device_inject</code></A> drives. Build with{' '}
-            <A href="/bindings/c/api#builders"><code>medius_input_button(...)</code></A>, <code>_key(...)</code>, or <code>_media(...)</code>;{' '}
+            <A href="/bindings/c/api#builders"><code>medius_usage_button(...)</code></A>, <code>_key(...)</code>, or <code>_media(...)</code>;{' '}
             <code>value</code> holds the id/usage per <A href="/bindings/c/types#input-kind"><code>kind</code></A>.
             See <A href="/library/inject">Inject</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#input-kind"><code>MediusInputKind</code></A></td><td>Which class <code>value</code> names.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#input-kind"><code>MediusClass</code></A></td><td>Which class <code>value</code> names.</td></tr>
               <tr><td><code>value</code></td><td><code>uint16_t</code></td><td>Button id, key usage, or media usage.</td></tr>
             </tbody>
           </table>
@@ -481,7 +483,7 @@ const Types: Component = () => {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#lock-target-kind"><code>MediusLockTargetKind</code></A></td><td>X, Y, Wheel, or Usage.</td></tr>
-              <tr><td><code>usage</code></td><td><A href="/bindings/c/types#input"><code>MediusInput</code></A></td><td>The button, key, or media usage, when <code>kind == USAGE</code>.</td></tr>
+              <tr><td><code>usage</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The button, key, or media usage, when <code>kind == USAGE</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -660,7 +662,7 @@ const Types: Component = () => {
           <CardHeader title="MediusLocks & MediusLockEntry" subtitle="The active locks, as an entry list" />
           <p>
             From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>: <code>entries[0..n]</code>, one per locked target. Test a target/direction with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked(&amp;locks, target, dir)</code></A>. Wire layout on the native{' '}
+            <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked(&amp;locks, target, dir)</code></A>, which reports a match from a specific entry or a covering whole-class <code>is_blanket</code> lock. Wire layout on the native{' '}
             <A href="/native/commands/requests#requests">LOCKS</A> reply.
           </p>
           <table class="api-params">
@@ -823,7 +825,7 @@ const Types: Component = () => {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Live usages in <code>usages</code>.</td></tr>
-              <tr><td><code>usages</code></td><td><code>MediusInput[MEDIUS_MAX_USAGES]</code></td><td>The held <A href="/bindings/c/types#input"><code>MediusInput</code></A> usages (button, key, or media).</td></tr>
+              <tr><td><code>usages</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The held <A href="/bindings/c/types#input"><code>MediusUsage</code></A> usages (button, key, or media).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -913,7 +915,6 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
       <div id="clip-config" data-search-target>
         <Card>
           <CardHeader title="MediusClipConfig" subtitle="Playback options for a clip start or catch trigger" />
-          <pre class="api-signature">{`typedef struct MediusClipConfig`}</pre>
           <p>The options a clip <A href="/bindings/c/api#clip"><code>medius_clip_start</code></A> / <code>medius_clip_arm_catch</code> plays with; extensible as more are added. Fill it inline; a zero-length <code>autolock</code> means no auto-lock. Concept on <A href="/library/clip">Clip</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -940,7 +941,7 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
               <tr><td><code>held_n</code></td><td><code>uint16_t</code></td><td>Held usages in <code>held</code>.</td></tr>
-              <tr><td><code>held</code></td><td><code>MediusInput[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
+              <tr><td><code>held</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>

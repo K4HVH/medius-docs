@@ -24,7 +24,7 @@ const Connection: Component = () => {
           <pre class="api-signature">fn find() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             <code>open</code> and <code>find</code> block on the{' '}
             <A href="/native/connection#handshake">handshake</A>. Auto-detect matches on{' '}
@@ -104,9 +104,9 @@ println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code
           <pre class="api-signature">fn AsyncDevice::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Behind the <code>async</code> feature, <code>AsyncDevice</code> turns the reply-reading
             queries into futures; the{' '}

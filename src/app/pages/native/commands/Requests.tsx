@@ -19,8 +19,9 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
           <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
-          <A href="/native/commands/requests#catch">catch</A> subscription, or a persistent box{' '}
-          <A href="/native/commands/requests#options">option</A>.
+          <A href="/native/commands/requests#catch">catch</A> subscription, a persistent box{' '}
+          <A href="/native/commands/requests#options">option</A>, or the buffered input{' '}
+          <A href="/native/commands/requests#clip">clip</A>.
         </p>
       </Card>
 
@@ -134,11 +135,11 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
-            describes <code>2</code>); the box reports its own firmware version, then its base{' '}
+            describes <code>3</code>); the box reports its own firmware version, then its base{' '}
             <code>mac</code>, a stable per-box id, then a length-delimited ASCII{' '}
             <A href="/native/commands/option#name"><code>name</code></A> tail (a synthesized default
             when unset). The <code>name</code> is additive, so <code>proto_ver</code> stays{' '}
-            <code>2</code>: an older box just sends an empty tail.
+            <code>3</code>: an older box just sends an empty tail.
           </p>
           <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -186,6 +187,8 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 1</code>: a single <code>flags</code> byte, each bit an independent status.
           </p>
+          <pre class="api-signature">QUERY  what = 1  ·  RESP 2 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
             <thead>
@@ -453,11 +456,15 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>4096 emits, no drops, no wedges:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
-| A5     | 06     | 00     | 11 00  | 05     | 00 10 00 00  | 00 00  | ...
-+--------+--------+--------+--------+--------+--------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits | drops  | ...
-+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
+| A5     | 06     | 00     | 11 00  | 05     | 00 10 00 00  |
++--------+--------+--------+--------+--------+--------------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
++--------+--------+--------+--------+--------+--------------+
+| 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| drops  | merges | maxdep | wedges | wakeup | resets | config | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
@@ -635,7 +642,8 @@ const Requests: Component = () => {
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 05 00  | 09     | 00     | 01     | 01     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |`}</pre>
+| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
@@ -652,6 +660,8 @@ const Requests: Component = () => {
             <A href="/library/clip#status"><code>ClipHandle::status</code></A>.
           </p>
           <pre class="api-signature">QUERY  what = 10  ·  RESP 21-byte prefix + held usages</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>

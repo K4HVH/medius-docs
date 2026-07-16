@@ -76,7 +76,7 @@ const Quickstart: Component = () => {
             </li>
             <li>
               Check <code>proto_ver == 3</code> before trusting the commands here. This documents
-              version <code>2</code>.
+              version <code>3</code>.
             </li>
           </ol>
           <p>

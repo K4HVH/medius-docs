@@ -33,7 +33,7 @@ const NativeIntroduction: Component = () => {
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>2</code></td>
+              <td><code>3</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -65,7 +65,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>2</code>. Confirm it during the{' '}
+                These pages describe version <code>3</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -173,7 +173,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all nine selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all ten selectors" />
               </Card>
             </A>
             <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
@@ -188,7 +188,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/option" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Option" subtitle="Imperfect clones, movement riding" />
+                <CardHeader title="Option" subtitle="Imperfect clones, movement riding, emit pacing" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

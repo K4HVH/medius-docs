@@ -89,7 +89,7 @@ let device = Device::find()?.into_async();`}</code></pre>
           <div class="callout callout--info">
             <p>
               Everything else on <A href="/library/connection"><code>Device</code></A> is mirrored on{' '}
-              <code>AsyncDevice</code> and stays synchronous — including{' '}
+              <code>AsyncDevice</code> and stays synchronous, including{' '}
               <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
               <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
               <A href="/library/lifecycle#from-async"><code>reapply</code></A>, and{' '}
