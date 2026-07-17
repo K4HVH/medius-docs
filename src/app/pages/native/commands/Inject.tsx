@@ -61,7 +61,7 @@ const Inject: Component = () => {
             </thead>
             <tbody>
               <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of physical state.</td></tr>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop our override, press or force; a physical hold stays active.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop our override (whether it was a press or a force-release); a physical hold stays active.</td></tr>
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>

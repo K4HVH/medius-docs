@@ -161,7 +161,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/diagnostics" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Logs & counters" subtitle="logs, counters" />
+                <CardHeader title="Logs & counters" subtitle="Read logs, snapshot counters" />
               </Card>
             </A>
           </div>

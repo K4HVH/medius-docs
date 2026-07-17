@@ -114,17 +114,7 @@ const Requests: Component = () => {
             You get exactly one <code>RESP</code> per <code>QUERY</code>. Its{' '}
             <A href="/native/frame#seq"><code>SEQ</code></A> matches the request's and{' '}
             <code>what</code> echoes the selector, so you can pair a reply with its request and tell
-            which kind it is. Each selector's payload is laid out below, with an example frame:{' '}
-            <A href="/native/commands/requests#version"><code>VERSION</code></A>,{' '}
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A>,{' '}
-            <A href="/native/commands/requests#device-info"><code>DEVICE_INFO</code></A>,{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
-            <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
-            <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>,{' '}
-            <A href="/native/commands/requests#catch"><code>CATCH</code></A>,{' '}
-            <A href="/native/commands/requests#options"><code>OPTIONS</code></A>, and{' '}
-            <A href="/native/commands/requests#clip"><code>CLIP</code></A>.
+            which kind it is. Each selector's payload is laid out below, with an example frame.
           </p>
         </Card>
       </div>
@@ -217,7 +207,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The first three set means the box is ready for input to reach the PC.
+            The first three bits set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -494,7 +484,6 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">DIRBITS</div>
-          <p>Each entry is 4 bytes (<code>class</code>, <code>id</code>, <code>dirbits</code>); the list is <code>n</code> of them.</p>
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -651,6 +640,7 @@ const Requests: Component = () => {
         <Card>
           <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
           <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 10</code>: the buffered-clip ring depth and playback state, for host flow-control.
             A fixed 21-byte prefix, then the clip's held-usage snapshot (the same class-tagged list a{' '}
             <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries). Read{' '}
@@ -680,12 +670,24 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">EFFECT</div>
           <p>
             The held snapshot lists the usages the clip is currently forcing down, one class-tagged
             entry each (3 bytes), so buttons, keys, and media are reported one way. Library binding:{' '}
             <A href="/library/clip#status"><code>status</code></A>{' '}
             (<A href="/library/clip#status"><code>ClipStatus::held</code></A>).
           </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Idle, empty ring (<code>state = 0</code>, <code>free = 1024</code>, no held usages):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
+| A5     | 06     | 00     | 15 00  | 0A     | 00     | 00 04 00 00  |
++--------+--------+--------+--------+--------+--------+--------------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
++--------+--------+--------+--------+--------+--------+--------------+
+| 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  | 00     | lo hi  |
++--------------+--------------+--------+--------+--------+--------+--------+
+| used         | ticks        | undrun | ovrrun | seqgap | n      | CRC16  |
++--------------+--------------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

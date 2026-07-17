@@ -47,7 +47,7 @@ const Lock: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <code>Axis</code> (X, Y, or wheel) or any <code>Usage</code> (a button, key, or media usage).</td></tr>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#lock-direction"><code>LockDirection</code></A></td><td><code>Both</code>, <code>Positive</code> (axis +, usage press), or <code>Negative</code> (axis -, usage release).</td></tr>
             </tbody>
           </table>
@@ -100,8 +100,9 @@ device.unlock(Axis::X, LockDirection::Both)?;   // hand horizontal motion back`}
             positive-only lock freezes scroll-up while scroll-down still passes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Axis, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
 
+let device = Device::find()?;
 device.lock_axis(Axis::Wheel, LockDirection::Positive)?; // block scroll up, keep scroll down
 device.unlock_axis(Axis::Wheel, LockDirection::Positive)?;`}</code></pre>
         </Card>
@@ -121,8 +122,9 @@ device.unlock_axis(Axis::Wheel, LockDirection::Positive)?;`}</code></pre>
             to.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Blanket, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Blanket, LockDirection};
 
+let device = Device::find()?;
 device.lock_all(Blanket::Keys, LockDirection::Both)?;   // every physical key blocked
 device.unlock_all(Blanket::Keys, LockDirection::Both)?;`}</code></pre>
         </Card>

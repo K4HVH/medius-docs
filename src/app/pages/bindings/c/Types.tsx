@@ -30,7 +30,7 @@ const Types: Component = () => {
             to the integer and you pass the prefixed enumerators
             (<code>MEDIUS_BUTTON_LEFT</code>). Structs are plain PODs: pass by value, read fields
             directly. Nothing is heap-allocated, so there's nothing to free per value; only the
-            opaque handles have a <code>*_free</code>.
+            opaque handles have a <A href="/bindings/c/api"><code>*_free</code></A>.
           </p>
         </div>
       </Card>
@@ -213,7 +213,7 @@ const Types: Component = () => {
           <CardHeader title="MediusBlanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">{`enum MediusBlanket : uint8_t`}</pre>
           <p>A whole input group: which one <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the members of a clip's <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> auto-lock. See <A href="/library/lock">Lock</A>.</p>
-          <p>The values are ABI-local ordinals (matching the crate's <code>Blanket</code> order), not the <code>CLIP_LOCK_*</code> wire bits.</p>
+          <p>The values are ABI-local ordinals (matching the crate's <A href="/library/types/enums#blanket"><code>Blanket</code></A> order), not the <code>CLIP_LOCK_*</code> wire bits.</p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -334,7 +334,7 @@ const Types: Component = () => {
           <CardHeader title="MediusCatchMask" subtitle="Which physical reports raise an event" />
           <pre class="api-signature">{`typedef uint8_t MediusCatchMask;   /* OR the MEDIUS_CATCH_MASK_* bits */`}</pre>
           <p>
-            The subscription you hand to <A href="/bindings/c/api#streams"><code>medius_device_catch_events</code></A>. OR the bits together.
+            The subscription you hand to <A href="/bindings/c/api#streams"><code>medius_device_catch_events</code></A>.
             See <A href="/library/catch">Catch</A>.
           </p>
           <table class="api-params">
@@ -354,7 +354,7 @@ const Types: Component = () => {
       <div id="key" data-search-target>
         <Card>
           <CardHeader title="MediusKey" subtitle="A HID keyboard/keypad usage" />
-          <pre class="api-signature">{`typedef uint8_t MediusKey;   /* modifiers are 0xE0..=0xE7 */`}</pre>
+          <pre class="api-signature">{`typedef uint8_t MediusKey;   /* modifiers are 0xE0 to 0xE7 */`}</pre>
           <p>
             A raw{' '}
             <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID keyboard usage</a>{' '}
@@ -504,7 +504,7 @@ const Types: Component = () => {
       <div id="version" data-search-target>
         <Card>
           <CardHeader title="MediusVersion" subtitle="Decoded firmware version and box name" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_version</code></A>. <code>mac</code> is the device chip's base MAC, a stable per-box id; <code>name</code> is the box's readable label, set with <A href="/bindings/c/api#led-admin-options"><code>medius_device_set_name</code></A>.</p>
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_version</code></A>. Set the box's <code>name</code> with <A href="/bindings/c/api#led-admin-options"><code>medius_device_set_name</code></A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -817,7 +817,7 @@ const Types: Component = () => {
           <CardHeader title="MediusUsageEvent" subtitle="One held-usage snapshot for a class" />
           <p>
             The held usages of one class (button, key, or media; modifiers are key usages{' '}
-            <code>0xE0..0xE7</code>) in <code>usages[0..n]</code>, buttons and keys the same shape. Test
+            <code>0xE0 to 0xE7</code>) in <code>usages[0..n]</code>, buttons and keys the same shape. Test
             one with <A href="/bindings/c/api#inspectors"><code>medius_usage_event_is_held(&amp;event, usage)</code></A>, or diff
             successive snapshots for edges.
           </p>

@@ -36,9 +36,9 @@ const Usage: Component = () => {
           </p>
           <pre class="diagram">{`  call ──▶ MediusStatus
              │
-   == OK ──▶ the out-param is valid, carry on
-   != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
-             medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
+             ├─ == OK ──▶ the out-param is valid, carry on
+             └─ != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
+                          medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
           <table class="api-params">
             <thead>
               <tr><th>MediusStatus</th><th>Value</th><th>Means</th></tr>
@@ -47,7 +47,7 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_OK</code></td><td>0</td><td>Success; the out-param is written.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td>1</td><td>Serial I/O failed on the link.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td>2</td><td>No box found (<A href="/bindings/c/api#connect"><code>open</code></A> / <A href="/bindings/c/api#connect"><code>find</code></A>).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td>3</td><td>A query got no <A href="/native/commands/requests">RESP</A> frame.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td>3</td><td>A query got no <A href="/native/commands/requests#resp">RESP</A> frame.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td>4</td><td>Protocol mismatch at the <A href="/native/connection#handshake">handshake</A>; read <code>medius_last_error_proto_ver()</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td>5</td><td>The RESP wait elapsed.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td>6</td><td>Link dropped or a stream closed (see below).</td></tr>

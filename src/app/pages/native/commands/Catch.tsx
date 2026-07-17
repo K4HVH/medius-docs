@@ -7,7 +7,7 @@ const Catch: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="CATCH" subtitle="Stream the physical mouse and keyboard input to the PC" />
+        <CardHeader title="Catch" subtitle="Stream the physical mouse, keyboard, and media input to the PC" />
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> subscribes to the user's real
           input. While subscribed, the box pushes a{' '}
@@ -97,7 +97,8 @@ const Catch: Component = () => {
           <p>
             While a subscription with <code>Motion</code> or <code>Wheel</code> is active the box pushes
             a <code>MOTION_EVENT</code> for each physical report whose motion changed. It's unsolicited
-            (there's no <code>QUERY</code> to correlate), so <code>SEQ</code> is a rolling per-event
+            (there's no <A href="/native/commands/requests#requests"><code>QUERY</code></A> to correlate), so{' '}
+            <A href="/native/frame#seq"><code>SEQ</code></A> is a rolling per-event
             counter shared with{' '}
             <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>: a host detects
             dropped events as <code>SEQ</code> gaps. <A href="/native/frame#opcodes">Opcode</A>{' '}

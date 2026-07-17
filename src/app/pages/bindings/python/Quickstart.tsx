@@ -127,7 +127,7 @@ except NotFoundError:
 # firmware 3.0.0, proto 3
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
-            The second line appears once you move or click the real mouse within the 5-second window;
+            The <code>motion</code> line appears once you move or click the real mouse within the 5-second window;
             otherwise you get <code>no physical input within 5 s</code>.
           </p>
         </Card>
@@ -155,7 +155,7 @@ except NotFoundError:
             A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of <code>.motion</code> /{' '}
             <code>.usages</code> (the other is <code>None</code>); a{' '}
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
-            <code>is_held(usage)</code> for any built <code>Usage</code>. Full payload shapes on{' '}
+            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>. Full payload shapes on{' '}
             <A href="/bindings/python/streams">Streams</A>.
           </p>
         </Card>

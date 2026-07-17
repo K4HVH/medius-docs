@@ -11,27 +11,29 @@ const GuideTesting: Component = () => {
           <CardHeader title="Testing without hardware" subtitle="Assert the frames with MockBox" />
           <p>
             With the <A href="/library/features/mock"><code>mock</code></A> feature, drive a{' '}
-            <code>Device</code> with a <A href="/library/features/mock"><code>MockBox</code></A> and assert
-            the queued frames.
+            <A href="/library/connection"><code>Device</code></A> with a{' '}
+            <A href="/library/features/mock"><code>MockBox</code></A> and assert the queued frames through{' '}
+            <A href="/library/features/mock#inspect"><code>recorded_frames</code></A>.
           </p>
           <pre><code class="language-bash">cargo add medius --features mock</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, Device, FrameType, MockBox};
 
-let mock = MockBox::new();
-let device = Device::with_mock(mock.clone());
+#[test]
+fn press_queues_an_inject() {
+    let mock = MockBox::new();
+    let device = Device::with_mock(mock.clone());
 
-device.press(Button::Left)?;
+    device.press(Button::Left).unwrap();
 
-assert!(mock.saw(FrameType::Inject));
-// the recorded INJECT payload is [class, id_lo, id_hi, action]
-// = [0 (button), 0, 0, 1 (press)] for a left-button press
-let frame = mock
-    .recorded_frames()
-    .into_iter()
-    .find(|f| f.ty == FrameType::Inject)
-    .unwrap();
-assert_eq!(frame.payload, vec![0, 0, 0, 1]);`}</code></pre>
+    assert!(mock.saw(FrameType::Inject));
+    let frame = mock
+        .recorded_frames()
+        .into_iter()
+        .find(|f| f.ty == FrameType::Inject)
+        .unwrap();
+    assert_eq!(frame.payload, vec![0, 0, 0, 1]);
+}`}</code></pre>
         </Card>
       </div>
 
@@ -68,9 +70,10 @@ fn logs_reach_the_stream() {
           <p>
             There's no <code>AsyncDevice::with_mock</code>: build a mocked <code>Device</code>, then call{' '}
             <A href="/library/features/async"><code>into_async</code></A>. Drive the futures with{' '}
-            <code>block_on</code>, so the test needs no async runtime. A{' '}
-            <A href="/library/features/mock"><code>silent</code></A> box never answers, resolving the
-            query to <code>Err(Error::QueryTimeout)</code>.
+            <A href="/library/guides/calls#block-on"><code>block_on</code></A>, so the test needs no async
+            runtime. A <A href="/library/features/mock"><code>silent</code></A> box never answers, resolving
+            the query to{' '}
+            <A href="/library/types/errors"><code>Err(Error::QueryTimeout)</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;

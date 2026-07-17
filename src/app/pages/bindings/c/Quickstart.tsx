@@ -23,7 +23,7 @@ const Quickstart: Component = () => {
           <p>
             Get <A href="/bindings/c"><code>medius.h</code></A> and the library from{' '}
             <A href="/bindings/c/build">Build &amp; features</A>. New to the{' '}
-            <A href="/native/hardware">box</A> itself, read the{' '}
+            <A href="/native/hardware">box</A> itself? Read the{' '}
             <A href="/native/quickstart">Native quickstart</A> first.
           </p>
         </div>
@@ -230,7 +230,7 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
                 <td><A href="/library/inject">Inject</A> · the <A href="/native/injection">injection model</A></td>
               </tr>
               <tr>
-                <td><code>medius_device_catch_events</code> / <code>_recv</code></td>
+                <td><code>medius_device_catch_events</code> / <code>medius_event_stream_recv</code></td>
                 <td><A href="/library/catch">Catch</A> · consuming them in C on <A href="/bindings/c/streams">Streams</A></td>
               </tr>
               <tr>

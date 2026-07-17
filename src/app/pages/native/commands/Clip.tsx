@@ -19,7 +19,8 @@ const Clip: Component = () => {
           <A href="/native/commands/inject"><code>INJECT</code></A> it is field-generic and{' '}
           <A href="/native/injection#state">additive</A>: one clip mixes mouse motion, buttons, keyboard, and
           media, each routed to its own interface, and follows{' '}
-          <A href="/native/commands/option#move-ride">movement riding</A> and the emit rate. A clip needs a
+          <A href="/native/commands/option#move-ride">movement riding</A> and{' '}
+          <A href="/native/commands/option#emit">the emit rate</A>. A clip needs a
           cloned mouse, whose native report tick is the box's frame clock; read the ring depth and state back
           with <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
         </p>
@@ -31,8 +32,11 @@ const Clip: Component = () => {
       |  CLIP_CTRL START      |    v                                    |
       | --------------------> |  injection state --> mouse    report    |
       |                       |                  --> keyboard report    |
-      |  QUERY(CLIP) <-- depth|                  --> media    report    |
-      +---------------------> +-----------------------------------------+
+      |                       |                  --> media    report    |
+      |  QUERY(CLIP)          |                                         |
+      | --------------------> |  ring depth + state                     |
+      | <-------------------- |                                         |
+      |                       +-----------------------------------------+
                 box-clocked: host does no per-frame timing`}</pre>
         <table class="api-params">
           <thead><tr><th>Opcode</th><th>Command</th><th>Direction</th><th>Does</th></tr></thead>
@@ -84,8 +88,8 @@ const Clip: Component = () => {
           </table>
           <div class="api-response-label">EDGES</div>
           <p>
-            An edge reuses <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s{' '}
-            <code>[class u8][id u16][action u8]</code> tuple, so one clip drives every input class.
+            An edge reuses <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s tuple, so
+            one clip drives every input class.
           </p>
           <div class="api-response-label">CLASS</div>
           <table class="api-params">
@@ -114,7 +118,7 @@ const Clip: Component = () => {
             still. Motion (<code>dx</code>/<code>dy</code>/<code>wheel</code>) is a per-frame delta.
           </p>
           <div class="api-response-label">A CLIP IS A TIMELINE</div>
-          <p>Entries play out one per frame, left to right; an edge stays held until a later entry releases it.</p>
+          <p>Entries play out one per frame, left to right.</p>
           <table class="api-params">
             <thead>
               <tr><th>Frame</th><th>Entry</th><th>The PC sees</th></tr>
@@ -129,7 +133,7 @@ const Clip: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE ENTRIES</div>
-          <p>The bytes for three of those entries: move up-right, press <code>A</code>, idle 5 frames.</p>
+          <p>The bytes for three example entries: move up-right, press <code>A</code>, idle 5 frames.</p>
           <pre class="diagram">{`01 0A 00 F6 FF        flags=XY,   dx=+10  dy=-10
 04 01 01 04 00 01     flags=EDGES n=1  edge[class=1 key, id=0x04 'A', action=1 press]
 00 05 00              tag=gap,    count=5  (NAK 5 frames)`}</pre>
@@ -157,7 +161,7 @@ const Clip: Component = () => {
           </table>
           <div class="api-response-label">DROP DETECTION</div>
           <p>
-            The frame <A href="/native/frame#layout"><code>SEQ</code></A> doubles as an append sequence
+            The frame <A href="/native/frame#seq"><code>SEQ</code></A> doubles as an append sequence
             number: the box expects each <code>CLIP_APPEND</code> to be the previous <code>SEQ</code> plus one.
             Because the link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, a lost frame
             shows up as a <code>SEQ</code> gap, and the box marks the clip <code>faulted</code> in{' '}
@@ -181,7 +185,7 @@ const Clip: Component = () => {
   |    here, <=    |     buffered, not yet played           |     1 / frame
   |    free)       |                                        |
   +----------------+----------------------------------------+
-   append > free  ->  dropped whole + clip faulted`}</pre>
+   append > free  -->  dropped whole + clip faulted`}</pre>
           <p>
             Library binding: <A href="/library/clip#builder"><code>ClipBuilder</code></A> +{' '}
             <A href="/library/clip#handle"><code>append</code></A>, which splits a large clip into whole-entry
@@ -270,9 +274,9 @@ RESET       a RESET command
 detach      the cloned mouse unplugs
 link loss   the inter-chip link drops`}</pre>
           <p>
-            Each stops the clip and flushes the ring, the box's{' '}
+            Each stops the clip and flushes the ring; the{' '}
             <A href="/native/injection#safety">1&nbsp;s safety net</A> and a{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> reaching a clip like any injection.
+            <A href="/native/commands/admin#reset"><code>RESET</code></A> reach a clip like any other injection.
             With <A href="/native/commands/option#move-ride">movement riding</A> on, clip motion rides native
             reports and is additive to the user's own movement, so the frame-exact use case runs riding off.
           </p>
@@ -284,12 +288,12 @@ link loss   the inter-chip link drops`}</pre>
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | op     | scope  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>Arm a catch trigger on the <code>A</code> key, auto-locking every class on the triggered start (<code>op = 2</code>, <code>class = 1</code>, <code>cond_id = 0x04</code>, <code>scope = 0x1F</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 13     | 00     | 05 00  | 02     | 01     | 04 00  | 1F     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | class  | cond_id| scope  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>Arm a catch trigger on the <code>A</code> key, auto-locking every class on the triggered start (<code>op = 2</code>, <code>cond_class = 1</code>, <code>cond_id = 0x04</code>, <code>scope = 0x1F</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+------------+--------+--------+--------+
+| A5     | 13     | 00     | 05 00  | 02     | 01         | 04 00  | 1F     | lo hi  |
++--------+--------+--------+--------+--------+------------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | op     | cond_class | cond_id| scope  | CRC16  |
++--------+--------+--------+--------+--------+------------+--------+--------+--------+`}</pre>
         </Card>
       </div>
     </>

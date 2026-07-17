@@ -30,8 +30,8 @@ const Discovery: Component = () => {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Opens each connected box in turn, handshakes, reads its{' '}
-            <A href="/library/requests#version"><code>Version</code></A> (with the box MAC and name) and cloned{' '}
-            <A href="/library/requests#device-info"><code>DeviceInfo</code></A>, then closes it,
+            <A href="/library/types/structs#version"><code>Version</code></A> (with the box MAC and name) and cloned{' '}
+            <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, then closes it,
             returning one <A href="/library/discovery#box-info"><code>BoxInfo</code></A> per box. Use it
             to show a picker, or to choose a box yourself.
           </p>
@@ -39,7 +39,7 @@ const Discovery: Component = () => {
           <pre><code class="language-rust">{`use medius::Device;
 
 for b in Device::list() {
-    // id() is the box MAC hex; name() is its readable label; b.device Displays as "VVVV:PPPP product".
+    // id() is the box MAC hex; name() is its readable label; b.device displays as "VVVV:PPPP product".
     println!("{}  {}  {}  {}", b.id(), b.name(), b.device, b.port.path);
 }`}</code></pre>
         </Card>
@@ -143,7 +143,7 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
             <tbody>
               <tr><td><code>id()</code></td><td><code>String</code></td><td>The box identity: the MAC hex, as passed to <A href="/library/discovery#open-by-id"><code>open_by_id</code></A>.</td></tr>
               <tr><td><code>name()</code></td><td><code>&amp;str</code></td><td>The box's human-readable <A href="/library/options#set-name">name</A> (from <code>version.name</code>), a display label rather than an opener key.</td></tr>
-              <tr><td><code>serial()</code></td><td><code>Option&lt;&amp;str&gt;</code></td><td>The CH343 adapter's serial, when it serves one.</td></tr>
+              <tr><td><code>serial()</code></td><td><code>Option&lt;&amp;str&gt;</code></td><td>The CH343 adapter's serial, when it has one.</td></tr>
             </tbody>
           </table>
         </Card>

@@ -20,35 +20,6 @@ const Hardware: Component = () => {
           <table class="api-params">
             <thead>
               <tr>
-                <th>Component</th>
-                <th>Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><A href="/native/architecture">Host chip</A></td>
-                <td>Reads the real mouse.</td>
-              </tr>
-              <tr>
-                <td><A href="/native/architecture">Device chip</A></td>
-                <td>
-                  Presents <A href="/native/architecture">the clone</A>, a copy of the mouse's USB
-                  identity, so the PC sees the same device it would if the mouse were plugged in
-                  directly.
-                </td>
-              </tr>
-              <tr>
-                <td><code>CH343</code> bridge</td>
-                <td>
-                  Exposes the control port as a serial device (see{' '}
-                  <A href="/native/transport">Transport</A>).
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead>
-              <tr>
                 <th>Port</th>
                 <th>Connects to</th>
                 <th>Role</th>
@@ -58,7 +29,11 @@ const Hardware: Component = () => {
               <tr>
                 <td><code>USB1</code></td>
                 <td>Game PC</td>
-                <td>The clone (<A href="/native/architecture">device chip</A>)</td>
+                <td>
+                  The clone (<A href="/native/architecture">device chip</A>), a copy of the
+                  mouse's USB identity, so the PC sees the same device it would if the mouse were
+                  plugged in directly.
+                </td>
               </tr>
               <tr>
                 <td><code>USB2</code></td>
@@ -107,7 +82,7 @@ const Hardware: Component = () => {
             <tbody>
               <tr>
                 <td><code>USB2</code> (control), or the program stops</td>
-                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and falls back to pure <A href="/native/injection">passthrough</A>. The real mouse keeps working.</td>
+                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and falls back to pure passthrough. The real mouse keeps working.</td>
               </tr>
               <tr>
                 <td><code>USB1</code> (clone)</td>

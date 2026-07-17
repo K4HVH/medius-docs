@@ -14,8 +14,8 @@ const Mock: Component = () => {
         </p>
         <pre><code class="language-bash">cargo add medius --features mock</code></pre>
         <p>
-          It's a cheap <A href="/library/connection"><code>Clone</code></A>: hand one to the{' '}
-          <code>Device</code>, keep one to script and inspect.
+          It's a cheap <code>Clone</code>: hand one to the{' '}
+          <A href="/library/connection"><code>Device</code></A>, keep one to script and inspect.
         </p>
         <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
       </Card>
@@ -28,9 +28,7 @@ const Mock: Component = () => {
 
           <p>
             <code>new()</code> records every command and auto-answers{' '}
-            <code>QUERY(VERSION)</code> and <code>QUERY(HEALTH)</code> with defaults. Clone it: one
-            goes to the <A href="/library/connection"><code>Device</code></A>, one stays to script
-            and inspect.
+            <code>QUERY(VERSION)</code> and <code>QUERY(HEALTH)</code> with defaults.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -141,8 +139,8 @@ assert_eq!((v.fw_major, v.fw_minor, v.fw_patch), (5, 6, 7));
 assert!(device.query_health()?.mouse_attached);
 
 // Change it mid-test: flip a later query_health.
-mock.set_health(Health::from_flags(0x02));
-assert!(device.query_health()?.mouse_attached);`}</code></pre>
+mock.set_health(Health::from_flags(0x00));
+assert!(!device.query_health()?.mouse_attached);`}</code></pre>
         </Card>
       </div>
 
@@ -199,7 +197,11 @@ assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));`}
           <CardHeader title="Asserting what was sent" subtitle="recorded_frames, saw, recorded, clear_recorded" />
           <pre class="api-signature">fn recorded_frames(&self) -&gt; Vec&lt;DecodedFrame&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <pre class="api-signature">fn recorded(&self) -&gt; usize</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <pre class="api-signature">fn saw(&self, ty: FrameType) -&gt; bool</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <pre class="api-signature">fn clear_recorded(&self)</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
           <div class="api-response-label">METHODS</div>
@@ -214,7 +216,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));`}
             <tbody>
               <tr>
                 <td><code>recorded_frames</code></td>
-                <td><A href="/library/types/structs"><code>Vec&lt;DecodedFrame&gt;</code></A></td>
+                <td><A href="/library/types/frames"><code>Vec&lt;DecodedFrame&gt;</code></A></td>
                 <td>Every command the host sent so far, decoded, in order.</td>
               </tr>
               <tr>

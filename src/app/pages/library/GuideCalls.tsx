@@ -21,7 +21,7 @@ const GuideCalls: Component = () => {
           <pre><code class="language-rust">{`device.move_rel(100, -50)?; // one frame out, no reply`}</code></pre>
 
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>Sends a <code>QUERY</code> and waits for the correlated <code>RESP</code>.</p>
+          <p>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let v = device.query_version()?; // waits for the box to reply`}</code></pre>
 
@@ -61,7 +61,8 @@ const GuideCalls: Component = () => {
                   <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
                   <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
                   <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-                  <A href="/library/requests#query-catch"><code>query_catch</code></A>
+                  <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
+                  and the option <code>query_*</code> methods
                 </td>
                 <td>
                   <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}

@@ -152,7 +152,7 @@ device.press(from_button)?;                         // press takes any impl Into
             <A href="/library/types/enums#axis"><code>Axis</code></A> instead.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Payload</th><th>Axis</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Payload</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
               <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
@@ -307,7 +307,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <pre class="api-signature">enum LockDirection {'{'} Both, Positive, Negative {'}'}</pre>
           <p>
             Which side of an input a <A href="/native/commands/lock"><code>LOCK</code></A> blocks. For
-            an axis or the wheel it's a sign; for a button it's an edge. The discriminant is the wire{' '}
+            an axis or the wheel it's a sign; for a usage (button, key, or media) it's an edge. The discriminant is the wire{' '}
             <code>direction</code> byte. Convert with <code>as_u8()</code> and{' '}
             <code>from_u8(u8) -&gt; Option&lt;LockDirection&gt;</code>.
           </p>
@@ -315,8 +315,8 @@ device.press(from_button)?;                         // press takes any impl Into
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Both</code></td><td><code>0</code></td><td>Both signs, or press and release.</td></tr>
-              <tr><td><code>Positive</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or button press.</td></tr>
-              <tr><td><code>Negative</code></td><td><code>2</code></td><td>Axis negative (<code>-</code>), or button release.</td></tr>
+              <tr><td><code>Positive</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or usage press.</td></tr>
+              <tr><td><code>Negative</code></td><td><code>2</code></td><td>Axis negative (<code>-</code>), or usage release.</td></tr>
             </tbody>
           </table>
         </Card>

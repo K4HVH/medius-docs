@@ -122,7 +122,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr now carries the connect span and an INFO event, e.g.:
-//   INFO connect: medius::device: connected proto_ver=3 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
+//   INFO  connect: medius::device: connected proto_ver=3 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
         </Card>
       </div>
 

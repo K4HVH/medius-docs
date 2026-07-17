@@ -14,14 +14,16 @@ const Streams: Component = () => {
           (<A href="/library/diagnostics">Logs &amp; counters</A>). Subscribe, then pull fixed-size{' '}
           <a href="https://en.cppreference.com/w/cpp/named_req/PODType" target="_blank" rel="noreferrer">POD</a> events off the handle.
         </p>
-        <pre class="diagram">{`  medius_device_catch_events(dev, mask, &stream)    ──  live input
-  medius_device_logs(dev, &stream)                  ──  log lines
+        <pre class="diagram">{`  medius_device_catch_events(dev, mask, &stream)    ──  subscribe to live input
+  medius_device_logs(dev, &stream)                  ──  subscribe to log lines
           │
           ▼   a background reader thread fills a host-side queue
   medius_event_stream_recv(stream, &event)          ──  pull one (blocks)
+  medius_log_stream_recv(stream, &line)             ──  the same, for logs
           │
           ▼   loop until MEDIUS_STATUS_ERR_DISCONNECTED
-  medius_event_stream_free(stream)                  ──  unsubscribe`}</pre>
+  medius_event_stream_free(stream)                  ──  unsubscribe
+  medius_log_stream_free(stream)                    ──  the same, for logs`}</pre>
       </Card>
 
       <div id="subscribe" data-search-target>
@@ -41,8 +43,8 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_catch_events(dev, mask, &amp;out)</code></td><td>Subscribe to physical input for the class <code>mask</code>; writes the stream to <code>*out</code>. See <A href="/library/catch">Catch</A>.</td></tr>
-              <tr><td><code>medius_device_logs(dev, &amp;out)</code></td><td>Open the device LOG channel; writes the stream to <code>*out</code>. See <A href="/library/diagnostics">Logs</A>.</td></tr>
+              <tr><td><code>medius_device_catch_events(dev, mask, &amp;out)</code></td><td>Subscribe to physical input for the class <code>mask</code>. See <A href="/library/catch">Catch</A>.</td></tr>
+              <tr><td><code>medius_device_logs(dev, &amp;out)</code></td><td>Open the device LOG channel. See <A href="/library/diagnostics">Logs</A>.</td></tr>
               <tr><td><code>medius_event_stream_clone(stream)</code> / <code>medius_log_stream_clone(stream)</code></td><td>Another handle to the same subscription. Null in &rarr; null out.</td></tr>
               <tr><td><code>medius_event_stream_free(stream)</code> / <code>medius_log_stream_free(stream)</code></td><td>Release a handle (unsubscribes when the last clone drops). Null is a no-op.</td></tr>
             </tbody>
@@ -68,9 +70,8 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
           <p>
             There's no iterator. Loop a receive call until it returns{' '}
             <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> (the stream closes after a{' '}
-            <A href="/library/admin">reset</A> or <A href="/library/connection">link loss</A>). The
-            blocking <code>recv</code> returns a <code>MediusStatus</code>; the two non-blocking
-            variants return a <code>bool</code>. Each writes one event through <code>*out</code>.
+            <A href="/library/admin">reset</A> or <A href="/library/connection">link loss</A>). Each
+            writes one event through <code>*out</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th><th>Blocks?</th></tr></thead>
@@ -122,14 +123,14 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
             <thead><tr><th>When <code>kind</code> is</th><th>Read</th><th>Fields</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code> (cursor and wheel deltas)</td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <A href="/bindings/c/types#input"><code>MediusUsage</code></A></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <code>MediusUsage</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">INSPECTORS (test one usage without walking the array)</div>
           <table class="api-params">
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that <A href="/bindings/c/types#input"><code>MediusUsage</code></A> usage (button, key, or media) is held.</td></tr>
+              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that <code>MediusUsage</code> usage (button, key, or media) is held.</td></tr>
               <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
             </tbody>
           </table>

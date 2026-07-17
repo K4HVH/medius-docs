@@ -8,7 +8,7 @@ const Lifecycle: Component = () => {
     <>
       <Card>
         <CardHeader title="Lifecycle" subtitle="Holding injected input alive and recovering a dropped link" />
-        <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-window clear</A>, and restores them if the link drops and reopens.</p>
+        <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them if the link drops and reopens.</p>
         <ul>
           <li>
             <A href="/library/guides/connection#keepalive"><code>keepalive</code></A> (automatic) holds an
@@ -23,7 +23,6 @@ const Lifecycle: Component = () => {
             port, and restores held state after a dropped link.
           </li>
         </ul>
-        <p>See also: <A href="/library/guides/connection#keepalive">keepalive &amp; holds</A>.</p>
       </Card>
 
       <div id="reapply" data-search-target>
@@ -36,7 +35,7 @@ const Lifecycle: Component = () => {
           </p>
 
           <p>
-            Re-sends each held override to match the box to the library;{' '}
+            One frame goes out per held override;{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> does this for you after a
             drop.
           </p>
@@ -113,10 +112,6 @@ assert!(after > before);`}</code></pre>
       <div id="from-async" data-search-target>
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="reapply and reconnect, still direct" />
-
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
 
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> exposes{' '}

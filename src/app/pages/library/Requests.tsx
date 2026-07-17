@@ -46,7 +46,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
             <p>
-              <code>Device::find()</code> already runs a version query during the handshake;
+              <A href="/library/connection#open"><code>Device::find()</code></A> already runs a version query during the handshake;
               calling <code>query_version</code> again just re-reads it.
             </p>
           </div>
@@ -231,8 +231,8 @@ if locks.is_locked(Axis::X, LockDirection::Both) {
             Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
             <code>mask</code> currently streaming via{' '}
             <A href="/library/catch#catch-events"><code>catch_events</code></A>, plus{' '}
-            <code>dropped</code>, the box-side count of events shed under back-pressure. Read it to
-            confirm a subscription is live, or to mirror the box's catch state in a UI.
+            <code>dropped</code>, the box-side count of events shed under back-pressure. Read it after
+            subscribing to confirm the mask took, or to reflect the live catch mask in your own UI.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

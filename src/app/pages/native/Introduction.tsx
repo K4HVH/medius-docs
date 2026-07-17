@@ -40,7 +40,7 @@ const NativeIntroduction: Component = () => {
               <td>4 Mbaud, framed-only (<a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer">CH343</a>)</td>
             </tr>
             <tr>
-              <td>USB id</td>
+              <td>USB ID</td>
               <td>VID <code>0x1A86</code> / PID <code>0x55D3</code></td>
             </tr>
             <tr>
@@ -89,7 +89,7 @@ const NativeIntroduction: Component = () => {
                 <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.
                 A <A href="/native/commands/requests#requests"><code>QUERY</code></A> is correlated
                 to its <A href="/native/commands/requests#resp"><code>RESP</code></A> by{' '}
-                <code>SEQ</code>.
+                <A href="/native/frame#seq"><code>SEQ</code></A>.
               </td>
             </tr>
           </tbody>

@@ -38,12 +38,12 @@ const Catch: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>mask</code></td><td><A href="/library/types/structs#catch-mask"><code>CatchMask</code></A></td><td>Which classes to stream. <code>MOTION</code> / <code>WHEEL</code> / <code>BUTTONS</code> / <code>KEYS</code> / <code>MEDIA</code> or <code>all()</code>.</td></tr>
+              <tr><td><code>mask</code></td><td><A href="/library/types/structs#catch-mask"><code>CatchMask</code></A></td><td>Bitmask selecting which input classes emit events (see above).</td></tr>
             </tbody>
           </table>
           <p>
             The subscription is held alive by the library's keepalive (which re-asserts it after a
-            device-side blip) and across a reconnect; it clears like injection: on control-PC silence,
+            device-side blip) and across a <A href="/library/lifecycle#reconnect">reconnect</A>; it clears like injection: on control-PC silence,
             a <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream, so its{' '}
             <code>recv</code> returns <code>Err</code>), or link loss. The reported input is the user's{' '}
             <em>physical</em>{' '}

@@ -16,7 +16,8 @@ const TypesAndErrors: Component = () => {
             Every public type is re-exported at the crate root: import from{' '}
             <code>medius::</code>, not <code>medius::types::</code>. The argument{' '}
             <A href="/library/types/enums">enums</A>, the{' '}
-            <A href="/library/types/structs">structs</A> the box reports back, and the one{' '}
+            <A href="/library/types/structs">structs</A> the box reports back, the low-level{' '}
+            <A href="/library/types/frames">frame types</A>, and the one{' '}
             <A href="/library/types/errors"><code>Error</code></A> all live here.
           </p>
 

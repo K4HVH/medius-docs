@@ -26,7 +26,8 @@ const Usage: Component = () => {
             A small semantic id, bound at clone time to the real mouse's buttons, and the same id for{' '}
             <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
             <A href="/native/commands/lock#lock"><code>LOCK</code></A> (a button locks as{' '}
-            <code>class = 0</code>, <code>id = button id</code>, exactly like a key). A command for an
+            <code>class = 0</code>, <code>id = button id</code>, the same <code>(class, id)</code> form a
+            key or media usage takes). A command for an
             id the mouse lacks is a no-op, so read{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>n_buttons</code> first.
@@ -41,6 +42,11 @@ const Usage: Component = () => {
               <tr><td>Side2 (second thumb)</td><td><code>4</code></td></tr>
             </tbody>
           </table>
+          <p>
+            The Rust library exposes these as the named{' '}
+            <A href="/library/types/enums#button"><code>Button</code></A> enum
+            (<code>Button::Left</code>, <code>Button::Side2</code>, ...).
+          </p>
         </Card>
       </div>
 

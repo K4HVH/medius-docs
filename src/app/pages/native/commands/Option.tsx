@@ -205,8 +205,8 @@ const Option: Component = () => {
               The name is the readable partner to the box{' '}
               <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
               rides on <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> as the
-              ASCII tail after the MAC, so it is read there, not through{' '}
-              <code>QUERY(OPTIONS)</code>.
+              ASCII tail after the MAC, so it's read there, not through{' '}
+              <A href="/native/commands/requests#options"><code>QUERY(OPTIONS)</code></A>.
             </p>
           </div>
           <p>

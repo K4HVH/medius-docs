@@ -68,7 +68,7 @@ const Usage: Component = () => {
             <code>MediusError</code> for all of them.
           </p>
           <pre class="api-signature">{`class MediusError(Exception):
-    status:    Status   # the failure code (a Status IntEnum)
+    status:    Status   # the failure code
     message:   str      # the box's last error text, may be ""
     proto_ver: int      # offending byte for BadProtoVerError, else 0
 
@@ -180,7 +180,7 @@ dev.close()`}</code></pre>
               <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
               <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
-              <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, dir)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
+              <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
               <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
             </tbody>
           </table>

@@ -20,9 +20,7 @@ const Structs: Component = () => {
           <p>
             Firmware identity from{' '}
             <A href="/library/requests#version"><code>query_version()</code></A>. <code>Display</code>{' '}
-            prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.{' '}
-            <code>mac</code> is the device chip's base MAC, a stable per-box id, and{' '}
-            <A href="/library/options#set-name"><code>name</code></A> is the box's readable label.
+            prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -613,7 +611,7 @@ if let Ok(line) = stream.recv() {
         <Card>
           <CardHeader title="ClipConfig" subtitle="Playback options for a clip start or catch trigger" />
           <p>
-            The options a clip <A href="/library/clip#handle"><code>start</code></A> or
+            The options a clip <A href="/library/clip#handle"><code>start</code></A> or{' '}
             <A href="/library/clip#handle"><code>arm_catch</code></A> plays with. The single place clip
             settings live, extensible as more are added. Build with the chained setters:
           </p>
