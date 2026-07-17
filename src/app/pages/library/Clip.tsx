@@ -198,18 +198,14 @@ handle.stop()?;`}</code></pre>
         <Card>
           <CardHeader title="Triggers" subtitle="Play, stop, or toggle on a physical key" />
           <p>
-            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> binds a physical
-            input edge to an engine action, so the box drives playback itself with no host round-trip, even on
-            the first frame. Bindings are a managed set keyed by <code>(usage, edge)</code>, like a{' '}
-            <A href="/library/lock">lock</A>: add with <code>bind</code>, drop with <code>unbind</code>, wipe
-            with <code>clear_triggers</code>. A physical edge runs the one most-specific matching binding, so a
-            key for <code>F1</code> beats an any-key binding, and a specific edge beats <code>Both</code>.
-          </p>
-          <p>
-            The trigger is <A href="/library/types/enums#edge"><code>Edge</code></A> (press, release, or both)
-            and <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> (start, stop, pause,
-            resume, restart, toggle). <code>.consume()</code> also suppresses the trigger input from the game
-            for the length of the physical hold, so a key you use to control the clip needn't leak into play.
+            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> binds an{' '}
+            <A href="/library/types/enums#edge"><code>Edge</code></A> of a usage to a{' '}
+            <A href="/library/types/enums#clip-action"><code>ClipAction</code></A>, so the box drives playback
+            itself with no host round-trip. Bindings are a managed set keyed by <code>(usage, edge)</code>,
+            like a <A href="/library/lock">lock</A>: <code>bind</code> adds, <code>unbind</code> drops,{' '}
+            <code>clear_triggers</code> wipes, and a physical edge runs the one most-specific match (a key for{' '}
+            <code>F1</code> beats an any-key binding). <code>.consume()</code> suppresses the trigger input
+            from the game for the length of the hold.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge, Key};
@@ -235,11 +231,10 @@ clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}<
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Reads a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>. Pace top-ups off{' '}
-            <code>free</code> (append only when it exceeds what you'll push), watch <code>state</code> for the{' '}
+            <code>free</code>, watch <code>state</code> for the{' '}
             <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync signal or for playback
-            reaching <code>Idle</code>, use <code>played</code>/<code>total</code> for retained progress, and
-            the <code>underruns</code>/<code>overruns</code>/<code>seq_gaps</code> counters to tell whether
-            you're feeding it fast enough. Backs <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+            reaching <code>Idle</code>, and use <code>played</code>/<code>total</code> for retained progress.
+            Backs <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
           </p>
           <div class="api-response-label">FIELDS</div>
           <table class="api-params">
@@ -263,30 +258,19 @@ clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}<
 
       <div id="config" data-search-target>
         <Card>
-          <CardHeader title="query_config" subtitle="Read back the whole clip config" />
+          <CardHeader title="query_config" subtitle="Read the config back" />
           <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Reads a <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>: the whole
-            configuration you set with <code>set_autolock</code>/<code>set_loop</code>/<code>set_retain</code>
-            and <code>bind</code>. Nothing here is write-only; every setting round-trips. It shares the one{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame with{' '}
-            <A href="/library/clip#status"><code>query_status</code></A>, so <code>query_status</code> is the
-            runtime view and <code>query_config</code> is the config view of the same reply.
+            The config view of the same <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>{' '}
+            frame <A href="/library/clip#status"><code>query_status</code></A> reads: a{' '}
+            <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
+            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set. Nothing
+            is write-only; every setting round-trips.
           </p>
-          <div class="api-response-label">FIELDS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>autolock</code></td><td><code>Vec&lt;<A href="/library/types/enums#blanket">Blanket</A>&gt;</code></td><td>the input groups locked while playing.</td></tr>
-              <tr><td><code>loop_</code></td><td><code>bool</code></td><td>whether playback loops at the clip end.</td></tr>
-              <tr><td><code>retain</code></td><td><code>bool</code></td><td>retained (replayable) vs streaming.</td></tr>
-              <tr><td><code>finalized</code></td><td><code>bool</code></td><td>whether a retained clip's end is fixed.</td></tr>
-              <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>the trigger binding set.</td></tr>
-            </tbody>
-          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let cfg = handle.query_config()?;
+println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 
