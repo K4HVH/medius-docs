@@ -62,7 +62,8 @@ const GuideCalls: Component = () => {
                   <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
                   <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
                   <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
-                  and the option <code>query_*</code> methods
+                  the option <code>query_*</code> methods, and the clip{' '}
+                  <A href="/library/clip#status"><code>status</code></A> query
                 </td>
                 <td>
                   <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}
@@ -76,7 +77,10 @@ const GuideCalls: Component = () => {
                   <A href="/library/led#led"><code>led</code></A>,{' '}
                   <A href="/library/lock#lock"><code>lock</code></A>,{' '}
                   <A href="/library/lock#unlock"><code>unlock</code></A>,{' '}
-                  <A href="/library/catch#catch-events"><code>catch_events</code></A>
+                  <A href="/library/catch#catch-events"><code>catch_events</code></A>,{' '}
+                  and the clip <A href="/library/clip#handle"><code>append</code></A> /{' '}
+                  <A href="/library/clip#handle"><code>start</code></A> /{' '}
+                  <A href="/library/clip#handle"><code>stop</code></A>
                 </td>
               </tr>
             </tbody>

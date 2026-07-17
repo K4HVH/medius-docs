@@ -141,6 +141,18 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
                 <td><code>medius_mock_clone</code></td>
                 <td><code>medius_mock_free</code></td>
               </tr>
+              <tr>
+                <td><A href="/library/clip#builder"><code>MediusClipBuilder</code></A></td>
+                <td><code>medius_clip_builder_new</code></td>
+                <td>-</td>
+                <td><code>medius_clip_builder_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/clip#handle"><code>MediusClip</code></A></td>
+                <td><code>medius_device_clip</code></td>
+                <td>-</td>
+                <td><code>medius_clip_free</code></td>
+              </tr>
             </tbody>
           </table>
           <pre><code class="language-c">{`MediusDevice *dev = NULL;
@@ -231,7 +243,7 @@ medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
             <tbody>
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
+                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
                 <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
               </tr>
               <tr>
