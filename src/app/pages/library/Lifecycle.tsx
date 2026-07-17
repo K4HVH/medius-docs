@@ -68,9 +68,6 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <CardHeader title="reconnect" subtitle="Rescan, reopen the port, and restore held state" />
 
           <pre class="api-signature">fn reconnect(&self) -&gt; Result&lt;()&gt;</pre>
-          <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
-          </p>
 
           <p>
             The reader thread auto-reconnects on any read error; call this by hand only to force a
@@ -109,7 +106,7 @@ assert!(after > before);`}</code></pre>
         </Card>
       </div>
 
-      <div id="from-async" data-search-target>
+      <div id="async" data-search-target>
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="reapply and reconnect, still direct" />
 

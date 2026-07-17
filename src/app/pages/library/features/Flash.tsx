@@ -25,19 +25,22 @@ const Flash: Component = () => {
           <p>
             <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool.py</code></a>{' '}
             must be on <code>PATH</code> as the script, not a bare <code>esptool</code> binary (else{' '}
-            <A href="#errors"><code>Error::FlashTool</code></A>).
+            <A href="/library/features/flash#errors"><code>Error::FlashTool</code></A>).
           </p>
           <div class="callout callout--warning">
             <p>
-              <A href="#flash"><code>flash</code></A> exists on Linux and Windows only, compiled out
-              on macOS. The consts and <A href="#args"><code>esptool_args</code></A> are always
+              <A href="/library/features/flash#flash"><code>flash</code></A> exists on Linux and Windows only, compiled out
+              on macOS. The consts and <A href="/library/features/flash#args"><code>esptool_args</code></A> are always
               present.
             </p>
           </div>
           <p>
             The four consts are public:
           </p>
-          <pre class="api-signature">const ESPTOOL: &amp;str; const CHIP: &amp;str; const FLASH_ADDR: &amp;str; const ROM_SETTLE: Duration</pre>
+          <pre class="api-signature">const ESPTOOL: &amp;str</pre>
+          <pre class="api-signature">const CHIP: &amp;str</pre>
+          <pre class="api-signature">const FLASH_ADDR: &amp;str</pre>
+          <pre class="api-signature">const ROM_SETTLE: Duration</pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::flash;
 
@@ -91,7 +94,7 @@ println!("settle:  {:?}", flash::ROM_SETTLE); // 2s`}</code></pre>
           <p>One call reboots the chosen chip into download mode, frees the port, then runs <code>esptool.py write_flash</code>; the firmware-side sequence is on <A href="/native/flashing#two-chips">Flashing</A>.</p>
           <p>
             Blocks for the wait plus the tool's runtime, returning <code>Ok(())</code> on a clean
-            exit else <A href="#errors"><code>Err(Error::FlashTool)</code></A>.
+            exit else <A href="/library/features/flash#errors"><code>Err(Error::FlashTool)</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::flash;
@@ -108,9 +111,9 @@ flash::flash("/dev/ttyACM0", "host.bin", true)?;`}</code></pre>
         <Card>
           <CardHeader title="Inspecting the command" subtitle="See exactly what esptool runs" />
           <pre class="api-signature">fn esptool_args(port: &amp;str, bin_path: &amp;Path) -&gt; Vec&lt;String&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
-            Builds the exact argv <A href="#flash"><code>flash</code></A> passes to{' '}
+            Builds the exact argv <A href="/library/features/flash#flash"><code>flash</code></A> passes to{' '}
             <code>esptool.py</code>, without running it. To debug, reboot the chip into download mode
             via <A href="/library/admin#reboot"><code>reboot</code></A> and run these args by hand.
           </p>
@@ -152,12 +155,15 @@ match flash::flash("/dev/ttyACM0", "device.bin", false) {
         <Card>
           <CardHeader title="Flashing in tests" subtitle="Swap the runner, skip the hardware" />
           <p>
-            <A href="#flash"><code>flash</code></A> wraps <code>flash_with</code>; pass a fake{' '}
+            <A href="/library/features/flash#flash"><code>flash</code></A> wraps <code>flash_with</code>; pass a fake{' '}
             <code>CommandRunner</code> and a no-op reboot closure to test without hardware.
           </p>
           <pre class="api-signature">fn flash_with&lt;R, F&gt;(port: &amp;str, bin_path: &amp;Path, host: bool, runner: &amp;R, reboot: F) -&gt; Result&lt;()&gt;
 where R: CommandRunner, F: FnOnce(&amp;str, bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`// A fake runner records the argv instead of running esptool; the reboot is a no-op.
+flash::flash_with("/dev/ttyACM0", bin, false, &recording_runner, |_port, _host| Ok(()))?;`}</code></pre>
         </Card>
       </div>
 

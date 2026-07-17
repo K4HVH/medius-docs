@@ -911,50 +911,6 @@ const Types: Component = () => {
         </Card>
       </div>
 
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="MediusStatus plus a thread-local message" />
-          <pre class="api-signature">{`enum MediusStatus : int32_t   /* MEDIUS_STATUS_OK == 0; everything else is a failure */`}</pre>
-          <p>
-            Every fallible call returns a <code>MediusStatus</code> and writes its result through an
-            out-param. On failure the detail lives in thread-local state. Read it before the next
-            call on that thread overwrites it. Canonical mapping on{' '}
-            <A href="/library/types/errors">Errors</A>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>MEDIUS_STATUS_OK</code></td><td><code>0</code></td><td>Success.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td><code>1</code></td><td>An underlying serial or OS error.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No device matched the expected VID/PID.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td><code>3</code></td><td>The box never answered the version query during the <A href="/native/connection#handshake">handshake</A>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td>A query waited past its timeout with no reply.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td><code>6</code></td><td>The link dropped (also returned by a stream when it closes).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td><td>An outbound frame exceeded the wire limit.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_FLASH_TOOL</code></td><td><code>8</code></td><td>The <A href="/library/features/flash">flash</A> subprocess (<a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>) failed.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td><code>9</code></td><td>A bad argument (e.g. a null required pointer).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td><code>10</code></td><td>A Rust panic was caught at the boundary.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td><code>11</code></td><td>An unclassified failure.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead><tr><th>Function</th><th>Returns</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>medius_last_error_message(char *buf, uintptr_t cap)</code></td><td><code>uintptr_t</code></td><td>Copies the last error's text (NUL-terminated, truncated to <code>cap</code>); returns the full length, so you can size a buffer and retry.</td></tr>
-              <tr><td><code>medius_last_error_proto_ver(void)</code></td><td><code>uint8_t</code></td><td>The version byte from a <code>BAD_PROTO_VER</code> error, or 0.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-c">{`MediusDevice *dev = NULL;
-if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
-    char buf[256];
-    medius_last_error_message(buf, sizeof buf);
-    fprintf(stderr, "open failed: %s\\n", buf);
-    return 1;
-}`}</code></pre>
-        </Card>
-      </div>
 
       <div id="clip-trigger" data-search-target>
         <Card>
@@ -1024,6 +980,51 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               <tr><td><code>held</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+
+      <div id="errors" data-search-target>
+        <Card>
+          <CardHeader title="Errors" subtitle="MediusStatus plus a thread-local message" />
+          <pre class="api-signature">{`enum MediusStatus : int32_t   /* MEDIUS_STATUS_OK == 0; everything else is a failure */`}</pre>
+          <p>
+            Every fallible call returns a <code>MediusStatus</code> and writes its result through an
+            out-param. On failure the detail lives in thread-local state. Read it before the next
+            call on that thread overwrites it. Canonical mapping on{' '}
+            <A href="/library/types/errors">Errors</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_STATUS_OK</code></td><td><code>0</code></td><td>Success.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td><code>1</code></td><td>An underlying serial or OS error.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No device matched the expected VID/PID.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td><code>3</code></td><td>The box never answered the version query during the <A href="/native/connection#handshake">handshake</A>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td>A query waited past its timeout with no reply.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td><code>6</code></td><td>The link dropped (also returned by a stream when it closes).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td><td>An outbound frame exceeded the wire limit.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_FLASH_TOOL</code></td><td><code>8</code></td><td>The <A href="/library/features/flash">flash</A> subprocess (<a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>) failed.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td><code>9</code></td><td>A bad argument (e.g. a null required pointer).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td><code>10</code></td><td>A Rust panic was caught at the boundary.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td><code>11</code></td><td>An unclassified failure.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_last_error_message(char *buf, uintptr_t cap)</code></td><td><code>uintptr_t</code></td><td>Copies the last error's text (NUL-terminated, truncated to <code>cap</code>); returns the full length, so you can size a buffer and retry.</td></tr>
+              <tr><td><code>medius_last_error_proto_ver(void)</code></td><td><code>uint8_t</code></td><td>The version byte from a <code>BAD_PROTO_VER</code> error, or 0.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`MediusDevice *dev = NULL;
+if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
+    char buf[256];
+    medius_last_error_message(buf, sizeof buf);
+    fprintf(stderr, "open failed: %s\\n", buf);
+    return 1;
+}`}</code></pre>
         </Card>
       </div>
 

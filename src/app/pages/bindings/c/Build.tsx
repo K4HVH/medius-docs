@@ -7,7 +7,7 @@ const Build: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Build &amp; features" subtitle="Linking and the optional surfaces" />
+        <CardHeader title="Build & features" subtitle="Linking and the optional surfaces" />
         <p>
           Two files: the header <A href="/bindings/c"><code>medius.h</code></A> and the native
           library <A href="/bindings/c"><code>libmedius_capi</code></A>. Point the compiler at both
@@ -65,7 +65,7 @@ cc app.c -DMEDIUS_FEATURE_MOCK -DMEDIUS_FEATURE_FLASH \\
 
       <div id="loading" data-search-target>
         <Card>
-          <CardHeader title="Linking &amp; loading" subtitle="Header, library, and the flags that find them" />
+          <CardHeader title="Linking & loading" subtitle="Header, library, and the flags that find them" />
           <p>
             Get the two files from a <A href="/bindings/c/build#packaging">release tarball</A>, or
             build the <a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer">crate</a>{' '}

@@ -30,7 +30,7 @@ const Quickstart: Component = () => {
         <pre class="diagram">{`  find()            ──▶  open + handshake      blocks
   query_version()   ──▶  read the version      blocks
   move() / press()  ──▶  inject input          fire-and-forget
-  catch_events()    ──▶  subscribe to input    blocks
+  catch_events()    ──▶  subscribe to input    fire-and-forget
   recv()            ──▶  next physical event   blocks
   free()            ──▶  close, NULL-safe      local`}</pre>
       </Card>
@@ -98,7 +98,7 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
         </Card>
       </div>
 
-      <div id="build" data-search-target>
+      <div id="run" data-search-target>
         <Card>
           <CardHeader title="Run it" subtitle="gcc or clang, link libmedius_capi" />
           <p>

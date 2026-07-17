@@ -11,14 +11,6 @@ import { useDashboard } from './context';
 
 // One card for every persistent box option (saved on the device, survive a reboot). Each option is a
 // labelled section here; the read-only summary on the Device tab mirrors the same values.
-const sectionLabel = {
-  color: 'var(--g-text-muted, #8a8a8a)',
-  'font-size': 'var(--font-size-xs, 0.75rem)',
-  'font-weight': '600',
-  'letter-spacing': '0.05em',
-  'text-transform': 'uppercase',
-  margin: 'var(--g-spacing) 0 var(--g-spacing-sm)',
-} as const;
 
 const controls = {
   display: 'flex',
@@ -118,7 +110,7 @@ const DeviceOptions = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
 
-        <div style={sectionLabel}>Box name</div>
+        <div class="api-response-label">Box name</div>
         <p>
           A human-readable name for the box, a friendlier alternative to its id. Leave it unset and the box
           makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters, numbers, and symbols.
@@ -146,7 +138,7 @@ const DeviceOptions = () => {
           </div>
         </Show>
 
-        <div style={sectionLabel}>Imperfect clone</div>
+        <div class="api-response-label">Imperfect clone</div>
         <p>
           Some devices need more inputs than the box can copy (like the Wooting's analog stream), so the
           box refuses them by default. Allow it and the box clones the device anyway with one input
@@ -173,7 +165,7 @@ const DeviceOptions = () => {
           )}
         </Show>
 
-        <div style={sectionLabel}>Movement riding</div>
+        <div class="api-response-label">Movement riding</div>
         <p>
           Injected motion only rides a real mouse move within the window and is dropped if no move
           arrives, so it keeps the hand's report timing. It can't move the cursor on its own while it's
@@ -204,7 +196,7 @@ const DeviceOptions = () => {
           </div>
         </Show>
 
-        <div style={sectionLabel}>Emit rate</div>
+        <div class="api-response-label">Emit rate</div>
         <p>
           How fast the box sends injected moves. Learned matches the mouse's own report rate, Interval
           follows its USB poll rate, and Fixed pins it to a rate you pick. It only sets the ceiling, so

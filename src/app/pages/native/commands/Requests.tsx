@@ -58,8 +58,9 @@ const Requests: Component = () => {
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
+              <tr><td><code>8</code></td><td>reserved</td><td>-</td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
-              <tr><td><code>10</code></td><td>The buffered-clip ring depth and playback state.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
+              <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -571,7 +572,7 @@ const Requests: Component = () => {
               <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">IMPERFECT value</div>
+          <div class="api-response-label">IMPERFECT VALUE</div>
           <p>
             The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
             two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
@@ -593,7 +594,7 @@ const Requests: Component = () => {
             (<code>clone_imperfect = 1</code>). Library binding:{' '}
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>.
           </p>
-          <div class="api-response-label">MOVE_RIDE value</div>
+          <div class="api-response-label">MOVE_RIDE VALUE</div>
           <p>
             The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window (id 1).
           </p>
@@ -609,7 +610,7 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
-          <div class="api-response-label">EMIT value</div>
+          <div class="api-response-label">EMIT VALUE</div>
           <p>
             The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2): the
             mode, the configured fixed rate, and the rate actually in effect.
