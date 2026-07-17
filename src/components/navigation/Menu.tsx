@@ -16,24 +16,18 @@ import '../../styles/components/navigation/Menu.css';
 export interface MenuProps {
   trigger: JSX.Element;
   children: JSX.Element;
-  // Trigger behavior
   openOn?: 'click' | 'contextmenu' | 'both';
-  // Positioning
   placement?: 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end' | 'right-start' | 'left-start';
   autoFlip?: boolean;
-  anchored?: boolean; // If true, menu follows trigger on scroll/resize (default: true)
-  matchTriggerWidth?: boolean; // If true, menu width matches trigger width (default: false)
-  // Controlled state
+  anchored?: boolean; // menu follows trigger on scroll/resize (default: true)
+  matchTriggerWidth?: boolean; // menu width matches trigger width (default: false)
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  // Behavior
-  closeOnContentClick?: boolean; // If true, menu closes when content is clicked (default: true)
-  // Appearance
+  closeOnContentClick?: boolean; // menu closes when content is clicked (default: true)
   variant?: 'default' | 'emphasized' | 'subtle';
   size?: 'compact' | 'normal' | 'spacious';
-  // Other
   class?: string;
-  wrapperClass?: string; // Custom class for trigger wrapper
+  wrapperClass?: string;
 }
 
 export const Menu: Component<MenuProps> = (props) => {
@@ -63,7 +57,6 @@ export const Menu: Component<MenuProps> = (props) => {
   const variant = () => local.variant ?? 'default';
   const size = () => local.size ?? 'normal';
 
-  // Controlled/uncontrolled state
   const isControlled = () => local.open !== undefined;
   const [internalOpen, setInternalOpen] = createSignal(false);
   const isOpen = () => (isControlled() ? local.open! : internalOpen());
@@ -86,16 +79,14 @@ export const Menu: Component<MenuProps> = (props) => {
   const updatePosition = () => {
     if (!triggerRef || !menuRef) return;
 
-    // Use the actual trigger element (child) if it exists, otherwise use the wrapper
     const actualTriggerElement = triggerRef.firstElementChild || triggerRef;
     const triggerRect = actualTriggerElement.getBoundingClientRect();
     const menuRect = menuRef.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Safety check: ensure menu has dimensions before positioning
     if (menuRect.width === 0 || menuRect.height === 0) {
-      // Menu not fully rendered yet, try again
+      // menu not fully rendered yet, retry next frame
       requestAnimationFrame(() => updatePosition());
       return;
     }
@@ -104,10 +95,8 @@ export const Menu: Component<MenuProps> = (props) => {
     let left = 0;
     let currentPlacement = placement();
 
-    // Add small gap between trigger and menu (4px)
     const gap = 4;
 
-    // Calculate initial position based on placement
     switch (placement()) {
       case 'bottom-start':
         top = triggerRect.bottom + gap;
@@ -135,7 +124,6 @@ export const Menu: Component<MenuProps> = (props) => {
         break;
     }
 
-    // Auto-flip if enabled
     if (autoFlip()) {
       const wouldOverflowBottom = top + menuRect.height > viewportHeight;
       const hasSpaceAbove = triggerRect.top - menuRect.height - gap >= 0;
@@ -146,7 +134,6 @@ export const Menu: Component<MenuProps> = (props) => {
       const wouldOverflowLeft = left < 0;
       const hasSpaceOnRight = triggerRect.right + menuRect.width + gap <= viewportWidth;
 
-      // Flip vertically (bottom <-> top)
       if (currentPlacement.startsWith('bottom') && wouldOverflowBottom && hasSpaceAbove) {
         currentPlacement = currentPlacement.replace('bottom', 'top') as typeof currentPlacement;
         top = triggerRect.top - menuRect.height - gap;
@@ -155,7 +142,6 @@ export const Menu: Component<MenuProps> = (props) => {
         top = triggerRect.bottom + gap;
       }
 
-      // Flip horizontally (right <-> left) for side placements
       if (currentPlacement === 'right-start' && wouldOverflowRight && hasSpaceOnLeft) {
         currentPlacement = 'left-start';
         left = triggerRect.left - menuRect.width - gap;
@@ -164,7 +150,6 @@ export const Menu: Component<MenuProps> = (props) => {
         left = triggerRect.right + gap;
       }
 
-      // Flip horizontally (start <-> end) for top/bottom placements
       if (currentPlacement.endsWith('-start') && wouldOverflowRight && !wouldOverflowLeft) {
         if (currentPlacement.startsWith('bottom') || currentPlacement.startsWith('top')) {
           currentPlacement = currentPlacement.replace('-start', '-end') as typeof currentPlacement;
@@ -181,7 +166,6 @@ export const Menu: Component<MenuProps> = (props) => {
     setPosition({ top, left });
     setFinalPlacement(currentPlacement);
 
-    // Set menu width to match trigger if requested
     if (matchTriggerWidth()) {
       setMenuWidth(triggerRect.width);
     }
@@ -212,27 +196,21 @@ export const Menu: Component<MenuProps> = (props) => {
     const clickedInTrigger = triggerRef.contains(target);
 
     if (!clickedInMenu && !clickedInTrigger) {
-      // Clicked outside both menu and trigger - always close
       setOpen(false);
     } else if (clickedInMenu && closeOnContentClick()) {
-      // Clicked inside menu and should close on content click
       setOpen(false);
     }
-    // If clicked in menu but closeOnContentClick is false, stay open
-    // If clicked in trigger, the trigger's own handler will toggle
   };
 
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && isOpen()) {
       e.preventDefault();
       setOpen(false);
-      // Return focus to trigger
       const focusTarget = triggerRef?.querySelector<HTMLElement>('[tabindex], button, a, input') || triggerRef;
       focusTarget?.focus();
     }
   };
 
-  // Keyboard navigation within the menu
   let typeAheadBuffer = '';
   let typeAheadTimer: number | undefined;
 
@@ -278,11 +256,10 @@ export const Menu: Component<MenuProps> = (props) => {
         break;
       }
       case 'ArrowRight': {
-        // Open submenu if current item has one
         const current = items[currentIndex];
         if (current?.classList.contains('menu__item--has-submenu')) {
           e.preventDefault();
-          // Trigger hover to open submenu, then focus first item
+          // dispatch pointerenter to open the hover-driven submenu, then focus its first item
           current.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -295,13 +272,12 @@ export const Menu: Component<MenuProps> = (props) => {
         break;
       }
       case 'ArrowLeft': {
-        // If we are in a submenu, close it and return focus to parent
-        // This is handled at the submenu level
+        // handled at the submenu level
         break;
       }
       case 'Enter':
       case ' ': {
-        // Native button handles Enter/Space click, but we ensure submenu behavior
+        // native button handles the click; here we only add submenu behavior
         if (items[currentIndex]?.classList.contains('menu__item--has-submenu')) {
           e.preventDefault();
           items[currentIndex].dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
@@ -316,11 +292,10 @@ export const Menu: Component<MenuProps> = (props) => {
         break;
       }
       case 'Escape': {
-        // Handled by global handler
+        // handled by the global handler
         break;
       }
       default: {
-        // Type-ahead: single character search
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
           e.preventDefault();
           typeAheadBuffer += e.key.toLowerCase();
@@ -339,13 +314,12 @@ export const Menu: Component<MenuProps> = (props) => {
   };
 
   onMount(() => {
-    // Use pointerdown for faster response and touch compatibility
+    // pointerdown gives faster response and touch compatibility
     document.addEventListener('pointerdown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
 
-    // Add scroll and resize listeners if anchored
     if (anchored()) {
-      window.addEventListener('scroll', updatePosition, true); // Use capture to catch all scroll events
+      window.addEventListener('scroll', updatePosition, true); // capture, to catch scrolls in any ancestor
       window.addEventListener('resize', updatePosition);
     }
 
@@ -360,17 +334,13 @@ export const Menu: Component<MenuProps> = (props) => {
     });
   });
 
-  // Update position when menu opens - use double requestAnimationFrame for accurate dimensions
-  // Also focus first menu item for keyboard accessibility
   createEffect(() => {
     if (isOpen() && menuRef) {
-      // Reset positioned state
       setIsPositioned(false);
-      // Double RAF ensures layout is complete
+      // double RAF ensures layout is complete before measuring
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           updatePosition();
-          // Focus first menu item when opened via keyboard (trigger was focused)
           const triggerHadFocus = triggerRef?.contains(document.activeElement);
           if (triggerHadFocus) {
             const firstItem = menuRef?.querySelector<HTMLButtonElement>('.menu__item:not(.menu__item--disabled):not([disabled])');
@@ -438,7 +408,6 @@ export const Menu: Component<MenuProps> = (props) => {
   );
 };
 
-// Helper components
 export const MenuItem: Component<{
   children: JSX.Element;
   onClick?: () => void;
@@ -465,12 +434,10 @@ export const MenuItem: Component<{
     let top = itemRect.top;
     let left = itemRect.right + gap;
 
-    // Flip to left if no space on right
     if (left + submenuRect.width > viewportWidth && itemRect.left - submenuRect.width - gap >= 0) {
       left = itemRect.left - submenuRect.width - gap;
     }
 
-    // Adjust vertically if submenu would overflow viewport
     if (top + submenuRect.height > viewportHeight) {
       top = Math.max(0, viewportHeight - submenuRect.height - 8);
     }
@@ -496,7 +463,7 @@ export const MenuItem: Component<{
 
   const handleClick = (e: MouseEvent) => {
     if (local.submenu) {
-      // Don't close menu if item has submenu
+      // keep the menu open when the item has a submenu
       e.stopPropagation();
     }
     local.onClick?.();

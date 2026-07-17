@@ -29,7 +29,6 @@ export const Button: Component<ButtonProps> = (props) => {
   const isIconOnly = () => local.icon && !local.children;
 
   const progressSize = () => {
-    // Icon-only buttons need larger progress indicator to match icon size
     if (isIconOnly()) return 'lg';
     if (size() === 'compact') return 'sm';
     if (size() === 'spacious') return 'lg';

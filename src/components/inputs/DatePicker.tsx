@@ -22,47 +22,36 @@ import {
 import '../../styles/components/inputs/DatePicker.css';
 import { useFormField } from '../../contexts/FormFieldContext';
 
-// ---- Public types ----
-
 export interface DatePickerRangeValue {
   start?: string;
   end?: string;
 }
 
 export interface DatePickerProps {
-  // Single value
   value?: string;
   onChange?: (value: string) => void;
-  // Range value
   range?: boolean;
   rangeValue?: DatePickerRangeValue;
   onRangeChange?: (value: DatePickerRangeValue) => void;
-  // Mode
   mode?: 'date' | 'time' | 'datetime';
-  // Time options
   showSeconds?: boolean;
   use12Hour?: boolean;
   timeStep?: number;
   secondStep?: number;
-  // Constraints
   minDate?: string;
   maxDate?: string;
   isDateDisabled?: (date: Date) => boolean;
-  // Display
   label?: string;
   placeholder?: string;
   clearable?: boolean;
-  // Appearance
   size?: 'normal' | 'compact';
   disabled?: boolean;
   required?: boolean;
   invalid?: boolean;
   error?: string;
-  // Controlled open state
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onBlur?: () => void;
-  // Pass-through
   class?: string;
   name?: string;
   id?: string;
@@ -71,16 +60,12 @@ export interface DatePickerProps {
   'aria-labelledby'?: string;
 }
 
-// ---- Constants ----
-
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-// ---- Date utilities ----
 
 function parseDateStr(iso: string): Date | null {
   if (!iso) return null;
@@ -118,23 +103,18 @@ function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-// ---- Manual input parsing ----
-
 function parseManualDate(str: string): Date | null {
   str = str.trim();
-  // YYYY-MM-DD
   let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (m) {
     const d = new Date(+m[1], +m[2] - 1, +m[3]);
     return isNaN(d.getTime()) ? null : d;
   }
-  // D/M/YYYY or DD/MM/YYYY
   m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) {
     const d = new Date(+m[3], +m[2] - 1, +m[1]);
     return isNaN(d.getTime()) ? null : d;
   }
-  // D MMM YYYY or D MonthName YYYY
   m = str.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
   if (m) {
     const monthIdx = MONTH_NAMES.findIndex(
@@ -152,7 +132,6 @@ interface ParsedTime { h: number; m: number; s: number; }
 
 function parseManualTime(str: string): ParsedTime | null {
   str = str.trim();
-  // HH:MM:SS AM/PM or HH:MM AM/PM
   let m = str.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
   if (m) {
     let h = +m[1];
@@ -164,7 +143,6 @@ function parseManualTime(str: string): ParsedTime | null {
     if (h < 0 || h > 23 || mn < 0 || mn > 59 || s < 0 || s > 59) return null;
     return { h, m: mn, s };
   }
-  // HH:MM:SS or HH:MM
   m = str.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (m) {
     const h = +m[1];
@@ -173,7 +151,6 @@ function parseManualTime(str: string): ParsedTime | null {
     if (h < 0 || h > 23 || mn < 0 || mn > 59 || s < 0 || s > 59) return null;
     return { h, m: mn, s };
   }
-  // Military time without colon: HHMMSS (6 digits) or HHMM / HMM (3-4 digits)
   if (/^\d{6}$/.test(str)) {
     const h = +str.slice(0, 2), mn = +str.slice(2, 4), s = +str.slice(4, 6);
     if (h <= 23 && mn <= 59 && s <= 59) return { h, m: mn, s };
@@ -185,8 +162,6 @@ function parseManualTime(str: string): ParsedTime | null {
   }
   return null;
 }
-
-// ---- Calendar grid ----
 
 interface CalendarDay {
   date: Date;
@@ -213,8 +188,6 @@ function buildCalendarDays(year: number, month: number): CalendarDay[] {
   return days;
 }
 
-// ---- Component ----
-
 export const DatePicker: Component<DatePickerProps> = (props) => {
   const [local, rest] = splitProps(props, [
     'value', 'onChange',
@@ -233,8 +206,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
   const mode = () => local.mode ?? 'date';
   const size = () => local.size ?? 'normal';
 
-  // ---- Open state (controlled/uncontrolled) ----
-
   const isControlled = () => local.open !== undefined;
   const [internalOpen, setInternalOpen] = createSignal(false);
   const isOpen = () => (isControlled() ? local.open! : internalOpen());
@@ -242,8 +213,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     if (!isControlled()) setInternalOpen(v);
     local.onOpenChange?.(v);
   };
-
-  // ---- Calendar view state ----
 
   const today = new Date();
 
@@ -261,8 +230,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
   const [viewMode, setViewMode] = createSignal<'days' | 'months' | 'years'>('days');
   const [decadeBase, setDecadeBase] = createSignal(Math.floor(today.getFullYear() / 20) * 20);
 
-  // ---- Time state (single mode) ----
-
   const initTime = () => {
     const val = local.value;
     if (val) {
@@ -275,8 +242,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
   const [hour, setHour] = createSignal(initTime().h);
   const [minute, setMinute] = createSignal(initTime().m);
   const [second, setSecond] = createSignal(initTime().s);
-
-  // ---- Time state (range datetime) ----
 
   const initRangeTimes = () => {
     const sd = local.rangeValue?.start ? parseDateStr(local.rangeValue.start) : null;
@@ -295,17 +260,11 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
   const [endMinute, setEndMinute] = createSignal(em);
   const [endSecond, setEndSecond] = createSignal(es);
 
-  // ---- Range selection step ----
-
   const [rangeStep, setRangeStep] = createSignal<'start' | 'end'>('start');
   const [hoverDate, setHoverDate] = createSignal<Date | null>(null);
 
-  // ---- Text input state ----
-
   const [inputText, setInputText] = createSignal('');
   const [isEditing, setIsEditing] = createSignal(false);
-
-  // ---- Refs and Portal positioning ----
 
   let triggerRef: HTMLDivElement | undefined;
   let calendarRef: HTMLDivElement | undefined;
@@ -347,7 +306,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     }
   });
 
-  // Sync time signals from controlled value
   createEffect(() => {
     const val = local.value;
     if (!val || (mode() !== 'time' && mode() !== 'datetime')) return;
@@ -371,8 +329,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
       window.removeEventListener('resize', updatePosition);
     });
   });
-
-  // ---- Derived values ----
 
   const calendarDays = createMemo(() => buildCalendarDays(viewYear(), viewMonth()));
   const visibleYears = createMemo(() => Array.from({ length: 20 }, (_, i) => decadeBase() + i));
@@ -440,8 +396,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     return !!local.value;
   };
 
-  // ---- Time display helpers ----
-
   const formatTime = (h: number, m: number, s: number): string => {
     const use12 = local.use12Hour;
     const showSec = local.showSeconds;
@@ -473,7 +427,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     return `${displayDate(d)}, ${formatTime(hour(), minute(), second())}`;
   });
 
-  // Sync inputText from displayValue when not actively editing
   createEffect(() => {
     if (!isEditing()) {
       setInputText(displayValue());
@@ -487,8 +440,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
           : 'Select date'
   );
 
-  // ---- Utility: emit current time value ----
-
   const emitTimeValue = (h: number, m: number, s: number) => {
     if (!local.onChange) return;
     const sec = local.showSeconds ? s : undefined;
@@ -499,8 +450,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
       if (d) local.onChange(toISODateTimeStr(d, h, m, sec));
     }
   };
-
-  // ---- Event handlers ----
 
   const handleClickOutside = (e: MouseEvent) => {
     if (!calendarRef || !triggerRef) return;
@@ -692,7 +641,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
       } else if (mode() === 'datetime') {
         const sec = local.showSeconds ? second() : undefined;
         local.onChange?.(toISODateTimeStr(date, hour(), minute(), sec));
-        // Keep open so user can adjust time
       } else {
         const sec = local.showSeconds ? second() : undefined;
         local.onChange?.(toISOTimeStr(hour(), minute(), sec));
@@ -728,8 +676,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     }
   };
 
-  // ---- Calendar navigation ----
-
   const prevPeriod = (e: MouseEvent) => {
     e.stopPropagation();
     if (viewMode() === 'years') { setDecadeBase(b => b - 20); return; }
@@ -762,8 +708,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     setViewMode('months');
   };
 
-  // ---- Time handlers (single) ----
-
   const adjustHour = (delta: number) => {
     const newH = (hour() + delta + 24) % 24;
     setHour(newH);
@@ -789,8 +733,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     setHour(newH);
     emitTimeValue(newH, minute(), second());
   };
-
-  // ---- Range datetime time handlers ----
 
   const emitRangeTime = (sh: number, sm: number, ss: number, eh: number, em: number, es: number) => {
     if (!local.onRangeChange) return;
@@ -850,16 +792,12 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     emitRangeTime(startHour(), startMinute(), startSecond(), v, endMinute(), endSecond());
   };
 
-  // ---- Display hour for 12h mode ----
-
   const displayHour = () => local.use12Hour ? (hour() % 12 || 12) : hour();
   const displayStartHour = () => local.use12Hour ? (startHour() % 12 || 12) : startHour();
   const displayEndHour = () => local.use12Hour ? (endHour() % 12 || 12) : endHour();
   const ampm = () => hour() < 12 ? 'AM' : 'PM';
   const startAmpm = () => startHour() < 12 ? 'AM' : 'PM';
   const endAmpm = () => endHour() < 12 ? 'AM' : 'PM';
-
-  // ---- Day class computation ----
 
   const isDayRangeStart = (date: Date): boolean => {
     const s = effectiveStart();
@@ -901,8 +839,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     return classes.join(' ');
   };
 
-  // ---- Class names ----
-
   const containerClasses = () => {
     const classes = ['date-picker'];
     if (size() === 'compact') classes.push('date-picker--compact');
@@ -920,7 +856,7 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
   };
 
   const headerLabel = () => {
-    if (viewMode() === 'years') return `${visibleYears()[0]} – ${visibleYears()[visibleYears().length - 1]}`;
+    if (viewMode() === 'years') return `${visibleYears()[0]} - ${visibleYears()[visibleYears().length - 1]}`;
     if (viewMode() === 'months') return String(viewYear());
     return `${MONTH_NAMES[viewMonth()]} ${viewYear()}`;
   };
@@ -997,7 +933,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
             role="dialog"
             aria-label="Date picker"
           >
-            {/* Calendar section */}
             <Show when={mode() !== 'time'}>
               <div class="date-picker__header">
                 <button type="button" class="date-picker__nav-btn" onClick={prevPeriod} aria-label="Previous">
@@ -1076,7 +1011,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
               </Show>
             </Show>
 
-            {/* Time section */}
             <Show when={mode() !== 'date'}>
               <Show
                 when={local.range && mode() === 'datetime'}
@@ -1084,20 +1018,17 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
                   <div class="date-picker__time">
                     <span class="date-picker__time-label">Time</span>
                     <div class="date-picker__time-columns">
-                      {/* Hour */}
                       <div class="date-picker__time-column">
                         <button type="button" class="date-picker__time-btn" onClick={() => adjustHour(1)} tabIndex={-1} aria-label="Increment hour"><BsChevronUp /></button>
                         <span class="date-picker__time-value">{String(displayHour()).padStart(2, '0')}</span>
                         <button type="button" class="date-picker__time-btn" onClick={() => adjustHour(-1)} tabIndex={-1} aria-label="Decrement hour"><BsChevronDown /></button>
                       </div>
                       <span class="date-picker__time-sep">:</span>
-                      {/* Minute */}
                       <div class="date-picker__time-column">
                         <button type="button" class="date-picker__time-btn" onClick={() => adjustMinute(1)} tabIndex={-1} aria-label="Increment minute"><BsChevronUp /></button>
                         <span class="date-picker__time-value">{String(minute()).padStart(2, '0')}</span>
                         <button type="button" class="date-picker__time-btn" onClick={() => adjustMinute(-1)} tabIndex={-1} aria-label="Decrement minute"><BsChevronDown /></button>
                       </div>
-                      {/* Seconds (conditional) */}
                       <Show when={local.showSeconds}>
                         <span class="date-picker__time-sep">:</span>
                         <div class="date-picker__time-column">
@@ -1106,7 +1037,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
                           <button type="button" class="date-picker__time-btn" onClick={() => adjustSecond(-1)} tabIndex={-1} aria-label="Decrement second"><BsChevronDown /></button>
                         </div>
                       </Show>
-                      {/* AM/PM toggle (conditional) */}
                       <Show when={local.use12Hour}>
                         <button type="button" class="date-picker__ampm-btn" onClick={toggleAmPm} tabIndex={-1}>
                           {ampm()}
@@ -1116,7 +1046,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
                   </div>
                 }
               >
-                {/* Range datetime: two time pickers */}
                 <div class="date-picker__time date-picker__time--range">
                   <div class="date-picker__time-row">
                     <span class="date-picker__time-label">Start</span>
@@ -1180,7 +1109,6 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
               </Show>
             </Show>
 
-            {/* Footer */}
             <div class="date-picker__footer">
               <div class="date-picker__footer-actions">
                 <Show when={mode() !== 'time'}>

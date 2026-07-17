@@ -47,13 +47,12 @@ export const Tooltip: Component<TooltipProps> = (props) => {
 
     const triggerRect = triggerRef.getBoundingClientRect();
     const tooltipRect = tooltipRef.getBoundingClientRect();
-    const spacing = 8; // Gap between trigger and tooltip
+    const spacing = 8;
 
     let desiredPlacement = placement();
     let top = 0;
     let left = 0;
 
-    // Calculate position based on placement
     const positions: Record<Placement, () => { top: number; left: number; canFit: boolean }> = {
       top: () => ({
         top: triggerRect.top - tooltipRect.height - spacing,
@@ -77,10 +76,8 @@ export const Tooltip: Component<TooltipProps> = (props) => {
       }),
     };
 
-    // Try desired placement first
     let result = positions[desiredPlacement]();
 
-    // Auto-flip if doesn't fit
     if (!result.canFit) {
       const flipMap: Record<Placement, Placement> = {
         top: 'bottom',
@@ -100,13 +97,11 @@ export const Tooltip: Component<TooltipProps> = (props) => {
     top = result.top;
     left = result.left;
 
-    // Keep tooltip within viewport horizontally
     if (desiredPlacement === 'top' || desiredPlacement === 'bottom') {
       const maxLeft = window.innerWidth - tooltipRect.width - 8;
       left = Math.max(8, Math.min(left, maxLeft));
     }
 
-    // Keep tooltip within viewport vertically
     if (desiredPlacement === 'left' || desiredPlacement === 'right') {
       const maxTop = window.innerHeight - tooltipRect.height - 8;
       top = Math.max(8, Math.min(top, maxTop));
@@ -122,25 +117,23 @@ export const Tooltip: Component<TooltipProps> = (props) => {
     clearTimeouts();
     showTimeout = window.setTimeout(() => {
       setIsMounted(true);
-      // Calculate position and make visible after mount
       requestAnimationFrame(() => {
         calculatePosition();
         requestAnimationFrame(() => {
           setIsVisible(true);
         });
       });
-    }, 200); // Show delay
+    }, 200);
   };
 
   const handleHide = () => {
     clearTimeouts();
     hideTimeout = window.setTimeout(() => {
       setIsVisible(false);
-      // Wait for fade out transition before unmounting
       setTimeout(() => {
         setIsMounted(false);
-      }, 150); // Match CSS transition duration
-    }, 100); // Hide delay
+      }, 150);
+    }, 100);
   };
 
   const handleMouseEnter = () => handleShow();
@@ -156,7 +149,6 @@ export const Tooltip: Component<TooltipProps> = (props) => {
   };
 
   onMount(() => {
-    // Recalculate position on scroll/resize
     const handleRecalculate = () => {
       if (isVisible()) {
         calculatePosition();

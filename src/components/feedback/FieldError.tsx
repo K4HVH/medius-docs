@@ -4,7 +4,7 @@ import '../../styles/components/feedback/FieldError.css';
 
 interface FieldErrorProps extends JSX.HTMLAttributes<HTMLDivElement> {
   error?: string;
-  id?: string;  // For aria-describedby linking
+  id?: string;
 }
 
 export const FieldError: Component<FieldErrorProps> = (props) => {

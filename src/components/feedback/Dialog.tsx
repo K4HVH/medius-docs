@@ -45,13 +45,9 @@ export const Dialog: Component<DialogProps> = (props) => {
 
   createEffect(() => {
     if (local.open) {
-      // Prevent body scroll when dialog is open
       document.body.style.overflow = 'hidden';
-
-      // Add escape key listener
       document.addEventListener('keydown', handleEscapeKey);
     } else {
-      // Restore body scroll
       document.body.style.overflow = '';
     }
   });
