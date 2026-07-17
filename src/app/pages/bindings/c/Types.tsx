@@ -53,6 +53,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_PRODUCT</code></td><td><code>128</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo.product</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_NAME</code></td><td><code>33</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion.name</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.triggers</code></A></td></tr>
             </tbody>
           </table>
         </Card>
@@ -208,11 +209,53 @@ const Types: Component = () => {
         </Card>
       </div>
 
+      <div id="edge" data-search-target>
+        <Card>
+          <CardHeader title="MediusEdge" subtitle="Which edge of a trigger usage fires a clip binding" />
+          <pre class="api-signature">{`enum MediusEdge : uint8_t`}</pre>
+          <p>
+            The edge of a <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A>'s{' '}
+            <code>on</code> usage that runs its action. Same wire values as{' '}
+            <A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A>. See <A href="/library/clip">Clip</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_EDGE_BOTH</code></td><td><code>0</code></td><td>Both press and release.</td></tr>
+              <tr><td><code>MEDIUS_EDGE_PRESS</code></td><td><code>1</code></td><td>The press edge only.</td></tr>
+              <tr><td><code>MEDIUS_EDGE_RELEASE</code></td><td><code>2</code></td><td>The release edge only.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="clip-action" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipAction" subtitle="The engine action a clip trigger drives" />
+          <pre class="api-signature">{`enum MediusClipAction : uint8_t`}</pre>
+          <p>
+            What a bound <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A> does to
+            the clip on its edge; the same verbs as the <A href="/bindings/c/api#clip"><code>medius_clip_start/_stop/...</code></A> calls. See <A href="/library/clip">Clip</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CLIP_ACTION_START</code></td><td><code>0</code></td><td>Rewind and play (resume from a pause).</td></tr>
+              <tr><td><code>MEDIUS_CLIP_ACTION_STOP</code></td><td><code>1</code></td><td>Stop and release held input and the auto-lock.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_ACTION_PAUSE</code></td><td><code>2</code></td><td>Halt mid-clip, retaining the cursor and held input.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_ACTION_RESUME</code></td><td><code>3</code></td><td>Continue from the paused cursor.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_ACTION_RESTART</code></td><td><code>4</code></td><td>Force a rewind and play, even mid-playback.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_ACTION_TOGGLE</code></td><td><code>5</code></td><td>Play if idle/paused, stop if playing.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="blanket" data-search-target>
         <Card>
           <CardHeader title="MediusBlanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">{`enum MediusBlanket : uint8_t`}</pre>
-          <p>A whole input group: which one <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the members of a clip's <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> auto-lock. See <A href="/library/lock">Lock</A>.</p>
+          <p>A whole input group: which one <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the scope <A href="/bindings/c/api#clip"><code>medius_clip_set_autolock</code></A> auto-locks while a clip plays. See <A href="/library/lock">Lock</A>.</p>
           <p>The values are ABI-local ordinals (matching the crate's <A href="/library/types/enums#blanket"><code>Blanket</code></A> order), not the <code>CLIP_LOCK_*</code> wire bits.</p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -416,7 +459,8 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_FRAME_TYPE_RESP</code></td><td><code>6</code></td><td><code>MEDIUS_FRAME_TYPE_OPTION</code></td><td><code>17</code></td></tr>
               <tr><td><code>MEDIUS_FRAME_TYPE_REBOOT_DL</code></td><td><code>7</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_APPEND</code></td><td><code>18</code></td></tr>
               <tr><td><code>MEDIUS_FRAME_TYPE_LOG</code></td><td><code>8</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_CTRL</code></td><td><code>19</code></td></tr>
-              <tr><td><code>MEDIUS_FRAME_TYPE_LED</code></td><td><code>9</code></td><td></td><td></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_LED</code></td><td><code>9</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_SET</code></td><td><code>20</code></td></tr>
+              <tr><td></td><td></td><td><code>MEDIUS_FRAME_TYPE_CLIP_TRIGGER</code></td><td><code>21</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -912,15 +956,39 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
         </Card>
       </div>
 
-      <div id="clip-config" data-search-target>
+      <div id="clip-trigger" data-search-target>
         <Card>
-          <CardHeader title="MediusClipConfig" subtitle="Playback options for a clip start or catch trigger" />
-          <p>The options a clip <A href="/bindings/c/api#clip"><code>medius_clip_start</code></A> / <code>medius_clip_arm_catch</code> plays with; extensible as more are added. Fill it inline; a zero-length <code>autolock</code> means no auto-lock. Concept on <A href="/library/clip">Clip</A>.</p>
+          <CardHeader title="MediusClipTrigger" subtitle="One physical-input binding that drives the clip" />
+          <p>
+            A managed binding you add with <A href="/bindings/c/api#clip"><code>medius_clip_bind</code></A>: when <code>on</code> hits <code>edge</code>,
+            the box runs <code>action</code> on the clip. Build the <code>on</code> usage with the{' '}
+            <A href="/bindings/c/api#builders"><code>medius_usage_*</code></A> helpers. Concept on <A href="/library/clip">Clip</A>.
+          </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>autolock</code></td><td><code>const MediusBlanket *</code></td><td>The <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> input groups to auto-lock while playing (NULL for none).</td></tr>
-              <tr><td><code>autolock_len</code></td><td><code>size_t</code></td><td>How many groups <code>autolock</code> points at (0 = none).</td></tr>
+              <tr><td><code>on</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The physical button, key, or media usage that fires the binding.</td></tr>
+              <tr><td><code>edge</code></td><td><A href="/bindings/c/types#edge"><code>MediusEdge</code></A></td><td>Which edge of <code>on</code> fires it.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A></td><td>What it does to the clip.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to swallow the input so the game never sees it; 0 to let it pass through.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="clip-settings" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipSettings" subtitle="The clip configuration read back from the box" />
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>: the auto-lock scope, the loop/retain/finalize scalars, and the live trigger set. Concept on <A href="/library/clip">Clip</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>autolock_bits</code></td><td><code>uint8_t</code></td><td>The auto-lock scope as <code>CLIP_LOCK_*</code> wire bits (set with <A href="/bindings/c/api#clip"><code>medius_clip_set_autolock</code></A>).</td></tr>
+              <tr><td><code>loop_</code></td><td><code>uint8_t</code></td><td>Playback loops at the clip end (retained mode only).</td></tr>
+              <tr><td><code>retain</code></td><td><code>uint8_t</code></td><td>The loaded clip is retained so it can rewind and replay (0 = streaming).</td></tr>
+              <tr><td><code>finalized</code></td><td><code>uint8_t</code></td><td>A retained clip's end is fixed, so it can replay and loop.</td></tr>
+              <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound triggers, <code>triggers[0..n]</code>.</td></tr>
+              <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>triggers</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -929,15 +997,15 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="MediusClipStatus & MediusClipState" subtitle="Buffered-clip ring and playback state" />
-          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_status</code></A>; <code>state</code> is a <code>MediusClipState</code>. Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_status</code></A>; <code>state</code> is a <code>MediusClipState</code>. Concept on <A href="/library/clip">Clip</A>.</p>
           <div class="api-response-label">MEDIUSCLIPSTATE</div>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CLIP_STATE_IDLE</code></td><td><code>0</code></td><td>No clip active.</td></tr>
-              <tr><td><code>MEDIUS_CLIP_STATE_ARMED</code></td><td><code>1</code></td><td>A catch-trigger is armed; playback starts on the physical press edge.</td></tr>
-              <tr><td><code>MEDIUS_CLIP_STATE_PLAYING</code></td><td><code>2</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-              <tr><td><code>MEDIUS_CLIP_STATE_FAULTED</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_IDLE</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_PLAYING</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_PAUSED</code></td><td><code>2</code></td><td>Halted mid-clip; the cursor and any held usages are retained.</td></tr>
+              <tr><td><code>MEDIUS_CLIP_STATE_FAULTED</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <A href="/bindings/c/api#clip"><code>medius_clip_clear</code></A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MEDIUSCLIPSTATUS</div>
@@ -946,7 +1014,8 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
             <tbody>
               <tr><td><code>state</code></td><td><code>MediusClipState</code></td><td>The lifecycle state.</td></tr>
               <tr><td><code>free</code></td><td><code>uint32_t</code></td><td>Ring bytes free; pace top-ups off this.</td></tr>
-              <tr><td><code>used</code></td><td><code>uint32_t</code></td><td>Ring bytes buffered, not yet drained.</td></tr>
+              <tr><td><code>total</code></td><td><code>uint32_t</code></td><td>The retained clip size in bytes; streaming, the buffered-but-undrained bytes.</td></tr>
+              <tr><td><code>played</code></td><td><code>uint32_t</code></td><td>Bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
               <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>

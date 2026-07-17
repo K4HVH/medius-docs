@@ -607,26 +607,65 @@ if let Ok(line) = stream.recv() {
         </Card>
       </div>
 
-      <div id="clip-config" data-search-target>
+      <div id="clip-settings" data-search-target>
         <Card>
-          <CardHeader title="ClipConfig" subtitle="Playback options for a clip start or catch trigger" />
+          <CardHeader title="ClipSettings" subtitle="A clip's persistent config, read back" />
           <p>
-            The options a clip <A href="/library/clip#handle"><code>start</code></A> or{' '}
-            <A href="/library/clip#handle"><code>arm_catch</code></A> plays with. The single place clip
-            settings live, extensible as more are added. Build with the chained setters:
+            A clip's configuration from{' '}
+            <A href="/library/clip#query-config"><code>ClipHandle::query_config()</code></A>: the
+            auto-lock set, the loop and retain flags, whether it's finalized, and the bound{' '}
+            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> list. You set
+            these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
+            <code>set_retain</code>, <code>finalize</code>, <code>bind</code>); this is the readback.
           </p>
-          <pre class="api-signature">fn new() -&gt; ClipConfig</pre>
           <table class="api-params">
-            <thead><tr><th>Setter</th><th>Sets</th></tr></thead>
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>autolock(scope: &amp;[Blanket])</code></td><td>Auto-lock these <A href="/library/types/enums#blanket"><code>Blanket</code></A> groups while playing (clip-owned, released on stop). <code>Blanket::ALL</code> for every class, or a subset like <code>&amp;[Blanket::Aim, Blanket::Buttons]</code>. Default: no auto-lock.</td></tr>
+              <tr><td><code>autolock</code></td><td><code>Vec&lt;<A href="/library/types/enums#blanket">Blanket</A>&gt;</code></td><td>The <A href="/library/types/enums#blanket"><code>Blanket</code></A> groups auto-locked while playing (clip-owned, released on stop); empty = no auto-lock.</td></tr>
+              <tr><td><code>loop_</code></td><td><code>bool</code></td><td>Playback restarts from the top instead of stopping at the end.</td></tr>
+              <tr><td><code>retain</code></td><td><code>bool</code></td><td>The buffered content survives a stop, so a restart replays it instead of needing a fresh append.</td></tr>
+              <tr><td><code>finalized</code></td><td><code>bool</code></td><td>The clip is sealed: no more appends, ready to replay as a fixed sequence.</td></tr>
+              <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a physical edge.</td></tr>
             </tbody>
           </table>
-          <pre><code class="language-rust">{`use medius::{Blanket, Button, ClipConfig};
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let cfg = handle.query_config()?;
+if cfg.loop_ && cfg.finalized {
+    println!("sealed looping clip, {} triggers", cfg.triggers.len());
+}`}</code></pre>
+        </Card>
+      </div>
 
-let cfg = ClipConfig::new().autolock(&[Blanket::Aim, Blanket::Buttons]);
-handle.start(&cfg)?;                       // play, locking aim + clicks (keyboard stays free)
-handle.arm_catch(Button::Side1, &cfg)?;    // or: fire that same config on a Side1 press`}</code></pre>
+      <div id="clip-trigger" data-search-target>
+        <Card>
+          <CardHeader title="ClipTrigger" subtitle="One input binding that drives a clip" />
+          <p>
+            One physical-input binding for a clip: on a given <A href="/library/types/enums#usage"><code>Usage</code></A>{' '}
+            and <A href="/library/types/enums#edge"><code>Edge</code></A>, run a{' '}
+            <A href="/library/types/enums#clip-action"><code>ClipAction</code></A>. You hand these to{' '}
+            <A href="/library/clip#bind"><code>ClipHandle::bind</code></A>; the box keeps up to 8, keyed
+            by usage and edge. <code>consume</code> hides the triggering input from the PC.
+          </p>
+          <p>
+            Build one with <code>ClipTrigger::new(usage, edge, action)</code> (consume defaults false),
+            then chain <code>.consume()</code> to swallow the input:
+          </p>
+          <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>on</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The button, key, or media usage that fires the trigger.</td></tr>
+              <tr><td><code>edge</code></td><td><A href="/library/types/enums#edge"><code>Edge</code></A></td><td>Which edge fires it: <code>Press</code>, <code>Release</code>, or <code>Both</code>.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run (<code>Start</code>, <code>Stop</code>, <code>Toggle</code>, ...).</td></tr>
+              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Swallow the triggering input so the PC never sees it; the <code>.consume()</code> builder sets it true.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
+
+// Toggle the clip on a Side1 press, and hide that press from the PC.
+let trig = ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle).consume();
+handle.bind(trig)?;`}</code></pre>
         </Card>
       </div>
 
@@ -635,16 +674,17 @@ handle.arm_catch(Button::Side1, &cfg)?;    // or: fire that same config on a Sid
           <CardHeader title="ClipStatus" subtitle="The buffered-clip ring and playback state" />
           <p>
             The clip ring depth and playback counters from{' '}
-            <A href="/library/clip#status"><code>ClipHandle::status()</code></A>. Pace top-ups off{' '}
+            <A href="/library/clip#status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
             <code>free</code>; a <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>{' '}
             state means re-sync (stop, then rebuild).
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>The lifecycle state (idle / armed / playing / faulted).</td></tr>
+              <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>The lifecycle state (idle / playing / paused / faulted).</td></tr>
               <tr><td><code>free</code></td><td><code>u32</code></td><td>Free bytes in the ring, the headroom for the next append.</td></tr>
-              <tr><td><code>used</code></td><td><code>u32</code></td><td>Buffered bytes not yet drained.</td></tr>
+              <tr><td><code>total</code></td><td><code>u32</code></td><td>The retained clip size in bytes; while streaming, the buffered-but-undrained bytes.</td></tr>
+              <tr><td><code>played</code></td><td><code>u32</code></td><td>Bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
               <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>

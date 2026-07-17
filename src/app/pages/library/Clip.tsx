@@ -26,10 +26,13 @@ const Clip: Component = () => {
 
   2. drive playback through a ClipHandle
        handle = device.clip();
-       handle.append(&clip)  ──▶  copy the entries into the box's ring
-       handle.start()        ──▶  box plays one entry per native frame
-       handle.status()       ◀──  ring depth + playback state
-       handle.stop()         ──▶  stop and flush`}</pre>
+       handle.append(&clip)     ──▶  copy the entries into the box's ring
+       handle.start()           ──▶  box plays one entry per native frame
+       handle.query_status()    ◀──  ring depth + progress + playback state
+       handle.stop()            ──▶  stop (retained: rewind; streaming: flush)
+
+  or let the box play it on a physical key, no host round-trip:
+       handle.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start))`}</pre>
       </Card>
 
       <div id="clip" data-search-target>
@@ -44,8 +47,10 @@ const Clip: Component = () => {
           <div class="callout callout--info">
             <p>
               Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or{' '}
-              <A href="/library/lifecycle#reconnect">reconnect</A> drops it, so re-preload after one. A clip needs a cloned mouse, since its frame clock is the mouse's
-              report tick; keyboard and media edges ride that tick.
+              <A href="/library/lifecycle#reconnect">reconnect</A> drops the loaded clip, so re-preload after one.
+              The <A href="/library/clip#config">config</A> (auto-lock, loop, retain, and the trigger set) is
+              re-asserted for you on reconnect. A clip needs a cloned mouse, since its frame clock is the
+              mouse's report tick; keyboard and media edges ride that tick.
             </p>
           </div>
         </Card>
@@ -99,46 +104,87 @@ clip.press(Key::A)                         // then type 'a'
 
       <div id="handle" data-search-target>
         <Card>
-          <CardHeader title="ClipHandle" subtitle="Fill the ring and drive playback" />
+          <CardHeader title="ClipHandle" subtitle="Fill the ring, configure, and drive playback" />
           <p>
-            From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method here except{' '}
-            <A href="/library/clip#status"><code>status</code></A> is{' '}
+            From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method here except the two{' '}
+            <A href="/library/clip#status">queries</A> is{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A>: it queues a frame and returns.
+            The <A href="/library/lock">auto-lock</A>, loop, and retain settings and the trigger set are the
+            clip's <A href="/library/clip#config">config</A>; the engine verbs drive playback.
           </p>
-          <div class="api-response-label">METHODS</div>
+          <div class="api-response-label">LOAD &amp; SETTINGS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Does</th></tr>
             </thead>
             <tbody>
               <tr><td><code>append(clip: &amp;ClipBuilder)</code></td><td>Send a <A href="/library/clip#builder"><code>ClipBuilder</code></A>'s entries to the ring; splits a large clip into whole-entry frames with contiguous append seqs.</td></tr>
-              <tr><td><code>start(config: &amp;ClipConfig)</code></td><td>Play from the ring head with a <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A> (its <A href="/library/lock">auto-lock</A> scope); <code>&amp;ClipConfig::new()</code> for no lock.</td></tr>
-              <tr><td><code>stop()</code></td><td>Stop, flush the ring, release the clip's lock.</td></tr>
-              <tr><td><code>arm_catch(trigger: impl Into&lt;Usage&gt;, config: &amp;ClipConfig)</code></td><td>Fire <code>start(config)</code> on a physical press of <code>trigger</code>, any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage), no host round-trip.</td></tr>
-              <tr><td><code>arm_catch_any(config: &amp;ClipConfig)</code></td><td>Fire on any physical input, starting with the given <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A>.</td></tr>
-              <tr><td><code>disarm()</code></td><td>Clear a pending catch-arm.</td></tr>
-              <tr><td><code>status() -&gt; ClipStatus</code></td><td>Read the ring depth and playback state (blocks); see <A href="/library/clip#status">below</A>.</td></tr>
+              <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
+              <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
+              <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
+              <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">TRIGGERS (a managed set)</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>bind(trigger: <A href="/library/types/structs#clip-trigger">ClipTrigger</A>)</code></td><td>Add or overwrite a binding: a physical edge drives an action on the box, no host round-trip.</td></tr>
+              <tr><td><code>unbind(usage, edge: <A href="/library/types/enums#edge">Edge</A>)</code></td><td>Remove the binding on that usage and edge.</td></tr>
+              <tr><td><code>clear_triggers()</code></td><td>Remove every binding.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">ENGINE VERBS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>start()</code></td><td>Rewind to the clip start and play (resume from a pause).</td></tr>
+              <tr><td><code>stop()</code></td><td>Stop, release held input and the clip lock; a streaming clip flushes, a retained clip rewinds and is kept.</td></tr>
+              <tr><td><code>pause()</code> / <code>resume()</code></td><td>Halt mid-clip keeping the cursor and held input / continue from the paused cursor.</td></tr>
+              <tr><td><code>restart()</code></td><td>Force a rewind and play, even mid-playback.</td></tr>
+              <tr><td><code>toggle()</code></td><td>Play if idle/paused, stop if playing.</td></tr>
+              <tr><td><code>clear()</code></td><td>Discard the loaded clip, free the ring, clear a fault.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
               A dropped append (or an overflow) leaves the clip{' '}
-              <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>. Recover by
-              <code>stop</code>-ping and rebuilding, not by appending more; a faulted stream has a hole in it.
+              <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A> and stops it.
+              Recover with <code>clear</code> and rebuild, not by appending more; a faulted stream has a hole
+              in it.
             </p>
           </div>
+        </Card>
+      </div>
+
+      <div id="modes" data-search-target>
+        <Card>
+          <CardHeader title="Streaming and retained" subtitle="Drain-and-discard, or keep-and-replay" />
+          <p>
+            <b>Streaming</b> is the default: the box drains and reclaims as it plays, so the clip is unbounded
+            (top it up in real time) but not replayable, and <code>stop</code> flushes it. <b>Retained</b> mode
+            (<code>set_retain(true)</code> before the first <code>append</code>) keeps the whole loaded clip
+            (up to 64 KiB) and advances a play cursor, so it rewinds and replays; <code>finalize</code> fixes
+            its end, which is what enables a real end-of-clip, <code>loop</code>, and a physical play/stop
+            replay loop. Append after <code>finalize</code> is rejected, so reload with <code>clear</code>.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Preload, play with auto-lock, and top up in real time, pacing against <code>free</code>:</p>
-          <pre><code class="language-rust">{`use medius::{Blanket, ClipConfig, ClipState};
+          <p>Streaming: preload, play with auto-lock, and top up in real time, pacing against <code>free</code>:</p>
+          <pre><code class="language-rust">{`use medius::{Blanket, ClipState};
 use std::time::Duration;
 
 let handle = device.clip();       // device: an open Device
-handle.append(&clip)?;            // preload (clip, next_chunk: ClipBuilders you built)
-handle.start(&ClipConfig::new().autolock(Blanket::ALL))?;   // play, blocking every physical input
+handle.set_autolock(&[Blanket::Aim])?;   // lock only the aim axes while playing
+handle.append(&clip)?;                    // preload (clip, next_chunk: ClipBuilders you built)
+handle.start()?;
 
 loop {
-    let s = handle.status()?;
-    if s.state != ClipState::Playing { break; }        // done, or faulted
+    let s = handle.query_status()?;
+    if s.state == ClipState::Idle { break; }           // done, or stopped
     if s.free as usize > next_chunk.as_bytes().len() {
         handle.append(&next_chunk)?;                   // stream more while there's room
     }
@@ -148,18 +194,52 @@ handle.stop()?;`}</code></pre>
         </Card>
       </div>
 
+      <div id="triggers" data-search-target>
+        <Card>
+          <CardHeader title="Triggers" subtitle="Play, stop, or toggle on a physical key" />
+          <p>
+            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> binds a physical
+            input edge to an engine action, so the box drives playback itself with no host round-trip, even on
+            the first frame. Bindings are a managed set keyed by <code>(usage, edge)</code>, like a{' '}
+            <A href="/library/lock">lock</A>: add with <code>bind</code>, drop with <code>unbind</code>, wipe
+            with <code>clear_triggers</code>. A physical edge runs the one most-specific matching binding, so a
+            key for <code>F1</code> beats an any-key binding, and a specific edge beats <code>Both</code>.
+          </p>
+          <p>
+            The trigger is <A href="/library/types/enums#edge"><code>Edge</code></A> (press, release, or both)
+            and <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> (start, stop, pause,
+            resume, restart, toggle). <code>.consume()</code> also suppresses the trigger input from the game
+            for the length of the physical hold, so a key you use to control the clip needn't leak into play.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge, Key};
+
+let clip = device.clip();
+clip.set_retain(true)?;      // set the mode before loading
+clip.append(&recording)?;
+clip.finalize()?;            // close it so it can replay
+
+// Hold-to-play: F1 down starts, F1 up stops. Consume F1 so the game never sees it.
+clip.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start).consume())?;
+clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop).consume())?;
+
+// Or one side-button that toggles play/stop:
+clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
+        </Card>
+      </div>
+
       <div id="status" data-search-target>
         <Card>
-          <CardHeader title="status" subtitle="Ring depth and playback counters" />
-          <pre class="api-signature">fn status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+          <CardHeader title="query_status" subtitle="Ring depth, progress, and playback counters" />
+          <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Reads a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>. Pace top-ups off{' '}
             <code>free</code> (append only when it exceeds what you'll push), watch <code>state</code> for the{' '}
             <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync signal or for playback
-            reaching <code>Idle</code>, and use the <code>underruns</code>/<code>overruns</code>/{' '}
-            <code>seq_gaps</code> counters to tell whether you're feeding it fast enough. Backs{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+            reaching <code>Idle</code>, use <code>played</code>/<code>total</code> for retained progress, and
+            the <code>underruns</code>/<code>overruns</code>/<code>seq_gaps</code> counters to tell whether
+            you're feeding it fast enough. Backs <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
           </p>
           <div class="api-response-label">FIELDS</div>
           <table class="api-params">
@@ -167,9 +247,10 @@ handle.stop()?;`}</code></pre>
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>idle / armed / playing / faulted.</td></tr>
+              <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>idle / playing / paused / faulted.</td></tr>
               <tr><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free.</td></tr>
-              <tr><td><code>used</code></td><td><code>u32</code></td><td>ring bytes buffered, not yet drained.</td></tr>
+              <tr><td><code>total</code></td><td><code>u32</code></td><td>retained clip size (streaming: buffered-but-undrained bytes).</td></tr>
+              <tr><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
               <tr><td><code>ticks</code></td><td><code>u32</code></td><td>content frames drained since the last start (gap runs excluded).</td></tr>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>times the ring ran dry mid-playback.</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped because the ring was full.</td></tr>
@@ -180,20 +261,50 @@ handle.stop()?;`}</code></pre>
         </Card>
       </div>
 
+      <div id="config" data-search-target>
+        <Card>
+          <CardHeader title="query_config" subtitle="Read back the whole clip config" />
+          <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Reads a <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>: the whole
+            configuration you set with <code>set_autolock</code>/<code>set_loop</code>/<code>set_retain</code>
+            and <code>bind</code>. Nothing here is write-only; every setting round-trips. It shares the one{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame with{' '}
+            <A href="/library/clip#status"><code>query_status</code></A>, so <code>query_status</code> is the
+            runtime view and <code>query_config</code> is the config view of the same reply.
+          </p>
+          <div class="api-response-label">FIELDS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>autolock</code></td><td><code>Vec&lt;<A href="/library/types/enums#blanket">Blanket</A>&gt;</code></td><td>the input groups locked while playing.</td></tr>
+              <tr><td><code>loop_</code></td><td><code>bool</code></td><td>whether playback loops at the clip end.</td></tr>
+              <tr><td><code>retain</code></td><td><code>bool</code></td><td>retained (replayable) vs streaming.</td></tr>
+              <tr><td><code>finalized</code></td><td><code>bool</code></td><td>whether a retained clip's end is fixed.</td></tr>
+              <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>the trigger binding set.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="On AsyncDevice" subtitle="AsyncClipHandle: control fires, status awaits" />
+          <CardHeader title="On AsyncDevice" subtitle="AsyncClipHandle: control fires, queries await" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice::clip()</code></A> returns an{' '}
-            <code>AsyncClipHandle</code> that keeps <code>append</code> and the control methods synchronous
-            (they just queue a frame), while <code>status().await</code> is a future like the other queries.
+            <code>AsyncClipHandle</code> that keeps <code>append</code>, the settings, and the engine verbs
+            synchronous (they just queue a frame), while <code>query_status().await</code> and{' '}
+            <code>query_config().await</code> are futures like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let device = Device::find()?.into_async();
 let handle = device.clip();
-handle.append(&clip)?;              // sync, no await
-handle.start(&ClipConfig::new())?;  // sync
-let s = handle.status().await?;     // the query awaits`}</code></pre>
+handle.append(&clip)?;          // sync, no await
+handle.start()?;                // sync
+let s = handle.query_status().await?;   // the query awaits`}</code></pre>
         </Card>
       </div>
     </>

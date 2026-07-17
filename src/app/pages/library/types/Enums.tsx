@@ -328,7 +328,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <p>
             A whole input group: which one <A href="/library/lock#lock-all"><code>lock_all</code></A> /{' '}
             <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call, and the members of a
-            clip's <A href="/library/types/structs#clip-config"><code>ClipConfig</code></A> auto-lock.
+            clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
@@ -385,19 +385,63 @@ device.press(from_button)?;                         // press takes any impl Into
       <div id="clip-state" data-search-target>
         <Card>
           <CardHeader title="ClipState" subtitle="The buffered-clip lifecycle state" />
-          <pre class="api-signature">enum ClipState {'{'} Idle, Armed, Playing, Faulted {'}'}</pre>
+          <pre class="api-signature">enum ClipState {'{'} Idle, Playing, Paused, Faulted {'}'}</pre>
           <p>
             The device-side clip state on{' '}
             <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
-            <A href="/library/clip#status"><code>ClipHandle::status()</code></A>.
+            <A href="/library/clip#query-status"><code>ClipHandle::query_status()</code></A>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Idle</code></td><td>No clip active.</td></tr>
-              <tr><td><code>Armed</code></td><td>A catch-trigger is armed; playback starts on the physical button edge.</td></tr>
-              <tr><td><code>Playing</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-              <tr><td><code>Faulted</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+              <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing; the ring keeps whatever's been appended.</td></tr>
+              <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Playback held mid-clip; resumes from the same spot.</td></tr>
+              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="edge" data-search-target>
+        <Card>
+          <CardHeader title="Edge" subtitle="Which edge fires a clip trigger" />
+          <pre class="api-signature">enum Edge {'{'} Both, Press, Release {'}'}</pre>
+          <p>
+            Which edge of a bound usage fires a{' '}
+            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A>: its press, its
+            release, or either. It shares wire values with{' '}
+            <A href="/library/types/enums#lock-direction"><code>LockDirection</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>Fire on either edge.</td></tr>
+              <tr><td><code>Press</code></td><td><code>1</code></td><td>Fire on the press edge.</td></tr>
+              <tr><td><code>Release</code></td><td><code>2</code></td><td>Fire on the release edge.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="clip-action" data-search-target>
+        <Card>
+          <CardHeader title="ClipAction" subtitle="What a fired clip trigger does" />
+          <pre class="api-signature">enum ClipAction {'{'} Start, Stop, Pause, Resume, Restart, Toggle {'}'}</pre>
+          <p>
+            What a bound{' '}
+            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> does to the clip
+            when its edge fires. The discriminant doubles as the{' '}
+            <A href="/native/commands/clip#clip-ctrl"><code>CLIP_CTRL</code></A> op byte for the same
+            action.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Start</code></td><td><code>0</code></td><td>Start playback from the ring's head.</td></tr>
+              <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
+              <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
+              <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
+              <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
+              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Start if idle, stop if playing.</td></tr>
             </tbody>
           </table>
         </Card>
