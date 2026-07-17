@@ -80,7 +80,7 @@ const Requests: Component = () => {
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
-            <A href="/library/clip#status"><code>status</code></A> query.
+            <A href="/library/requests#clip-status"><code>status</code></A> query.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -651,8 +651,8 @@ const Requests: Component = () => {
             config tail (autolock, flags, and the bound triggers). Read <code>free</code> before a{' '}
             <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun, and{' '}
             <code>state</code> to see a fault or that playback finished. Backs{' '}
-            <A href="/library/clip#status"><code>ClipHandle::query_status</code></A> and{' '}
-            <A href="/library/clip#status"><code>query_config</code></A>.
+            <A href="/library/requests#clip-status"><code>ClipHandle::query_status</code></A> and{' '}
+            <A href="/library/requests#clip-config"><code>query_config</code></A>.
           </p>
           <pre class="api-signature">QUERY  what = 10  ·  RESP 25-byte prefix + held usages + config</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -702,10 +702,10 @@ const Requests: Component = () => {
             mirrors what <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> and{' '}
             <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> set, so a UI can read
             back the whole clip in one query. Library bindings:{' '}
-            <A href="/library/clip#status"><code>query_status</code></A>{' '}
-            (<A href="/library/clip#status"><code>ClipStatus</code></A>) and{' '}
-            <A href="/library/clip#status"><code>query_config</code></A>{' '}
-            (<A href="/library/clip#status"><code>ClipSettings</code></A>).
+            <A href="/library/requests#clip-status"><code>query_status</code></A>{' '}
+            (<A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>) and{' '}
+            <A href="/library/requests#clip-config"><code>query_config</code></A>{' '}
+            (<A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Idle, empty ring, no held usages, no autolock, no triggers (<code>state = 0</code>, <code>free = 1024</code>):</p>

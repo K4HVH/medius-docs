@@ -48,7 +48,7 @@ const Clip: Component = () => {
             <p>
               Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or{' '}
               <A href="/library/lifecycle#reconnect">reconnect</A> drops the loaded clip, so re-preload after one.
-              The <A href="/library/clip#config">config</A> (auto-lock, loop, retain, and the trigger set) is
+              The config (auto-lock, loop, retain, and the trigger set) is
               re-asserted for you on reconnect. A clip needs a cloned mouse, since its frame clock is the
               mouse's report tick; keyboard and media edges ride that tick.
             </p>
@@ -107,10 +107,10 @@ clip.press(Key::A)                         // then type 'a'
           <CardHeader title="ClipHandle" subtitle="Fill the ring, configure, and drive playback" />
           <p>
             From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method here except the two{' '}
-            <A href="/library/clip#status">queries</A> is{' '}
+            <A href="/library/requests#clip-status">queries</A> is{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A>: it queues a frame and returns.
             The <A href="/library/lock">auto-lock</A>, loop, and retain settings and the trigger set are the
-            clip's <A href="/library/clip#config">config</A>; the engine verbs drive playback.
+            clip's config; the engine verbs drive playback.
           </p>
           <div class="api-response-label">LOAD &amp; SETTINGS</div>
           <table class="api-params">
@@ -221,40 +221,6 @@ clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop).consume())?
 
 // Or one side-button that toggles play/stop:
 clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="status" data-search-target>
-        <Card>
-          <CardHeader title="query_status" subtitle="Ring depth, progress, and playback counters" />
-          <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            Reads a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>: <code>state</code>,
-            ring <code>free</code>, retained <code>played</code>/<code>total</code>, the drain counters, and
-            the <code>held</code> usages (test one with <code>is_held</code>). Pace top-ups off{' '}
-            <code>free</code>, and watch <code>state</code> for the{' '}
-            <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync signal or for playback
-            reaching <code>Idle</code>. Backs <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
-          </p>
-        </Card>
-      </div>
-
-      <div id="config" data-search-target>
-        <Card>
-          <CardHeader title="query_config" subtitle="Read the config back" />
-          <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            The config view of the same <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>{' '}
-            frame <A href="/library/clip#status"><code>query_status</code></A> reads: a{' '}
-            <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
-            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set. Nothing
-            is write-only; every setting round-trips.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let cfg = handle.query_config()?;
-println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 

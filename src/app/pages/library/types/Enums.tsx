@@ -389,7 +389,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <p>
             The device-side clip state on{' '}
             <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
-            <A href="/library/clip#status"><code>ClipHandle::query_status()</code></A>.
+            <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
