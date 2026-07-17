@@ -121,13 +121,13 @@ const DeviceInfo = () => {
                 </Row>
               </Show>
               <Show when={device()?.vid}>
-                <Row label="USB id">
+                <Row label="USB ID">
                   <code>{vidPid(device()!)}</code>
                   <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
                 </Row>
               </Show>
               <Show when={dash.version?.()?.mac?.length}>
-                <Row label="Box id">
+                <Row label="Box ID">
                   <code>{macHex(dash.version()!)}</code>
                 </Row>
               </Show>

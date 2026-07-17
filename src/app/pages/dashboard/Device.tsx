@@ -1,5 +1,5 @@
 import { For, Match, Show, Switch, createEffect } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -65,7 +65,7 @@ const Device = () => {
       <div style={{ display: 'flex', gap: 'var(--g-spacing)', 'flex-wrap': 'wrap', 'align-items': 'flex-start' }}>
         <div style={col}>
           <Card>
-            <CardHeader title="Your device" subtitle="Connect over USB to view and manage your box" />
+            <CardHeader title="Your box" subtitle="Connect over USB to view and manage your box" />
             <div aria-live="polite">
               <Switch>
                 <Match when={dash.status() === 'connected'}>
@@ -85,7 +85,7 @@ const Device = () => {
                 </Match>
 
                 <Match when={dash.status() === 'flashing'}>
-                  <p>Updating. See the Update tab.</p>
+                  <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
                 </Match>
 
                 <Match when={dash.status() === 'error'}>

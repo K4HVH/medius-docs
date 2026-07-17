@@ -120,8 +120,8 @@ const DeviceOptions = () => {
 
         <div style={sectionLabel}>Box name</div>
         <p>
-          A human-readable name for the box, the readable partner to its id. Leave it unset and the box
-          makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters and numbers.
+          A human-readable name for the box, a friendlier alternative to its id. Leave it unset and the box
+          makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters, numbers, and symbols.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>

@@ -123,7 +123,7 @@ const Update = () => {
       const port = await requestRomPort();
       const ok = await dash.flashNative(port, await downloadAsset(a), 'app');
       if (ok) setStep('done');
-      else setErr(dash.error() ?? 'That did not finish. Hold BOOT and try again.');
+      else setErr(dash.error() ?? "That didn't finish. Hold the BOOT button and try again.");
     } catch (e) {
       if (!isUserCancel(e)) setErr((e as Error).message);
     } finally {
@@ -220,7 +220,7 @@ const Update = () => {
                   </p>
                   <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                     <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
-                      Update both parts
+                      Update both chips
                     </Button>
                     <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
                       Main only
