@@ -235,32 +235,17 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusUsage</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">HANDLE &mdash; CONFIG</div>
-          <p>Set these before the first <code>medius_clip_append</code>. See <A href="/library/clip">Clip</A>.</p>
+          <div class="api-response-label">HANDLE</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>medius_device_clip(dev, out) / medius_clip_free(clip)</code></td><td>Open / free a clip handle.</td></tr>
               <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring.</td></tr>
-              <tr><td><code>medius_clip_set_autolock(clip, const MediusBlanket *scope, uintptr_t scope_len)</code></td><td>The auto-lock scope: the <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> groups <code>scope</code> points at (<code>NULL</code> / 0 = no lock).</td></tr>
+              <tr><td><code>medius_clip_set_autolock(clip, const MediusBlanket *scope, uintptr_t scope_len)</code></td><td>The auto-lock scope: the <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> groups <code>scope</code> points at (<code>NULL</code> / 0 = no lock). Set before the first append.</td></tr>
               <tr><td><code>medius_clip_set_loop(clip, uint8_t on) / _set_retain(clip, uint8_t on)</code></td><td>Loop at the clip end (retained only) / retain the loaded clip so it can rewind and replay (0 = streaming, the default).</td></tr>
               <tr><td><code>medius_clip_finalize(clip)</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">HANDLE &mdash; TRIGGERS</div>
-          <p>A managed set of up to <code>MEDIUS_CLIP_TRIG_MAX</code> bindings, keyed by usage + edge.</p>
-          <table class="api-params">
-            <thead><tr><th>Function</th><th>Effect</th></tr></thead>
-            <tbody>
               <tr><td><code>medius_clip_bind(clip, MediusClipTrigger trigger)</code></td><td>Add or overwrite a <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A>: a <A href="/bindings/c/types#edge"><code>MediusEdge</code></A> of <code>on</code> drives a <A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A>; <code>consume</code> hides the input from the game.</td></tr>
-              <tr><td><code>medius_clip_unbind(clip, MediusUsage usage, MediusEdge edge)</code></td><td>Remove the binding on that usage + edge.</td></tr>
-              <tr><td><code>medius_clip_clear_triggers(clip)</code></td><td>Remove every trigger binding.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">HANDLE &mdash; TRANSPORT &amp; QUERY</div>
-          <table class="api-params">
-            <thead><tr><th>Function</th><th>Effect</th></tr></thead>
-            <tbody>
+              <tr><td><code>medius_clip_unbind(clip, MediusUsage usage, MediusEdge edge) / _clear_triggers(clip)</code></td><td>Remove the binding on that usage + edge; drop every binding.</td></tr>
               <tr><td><code>medius_clip_start(clip) / _stop(clip)</code></td><td>Rewind and play (or resume a pause) / stop, flush a streaming clip (rewind a retained one), and release held input and the auto-lock.</td></tr>
               <tr><td><code>medius_clip_pause(clip) / _resume(clip)</code></td><td>Halt mid-clip, retaining the cursor and held input / continue from the paused cursor.</td></tr>
               <tr><td><code>medius_clip_restart(clip) / _toggle(clip)</code></td><td>Force a rewind and play, even mid-playback / play if idle or paused, stop if playing.</td></tr>

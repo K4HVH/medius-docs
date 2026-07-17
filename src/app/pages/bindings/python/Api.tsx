@@ -214,14 +214,14 @@ const Api: Component = () => {
               <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
-              <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clip-trigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clip-action"><code>ClipAction</code></A> (up to 8).</td></tr>
+              <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>
               <tr><td><code>clip.start() / clip.stop()</code></td><td>Begin playback; stop and flush the ring, releasing the auto-lock.</td></tr>
               <tr><td><code>clip.pause() / clip.resume()</code></td><td>Halt playback in place; carry on from where it paused.</td></tr>
               <tr><td><code>clip.restart() / clip.toggle()</code></td><td>Replay from the first frame; start if idle else stop.</td></tr>
               <tr><td><code>clip.clear()</code></td><td>Drop the ring's entries.</td></tr>
               <tr><td><code>clip.query_status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth, playback state, held usages, counters.</td></tr>
-              <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clip-settings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, bound triggers.</td></tr>
+              <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, bound triggers.</td></tr>
             </tbody>
           </table>
         </Card>
