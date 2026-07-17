@@ -77,7 +77,9 @@ const Requests: Component = () => {
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
             <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
-            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
+            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
+            <A href="/library/clip#status"><code>status</code></A> query.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>

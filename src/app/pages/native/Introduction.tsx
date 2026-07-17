@@ -171,6 +171,11 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
+            <A href="/native/commands/clip" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Clip" subtitle="Buffered clip playback" />
+              </Card>
+            </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Requests" subtitle="QUERY and its RESP, all ten selectors" />

@@ -81,6 +81,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/lock">Lock physical input</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>✓</td><td>✓</td></tr>
+              <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/options">Options &amp; LED</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/requests">Queries (version, health, caps…)</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
