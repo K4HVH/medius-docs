@@ -661,12 +661,12 @@ const Requests: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0A</td></tr>
-              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (an append was dropped, re-sync)</td></tr>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>10</td></tr>
+              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (recover with <code>CLEAR</code>)</td></tr>
               <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this, little-endian</td></tr>
-              <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>ring capacity in bytes</td></tr>
-              <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>content ticks drained since start</td></tr>
-              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks appended since start (diagnostic)</td></tr>
+              <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>retained clip size in bytes (streaming: buffered-but-undrained bytes)</td></tr>
+              <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
+              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks emitted since start (diagnostic)</td></tr>
               <tr><td>18</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
               <tr><td>20</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
               <tr><td>22</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>

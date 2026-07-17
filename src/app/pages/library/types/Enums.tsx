@@ -389,15 +389,15 @@ device.press(from_button)?;                         // press takes any impl Into
           <p>
             The device-side clip state on{' '}
             <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
-            <A href="/library/clip#query-status"><code>ClipHandle::query_status()</code></A>.
+            <A href="/library/clip#status"><code>ClipHandle::query_status()</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing; the ring keeps whatever's been appended.</td></tr>
+              <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
               <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Playback held mid-clip; resumes from the same spot.</td></tr>
-              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input; resumes from the same spot.</td></tr>
+              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <code>clear</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -430,7 +430,7 @@ device.press(from_button)?;                         // press takes any impl Into
             What a bound{' '}
             <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> does to the clip
             when its edge fires. The discriminant doubles as the{' '}
-            <A href="/native/commands/clip#clip-ctrl"><code>CLIP_CTRL</code></A> op byte for the same
+            <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op byte for the same
             action.
           </p>
           <table class="api-params">
