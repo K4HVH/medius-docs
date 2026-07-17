@@ -106,11 +106,13 @@ clip.press(Key::A)                         // then type 'a'
         <Card>
           <CardHeader title="ClipHandle" subtitle="Fill the ring, configure, and drive playback" />
           <p>
-            From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method here except the two{' '}
-            <A href="/library/requests#clip-status">queries</A> is{' '}
+            From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method below is{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A>: it queues a frame and returns.
             The <A href="/library/lock">auto-lock</A>, loop, and retain settings and the trigger set are the
-            clip's config; the engine verbs drive playback.
+            clip's config; the engine verbs drive playback.{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A> reads the ring depth and
+            playback state, and <A href="/library/requests#clip-config"><code>query_config</code></A> reads
+            the config back.
           </p>
           <div class="api-response-label">LOAD &amp; SETTINGS</div>
           <table class="api-params">
