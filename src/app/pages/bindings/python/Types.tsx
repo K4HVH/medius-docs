@@ -313,9 +313,9 @@ const Types: Component = () => {
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>state</code></td><td><A href="#clipstate"><code>ClipState</code></A></td><td>the lifecycle state</td></tr>
-                <tr><td><code>free</code> / <code>total</code></td><td><code>int</code></td><td>ring bytes free / capacity (pace top-ups off <code>free</code>)</td></tr>
-                <tr><td><code>played</code></td><td><code>int</code></td><td>entry frames played since the last start</td></tr>
-                <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames drained since the last start (gap runs excluded)</td></tr>
+                <tr><td><code>free</code> / <code>total</code></td><td><code>int</code></td><td>ring bytes free (pace top-ups off this) / retained clip size in bytes (streaming: buffered-but-undrained)</td></tr>
+                <tr><td><code>played</code></td><td><code>int</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
+                <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames emitted since the last start (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
                 <tr><td><code>held</code></td><td><code>List[Usage]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
                 <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test one <A href="#input"><code>Usage</code></A> in <code>held</code></td></tr>

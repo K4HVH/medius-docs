@@ -612,7 +612,7 @@ if let Ok(line) = stream.recv() {
           <CardHeader title="ClipSettings" subtitle="A clip's persistent config, read back" />
           <p>
             A clip's configuration from{' '}
-            <A href="/library/clip#query-config"><code>ClipHandle::query_config()</code></A>: the
+            <A href="/library/clip#config"><code>ClipHandle::query_config()</code></A>: the
             auto-lock set, the loop and retain flags, whether it's finalized, and the bound{' '}
             <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> list. You set
             these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
@@ -643,7 +643,7 @@ if cfg.loop_ && cfg.finalized {
             One physical-input binding for a clip: on a given <A href="/library/types/enums#usage"><code>Usage</code></A>{' '}
             and <A href="/library/types/enums#edge"><code>Edge</code></A>, run a{' '}
             <A href="/library/types/enums#clip-action"><code>ClipAction</code></A>. You hand these to{' '}
-            <A href="/library/clip#bind"><code>ClipHandle::bind</code></A>; the box keeps up to 8, keyed
+            <A href="/library/clip#triggers"><code>ClipHandle::bind</code></A>; the box keeps up to 8, keyed
             by usage and edge. <code>consume</code> hides the triggering input from the PC.
           </p>
           <p>
