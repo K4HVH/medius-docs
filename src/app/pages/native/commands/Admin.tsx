@@ -9,7 +9,7 @@ const Admin: Component = () => {
       <Card>
         <CardHeader title="Admin" subtitle="Reset, reboot, and logs" />
         <p>
-          Three frames that manage the box rather than inject input:{' '}
+          Three <A href="/native/frame">frames</A> that manage the box rather than inject input:{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A>,{' '}
           <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>, and{' '}
           <A href="/native/commands/admin#log"><code>LOG</code></A>.

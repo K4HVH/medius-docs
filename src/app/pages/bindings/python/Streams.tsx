@@ -19,9 +19,9 @@ const Streams: Component = () => {
             │   (also forwarded to the game PC)
             ▼
    ┌─────────────────┐                         ┌─────────────┐
-   │   medius box    │  catch_events(mask)   ─▶│ EventStream │ ─▶ recv() → CatchEvent
+   │   medius box    │  catch_events(mask)   ─▶│ EventStream │ ─▶ recv() ─▶ CatchEvent
    │                 │                         ├─────────────┤
-   │                 │  logs()               ─▶│  LogStream  │ ─▶ recv() → LogLine
+   │                 │  logs()               ─▶│  LogStream  │ ─▶ recv() ─▶ LogLine
    └─────────────────┘                         └─────────────┘`}</pre>
         <div class="callout callout--info">
           <p>
@@ -72,7 +72,8 @@ const Streams: Component = () => {
         <Card>
           <CardHeader title="Receive" subtitle="Block, poll, time out, or iterate" />
           <p>
-            The same four read methods are on both streams. The table shows <code>EventStream</code>{' '}
+            Four read methods (<code>recv</code>, <code>try_recv</code>, <code>recv_timeout</code>, <code>iterate</code>) are on both
+            streams, plus <code>clone()</code> and <code>close()</code> for lifecycle. The table shows <code>EventStream</code>{' '}
             (yielding <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>); <code>LogStream</code> is identical with{' '}
             <A href="/bindings/python/types#logline"><code>LogLine</code></A> in place of <code>CatchEvent</code>.
           </p>
@@ -109,7 +110,7 @@ const Streams: Component = () => {
             <tbody>
               <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
               <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape)</td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
-              <tr><td><code>LogLine</code></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
+              <tr><td><A href="/bindings/python/types#logline"><code>LogLine</code></A></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
           </table>
           <p>

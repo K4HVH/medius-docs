@@ -21,11 +21,9 @@ const Flashing: Component = () => {
         <Card>
           <CardHeader title="Two chips" subtitle="Flash each separately" />
           <p>
-            Each chip flashes in two steps: a{' '}
-            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> into ROM download mode, then
-            a flashing tool writes the image. Pick the chip with the{' '}
-            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> <code>target</code> byte (a
-            download target: <code>0</code> for the device chip, <code>1</code> for the host chip).
+            Pick the chip with the{' '}
+            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> <code>target</code> byte,
+            then flash it over the link in the table.
           </p>
           <table class="api-params">
             <thead>
@@ -51,7 +49,7 @@ const Flashing: Component = () => {
         <Card>
           <CardHeader title="Version scheme" subtitle="major.minor.patch" />
           <p>
-            The firmware version is <code>major.minor.patch</code>. Read the running version with{' '}
+            Read the running version with{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
           </p>
         </Card>

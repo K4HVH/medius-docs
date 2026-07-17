@@ -85,7 +85,7 @@ const Diagnostics: Component = () => {
               </tr>
               <tr>
                 <td><code>try_iter()</code></td>
-                <td>iterator</td>
+                <td><code>impl Iterator</code></td>
                 <td>No</td>
                 <td>Drains every line queued right now, then stops.</td>
               </tr>
@@ -94,6 +94,12 @@ const Diagnostics: Component = () => {
                 <td><code>Result&lt;LogLine&gt;</code></td>
                 <td>Awaits</td>
                 <td>Await the next line (<code>async</code> feature), runtime-agnostic.</td>
+              </tr>
+              <tr>
+                <td><code>for line in stream</code></td>
+                <td><code>LogLine</code></td>
+                <td>Yes</td>
+                <td>Blocking <code>IntoIterator</code>; yields each line until the link closes.</td>
               </tr>
             </tbody>
           </table>

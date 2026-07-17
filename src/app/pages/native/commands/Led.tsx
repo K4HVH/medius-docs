@@ -43,7 +43,7 @@ const Led: Component = () => {
             </thead>
             <tbody>
               <tr><td>device</td><td><code>0</code></td><td>The device chip's own LED.</td></tr>
-              <tr><td>host</td><td><code>1</code></td><td>The host chip's LED; the device relays it over the <A href="/native/transport">inter-chip link</A>.</td></tr>
+              <tr><td>host</td><td><code>1</code></td><td>The host chip's LED; the device relays it over the <A href="/native/architecture#data-flow">inter-chip link</A>.</td></tr>
               <tr><td>both</td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
             </tbody>
           </table>
@@ -69,7 +69,8 @@ const Led: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             An override holds until you send <code>auto</code> again, and the box also reverts it to
-            status on control-PC silence (the same ~1 s timeout that clears injection), on{' '}
+            status on control-PC silence (the same ~1 s timeout that clears{' '}
+            <A href="/native/injection#safety">injection</A>), on{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A>, or on inter-chip link loss.
             The LED is PC-owned state, released like injection. There's no game-PC-visible surface: a
             host or both override travels the inter-chip link only. Library binding:{' '}

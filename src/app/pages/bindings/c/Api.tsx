@@ -20,7 +20,7 @@ const Api: Component = () => {
         <p>
           Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
           return as soon as the <A href="/native/frame">frame</A> is queued and never wait on the box.
-          The query reads and <code>open</code> / <code>find</code> block for the{' '}
+          The queries, plus <code>open</code> / <code>find</code>, block for the{' '}
           <A href="/native/hardware">box</A>'s <A href="/native/commands/requests">reply</A>. Every
           fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>{' '}
           (<code>MEDIUS_STATUS_OK</code> is 0) and writes its result through an out-param;{' '}
@@ -109,7 +109,7 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_inject(MediusDevice *dev, MediusUsage input, MediusAction action)</code></td><td>Apply an <A href="/bindings/c/types#action"><code>MediusAction</code></A> to a usage. The one injection verb.</td></tr>
+              <tr><td><code>medius_device_inject(MediusDevice *dev, MediusUsage input, MediusAction action)</code></td><td>Apply a <A href="/bindings/c/types#action"><code>MediusAction</code></A> to a usage.</td></tr>
               <tr><td><code>medius_device_press(MediusDevice *dev, MediusUsage input)</code></td><td>Hold the usage down (<code>MEDIUS_ACTION_PRESS</code>).</td></tr>
               <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusUsage input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
               <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusUsage input)</code></td><td>Release even against a physical hold.</td></tr>
@@ -117,8 +117,7 @@ medius_device_free(dev);`}</code></pre>
           </table>
           <div class="callout callout--info">
             <p>
-              Build the target with <code>medius_usage_button</code> / <code>_key</code> / <code>_media</code>{' '}
-              (see <A href="#builders">Usage builders</A>); a <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
+              A <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
               or <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a raw HID usage.
             </p>
           </div>
@@ -226,7 +225,7 @@ medius_device_free(dev);`}</code></pre>
           </p>
           <div class="api-response-label">BUILDER</div>
           <table class="api-params">
-            <thead><tr><th>Function</th><th>Appends</th></tr></thead>
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius_clip_builder_new() / _free(b) / _clear(b)</code></td><td>Allocate / free / reset a builder.</td></tr>
               <tr><td><code>medius_clip_builder_gap(b, uint16_t frames)</code></td><td>A gap run (0 = no-op).</td></tr>
@@ -259,7 +258,7 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_usage_button(MediusButton button)</code></td><td><code>MediusUsage</code> for <code>medius_device_inject</code>.</td></tr>
+              <tr><td><code>medius_usage_button(MediusButton button)</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A> for <code>medius_device_inject</code>.</td></tr>
               <tr><td><code>medius_usage_key(MediusKey key)</code></td><td><code>MediusUsage</code> addressing a keyboard key.</td></tr>
               <tr><td><code>medius_usage_media(MediusMediaKey media)</code></td><td><code>MediusUsage</code> addressing a media key.</td></tr>
               <tr><td><code>medius_motion_cursor(int16_t dx, int16_t dy)</code></td><td><A href="/bindings/c/types#motion"><code>MediusMotion</code></A> for <code>medius_device_move_axis</code>.</td></tr>

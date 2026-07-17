@@ -92,8 +92,8 @@ let device = Device::find()?.into_async();`}</code></pre>
               <code>AsyncDevice</code> and stays synchronous, including{' '}
               <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
               <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
-              <A href="/library/lifecycle#from-async"><code>reapply</code></A>, and{' '}
-              <A href="/library/lifecycle#from-async"><code>reconnect</code></A>. Only the queries
+              <A href="/library/lifecycle#reapply"><code>reapply</code></A>, and{' '}
+              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>. Only the queries
               are futures.
             </p>
           </div>

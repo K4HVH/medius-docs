@@ -39,17 +39,13 @@ const Connection: Component = () => {
               Read <code>proto_ver</code> from that reply and check it equals <code>3</code>.
             </li>
           </ol>
-          <p>
-            <code>proto_ver</code> is the protocol version the firmware speaks, one byte. These pages
-            describe version <code>3</code>.
-          </p>
           <table class="api-params">
             <thead>
               <tr><th>Reply</th><th>Meaning</th></tr>
             </thead>
             <tbody>
               <tr><td><code>proto_ver == 3</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 3</code></td><td>Speaks a protocol they don't cover; don't assume the commands behave as described.</td></tr>
+              <tr><td><code>proto_ver != 3</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
@@ -96,9 +92,7 @@ const Connection: Component = () => {
           </table>
           <p>
             The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> since no request
-            prompted it. The payload is identical to a queried reply, so a program that ignores the
-            hello loses nothing and just sends{' '}
-            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> instead.
+            prompted it, and its payload is identical to a queried reply.
           </p>
           <div class="callout callout--info">
             <p>

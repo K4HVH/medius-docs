@@ -15,15 +15,21 @@ const Clip: Component = () => {
           <A href="/library/clip#clip"><code>Device::clip()</code></A>, and the box drains one entry per native
           frame into the same injection state your live <A href="/library/move"><code>move</code></A> and{' '}
           <A href="/library/inject"><code>inject</code></A> calls feed. Playback is box-clocked, so it carries
-          no host scheduling jitter. It is field-generic (mouse, keyboard, and media in one clip) and backs
+          no host scheduling jitter. It's field-generic (mouse, keyboard, and media in one clip) and backs
           the <A href="/native/commands/clip"><code>CLIP</code></A> commands.
         </p>
-        <pre class="diagram">{`  ClipBuilder                  ClipHandle = device.clip()              box
-  -----------                  --------------------------              ---
-  clip.move_by(10, 0)          handle.append(&clip)          ------->  ring fills
-  clip.press(Button::Left)     handle.start()                ------->  plays 1 / frame
-  clip.gap(20)                 handle.status()               <-------  free / used / state
-  clip.release(...)            handle.stop()`}</pre>
+        <pre class="diagram">{`  1. build a clip with ClipBuilder
+       clip.move_by(10, 0)
+       clip.press(Button::Left)
+       clip.gap(20)
+       clip.release(...)
+
+  2. drive playback through a ClipHandle
+       handle = device.clip();
+       handle.append(&clip)  ──▶  copy the entries into the box's ring
+       handle.start()        ──▶  box plays one entry per native frame
+       handle.status()       ◀──  ring depth + playback state
+       handle.stop()         ──▶  stop and flush`}</pre>
       </Card>
 
       <div id="clip" data-search-target>
@@ -37,8 +43,8 @@ const Clip: Component = () => {
           </p>
           <div class="callout callout--info">
             <p>
-              Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or reconnect drops
-              it, so re-preload after one. A clip needs a cloned mouse, since its frame clock is the mouse's
+              Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or{' '}
+              <A href="/library/lifecycle#reconnect">reconnect</A> drops it, so re-preload after one. A clip needs a cloned mouse, since its frame clock is the mouse's
               report tick; keyboard and media edges ride that tick.
             </p>
           </div>
@@ -162,7 +168,7 @@ handle.stop()?;`}</code></pre>
             </thead>
             <tbody>
               <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>idle / armed / playing / faulted.</td></tr>
-              <tr><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this.</td></tr>
+              <tr><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free.</td></tr>
               <tr><td><code>used</code></td><td><code>u32</code></td><td>ring bytes buffered, not yet drained.</td></tr>
               <tr><td><code>ticks</code></td><td><code>u32</code></td><td>content frames drained since the last start (gap runs excluded).</td></tr>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>times the ring ran dry mid-playback.</td></tr>

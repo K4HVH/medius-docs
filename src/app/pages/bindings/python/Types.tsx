@@ -108,7 +108,7 @@ const Types: Component = () => {
                 <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td></tr>
               </tbody>
             </table>
-            <p>These are ABI-local ordinals, not the <A href="#catchmask"><code>CatchMask</code></A> wire bits.</p>
+            <p>These are ABI-local ordinals (matching the crate's Blanket order), not the clip auto-lock scope bits.</p>
           </div>
         </Card>
       </div>
@@ -243,7 +243,7 @@ const Types: Component = () => {
           <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
           <div id="clip-config">
             <div class="api-response-label">ClipConfig</div>
-            <p>Playback options for <code>clip.start</code> / <code>clip.arm_catch</code>; extensible as more are added. <code>ClipConfig(autolock=[Blanket, ...])</code> auto-locks those <A href="/bindings/python/types#blanket"><code>Blanket</code></A> groups while playing (<code>None</code> / <code>[]</code> = none, <code>list(Blanket)</code> for every class).</p>
+            <p>Playback options for <code>clip.start</code> / <code>clip.arm_catch</code>; extensible as more are added. <code>ClipConfig(autolock=[Blanket, ...])</code> auto-locks those <A href="#blanket"><code>Blanket</code></A> groups while playing (<code>None</code> / <code>[]</code> = none, <code>list(Blanket)</code> for every class).</p>
           </div>
           <div id="clipstate">
             <div class="api-response-label">ClipState</div>
@@ -626,7 +626,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>mode</code></td><td><A href="#emitpace"><code>EmitPace</code></A></td><td>the selected mode</td></tr>
-                <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learnt/adaptive or no device yet</td></tr>
+                <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
@@ -717,7 +717,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>usages</code></td><td><code>List[Usage]</code></td><td>every held <A href="#input"><code>Usage</code></A> (button, key, or media; modifiers are key usages <code>0xE0</code> to <code>0xE7</code>)</td></tr>
-                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test an <A href="#input"><code>Usage</code></A> in the snapshot</td></tr>
+                <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test a <A href="#input"><code>Usage</code></A> in the snapshot</td></tr>
               </tbody>
             </table>
           </div>

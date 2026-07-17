@@ -63,8 +63,8 @@ const Lock: Component = () => {
           <div class="api-response-label">DIRECTION</div>
           <p>
             What <code>direction</code> means depends on the input. For an axis it's a sign, so you can
-            block scrolling up but not down. For a button or key it's an edge, so you can block the press
-            but not the release.
+            block scrolling up but not down. For a button, key, or media usage it's an edge, so you can
+            block the press but not the release.
           </p>
           <table class="api-params">
             <thead>
@@ -112,7 +112,7 @@ link loss   the inter-chip link drops`}</pre>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 0A     | 00     | 05 00  | 03     | 02 00  | 02     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | direc  | state  | CRC16  |
+| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>

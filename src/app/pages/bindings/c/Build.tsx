@@ -25,12 +25,11 @@ const Build: Component = () => {
             on <code>medius-capi</code>{' '}
             <em>and</em> a matching{' '}
             <a href="https://en.cppreference.com/w/c/preprocessor/conditional" target="_blank" rel="noreferrer"><code>#ifdef</code></a>{' '}
-            in the header. Build the library with the
-            feature, then define the macro when you compile your code so the declarations appear.
+            in the header.
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Cargo feature</th><th>Header macro</th><th>Unlocks</th><th>What it does</th></tr>
+              <tr><th>Cargo feature</th><th>Header macro</th><th>Declares</th><th>What it does</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -73,11 +72,11 @@ cc app.c -DMEDIUS_FEATURE_MOCK -DMEDIUS_FEATURE_FLASH \\
             yourself with the{' '}
             <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>{' '}
             (<code>cargo build -p medius-capi --release</code> writes them under{' '}
-            <code>target/release/</code>). Then three flags wire them in.
+            <code>target/release/</code>). Then these flags wire them in.
           </p>
-          <pre class="diagram">{`  compile  ──▶  your code + medius.h
-  link     ──▶  + libmedius_capi
-  run      ──▶  load libmedius_capi`}</pre>
+          <pre class="diagram">{`  compile  ──▶  needs your code + medius.h
+  link     ──▶  adds libmedius_capi
+  run      ──▶  loads libmedius_capi`}</pre>
           <table class="api-params">
             <thead>
               <tr><th>Flag</th><th>Points at</th><th>Example</th></tr>
@@ -149,7 +148,7 @@ LD_LIBRARY_PATH=target/release ./hello
               <a href="https://conan.io" target="_blank" rel="noreferrer">Conan</a> port: those build
               C and C++ from source with no Rust toolchain, so a Rust-backed library doesn't fit. Use
               the prebuilt tarball, or build <code>medius-capi</code> from source. Python uses the{' '}
-              <A href="/bindings/python">prebuilt wheel</A>.
+              <A href="/bindings/python/build#packaging">prebuilt wheel</A>.
             </p>
           </div>
         </Card>

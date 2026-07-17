@@ -91,7 +91,7 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
    ├─ 1. $MEDIUS_LIB set?                   ──▶  CDLL(that exact path)   (dev / test builds)
    ├─ 2. bundled beside the package?        ──▶  CDLL(medius/<libname>)  (what the wheel ships)
    ├─ 3. on the system loader path?         ──▶  CDLL(<libname>)         (LD_LIBRARY_PATH / PATH)
-   ├─ 4. ctypes.util.find_library(...)?     ──▶  CDLL(found)             
+   ├─ 4. ctypes.util.find_library(...)?     ──▶  CDLL(found)             (ldconfig / system paths)
    └─ none                                  ──▶  OSError                 (cannot locate the library)`}</pre>
           <div class="api-response-label">POINT AT ANY BUILD WITH MEDIUS_LIB</div>
           <pre><code class="language-python">{`MEDIUS_LIB=/path/to/target/release/libmedius_capi.so python myscript.py`}</code></pre>

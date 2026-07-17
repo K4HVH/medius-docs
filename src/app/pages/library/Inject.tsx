@@ -28,21 +28,12 @@ const Inject: Component = () => {
           <p>
             <code>usage</code> is any <A href="/library/types/enums#usage"><code>Usage</code></A>: a{' '}
             <A href="/library/types/enums#button"><code>Button</code></A>, a{' '}
-            <A href="/library/types/structs#key"><code>Key</code></A>, or a{' '}
-            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one.{' '}
-            <code>action</code> is the shared{' '}
-            <A href="/library/types/enums#action"><code>Action</code></A> tri-state.
+            <A href="/library/types/structs#key"><code>Key</code></A>, and a{' '}
+            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one, so one
+            verb drives every input class. <code>action</code> is the shared{' '}
+            <A href="/library/types/enums#action"><code>Action</code></A> tri-state: press, soft-release, or
+            force-release.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>usage</code></td><td><code>impl Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>A <code>Button</code>, <code>Key</code>, or <code>MediaKey</code>, or a <code>Usage</code>.</td></tr>
-              <tr><td><code>action</code></td><td><A href="/library/types/enums#action"><code>Action</code></A></td><td>Press, soft-release, or force-release.</td></tr>
-            </tbody>
-          </table>
           <p>
             A usage the cloned device can't report is a no-op, and there's no firmware click or chord
             (compose a press then a client-timed release).{' '}
@@ -96,7 +87,7 @@ async_device.press(Key::ESCAPE)?;`}</code></pre>
             <p>
               Build an <code>AsyncDevice</code> with{' '}
               <code>cargo add medius --features async</code> and{' '}
-              <A href="/library/connection"><code>AsyncDevice::open</code></A> or{' '}
+              <A href="/library/connection#async"><code>AsyncDevice::open</code></A> or{' '}
               <code>Device::into_async</code>.
             </p>
           </div>

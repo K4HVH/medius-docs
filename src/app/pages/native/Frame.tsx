@@ -10,9 +10,8 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Frame format" subtitle="The one packet shape" />
           <p>
-            Every message, both directions, is a frame: a marker byte, an opcode, a length, the
-            command's data, and a checksum. The whole protocol is frames; each command is the same
-            machinery with a different opcode and payload.
+            Every message, both directions, is a frame with one fixed shape. The whole protocol is
+            frames; each command is the same machinery with a different opcode and payload.
           </p>
           <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD ≤512][CRC16 u16 LE]</pre>
           <table class="byte-table">
@@ -29,7 +28,7 @@ const Frame: Component = () => {
             </tbody>
           </table>
           <p>
-            Max payload 512 bytes, so a frame is at most 520. Every multi-byte number is little-endian:
+            Max payload 512 bytes, so a frame is at most 519. Every multi-byte number is little-endian:
             the 16-bit value <code>100</code> is the bytes <code>64 00</code>.
           </p>
         </Card>

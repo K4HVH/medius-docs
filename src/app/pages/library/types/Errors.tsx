@@ -77,10 +77,7 @@ const Errors: Component = () => {
               </tr>
               <tr>
                 <td><code>FlashTool(String)</code></td>
-                <td>
-                  The flash tool failed. Present only with the{' '}
-                  <A href="/library/features/flash"><code>flash</code></A> feature.
-                </td>
+                <td>The flash tool failed.</td>
               </tr>
             </tbody>
           </table>

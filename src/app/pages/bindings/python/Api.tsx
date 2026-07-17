@@ -17,8 +17,8 @@ const Api: Component = () => {
         </p>
         <p>
           Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
-          return once the frame is queued. The query reads and <code>Device.open</code> /{' '}
-          <code>find</code> block for the <A href="/native/hardware">box</A>'s reply. Any call raises
+          return once the frame is queued. The query calls, plus <code>Device.open</code> /{' '}
+          <code>find</code>, block for the <A href="/native/hardware">box</A>'s reply. Any call raises
           a <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
         </p>
       </Card>
@@ -35,7 +35,6 @@ const Api: Component = () => {
               <tr><td><code>dev.clone()</code></td><td>Another handle to the same link; the connection is shared.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Free the handle. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
-              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> without opening one.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -179,8 +178,8 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.catch_events(mask=CatchMask.ALL)</code></td><td><code>EventStream</code> of physical mouse/key/media events.</td></tr>
-              <tr><td><code>dev.logs()</code></td><td><code>LogStream</code> of device log lines.</td></tr>
+              <tr><td><code>dev.catch_events(mask=<A href="/bindings/python/types#catchmask">CatchMask</A>.ALL)</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of physical mouse/key/media events.</td></tr>
+              <tr><td><code>dev.logs()</code></td><td><A href="/bindings/python/streams"><code>LogStream</code></A> of device log lines.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -190,8 +189,9 @@ const Api: Component = () => {
         <Card>
           <CardHeader title="Buffered clip playback" subtitle="Preload a per-frame stream, box-clocked" />
           <p>
-            Build a stream with <code>ClipBuilder</code>, then drive it with the <code>ClipHandle</code>{' '}
-            from <code>dev.clip()</code>. Concept on <A href="/library/clip">Clip</A>.
+            Build a stream with <code>ClipBuilder</code>, then drive it with the{' '}
+            <A href="/library/clip#handle"><code>ClipHandle</code></A> from <code>dev.clip()</code>.{' '}
+            Concept on <A href="/library/clip">Clip</A>.
           </p>
           <div class="api-response-label">CLIPBUILDER</div>
           <table class="api-params">

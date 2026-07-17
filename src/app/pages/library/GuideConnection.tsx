@@ -81,7 +81,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
             The box clears every injected input and pending move once no frame arrives for its{' '}
             <A href="/native/injection#safety">silence window</A>. A live <code>Device</code> holds your
             overrides past that on its own: a background thread (<code>medius-keepalive</code>) sends a{' '}
-            <code>QUERY(HEALTH)</code> every <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while
+            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> every <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while
             anything is held, so a press survives. There's no <code>keepalive()</code> to call.
           </p>
           <table class="api-params">
@@ -89,7 +89,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
               <tr><th>State</th><th>Behavior</th></tr>
             </thead>
             <tbody>
-              <tr><td>Override held</td><td>Sends a <code>QUERY(HEALTH)</code> every 500 ms and drops the reply.</td></tr>
+              <tr><td>Override held</td><td>Keepalive thread runs; the health reply is dropped.</td></tr>
               <tr><td>Idle</td><td>No override held, so the thread sends nothing.</td></tr>
             </tbody>
           </table>

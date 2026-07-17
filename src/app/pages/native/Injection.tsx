@@ -7,7 +7,7 @@ const Injection: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Injection model" subtitle="One device of fields, two verbs, added on top of the user" />
+        <CardHeader title="Injection model" subtitle="A set of fields, two verbs, added on top of the user's input" />
         <p>
           A connected device is a set of <em>fields</em>: each is an <em>Axis</em> (relative motion: X,
           Y, wheel) or a <em>Usage</em> (a momentary button, key, or media control).{' '}
@@ -15,8 +15,6 @@ const Injection: Component = () => {
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> drives a Usage, and a Usage is
           one <code>(class, id)</code> shape for buttons, keys, and media alike.
         </p>
-        <pre class="diagram">{`  Axis  (relative)   →  MOVE     cursor X/Y, wheel
-  Usage (momentary)  →  INJECT   buttons, keys, media`}</pre>
         <table class="api-params">
           <thead>
             <tr><th>Device</th><th>Axes (<A href="/native/commands/move#move"><code>MOVE</code></A>)</th><th>Momentary (<A href="/native/commands/inject#inject"><code>INJECT</code></A>)</th></tr>
