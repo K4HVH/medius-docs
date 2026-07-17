@@ -19,7 +19,10 @@ const Requests: Component = () => {
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below.
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below. The{' '}
+            <A href="/library/clip#handle">clip handle</A> adds{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A> and{' '}
+            <A href="/library/requests#clip-config"><code>query_config</code></A>, also here.
           </p>
         </Card>
       </div>
@@ -243,6 +246,54 @@ let c = device.query_catch()?;
 if !c.mask.is_empty() {
     println!("catching {:?}, {} dropped", c.mask, c.dropped);
 }`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-status" data-search-target>
+        <Card>
+          <CardHeader title="query_status (clip)" subtitle="Buffered-clip ring depth, progress, and playback state" />
+          <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            On the <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
+            <A href="/library/clip#clip"><code>device.clip()</code></A>, not <code>Device</code> itself.
+            Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
+            <code>state</code>, ring <code>free</code>, retained <code>played</code>/<code>total</code>, the
+            drain counters, and the <code>held</code> usages. Pace clip top-ups off <code>free</code>, and
+            watch <code>state</code> for a{' '}
+            <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync or for playback
+            reaching <code>Idle</code>. Backs{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let clip = device.clip();
+let s = clip.query_status()?;
+if s.state == medius::ClipState::Faulted { clip.clear()?; }
+println!("{} free, {} played", s.free, s.played);`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-config" data-search-target>
+        <Card>
+          <CardHeader title="query_config (clip)" subtitle="Read the whole clip config back" />
+          <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            The config view of the same{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on the{' '}
+            <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
+            <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
+            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set; nothing
+            is write-only, every setting round-trips.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let cfg = device.clip().query_config()?;
+println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 

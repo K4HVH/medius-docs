@@ -63,7 +63,7 @@ const GuideCalls: Component = () => {
                   <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
                   <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
                   the option <code>query_*</code> methods, and the clip{' '}
-                  <A href="/library/clip#status"><code>status</code></A> query
+                  <A href="/library/requests#clip-status"><code>status</code></A> query
                 </td>
                 <td>
                   <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}

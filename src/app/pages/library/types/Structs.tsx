@@ -569,7 +569,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="ClipSettings" subtitle="A clip's persistent config, read back" />
           <p>
             A clip's configuration from{' '}
-            <A href="/library/clip#config"><code>ClipHandle::query_config()</code></A>: the
+            <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>: the
             auto-lock set, the loop and retain flags, whether it's finalized, and the bound{' '}
             <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> list. You set
             these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
@@ -631,7 +631,7 @@ handle.bind(trig)?;`}</code></pre>
           <CardHeader title="ClipStatus" subtitle="The buffered-clip ring and playback state" />
           <p>
             The clip ring depth and playback counters from{' '}
-            <A href="/library/clip#status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
+            <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
             <code>free</code>; a <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>{' '}
             state means re-sync (stop, then rebuild).
           </p>
