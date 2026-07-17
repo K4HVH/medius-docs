@@ -57,14 +57,14 @@ const DeviceKeyboard = () => {
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
-        <CardHeader title="Keyboard" subtitle="Type onto the cloned keyboard" />
+        <CardHeader title="Keyboard" subtitle="Type through the cloned keyboard" />
         <Show
           when={kbdAttached()}
           fallback={<p style={muted}>No keyboard is attached to the box.</p>}
         >
           <p>
             Press and hold a key to inject it on top of the real typing. Keys release when you let go.
-            Media keys need a board that reports them. Injection clears on its own if the dashboard
+            Media keys need a keyboard that reports them. Injection clears on its own if the dashboard
             disconnects.
           </p>
           <div style={label}>Keys</div>

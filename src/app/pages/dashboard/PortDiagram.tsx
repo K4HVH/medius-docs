@@ -4,7 +4,7 @@ export type PortId = 'usb1' | 'usb2' | 'usb3';
 
 const PORTS: { id: PortId; label: string; sub: string }[] = [
   { id: 'usb1', label: 'USB1', sub: 'Game PC' },
-  { id: 'usb2', label: 'USB2', sub: 'Control' },
+  { id: 'usb2', label: 'USB2', sub: 'Control PC' },
   { id: 'usb3', label: 'USB3', sub: 'Mouse' },
 ];
 
