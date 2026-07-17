@@ -15,8 +15,8 @@ export interface BreadcrumbsProps {
   items: BreadcrumbItem[];
   variant?: 'primary' | 'secondary' | 'subtle';
   size?: 'compact' | 'normal' | 'spacious';
-  separator?: Component; // Custom separator icon
-  maxItems?: number; // Collapse middle items if total exceeds this
+  separator?: Component;
+  maxItems?: number;
   disabled?: boolean;
   class?: string;
 }
@@ -36,32 +36,24 @@ export const Breadcrumbs: Component<BreadcrumbsProps> = (props) => {
   const size = () => local.size ?? 'normal';
   const separator = () => local.separator ?? BsChevronRight;
 
-  // Calculate which items to show based on maxItems
   const getVisibleItems = (): (BreadcrumbItem | 'ellipsis')[] => {
     const items = local.items;
     const max = local.maxItems;
 
-    // If no maxItems or items fit within limit, show all
     if (!max || items.length <= max) {
       return items;
     }
 
-    // Ensure we show at least first and last
     if (max < 2) {
       return items;
     }
 
-    // Calculate how many items to show on each side of ellipsis
-    // Formula: show first item, ellipsis, last (max - 1) items
     const result: (BreadcrumbItem | 'ellipsis')[] = [];
 
-    // Always show first item
     result.push(items[0]);
 
-    // Add ellipsis
     result.push('ellipsis');
 
-    // Add last (max - 1) items
     const lastItemsCount = max - 1;
     const startIndex = items.length - lastItemsCount;
     for (let i = startIndex; i < items.length; i++) {
@@ -155,7 +147,6 @@ export const Breadcrumbs: Component<BreadcrumbsProps> = (props) => {
                       </A>
                     </Show>
 
-                    {/* Separator after all items except the last */}
                     <Show when={!isLast}>
                       <span class="breadcrumbs__separator" aria-hidden="true">
                         <Dynamic component={separator()} />

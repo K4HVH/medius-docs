@@ -25,7 +25,7 @@ interface FileUploadProps {
   maxSize?: number;
   /** Maximum number of files (only applies when multiple=true) */
   maxFiles?: number;
-  /** Upload progress 0–100; renders a linear Progress bar when defined */
+  /** Upload progress 0 to 100; renders a linear Progress bar when defined */
   progress?: number;
   disabled?: boolean;
   name?: string;
@@ -105,7 +105,6 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
     const errors: string[] = [];
     let valid = incoming;
 
-    // Validate accept types on drag-and-drop
     if (local.accept) {
       const rejected = valid.filter((f) => !isFileAccepted(f, local.accept!));
       if (rejected.length > 0) {
@@ -116,7 +115,6 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
       }
     }
 
-    // Validate maxSize
     if (local.maxSize !== undefined) {
       const oversized = valid.filter((f) => f.size > local.maxSize!);
       if (oversized.length > 0) {
@@ -127,18 +125,16 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
       }
     }
 
-    // In single mode, only take the first file
     if (!local.multiple) {
       valid = valid.slice(0, 1);
     }
 
-    // Merge with existing files in multi mode and apply maxFiles
     let merged = local.multiple ? [...selectedFiles(), ...valid] : valid;
 
     if (local.multiple && local.maxFiles !== undefined && merged.length > local.maxFiles) {
       const excess = merged.length - local.maxFiles;
       errors.push(
-        `Maximum ${local.maxFiles} file${local.maxFiles === 1 ? '' : 's'} allowed — ${excess} file${excess === 1 ? '' : 's'} skipped.`
+        `Maximum ${local.maxFiles} file${local.maxFiles === 1 ? '' : 's'} allowed; ${excess} file${excess === 1 ? '' : 's'} skipped.`
       );
       merged = merged.slice(0, local.maxFiles);
     }
@@ -243,7 +239,6 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
         </label>
       </Show>
 
-      {/* Hidden native file input */}
       <input
         ref={inputRef}
         id={inputId()}
@@ -261,7 +256,6 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
         onChange={handleInputChange}
       />
 
-      {/* Dropzone variant */}
       <Show when={variant() === 'dropzone'}>
         <div
           ref={dropzoneRef}
@@ -302,7 +296,6 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
         </div>
       </Show>
 
-      {/* Button variant */}
       <Show when={variant() === 'button'}>
         <div
           class="file-upload__button-area"
@@ -337,14 +330,12 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
         </div>
       </Show>
 
-      {/* Optional progress bar */}
       <Show when={local.progress !== undefined}>
         <div class="file-upload__progress">
           <Progress type="linear" value={local.progress} variant="primary" />
         </div>
       </Show>
 
-      {/* Selected files as removable Chips */}
       <Show when={selectedFiles().length > 0}>
         <div class="file-upload__files">
           <For each={selectedFiles()}>
@@ -357,7 +348,6 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
         </div>
       </Show>
 
-      {/* Error message */}
       <Show when={local.error}>
         <span class="file-upload__error">{local.error}</span>
       </Show>

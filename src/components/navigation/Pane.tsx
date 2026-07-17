@@ -81,7 +81,7 @@ export const Pane: Component<PaneProps> = (props) => {
   const sizeVariant = () => local.size ?? 'normal';
   const isHorizontal = () => position() === 'left' || position() === 'right';
 
-  // State management — controlled or uncontrolled
+  // State management: controlled or uncontrolled
   const isControlled = () => local.state !== undefined;
   const [internalState, setInternalState] = createSignal<PaneState>(local.defaultState ?? 'closed');
 
@@ -127,7 +127,7 @@ export const Pane: Component<PaneProps> = (props) => {
     }
   });
 
-  // Base chevron icon per position — points outward (toward opening direction).
+  // Base chevron icon per position, points outward (toward opening direction).
   // Rotated 180deg via CSS when open to point inward (toward closing).
   const baseIcon = createMemo(() => {
     switch (position()) {

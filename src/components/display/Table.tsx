@@ -16,22 +16,17 @@ interface TableProps<T> {
   columns: Column<T>[];
   data: T[];
   getRowId: (row: T) => string;
-  // Selection
   selectable?: boolean;
   selectedRows?: Set<string> | string[];
   onSelectionChange?: (selected: Set<string>) => void;
-  // Sorting
   sortKey?: string;
   sortDirection?: 'asc' | 'desc';
   onSort?: (key: string, direction: 'asc' | 'desc') => void;
-  // Appearance
   variant?: 'default' | 'emphasized' | 'subtle';
   size?: 'compact' | 'normal' | 'spacious';
   stickyHeader?: boolean;
-  // States
   loading?: boolean;
   emptyMessage?: string;
-  // Other
   class?: string;
 }
 
@@ -57,7 +52,6 @@ export const Table = <T,>(props: TableProps<T>) => {
   const variant = () => local.variant ?? 'default';
   const size = () => local.size ?? 'normal';
 
-  // Normalize selectedRows to Set
   const selectedSet = createMemo(() => {
     if (!local.selectedRows) return new Set<string>();
     if (local.selectedRows instanceof Set) return local.selectedRows;

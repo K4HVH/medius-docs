@@ -135,16 +135,13 @@ export const Slider: Component<SliderProps> = (props) => {
     const range = max() - min();
     let value = min() + percentage * range;
 
-    // Snap to marks or step
     if (restrictToMarks()) {
-      // Find nearest mark
       const marks = local.marks!;
       const nearest = marks.reduce((prev, curr) => {
         return Math.abs(curr.value - value) < Math.abs(prev.value - value) ? curr : prev;
       });
       return nearest.value;
     } else {
-      // Snap to step
       const stepValue = step()!;
       value = Math.round(value / stepValue) * stepValue;
       value = Math.max(min(), Math.min(max(), value));
@@ -159,11 +156,10 @@ export const Slider: Component<SliderProps> = (props) => {
     setIsDragging(true);
     setActiveThumb(thumb);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    // Only update position if not already hovering this thumb
     if (local.showTooltip !== false && hoveredThumb() !== thumb) {
       updateTooltipPosition();
     }
-    setHoveredThumb(null); // Clear hover state when dragging starts
+    setHoveredThumb(null);
   };
 
   const handlePointerMove = (e: PointerEvent) => {
@@ -176,7 +172,6 @@ export const Slider: Component<SliderProps> = (props) => {
       const [start, end] = getValue();
       if (activeThumb() === 'start') {
         if (newValue > end) {
-          // Crossed over - swap to end thumb
           setActiveThumb('end');
           local.onChange?.([end, newValue]);
         } else {
@@ -184,7 +179,6 @@ export const Slider: Component<SliderProps> = (props) => {
         }
       } else {
         if (newValue < start) {
-          // Crossed over - swap to start thumb
           setActiveThumb('start');
           local.onChange?.([newValue, start]);
         } else {
@@ -363,7 +357,6 @@ export const Slider: Component<SliderProps> = (props) => {
             }}
           />
 
-          {/* Marks */}
           <Show when={local.marks}>
             <For each={local.marks}>
               {(mark) => (
@@ -440,7 +433,6 @@ export const Slider: Component<SliderProps> = (props) => {
         </div>
       </div>
 
-      {/* Tooltip */}
       <Show when={(isDragging() || hoveredThumb()) && local.showTooltip !== false}>
         <Portal>
           <div

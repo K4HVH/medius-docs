@@ -43,14 +43,12 @@ export const Tabs: Component<TabsProps> = (props) => {
   const orientation = () => local.orientation ?? 'horizontal';
   const size = () => local.size ?? 'normal';
 
-  // Scrollable tabs state
   let scrollContainerRef: HTMLDivElement | undefined;
   let scrollIntervalRef: number | undefined;
   let isButtonScrolling = false;
   const [canScrollStart, setCanScrollStart] = createSignal(false);
   const [canScrollEnd, setCanScrollEnd] = createSignal(false);
 
-  // Controlled / uncontrolled state
   const isControlled = () => local.value !== undefined;
   const [internalValue, setInternalValue] = createSignal(
     local.defaultValue ?? local.options[0]?.value ?? ''
@@ -98,7 +96,6 @@ export const Tabs: Component<TabsProps> = (props) => {
     let nextIndex = currentIndex;
     const len = local.options.length;
 
-    // Find next enabled tab in direction, wrapping around
     for (let i = 1; i <= len; i++) {
       const candidate = (currentIndex + direction * i + len) % len;
       const option = local.options[candidate];
@@ -116,7 +113,6 @@ export const Tabs: Component<TabsProps> = (props) => {
     }
   };
 
-  // Scrollable tabs logic
   const updateScrollIndicators = () => {
     if (!local.scrollable || !scrollContainerRef) return;
 
@@ -130,7 +126,6 @@ export const Tabs: Component<TabsProps> = (props) => {
   };
 
   const handleScroll = () => {
-    // If user is manually scrolling (button not held), stop any continuous scroll
     if (!isButtonScrolling && scrollIntervalRef !== undefined) {
       stopContinuousScroll();
     }
@@ -144,7 +139,6 @@ export const Tabs: Component<TabsProps> = (props) => {
     const tabs = scrollContainerRef.querySelectorAll<HTMLButtonElement>('[role="tab"]');
     if (tabs.length === 0) return;
 
-    // Get the size of one tab plus gap
     const firstTab = tabs[0];
     const computedStyle = window.getComputedStyle(scrollContainerRef);
     const gap = parseFloat(computedStyle.gap || '0');
@@ -172,7 +166,7 @@ export const Tabs: Component<TabsProps> = (props) => {
     if (!scrollContainerRef) return;
 
     const isHorizontal = orientation() === 'horizontal';
-    const scrollStep = 3; // pixels per frame
+    const scrollStep = 3;
 
     scrollIntervalRef = window.setInterval(() => {
       if (!scrollContainerRef) return;
@@ -188,7 +182,7 @@ export const Tabs: Component<TabsProps> = (props) => {
           behavior: 'auto'
         });
       }
-    }, 16); // ~60fps
+    }, 16);
   };
 
   const stopContinuousScroll = () => {
@@ -203,23 +197,20 @@ export const Tabs: Component<TabsProps> = (props) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Mark that button is being held FIRST (before any other operations)
     isButtonScrolling = true;
 
-    // Clear any existing interval
     if (scrollIntervalRef !== undefined) {
       clearInterval(scrollIntervalRef);
       scrollIntervalRef = undefined;
     }
 
-    // Add global pointerup listener to catch release even if pointer moves off button
+    // Global listener catches release even if the pointer leaves the button.
     const handleGlobalPointerUp = () => {
       stopContinuousScroll();
       document.removeEventListener('pointerup', handleGlobalPointerUp);
     };
     document.addEventListener('pointerup', handleGlobalPointerUp);
 
-    // Start scrolling immediately on pointer down
     startContinuousScroll(direction);
   };
 
@@ -229,17 +220,14 @@ export const Tabs: Component<TabsProps> = (props) => {
     stopContinuousScroll();
   };
 
-  // Set up scroll listener and initial update
   createEffect(() => {
     if (!local.scrollable || !scrollContainerRef) return;
 
-    // Initial update
     updateScrollIndicators();
 
-    // Update on scroll - use handleScroll which detects manual scrolling
     scrollContainerRef.addEventListener('scroll', handleScroll);
 
-    // Update after a short delay to ensure layout is complete
+    // Delay so layout is complete before measuring.
     const timeoutId = setTimeout(() => {
       updateScrollIndicators();
     }, 100);
@@ -251,7 +239,6 @@ export const Tabs: Component<TabsProps> = (props) => {
     });
   });
 
-  // Update on resize
   createEffect(() => {
     if (!local.scrollable) return;
 

@@ -12,7 +12,7 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
-  // One stable link object — the component bails if dash.link() identity changes between polls.
+  // One stable link object; the component bails if dash.link() identity changes between polls.
   const link = {
     queryDeviceInfo: async () => mock.mouse,
     queryCaps: async () => mock.caps,
@@ -40,7 +40,7 @@ const stats = { injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges
 
 afterEach(cleanup);
 
-describe('DeviceInfo — one Capabilities card', () => {
+describe('DeviceInfo: one Capabilities card', () => {
   it('over-capacity keyboard: keyboard caps + a "Full clone: No" row, no prose card', async () => {
     mock.health = health({ kbdAttached: true });
     // kind 1 = keyboard.
