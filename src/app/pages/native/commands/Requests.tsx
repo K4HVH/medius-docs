@@ -643,15 +643,17 @@ const Requests: Component = () => {
           <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 10</code>: the buffered-clip ring depth and playback state, for host flow-control.
-            A fixed 21-byte prefix, then the clip's held-usage snapshot (the same class-tagged list a{' '}
-            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries). Read{' '}
-            <code>free</code> before a{' '}
+            <code>what = 10</code>: the buffered-clip ring depth, playback state, and full config, for
+            host flow-control. A fixed 25-byte prefix, then the clip's held-usage snapshot (the same
+            class-tagged list a{' '}
+            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries), then the
+            config tail (autolock, flags, and the bound triggers). Read <code>free</code> before a{' '}
             <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun, and{' '}
             <code>state</code> to see a fault or that playback finished. Backs{' '}
-            <A href="/library/clip#status"><code>ClipHandle::status</code></A>.
+            <A href="/library/clip#status"><code>ClipHandle::query_status</code></A> and{' '}
+            <A href="/library/clip#status"><code>query_config</code></A>.
           </p>
-          <pre class="api-signature">QUERY  what = 10  ·  RESP 21-byte prefix + held usages</pre>
+          <pre class="api-signature">QUERY  what = 10  ·  RESP 25-byte prefix + held usages + config</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -660,36 +662,65 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0A</td></tr>
-              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 armed (catch) / 2 playing / 3 faulted (an append was dropped, re-sync)</td></tr>
+              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (an append was dropped, re-sync)</td></tr>
               <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this, little-endian</td></tr>
-              <tr><td>6</td><td><code>used</code></td><td><code>u32</code></td><td>ring bytes buffered, not yet drained</td></tr>
-              <tr><td>10</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks emitted since start (diagnostic)</td></tr>
-              <tr><td>14</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
-              <tr><td>16</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
-              <tr><td>18</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
-              <tr><td>20</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>ring capacity in bytes</td></tr>
+              <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>content ticks drained since start</td></tr>
+              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks appended since start (diagnostic)</td></tr>
+              <tr><td>18</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
+              <tr><td>20</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
+              <tr><td>22</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
+              <tr><td>24</td><td><code>held_n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
+              <tr><td>+</td><td><code>autolock</code></td><td><code>u8</code></td><td>config: the <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> autolock bitmask (<code>CLIP_LOCK_*</code>)</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized</td></tr>
+              <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound triggers that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per trigger: 0=button 1=key 2=media 0xFF=any</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
+              <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
+              <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = swallow the triggering edge from the host</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>LOOP</code>: playback restarts from the top on drain instead of stopping</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>RETAIN</code>: the buffered content survives a stop instead of clearing</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>FINALIZED</code>: the clip is sealed, no more <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> accepted</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             The held snapshot lists the usages the clip is currently forcing down, one class-tagged
-            entry each (3 bytes), so buttons, keys, and media are reported one way. Library binding:{' '}
-            <A href="/library/clip#status"><code>status</code></A>{' '}
-            (<A href="/library/clip#status"><code>ClipStatus::held</code></A>).
+            entry each (3 bytes), so buttons, keys, and media are reported one way. The config tail
+            mirrors what <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> and{' '}
+            <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> set, so a UI can read
+            back the whole clip in one query. Library bindings:{' '}
+            <A href="/library/clip#status"><code>query_status</code></A>{' '}
+            (<A href="/library/clip#status"><code>ClipStatus</code></A>) and{' '}
+            <A href="/library/clip#status"><code>query_config</code></A>{' '}
+            (<A href="/library/clip#status"><code>ClipSettings</code></A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Idle, empty ring (<code>state = 0</code>, <code>free = 1024</code>, no held usages):</p>
+          <p>Idle, empty ring, no held usages, no autolock, no triggers (<code>state = 0</code>, <code>free = 1024</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 15 00  | 0A     | 00     | 00 04 00 00  |
+| A5     | 06     | 00     | 1C 00  | 0A     | 00     | 00 04 00 00  |
 +--------+--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
 +--------+--------+--------+--------+--------+--------+--------------+
-| 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  | 00     | lo hi  |
-+--------------+--------------+--------+--------+--------+--------+--------+
-| used         | ticks        | undrun | ovrrun | seqgap | n      | CRC16  |
-+--------------+--------------+--------+--------+--------+--------+--------+`}</pre>
+| 00 04 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
++--------------+--------------+--------------+--------+--------+--------+
+| total        | played       | ticks        | undrun | ovrrun | seqgap |
++--------------+--------------+--------------+--------+--------+--------+
+| 00     | 00     | 00     | 00     | lo hi  |
++--------+--------+--------+--------+--------+
+| held_n | autolk | flags  | n_trig | CRC16  |
++--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

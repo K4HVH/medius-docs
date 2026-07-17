@@ -235,17 +235,38 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusUsage</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">HANDLE</div>
+          <div class="api-response-label">HANDLE &mdash; CONFIG</div>
+          <p>Set these before the first <code>medius_clip_append</code>. See <A href="/library/clip">Clip</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>medius_device_clip(dev, out) / medius_clip_free(clip)</code></td><td>Open / free a clip handle.</td></tr>
               <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring.</td></tr>
-              <tr><td><code>medius_clip_start(clip, config)</code></td><td>Begin playback with a <A href="/bindings/c/types#clip-config"><code>MediusClipConfig</code></A> (its auto-lock scope); a zero-length <code>autolock</code> plays with no lock.</td></tr>
-              <tr><td><code>medius_clip_stop(clip)</code></td><td>Stop playback, flush the ring, release the clip's lock.</td></tr>
-              <tr><td><code>medius_clip_arm_catch(clip, input, config)</code></td><td>Arm a trigger on a physical press of <code>input</code>, any <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (build it with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>), starting with <A href="/bindings/c/types#clip-config"><code>config</code></A>.</td></tr>
-              <tr><td><code>medius_clip_arm_catch_any(clip, config) / medius_clip_disarm(clip)</code></td><td>Arm on any physical input (with <code>config</code>) / clear a pending arm.</td></tr>
-              <tr><td><code>medius_clip_status(clip, out)</code></td><td>Fill a <A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth + playback state.</td></tr>
+              <tr><td><code>medius_clip_set_autolock(clip, const MediusBlanket *scope, uintptr_t scope_len)</code></td><td>The auto-lock scope: the <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> groups <code>scope</code> points at (<code>NULL</code> / 0 = no lock).</td></tr>
+              <tr><td><code>medius_clip_set_loop(clip, uint8_t on) / _set_retain(clip, uint8_t on)</code></td><td>Loop at the clip end (retained only) / retain the loaded clip so it can rewind and replay (0 = streaming, the default).</td></tr>
+              <tr><td><code>medius_clip_finalize(clip)</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">HANDLE &mdash; TRIGGERS</div>
+          <p>A managed set of up to <code>MEDIUS_CLIP_TRIG_MAX</code> bindings, keyed by usage + edge.</p>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_clip_bind(clip, MediusClipTrigger trigger)</code></td><td>Add or overwrite a <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A>: a <A href="/bindings/c/types#edge"><code>MediusEdge</code></A> of <code>on</code> drives a <A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A>; <code>consume</code> hides the input from the game.</td></tr>
+              <tr><td><code>medius_clip_unbind(clip, MediusUsage usage, MediusEdge edge)</code></td><td>Remove the binding on that usage + edge.</td></tr>
+              <tr><td><code>medius_clip_clear_triggers(clip)</code></td><td>Remove every trigger binding.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">HANDLE &mdash; TRANSPORT &amp; QUERY</div>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_clip_start(clip) / _stop(clip)</code></td><td>Rewind and play (or resume a pause) / stop, flush a streaming clip (rewind a retained one), and release held input and the auto-lock.</td></tr>
+              <tr><td><code>medius_clip_pause(clip) / _resume(clip)</code></td><td>Halt mid-clip, retaining the cursor and held input / continue from the paused cursor.</td></tr>
+              <tr><td><code>medius_clip_restart(clip) / _toggle(clip)</code></td><td>Force a rewind and play, even mid-playback / play if idle or paused, stop if playing.</td></tr>
+              <tr><td><code>medius_clip_clear(clip)</code></td><td>Discard the loaded clip, free the ring, and clear a <code>Faulted</code> state.</td></tr>
+              <tr><td><code>medius_clip_query_status(clip, out)</code></td><td>Fill a <A href="/bindings/c/types#clip-status"><code>MediusClipStatus</code></A>: ring depth, progress, and playback counters.</td></tr>
+              <tr><td><code>medius_clip_query_config(clip, out)</code></td><td>Fill a <A href="/bindings/c/types#clip-settings"><code>MediusClipSettings</code></A>: auto-lock scope, loop/retain, finalized, and the trigger set.</td></tr>
             </tbody>
           </table>
         </Card>

@@ -239,31 +239,82 @@ const Types: Component = () => {
 
       <div id="clip-status" data-search-target>
         <Card>
-          <CardHeader title="Clip" subtitle="ClipConfig · ClipState · ClipStatus" />
+          <CardHeader title="Clip" subtitle="ClipState · Edge · ClipAction · ClipTrigger · ClipSettings · ClipStatus" />
           <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
-          <div id="clip-config">
-            <div class="api-response-label">ClipConfig</div>
-            <p>Playback options for <code>clip.start</code> / <code>clip.arm_catch</code>; extensible as more are added. <code>ClipConfig(autolock=[Blanket, ...])</code> auto-locks those <A href="#blanket"><code>Blanket</code></A> groups while playing (<code>None</code> / <code>[]</code> = none, <code>list(Blanket)</code> for every class).</p>
-          </div>
           <div id="clipstate">
             <div class="api-response-label">ClipState</div>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>IDLE</code></td><td><code>0</code></td><td>No clip active.</td></tr>
-                <tr><td><code>ARMED</code></td><td><code>1</code></td><td>A catch-trigger is armed; playback starts on the physical press edge.</td></tr>
-                <tr><td><code>PLAYING</code></td><td><code>2</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-                <tr><td><code>FAULTED</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; stop and re-preload.</td></tr>
+                <tr><td><code>IDLE</code></td><td><code>0</code></td><td>No clip playing.</td></tr>
+                <tr><td><code>PLAYING</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+                <tr><td><code>PAUSED</code></td><td><code>2</code></td><td>Halted mid-clip; the cursor and any held input are retained.</td></tr>
+                <tr><td><code>FAULTED</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; <code>clear</code> to recover.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="edge">
+            <div class="api-response-label">Edge</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Fires on</th></tr></thead>
+              <tbody>
+                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>either edge of the trigger usage</td></tr>
+                <tr><td><code>PRESS</code></td><td><code>1</code></td><td>the physical press edge</td></tr>
+                <tr><td><code>RELEASE</code></td><td><code>2</code></td><td>the physical release edge</td></tr>
+              </tbody>
+            </table>
+            <p>Which edge of a <A href="#cliptrigger"><code>ClipTrigger</code></A> runs its action.</p>
+          </div>
+          <div id="clipaction">
+            <div class="api-response-label">ClipAction</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Runs</th></tr></thead>
+              <tbody>
+                <tr><td><code>START</code></td><td><code>0</code></td><td>rewind and play</td></tr>
+                <tr><td><code>STOP</code></td><td><code>1</code></td><td>stop and release</td></tr>
+                <tr><td><code>PAUSE</code></td><td><code>2</code></td><td>halt mid-clip</td></tr>
+                <tr><td><code>RESUME</code></td><td><code>3</code></td><td>continue from the pause</td></tr>
+                <tr><td><code>RESTART</code></td><td><code>4</code></td><td>force a rewind and play</td></tr>
+                <tr><td><code>TOGGLE</code></td><td><code>5</code></td><td>play if idle/paused, stop if playing</td></tr>
+              </tbody>
+            </table>
+            <p>The action a bound trigger runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
+          </div>
+          <div id="cliptrigger">
+            <div class="api-response-label">ClipTrigger</div>
+            <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action itself with no host round-trip.</p>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>on</code></td><td><A href="#input"><code>Usage</code></A></td><td>the trigger usage (button, key, or media)</td></tr>
+                <tr><td><code>edge</code></td><td><A href="#edge"><code>Edge</code></A></td><td>which edge fires the action</td></tr>
+                <tr><td><code>action</code></td><td><A href="#clipaction"><code>ClipAction</code></A></td><td>what the box runs</td></tr>
+                <tr><td><code>consume</code></td><td><code>bool</code></td><td>swallow the physical edge so it doesn't pass through (default <code>False</code>)</td></tr>
+              </tbody>
+            </table>
+            <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
+          </div>
+          <div id="clipsettings">
+            <div class="api-response-label">ClipSettings (clip.query_config())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>autolock</code></td><td><code>List[<A href="#blanket">Blanket</A>]</code></td><td>the input groups auto-locked while the clip plays</td></tr>
+                <tr><td><code>loop</code></td><td><code>bool</code></td><td>playback loops at the clip end (retained mode only)</td></tr>
+                <tr><td><code>retain</code></td><td><code>bool</code></td><td>the loaded clip is retained so it can rewind and replay</td></tr>
+                <tr><td><code>finalized</code></td><td><code>bool</code></td><td>a retained clip's end is fixed, ready to replay and loop</td></tr>
+                <tr><td><code>triggers</code></td><td><code>List[<A href="#cliptrigger">ClipTrigger</A>]</code></td><td>the bound trigger set (up to 8)</td></tr>
               </tbody>
             </table>
           </div>
           <div id="clipstatus">
-            <div class="api-response-label">ClipStatus (clip.status())</div>
+            <div class="api-response-label">ClipStatus (clip.query_status())</div>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>state</code></td><td><A href="#clipstate"><code>ClipState</code></A></td><td>the lifecycle state</td></tr>
-                <tr><td><code>free</code> / <code>used</code></td><td><code>int</code></td><td>ring bytes free / buffered (pace top-ups off <code>free</code>)</td></tr>
+                <tr><td><code>free</code> / <code>total</code></td><td><code>int</code></td><td>ring bytes free / capacity (pace top-ups off <code>free</code>)</td></tr>
+                <tr><td><code>played</code></td><td><code>int</code></td><td>entry frames played since the last start</td></tr>
                 <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames drained since the last start (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
                 <tr><td><code>held</code></td><td><code>List[Usage]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
@@ -368,7 +419,8 @@ const Types: Component = () => {
                 <tr><td><code>RESP</code></td><td><code>6</code></td><td><code>OPTION</code></td><td><code>17</code></td></tr>
                 <tr><td><code>REBOOT_DL</code></td><td><code>7</code></td><td><code>CLIP_APPEND</code></td><td><code>18</code></td></tr>
                 <tr><td><code>LOG</code></td><td><code>8</code></td><td><code>CLIP_CTRL</code></td><td><code>19</code></td></tr>
-                <tr><td><code>LED</code></td><td><code>9</code></td><td></td><td></td></tr>
+                <tr><td><code>LED</code></td><td><code>9</code></td><td><code>CLIP_SET</code></td><td><code>20</code></td></tr>
+                <tr><td></td><td></td><td><code>CLIP_TRIGGER</code></td><td><code>21</code></td></tr>
               </tbody>
             </table>
           </div>
