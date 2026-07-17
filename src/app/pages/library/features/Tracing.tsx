@@ -13,7 +13,7 @@ const Tracing: Component = () => {
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
           it emits a span and events as it works the link, but adds no medius functions and changes no
           behavior. The sections below are what it emits; you read them by installing a{' '}
-          <A href="#subscriber">subscriber</A>.
+          <A href="/library/features/tracing#subscriber">subscriber</A>.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
         <p>
@@ -132,7 +132,7 @@ device.move_rel(10, 0)?;
           <p>
             Transport events sit below the default <code>INFO</code> floor. Lower it with a per-target{' '}
             <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}
-            (target names in <A href="#targets">targets</A>).
+            (target names in <A href="/library/features/tracing#targets">targets</A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`// Code-side: medius events at DEBUG, everything else at the default.

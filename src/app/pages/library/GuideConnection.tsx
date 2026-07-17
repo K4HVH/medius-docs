@@ -116,7 +116,7 @@ device.reset()?;`}</code></pre>
           <CardHeader title="Releasing the device" subtitle="Drop it; no close() call" />
           <p>
             There's no <code>close</code>: dropping the last{' '}
-            <A href="#threading"><code>Arc</code>-backed handle</A> tears the connection down. Its{' '}
+            <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> tears the connection down. Its{' '}
             <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
             stops the threads and closes the port.
           </p>

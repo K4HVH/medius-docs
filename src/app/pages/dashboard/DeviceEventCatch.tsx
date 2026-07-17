@@ -50,13 +50,6 @@ const label = {
   'margin-bottom': '4px',
 } as const;
 
-const mono = {
-  'font-family': 'var(--g-font-mono, monospace)',
-  'font-size': 'var(--font-size-xs, 0.8rem)',
-  'line-height': '1.5',
-  'max-height': '11rem',
-  overflow: 'auto',
-} as const;
 
 const DeviceEventCatch = () => {
   const dash = useDashboard();
@@ -212,7 +205,7 @@ const DeviceEventCatch = () => {
               Recent events ({events().length} received, {dropped()} dropped by the box)
             </div>
             <Show when={events().length > 0} fallback={<p>Move, click, or type...</p>}>
-              <div style={mono}>
+              <div class="diagram" style={{ 'max-height': '11rem', overflow: 'auto' }}>
                 <For each={events().slice(-12).reverse()}>
                   {(e) => <div>{eventLine(e)}</div>}
                 </For>

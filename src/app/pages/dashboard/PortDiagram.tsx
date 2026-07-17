@@ -54,7 +54,7 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mo
                 }}
               >
                 <div style={{ 'font-weight': '700' }}>{p.label}</div>
-                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-secondary)' }}>{p.sub}</div>
+                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-muted)' }}>{p.sub}</div>
                 <div
                   style={{
                     'margin-top': '4px',

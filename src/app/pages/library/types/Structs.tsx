@@ -555,55 +555,12 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
-            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>.
+            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. Pull lines with{' '}
+            <code>recv</code> / <code>try_recv</code> / <code>recv_timeout</code> / <code>try_iter</code> /{' '}
+            <code>recv_async</code> (or <code>for line in stream</code>); none touch the wire, so cloning
+            shares the queue. The methods and an example are on{' '}
+            <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
           </p>
-
-          <p>
-            Pull lines with whichever method fits your loop; none touch the wire (they read a local
-            channel), so cloning shares the same queue. See{' '}
-            <a
-              href="https://doc.rust-lang.org/std/iter/trait.IntoIterator.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <code>IntoIterator</code>
-            </a>{' '}
-            for looping the stream directly with <code>for line in stream</code> (blocks per line until
-            the link closes).
-          </p>
-          <div class="api-response-label">METHODS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>recv()</code></td><td><code>Result&lt;LogLine&gt;</code></td><td>Block until the next line, or <code>Err(Disconnected)</code> if the link drops.</td></tr>
-              <tr><td><code>try_recv()</code></td><td><code>Option&lt;LogLine&gt;</code></td><td>The next buffered line, or <code>None</code> (never blocks).</td></tr>
-              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;LogLine&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
-              <tr><td><code>try_iter()</code></td><td><code>impl Iterator</code></td><td>Drain every buffered line without blocking.</td></tr>
-              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;LogLine&gt;</code></td><td>Await the next line (<code>async</code> feature), runtime-agnostic.</td></tr>
-            </tbody>
-          </table>
-
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let stream = device.logs();
-
-// Drain whatever has piled up so far, no blocking.
-for line in stream.try_iter() {
-    println!("[{:?}] {}", line.level, line.text);
-}
-
-// Then block once for the next line.
-if let Ok(line) = stream.recv() {
-    println!("[{:?}] {}", line.level, line.text);
-}`}</code></pre>
-
-          <div class="callout callout--info">
-            <p>
-              See <A href="/library/diagnostics#logs">Logs</A> for where the stream comes from and
-              when the box emits <A href="/native/commands/admin#log"><code>LOG</code></A> frames.
-            </p>
-          </div>
         </Card>
       </div>
 

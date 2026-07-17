@@ -57,7 +57,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x13</code>. Four values are reserved,
+            The opcodes run from <code>0x01</code> to <code>0x15</code>. Four values are reserved,
             retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
             keeps newer and older firmware compatible.
           </p>
@@ -84,7 +84,9 @@ const Frame: Component = () => {
               <tr><td><code>0x10</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x11</code></td><td><A href="/native/commands/option#option"><code>OPTION</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
+              <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
+              <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
             </tbody>
           </table>
           <p>

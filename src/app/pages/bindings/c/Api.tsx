@@ -24,7 +24,7 @@ const Api: Component = () => {
           <A href="/native/hardware">box</A>'s <A href="/native/commands/requests">reply</A>. Every
           fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>{' '}
           (<code>MEDIUS_STATUS_OK</code> is 0) and writes its result through an out-param;{' '}
-          <A href="#module"><code>medius_last_error_message()</code></A> gives the last failure's text on the calling thread.
+          <A href="/bindings/c/api#module"><code>medius_last_error_message()</code></A> gives the last failure's text on the calling thread.
         </p>
         <div class="api-response-label">CALLING CONVENTION</div>
         <pre><code class="language-c">{`MediusDevice *dev = NULL;
@@ -85,7 +85,7 @@ medius_device_free(dev);`}</code></pre>
       <div id="move" data-search-target>
         <Card>
           <CardHeader title="Movement" subtitle="Relative cursor and wheel" />
-          <p>See <A href="/library/move">Move</A>. <code>+x</code> right, <code>+y</code> down. Build the axis struct with the <A href="#builders">motion helpers</A>.</p>
+          <p>See <A href="/library/move">Move</A>. <code>+x</code> right, <code>+y</code> down. Build the axis struct with the <A href="/bindings/c/api#builders">motion helpers</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -102,7 +102,7 @@ medius_device_free(dev);`}</code></pre>
           <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
           <p>
             One verb set over a <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (button, key,
-            or media). Build it with the <A href="#builders">input helpers</A>; see{' '}
+            or media). Build it with the <A href="/bindings/c/api#builders">input helpers</A>; see{' '}
             <A href="/library/inject">Inject</A>, the <A href="/native/injection">injection model</A>, and
             the id spaces on <A href="/native/commands/usage">Usage IDs</A>.
           </p>
@@ -127,7 +127,7 @@ medius_device_free(dev);`}</code></pre>
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A> picks an edge. Read the returned entries with <A href="#inspectors"><code>medius_locks_is_locked</code></A>.</p>
+          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A> picks an edge. Read the returned entries with <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked</code></A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>

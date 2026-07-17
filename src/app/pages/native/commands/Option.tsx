@@ -53,6 +53,11 @@ const Option: Component = () => {
       <div id="option" data-search-target>
         <Card>
           <CardHeader title="OPTION" subtitle="One generic, persistent option" />
+          <p>
+            <code>OPTION</code> carries an <code>id</code> byte then an id-specific value, and the box
+            persists the setting across a reboot. One opcode covers every persistent option; the id picks
+            which. <A href="/native/frame#opcodes">Opcode</A> <code>0x11</code>.
+          </p>
           <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
@@ -191,7 +196,6 @@ const Option: Component = () => {
         <Card>
           <CardHeader title="NAME" subtitle="Give the box a human-readable name" />
           <pre class="api-signature">id 3  ·  [name ascii 1..32]  (0 bytes = clear)</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">VALUE</div>
           <table class="api-params">
             <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>

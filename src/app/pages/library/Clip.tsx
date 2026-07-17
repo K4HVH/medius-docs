@@ -230,29 +230,13 @@ clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}<
           <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Reads a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>. Pace top-ups off{' '}
-            <code>free</code>, watch <code>state</code> for the{' '}
+            Reads a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>: <code>state</code>,
+            ring <code>free</code>, retained <code>played</code>/<code>total</code>, the drain counters, and
+            the <code>held</code> usages (test one with <code>is_held</code>). Pace top-ups off{' '}
+            <code>free</code>, and watch <code>state</code> for the{' '}
             <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync signal or for playback
-            reaching <code>Idle</code>, and use <code>played</code>/<code>total</code> for retained progress.
-            Backs <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+            reaching <code>Idle</code>. Backs <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
           </p>
-          <div class="api-response-label">FIELDS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>state</code></td><td><A href="/library/types/enums#clip-state"><code>ClipState</code></A></td><td>idle / playing / paused / faulted.</td></tr>
-              <tr><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free.</td></tr>
-              <tr><td><code>total</code></td><td><code>u32</code></td><td>retained clip size (streaming: buffered-but-undrained bytes).</td></tr>
-              <tr><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
-              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>content frames drained since the last start (gap runs excluded).</td></tr>
-              <tr><td><code>underruns</code></td><td><code>u16</code></td><td>times the ring ran dry mid-playback.</td></tr>
-              <tr><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped because the ring was full.</td></tr>
-              <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped append frames detected.</td></tr>
-              <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>the usages the clip is holding down (buttons, keys, and media in one list); test one with <code>is_held(usage)</code>.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 

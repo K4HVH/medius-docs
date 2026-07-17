@@ -49,7 +49,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
               <tr><td><code>medius_event_stream_free(stream)</code> / <code>medius_log_stream_free(stream)</code></td><td>Release a handle (unsubscribes when the last clone drops). Null is a no-op.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CATCH MASK BITS (OR THEM TOGETHER)</div>
+          <div class="api-response-label">CATCH MASK BITS</div>
           <table class="api-params">
             <thead><tr><th>Constant</th><th>Value</th><th>Class</th></tr></thead>
             <tbody>
@@ -81,7 +81,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
               <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td><td>Up to <code>timeout_ms</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">LOGS MIRROR THIS EXACTLY (writing a <A href="/bindings/c/types#log-line"><code>MediusLogLine</code></A> instead)</div>
+          <div class="api-response-label">LOGS MIRROR THIS</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
@@ -126,7 +126,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <code>MediusUsage</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">INSPECTORS (test one usage without walking the array)</div>
+          <div class="api-response-label">INSPECTORS</div>
           <table class="api-params">
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
@@ -172,10 +172,10 @@ medius_event_stream_free(events);`}</code></pre>
         </Card>
       </div>
 
-      <div id="no-async" data-search-target>
+      <div id="async" data-search-target>
         <Card>
           <CardHeader title="No async" subtitle="Build it on the non-blocking receives" />
-          <div class="callout callout--info">
+          <div class="callout callout--warning">
             <p>
               The <A href="/bindings/c">C ABI</A> is synchronous; there's no <A href="/library/features/async">async</A> API.
               For a single-threaded event loop, poll with{' '}
