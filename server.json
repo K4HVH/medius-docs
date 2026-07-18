@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "net.k4tech/docs",
   "title": "Medius Docs",
-  "description": "Documentation MCP server for Medius (medius.k4tech.net): the binary control protocol, device behavior, and the medius Rust library. Tools: search, fetch, search_docs, get_page, list_pages.",
+  "description": "Medius docs: the binary control protocol, device behavior, and the medius Rust library.",
   "version": "1.0.0",
   "websiteUrl": "https://medius.k4tech.net",
   "repository": {
