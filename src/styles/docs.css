@@ -265,3 +265,36 @@ pre code[class*="language-"] {
   border-radius: var(--g-radius);
   animation: search-highlight-ring 2s ease-out forwards;
 }
+
+/* AI actions row (top of each doc page) */
+.ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--g-spacing-xs);
+  justify-content: flex-end;
+  margin-bottom: var(--g-spacing);
+  font-size: var(--font-size-xs);
+}
+.ai-actions__label {
+  color: var(--g-text-muted);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  margin-right: var(--g-spacing-xs);
+}
+.ai-actions__item {
+  padding: 2px var(--g-spacing-sm);
+  color: var(--g-text-secondary);
+  border: var(--g-border-width) solid var(--g-border-color-subtle);
+  border-radius: var(--g-radius);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.ai-actions__item:hover {
+  color: var(--color-accent);
+  border-color: var(--g-border-color);
+}

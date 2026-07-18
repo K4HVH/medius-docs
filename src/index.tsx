@@ -13,4 +13,8 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
+// Prerendered SSG pages ship a static snapshot inside #root; clear it before the
+// client renders a fresh tree (this is a client render(), not a hydrate()).
+if (root) root.textContent = '';
+
 render(() => <App />, root!);
