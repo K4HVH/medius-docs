@@ -35,3 +35,6 @@ src/gen/
 .DS_Store
 Thumbs.db
 .claude
+# MCP registry publishing key (never commit)
+mcp-registry-key.pem
+key.pem
