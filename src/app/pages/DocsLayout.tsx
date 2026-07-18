@@ -59,8 +59,10 @@ const nativeCommandTabs: TabOption[] = [
 const nativeReferenceTabs: TabOption[] = [
   { value: '/native/flashing', label: 'Flashing', icon: BsBoxArrowInDown },
   { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
-  { value: '/native/ai', label: 'AI & LLMs', icon: BsStars },
 ];
+
+// Cross-cutting AI access group, shown at the foot of every code section.
+const aiAccessTabs: TabOption[] = [{ value: '/ai', label: 'AI & LLMs', icon: BsStars }];
 
 const allNativeTabs = [
   ...nativeOverviewTabs, ...nativeProtocolTabs, ...nativeCommandTabs, ...nativeReferenceTabs,
@@ -215,14 +217,27 @@ const DocsLayout = (props: RouteSectionProps) => {
     onCleanup(() => mql.removeEventListener('change', handler));
   });
 
-  const activeSection = () =>
+  const rawSection = () =>
     location.pathname.startsWith('/dashboard')
       ? 'dashboard'
       : location.pathname.startsWith('/bindings')
         ? 'bindings'
         : location.pathname.startsWith('/library')
           ? 'library'
-          : 'native';
+          : location.pathname === '/ai' || location.pathname.startsWith('/ai/')
+            ? 'ai'
+            : 'native';
+
+  const [lastCodeSection, setLastCodeSection] = createSignal<'native' | 'library' | 'bindings'>('native');
+  createEffect(() => {
+    const s = rawSection();
+    if (s === 'native' || s === 'library' || s === 'bindings') setLastCodeSection(s);
+  });
+  // The AI page is cross-cutting, so keep the sidebar of the section it was opened from.
+  const activeSection = () => {
+    const s = rawSection();
+    return s === 'ai' ? lastCodeSection() : s;
+  };
 
   const bindingRoot = () => {
     const p = location.pathname;
@@ -232,7 +247,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   };
 
   const pageTitle = createMemo(() => {
-    const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs];
+    const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs, ...aiAccessTabs];
     return all.find(t => t.value === location.pathname)?.label ?? '';
   });
 
@@ -325,6 +340,14 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={nativeReferenceTabs}
             />
+            <Divider spacing="compact" label="AI Access" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={aiAccessTabs}
+            />
           </Show>
           <Show when={activeSection() === 'library'}>
             <Divider spacing="compact" label="Getting Started" labelAlign="start" />
@@ -367,6 +390,14 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={libraryReferenceTabs}
             />
+            <Divider spacing="compact" label="AI Access" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={aiAccessTabs}
+            />
           </Show>
           <Show when={activeSection() === 'bindings'}>
             <Divider spacing="compact" label="Bindings" labelAlign="start" />
@@ -391,6 +422,14 @@ const DocsLayout = (props: RouteSectionProps) => {
                 </>
               )}
             </For>
+            <Divider spacing="compact" label="AI Access" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={aiAccessTabs}
+            />
           </Show>
           <Show when={activeSection() === 'dashboard'}>
             <Divider spacing="compact" label="Dashboard" labelAlign="start" />

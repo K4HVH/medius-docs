@@ -24,7 +24,7 @@ import CmdOption from './pages/native/commands/Option';
 import CmdClip from './pages/native/commands/Clip';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
-import NativeAiAccess from './pages/native/AiAccess';
+import AiAccess from './pages/AiAccess';
 import LibIntroduction from './pages/library/Introduction';
 import LibConnection from './pages/library/Connection';
 import LibDiscovery from './pages/library/Discovery';
@@ -107,7 +107,7 @@ const App: Component = () => {
           <Route path="/native/commands/usage" component={CmdUsage} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
-          <Route path="/native/ai" component={NativeAiAccess} />
+          <Route path="/ai" component={AiAccess} />
           <Route path="/library" component={LibIntroduction} />
           <Route path="/library/connection" component={LibConnection} />
           <Route path="/library/discovery" component={LibDiscovery} />

@@ -302,3 +302,9 @@ pre code[class*="language-"] {
   color: var(--color-accent);
   background: var(--g-background-subtle);
 }
+
+.ai-actions__sep {
+  height: var(--g-border-width);
+  margin: var(--g-spacing-xs) 0;
+  background: var(--g-border-color-subtle);
+}
