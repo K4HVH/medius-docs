@@ -251,7 +251,7 @@ if !c.mask.is_empty() {
 
       <div id="clip-status" data-search-target>
         <Card>
-          <CardHeader title="query_status (clip)" subtitle="Buffered-clip ring depth, progress, and playback state" />
+          <CardHeader title="query_status (clip)" subtitle="Read the buffered-clip ring depth, progress, and playback state" />
           <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
@@ -268,7 +268,10 @@ if !c.mask.is_empty() {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let clip = device.clip();
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let clip = device.clip();
 let s = clip.query_status()?;
 if s.state == medius::ClipState::Faulted { clip.clear()?; }
 println!("{} free, {} played", s.free, s.played);`}</code></pre>
@@ -292,7 +295,10 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let cfg = device.clip().query_config()?;
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let cfg = device.clip().query_config()?;
 println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>

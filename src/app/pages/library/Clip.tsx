@@ -48,8 +48,9 @@ const Clip: Component = () => {
             <p>
               Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or{' '}
               <A href="/library/lifecycle#reconnect">reconnect</A> drops the loaded clip, so re-preload after one.
-              The config (auto-lock, loop, retain, and the trigger set) is
-              re-asserted for you on reconnect. A clip needs a cloned mouse, since its frame clock is the
+              Its config (auto-lock, loop, retain, and the trigger set) goes too: unlike a held lock or
+              catch subscription, a clip isn't re-asserted for you, so re-set it after a reconnect. A clip
+              needs a cloned mouse, since its frame clock is the
               mouse's report tick; keyboard and media edges ride that tick.
             </p>
           </div>
@@ -176,9 +177,9 @@ clip.press(Key::A)                         // then type 'a'
               <tr><th>Aspect</th><th>Streaming (default)</th><th>Retained</th></tr>
             </thead>
             <tbody>
-              <tr><td>Turn on</td><td>nothing, it is the default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
-              <tr><td>The ring</td><td>each entry is freed as it plays, so it is unbounded</td><td>entries are kept after playing, up to 64 KiB</td></tr>
-              <tr><td>Top up mid-play</td><td>yes, append to the tail in real time</td><td>append until <code>finalize</code>, then it is sealed</td></tr>
+              <tr><td>Turn on</td><td>nothing, it's the default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
+              <tr><td>The ring</td><td>each entry is freed as it plays, so it's unbounded</td><td>entries are kept after playing, up to 64 KiB</td></tr>
+              <tr><td>Top up mid-play</td><td>yes, append to the tail in real time</td><td>append until <code>finalize</code>, then it's sealed</td></tr>
               <tr><td>Replay</td><td>no, it plays once</td><td>yes, it rewinds and replays</td></tr>
               <tr><td><code>loop</code></td><td>not available</td><td>available once <code>finalize</code>d</td></tr>
               <tr><td><code>stop</code></td><td>flushes the buffer</td><td>rewinds and keeps the clip</td></tr>
