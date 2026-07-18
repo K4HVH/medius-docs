@@ -17,6 +17,7 @@ import {
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
+import AiActions from '../AiActions';
 import { useDashboard } from './dashboard/context';
 import Prism from '../prism';
 import '../../styles/docs.css';
@@ -440,6 +441,7 @@ const DocsLayout = (props: RouteSectionProps) => {
             }
             right={
               <>
+                <AiActions />
                 <Button
                   variant="subtle"
                   size="compact"

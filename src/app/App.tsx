@@ -1,6 +1,8 @@
-import type { Component } from 'solid-js';
+import type { Component, JSX } from 'solid-js';
 import { Router, Route, Navigate } from '@solidjs/router';
+import { MetaProvider } from '@solidjs/meta';
 import { NotificationProvider } from '../components/feedback/Notification';
+import RouteMeta from './RouteMeta';
 import Home from './pages/Home';
 import DocsLayout from './pages/DocsLayout';
 import NativeIntroduction from './pages/native/Introduction';
@@ -71,11 +73,19 @@ import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
 import { DashboardProvider } from './pages/dashboard/context';
 
+const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
+  <>
+    <RouteMeta />
+    {props.children}
+  </>
+);
+
 const App: Component = () => {
   return (
-    <NotificationProvider>
+    <MetaProvider>
+      <NotificationProvider>
       <DashboardProvider>
-        <Router>
+        <Router root={RootLayout}>
         <Route path="/" component={Home} />
         <Route path="/" component={DocsLayout}>
           <Route path="/native" component={NativeIntroduction} />
@@ -148,7 +158,8 @@ const App: Component = () => {
         <Route path="*" component={() => <Navigate href="/" />} />
         </Router>
       </DashboardProvider>
-    </NotificationProvider>
+      </NotificationProvider>
+    </MetaProvider>
   );
 };
 
