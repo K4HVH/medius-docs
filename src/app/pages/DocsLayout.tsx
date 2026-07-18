@@ -59,6 +59,7 @@ const nativeCommandTabs: TabOption[] = [
 const nativeReferenceTabs: TabOption[] = [
   { value: '/native/flashing', label: 'Flashing', icon: BsBoxArrowInDown },
   { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
+  { value: '/native/ai', label: 'AI & LLMs', icon: BsStars },
 ];
 
 const allNativeTabs = [
