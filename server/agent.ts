@@ -69,8 +69,22 @@ function has(distRelPath: string): boolean {
   return abs ? existsSync(abs) : false;
 }
 
-const MD_HEADERS = { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept' };
-const HTML_HEADERS = { 'content-type': 'text/html; charset=utf-8', vary: 'Accept' };
+// Advertise the llms.txt indexes from every doc response (RFC 8288 Link header),
+// and let CDNs/agents cache briefly while revalidating in the background.
+export const LLMS_LINK = '</llms.txt>; rel="llms-txt", </llms-full.txt>; rel="llms-full-txt"';
+export const DOC_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
+const MD_HEADERS = {
+  'content-type': 'text/markdown; charset=utf-8',
+  vary: 'Accept',
+  link: LLMS_LINK,
+  'cache-control': DOC_CACHE,
+};
+const HTML_HEADERS = {
+  'content-type': 'text/html; charset=utf-8',
+  vary: 'Accept',
+  link: LLMS_LINK,
+  'cache-control': DOC_CACHE,
+};
 
 export async function handleAgentDocs(req: Request): Promise<Response | null> {
   if (req.method !== 'GET' && req.method !== 'HEAD') return null;

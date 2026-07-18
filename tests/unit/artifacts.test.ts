@@ -5,6 +5,7 @@ import {
   buildSitemap,
   buildRobotsTxt,
   buildAgentIndex,
+  buildServerCard,
   type PageRecord,
 } from '../../scripts/lib/artifacts';
 
@@ -52,6 +53,20 @@ describe('buildLlmsTxt', () => {
   it('points at the full corpus file', () => {
     expect(out).toContain('https://s/llms-full.txt');
   });
+  it('advertises the MCP server endpoint', () => {
+    expect(out).toContain('MCP server: https://s/mcp');
+  });
+});
+
+describe('buildServerCard', () => {
+  const card = JSON.parse(buildServerCard('https://s'));
+  it('is a valid MCP server card pointing at /mcp with search + fetch tools', () => {
+    expect(card.url).toBe('https://s/mcp');
+    expect(card.transport).toBe('streamable-http');
+    const names = card.tools.map((t: { name: string }) => t.name);
+    expect(names).toContain('search');
+    expect(names).toContain('fetch');
+  });
 });
 
 describe('buildLlmsFullTxt', () => {
@@ -94,6 +109,7 @@ describe('buildAgentIndex', () => {
   const out = buildAgentIndex(SITE, PAGES);
   it('carries one searchable record per page with the source comment stripped from text', () => {
     expect(out.site).toBe(SITE);
+    expect(out.mcp).toBe('https://s/mcp');
     expect(out.pages).toHaveLength(3);
     const clip = out.pages.find((p) => p.path === '/library/clip')!;
     expect(clip.title).toBe('Clip');

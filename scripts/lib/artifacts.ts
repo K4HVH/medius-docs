@@ -11,6 +11,7 @@ export interface PageRecord {
 
 export interface AgentIndex {
   site: string;
+  mcp: string;
   pages: Array<{ path: string; title: string; section: string; description: string; text: string }>;
 }
 
@@ -45,6 +46,8 @@ export function buildLlmsTxt(site: string, pages: PageRecord[]): string {
     `> ${SITE_SUMMARY}`,
     '',
     `Documentation as Markdown for AI agents. Each link is the Markdown twin of a page; the whole corpus is at ${site}/llms-full.txt.`,
+    '',
+    `MCP server: ${site}/mcp (Streamable HTTP; tools: search, fetch, search_docs, get_page, list_pages).`,
   ];
   for (const [section, list] of bySectionOrder(pages)) {
     lines.push('', `## ${section}`, '');
@@ -104,9 +107,29 @@ export function buildRobotsTxt(site: string): string {
   return lines.join('\n') + '\n';
 }
 
+export function buildServerCard(site: string): string {
+  const card = {
+    name: 'net.k4tech.medius/docs',
+    description:
+      'Medius documentation: the binary control protocol, device behavior, and the medius Rust library.',
+    version: '1.0.0',
+    url: `${site}/mcp`,
+    transport: 'streamable-http',
+    tools: [
+      { name: 'search', description: 'Search the docs; returns pages with an id for fetch.' },
+      { name: 'fetch', description: 'Fetch a page as Markdown by id.' },
+      { name: 'search_docs', description: 'Ranked full-text search with snippets.' },
+      { name: 'get_page', description: 'Full Markdown of one page by path.' },
+      { name: 'list_pages', description: 'List every documentation page.' },
+    ],
+  };
+  return JSON.stringify(card, null, 2) + '\n';
+}
+
 export function buildAgentIndex(site: string, pages: PageRecord[]): AgentIndex {
   return {
     site,
+    mcp: `${site}/mcp`,
     pages: pages.map((p) => ({
       path: p.path,
       title: p.title,
@@ -125,4 +148,7 @@ export function buildArtifacts(opts: { dist: string; site: string; pages: PageRe
   writeFileSync(join(dist, 'sitemap.xml'), buildSitemap(site, pages));
   writeFileSync(join(dist, 'robots.txt'), buildRobotsTxt(site));
   writeFileSync(join(dist, 'agent-index.json'), JSON.stringify(buildAgentIndex(site, pages), null, 2) + '\n');
+  const wellKnown = join(dist, '.well-known', 'mcp');
+  mkdirSync(wellKnown, { recursive: true });
+  writeFileSync(join(wellKnown, 'server-card.json'), buildServerCard(site));
 }

@@ -6,7 +6,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve, sep } from 'node:path';
-import { planAgentResponse } from './agent';
+import { LLMS_LINK, planAgentResponse } from './agent';
 import { handleMcp } from './mcp';
 
 const DIST = resolve('dist');
@@ -17,6 +17,7 @@ const ARTIFACT_TYPES: Record<string, string> = {
   '/sitemap.xml': 'application/xml; charset=utf-8',
   '/robots.txt': 'text/plain; charset=utf-8',
   '/agent-index.json': 'application/json; charset=utf-8',
+  '/.well-known/mcp/server-card.json': 'application/json; charset=utf-8',
 };
 
 const HINT = 'Markdown twins are build artifacts. Run `bun run build:full` to generate dist/, then reload.\n';
@@ -83,6 +84,7 @@ export async function agentDocsDev(req: IncomingMessage, res: ServerResponse, ne
       if (!abs) return next();
       res.setHeader('content-type', 'text/markdown; charset=utf-8');
       res.setHeader('vary', 'Accept');
+      res.setHeader('link', LLMS_LINK);
       res.end(readFileSync(abs));
       return;
     }

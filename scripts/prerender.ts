@@ -59,20 +59,31 @@ async function main(): Promise<void> {
         () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
       );
 
-      const cap = (await page.evaluate((sel: string) => {
-        const content = document.querySelector(sel);
-        const h = content?.querySelector('.card__header h3');
-        const sub = content?.querySelector('.card__header small');
-        const firstP = content?.querySelector('p');
-        const title = (h?.textContent || '').trim();
-        const description = ((sub?.textContent || firstP?.textContent || '').trim()).slice(0, 200);
-        return {
-          title,
-          description,
-          contentHtml: content ? content.innerHTML : '',
-          outerHtml: '<!DOCTYPE html>\n' + document.documentElement.outerHTML,
-        };
-      }, CONTENT)) as Captured;
+      const cap = (await page.evaluate(
+        ({ sel, mdPath }: { sel: string; mdPath: string }) => {
+          // Advertise the Markdown twin to agents that scrape HTML without content negotiation.
+          if (!document.head.querySelector('link[rel="alternate"][type="text/markdown"]')) {
+            const link = document.createElement('link');
+            link.setAttribute('rel', 'alternate');
+            link.setAttribute('type', 'text/markdown');
+            link.setAttribute('href', mdPath);
+            document.head.appendChild(link);
+          }
+          const content = document.querySelector(sel);
+          const h = content?.querySelector('.card__header h3');
+          const sub = content?.querySelector('.card__header small');
+          const firstP = content?.querySelector('p');
+          const title = (h?.textContent || '').trim();
+          const description = ((sub?.textContent || firstP?.textContent || '').trim()).slice(0, 200);
+          return {
+            title,
+            description,
+            contentHtml: content ? content.innerHTML : '',
+            outerHtml: '<!DOCTYPE html>\n' + document.documentElement.outerHTML,
+          };
+        },
+        { sel: CONTENT, mdPath: route.path + '.md' },
+      )) as Captured;
 
       if (!cap.contentHtml.trim()) throw new Error(`Empty ${CONTENT} content for ${route.path}`);
       if (!cap.title) throw new Error(`No page title (card header) for ${route.path}`);
@@ -96,6 +107,18 @@ async function main(): Promise<void> {
       });
       process.stdout.write(`  ${route.path} -> ${route.path}.html + ${route.path}.md\n`);
     }
+
+    // Prerender the Home landing page into dist/index.html so the root URL (the
+    // most-crawled one, and the SPA fallback) is real content, not an empty shell.
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForSelector('h1', { timeout: 20000 });
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    );
+    const homeHtml = await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML);
+    if (!/<h1[\s>]/i.test(homeHtml)) throw new Error('Home page did not render (no <h1>)');
+    writeFile(join(DIST, 'index.html'), homeHtml);
+    process.stdout.write('  / -> index.html (Home prerendered)\n');
   } finally {
     await browser.close();
     server.close();
