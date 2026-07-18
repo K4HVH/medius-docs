@@ -1,5 +1,4 @@
 import TurndownService from 'turndown';
-import { tables } from 'turndown-plugin-gfm';
 
 const CALLOUT_LABEL: Record<string, string> = {
   info: 'Note',
@@ -21,13 +20,80 @@ function fence(text: string, lang: string): string {
   return '\n\n```' + lang + '\n' + body + '\n```\n\n';
 }
 
-// Rewrite an internal router href (/x, /x#frag) to its .md twin, keeping the hash.
+// Rewrite an internal router href (/x, /x#frag) to its .md twin, keeping the
+// hash. A path whose last segment has a file extension (a static asset) is left
+// as-is, since it has no .md twin.
 function rewriteInternalHref(href: string): string {
   const hashIndex = href.indexOf('#');
   const path = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
   const frag = hashIndex >= 0 ? href.slice(hashIndex) : '';
-  const mdPath = path === '/' ? '/' : path.replace(/\/+$/, '') + '.md';
+  const lastSeg = path.slice(path.lastIndexOf('/') + 1);
+  const isFile = /\.[A-Za-z0-9]+$/.test(lastSeg);
+  const mdPath = path === '/' || isFile ? path : path.replace(/\/+$/, '') + '.md';
   return mdPath + frag;
+}
+
+// Convert one table cell's inner HTML to single-line inline Markdown, escaping
+// pipes (even inside code spans, per GFM) so they can't break the row.
+function cellMarkdown(td: TurndownService, cell: any): string {
+  const md = td.turndown(cell.innerHTML || '');
+  return md
+    .replace(/\r?\n+/g, ' ')
+    .replace(/\|/g, '\\|')
+    .trim();
+}
+
+// Build a rectangular grid of cell text from an HTML table, expanding colspan
+// (repeat across columns) and rowspan (carry the value down). Markdown tables
+// have no spans, so repeating the value preserves both data and alignment.
+function tableGrid(td: TurndownService, table: any): string[][] {
+  const rows = Array.from(table.querySelectorAll('tr')) as any[];
+  const grid: string[][] = [];
+  const carry = new Map<number, { text: string; rowsLeft: number }>();
+
+  rows.forEach((tr, r) => {
+    const rowArr: string[] = grid[r] || (grid[r] = []);
+    // Place any cells carried down from a rowspan above, at their fixed columns.
+    for (const [col, info] of carry) {
+      if (info.rowsLeft > 0) {
+        rowArr[col] = info.text;
+        info.rowsLeft--;
+        if (info.rowsLeft === 0) carry.delete(col);
+      }
+    }
+    let col = 0;
+    const cells = (Array.from(tr.children) as any[]).filter(
+      (c) => c.nodeName === 'TD' || c.nodeName === 'TH',
+    );
+    for (const cell of cells) {
+      const text = cellMarkdown(td, cell);
+      const cspan = Math.max(1, parseInt(cell.getAttribute('colspan') || '1', 10) || 1);
+      const rspan = Math.max(1, parseInt(cell.getAttribute('rowspan') || '1', 10) || 1);
+      for (let k = 0; k < cspan; k++) {
+        while (rowArr[col] !== undefined) col++;
+        rowArr[col] = text;
+        if (rspan > 1) carry.set(col, { text, rowsLeft: rspan - 1 });
+        col++;
+      }
+    }
+  });
+
+  const width = grid.reduce((w, row) => Math.max(w, row.length), 0);
+  return grid.map((row) => {
+    const out: string[] = [];
+    for (let i = 0; i < width; i++) out.push(row[i] ?? '');
+    return out;
+  });
+}
+
+function renderTable(td: TurndownService, table: any): string {
+  const grid = tableGrid(td, table);
+  if (grid.length === 0) return '';
+  const [header, ...body] = grid;
+  const line = (cells: string[]) => '| ' + cells.join(' | ') + ' |';
+  const sep = '| ' + header.map(() => '---').join(' | ') + ' |';
+  const lines = [line(header), sep, ...body.map(line)];
+  return '\n\n' + lines.join('\n') + '\n\n';
 }
 
 export function createTurndown(): TurndownService {
@@ -40,7 +106,12 @@ export function createTurndown(): TurndownService {
     emDelimiter: '_',
     strongDelimiter: '**',
   });
-  td.use(tables);
+
+  // Full table handling: pipe-escaped cells, colspan/rowspan expansion.
+  td.addRule('table', {
+    filter: (node: any) => node.nodeName === 'TABLE',
+    replacement: (_content, node: any) => renderTable(td, node),
+  });
 
   // CardHeader -> h2 title + italic subtitle line.
   td.addRule('cardHeader', {
@@ -105,6 +176,13 @@ export function createTurndown(): TurndownService {
     },
   });
 
+  // Drop agent-hidden chrome (the AI-actions menu) if it ever lands in content.
+  td.addRule('agentHidden', {
+    filter: (node: any) =>
+      hasClass(node, 'ai-actions') || (node.getAttribute && node.getAttribute('data-agent-hide') !== null),
+    replacement: () => '',
+  });
+
   // Internal router links -> .md twin, preserving the hash.
   td.addRule('internalLink', {
     filter: (node: any) =>
@@ -139,6 +217,12 @@ export function htmlToMarkdown(html: string): string {
   return normalizeMarkdown(md);
 }
 
+// Collapse runs of blank lines to a single blank line, but never inside a fenced
+// code block (diagrams and code must keep their exact internal spacing).
 export function normalizeMarkdown(md: string): string {
-  return md.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  const parts = md.replace(/\r\n/g, '\n').split(/(```[\s\S]*?```)/g);
+  return parts
+    .map((part, i) => (i % 2 === 0 ? part.replace(/\n{3,}/g, '\n\n') : part))
+    .join('')
+    .trim();
 }

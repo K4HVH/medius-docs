@@ -79,6 +79,44 @@ describe('htmlToMarkdown', () => {
     ).toBe('[medius](https://crates.io/crates/medius)');
   });
 
+  it('escapes literal pipes inside table cells (incl. inside code spans)', () => {
+    const html =
+      '<table class="api-params"><thead><tr><th>Type</th></tr></thead>' +
+      '<tbody><tr><td><code>float | None</code></td></tr></tbody></table>';
+    expect(htmlToMarkdown(html)).toBe('| Type |\n| --- |\n| `float \\| None` |');
+  });
+
+  it('expands a colspan cell by repeating it across the spanned columns', () => {
+    const html =
+      '<table class="api-params"><thead><tr><th>A</th><th>B</th><th>C</th></tr></thead>' +
+      '<tbody><tr><td>x</td><td colspan="2">y</td></tr></tbody></table>';
+    expect(htmlToMarkdown(html)).toBe('| A | B | C |\n| --- | --- | --- |\n| x | y | y |');
+  });
+
+  it('carries a rowspan cell down into the rows it spans (middle column)', () => {
+    const html =
+      '<table class="api-params"><thead><tr><th>A</th><th>B</th><th>C</th></tr></thead><tbody>' +
+      '<tr><td>a1</td><td rowspan="2">b</td><td>c1</td></tr>' +
+      '<tr><td>a2</td><td>c2</td></tr>' +
+      '</tbody></table>';
+    expect(htmlToMarkdown(html)).toBe(
+      '| A | B | C |\n| --- | --- | --- |\n| a1 | b | c1 |\n| a2 | b | c2 |',
+    );
+  });
+
+  it('does not collapse blank lines inside a fenced diagram (fence-aware normalize)', () => {
+    const html = '<pre class="diagram">line1\n\n\nline2</pre>';
+    expect(htmlToMarkdown(html)).toBe('```\nline1\n\n\nline2\n```');
+  });
+
+  it('drops agent-hidden UI chrome (the AI actions row) from the content', () => {
+    const html =
+      '<div class="ai-actions" data-agent-hide><span>For AI</span>' +
+      '<a href="/library/clip.md">View</a></div>' +
+      '<p>Real body.</p>';
+    expect(htmlToMarkdown(html)).toBe('Real body.');
+  });
+
   it('renders a docs-grid nav tile block as a bullet list of links, not nested headings', () => {
     const html =
       '<div class="docs-grid">' +

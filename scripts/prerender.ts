@@ -80,6 +80,9 @@ async function main(): Promise<void> {
       const sourceUrl = SITE + route.path;
       const contentMd = htmlToMarkdown(cap.contentHtml);
       const markdown = assemblePageMarkdown(contentMd, sourceUrl);
+      if (!/^# /m.test(markdown)) {
+        process.stderr.write(`  [warn] ${route.path}: extracted markdown has no H1 heading\n`);
+      }
 
       writeFile(join(DIST, route.path + '.md'), markdown);
       writeFile(join(DIST, route.path + '.html'), cap.outerHtml);
