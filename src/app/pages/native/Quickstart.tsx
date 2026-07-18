@@ -55,7 +55,7 @@ const Quickstart: Component = () => {
           <CardHeader title="Open the link" subtitle="Open at the fixed baud, speak binary" />
           <p>
             Open <code>/dev/ttyACM0</code> (Linux) or <code>COMx</code> (Windows) at{' '}
-            <code>4,000,000</code> baud, <code>8N1</code>, and speak binary immediately. There is no{' '}
+            <code>4,000,000</code> baud, <code>8N1</code>, and speak binary immediately. There's no{' '}
             <code>115200</code> handshake and no baud-switch frame.
           </p>
           <p>
@@ -75,12 +75,13 @@ const Quickstart: Component = () => {
               protocol version the firmware speaks.
             </li>
             <li>
-              Check <code>proto_ver == 2</code> before trusting the commands here. This documents
-              version <code>2</code>.
+              Check <code>proto_ver == 3</code> before trusting the commands here. This documents
+              version <code>3</code>.
             </li>
           </ol>
           <p>
-            Handshake and presence detail on <A href="/native/connection">Connection</A>.
+            Serial framing detail on <A href="/native/transport#serial">Transport</A>; handshake
+            and presence detail on <A href="/native/connection">Connection</A>.
           </p>
         </Card>
       </div>
@@ -157,12 +158,13 @@ port.write(frame)`}</code></pre>
               <tr><th>Flag</th><th>Mask</th><th>Means</th></tr>
             </thead>
             <tbody>
+              <tr><td><code>LINK_UP</code></td><td><code>0x01</code></td><td>The link to the host chip is up.</td></tr>
               <tr><td><code>MOUSE_ATTACHED</code></td><td><code>0x02</code></td><td>A mouse is on <code>USB3</code>.</td></tr>
               <tr><td><code>CLONE_CONFIGURED</code></td><td><code>0x04</code></td><td>The game PC has enumerated the clone.</td></tr>
             </tbody>
           </table>
           <p>
-            A flag is set when <code>(flags &amp; mask)</code> is non-zero. With both set, your{' '}
+            A flag is set when <code>(flags &amp; mask)</code> is non-zero. With all three set, your{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC. The full
             byte is on <A href="/native/commands/requests#health">HEALTH</A>.
           </p>

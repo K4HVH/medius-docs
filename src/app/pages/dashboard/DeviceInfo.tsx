@@ -30,14 +30,6 @@ const field = {
   gap: 'var(--g-spacing)',
   padding: '6px 0',
 } as const;
-const sectionLabel = {
-  color: 'var(--g-text-muted, #8a8a8a)',
-  'font-size': 'var(--font-size-xs, 0.75rem)',
-  'font-weight': '600',
-  'letter-spacing': '0.05em',
-  'text-transform': 'uppercase',
-  margin: 'var(--g-spacing) 0 var(--g-spacing-sm)',
-} as const;
 const chipRow = {
   display: 'flex',
   'flex-wrap': 'wrap',
@@ -121,19 +113,24 @@ const DeviceInfo = () => {
                 </Row>
               </Show>
               <Show when={device()?.vid}>
-                <Row label="USB id">
+                <Row label="USB ID">
                   <code>{vidPid(device()!)}</code>
                   <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
                 </Row>
               </Show>
               <Show when={dash.version?.()?.mac?.length}>
-                <Row label="Box id">
+                <Row label="Box ID">
                   <code>{macHex(dash.version()!)}</code>
+                </Row>
+              </Show>
+              <Show when={dash.version?.()?.name}>
+                <Row label="Box name">
+                  <code>{dash.version()!.name}</code>
                 </Row>
               </Show>
 
               <Show when={hasMouse(c())}>
-                <div style={sectionLabel}>Mouse</div>
+                <div class="api-response-label">Mouse</div>
                 <Row label="Buttons">{c().mouse.nButtons}</Row>
                 <Row label="Interfaces">
                   {c().mouse.nHid}
@@ -148,7 +145,7 @@ const DeviceInfo = () => {
               </Show>
 
               <Show when={hasKeyboard(c())}>
-                <div style={sectionLabel}>Keyboard</div>
+                <div class="api-response-label">Keyboard</div>
                 <Row label="Rollover">
                   {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
                 </Row>
@@ -162,7 +159,7 @@ const DeviceInfo = () => {
               <Show when={imperfect()}>
                 {(imp) => (
                   <>
-                    <div style={sectionLabel}>Clone</div>
+                    <div class="api-response-label">Clone</div>
                     <Row label="Full clone">
                       <Show
                         when={imp().overCapacity}
@@ -198,7 +195,7 @@ const DeviceInfo = () => {
                 }
               >
                 <Show when={mouseAttached()} fallback={<span style={muted}>no mouse</span>}>
-                  <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting…</span>}>
+                  <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting...</span>}>
                     {nativeHz(r())} Hz
                   </Show>
                 </Show>

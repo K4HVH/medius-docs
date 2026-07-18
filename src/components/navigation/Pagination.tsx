@@ -3,18 +3,14 @@ import { BsChevronLeft, BsChevronRight, BsChevronBarLeft, BsChevronBarRight } fr
 import '../../styles/components/navigation/Pagination.css';
 
 export interface PaginationProps {
-  // Required controlled state
-  page: number; // Current page (1-indexed)
-  totalPages: number; // Total number of pages
+  page: number; // 1-indexed
+  totalPages: number;
   onPageChange: (page: number) => void;
-  // Optional appearance
   variant?: 'primary' | 'secondary' | 'subtle';
   size?: 'compact' | 'normal' | 'spacious';
-  // Optional features
-  showFirstLast?: boolean; // Show first/last page buttons (default: true)
-  showPrevNext?: boolean; // Show prev/next page buttons (default: true)
-  siblingCount?: number; // Number of page buttons on each side of current (default: 1)
-  // Other
+  showFirstLast?: boolean; // default: true
+  showPrevNext?: boolean; // default: true
+  siblingCount?: number; // page buttons each side of current, default: 1
   disabled?: boolean;
   class?: string;
 }
@@ -35,61 +31,43 @@ export const Pagination: Component<PaginationProps> = (props) => {
 
   const variant = () => local.variant ?? 'secondary';
   const size = () => local.size ?? 'normal';
-  const shouldShowFirstLast = () => {
-    // Explicitly handle false value (default to true)
-    return local.showFirstLast !== false;
-  };
-  const shouldShowPrevNext = () => {
-    // Explicitly handle false value (default to true)
-    return local.showPrevNext !== false;
-  };
+  const shouldShowFirstLast = () => local.showFirstLast !== false;
+  const shouldShowPrevNext = () => local.showPrevNext !== false;
   const siblingCount = () => local.siblingCount ?? 1;
 
-  // Calculate which page numbers to show
   const getPageNumbers = (): (number | 'ellipsis')[] => {
     const current = local.page;
     const total = local.totalPages;
     const siblings = siblingCount();
 
     if (total <= 7) {
-      // Show all pages if 7 or fewer
       return Array.from({ length: total }, (_, i) => i + 1);
     }
 
-    // Always show first and last
     const pages: (number | 'ellipsis')[] = [];
 
-    // Calculate range around current page
     const leftSibling = Math.max(current - siblings, 1);
     const rightSibling = Math.min(current + siblings, total);
 
-    // Show left ellipsis if gap exists
     const showLeftEllipsis = leftSibling > 2;
-    // Show right ellipsis if gap exists
     const showRightEllipsis = rightSibling < total - 1;
 
-    // First page
     pages.push(1);
 
-    // Left ellipsis if there's a gap
     if (showLeftEllipsis) {
       pages.push('ellipsis');
     }
 
-    // Middle pages (around current page)
-    // Start from leftSibling but skip page 1 and total
     for (let i = leftSibling; i <= rightSibling; i++) {
       if (i > 1 && i < total) {
         pages.push(i);
       }
     }
 
-    // Right ellipsis if there's a gap
     if (showRightEllipsis) {
       pages.push('ellipsis');
     }
 
-    // Last page
     if (total > 1) {
       pages.push(total);
     }
@@ -146,7 +124,6 @@ export const Pagination: Component<PaginationProps> = (props) => {
     else if (e.key === 'Home') next = 0;
     else next = buttons.length - 1;
 
-    // Update tabindex: remove from all, set on target
     buttons.forEach(b => b.setAttribute('tabindex', '-1'));
     buttons[next].setAttribute('tabindex', '0');
     buttons[next].focus();
@@ -155,7 +132,6 @@ export const Pagination: Component<PaginationProps> = (props) => {
   return (
     <nav class={classNames()} aria-label="Pagination" onKeyDown={handleContainerKeyDown} {...rest}>
       <div class="pagination__container">
-        {/* First page button */}
         <Show when={shouldShowFirstLast()}>
           <button
             type="button"
@@ -169,7 +145,6 @@ export const Pagination: Component<PaginationProps> = (props) => {
           </button>
         </Show>
 
-        {/* Previous page button */}
         <Show when={shouldShowPrevNext()}>
           <button
             type="button"
@@ -183,7 +158,6 @@ export const Pagination: Component<PaginationProps> = (props) => {
           </button>
         </Show>
 
-        {/* Page numbers */}
         <div class="pagination__pages">
           <For each={getPageNumbers()}>
             {(item) => (
@@ -213,7 +187,6 @@ export const Pagination: Component<PaginationProps> = (props) => {
           </For>
         </div>
 
-        {/* Next page button */}
         <Show when={shouldShowPrevNext()}>
           <button
             type="button"
@@ -227,7 +200,6 @@ export const Pagination: Component<PaginationProps> = (props) => {
           </button>
         </Show>
 
-        {/* Last page button */}
         <Show when={shouldShowFirstLast()}>
           <button
             type="button"

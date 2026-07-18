@@ -36,9 +36,9 @@ const Usage: Component = () => {
           </p>
           <pre class="diagram">{`  call ──▶ MediusStatus
              │
-   == OK ──▶ the out-param is valid, carry on
-   != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
-             medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
+             ├─ == OK ──▶ the out-param is valid, carry on
+             └─ != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
+                          medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
           <table class="api-params">
             <thead>
               <tr><th>MediusStatus</th><th>Value</th><th>Means</th></tr>
@@ -47,7 +47,7 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_OK</code></td><td>0</td><td>Success; the out-param is written.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td>1</td><td>Serial I/O failed on the link.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td>2</td><td>No box found (<A href="/bindings/c/api#connect"><code>open</code></A> / <A href="/bindings/c/api#connect"><code>find</code></A>).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td>3</td><td>A query got no <A href="/native/commands/requests">RESP</A> frame.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td>3</td><td>A query got no <A href="/native/commands/requests#resp">RESP</A> frame.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td>4</td><td>Protocol mismatch at the <A href="/native/connection#handshake">handshake</A>; read <code>medius_last_error_proto_ver()</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td>5</td><td>The RESP wait elapsed.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td>6</td><td>Link dropped or a stream closed (see below).</td></tr>
@@ -141,6 +141,18 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
                 <td><code>medius_mock_clone</code></td>
                 <td><code>medius_mock_free</code></td>
               </tr>
+              <tr>
+                <td><A href="/library/clip#builder"><code>MediusClipBuilder</code></A></td>
+                <td><code>medius_clip_builder_new</code></td>
+                <td>-</td>
+                <td><code>medius_clip_builder_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/clip#handle"><code>MediusClip</code></A></td>
+                <td><code>medius_device_clip</code></td>
+                <td>-</td>
+                <td><code>medius_clip_free</code></td>
+              </tr>
             </tbody>
           </table>
           <pre><code class="language-c">{`MediusDevice *dev = NULL;
@@ -164,53 +176,53 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Input, Motion, LockTarget for the generic verbs" />
+          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget for the generic verbs" />
           <p>
-            Rust's <code>inject</code> / <code>move_axis</code> / <code>lock</code> are generic over the
-            target. In C you build a small struct first, then pass it by value.{' '}
-            <A href="/bindings/c/types#input"><code>MediusInput</code></A> and{' '}
-            <A href="/bindings/c/types#motion"><code>MediusMotion</code></A> have helper constructors;{' '}
-            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> is a plain two-field struct you fill yourself. A{' '}
-            <code>MediusInput</code> value holds a <A href="/native/commands/usage#buttons">button id</A>,
-            an <A href="/native/commands/usage#keycodes">HID keycode</A>, or a{' '}
-            <A href="/native/commands/usage#consumer">Consumer usage</A> per its kind. The direct verbs
-            (<A href="/bindings/c/api#inject"><code>medius_device_press</code></A>,{' '}
-            <A href="/bindings/c/api#keys"><code>_key_down</code></A>,{' '}
-            <A href="/bindings/c/api#media"><code>_media_down</code></A>,{' '}
-            <A href="/bindings/c/api#lock"><code>_lock_key</code></A>, …) skip the builder entirely.
+            Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
+            <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
+            targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
+            <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
+            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, each with a helper
+            constructor. A <code>MediusUsage</code> holds a{' '}
+            <A href="/native/commands/usage#buttons">button id</A>,{' '}
+            <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
+            <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
+            inject, a lock, or a catch test.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Builder</th><th>Returns</th><th>For</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>medius_input_button(MediusButton)</code></td><td><code>MediusInput</code></td><td rowspan="3"><A href="/library/inject">inject</A> / <A href="/native/injection">injection model</A></td></tr>
-              <tr><td><code>medius_input_key(MediusKey)</code></td><td><code>MediusInput</code></td></tr>
-              <tr><td><code>medius_input_media(MediusMediaKey)</code></td><td><code>MediusInput</code></td></tr>
+              <tr><td><code>medius_usage_button(MediusButton)</code></td><td><code>MediusUsage</code></td><td rowspan="3"><A href="/library/inject">inject</A> / <A href="/native/injection">injection model</A></td></tr>
+              <tr><td><code>medius_usage_key(MediusKey)</code></td><td><code>MediusUsage</code></td></tr>
+              <tr><td><code>medius_usage_media(MediusMediaKey)</code></td><td><code>MediusUsage</code></td></tr>
               <tr><td><code>medius_motion_cursor(dx, dy)</code></td><td><code>MediusMotion</code></td><td rowspan="2"><A href="/library/move">move</A> / <A href="/native/commands/move#move">MOVE</A></td></tr>
               <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
-              <tr><td><code>{'MediusLockTarget{ kind, button }'}</code> (struct literal)</td><td><code>MediusLockTarget</code></td><td><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
+              <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
+              <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
             </tbody>
           </table>
-          <pre><code class="language-c">{`/* inject: build a target, then apply an Action */
-MediusInput lmb = medius_input_button(MEDIUS_BUTTON_LEFT);
+          <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
+MediusUsage lmb = medius_usage_button(MEDIUS_BUTTON_LEFT);
 medius_device_inject(dev, lmb, MEDIUS_ACTION_PRESS);
+medius_device_press(dev, medius_usage_key(MEDIUS_KEY_W));   /* keys and media inject the same way */
 
 /* move: build a motion arm */
 MediusMotion m = medius_motion_cursor(100, -50);
 medius_device_move_axis(dev, m);
 
-/* lock: MediusLockTarget has no constructor, fill the struct */
-MediusLockTarget x = { MEDIUS_LOCK_TARGET_KIND_X, 0 };
+/* lock: an axis, or any usage */
+MediusLockTarget x = medius_lock_target_axis(MEDIUS_LOCK_TARGET_KIND_X);
 medius_device_lock(dev, x, MEDIUS_LOCK_DIRECTION_BOTH);
 
-MediusLockTarget side = { MEDIUS_LOCK_TARGET_KIND_BUTTON, MEDIUS_BUTTON_SIDE1 };
+MediusLockTarget side = medius_lock_target_usage(medius_usage_button(MEDIUS_BUTTON_SIDE1));
 medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
           <div class="callout callout--info">
             <p>
-              For <code>MediusLockTarget</code>, <code>button</code> is read only when <code>kind</code>{' '}
-              is <code>MEDIUS_LOCK_TARGET_KIND_BUTTON</code>; for the axis/wheel kinds it is ignored
-              (pass <code>0</code>). The struct fields are on{' '}
+              A button, key, and media usage all lock the same way:{' '}
+              <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
+              <code>medius_lock_target_axis(...)</code> an axis or the wheel. The struct fields are on{' '}
               <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
             </p>
           </div>
@@ -231,7 +243,7 @@ medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
             <tbody>
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
+                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
                 <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
               </tr>
               <tr>

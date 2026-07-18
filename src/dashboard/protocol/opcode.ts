@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 2; // the unified-input-core redesign (generic INJECT/MOVE/LOCK, class-aware RATE)
+export const PROTO_VER = 3; // input-taxonomy unification (uniform LOCK class+id, list RESP(LOCKS), MOTION/USAGE catch events)
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
@@ -26,6 +26,10 @@ export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> 
 export const OPT_IMPERFECT = 0; // value [allow u8]
 export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
 export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
+export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
+
+// The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
+export const NAME_MAX = 32;
 
 // OPTION(EMIT) emit-rate pacing modes (§3.10). Fixed snaps to 1000/n Hz and is capped at 1000.
 export enum EmitMode {
@@ -96,9 +100,9 @@ export enum FrameType {
   Led = 0x09,
   Lock = 0x0a,
   Catch = 0x0b,
-  MouseEvent = 0x0c,
-  KbEvent = 0x0f,
-  ConsEvent = 0x10,
+  MotionEvent = 0x0c,
+  UsageEvent = 0x0f,
+  // 0x10 reserved (was ConsEvent; media folded into UsageEvent)
   Option = 0x11,
 }
 
@@ -125,11 +129,9 @@ export function frameTypeFromU8(value: number): FrameType | null {
     case 0x0b:
       return FrameType.Catch;
     case 0x0c:
-      return FrameType.MouseEvent;
+      return FrameType.MotionEvent;
     case 0x0f:
-      return FrameType.KbEvent;
-    case 0x10:
-      return FrameType.ConsEvent;
+      return FrameType.UsageEvent;
     case 0x11:
       return FrameType.Option;
     default:

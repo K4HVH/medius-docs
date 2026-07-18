@@ -9,10 +9,10 @@ interface FormFieldProps extends JSX.HTMLAttributes<HTMLDivElement> {
   error?: string;
   required?: boolean;
   children: JSX.Element;
-  fieldId?: string;      // Override ID for the input field
-  errorId?: string;      // Override ID for the error message
-  helpText?: string;     // Additional help text
-  helpTextId?: string;   // Override ID for help text
+  fieldId?: string;
+  errorId?: string;
+  helpText?: string;
+  helpTextId?: string;
 }
 
 export const FormField: Component<FormFieldProps> = (props) => {
@@ -28,14 +28,13 @@ export const FormField: Component<FormFieldProps> = (props) => {
     'helpTextId',
   ]);
 
-  // IDs are computed ONCE per mount (not inside reactive functions) so the same
-  // ID is stable across all reads: label for=, context, aria-describedby, etc.
+  // Computed once per mount, not in a reactive function, so each ID stays stable
+  // across every read (label for=, context, aria-describedby).
   const fieldId = local.fieldId ?? generateId('field');
   const errorId = local.errorId ?? generateId('error');
   const helpTextId = local.helpTextId ?? generateId('help');
 
-  // Build aria-describedby reactively so it updates when error/helpText change.
-  // Exposed as an accessor so context consumers stay reactive.
+  // Kept as an accessor so context consumers stay reactive when error/helpText change.
   const ariaDescribedBy = createMemo(() => {
     const ids: string[] = [];
     if (local.error) ids.push(errorId);

@@ -23,14 +23,14 @@ const Quickstart: Component = () => {
           <p>
             Get <A href="/bindings/c"><code>medius.h</code></A> and the library from{' '}
             <A href="/bindings/c/build">Build &amp; features</A>. New to the{' '}
-            <A href="/native/hardware">box</A> itself, read the{' '}
+            <A href="/native/hardware">box</A> itself? Read the{' '}
             <A href="/native/quickstart">Native quickstart</A> first.
           </p>
         </div>
         <pre class="diagram">{`  find()            ──▶  open + handshake      blocks
   query_version()   ──▶  read the version      blocks
   move() / press()  ──▶  inject input          fire-and-forget
-  catch_events()    ──▶  subscribe to input    blocks
+  catch_events()    ──▶  subscribe to input    fire-and-forget
   recv()            ──▶  next physical event   blocks
   free()            ──▶  close, NULL-safe      local`}</pre>
       </Card>
@@ -68,16 +68,16 @@ int main(void) {
         printf("firmware %u.%u.%u (proto %u)\\n", v.fw_major, v.fw_minor, v.fw_patch, v.proto_ver);
 
     check(medius_device_move_rel(dev, 100, -50), "move_rel");   /* fire-and-forget */
-    check(medius_device_press(dev, MEDIUS_BUTTON_LEFT), "press");
-    check(medius_device_soft_release(dev, MEDIUS_BUTTON_LEFT), "release");
+    check(medius_device_press(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "press");
+    check(medius_device_soft_release(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "release");
 
     MediusEventStream *events = NULL;
     if (!check(medius_device_catch_events(dev, MEDIUS_CATCH_MASK_ALL, &events), "catch_events")) {
         MediusCatchEvent ev;                                   /* blocks for one physical event */
         if (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK &&
-            ev.kind == MEDIUS_CATCH_EVENT_KIND_MOUSE)
-            printf("mouse: dx=%d dy=%d buttons=0x%02x\\n",
-                   ev.data.mouse.dx, ev.data.mouse.dy, ev.data.mouse.buttons);
+            ev.kind == MEDIUS_CATCH_EVENT_KIND_MOTION)
+            printf("motion: dx=%d dy=%d dz=%d\\n",
+                   ev.data.motion.dx, ev.data.motion.dy, ev.data.motion.dz);
         medius_event_stream_free(events);                      /* unsubscribe */
     }
 
@@ -85,9 +85,9 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 2.3.0 (abi 1)
-firmware 2.3.2 (proto 2)
-mouse: dx=12 dy=-4 buttons=0x00`}</code></pre>
+          <pre><code class="language-c">{`medius-capi 3.0.0 (abi 3)
+firmware 3.0.0 (proto 3)
+motion: dx=12 dy=-4 dz=0`}</code></pre>
           <div class="callout callout--info">
             <p>
               <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until the user touches the mouse or
@@ -98,7 +98,7 @@ mouse: dx=12 dy=-4 buttons=0x00`}</code></pre>
         </Card>
       </div>
 
-      <div id="build" data-search-target>
+      <div id="run" data-search-target>
         <Card>
           <CardHeader title="Run it" subtitle="gcc or clang, link libmedius_capi" />
           <p>
@@ -230,7 +230,7 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
                 <td><A href="/library/inject">Inject</A> · the <A href="/native/injection">injection model</A></td>
               </tr>
               <tr>
-                <td><code>medius_device_catch_events</code> / <code>_recv</code></td>
+                <td><code>medius_device_catch_events</code> / <code>medius_event_stream_recv</code></td>
                 <td><A href="/library/catch">Catch</A> · consuming them in C on <A href="/bindings/c/streams">Streams</A></td>
               </tr>
               <tr>

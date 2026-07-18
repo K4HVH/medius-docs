@@ -78,10 +78,10 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
         <Card>
           <CardHeader title="Keepalive and holds" subtitle="Holding injected input past the silence window" />
           <p>
-            The box clears every injected button and pending move once no frame arrives for its{' '}
+            The box clears every injected input and pending move once no frame arrives for its{' '}
             <A href="/native/injection#safety">silence window</A>. A live <code>Device</code> holds your
             overrides past that on its own: a background thread (<code>medius-keepalive</code>) sends a{' '}
-            <code>QUERY(HEALTH)</code> every <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while
+            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> every <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while
             anything is held, so a press survives. There's no <code>keepalive()</code> to call.
           </p>
           <table class="api-params">
@@ -89,7 +89,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
               <tr><th>State</th><th>Behavior</th></tr>
             </thead>
             <tbody>
-              <tr><td>Override held</td><td>Sends a <code>QUERY(HEALTH)</code> every 500 ms and drops the reply.</td></tr>
+              <tr><td>Override held</td><td>Keepalive thread runs; the health reply is dropped.</td></tr>
               <tr><td>Idle</td><td>No override held, so the thread sends nothing.</td></tr>
             </tbody>
           </table>
@@ -102,9 +102,9 @@ std::thread::sleep(std::time::Duration::from_secs(5));
 
 device.reset()?;`}</code></pre>
           <p>
-            An <em>override</em> is the box holding a button down or up itself, set by{' '}
-            <A href="/library/inject#button"><code>press</code></A> or{' '}
-            <A href="/library/inject#button"><code>force_release</code></A>; the library keeps a
+            An <em>override</em> is the box holding an input down or up itself, set by{' '}
+            <A href="/library/inject#inject"><code>press</code></A> or{' '}
+            <A href="/library/inject#inject"><code>force_release</code></A>; the library keeps a
             copy. After a dropped link, <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it.
           </p>
@@ -116,7 +116,7 @@ device.reset()?;`}</code></pre>
           <CardHeader title="Releasing the device" subtitle="Drop it; no close() call" />
           <p>
             There's no <code>close</code>: dropping the last{' '}
-            <A href="#threading"><code>Arc</code>-backed handle</A> tears the connection down. Its{' '}
+            <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> tears the connection down. Its{' '}
             <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
             stops the threads and closes the port.
           </p>

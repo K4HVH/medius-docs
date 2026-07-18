@@ -48,7 +48,6 @@ export const Accordion: Component<AccordionProps> = (props) => {
   const size = () => local.size ?? 'normal';
   const exclusive = () => local.exclusive ?? true;
 
-  // Controlled / uncontrolled state
   const isControlled = () => local.value !== undefined;
   const [internalValue, setInternalValue] = createSignal<string[]>(
     local.defaultValue ?? []
@@ -69,10 +68,8 @@ export const Accordion: Component<AccordionProps> = (props) => {
     const current = currentValue();
 
     if (isExpanded(value)) {
-      // Collapse
       setValue(current.filter(v => v !== value));
     } else {
-      // Expand
       if (exclusive()) {
         setValue([value]);
       } else {
@@ -228,7 +225,6 @@ export const AccordionItem: Component<AccordionItemProps> = (props) => {
     return classes.join(' ');
   };
 
-  // Resolve children to get content
   const content = resolveChildren(() => local.children);
 
   const contentClassNames = () => {

@@ -4,7 +4,7 @@ export type PortId = 'usb1' | 'usb2' | 'usb3';
 
 const PORTS: { id: PortId; label: string; sub: string }[] = [
   { id: 'usb1', label: 'USB1', sub: 'Game PC' },
-  { id: 'usb2', label: 'USB2', sub: 'Control' },
+  { id: 'usb2', label: 'USB2', sub: 'Control PC' },
   { id: 'usb3', label: 'USB3', sub: 'Mouse' },
 ];
 
@@ -54,7 +54,7 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mo
                 }}
               >
                 <div style={{ 'font-weight': '700' }}>{p.label}</div>
-                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-secondary)' }}>{p.sub}</div>
+                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-muted)' }}>{p.sub}</div>
                 <div
                   style={{
                     'margin-top': '4px',

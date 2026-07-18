@@ -72,7 +72,6 @@ export const TextField: Component<TextFieldProps> = (props) => {
   const autoGrowTextarea = () => {
     if (!textareaRef || !local.multiline) return;
 
-    // Reset height to auto to get the correct scrollHeight
     textareaRef.style.height = 'auto';
 
     const minHeight = rows() * parseFloat(getComputedStyle(textareaRef).lineHeight);
@@ -163,7 +162,6 @@ export const TextField: Component<TextFieldProps> = (props) => {
   const ariaDescribedBy = () => local['aria-describedby'] ?? fieldCtx?.ariaDescribedBy?.();
   const ariaRequired = () => local['aria-required'] ?? local.required ?? fieldCtx?.required;
 
-  // Auto-grow textarea when value changes
   createEffect(() => {
     if (local.multiline && local.value !== undefined) {
       autoGrowTextarea();

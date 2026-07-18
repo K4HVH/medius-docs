@@ -61,7 +61,7 @@ const Inject: Component = () => {
             </thead>
             <tbody>
               <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of physical state.</td></tr>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop our override, press or force; a physical hold stays active.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop our override (whether it was a press or a force-release); a physical hold stays active.</td></tr>
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>
@@ -101,7 +101,7 @@ RESET      releases every override at once`}</pre>
             <A href="/native/commands/usage#buttons">button id</A> (0=Left, 1=Right, 2=Middle,
             3=Side1, 4=Side2), bound at clone time to the real mouse's buttons. The override sets that
             button's bit in the report the PC sees. Library bindings:{' '}
-            <A href="/library/inject#button"><code>press</code> / <code>soft_release</code> / <code>force_release</code></A>.
+            <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Press Left: <code>class</code> <code>0x00</code>, <code>id</code> <code>0x0000</code>, <code>action</code> <code>0x01</code>:</p>
@@ -124,7 +124,7 @@ RESET      releases every override at once`}</pre>
             slots, so injection never evicts the user's typing; past the board's rollover limit it
             emits the board's own <code>ErrorRollOver</code>. A keycode the cloned board can't report is
             a no-op. Library bindings:{' '}
-            <A href="/library/inject#key"><code>key</code> / <code>key_down</code> / <code>key_up</code> / <code>key_force_release</code></A>.
+            <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Press <code>A</code>: <code>class</code> <code>0x01</code>, <code>id</code> <code>0x0004</code>, <code>action</code> <code>0x01</code>:</p>
@@ -146,7 +146,7 @@ RESET      releases every override at once`}</pre>
             that declares a Consumer collection, read from the{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>CONSUMER</code> flag; otherwise a no-op. Library bindings:{' '}
-            <A href="/library/inject#media"><code>media</code> / <code>media_down</code> / <code>media_up</code> / <code>media_force_release</code></A>.
+            <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Press Volume Up: <code>class</code> <code>0x02</code>, <code>id</code> <code>0x00E9</code>, <code>action</code> <code>0x01</code>:</p>

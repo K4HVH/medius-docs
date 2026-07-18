@@ -61,7 +61,6 @@ export const NotificationProvider: Component<{ children: JSX.Element }> = (props
 
     setNotifications((prev) => [...prev, notification]);
 
-    // Auto-dismiss if duration is set
     if (notification.duration !== null && notification.duration !== undefined && notification.duration > 0) {
       setTimeout(() => {
         dismiss(id);
@@ -72,12 +71,10 @@ export const NotificationProvider: Component<{ children: JSX.Element }> = (props
   };
 
   const dismiss = (id: string) => {
-    // Set dismissing flag for animation
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, dismissing: true } : n))
     );
 
-    // Wait for animation to complete before removing
     setTimeout(() => {
       setNotifications((prev) => {
         const notification = prev.find((n) => n.id === id);

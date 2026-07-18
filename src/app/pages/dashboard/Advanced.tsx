@@ -83,7 +83,7 @@ const Advanced = () => {
       if (!img) return setErr('No image selected.');
       const ok = await dash.flashNative(port, img, kind());
       if (ok) setDone(true);
-      else setErr(dash.error() ?? 'That did not finish. Hold BOOT and try again.');
+      else setErr(dash.error() ?? "That didn't finish. Hold the BOOT button and try again.");
     } catch (e) {
       if (!isUserCancel(e)) setErr((e as Error).message);
     } finally {
@@ -114,7 +114,7 @@ const Advanced = () => {
           <Switch>
             <Match when={done()}>
               <div class="callout callout--info">Done. Plug back in normally, then reconnect.</div>
-              <PortDiagram plug={['usb1', 'usb2']} />
+              <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
               <Button variant="secondary" onClick={() => setDone(false)}>Flash another</Button>
             </Match>
 
@@ -187,12 +187,11 @@ const Advanced = () => {
                 </Show>
               </Show>
 
-              <p style={{ 'margin-top': 'var(--g-spacing)' }}>Get the chip into the bootloader:</p>
+              <p style={{ 'margin-top': 'var(--g-spacing)' }}>Get the chip into update mode:</p>
               <Show
                 when={chip() === 'device' || unplugged()}
                 fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
               >
-                <p>Hold the BOOT button, then plug in:</p>
                 <PortDiagram
                   plug={chip() === 'host' ? ['usb3'] : ['usb1', 'usb2']}
                   boot={chip() === 'host' ? 'mouse' : 'main'}

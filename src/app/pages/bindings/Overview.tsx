@@ -13,7 +13,7 @@ const Overview: Component = () => {
           device passes through untouched, and your program{' '}
           <A href="/native/injection">injects input</A> of its own over a{' '}
           <A href="/native/frame">USB-serial link</A>. These bindings let you write that program in{' '}
-          <A href="/bindings/c">C or C++</A> or <A href="/bindings/python">Python</A> instead of{' '}
+          <A href="/bindings/c">C / C++</A> or <A href="/bindings/python">Python</A> instead of{' '}
           <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a>. They
           cover the whole feature set and put the exact same bytes on the wire.
         </p>
@@ -28,7 +28,7 @@ const Overview: Component = () => {
         └──────────────┬──────────────┘
                        │   4 Mbaud USB-serial frames
         ┌──────────────▼──────────────┐
-        │       the medius box        │   ──▶ mouse + game PC
+        │       the medius box        │   ▶ mouse + game PC
         └─────────────────────────────┘`}</pre>
         <div class="callout callout--info">
           <p>
@@ -52,7 +52,7 @@ const Overview: Component = () => {
               <tr>
                 <td><A href="/bindings/python"><code>Python</code></A></td>
                 <td><code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code></td>
-                <td>raises <A href="/bindings/python/types"><code>MediusError</code></A></td>
+                <td>raises <A href="/bindings/python/types#errors"><code>MediusError</code></A></td>
                 <td>automatic (<code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code> / <a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">GC</a>)</td>
                 <td>scripting, automation, fast prototyping</td>
               </tr>
@@ -65,7 +65,6 @@ const Overview: Component = () => {
               </tr>
             </tbody>
           </table>
-          <p>Every language does everything. Pick by ergonomics, not capability.</p>
         </Card>
       </div>
 
@@ -82,6 +81,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/lock">Lock physical input</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>✓</td><td>✓</td></tr>
+              <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/options">Options &amp; LED</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/requests">Queries (version, health, caps…)</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>

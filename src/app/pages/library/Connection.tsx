@@ -19,12 +19,12 @@ const Connection: Component = () => {
       <div id="open" data-search-target>
         <Card>
           <CardHeader title="Open a device" subtitle="Auto-detect, or a path you already have" />
-          <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;Device&gt;</pre>
+          <pre class="api-signature">fn Device::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn find() -&gt; Result&lt;Device&gt;</pre>
+          <pre class="api-signature">fn Device::find() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <pre class="api-signature">fn Device::find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             <code>open</code> and <code>find</code> block on the{' '}
             <A href="/native/connection#handshake">handshake</A>. Auto-detect matches on{' '}
@@ -93,7 +93,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE};
 
-println!("query timeout:    {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
+println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code></pre>
         </Card>
       </div>
@@ -103,17 +103,18 @@ println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code
           <CardHeader title="Async device" subtitle="The same link, with awaitable queries" />
           <pre class="api-signature">fn AsyncDevice::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <pre class="api-signature">fn AsyncDevice::find() -&gt; Result&lt;AsyncDevice&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
-            Behind the <code>async</code> feature, <code>AsyncDevice</code> turns the reply-reading
+            Behind the <code>async</code> feature, <A href="/library/features/async"><code>AsyncDevice</code></A> turns the reply-reading
             queries into futures; the{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
             Construct one with <code>AsyncDevice::find</code>, <code>open</code> by path, or{' '}
-            <code>into_async</code>; full surface on the{' '}
-            <A href="/library/features/async">async feature</A> page.
+            <code>into_async</code>; full surface on the async feature page.
           </p>
           <pre><code class="language-bash">cargo add medius --features async</code></pre>
           <div class="api-response-label">EXAMPLE</div>

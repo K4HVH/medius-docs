@@ -59,7 +59,7 @@ const Troubleshooting: Component = () => {
             <code>flags</code> byte. The box only merges injection once the first three flags are set:{' '}
             <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a mouse is on{' '}
             <A href="/native/hardware"><code>USB3</code></A>), and <code>CLONE_CONFIGURED</code> (the
-            PC has enumerated the clone). The full flag byte is on{' '}
+            PC has enumerated the clone). The full flags byte is on{' '}
             <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
@@ -83,7 +83,8 @@ const Troubleshooting: Component = () => {
           <p>
             To hold an injected button, keep the link busy with periodic frames (a{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> is enough), or
-            let the library's keepalive do it.
+            let{' '}
+            <A href="/library/guides/connection#keepalive">the library's keepalive</A> do it.
           </p>
           <div class="callout callout--info">
             <p>

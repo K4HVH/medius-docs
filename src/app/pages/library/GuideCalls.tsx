@@ -21,11 +21,11 @@ const GuideCalls: Component = () => {
           <pre><code class="language-rust">{`device.move_rel(100, -50)?; // one frame out, no reply`}</code></pre>
 
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>Sends a <code>QUERY</code> and waits for the correlated <code>RESP</code>.</p>
+          <p>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let v = device.query_version()?; // waits for the box to reply`}</code></pre>
 
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>Reads state the library already holds; can't fail on the link.</p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let c = device.counters(); // local snapshot, no network`}</code></pre>
@@ -61,23 +61,26 @@ const GuideCalls: Component = () => {
                   <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
                   <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
                   <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-                  <A href="/library/requests#query-catch"><code>query_catch</code></A>
+                  <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
+                  the option <code>query_*</code> methods, and the clip{' '}
+                  <A href="/library/requests#clip-status"><code>status</code></A> query
                 </td>
                 <td>
                   <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}
                   <A href="/library/move#wheel"><code>wheel</code></A>,{' '}
-                  <A href="/library/inject#button"><code>button</code></A>,{' '}
-                  <A href="/library/inject#button"><code>press</code></A>,{' '}
-                  <A href="/library/inject#button"><code>soft_release</code></A>,{' '}
-                  <A href="/library/inject#button"><code>force_release</code></A>,{' '}
-                  <A href="/library/inject#key"><code>key</code></A>,{' '}
-                  <A href="/library/inject#media"><code>media</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>inject</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>press</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>release</code></A>,{' '}
+                  <A href="/library/inject#inject"><code>force_release</code></A>,{' '}
                   <A href="/library/admin#reset"><code>reset</code></A>,{' '}
                   <A href="/library/admin#reboot"><code>reboot</code></A>,{' '}
                   <A href="/library/led#led"><code>led</code></A>,{' '}
                   <A href="/library/lock#lock"><code>lock</code></A>,{' '}
                   <A href="/library/lock#unlock"><code>unlock</code></A>,{' '}
-                  <A href="/library/catch#catch-events"><code>catch_events</code></A>
+                  <A href="/library/catch#catch-events"><code>catch_events</code></A>,{' '}
+                  and the clip <A href="/library/clip#handle"><code>append</code></A> /{' '}
+                  <A href="/library/clip#handle"><code>start</code></A> /{' '}
+                  <A href="/library/clip#handle"><code>stop</code></A>
                 </td>
               </tr>
             </tbody>
@@ -166,8 +169,8 @@ for _ in 0..200 {
           <CardHeader title="Making a click" subtitle="Press, wait, release" />
           <p>
             There's no one-shot <code>click</code>:{' '}
-            <A href="/library/inject#button"><code>press</code></A>, wait, then release with{' '}
-            <A href="/library/inject#button"><code>soft_release</code></A> so you don't stomp a
+            <A href="/library/inject#inject"><code>press</code></A>, wait, then release with{' '}
+            <A href="/library/inject#inject"><code>release</code></A> so you don't stomp a
             physical hold.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -176,7 +179,7 @@ use medius::Button;
 
 device.press(Button::Left)?;
 thread::sleep(Duration::from_millis(20));
-device.soft_release(Button::Left)?;`}</code></pre>
+device.release(Button::Left)?;`}</code></pre>
           <p>
             <A href="/library/admin#reset"><code>reset</code></A> drops every override at once; a held
             press is re-asserted on reconnect via{' '}

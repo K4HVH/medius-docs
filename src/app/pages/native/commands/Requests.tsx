@@ -19,8 +19,9 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
           <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
-          <A href="/native/commands/requests#catch">catch</A> subscription, or a persistent box{' '}
-          <A href="/native/commands/requests#options">option</A>.
+          <A href="/native/commands/requests#catch">catch</A> subscription, a persistent box{' '}
+          <A href="/native/commands/requests#options">option</A>, or the buffered input{' '}
+          <A href="/native/commands/requests#clip">clip</A>.
         </p>
       </Card>
 
@@ -57,7 +58,9 @@ const Requests: Component = () => {
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
+              <tr><td><code>8</code></td><td>reserved</td><td>-</td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
+              <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -75,7 +78,9 @@ const Requests: Component = () => {
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
             <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
-            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
+            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
+            <A href="/library/requests#clip-status"><code>status</code></A> query.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -112,16 +117,7 @@ const Requests: Component = () => {
             You get exactly one <code>RESP</code> per <code>QUERY</code>. Its{' '}
             <A href="/native/frame#seq"><code>SEQ</code></A> matches the request's and{' '}
             <code>what</code> echoes the selector, so you can pair a reply with its request and tell
-            which kind it is. Each selector's payload is laid out below, with an example frame:{' '}
-            <A href="/native/commands/requests#version"><code>VERSION</code></A>,{' '}
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A>,{' '}
-            <A href="/native/commands/requests#device-info"><code>DEVICE_INFO</code></A>,{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A>,{' '}
-            <A href="/native/commands/requests#rate"><code>RATE</code></A>,{' '}
-            <A href="/native/commands/requests#stats"><code>STATS</code></A>,{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A>,{' '}
-            <A href="/native/commands/requests#catch"><code>CATCH</code></A>, and{' '}
-            <A href="/native/commands/requests#options"><code>OPTIONS</code></A>.
+            which kind it is. Each selector's payload is laid out below, with an example frame.
           </p>
         </Card>
       </div>
@@ -132,10 +128,13 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
-            describes <code>2</code>); the box reports its own firmware version, then its base{' '}
-            <code>mac</code>, a stable per-box id.
+            describes <code>3</code>); the box reports its own firmware version, then its base{' '}
+            <code>mac</code>, a stable per-box id, then a length-delimited ASCII{' '}
+            <A href="/native/commands/option#name"><code>name</code></A> tail (a synthesized default
+            when unset). The <code>name</code> is additive, so <code>proto_ver</code> stays{' '}
+            <code>3</code>: an older box just sends an empty tail.
           </p>
-          <pre class="api-signature">QUERY  what = 0  ·  RESP 11 bytes</pre>
+          <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -144,27 +143,33 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 2</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 3</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
               <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the device chip's base MAC; the stable per-box id, rendered as 12 lowercase hex digits</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name, filling the rest of the payload (the frame <code>LEN</code> delimits it); a synthesized <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             The box also sends this unprompted at startup, as a{' '}
             <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> stays fixed for a
-            box, so it identifies the same box across replugs and port renumbering. Library binding:{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>.
+            box, so it identifies the same box across replugs and port renumbering; the{' '}
+            <A href="/native/commands/option#name"><code>name</code></A> is its readable label. Library
+            binding: <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>2.3.2</code>, protocol <code>2</code>, MAC <code>123456789abc</code>:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
-| A5     | 06     | 00     | 0B 00  | 00     | 02     | 02     | 03     | 02     | 12 34 56 78 9A BC  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | mac (6 bytes)     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+-------------------+--------+`}</pre>
+          <p>Firmware <code>3.0.0</code>, protocol <code>3</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 0F 00  | 00     | 03     | 03     | 00     | 00     | ...    |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| ...    | 12 34 56 78 9A BC  | 4C 6F 6B 69  | lo hi  |
++--------+--------------------+--------------+--------+
+| ...    | mac (6 bytes)      | "Loki"       | CRC16  |
++--------+--------------------+--------------+--------+`}</pre>
         </Card>
       </div>
 
@@ -175,6 +180,8 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 1</code>: a single <code>flags</code> byte, each bit an independent status.
           </p>
+          <pre class="api-signature">QUERY  what = 1  ·  RESP 2 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
             <thead>
@@ -203,7 +210,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The first three set means the box is ready for input to reach the PC.
+            The first three bits set means the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -442,11 +449,15 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>4096 emits, no drops, no wedges:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
-| A5     | 06     | 00     | 11 00  | 05     | 00 10 00 00  | 00 00  | ...
-+--------+--------+--------+--------+--------+--------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits | drops  | ...
-+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
+| A5     | 06     | 00     | 11 00  | 05     | 00 10 00 00  |
++--------+--------+--------+--------+--------+--------------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
++--------+--------+--------+--------+--------+--------------+
+| 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| drops  | merges | maxdep | wedges | wakeup | resets | config | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
@@ -456,11 +467,11 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 6</code>: which physical inputs are currently locked by{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>, as a 16-bit <code>mask</code>. Two
-            bits per target, one for each direction, so you can read back a per-direction lock exactly
-            as you set it. A zero mask means nothing is locked.
+            <A href="/native/commands/lock"><code>LOCK</code></A>, as a variable list of entries, one
+            per locked field across every class, so keyboard and media locks read the same as mouse
+            ones. An empty list (<code>n = 0</code>) means nothing is locked.
           </p>
-          <pre class="api-signature">QUERY  what = 6  ·  RESP 3 bytes</pre>
+          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 4n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -469,26 +480,20 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-              <tr><td>1</td><td><code>mask</code></td><td><code>u16</code></td><td>active locks, little-endian; bit layout below</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of lock entries that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the locked field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
+              <tr><td>+</td><td><code>dirbits</code></td><td><code>u8</code></td><td>which edges are locked, the bits below</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">BIT LAYOUT</div>
-          <p>
-            Each <A href="/native/commands/lock"><code>target</code></A> owns two bits: bit{' '}
-            <code>target*2</code> is the positive/press direction, bit <code>target*2 + 1</code> the
-            negative/release direction.
-          </p>
+          <div class="api-response-label">DIRBITS</div>
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
             </thead>
             <tbody>
-              <tr><td>b0</td><td><code>0x0001</code></td><td><code>X</code> positive is locked</td></tr>
-              <tr><td>b1</td><td><code>0x0002</code></td><td><code>X</code> negative is locked</td></tr>
-              <tr><td>b2 / b3</td><td><code>0x0004</code> / <code>0x0008</code></td><td><code>Y</code> positive / negative</td></tr>
-              <tr><td>b4 / b5</td><td><code>0x0010</code> / <code>0x0020</code></td><td><code>Wheel</code> up / down</td></tr>
-              <tr><td>b6 / b7</td><td><code>0x0040</code> / <code>0x0080</code></td><td><code>Left</code> press / release</td></tr>
-              <tr><td>b8..b15</td><td><code>0x0100</code>+</td><td><code>Right</code>, <code>Middle</code>, <code>Side1</code>, <code>Side2</code>, press then release</td></tr>
+              <tr><td>b0</td><td><code>0x01</code></td><td>the positive / press edge is locked</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td>the negative / release edge is locked</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -497,12 +502,12 @@ const Requests: Component = () => {
             binding: <A href="/library/requests#query-locks"><code>query_locks</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Only the wheel's negative (scroll-down) direction locked (<code>mask = 0x0020</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 03 00  | 06     | 20 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | mask   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>One entry: the wheel's negative (scroll-down) sign locked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>dirbits = 0x02</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 06 00  | 06     | 01     | 03     | 02 00  | 02     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dirbits| CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
@@ -525,7 +530,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
-              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04, Keys 0x08</td></tr>
+              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04, Keys 0x08, Media 0x10</td></tr>
               <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>events dropped box-side under back-pressure, little-endian</td></tr>
             </tbody>
           </table>
@@ -567,7 +572,7 @@ const Requests: Component = () => {
               <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">IMPERFECT value</div>
+          <div class="api-response-label">IMPERFECT VALUE</div>
           <p>
             The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
             two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
@@ -589,7 +594,7 @@ const Requests: Component = () => {
             (<code>clone_imperfect = 1</code>). Library binding:{' '}
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>.
           </p>
-          <div class="api-response-label">MOVE_RIDE value</div>
+          <div class="api-response-label">MOVE_RIDE VALUE</div>
           <p>
             The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window (id 1).
           </p>
@@ -605,7 +610,7 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
-          <div class="api-response-label">EMIT value</div>
+          <div class="api-response-label">EMIT VALUE</div>
           <p>
             The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2): the
             mode, the configured fixed rate, and the rate actually in effect.
@@ -629,7 +634,94 @@ const Requests: Component = () => {
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 05 00  | 09     | 00     | 01     | 01     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |`}</pre>
+| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="clip" data-search-target>
+        <Card>
+          <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 10</code>: the buffered-clip ring depth, playback state, and full config, for
+            host flow-control. A fixed 25-byte prefix, then the clip's held-usage snapshot (the same
+            class-tagged list a{' '}
+            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries), then the
+            config tail (autolock, flags, and the bound triggers). Read <code>free</code> before a{' '}
+            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun, and{' '}
+            <code>state</code> to see a fault or that playback finished. Backs{' '}
+            <A href="/library/requests#clip-status"><code>ClipHandle::query_status</code></A> and{' '}
+            <A href="/library/requests#clip-config"><code>query_config</code></A>.
+          </p>
+          <pre class="api-signature">QUERY  what = 10  ·  RESP 25-byte prefix + held usages + config</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>10</td></tr>
+              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (recover with <code>CLEAR</code>)</td></tr>
+              <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this, little-endian</td></tr>
+              <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>retained clip size in bytes (streaming: buffered-but-undrained bytes)</td></tr>
+              <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
+              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks emitted since start (diagnostic)</td></tr>
+              <tr><td>18</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
+              <tr><td>20</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
+              <tr><td>22</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
+              <tr><td>24</td><td><code>held_n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
+              <tr><td>+</td><td><code>autolock</code></td><td><code>u8</code></td><td>config: the <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> autolock bitmask (<code>CLIP_LOCK_*</code>)</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized</td></tr>
+              <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound triggers that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per trigger: 0=button 1=key 2=media 0xFF=any</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
+              <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
+              <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = swallow the triggering edge from the host</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>LOOP</code>: playback restarts from the top on drain instead of stopping</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>RETAIN</code>: the buffered content survives a stop instead of clearing</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>FINALIZED</code>: the clip is sealed, no more <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> accepted</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            The held snapshot lists the usages the clip is currently forcing down, one class-tagged
+            entry each (3 bytes), so buttons, keys, and media are reported one way. The config tail
+            mirrors what <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> and{' '}
+            <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> set, so a UI can read
+            back the whole clip in one query. Library bindings:{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A>{' '}
+            (<A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>) and{' '}
+            <A href="/library/requests#clip-config"><code>query_config</code></A>{' '}
+            (<A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>).
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Idle, empty ring, no held usages, no autolock, no triggers (<code>state = 0</code>, <code>free = 1024</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
+| A5     | 06     | 00     | 1C 00  | 0A     | 00     | 00 04 00 00  |
++--------+--------+--------+--------+--------+--------+--------------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
++--------+--------+--------+--------+--------+--------+--------------+
+| 00 04 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
++--------------+--------------+--------------+--------+--------+--------+
+| total        | played       | ticks        | undrun | ovrrun | seqgap |
++--------------+--------------+--------------+--------+--------+--------+
+| 00     | 00     | 00     | 00     | lo hi  |
++--------+--------+--------+--------+--------+
+| held_n | autolk | flags  | n_trig | CRC16  |
++--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

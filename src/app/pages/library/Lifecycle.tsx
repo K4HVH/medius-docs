@@ -8,7 +8,7 @@ const Lifecycle: Component = () => {
     <>
       <Card>
         <CardHeader title="Lifecycle" subtitle="Holding injected input alive and recovering a dropped link" />
-        <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-window clear</A>, and restores them if the link drops and reopens.</p>
+        <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them if the link drops and reopens.</p>
         <ul>
           <li>
             <A href="/library/guides/connection#keepalive"><code>keepalive</code></A> (automatic) holds an
@@ -23,7 +23,6 @@ const Lifecycle: Component = () => {
             port, and restores held state after a dropped link.
           </li>
         </ul>
-        <p>See also: <A href="/library/guides/connection#keepalive">keepalive &amp; holds</A>.</p>
       </Card>
 
       <div id="reapply" data-search-target>
@@ -36,7 +35,7 @@ const Lifecycle: Component = () => {
           </p>
 
           <p>
-            Re-sends each held override to match the box to the library;{' '}
+            One frame goes out per held override;{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> does this for you after a
             drop.
           </p>
@@ -53,10 +52,11 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <div class="callout callout--info">
             <p>
               Overrides are keyed by their{' '}
-              <A href="/library/types/enums#button"><code>Button</code></A> values.{' '}
-              <A href="/library/inject#button"><code>press</code></A> and{' '}
-              <A href="/library/inject#button"><code>force_release</code></A> add a held override;{' '}
-              <A href="/library/inject#button"><code>soft_release</code></A> and{' '}
+              <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media
+              usage).{' '}
+              <A href="/library/inject#inject"><code>press</code></A> and{' '}
+              <A href="/library/inject#inject"><code>force_release</code></A> add a held override;{' '}
+              <A href="/library/inject#inject"><code>release</code></A> and{' '}
               <A href="/library/admin#reset"><code>reset</code></A> clear them.
             </p>
           </div>
@@ -68,13 +68,11 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <CardHeader title="reconnect" subtitle="Rescan, reopen the port, and restore held state" />
 
           <pre class="api-signature">fn reconnect(&self) -&gt; Result&lt;()&gt;</pre>
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
 
           <p>
             The reader thread auto-reconnects on any read error; call this by hand only to force a
-            rescan.
+            rescan. It blocks while it rescans and reopens the port, and returns an error if the box
+            can't be found or opened, but it never waits on a box reply.
           </p>
           <p>On each call:</p>
           <ol>
@@ -101,20 +99,16 @@ assert!(after > before);`}</code></pre>
             <p>
               The reconnect count is the <code>reconnects</code> field in{' '}
               <A href="/library/diagnostics#counters">diagnostics</A>. Held state is keyed by{' '}
-              <A href="/library/types/enums#button"><code>Button</code></A> value, so the right buttons come
+              <A href="/library/types/enums#usage"><code>Usage</code></A>, so the right inputs come
               back after a reopen.
             </p>
           </div>
         </Card>
       </div>
 
-      <div id="from-async" data-search-target>
+      <div id="async" data-search-target>
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="reapply and reconnect, still direct" />
-
-          <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span>
-          </p>
 
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> exposes{' '}

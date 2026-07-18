@@ -39,6 +39,13 @@ const Option: Component = () => {
               <td>Pick what paces injected motion</td>
               <td>learnt</td>
             </tr>
+            <tr>
+              <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
+              <td><code>3</code></td>
+              <td><code>[name ascii 0..32]</code></td>
+              <td>Give the box a human-readable name</td>
+              <td>Medius-XXXX</td>
+            </tr>
           </tbody>
         </table>
       </Card>
@@ -46,6 +53,11 @@ const Option: Component = () => {
       <div id="option" data-search-target>
         <Card>
           <CardHeader title="OPTION" subtitle="One generic, persistent option" />
+          <p>
+            <code>OPTION</code> carries an <code>id</code> byte then an id-specific value, and the box
+            persists the setting across a reboot. One opcode covers every persistent option; the id picks
+            which. <A href="/native/frame#opcodes">Opcode</A> <code>0x11</code>.
+          </p>
           <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
@@ -80,7 +92,9 @@ const Option: Component = () => {
           <div class="callout callout--info">
             <p>
               Some devices need more interrupt-IN endpoints than the box serves (the Wooting Two HE's
-              analog stream wants a sixth, past the ESP32-S3's five). Changing this for an{' '}
+              analog stream wants a sixth, past the{' '}
+              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
+              five). Changing this for an{' '}
               <em>attached</em> over-capacity device reboots the box to re-clone; a normal device is
               unaffected.
             </p>
@@ -120,7 +134,7 @@ const Option: Component = () => {
           </p>
           <div class="callout callout--warning">
             <p>
-              While on, pure idle injection (moving the cursor while the hand is still) stops working —
+              While on, pure idle injection (moving the cursor while the hand is still) stops working:
               motion waits for a native move and is dropped if none comes. Button, key, and media
               injection are unaffected.
             </p>
@@ -148,8 +162,8 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>—</td><td>The rate the real mouse actually reports at</td></tr>
-              <tr><td><code>1</code></td><td>Interval</td><td>—</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
+              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
+              <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
             </tbody>
           </table>
@@ -175,6 +189,42 @@ const Option: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="name" data-search-target>
+        <Card>
+          <CardHeader title="NAME" subtitle="Give the box a human-readable name" />
+          <pre class="api-signature">id 3  ·  [name ascii 1..32]  (0 bytes = clear)</pre>
+          <div class="api-response-label">VALUE</div>
+          <table class="api-params">
+            <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>1..32</code> printable ASCII</td><td>Sets the box's name to those bytes.</td></tr>
+              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the synthesized <code>Medius-XXXX</code> default derived from the MAC.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              The name is the readable partner to the box{' '}
+              <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
+              rides on <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> as the
+              ASCII tail after the MAC, so it's read there, not through{' '}
+              <A href="/native/commands/requests#options"><code>QUERY(OPTIONS)</code></A>.
+            </p>
+          </div>
+          <p>
+            Read it back on{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> · Library{' '}
+            <A href="/library/options#set-name"><code>set_name</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Name the box "Loki" (<code>id = 3</code>, ascii <code>4C 6F 6B 69</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
+| A5     | 11     | 00     | 05 00  | 03     | 4C 6F 6B 69  | lo hi  |
++--------+--------+--------+--------+--------+--------------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | name ascii   | CRC16  |
++--------+--------+--------+--------+--------+--------------+--------+`}</pre>
         </Card>
       </div>
     </>

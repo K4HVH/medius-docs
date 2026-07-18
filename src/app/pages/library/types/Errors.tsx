@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer &#123; got &#125;</code></td>
                 <td>
-                  The box answered, but its <code>proto_ver</code> wasn't <code>2</code>;{' '}
+                  The box answered, but its <code>proto_ver</code> wasn't <code>3</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>
@@ -77,10 +77,7 @@ const Errors: Component = () => {
               </tr>
               <tr>
                 <td><code>FlashTool(String)</code></td>
-                <td>
-                  The flash tool failed. Present only with the{' '}
-                  <A href="/library/features/flash"><code>flash</code></A> feature.
-                </td>
+                <td>The flash tool failed.</td>
               </tr>
             </tbody>
           </table>

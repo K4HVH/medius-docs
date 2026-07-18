@@ -51,7 +51,6 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
     else if (e.key === 'Home') next = 0;
     else next = buttons.length - 1;
 
-    // Roving tabindex
     buttons.forEach(b => b.setAttribute('tabindex', '-1'));
     buttons[next].setAttribute('tabindex', '0');
     buttons[next].focus();

@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>2.3.0</code></td>
+              <td><code>3.0.0</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -96,6 +96,11 @@ const Introduction: Component = () => {
                 <CardHeader title="Connection" subtitle="Open, find, handshake" />
               </Card>
             </A>
+            <A href="/library/discovery" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Discovery" subtitle="List boxes, open by identity" />
+              </Card>
+            </A>
           </div>
         </Card>
       </div>
@@ -106,7 +111,7 @@ const Introduction: Component = () => {
           <div class="docs-grid">
             <A href="/library/inject" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Inject" subtitle="press, key, media" />
+                <CardHeader title="Inject" subtitle="press, release, force_release" />
               </Card>
             </A>
             <A href="/library/move" style={{ "text-decoration": "none" }}>
@@ -116,12 +121,17 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lock" subtitle="lock, lock_key, lock_all" />
+                <CardHeader title="Lock" subtitle="lock, lock_axis, lock_all" />
               </Card>
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Catch" subtitle="Stream physical input" />
+              </Card>
+            </A>
+            <A href="/library/clip" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Clip" subtitle="Preload input, box-clocked playback" />
               </Card>
             </A>
             <A href="/library/requests" style={{ "text-decoration": "none" }}>
@@ -151,7 +161,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/diagnostics" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Logs & counters" subtitle="logs, counters" />
+                <CardHeader title="Logs & counters" subtitle="Read logs, snapshot counters" />
               </Card>
             </A>
           </div>

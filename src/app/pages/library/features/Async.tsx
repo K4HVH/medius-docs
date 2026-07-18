@@ -32,9 +32,9 @@ const Async: Component = () => {
           <pre class="api-signature">fn find() -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
@@ -89,11 +89,11 @@ let device = Device::find()?.into_async();`}</code></pre>
           <div class="callout callout--info">
             <p>
               Everything else on <A href="/library/connection"><code>Device</code></A> is mirrored on{' '}
-              <code>AsyncDevice</code> and stays synchronous — including{' '}
+              <code>AsyncDevice</code> and stays synchronous, including{' '}
               <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
               <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
-              <A href="/library/lifecycle#from-async"><code>reapply</code></A>, and{' '}
-              <A href="/library/lifecycle#from-async"><code>reconnect</code></A>. Only the queries
+              <A href="/library/lifecycle#reapply"><code>reapply</code></A>, and{' '}
+              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>. Only the queries
               are futures.
             </p>
           </div>
@@ -136,6 +136,11 @@ let device = Device::find()?.into_async();`}</code></pre>
               </tr>
             </tbody>
           </table>
+          <p>
+            Two shown; the rest (<code>device_info</code>, <code>caps</code>, <code>query_rate</code>,{' '}
+            <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>) resolve the same
+            way. The full list is on <A href="/library/requests#async"><code>Requests</code></A>.
+          </p>
 
           <p>
             <code>.await</code> is only legal inside an <code>async</code> function or block.

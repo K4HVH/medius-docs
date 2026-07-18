@@ -1,6 +1,7 @@
-import type { Component } from 'solid-js';
+import type { Component, JSX } from 'solid-js';
 import { Router, Route, Navigate } from '@solidjs/router';
 import { NotificationProvider } from '../components/feedback/Notification';
+import RouteMeta from './RouteMeta';
 import Home from './pages/Home';
 import DocsLayout from './pages/DocsLayout';
 import NativeIntroduction from './pages/native/Introduction';
@@ -20,8 +21,10 @@ import CmdLed from './pages/native/commands/Led';
 import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
 import CmdOption from './pages/native/commands/Option';
+import CmdClip from './pages/native/commands/Clip';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
+import AiAccess from './pages/AiAccess';
 import LibIntroduction from './pages/library/Introduction';
 import LibConnection from './pages/library/Connection';
 import LibDiscovery from './pages/library/Discovery';
@@ -33,6 +36,7 @@ import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
 import LibOptions from './pages/library/Options';
+import LibClip from './pages/library/Clip';
 import LibLifecycle from './pages/library/Lifecycle';
 import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
@@ -69,11 +73,18 @@ import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
 import { DashboardProvider } from './pages/dashboard/context';
 
+const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
+  <>
+    <RouteMeta />
+    {props.children}
+  </>
+);
+
 const App: Component = () => {
   return (
-    <NotificationProvider>
+      <NotificationProvider>
       <DashboardProvider>
-        <Router>
+        <Router root={RootLayout}>
         <Route path="/" component={Home} />
         <Route path="/" component={DocsLayout}>
           <Route path="/native" component={NativeIntroduction} />
@@ -92,9 +103,11 @@ const App: Component = () => {
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
           <Route path="/native/commands/option" component={CmdOption} />
+          <Route path="/native/commands/clip" component={CmdClip} />
           <Route path="/native/commands/usage" component={CmdUsage} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
+          <Route path="/ai" component={AiAccess} />
           <Route path="/library" component={LibIntroduction} />
           <Route path="/library/connection" component={LibConnection} />
           <Route path="/library/discovery" component={LibDiscovery} />
@@ -106,6 +119,7 @@ const App: Component = () => {
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
           <Route path="/library/options" component={LibOptions} />
+          <Route path="/library/clip" component={LibClip} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
           <Route path="/library/diagnostics" component={LibDiagnostics} />
           <Route path="/library/features/async" component={FeatAsync} />
@@ -144,7 +158,7 @@ const App: Component = () => {
         <Route path="*" component={() => <Navigate href="/" />} />
         </Router>
       </DashboardProvider>
-    </NotificationProvider>
+      </NotificationProvider>
   );
 };
 

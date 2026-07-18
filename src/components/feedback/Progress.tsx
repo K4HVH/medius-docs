@@ -36,7 +36,6 @@ export const Progress: Component<ProgressProps> = (props) => {
   const size = () => local.size ?? 'normal';
   const isIndeterminate = () => local.value === undefined || local.value === null;
 
-  // Clamp value between 0 and 100
   const normalizedValue = () => {
     if (isIndeterminate()) return 0;
     const val = local.value ?? 0;
@@ -65,7 +64,6 @@ export const Progress: Component<ProgressProps> = (props) => {
       classes.push('progress--indeterminate');
     }
 
-    // Make circular progress larger when label is shown
     if (type() === 'circular' && displayLabel()) {
       classes.push('progress--with-label');
     }
@@ -93,7 +91,6 @@ export const Progress: Component<ProgressProps> = (props) => {
 
       <Show when={type() === 'circular'}>
         <svg class="progress__svg" viewBox="0 0 100 100">
-          {/* Background circle */}
           <circle
             class="progress__circle-bg"
             cx="50"
@@ -102,7 +99,6 @@ export const Progress: Component<ProgressProps> = (props) => {
             fill="none"
             stroke-width="10"
           />
-          {/* Progress circle */}
           <circle
             class="progress__circle"
             cx="50"
