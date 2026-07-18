@@ -288,6 +288,7 @@ pre code[class*="language-"] {
   width: 100%;
   text-align: left;
   padding: var(--g-spacing-xs) var(--g-spacing-sm);
+  font-family: inherit;
   font-size: var(--font-size-sm);
   color: var(--g-text-secondary);
   background: transparent;
