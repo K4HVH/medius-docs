@@ -1,10 +1,20 @@
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
-import { handleAgentDocs } from "./server/agent";
+import { handleAgentDocs, DOC_CACHE } from "./server/agent";
 import { handleMcp } from "./server/mcp";
 
 const PORT = parseInt(process.env.PORT || "3000");
 const PUBLIC_DIR = process.env.PUBLIC_DIR || "./dist";
+
+const ASSET_CACHE = "public, max-age=31536000, immutable";
+const ARTIFACTS = /^\/(llms\.txt|llms-full\.txt|sitemap\.xml|robots\.txt|agent-index\.json)$/;
+
+function cacheHeaders(pathname: string): Record<string, string> | undefined {
+  if (pathname.startsWith("/assets/")) return { "cache-control": ASSET_CACHE };
+  if (ARTIFACTS.test(pathname) || pathname.startsWith("/.well-known/"))
+    return { "cache-control": DOC_CACHE };
+  return undefined;
+}
 
 Bun.serve({
   port: PORT,
@@ -31,7 +41,7 @@ Bun.serve({
     // Try to serve the file
     let file = Bun.file(filePath);
     if (await file.exists()) {
-      return new Response(file);
+      return new Response(file, { headers: cacheHeaders(pathname) });
     }
 
     // Try with .html extension
