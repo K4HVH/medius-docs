@@ -17,9 +17,15 @@ export function acceptsMarkdown(accept: string): boolean {
 }
 
 export function isCandidateRoute(pathname: string): boolean {
-  if (!pathname.startsWith('/') || pathname === '/' || pathname.endsWith('/')) return false;
-  if (pathname.startsWith('/api') || pathname.startsWith('/assets')) return false;
-  const last = pathname.slice(pathname.lastIndexOf('/') + 1);
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return false;
+  }
+  if (!decoded.startsWith('/') || decoded === '/' || decoded.endsWith('/')) return false;
+  if (decoded.startsWith('/api') || decoded.startsWith('/assets')) return false;
+  const last = decoded.slice(decoded.lastIndexOf('/') + 1);
   if (/\.[A-Za-z0-9]+$/.test(last)) return false; // has a file extension
   return true;
 }

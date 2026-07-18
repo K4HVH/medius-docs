@@ -1,6 +1,5 @@
 import type { Component, JSX } from 'solid-js';
 import { Router, Route, Navigate } from '@solidjs/router';
-import { MetaProvider } from '@solidjs/meta';
 import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import Home from './pages/Home';
@@ -82,7 +81,6 @@ const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
 
 const App: Component = () => {
   return (
-    <MetaProvider>
       <NotificationProvider>
       <DashboardProvider>
         <Router root={RootLayout}>
@@ -159,7 +157,6 @@ const App: Component = () => {
         </Router>
       </DashboardProvider>
       </NotificationProvider>
-    </MetaProvider>
   );
 };
 

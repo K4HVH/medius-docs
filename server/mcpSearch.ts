@@ -55,8 +55,10 @@ function makeSnippet(page: IndexPage, terms: string[]): string {
   return (start > 0 ? '...' : '') + snippet + (start + 200 < text.length ? '...' : '');
 }
 
+const MAX_TERMS = 24;
+
 export function searchDocs(pages: IndexPage[], query: string, limit = 10): SearchHit[] {
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean).slice(0, MAX_TERMS);
   if (terms.length === 0) return [];
   const scored = pages
     .map((p) => {
