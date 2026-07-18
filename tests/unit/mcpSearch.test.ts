@@ -77,6 +77,12 @@ describe('searchDocs', () => {
   it('respects the limit', () => {
     expect(searchDocs(PAGES, 'clip', 1)).toHaveLength(1);
   });
+  it('stays bounded and correct on a huge query (term cap)', () => {
+    const huge = Array(5000).fill('clip').join(' ');
+    const hits = searchDocs(PAGES, huge);
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.map((h) => h.path)).toContain('/library/clip');
+  });
   it('is deterministic for equal scores (path tiebreak)', () => {
     const a = searchDocs(PAGES, 'clip').map((h) => h.path);
     const b = searchDocs(PAGES, 'clip').map((h) => h.path);

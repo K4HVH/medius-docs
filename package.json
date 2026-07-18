@@ -34,7 +34,6 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.4",
     "esptool-js": "^0.6.0",
     "mcp-lite": "^0.10.0",

@@ -73,7 +73,7 @@ function buildServer(): McpServer {
       additionalProperties: false,
     },
     handler: (args: any) => {
-      const query = typeof args?.query === 'string' ? args.query : '';
+      const query = (typeof args?.query === 'string' ? args.query : '').slice(0, 200);
       const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.min(args.limit, 50) : 10;
       return textResult(searchDocs(pages, query, limit));
     },

@@ -5,7 +5,6 @@
     "": {
       "name": "vite-template-solid",
       "dependencies": {
-        "@solidjs/meta": "^0.29.4",
         "@solidjs/router": "^0.15.4",
         "esptool-js": "^0.6.0",
         "mcp-lite": "^0.10.0",
@@ -237,8 +236,6 @@
     "@solid-primitives/styles": ["@solid-primitives/styles@0.1.2", "", { "dependencies": { "@solid-primitives/rootless": "1.5.2", "@solid-primitives/utils": "6.3.2" }, "peerDependencies": { "solid-js": "1.9.9" } }, "sha512-7iX5K+J5b1PRrbgw3Ki92uvU2LgQ0Kd/QMsrAZxDg5dpUBwMyTijZkA3bbs1ikZsT1oQhS41bTyKbjrXeU0Awg=="],
 
     "@solid-primitives/utils": ["@solid-primitives/utils@6.3.2", "", { "peerDependencies": { "solid-js": "1.9.9" } }, "sha512-hZ/M/qr25QOCcwDPOHtGjxTD8w2mNyVAYvcfgwzBHq2RwNqHNdDNsMZYap20+ruRwW4A3Cdkczyoz0TSxLCAPQ=="],
-
-    "@solidjs/meta": ["@solidjs/meta@0.29.4", "", { "peerDependencies": { "solid-js": ">=1.8.4" } }, "sha512-zdIWBGpR9zGx1p1bzIPqF5Gs+Ks/BH8R6fWhmUa/dcK1L2rUC8BAcZJzNRYBQv74kScf1TSOs0EY//Vd/I0V8g=="],
 
     "@solidjs/router": ["@solidjs/router@0.15.4", "", { "peerDependencies": { "solid-js": "^1.8.6" } }, "sha512-WOpgg9a9T638cR+5FGbFi/IV4l2FpmBs1GpIMSPa0Ce9vyJN7Wts+X2PqMf9IYn0zUj2MlSJtm1gp7/HI/n5TQ=="],
 
