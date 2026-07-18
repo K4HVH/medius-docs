@@ -167,16 +167,43 @@ clip.press(Key::A)                         // then type 'a'
         <Card>
           <CardHeader title="Streaming and retained" subtitle="Drain-and-discard, or keep-and-replay" />
           <p>
-            <b>Streaming</b> is the default: the box drains and reclaims as it plays, so the clip is unbounded
-            (top it up in real time) but not replayable, and <code>stop</code> flushes it. <b>Retained</b> mode
-            (<code>set_retain(true)</code> before the first <code>append</code>) keeps the whole loaded clip
-            (up to 64 KiB) and advances a play cursor, so it rewinds and replays; <code>finalize</code> fixes
-            its end, which is what enables a real end-of-clip, <code>loop</code>, and a physical play/stop
-            replay loop. Append after <code>finalize</code> is rejected, so reload with <code>clear</code>.
+            A clip runs in one of two shapes, chosen by{' '}
+            <A href="/library/clip#handle"><code>set_retain</code></A> before the first{' '}
+            <A href="/library/clip#handle"><code>append</code></A>.
           </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Aspect</th><th>Streaming (default)</th><th>Retained</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Turn on</td><td>nothing, it is the default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
+              <tr><td>The ring</td><td>each entry is freed as it plays, so it is unbounded</td><td>entries are kept after playing, up to 64 KiB</td></tr>
+              <tr><td>Top up mid-play</td><td>yes, append to the tail in real time</td><td>append until <code>finalize</code>, then it is sealed</td></tr>
+              <tr><td>Replay</td><td>no, it plays once</td><td>yes, it rewinds and replays</td></tr>
+              <tr><td><code>loop</code></td><td>not available</td><td>available once <code>finalize</code>d</td></tr>
+              <tr><td><code>stop</code></td><td>flushes the buffer</td><td>rewinds and keeps the clip</td></tr>
+              <tr><td>Best for</td><td>open-ended or generated input</td><td>a fixed macro you replay on a trigger</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">HOW THE RING MOVES</div>
+          <pre class="diagram">{`streaming (drain-and-discard)
+    append ──▶ [ e4 e3 e2 ] ──▶ play ──▶ freed     (unbounded, top up forever)
+                   box reclaims each entry once played; no replay
+
+retained (keep-and-replay, up to 64 KiB)
+    append ──▶ [ e0 e1 e2 e3 e4 ] ──▶ finalize ──▶ sealed
+               base │──▶ play cursor ──▶ end
+                    └──── start / loop rewinds to base ◀────┘`}</pre>
+          <div class="callout callout--info">
+            <p>
+              <code>set_retain</code> only takes effect before the first <code>append</code>, and an{' '}
+              <code>append</code> after <code>finalize</code> is rejected. To reload a retained clip,{' '}
+              <A href="/library/clip#handle"><code>clear</code></A> it and build again.
+            </p>
+          </div>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Streaming: preload, play with auto-lock, and top up in real time, pacing against <code>free</code>:</p>
-          <pre><code class="language-rust">{`use medius::{Blanket, ClipState};
+          <pre><code class="language-rust">{`// Streaming: preload, play with auto-lock, then top up in real time, pacing against free.
+use medius::{Blanket, ClipState};
 use std::time::Duration;
 
 let handle = device.clip();       // device: an open Device
@@ -200,15 +227,47 @@ handle.stop()?;`}</code></pre>
         <Card>
           <CardHeader title="Triggers" subtitle="Play, stop, or toggle on a physical key" />
           <p>
-            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> binds an{' '}
-            <A href="/library/types/enums#edge"><code>Edge</code></A> of a usage to a{' '}
+            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> binds one{' '}
+            <A href="/library/types/enums#edge"><code>Edge</code></A> of a usage to one{' '}
             <A href="/library/types/enums#clip-action"><code>ClipAction</code></A>, so the box drives playback
-            itself with no host round-trip. Bindings are a managed set keyed by <code>(usage, edge)</code>,
-            like a <A href="/library/lock">lock</A>: <code>bind</code> adds, <code>unbind</code> drops,{' '}
-            <code>clear_triggers</code> wipes, and a physical edge runs the one most-specific match (a key for{' '}
-            <code>F1</code> beats an any-key binding). <code>.consume()</code> suppresses the trigger input
-            from the game for the length of the hold.
+            itself with no host round-trip.
           </p>
+          <div class="api-response-label">ANATOMY</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Part</th><th>Is</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>usage</td><td>the button, key, or media the edge is on (or any of a class)</td><td><code>Key::F1</code></td></tr>
+              <tr><td>edge</td><td>which transition fires it: press, release, or both</td><td><code>Edge::Press</code></td></tr>
+              <tr><td>action</td><td>the engine verb to run</td><td><code>ClipAction::Start</code></td></tr>
+            </tbody>
+          </table>
+          <p>
+            Bindings are a managed set keyed by <code>(usage, edge)</code>, like a{' '}
+            <A href="/library/lock">lock</A>: <A href="/library/clip#handle"><code>bind</code></A> adds or
+            overwrites, <A href="/library/clip#handle"><code>unbind</code></A> drops one, and{' '}
+            <A href="/library/clip#handle"><code>clear_triggers</code></A> wipes them. A physical edge runs the
+            one most-specific match, so a binding on <code>Key::F1</code> beats an any-key binding.
+          </p>
+          <div class="api-response-label">RECIPES</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>To get</th><th>Bind</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Hold to play</td><td><code>F1 Press → Start</code> and <code>F1 Release → Stop</code></td></tr>
+              <tr><td>Toggle play/stop on one key</td><td><code>Side1 Press → Toggle</code></td></tr>
+              <tr><td>Separate play and stop keys</td><td><code>F1 Press → Start</code> and <code>F2 Press → Stop</code></td></tr>
+              <tr><td>Pause, then resume</td><td><code>F3 Press → Pause</code> and <code>F4 Press → Resume</code></td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              <code>.consume()</code> swallows the triggering edge from the game for the length of the hold, so
+              the key drives the clip without also reaching what you're playing.
+            </p>
+          </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge, Key};
 
