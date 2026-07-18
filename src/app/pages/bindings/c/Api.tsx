@@ -235,6 +235,13 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusUsage</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">MOVE AND CLICK ON ONE FRAME</div>
+          <pre><code class="language-c">{`MediusClipBuilder *b = medius_clip_builder_new();
+
+/* move (+10, -4) AND press Left on the same frame */
+MediusUsage  inputs[1]  = { medius_usage_button(MEDIUS_BUTTON_LEFT) };
+MediusAction actions[1] = { MEDIUS_ACTION_PRESS };
+medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
           <div class="api-response-label">HANDLE</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Effect</th></tr></thead>
