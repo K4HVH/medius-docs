@@ -1,6 +1,6 @@
 import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { useLocation } from '@solidjs/router';
+import { useLocation, useNavigate } from '@solidjs/router';
 import { BsStars } from 'solid-icons/bs';
 import { Button } from '../components/inputs/Button';
 
@@ -12,7 +12,8 @@ const SITE = 'https://medius.k4tech.net';
 // overflow:hidden cannot clip it.
 export default function AiActions() {
   const location = useLocation();
-  const isDoc = () => /^\/(native|library|bindings)(\/|$)/.test(location.pathname);
+  const navigate = useNavigate();
+  const isDoc = () => /^\/(native|library|bindings|ai)(\/|$)/.test(location.pathname);
   const mdPath = () => location.pathname.replace(/\/+$/, '') + '.md';
   const mdUrl = () => SITE + mdPath();
 
@@ -92,6 +93,17 @@ export default function AiActions() {
               ref={menuRef}
               style={{ top: `${pos().top}px`, right: `${pos().right}px` }}
             >
+              <button
+                type="button"
+                class="ai-actions__item"
+                onClick={() => {
+                  close();
+                  navigate('/ai');
+                }}
+              >
+                About AI access
+              </button>
+              <div class="ai-actions__sep" role="separator" />
               <button type="button" class="ai-actions__item" onClick={copyMarkdown}>
                 {copied() ? 'Copied' : 'Copy as Markdown'}
               </button>

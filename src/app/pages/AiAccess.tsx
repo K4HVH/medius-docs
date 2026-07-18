@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { Card, CardHeader } from '../../components/surfaces/Card';
+import '../../styles/docs.css';
 
 const AiAccess: Component = () => {
   return (
@@ -10,8 +10,8 @@ const AiAccess: Component = () => {
         <CardHeader title="AI & LLM access" subtitle="Read these docs from an agent" />
         <p>
           Every page is also served as Markdown, indexed for LLMs, and exposed by an MCP server. Point
-          your agent at whichever fits: a page's <A href="/native/ai#markdown">Markdown twin</A>, the{' '}
-          <A href="/native/ai#llms">llms.txt</A> index, or the <A href="/native/ai#mcp">MCP server</A>.
+          your agent at whichever fits: a page's <A href="/ai#markdown">Markdown twin</A>, the{' '}
+          <A href="/ai#llms">llms.txt</A> index, or the <A href="/ai#mcp">MCP server</A>.
         </p>
       </Card>
 
