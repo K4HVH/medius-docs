@@ -87,3 +87,41 @@ export function isOriginAllowed(origin: string | null, allowed: string[]): boole
   if (!origin) return true;
   return allowed.includes(origin);
 }
+
+// OpenAI deep-research "search" tool shape: { results: [{ id, title, url, text }] }.
+// id is the page path, which fetch() accepts back.
+export interface OpenAiSearchResult {
+  id: string;
+  title: string;
+  url: string;
+  text: string;
+}
+
+export function toSearchResults(
+  pages: IndexPage[],
+  query: string,
+  site: string,
+  limit = 10,
+): OpenAiSearchResult[] {
+  return searchDocs(pages, query, limit).map((h) => ({
+    id: h.path,
+    title: h.title,
+    url: site + h.path,
+    text: h.snippet,
+  }));
+}
+
+// OpenAI deep-research "fetch" tool shape: { id, title, text, url, metadata }.
+export interface OpenAiDocument {
+  id: string;
+  title: string;
+  text: string;
+  url: string;
+  metadata: { section: string };
+}
+
+export function toFetchDoc(pages: IndexPage[], id: string, site: string): OpenAiDocument | null {
+  const p = getPage(pages, id);
+  if (!p) return null;
+  return { id: p.path, title: p.title, text: p.text, url: site + p.path, metadata: { section: p.section } };
+}

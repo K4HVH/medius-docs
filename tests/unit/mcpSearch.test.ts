@@ -5,6 +5,8 @@ import {
   getPage,
   searchDocs,
   isOriginAllowed,
+  toSearchResults,
+  toFetchDoc,
   type IndexPage,
 } from '../../server/mcpSearch';
 
@@ -87,6 +89,27 @@ describe('searchDocs', () => {
     const a = searchDocs(PAGES, 'clip').map((h) => h.path);
     const b = searchDocs(PAGES, 'clip').map((h) => h.path);
     expect(a).toEqual(b);
+  });
+});
+
+describe('toSearchResults (OpenAI search shape)', () => {
+  it('returns {id,title,url,text} with id=path and absolute url', () => {
+    const r = toSearchResults(PAGES, 'ClipBuilder', 'https://s');
+    expect(r[0]).toMatchObject({ id: '/library/clip', title: 'Clip', url: 'https://s/library/clip' });
+    expect(typeof r[0].text).toBe('string');
+  });
+});
+
+describe('toFetchDoc (OpenAI fetch shape)', () => {
+  it('returns the full document by id, tolerating .md and missing slash', () => {
+    const d = toFetchDoc(PAGES, 'library/clip.md', 'https://s')!;
+    expect(d.id).toBe('/library/clip');
+    expect(d.url).toBe('https://s/library/clip');
+    expect(d.text).toContain('ClipBuilder');
+    expect(d.metadata.section).toBe('Rust Library');
+  });
+  it('returns null for an unknown id', () => {
+    expect(toFetchDoc(PAGES, '/nope', 'https://s')).toBeNull();
   });
 });
 

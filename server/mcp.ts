@@ -3,7 +3,15 @@
 import { McpServer, StreamableHttpTransport } from 'mcp-lite';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { getPage, isOriginAllowed, listPages, searchDocs, type IndexPage } from './mcpSearch';
+import {
+  getPage,
+  isOriginAllowed,
+  listPages,
+  searchDocs,
+  toFetchDoc,
+  toSearchResults,
+  type IndexPage,
+} from './mcpSearch';
 
 const DIST = resolve(process.env.PUBLIC_DIR || './dist');
 const SITE = (process.env.SITE_ORIGIN || 'https://medius.k4tech.net').replace(/\/+$/, '');
@@ -76,6 +84,70 @@ function buildServer(): McpServer {
       const query = (typeof args?.query === 'string' ? args.query : '').slice(0, 200);
       const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.min(args.limit, 50) : 10;
       return textResult(searchDocs(pages, query, limit));
+    },
+  });
+
+  // OpenAI deep-research compatibility: ChatGPT's connector/deep-research picker
+  // requires two tools named exactly `search` and `fetch` with these shapes.
+  server.tool('search', {
+    description:
+      'Search the Medius documentation and return matching pages. Use the returned id with the fetch tool to read a page.',
+    inputSchema: {
+      type: 'object',
+      properties: { query: { type: 'string', description: 'Search terms.' } },
+      required: ['query'],
+      additionalProperties: false,
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        results: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' },
+              url: { type: 'string' },
+              text: { type: 'string' },
+            },
+            required: ['id', 'title', 'url', 'text'],
+          },
+        },
+      },
+      required: ['results'],
+    },
+    handler: (args: any) => {
+      const query = (typeof args?.query === 'string' ? args.query : '').slice(0, 200);
+      const results = toSearchResults(pages, query, SITE, 10);
+      return { content: [{ type: 'text' as const, text: JSON.stringify({ results }) }], structuredContent: { results } };
+    },
+  });
+
+  server.tool('fetch', {
+    description: 'Fetch the full Markdown of one documentation page by its id (the id returned by search).',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The page id returned by search (its path).' } },
+      required: ['id'],
+      additionalProperties: false,
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        title: { type: 'string' },
+        text: { type: 'string' },
+        url: { type: 'string' },
+        metadata: { type: 'object' },
+      },
+      required: ['id', 'title', 'text', 'url'],
+    },
+    handler: (args: any) => {
+      const id = typeof args?.id === 'string' ? args.id : '';
+      const doc = toFetchDoc(pages, id, SITE);
+      if (!doc) return textResult(`No page with id "${id}". Use search or list_pages for valid ids.`, true);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(doc) }], structuredContent: doc };
     },
   });
 
