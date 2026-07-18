@@ -1,5 +1,7 @@
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
+import { handleAgentDocs } from "./server/agent";
+import { handleMcp } from "./server/mcp";
 
 const PORT = parseInt(process.env.PORT || "3000");
 const PUBLIC_DIR = process.env.PUBLIC_DIR || "./dist";
@@ -9,6 +11,12 @@ Bun.serve({
   async fetch(req) {
     const api = await handleFirmwareApi(req);
     if (api) return api;
+
+    const mcp = await handleMcp(req);
+    if (mcp) return mcp;
+
+    const agentDocs = await handleAgentDocs(req);
+    if (agentDocs) return agentDocs;
 
     const url = new URL(req.url);
     let pathname = url.pathname;
