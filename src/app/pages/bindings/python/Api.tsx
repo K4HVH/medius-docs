@@ -205,6 +205,13 @@ const Api: Component = () => {
               <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Usage</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">MOVE AND CLICK ON ONE FRAME</div>
+          <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Usage
+
+b = ClipBuilder()
+
+# move (+10, -4) AND press Left on the same frame
+b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
           <div class="api-response-label">CLIPHANDLE</div>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Effect</th></tr></thead>

@@ -138,6 +138,14 @@ const Clip: Component = () => {
             An edge is a level: it sticks until a later tick changes it, and the box NAKs while it is held
             still. Motion (<code>dx</code>/<code>dy</code>/<code>wheel</code>) is a per-frame delta.
           </p>
+          <div class="api-response-label">MOTION AND EDGES ON ONE TICK</div>
+          <p>
+            Set several flag bits and the fields stack in a single tick, so a move and a press land on the
+            same frame and the PC sees one report. That is what keeps "aim and hold fire" faithful: motion
+            every frame, the fire button pressed on the frame it goes down.
+          </p>
+          <pre class="diagram">{`05 0A 00 FC FF 01 00 00 00 01
+   flags=XY|EDGES   dx=+10 dy=-4   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
           <div class="api-response-label">A CLIP IS A TIMELINE</div>
           <p>Entries play out one per frame, left to right.</p>
           <table class="api-params">
