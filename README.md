@@ -1,13 +1,16 @@
 # Medius Documentation
 
-Documentation site for Medius: the mouse-passthrough firmware, its binary control protocol, and the `medius` Rust library.
+Documentation site for Medius: the input-passthrough firmware, its binary control protocol, and the `medius` Rust library.
 
-Built with [SolidJS](https://solidjs.com) and [MidnightUI](https://github.com/user/midnightui).
+Built with [SolidJS](https://solidjs.com) and MidnightUI.
 
 ## Sections
 
-- **Native API** -- The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x08`).
-- **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` features.
+- **Native API** -- The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x15`).
+- **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` / `tracing` features.
+- **Bindings** -- The C ABI and Python bindings over the same crate.
+- **Dashboard** -- The in-browser box dashboard: connect, view device info, update firmware, recover, and a console.
+- **AI Access** -- Using the docs with an AI assistant: per-page Markdown twins, `llms.txt`, and the MCP server.
 
 ## Development
 
@@ -43,7 +46,7 @@ Output goes to `dist/`.
 - [@solidjs/router](https://docs.solidjs.com/solid-router) -- Client-side routing
 - [Vite](https://vitejs.dev) -- Build tool
 - [Bun](https://bun.sh) -- Runtime and package manager
-- [MidnightUI](https://github.com/user/midnightui) -- Component library
+- MidnightUI -- Component library
 - [solid-icons](https://github.com/x64Bits/solid-icons) -- Icons
 
 ## Deployment
