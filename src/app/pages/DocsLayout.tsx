@@ -441,6 +441,7 @@ const DocsLayout = (props: RouteSectionProps) => {
             }
             right={
               <>
+                <AiActions />
                 <Button
                   variant="subtle"
                   size="compact"
@@ -461,7 +462,6 @@ const DocsLayout = (props: RouteSectionProps) => {
             }
           />
           <div class="docs-page">
-            <AiActions />
             {props.children}
           </div>
         </div>
