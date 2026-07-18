@@ -100,6 +100,23 @@ clip.press(Button::Left)                   // a click, held for 20 frames
 clip.press(Key::A)                         // then type 'a'
     .gap(3)
     .release(Key::A);`}</code></pre>
+          <div class="api-response-label">MOTION AND AN EDGE ON ONE FRAME</div>
+          <p>
+            <code>frame</code> is the one builder call that fills more than a single field, so it's how a
+            move and an edge share a frame: one entry, one wire report. Edges are sticky, so a hold is a
+            press once then plain motion until the release.
+          </p>
+          <pre><code class="language-rust">{`use medius::{Action, Button, ClipBuilder};
+
+let mut clip = ClipBuilder::new();
+
+// move (+10, -4) AND press Left on the same frame
+clip.frame(10, -4, 0, &[(Button::Left.into(), Action::Press)]);
+
+// "aim and hold fire": press once, keep moving while held, then release
+clip.frame(8, -2, 0, &[(Button::Left.into(), Action::Press)]);
+for _ in 0..60 { clip.move_by(8, -2); }   // Left stays down (edges are sticky)
+clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pre>
         </Card>
       </div>
 
