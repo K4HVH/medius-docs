@@ -4,20 +4,13 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { EmitMode } from '../../../dashboard/protocol';
+import { TextField } from '../../../components/inputs/TextField';
+import { EmitMode, NAME_MAX } from '../../../dashboard/protocol';
 import type { EmitPace, ImperfectStatus } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 
 // One card for every persistent box option (saved on the device, survive a reboot). Each option is a
 // labelled section here; the read-only summary on the Device tab mirrors the same values.
-const sectionLabel = {
-  color: 'var(--g-text-muted, #8a8a8a)',
-  'font-size': 'var(--font-size-xs, 0.75rem)',
-  'font-weight': '600',
-  'letter-spacing': '0.05em',
-  'text-transform': 'uppercase',
-  margin: 'var(--g-spacing) 0 var(--g-spacing-sm)',
-} as const;
 
 const controls = {
   display: 'flex',
@@ -55,6 +48,8 @@ const DeviceOptions = () => {
   const [emit, setEmit] = createSignal<EmitPace | null>(null);
   const [emitMode, setEmitMode] = createSignal('learned');
   const [hz, setHz] = createSignal(500);
+  const [boxName, setBoxName] = createSignal<string | null>(null); // the box's live name, read from RESP(VERSION)
+  const [nameDraft, setNameDraft] = createSignal('');
 
   const refresh = async () => {
     try {
@@ -63,9 +58,24 @@ const DeviceOptions = () => {
       setImperfect(await link.queryImperfect());
       setRide(await link.queryMovementRiding());
       setEmit(await link.queryEmitPace());
+      // The name rides on RESP(VERSION) (the ASCII tail after the MAC), not a Q_OPTIONS readback.
+      setBoxName((await link.queryVersion()).name);
     } catch {
       // A transient miss is fine; the next refresh tries again.
     }
+  };
+
+  const applyName = async () => {
+    const name = nameDraft().trim();
+    if (name.length === 0) return;
+    await dash.link()?.setName(name);
+    await refresh();
+  };
+
+  const clearName = async () => {
+    await dash.link()?.clearName();
+    setNameDraft('');
+    await refresh();
   };
 
   const allowImperfect = async (allow: boolean) => {
@@ -86,6 +96,8 @@ const DeviceOptions = () => {
 
   let timer: ReturnType<typeof setInterval> | null = null;
   onMount(() => {
+    // Seed the editable draft from the name known at handshake, so the field opens on the current name.
+    setNameDraft(dash.version()?.name ?? '');
     void refresh();
     timer = setInterval(() => void refresh(), 1000);
   });
@@ -98,7 +110,35 @@ const DeviceOptions = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
 
-        <div style={sectionLabel}>Imperfect clone</div>
+        <div class="api-response-label">Box name</div>
+        <p>
+          A human-readable name for the box, a friendlier alternative to its id. Leave it unset and the box
+          makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters, numbers, and symbols.
+        </p>
+        <div style={controls}>
+          <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
+            <TextField
+              label="Name"
+              value={nameDraft()}
+              maxLength={NAME_MAX}
+              placeholder="Medius-1A2B"
+              onInput={setNameDraft}
+            />
+          </div>
+          <Button variant="primary" onClick={() => void applyName()}>
+            Set
+          </Button>
+          <Button variant="secondary" onClick={() => void clearName()}>
+            Clear
+          </Button>
+        </div>
+        <Show when={boxName() !== null} fallback={<p style={status}>Reading status...</p>}>
+          <div style={status}>
+            <Chip variant="neutral">{boxName()}</Chip>
+          </div>
+        </Show>
+
+        <div class="api-response-label">Imperfect clone</div>
         <p>
           Some devices need more inputs than the box can copy (like the Wooting's analog stream), so the
           box refuses them by default. Allow it and the box clones the device anyway with one input
@@ -125,7 +165,7 @@ const DeviceOptions = () => {
           )}
         </Show>
 
-        <div style={sectionLabel}>Movement riding</div>
+        <div class="api-response-label">Movement riding</div>
         <p>
           Injected motion only rides a real mouse move within the window and is dropped if no move
           arrives, so it keeps the hand's report timing. It can't move the cursor on its own while it's
@@ -156,7 +196,7 @@ const DeviceOptions = () => {
           </div>
         </Show>
 
-        <div style={sectionLabel}>Emit rate</div>
+        <div class="api-response-label">Emit rate</div>
         <p>
           How fast the box sends injected moves. Learned matches the mouse's own report rate, Interval
           follows its USB poll rate, and Fixed pins it to a rate you pick. It only sets the ceiling, so

@@ -36,28 +36,24 @@ const Connection: Component = () => {
               <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
             </li>
             <li>
-              Read <code>proto_ver</code> from that reply and check it equals <code>2</code>.
+              Read <code>proto_ver</code> from that reply and check it equals <code>3</code>.
             </li>
           </ol>
-          <p>
-            <code>proto_ver</code> is the protocol version the firmware speaks, one byte. These pages
-            describe version <code>2</code>.
-          </p>
           <table class="api-params">
             <thead>
               <tr><th>Reply</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>proto_ver == 2</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 2</code></td><td>Speaks a protocol they don't cover; don't assume the commands behave as described.</td></tr>
+              <tr><td><code>proto_ver == 3</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 3</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
           <p>
-            Five payload bytes. The first echoes the <code>what</code> selector you asked for (the
-            byte that chose which thing to query), then the protocol and firmware version follow. Full
-            detail on the <A href="/native/commands/requests#version">Requests</A> page.
+            The first byte echoes the <code>what</code> selector you asked for (the byte that chose which
+            thing to query), then the protocol and firmware version, the box MAC, and the box name follow.
+            Full detail on the <A href="/native/commands/requests#version">Requests</A> page.
           </p>
           <table class="byte-table">
             <thead>
@@ -65,10 +61,12 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>the selector byte, echoed back; <code>0x00</code> = <code>VERSION</code></td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>2</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>3</code></td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
+              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the box MAC, a stable per-box id</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name (may be empty), delimited by the frame <code>LEN</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -94,9 +92,7 @@ const Connection: Component = () => {
           </table>
           <p>
             The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> since no request
-            prompted it. The payload is identical to a queried reply, so a program that ignores the
-            hello loses nothing and just sends{' '}
-            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> instead.
+            prompted it, and its payload is identical to a queried reply.
           </p>
           <div class="callout callout--info">
             <p>
@@ -104,7 +100,7 @@ const Connection: Component = () => {
               <A href="/library/connection#open"><code>open</code></A> and{' '}
               <A href="/library/connection#open"><code>find</code></A>: it sends{' '}
               <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retries a
-              few times, and checks <code>proto_ver == 2</code> before handing you a working
+              few times, and checks <code>proto_ver == 3</code> before handing you a working
               connection.
             </p>
           </div>

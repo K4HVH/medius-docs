@@ -48,13 +48,11 @@ export const Chip: Component<ChipProps> = (props) => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (local.disabled) return;
 
-    // Handle Enter/Space for clickable chips
     if (local.onClick && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       local.onClick();
     }
 
-    // Handle Backspace/Delete for removable chips
     if (local.onRemove && (e.key === 'Backspace' || e.key === 'Delete')) {
       e.preventDefault();
       local.onRemove();

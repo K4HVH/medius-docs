@@ -52,10 +52,6 @@ const Transport: Component = () => {
             </thead>
             <tbody>
               <tr>
-                <td>Bridge chip</td>
-                <td><code>CH343</code></td>
-              </tr>
-              <tr>
                 <td>VID</td>
                 <td><code>0x1A86</code></td>
               </tr>
@@ -82,8 +78,7 @@ const Transport: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>8N1</code> is 8 data bits, no parity, 1 stop bit. Open the OS port path above at
-            that baud and framing to connect.
+            <code>8N1</code> is 8 data bits, no parity, 1 stop bit.
           </p>
           <div class="callout callout--info">
             <p>

@@ -17,8 +17,8 @@ const Api: Component = () => {
         </p>
         <p>
           Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
-          return once the frame is queued. The query reads and <code>Device.open</code> /{' '}
-          <code>find</code> block for the <A href="/native/hardware">box</A>'s reply. Any call raises
+          return once the frame is queued. The query calls, plus <code>Device.open</code> /{' '}
+          <code>find</code>, block for the <A href="/native/hardware">box</A>'s reply. Any call raises
           a <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
         </p>
       </Card>
@@ -35,7 +35,6 @@ const Api: Component = () => {
               <tr><td><code>dev.clone()</code></td><td>Another handle to the same link; the connection is shared.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Free the handle. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
-              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> without opening one.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -77,78 +76,44 @@ const Api: Component = () => {
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject: buttons" subtitle="Press and release mouse buttons" />
+          <CardHeader title="Inject" subtitle="Press and release any usage: button, key, or media" />
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
-            <A href="/native/injection">injection model</A> (press / soft-release / force-release).
-            Button ids are on <A href="/native/commands/usage#buttons">Usage IDs</A>.
+            <A href="/native/injection">injection model</A> (press / soft-release / force-release). One
+            usage vocabulary drives every verb; build a <A href="/bindings/python/types#input"><code>Usage</code></A>{' '}
+            with <code>Usage.button</code> / <code>key</code> / <code>media</code>. Ids are on{' '}
+            <A href="/native/commands/usage">Usage IDs</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Input</code></A> (button, key, or media).</td></tr>
-              <tr><td><code>dev.button(button, action)</code></td><td>Apply an <code>Action</code> to a <A href="/bindings/python/types#button"><code>Button</code></A> directly.</td></tr>
-              <tr><td><code>dev.press(button)</code></td><td>Hold a button down (<code>Action.PRESS</code>).</td></tr>
-              <tr><td><code>dev.soft_release(button)</code></td><td>Release, unless the user is physically holding it.</td></tr>
-              <tr><td><code>dev.force_release(button)</code></td><td>Release even against a physical hold.</td></tr>
+              <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media usage).</td></tr>
+              <tr><td><code>dev.press(input)</code></td><td>Hold a usage down (<code>Action.PRESS</code>).</td></tr>
+              <tr><td><code>dev.soft_release(input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
+              <tr><td><code>dev.force_release(input)</code></td><td>Release even against a physical hold.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              The generic <code>inject()</code> takes a built target, not a generic argument. Build it
-              with <code>Input.button</code>/<code>key</code>/<code>media</code>, as in{' '}
-              <code>dev.inject(Input.button(Button.LEFT), Action.PRESS)</code>. The direct verbs
-              (<code>press</code>, <code>key_down</code>, <code>media_down</code>) take the target
-              directly, so <code>Input</code> is only needed on the generic path.
+              Every verb takes a <code>Usage</code>, so a button, key, and media usage inject the
+              same way: <code>dev.press(Usage.button(Button.LEFT))</code>,{' '}
+              <code>dev.press(Usage.key(Key.W))</code>,{' '}
+              <code>dev.press(Usage.media(MediaKey.MUTE))</code>.
             </p>
           </div>
-        </Card>
-      </div>
-
-      <div id="keys" data-search-target>
-        <Card>
-          <CardHeader title="Inject: keyboard" subtitle="Press and release keys" />
-          <p>See <A href="/library/inject">Inject</A>; HID keycodes on <A href="/native/commands/usage#keycodes">Usage IDs</A>. Pass a <A href="/bindings/python/types#key"><code>Key</code></A> or a raw keycode <code>int</code>.</p>
-          <table class="api-params">
-            <thead><tr><th>Call</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>dev.key(key, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a key.</td></tr>
-              <tr><td><code>dev.key_down(key)</code></td><td>Hold a key down.</td></tr>
-              <tr><td><code>dev.key_up(key)</code></td><td>Soft-release a key.</td></tr>
-              <tr><td><code>dev.key_force_release(key)</code></td><td>Force-release a key.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-
-      <div id="media" data-search-target>
-        <Card>
-          <CardHeader title="Inject: media" subtitle="Consumer-control keys" />
-          <p>See <A href="/library/inject">Inject</A>; Consumer usages on <A href="/native/commands/usage#consumer">Usage IDs</A>. Pass a <A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a raw 16-bit usage <code>int</code>.</p>
-          <table class="api-params">
-            <thead><tr><th>Call</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>dev.media(media, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a media key.</td></tr>
-              <tr><td><code>dev.media_down(media)</code></td><td>Hold a media key down.</td></tr>
-              <tr><td><code>dev.media_up(media)</code></td><td>Soft-release a media key.</td></tr>
-              <tr><td><code>dev.media_force_release(media)</code></td><td>Force-release a media key.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/button targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/button</code></A>; a <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A> picks an edge.</p>
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A> picks an edge.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.lock(target, direction)</code></td><td>Lock an axis or button (e.g. <code>LockTarget.button(Button.LEFT)</code>).</td></tr>
-              <tr><td><code>dev.unlock(target, direction)</code></td><td>Unlock an axis or button.</td></tr>
-              <tr><td><code>dev.lock_key(key, direction)</code> / <code>unlock_key</code></td><td>Lock / unlock one keyboard key.</td></tr>
-              <tr><td><code>dev.lock_media(media)</code> / <code>unlock_media</code></td><td>Lock / unlock one media key.</td></tr>
-              <tr><td><code>dev.lock_all(what)</code> / <code>unlock_all</code></td><td>Blanket lock / unlock a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (keys, media, buttons).</td></tr>
+              <tr><td><code>dev.lock(target, direction)</code></td><td>Lock an axis or usage (e.g. <code>LockTarget.button(Button.LEFT)</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
+              <tr><td><code>dev.unlock(target, direction)</code></td><td>Unlock an axis or usage.</td></tr>
+              <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket lock / unlock a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
@@ -171,6 +136,8 @@ const Api: Component = () => {
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
+              <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -193,7 +160,7 @@ const Api: Component = () => {
               <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
-              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active lock mask (<code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active locks (<code>.entries</code>, <code>.is_locked(...)</code>).</td></tr>
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
@@ -211,8 +178,57 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.catch_events(mask=CatchMask.ALL)</code></td><td><code>EventStream</code> of physical mouse/key/media events.</td></tr>
-              <tr><td><code>dev.logs()</code></td><td><code>LogStream</code> of device log lines.</td></tr>
+              <tr><td><code>dev.catch_events(mask=<A href="/bindings/python/types#catchmask">CatchMask</A>.ALL)</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of physical mouse/key/media events.</td></tr>
+              <tr><td><code>dev.logs()</code></td><td><A href="/bindings/python/streams"><code>LogStream</code></A> of device log lines.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="clip" data-search-target>
+        <Card>
+          <CardHeader title="Buffered clip playback" subtitle="Preload a per-frame stream, box-clocked" />
+          <p>
+            Build a stream with <code>ClipBuilder</code>, then drive it with the{' '}
+            <A href="/library/clip#handle"><code>ClipHandle</code></A> from <code>dev.clip()</code>.{' '}
+            Concept on <A href="/library/clip">Clip</A>.
+          </p>
+          <div class="api-response-label">CLIPBUILDER</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Appends</th></tr></thead>
+            <tbody>
+              <tr><td><code>ClipBuilder() / .clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
+              <tr><td><code>.gap(frames)</code></td><td>A gap run (0 = no-op).</td></tr>
+              <tr><td><code>.move(dx, dy) / .wheel(dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
+              <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
+              <tr><td><code>.edge(usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an explicit <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
+              <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Usage</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MOVE AND CLICK ON ONE FRAME</div>
+          <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Usage
+
+b = ClipBuilder()
+
+# move (+10, -4) AND press Left on the same frame
+b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
+          <div class="api-response-label">CLIPHANDLE</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev.clip()</code></td><td>A <code>ClipHandle</code> (owns the append-seq counter).</td></tr>
+              <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
+              <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
+              <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
+              <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
+              <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
+              <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>
+              <tr><td><code>clip.start() / clip.stop()</code></td><td>Begin playback; stop and flush the ring, releasing the auto-lock.</td></tr>
+              <tr><td><code>clip.pause() / clip.resume()</code></td><td>Halt playback in place; carry on from where it paused.</td></tr>
+              <tr><td><code>clip.restart() / clip.toggle()</code></td><td>Replay from the first frame; start if idle else stop.</td></tr>
+              <tr><td><code>clip.clear()</code></td><td>Drop the ring's entries.</td></tr>
+              <tr><td><code>clip.query_status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth, playback state, held usages, counters.</td></tr>
+              <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, bound triggers.</td></tr>
             </tbody>
           </table>
         </Card>

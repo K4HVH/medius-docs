@@ -67,7 +67,7 @@ export const NumberInput: Component<NumberInputProps> = (props) => {
     local.value !== undefined ? String(local.value) : ''
   );
 
-  // Sync display when controlled value changes externally (only while not focused)
+  // Skip sync while focused so external updates don't clobber in-progress typing.
   createEffect(() => {
     const v = local.value;
     if (!isFocused()) {

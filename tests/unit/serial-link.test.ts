@@ -53,9 +53,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=2][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto=3][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 3, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -63,11 +63,12 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 2,
+      protoVer: 3,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
       mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+      name: '',
     });
     await link.close();
   });
@@ -80,14 +81,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 2, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 3, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(2);
+    expect(version.protoVer).toBe(3);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -178,6 +179,7 @@ describe('SerialLink', () => {
       fwMinor: 1,
       fwPatch: 0,
       mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
+      name: '',
     });
     await link.close();
   });
@@ -293,15 +295,13 @@ describe('SerialLink', () => {
       onEvent: (ev, seq) => events.push({ kind: ev.kind, seq }),
     });
     await link.open();
-    // A mouse, keyboard, then media snapshot.
-    mock.push(encode(FrameType.MouseEvent, 10, new Uint8Array([0x01, 1, 0, 0, 0, 0, 0])));
-    mock.push(encode(FrameType.KbEvent, 11, new Uint8Array([0x02, 1, 0x04])));
-    mock.push(encode(FrameType.ConsEvent, 12, new Uint8Array([1, 0xe9, 0x00])));
+    // A motion event, then a class-tagged held-usage snapshot (a held button).
+    mock.push(encode(FrameType.MotionEvent, 10, new Uint8Array([1, 0, 0, 0, 0, 0])));
+    mock.push(encode(FrameType.UsageEvent, 11, new Uint8Array([1, 0, 0x04, 0x00])));
     await new Promise((r) => setTimeout(r, 10));
     expect(events).toEqual([
-      { kind: 'mouse', seq: 10 },
-      { kind: 'keyboard', seq: 11 },
-      { kind: 'media', seq: 12 },
+      { kind: 'motion', seq: 10 },
+      { kind: 'usages', seq: 11 },
     ]);
     await link.close();
   });
@@ -335,7 +335,7 @@ describe('SerialLink', () => {
     const link = new SerialLink(asPort(mock));
     await link.open();
     const [v, h] = await Promise.all([link.queryVersion(), link.queryHealth()]);
-    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4, mac: [0, 0, 0, 0, 0, 0] });
+    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4, mac: [0, 0, 0, 0, 0, 0], name: '' });
     expect(h.linkUp).toBe(true);
     await link.close();
   });

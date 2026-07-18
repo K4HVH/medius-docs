@@ -13,6 +13,7 @@ import {
   type Health,
   type ImperfectStatus,
   type Locks,
+  type LockTarget,
   type LogLine,
   type Rate,
   type Stats,
@@ -37,11 +38,10 @@ import {
   INJ_MEDIA,
   LedMode,
   LedTarget,
-  LockClass,
   LockDirection,
-  LockTarget,
   RebootTarget,
   catchPayload,
+  clearNamePayload,
   emitPayload,
   encode,
   imperfectPayload,
@@ -49,11 +49,11 @@ import {
   ledPayload,
   lockPayload,
   moveRidePayload,
-  parseConsEvent,
-  parseKbEvent,
+  namePayload,
   parseLog,
-  parseMouseEvent,
+  parseMotionEvent,
   parseResp,
+  parseUsageEvent,
   queryPayload,
   rebootPayload,
 } from '../protocol';
@@ -94,7 +94,7 @@ export interface SerialLinkEvents {
   onClose?: (reason?: Error) => void;
   onVersionHello?: (version: Version) => void;
   // An unsolicited physical-input event (the CATCH stream); `seq` is the box's rolling event counter.
-  // The event is tagged mouse / keyboard / media by its source frame type.
+  // The event is tagged motion (relative axes) or usages (a class-tagged held-usage snapshot).
   onEvent?: (ev: CatchEvent, seq: number) => void;
 }
 
@@ -267,13 +267,13 @@ export class SerialLink {
 
   lock(target: LockTarget, direction: LockDirection): Promise<void> {
     return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(LockClass.Mouse, target, direction, 1)),
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 1)),
     );
   }
 
   unlock(target: LockTarget, direction: LockDirection): Promise<void> {
     return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(LockClass.Mouse, target, direction, 0)),
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 0)),
     );
   }
 
@@ -290,8 +290,8 @@ export class SerialLink {
   }
 
   // Subscribe to the physical-input event stream (§3.9); event frames arrive on `onEvent` tagged
-  // mouse / keyboard / media. mask 0 unsubscribes. The subscription clears after ~1 s of silence,
-  // so poll a query to hold it alive.
+  // motion or usages. mask 0 unsubscribes. The subscription clears after ~1 s of silence, so poll a
+  // query to hold it alive.
   catch(mask: number): Promise<void> {
     return this.send(encode(FrameType.Catch, this.nextSeq(), catchPayload(mask)));
   }
@@ -321,6 +321,19 @@ export class SerialLink {
   // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
   setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
+  }
+
+  // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.
+  // Persisted in NVS, no reboot. Fire-and-forget. Read it back on RESP(VERSION) as the name tail after
+  // the MAC (there is no Q_OPTIONS readback for it).
+  setName(name: string): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), namePayload(name)));
+  }
+
+  // Clear the box name (§3.10): reverts to the firmware-synthesized "Medius-XXXX" default. Persisted
+  // in NVS. Fire-and-forget.
+  clearName(): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
   }
 
   async close(): Promise<void> {
@@ -451,19 +464,14 @@ export class SerialLink {
       this.events.onLog?.(parseLog(f.payload));
       return;
     }
-    if (f.ty === FrameType.MouseEvent) {
-      const report = parseMouseEvent(f.payload);
-      if (report) this.events.onEvent?.({ kind: 'mouse', report }, f.seq);
+    if (f.ty === FrameType.MotionEvent) {
+      const motion = parseMotionEvent(f.payload);
+      if (motion) this.events.onEvent?.({ kind: 'motion', motion }, f.seq);
       return;
     }
-    if (f.ty === FrameType.KbEvent) {
-      const report = parseKbEvent(f.payload);
-      if (report) this.events.onEvent?.({ kind: 'keyboard', report }, f.seq);
-      return;
-    }
-    if (f.ty === FrameType.ConsEvent) {
-      const report = parseConsEvent(f.payload);
-      if (report) this.events.onEvent?.({ kind: 'media', report }, f.seq);
+    if (f.ty === FrameType.UsageEvent) {
+      const snapshot = parseUsageEvent(f.payload);
+      if (snapshot) this.events.onEvent?.({ kind: 'usages', snapshot }, f.seq);
     }
   }
 

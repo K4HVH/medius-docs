@@ -9,10 +9,10 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Options are persistent box settings, each one set and read on its own. There are three:
-          imperfect clones, movement riding, and emit-rate pacing. All persist in NVS and survive a
-          reboot. See the native <A href="/native/commands/option"><code>OPTION</code></A> command for
-          the wire contract.
+          Options are persistent box settings, each one set and read on its own. There are four:
+          imperfect clones, movement riding, emit-rate pacing, and the box name. All persist in NVS and
+          survive a reboot. See the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
+          command for the wire contract.
         </p>
         <table class="api-params">
           <thead><tr><th>Option</th><th>Set</th><th>Read</th></tr></thead>
@@ -20,6 +20,7 @@ const Options: Component = () => {
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
+            <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
           </tbody>
         </table>
       </Card>
@@ -128,6 +129,53 @@ device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace
         </Card>
       </div>
 
+      <div id="set-name" data-search-target>
+        <Card>
+          <CardHeader title="set_name" subtitle="Give the box a human-readable name" />
+          <pre class="api-signature">fn set_name(&self, name: &str) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Sets the box's name, its readable partner to the{' '}
+            <A href="/library/discovery#identity">MAC</A>. Like the other setters it sends the value and
+            lets the box own the rules: the firmware keeps the leading printable-ASCII run capped at 32
+            bytes, and an empty string clears it. Unlike the other options it is read not by a query but
+            off <A href="/library/types/structs#version"><code>Version::name</code></A>, like the MAC.
+          </p>
+          <div class="api-response-label">PARAMETERS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>name</code></td><td><code>&amp;str</code></td><td>The new name, 1 to 32 printable ASCII characters.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+device.set_name("Loki")?;              // the box now answers to "Loki"
+let name = device.query_version()?.name;  // read it back off Version`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clear-name" data-search-target>
+        <Card>
+          <CardHeader title="clear_name" subtitle="Back to the synthesized default" />
+          <pre class="api-signature">fn clear_name(&self) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Clears the custom name, reverting the box to a firmware-synthesized{' '}
+            <code>Medius-XXXX</code> default derived from its MAC.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
+        </Card>
+      </div>
+
       <div id="query-imperfect" data-search-target>
         <Card>
           <CardHeader title="query_imperfect" subtitle="Read the imperfect-clone state" />
@@ -199,9 +247,10 @@ if let EmitPace::Fixed(hz) = status.mode {
           <CardHeader title="On AsyncDevice" subtitle="setters fire, queries await" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
-            <code>allow_imperfect_clones</code>, <code>set_movement_riding</code>, and{' '}
-            <code>set_emit_pace</code> fire-and-forget (no await) and makes <code>query_imperfect</code>,
-            {' '}<code>query_movement_riding</code>, and <code>query_emit_pace</code> futures, like the
+            <code>allow_imperfect_clones</code>, <code>set_movement_riding</code>,{' '}
+            <code>set_emit_pace</code>, <code>set_name</code>, and <code>clear_name</code>{' '}
+            fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
+            <code>query_movement_riding</code>, and <code>query_emit_pace</code> futures, like the
             other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>

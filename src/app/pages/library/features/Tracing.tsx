@@ -13,7 +13,7 @@ const Tracing: Component = () => {
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
           it emits a span and events as it works the link, but adds no medius functions and changes no
           behavior. The sections below are what it emits; you read them by installing a{' '}
-          <A href="#subscriber">subscriber</A>.
+          <A href="/library/features/tracing#subscriber">subscriber</A>.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
         <p>
@@ -75,7 +75,7 @@ const Tracing: Component = () => {
           <pre><code class="language-rust">{`// With "medius=debug" and a box that answers on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
-//   INFO  connect: medius::device: connected proto_ver=2 fw_major=1 fw_minor=3 fw_patch=0
+//   INFO  connect: medius::device: connected proto_ver=3 fw_major=1 fw_minor=3 fw_patch=0
 // "connect:" is the span; the rest is the event with its fields.`}</code></pre>
         </Card>
       </div>
@@ -122,7 +122,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr now carries the connect span and an INFO event, e.g.:
-//   INFO connect: medius::device: connected proto_ver=2 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
+//   INFO  connect: medius::device: connected proto_ver=3 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
         </Card>
       </div>
 
@@ -132,7 +132,7 @@ device.move_rel(10, 0)?;
           <p>
             Transport events sit below the default <code>INFO</code> floor. Lower it with a per-target{' '}
             <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}
-            (target names in <A href="#targets">targets</A>).
+            (target names in <A href="/library/features/tracing#targets">targets</A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`// Code-side: medius events at DEBUG, everything else at the default.
@@ -166,7 +166,7 @@ tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
 // Each event is now a JSON line, e.g.:
-//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":2}}`}</code></pre>
+//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":3}}`}</code></pre>
         </Card>
       </div>
     </>

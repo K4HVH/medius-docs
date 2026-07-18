@@ -14,17 +14,7 @@ import { Chip } from '../display/Chip';
 import { generateId } from '../../utils/generateId';
 import '../../styles/components/navigation/CommandPalette.css';
 
-// ─── Reserved Shortcuts ──────────────────────────────────────────────────────
-
-/**
- * Modifier + key combinations that cannot or should not be used as
- * CommandPalette item shortcuts.
- *
- * - **Browser-reserved** (Ctrl/Cmd + N, T, W): handled at the browser-chrome
- *   level — JavaScript never receives these events.
- * - **Text-editing** (Ctrl/Cmd + A, C, V, X, Z, Y): conflict with standard
- *   text editing in the search input (select-all, copy, paste, cut, undo, redo).
- */
+/** Modifier + key combinations that must not be used as CommandPalette item shortcuts. */
 type ReservedModifier = 'Ctrl' | 'Cmd';
 type BrowserReservedLetter = 'N' | 'T' | 'W';
 type TextEditingLetter = 'A' | 'C' | 'V' | 'X' | 'Z' | 'Y';
@@ -35,15 +25,9 @@ export type ReservedShortcut =
   | `${ReservedModifier}+${ReservedLetter}`
   | `${ReservedModifier}+${Lowercase<ReservedLetter>}`;
 
-/**
- * Runtime set of reserved shortcuts.
- * Shortcuts are normalised to `ctrl+<lowercase>` for matching
- * ("Cmd" / "Meta" are treated as "Ctrl").
- */
+/** Reserved shortcuts, normalised to `ctrl+<lowercase>` for matching (Cmd/Meta treated as Ctrl). */
 export const RESERVED_SHORTCUTS: ReadonlySet<string> = new Set([
-  // Browser-reserved
   'ctrl+n', 'ctrl+t', 'ctrl+w',
-  // Text-editing
   'ctrl+a', 'ctrl+c', 'ctrl+v', 'ctrl+x', 'ctrl+z', 'ctrl+y',
 ]);
 
@@ -60,8 +44,6 @@ export function isReservedShortcut(shortcut: string): boolean {
   return RESERVED_SHORTCUTS.has(normalizeShortcutForCheck(shortcut));
 }
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 export interface CommandPaletteItem {
   /** Unique identifier for the command */
   id: string;
@@ -75,21 +57,7 @@ export interface CommandPaletteItem {
   onSelect: () => void;
   /** Whether the command is disabled */
   disabled?: boolean;
-  /**
-   * Optional keyboard shortcut hint displayed as a badge (e.g. "Ctrl+S",
-   * "Alt+N").  The palette will intercept the matching keypress while open
-   * and execute the item's `onSelect`.
-   *
-   * **Reserved shortcuts** — the following are automatically rejected
-   * (a console warning is emitted and the shortcut is ignored at runtime):
-   *
-   * | Category | Keys |
-   * |---|---|
-   * | Browser-reserved | Ctrl/Cmd + N, T, W |
-   * | Text-editing | Ctrl/Cmd + A, C, V, X, Z, Y |
-   *
-   * Use the {@link createCommandItem} helper for **compile-time** enforcement.
-   */
+  /** Optional shortcut hint badge; the palette intercepts the matching keypress while open (reserved shortcuts are ignored). */
   shortcut?: string;
   /** Optional group/category name for grouping commands */
   group?: string;
@@ -99,21 +67,7 @@ export interface CommandPaletteItem {
   keywords?: string[];
 }
 
-/**
- * Type-safe factory for creating `CommandPaletteItem` objects.
- *
- * Emits a **runtime `console.warn`** when a reserved shortcut is assigned,
- * and the component will ignore it (the shortcut won't be matched).
- *
- * Reserved shortcuts are exposed as the {@link ReservedShortcut} type and the
- * {@link RESERVED_SHORTCUTS} set so you can build your own compile-time or
- * runtime guards.
- *
- * ```ts
- * createCommandItem({ shortcut: 'Ctrl+O', ... }) // ✓  Valid
- * createCommandItem({ shortcut: 'Ctrl+C', ... }) // ⚠ Runtime warning
- * ```
- */
+/** Factory for `CommandPaletteItem` objects that warns when a reserved shortcut is assigned. */
 export function createCommandItem(item: CommandPaletteItem): CommandPaletteItem {
   if (item.shortcut && isReservedShortcut(item.shortcut)) {
     console.warn(
@@ -148,16 +102,12 @@ export interface CommandPaletteProps {
   class?: string;
 }
 
-// ─── Fuzzy Match Helper ──────────────────────────────────────────────────────
-
 function fuzzyMatch(query: string, text: string): boolean {
   const lowerQuery = query.toLowerCase();
   const lowerText = text.toLowerCase();
 
-  // Substring match first (fastest)
   if (lowerText.includes(lowerQuery)) return true;
 
-  // Fuzzy character-by-character match
   let qi = 0;
   for (let ti = 0; ti < lowerText.length && qi < lowerQuery.length; ti++) {
     if (lowerText[ti] === lowerQuery[qi]) qi++;
@@ -181,8 +131,6 @@ function matchesItem(query: string, item: CommandPaletteItem): boolean {
   }
   return false;
 }
-
-// ─── Shortcut Parsing ────────────────────────────────────────────────────────
 
 interface ParsedShortcut {
   ctrlKey: boolean;
@@ -216,8 +164,6 @@ function eventMatchesShortcut(e: KeyboardEvent, parsed: ParsedShortcut): boolean
   return keyMatches && ctrlOrMeta === needsCtrlOrMeta && shiftMatches && altMatches;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
-
 export const CommandPalette: Component<CommandPaletteProps> = (props) => {
   const [local] = splitProps(props, [
     'open',
@@ -247,8 +193,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
   let listRef: HTMLDivElement | undefined;
   let backdropRef: HTMLDivElement | undefined;
 
-  // ── Filtered & grouped items ─────────────────────────────────────────────
-
   const filteredItems = createMemo(() => {
     const q = query().trim();
     if (!q) return local.items;
@@ -275,12 +219,10 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
 
     const result: Array<{ group?: string; items: CommandPaletteItem[] }> = [];
 
-    // Ungrouped items first
     if (ungrouped.length > 0) {
       result.push({ items: ungrouped });
     }
 
-    // Then grouped items in order
     for (const [group, groupItems] of groups) {
       result.push({ group, items: groupItems });
     }
@@ -288,20 +230,19 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     return result;
   });
 
-  // Flat list for keyboard navigation — follows grouped display order
+  // Flat list follows grouped display order so keyboard nav matches what's shown.
   const flatFilteredItems = createMemo(() => {
     return groupedItems().flatMap((section) => section.items);
   });
 
-  // Pre-built index map for O(1) lookup in render (avoids O(n²) indexOf)
+  // Pre-built index map for O(1) lookup in render (avoids O(n²) indexOf).
   const itemIndexMap = createMemo(() => {
     const map = new Map<CommandPaletteItem, number>();
     flatFilteredItems().forEach((item, index) => map.set(item, index));
     return map;
   });
 
-  // Pre-parsed shortcuts — avoids re-parsing on every keypress in the
-  // capture handler.  Excludes disabled items and reserved shortcuts.
+  // Pre-parsed so the capture handler doesn't re-parse on every keypress.
   const parsedShortcuts = createMemo(() => {
     return local.items
       .filter((item): item is CommandPaletteItem & { shortcut: string } =>
@@ -310,25 +251,20 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
       .map((item) => ({ item, parsed: parseShortcut(item.shortcut) }));
   });
 
-  // ── Effects ──────────────────────────────────────────────────────────────
-
-  // Reset query and active index when opening
   createEffect(() => {
     if (local.open) {
       setQuery('');
       setActiveIndex(0);
-      // Focus the input after the portal renders
+      // Focus after the portal renders.
       requestAnimationFrame(() => {
         inputRef?.focus();
       });
-      // Prevent body scroll
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
   });
 
-  // Global keybinding handler (Ctrl+K / Cmd+K to toggle palette)
   const handleGlobalKeydown = (e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
@@ -337,17 +273,14 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     }
   };
 
-  // Window capture-phase listener: intercepts *only* keypresses that match
-  // a registered (non-reserved, non-disabled) item shortcut.  Everything
-  // else — text-editing combos, unregistered modifier keys, etc. — flows
-  // through to the browser naturally.
+  // Capture-phase: intercept only keypresses matching a registered item shortcut;
+  // everything else flows through to the browser.
   const handleCaptureKeydown = (e: KeyboardEvent) => {
     if (!local.open) return;
 
-    // Allow Ctrl+K / Cmd+K through for the global keybinding toggle
+    // Let Ctrl+K / Cmd+K through for the global toggle.
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') return;
 
-    // Match against registered (non-reserved) item shortcuts
     for (const { item, parsed } of parsedShortcuts()) {
       if (eventMatchesShortcut(e, parsed)) {
         e.preventDefault();
@@ -360,10 +293,9 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     }
   };
 
-  // Register capture handler on window immediately (not deferred)
   window.addEventListener('keydown', handleCaptureKeydown, true);
 
-  // Track keybinding listener to avoid stacking on re-runs
+  // Flag avoids stacking the listener on effect re-runs.
   let keybindingListenerActive = false;
 
   createEffect(() => {
@@ -384,8 +316,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     window.removeEventListener('keydown', handleCaptureKeydown, true);
   });
 
-  // ── Event Handlers ───────────────────────────────────────────────────────
-
   const handleBackdropClick = (e: MouseEvent) => {
     if (dismissOnBackdrop() && e.target === backdropRef) {
       local.onClose();
@@ -396,16 +326,12 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     const items = flatFilteredItems();
     const count = items.length;
 
-    // The capture-phase listener (handleCaptureKeydown) only intercepts
-    // modifier combos that match a registered item shortcut.  Unmatched
-    // modifier combos (including text-editing shortcuts) pass through.
-
     if (count === 0 && e.key !== 'Escape') return;
 
     switch (e.key) {
       case 'Escape': {
         e.preventDefault();
-        e.stopPropagation(); // Prevent bubble to backdrop's onKeyDown
+        e.stopPropagation(); // prevent bubble to backdrop's onKeyDown
         local.onClose();
         break;
       }
@@ -413,7 +339,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
         e.preventDefault();
         setActiveIndex((prev) => {
           let next = (prev + 1) % count;
-          // Skip disabled items
           let attempts = 0;
           while (items[next]?.disabled && attempts < count) {
             next = (next + 1) % count;
@@ -428,7 +353,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
         e.preventDefault();
         setActiveIndex((prev) => {
           let next = (prev - 1 + count) % count;
-          // Skip disabled items
           let attempts = 0;
           while (items[next]?.disabled && attempts < count) {
             next = (next - 1 + count) % count;
@@ -484,9 +408,8 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     });
   };
 
-  // Reset active index when query changes
   createEffect(() => {
-    query(); // Track dependency
+    query(); // track dependency
     setActiveIndex(0);
   });
 
@@ -495,8 +418,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     item.onSelect();
     local.onClose();
   };
-
-  // ── Render ───────────────────────────────────────────────────────────────
 
   const paletteClasses = () => {
     const classes = ['command-palette'];
@@ -524,7 +445,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
           }}
         >
           <div class={paletteClasses()} role="dialog" aria-modal="true" aria-label="Command palette">
-            {/* Search input */}
             <div class="command-palette__header">
               <div class="command-palette__search-icon">
                 <BsSearch />
@@ -563,7 +483,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
               </Show>
             </div>
 
-            {/* Results list */}
             <div
               ref={listRef}
               class="command-palette__list"
@@ -649,7 +568,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
               </Show>
             </div>
 
-            {/* Footer */}
             <div class="command-palette__footer">
               <span class="command-palette__footer-hint">
                 <kbd>↑↓</kbd> navigate

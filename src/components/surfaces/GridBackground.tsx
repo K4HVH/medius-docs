@@ -32,12 +32,10 @@ export const GridBackground: Component<GridBackgroundProps> = (props) => {
     const color1 = gridColor();
     const color2 = getCSSVariable('--color-blue-950');
 
-    // Skip drawing if CSS variables aren't available (e.g. test environment)
     if (!color1 || !color2) return;
 
     ctx.imageSmoothingEnabled = false;
 
-    // Create gradient from NNE to SSW
     const gradient = ctx.createLinearGradient(width * 0.65, height * 0.1, width * 0.35, height * 0.9);
     gradient.addColorStop(0, color1);
     gradient.addColorStop(1, color2);
@@ -46,7 +44,6 @@ export const GridBackground: Component<GridBackgroundProps> = (props) => {
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.3;
 
-    // Draw vertical lines
     for (let x = 0; x <= width; x += size) {
       const pixelX = Math.floor(x) + 0.5;
       ctx.beginPath();
@@ -55,7 +52,6 @@ export const GridBackground: Component<GridBackgroundProps> = (props) => {
       ctx.stroke();
     }
 
-    // Draw horizontal lines
     for (let y = 0; y <= height; y += size) {
       const pixelY = Math.floor(y) + 0.5;
       ctx.beginPath();

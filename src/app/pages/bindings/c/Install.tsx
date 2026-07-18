@@ -7,7 +7,7 @@ const Install: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Install" subtitle="One header and one prebuilt library" />
+        <CardHeader title="Install" subtitle="No build step, works in C and C++" />
         <p>
           The binding is one header (<code>medius.h</code>) and one prebuilt library
           (<code>libmedius_capi</code>). It's the same for C and C++. The header compiles as both, so
@@ -57,9 +57,9 @@ const Install: Component = () => {
             <a href="https://learn.microsoft.com/en-us/cpp/" target="_blank" rel="noreferrer">C and C++</a>):
           </p>
           <ol>
-            <li><strong>C/C++ → General → Additional Include Directories</strong>: add the unzipped <code>include\</code> folder.</li>
-            <li><strong>Linker → General → Additional Library Directories</strong>: add the <code>lib\</code> folder.</li>
-            <li><strong>Linker → Input → Additional Dependencies</strong>: add <code>medius_capi.dll.lib</code>.</li>
+            <li>Under <strong>C/C++ → General → Additional Include Directories</strong>, add the unzipped <code>include\</code> folder.</li>
+            <li>Under <strong>Linker → General → Additional Library Directories</strong>, add the <code>lib\</code> folder.</li>
+            <li>Under <strong>Linker → Input → Additional Dependencies</strong>, add <code>medius_capi.dll.lib</code>.</li>
             <li>Copy <code>medius_capi.dll</code> next to your built <code>.exe</code> (or onto your <code>PATH</code>).</li>
           </ol>
           <p>Build and run as normal. To skip the DLL, add <code>medius_capi.lib</code> in step 3 instead (static, nothing to copy).</p>

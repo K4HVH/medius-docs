@@ -21,21 +21,25 @@ import {
   INJ_MEDIA,
   LedMode,
   LedTarget,
+  LockAxis,
   LockClass,
   LockDirection,
-  LockTarget,
+  LOCK_ID_ALL,
   isComposite,
+  isLocked,
+  clearNamePayload,
   emitPayload,
   imperfectPayload,
   ledPayload,
+  lockAxis,
+  lockButton,
   lockPayload,
   moveRidePayload,
-  lockSet,
+  namePayload,
   logLevelFromU8,
   nativeHz,
-  parseConsEvent,
-  parseKbEvent,
-  parseMouseEvent,
+  parseMotionEvent,
+  parseUsageEvent,
   parseLog,
   parseResp,
   queryPayload,
@@ -129,6 +133,7 @@ describe('FrameDecoder', () => {
         fwMinor: 1,
         fwPatch: 0,
         mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+        name: '', // no name tail past the 11-byte header
       },
     });
   });
@@ -244,9 +249,12 @@ describe('parseResp / parseLog', () => {
     expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
 
-  it('ignores trailing bytes past a complete RESP(VERSION)', () => {
+  it('decodes the ASCII name tail after the RESP(VERSION) header', () => {
+    // Bytes past the 11-byte header are the box name (ASCII, LEN-delimited), not trailing garbage.
     expect(
-      parseResp(new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 99, 99])),
+      parseResp(
+        new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x42, 0x6f, 0x78]),
+      ),
     ).toEqual({
       kind: 'version',
       version: {
@@ -255,6 +263,7 @@ describe('parseResp / parseLog', () => {
         fwMinor: 3,
         fwPatch: 4,
         mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+        name: 'Box',
       },
     });
   });
@@ -279,9 +288,9 @@ describe('helpers', () => {
   it('frameTypeFromU8 maps the catch + inject opcodes, null for unknown', () => {
     expect(frameTypeFromU8(0x03)).toBe(FrameType.Inject);
     expect(frameTypeFromU8(0x0b)).toBe(FrameType.Catch);
-    expect(frameTypeFromU8(0x0c)).toBe(FrameType.MouseEvent);
-    expect(frameTypeFromU8(0x0f)).toBe(FrameType.KbEvent);
-    expect(frameTypeFromU8(0x10)).toBe(FrameType.ConsEvent);
+    expect(frameTypeFromU8(0x0c)).toBe(FrameType.MotionEvent);
+    expect(frameTypeFromU8(0x0f)).toBe(FrameType.UsageEvent);
+    expect(frameTypeFromU8(0x10)).toBeNull(); // reserved (was ConsEvent; media folded into USAGE_EVENT)
     expect(frameTypeFromU8(0x11)).toBe(FrameType.Option);
     expect(frameTypeFromU8(0x12)).toBeNull();
     expect(frameTypeFromU8(0x00)).toBeNull();
@@ -360,7 +369,7 @@ describe('helpers', () => {
   });
 
   it('versionString formats major.minor.patch', () => {
-    expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0, mac: [] })).toBe('0.1.0');
+    expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0, mac: [], name: '' })).toBe('0.1.0');
   });
 });
 
@@ -377,58 +386,74 @@ describe('LED command (§3.7)', () => {
 });
 
 describe('LOCK command (§3.8)', () => {
-  it('lockPayload packs [class][usage u16 LE][direction][state]', () => {
-    // Lock the mouse wheel's negative (scroll-down) direction.
+  it('lockPayload packs [class][id u16 LE][direction][state]', () => {
+    // Lock the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
     expect(
-      Array.from(lockPayload(LockClass.Mouse, LockTarget.Wheel, LockDirection.Negative, 1)),
-    ).toEqual([0, 2, 0, 2, 1]);
+      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, LockDirection.Negative, 1)),
+    ).toEqual([3, 2, 0, 2, 1]);
     // Unlock the X axis, both signs.
-    expect(Array.from(lockPayload(LockClass.Mouse, LockTarget.X, LockDirection.Both, 0))).toEqual([
-      0, 0, 0, 0, 0,
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, LockDirection.Both, 0))).toEqual([
+      3, 0, 0, 0, 0,
+    ]);
+    // A button locks as class button (0), id = button id, with no +3 offset.
+    expect(Array.from(lockPayload(LockClass.Button, 4, LockDirection.Positive, 1))).toEqual([
+      0, 4, 0, 1, 1,
     ]);
     // A media-class lock keeps its 16-bit usage.
     expect(Array.from(lockPayload(LockClass.Media, 0x00e9, LockDirection.Both, 1))).toEqual([
       2, 0xe9, 0x00, 0, 1,
     ]);
+    // The id sentinel 0xFFFF blanket-locks the whole class.
+    expect(Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, LockDirection.Both, 1))).toEqual([
+      1, 0xff, 0xff, 0, 1,
+    ]);
   });
 
-  it('LockTarget wire values match ctrl_proto.h', () => {
-    expect([
-      LockTarget.X,
-      LockTarget.Y,
-      LockTarget.Wheel,
-      LockTarget.Left,
-      LockTarget.Right,
-      LockTarget.Middle,
-      LockTarget.Side1,
-      LockTarget.Side2,
-    ]).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  it('LockClass wire values match ctrl_proto.h', () => {
+    expect([LockClass.Button, LockClass.Key, LockClass.Media, LockClass.Axis]).toEqual([0, 1, 2, 3]);
   });
 
   it('LockDirection wire values match ctrl_proto.h', () => {
     expect([LockDirection.Both, LockDirection.Positive, LockDirection.Negative]).toEqual([0, 1, 2]);
   });
 
-  it('parses a LOCKS RESP into the 16-bit mask', () => {
-    // what = 6, mask = 0x0020 little-endian (wheel negative / scroll-down locked).
-    const resp = parseResp(new Uint8Array([6, 0x20, 0x00]));
-    expect(resp).toEqual({ kind: 'locks', locks: { mask: 0x0020 } });
+  it('parses a RESP(LOCKS) entry list', () => {
+    // what = 6, n = 2: axis wheel negative (dirbits 0x02), then button Left both (dirbits 0x03).
+    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 0x02, 0, 0, 0, 0x03]));
+    expect(resp).toEqual({
+      kind: 'locks',
+      locks: {
+        entries: [
+          { cls: LockClass.Axis, id: LockAxis.Wheel, positive: false, negative: true },
+          { cls: LockClass.Button, id: 0, positive: true, negative: true },
+        ],
+      },
+    });
   });
 
-  it('lockSet reads a per-direction bit out of the mask', () => {
-    // bit(Wheel*2 + 1) = bit 5 = 0x20 = wheel negative (scroll-down).
-    const locks = { mask: 0x0020 };
-    expect(lockSet(locks, LockTarget.Wheel, LockDirection.Negative)).toBe(true);
-    expect(lockSet(locks, LockTarget.Wheel, LockDirection.Positive)).toBe(false);
-    expect(lockSet(locks, LockTarget.Wheel, LockDirection.Both)).toBe(false);
-    // Side2 release = bit 15 = 0x8000.
-    expect(lockSet({ mask: 0x8000 }, LockTarget.Side2, LockDirection.Negative)).toBe(true);
-    // X positive = bit 0; both directions set means Both is true.
-    expect(lockSet({ mask: 0x0003 }, LockTarget.X, LockDirection.Both)).toBe(true);
+  it('parses an empty RESP(LOCKS) list', () => {
+    expect(parseResp(new Uint8Array([6, 0]))).toEqual({ kind: 'locks', locks: { entries: [] } });
   });
 
-  it('returns null for a truncated LOCKS payload', () => {
-    expect(parseResp(new Uint8Array([6, 0x20]))).toBeNull(); // needs 3 bytes
+  it('isLocked reads a per-direction lock out of the entry list', () => {
+    const locks = {
+      entries: [
+        { cls: LockClass.Axis, id: LockAxis.Wheel, positive: false, negative: true },
+        { cls: LockClass.Axis, id: LockAxis.X, positive: true, negative: true },
+      ],
+    };
+    expect(isLocked(locks, lockAxis(LockAxis.Wheel), LockDirection.Negative)).toBe(true);
+    expect(isLocked(locks, lockAxis(LockAxis.Wheel), LockDirection.Positive)).toBe(false);
+    expect(isLocked(locks, lockAxis(LockAxis.Wheel), LockDirection.Both)).toBe(false);
+    // X: both directions set means Both is true.
+    expect(isLocked(locks, lockAxis(LockAxis.X), LockDirection.Both)).toBe(true);
+    // A button not in the list reads unlocked.
+    expect(isLocked(locks, lockButton(0), LockDirection.Positive)).toBe(false);
+  });
+
+  it('returns null for a truncated RESP(LOCKS) payload', () => {
+    expect(parseResp(new Uint8Array([6]))).toBeNull(); // needs the n byte
+    expect(parseResp(new Uint8Array([6, 1, 3, 2, 0]))).toBeNull(); // n=1 but only 3 entry bytes
   });
 });
 
@@ -436,16 +461,20 @@ describe('CATCH command (§3.9)', () => {
   it('catchPayload packs [mask]', () => {
     // Motion + Buttons, no wheel.
     expect(Array.from(catchPayload(CatchClass.Motion | CatchClass.Buttons))).toEqual([0x05]);
-    // Subscribe to everything (now includes the keys class), then unsubscribe.
-    expect(Array.from(catchPayload(CatchClass.All))).toEqual([0x0f]);
+    // Subscribe to everything (motion, wheel, buttons, keys, media), then unsubscribe.
+    expect(Array.from(catchPayload(CatchClass.All))).toEqual([0x1f]);
     expect(Array.from(catchPayload(0))).toEqual([0x00]);
   });
 
   it('CatchClass wire values match ctrl_proto.h', () => {
-    expect([CatchClass.Motion, CatchClass.Wheel, CatchClass.Buttons, CatchClass.Keys]).toEqual([
-      0x01, 0x02, 0x04, 0x08,
-    ]);
-    expect(CatchClass.All).toBe(0x0f);
+    expect([
+      CatchClass.Motion,
+      CatchClass.Wheel,
+      CatchClass.Buttons,
+      CatchClass.Keys,
+      CatchClass.Media,
+    ]).toEqual([0x01, 0x02, 0x04, 0x08, 0x10]);
+    expect(CatchClass.All).toBe(0x1f);
   });
 
   it('parses a CATCH RESP into mask + dropped', () => {
@@ -458,29 +487,24 @@ describe('CATCH command (§3.9)', () => {
     expect(parseResp(new Uint8Array([7, 0x05, 0x00, 0x00, 0x00]))).toBeNull(); // needs 6 bytes
   });
 
-  it('parseMouseEvent decodes [buttons][dx][dy][wheel] with i16 sign-extension', () => {
-    // buttons = Left + Side2 (0x11), dx = +1, dy = -2, wheel = -1.
-    const resp = parseMouseEvent(new Uint8Array([0x11, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]));
-    expect(resp).toEqual({ buttons: 0x11, dx: 1, dy: -2, wheel: -1 });
+  it('parseMotionEvent decodes [dx][dy][dz] with i16 sign-extension', () => {
+    // dx = +1, dy = -2, dz = -1.
+    const ev = parseMotionEvent(new Uint8Array([0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]));
+    expect(ev).toEqual({ dx: 1, dy: -2, dz: -1 });
   });
 
-  it('parseMouseEvent returns null for a short payload', () => {
-    expect(parseMouseEvent(new Uint8Array([0, 0, 0, 0, 0, 0]))).toBeNull(); // needs 7 bytes
+  it('parseMotionEvent returns null for a short payload', () => {
+    expect(parseMotionEvent(new Uint8Array([0, 0, 0, 0, 0]))).toBeNull(); // needs 6 bytes
   });
 
-  it('round-trips a MOUSE_EVENT frame through the decoder', () => {
-    // buttons = 0x04 (Middle), dx = -1000, dy = +1000, wheel = -120 (one notch up).
-    const payload = new Uint8Array([0x04, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff]);
-    const frames = decodeAll(new FrameDecoder(), encode(FrameType.MouseEvent, 200, payload));
+  it('round-trips a MOTION_EVENT frame through the decoder', () => {
+    // dx = -1000, dy = +1000, dz = -120 (one notch up).
+    const payload = new Uint8Array([0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff]);
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.MotionEvent, 200, payload));
     expect(frames).toHaveLength(1);
-    expect(frames[0].ty).toBe(FrameType.MouseEvent);
+    expect(frames[0].ty).toBe(FrameType.MotionEvent);
     expect(frames[0].seq).toBe(200);
-    expect(parseMouseEvent(frames[0].payload)).toEqual({
-      buttons: 0x04,
-      dx: -1000,
-      dy: 1000,
-      wheel: -120,
-    });
+    expect(parseMotionEvent(frames[0].payload)).toEqual({ dx: -1000, dy: 1000, dz: -120 });
   });
 });
 
@@ -518,6 +542,15 @@ describe('OPTION command (§3.10)', () => {
     expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01]);
+  });
+
+  it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
+    expect(Array.from(namePayload('AB'))).toEqual([3, 0x41, 0x42]);
+    expect(Array.from(clearNamePayload())).toEqual([3]); // clear = OPTION(NAME) with no value
+    // non-printable / non-ASCII bytes are dropped so only a valid name reaches the wire
+    expect(Array.from(namePayload('A\tB\u{1f600}C'))).toEqual([3, 0x41, 0x42, 0x43]);
+    // capped at 32 bytes
+    expect(namePayload('x'.repeat(40)).length).toBe(1 + 32);
   });
 
   it('parses RESP(OPTIONS, EMIT) into mode / fixed_hz / resolved_hz', () => {
@@ -661,8 +694,9 @@ describe('device-info RESP decoding (v1.4.0)', () => {
   });
 });
 
-// KEY/CONSUMER inject + the keyboard/media catch stream + KBD_CAPS. Byte vectors mirror the firmware
-// packers/decoders in ctrl_proto.h so the JS side is pinned to the wire format.
+// key/media inject (via the class-tagged INJECT) + the unified USAGE_EVENT catch stream + the keyboard
+// half of CAPS. Byte vectors mirror the firmware packers/decoders in ctrl_proto.h so the JS side is
+// pinned to the wire format.
 describe('keyboard + media (v2.0.0)', () => {
   it('injectPayload (key) packs [class][usage u16 LE][action] (§3.2)', () => {
     // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1). class key = 1.
@@ -697,54 +731,43 @@ describe('keyboard + media (v2.0.0)', () => {
     expect(parseResp(new Uint8Array([3, 5, 0x07, 2]))).toBeNull(); // unified CAPS needs 7 bytes
   });
 
-  it('parseKbEvent decodes [modifiers][n][keycodes] (§4.12)', () => {
-    // Left Ctrl held (0x01), keys A (0x04) and C (0x06) pressed.
-    expect(parseKbEvent(new Uint8Array([0x01, 2, 0x04, 0x06]))).toEqual({
-      modifiers: 0x01,
-      keys: [0x04, 0x06],
+  it('parseUsageEvent decodes [n] then [class][id u16 LE] class-tagged usages (§4.10)', () => {
+    // Two held buttons: Left (class 0, id 0) and Side2 (class 0, id 4).
+    expect(parseUsageEvent(new Uint8Array([2, 0, 0, 0, 0, 4, 0]))).toEqual({
+      usages: [
+        { cls: 0, id: 0 },
+        { cls: 0, id: 4 },
+      ],
     });
-    // No keys, only a modifier.
-    expect(parseKbEvent(new Uint8Array([0x02, 0]))).toEqual({ modifiers: 0x02, keys: [] });
-  });
-
-  it('parseKbEvent returns null for a short payload or a truncated key array', () => {
-    expect(parseKbEvent(new Uint8Array([0x01]))).toBeNull(); // needs the n byte
-    expect(parseKbEvent(new Uint8Array([0x00, 3, 0x04, 0x05]))).toBeNull(); // n=3 but only 2 keys
-  });
-
-  it('round-trips a KB_EVENT frame through the decoder', () => {
-    // mod = Left Shift (0x02), keys = [0x1a 'w', 0x07 'd'].
-    const payload = new Uint8Array([0x02, 2, 0x1a, 0x07]);
-    const frames = decodeAll(new FrameDecoder(), encode(FrameType.KbEvent, 7, payload));
-    expect(frames).toHaveLength(1);
-    expect(frames[0].ty).toBe(FrameType.KbEvent);
-    expect(frames[0].seq).toBe(7);
-    expect(parseKbEvent(frames[0].payload)).toEqual({ modifiers: 0x02, keys: [0x1a, 0x07] });
-  });
-
-  it('parseConsEvent decodes [n][usage u16 LE x n] (§4.13)', () => {
-    // One active usage: Volume Up (0x00E9).
-    expect(parseConsEvent(new Uint8Array([1, 0xe9, 0x00]))).toEqual({ usages: [0xe9] });
-    // Two usages, little-endian: 0x00E9 and 0x0123.
-    expect(parseConsEvent(new Uint8Array([2, 0xe9, 0x00, 0x23, 0x01]))).toEqual({
-      usages: [0xe9, 0x0123],
+    // One held key ('A', class 1, id 0x04) and one held media usage (Volume Up, class 2, id 0x00E9),
+    // each in its own event; the id stays little-endian.
+    expect(parseUsageEvent(new Uint8Array([1, 1, 0x04, 0x00]))).toEqual({
+      usages: [{ cls: 1, id: 0x04 }],
+    });
+    expect(parseUsageEvent(new Uint8Array([1, 2, 0xe9, 0x00]))).toEqual({
+      usages: [{ cls: 2, id: 0xe9 }],
     });
     // Empty (nothing held).
-    expect(parseConsEvent(new Uint8Array([0]))).toEqual({ usages: [] });
+    expect(parseUsageEvent(new Uint8Array([0]))).toEqual({ usages: [] });
   });
 
-  it('parseConsEvent returns null for a short or truncated payload', () => {
-    expect(parseConsEvent(new Uint8Array([]))).toBeNull(); // needs the n byte
-    expect(parseConsEvent(new Uint8Array([2, 0xe9, 0x00]))).toBeNull(); // n=2 but one usage
+  it('parseUsageEvent returns null for a short or truncated payload', () => {
+    expect(parseUsageEvent(new Uint8Array([]))).toBeNull(); // needs the n byte
+    expect(parseUsageEvent(new Uint8Array([2, 0, 0, 0]))).toBeNull(); // n=2 but one entry
   });
 
-  it('round-trips a CONS_EVENT frame through the decoder', () => {
-    // One usage: Mute (0x00E2).
-    const payload = new Uint8Array([1, 0xe2, 0x00]);
-    const frames = decodeAll(new FrameDecoder(), encode(FrameType.ConsEvent, 9, payload));
+  it('round-trips a USAGE_EVENT frame through the decoder', () => {
+    // Two held keys: 'w' (class 1, id 0x1a) and 'd' (class 1, id 0x07).
+    const payload = new Uint8Array([2, 1, 0x1a, 0x00, 1, 0x07, 0x00]);
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.UsageEvent, 7, payload));
     expect(frames).toHaveLength(1);
-    expect(frames[0].ty).toBe(FrameType.ConsEvent);
-    expect(frames[0].seq).toBe(9);
-    expect(parseConsEvent(frames[0].payload)).toEqual({ usages: [0xe2] });
+    expect(frames[0].ty).toBe(FrameType.UsageEvent);
+    expect(frames[0].seq).toBe(7);
+    expect(parseUsageEvent(frames[0].payload)).toEqual({
+      usages: [
+        { cls: 1, id: 0x1a },
+        { cls: 1, id: 0x07 },
+      ],
+    });
   });
 });

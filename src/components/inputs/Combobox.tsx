@@ -70,8 +70,7 @@ export const Combobox: Component<ComboboxProps> = (props) => {
     else triggerRef?.removeAttribute('name');
   });
 
-  // Reset active index when dropdown opens/closes
-  // Don't auto-highlight any option on open — only highlight via keyboard nav or pointer hover
+  // No auto-highlight on open; only keyboard nav or pointer hover sets active
   createEffect(() => {
     if (!isOpen()) {
       setActiveIndex(-1);
@@ -96,8 +95,6 @@ export const Combobox: Component<ComboboxProps> = (props) => {
     return selectedValues().includes(value);
   };
 
-  // Menu handles opening/closing via open/onOpenChange props
-
   const handleSelect = (value: string) => {
     if (!local.onChange) return;
 
@@ -107,10 +104,8 @@ export const Combobox: Component<ComboboxProps> = (props) => {
         ? currentValues.filter(v => v !== value)
         : [...currentValues, value];
       local.onChange(newValues);
-      // Don't close dropdown in multiple mode
     } else {
       local.onChange(value);
-      // Close dropdown after selection in single-select mode
       setIsOpen(false);
     }
   };
@@ -148,7 +143,7 @@ export const Combobox: Component<ComboboxProps> = (props) => {
       if (enabled.length === 0) return;
       const current = activeIndex();
       if (current === -1) {
-        // First keyboard nav — jump to first selected or first enabled
+        // First keyboard nav: jump to first selected or first enabled
         const selVals = selectedValues();
         const firstSelectedIdx = local.options.findIndex(o => !o.disabled && selVals.includes(o.value));
         setActiveIndex(firstSelectedIdx >= 0 ? firstSelectedIdx : enabled[0]);
@@ -166,7 +161,7 @@ export const Combobox: Component<ComboboxProps> = (props) => {
       if (enabled.length === 0) return;
       const current = activeIndex();
       if (current === -1) {
-        // First keyboard nav — jump to last enabled
+        // First keyboard nav: jump to last enabled
         setActiveIndex(enabled[enabled.length - 1]);
       } else {
         const pos = enabled.indexOf(current);

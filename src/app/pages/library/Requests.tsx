@@ -19,7 +19,10 @@ const Requests: Component = () => {
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below.
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below. The{' '}
+            <A href="/library/clip#handle">clip handle</A> adds{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A> and{' '}
+            <A href="/library/requests#clip-config"><code>query_config</code></A>, also here.
           </p>
         </Card>
       </div>
@@ -31,7 +34,8 @@ const Requests: Component = () => {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#version"><code>Version</code></A>.
+            Returns a <A href="/library/types/structs#version"><code>Version</code></A>. The box's{' '}
+            <A href="/library/options#set-name">name</A> rides on it, in the <code>name</code> field.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -39,12 +43,13 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 2.3.2
-println!("proto {}", v.proto_ver);     // proto 2`}</code></pre>
+println!("{v}");                       // fw 3.0.0
+println!("proto {}", v.proto_ver);     // proto 3
+println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
             <p>
-              <code>Device::find()</code> already runs a version query during the handshake;
+              <A href="/library/connection#open"><code>Device::find()</code></A> already runs a version query during the handshake;
               calling <code>query_version</code> again just re-reads it.
             </p>
           </div>
@@ -137,7 +142,7 @@ if caps.mouse.has_wheel {
     device.wheel(1)?;
 }
 if caps.has_keyboard() && caps.keyboard.has_consumer {
-    device.media_down(medius::MediaKey::MUTE)?;
+    device.press(medius::MediaKey::MUTE)?;
 }`}</code></pre>
         </Card>
       </div>
@@ -201,18 +206,19 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the inputs
+            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the list of inputs
             currently blocked by <A href="/library/lock#lock"><code>lock</code></A>.{' '}
-            <code>is_locked(target, direction)</code> answers whether one particular lock is set. Read
-            it to confirm a lock landed, or to mirror the box's lock state in a UI.
+            <code>entries()</code> walks them and <code>is_locked(target, direction)</code> answers
+            whether one particular lock is set. Read it to confirm a lock landed, or to mirror the box's
+            lock state in a UI.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, LockTarget, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
 
 let device = Device::find()?;
 let locks = device.query_locks()?;
-if locks.is_locked(LockTarget::X, LockDirection::Both) {
+if locks.is_locked(Axis::X, LockDirection::Both) {
     println!("horizontal motion is frozen");
 }`}</code></pre>
         </Card>
@@ -228,8 +234,8 @@ if locks.is_locked(LockTarget::X, LockDirection::Both) {
             Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
             <code>mask</code> currently streaming via{' '}
             <A href="/library/catch#catch-events"><code>catch_events</code></A>, plus{' '}
-            <code>dropped</code>, the box-side count of events shed under back-pressure. Read it to
-            confirm a subscription is live, or to mirror the box's catch state in a UI.
+            <code>dropped</code>, the box-side count of events shed under back-pressure. Read it after
+            subscribing to confirm the mask took, or to reflect the live catch mask in your own UI.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -240,6 +246,60 @@ let c = device.query_catch()?;
 if !c.mask.is_empty() {
     println!("catching {:?}, {} dropped", c.mask, c.dropped);
 }`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-status" data-search-target>
+        <Card>
+          <CardHeader title="query_status (clip)" subtitle="Read the buffered-clip ring depth, progress, and playback state" />
+          <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            On the <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
+            <A href="/library/clip#clip"><code>device.clip()</code></A>, not <code>Device</code> itself.
+            Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
+            <code>state</code>, ring <code>free</code>, retained <code>played</code>/<code>total</code>, the
+            drain counters, and the <code>held</code> usages. Pace clip top-ups off <code>free</code>, and
+            watch <code>state</code> for a{' '}
+            <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync or for playback
+            reaching <code>Idle</code>. Backs{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let clip = device.clip();
+let s = clip.query_status()?;
+if s.state == medius::ClipState::Faulted { clip.clear()?; }
+println!("{} free, {} played", s.free, s.played);`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-config" data-search-target>
+        <Card>
+          <CardHeader title="query_config (clip)" subtitle="Read the whole clip config back" />
+          <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+          <p>
+            The config view of the same{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on the{' '}
+            <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
+            <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
+            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set; nothing
+            is write-only, every setting round-trips.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let cfg = device.clip().query_config()?;
+println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 

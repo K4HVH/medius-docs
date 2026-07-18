@@ -29,18 +29,18 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>2.3.2</code></td>
+              <td><code>3.0.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>2</code></td>
+              <td><code>3</code></td>
             </tr>
             <tr>
               <td>Transport</td>
               <td>4 Mbaud, framed-only (<a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer">CH343</a>)</td>
             </tr>
             <tr>
-              <td>USB id</td>
+              <td>USB ID</td>
               <td>VID <code>0x1A86</code> / PID <code>0x55D3</code></td>
             </tr>
             <tr>
@@ -65,7 +65,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>2</code>. Confirm it during the{' '}
+                These pages describe version <code>3</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -89,7 +89,7 @@ const NativeIntroduction: Component = () => {
                 <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.
                 A <A href="/native/commands/requests#requests"><code>QUERY</code></A> is correlated
                 to its <A href="/native/commands/requests#resp"><code>RESP</code></A> by{' '}
-                <code>SEQ</code>.
+                <A href="/native/frame#seq"><code>SEQ</code></A>.
               </td>
             </tr>
           </tbody>
@@ -171,9 +171,14 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream physical input" />
               </Card>
             </A>
+            <A href="/native/commands/clip" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Clip" subtitle="Buffered clip playback" />
+              </Card>
+            </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all nine selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all ten selectors" />
               </Card>
             </A>
             <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
@@ -188,7 +193,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/option" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Option" subtitle="Imperfect clones, movement riding" />
+                <CardHeader title="Option" subtitle="Imperfect clones, movement riding, emit pacing" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

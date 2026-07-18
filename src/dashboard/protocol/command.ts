@@ -1,6 +1,6 @@
 // Command payload builders (PC -> box).
 
-import { EmitMode, OPT_EMIT, OPT_IMPERFECT, OPT_MOVE_RIDE } from './opcode';
+import { EmitMode, NAME_MAX, OPT_EMIT, OPT_IMPERFECT, OPT_MOVE_RIDE, OPT_NAME } from './opcode';
 import { LedMode, LedTarget, LockClass, LockDirection, RebootTarget } from './types';
 
 export function queryPayload(what: number): Uint8Array {
@@ -16,15 +16,15 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
   return new Uint8Array([target, mode, level & 0xff]);
 }
 
-// LOCK (§3.8): [class u8][usage u16 LE][direction u8][state u8]. state 0 = unlock, 1 = lock.
-// usage is class-specific (mouse target / keyboard usage / media usage; ignored for blanket classes).
+// LOCK (§3.8): [class u8][id u16 LE][direction u8][state u8]. state 0 = unlock, 1 = lock. id is
+// class-specific (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
 export function lockPayload(
   cls: LockClass,
-  usage: number,
+  id: number,
   direction: LockDirection,
   state: number,
 ): Uint8Array {
-  return new Uint8Array([cls, usage & 0xff, (usage >> 8) & 0xff, direction, state & 0xff]);
+  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, state & 0xff]);
 }
 
 // CATCH (§3.9): [mask u8] - subscribe to physical-input event classes (0 = unsubscribe).
@@ -51,6 +51,25 @@ export function moveRidePayload(timeoutMs: number): Uint8Array {
 export function emitPayload(mode: EmitMode, rateHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
   return new Uint8Array([OPT_EMIT, mode & 0xff, hz & 0xff, (hz >> 8) & 0xff]);
+}
+
+// OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the
+// id alone (0 value bytes) clears it, reverting to the firmware-synthesized "Medius-XXXX" default. The
+// name is read back on RESP(VERSION), not Q_OPTIONS. Persisted in NVS. Non-ASCII/out-of-range bytes are
+// dropped so only a valid name is ever sent.
+export function namePayload(name: string): Uint8Array {
+  const bytes: number[] = [];
+  for (const ch of name) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0x20 && c <= 0x7e) bytes.push(c);
+    if (bytes.length >= NAME_MAX) break;
+  }
+  return new Uint8Array([OPT_NAME, ...bytes]);
+}
+
+// OPTION(NAME) clear (§3.10): the id alone, no value bytes, reverting to the synthesized default.
+export function clearNamePayload(): Uint8Array {
+  return new Uint8Array([OPT_NAME]);
 }
 
 // INJECT (§3.2): [class u8][id u16 LE][action u8]. class 0 button / 1 key / 2 media; tri-state action.

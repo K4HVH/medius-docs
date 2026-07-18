@@ -9,17 +9,17 @@ const Move: Component = () => {
       <Card>
         <CardHeader title="Move" subtitle="Cursor motion and scroll" />
         <p>
-          <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative axis: the cursor
-          or the wheel, picked by a <code>motion</code> byte. It injects on top of the real mouse, so
-          the PC sees the two combined, and it's{' '}
+          <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis: the
+          cursor pair (X and Y together) or the wheel, picked by a <code>motion</code>{' '}
+          byte. It injects on top of the real mouse, so the PC sees the combined result, and it's{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>. The momentary inputs
           (buttons, keys, media) have their own verb,{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
         </p>
         <table class="api-params">
-          <thead><tr><th>motion</th><th>axis</th><th>carries</th><th>payload</th></tr></thead>
+          <thead><tr><th>motion</th><th>Axis</th><th>carries</th><th>payload</th></tr></thead>
           <tbody>
-            <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A></td><td><code>dx</code>, <code>dy</code> (i16)</td><td>5 bytes</td></tr>
+            <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A> (X, Y)</td><td><code>dx</code>, <code>dy</code> (i16)</td><td>5 bytes</td></tr>
             <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>3 bytes</td></tr>
           </tbody>
         </table>
@@ -30,8 +30,7 @@ const Move: Component = () => {
           <CardHeader title="MOVE" subtitle="Relative axis injection" />
           <p>
             <code>MOVE</code> shifts an axis by a relative amount, not a screen position. The{' '}
-            <code>motion</code> byte at offset 0 picks the axis: <code>0</code> the cursor (carrying{' '}
-            <code>dx</code> and <code>dy</code>), <code>1</code> the wheel (carrying <code>dz</code>).{' '}
+            <code>motion</code> byte at offset 0 selects the axis.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x01</code>.
           </p>
           <pre class="api-signature">MOVE  0x01  ·  cursor payload 5 bytes</pre>
