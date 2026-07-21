@@ -160,7 +160,7 @@ const Requests: Component = () => {
             binding: <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.0.0</code>, protocol <code>3</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.0.1</code>, protocol <code>3</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 0F 00  | 00     | 03     | 03     | 00     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
