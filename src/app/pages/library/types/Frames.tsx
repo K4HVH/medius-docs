@@ -141,8 +141,8 @@ assert!(FrameType::try_from(0xFF).is_err());
 // Variant -> byte always works.
 assert_eq!(u8::from(FrameType::Log), 0x08);
 
-// Read a decoded frame by field: a MOTION_EVENT carrying dx=5, dy=-5, dz=1.
-let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![5, 0, 0xFB, 0xFF, 1, 0] };
+// Read a decoded frame by field: a MOTION_EVENT at ts_us=1000 carrying dx=5, dy=-5, dz=1.
+let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![0xE8, 3, 0, 0, 5, 0, 0xFB, 0xFF, 1, 0] };
 println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</code></pre>
 
           <div class="callout callout--info">

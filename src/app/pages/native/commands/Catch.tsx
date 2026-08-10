@@ -104,7 +104,7 @@ const Catch: Component = () => {
             dropped events as <code>SEQ</code> gaps. <A href="/native/frame#opcodes">Opcode</A>{' '}
             <code>0x0C</code>.
           </p>
-          <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 6 bytes</pre>
+          <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 10 bytes</pre>
           <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -112,9 +112,10 @@ const Catch: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
-              <tr><td>2</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
-              <tr><td>4</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian (see <A href="/native/commands/catch#timestamps">Timestamps</A>)</td></tr>
+              <tr><td>4</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
+              <tr><td>6</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
+              <tr><td>8</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">BEST-EFFORT</div>
@@ -125,11 +126,43 @@ const Catch: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>The user moves +10 right, no vertical or wheel motion (<code>dx = 10</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0C     | 2A     | 06 00  | 0A 00  | 00 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | dx     | dy     | dz     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
+| A5     | 0C     | 2A     | 0A 00  | 40 42 0F 00 | 0A 00  | 00 00  | 00 00  | lo hi  |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | ts_us       | dx     | dy     | dz     | CRC16  |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="timestamps" data-search-target>
+        <Card>
+          <CardHeader title="Timestamps" subtitle="What ts_us measures, and what it does not" />
+          <p>
+            Both event frames lead with <code>ts_us</code>: when the real device's report arrived, in
+            microseconds. The box stamps it on its mouse-facing chip in USB interrupt context, the moment
+            the device's interrupt-IN transfer completes. That is the closest point to the wire in the
+            whole path, so the value measures the device rather than the box's own queueing, the inter-chip
+            link, or the control link. Timestamping on arrival at the PC instead would fold all three in,
+            plus USB CDC scheduling and OS wake-up jitter.
+          </p>
+          <div class="api-response-label">IT IS THE BOX'S CLOCK</div>
+          <p>
+            The clock counts microseconds since that chip booted. It has no relationship to any clock on
+            the control PC and there is no sync mechanism, so the values are only meaningful compared
+            against each other: gaps, cadence, and velocity over time. It wraps every ~71.6 minutes, and it
+            restarts at zero if the box reboots, so a consumer tracking elapsed time across a long session
+            handles both. A stamp lower than the one before it is a restart, not time travel; deltas across
+            that point mean nothing.
+          </p>
+          <div class="api-response-label">IDLE POLLS ARE NOT SYNTHESIZED</div>
+          <p>
+            The box reports what it observed and never invents samples. Many mice report at every poll
+            interval even at rest, and those idle reports do reach the box, but they only produce an event
+            when a subscribed class actually changed. Other mice are change-driven: they send nothing at
+            all while idle, so the box never sees those polls and cannot know how many there were. Read{' '}
+            <A href="/native/commands/requests#rate"><code>QUERY(RATE)</code></A>'s change-driven flag to
+            tell which kind is attached before reconstructing a poll grid from the gaps between events.
+          </p>
         </Card>
       </div>
 
@@ -144,7 +177,7 @@ const Catch: Component = () => {
             one; diff successive snapshots per class for press / release edges.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x0F</code>.
           </p>
-          <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 1 + 3n bytes</pre>
+          <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 5 + 3n bytes</pre>
           <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -152,7 +185,8 @@ const Catch: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian (see <A href="/native/commands/catch#timestamps">Timestamps</A>)</td></tr>
+              <tr><td>4</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per usage: 0=button 1=key 2=media (as <A href="/native/commands/inject#inject"><code>INJECT</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
             </tbody>
@@ -167,11 +201,11 @@ const Catch: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Left Shift held while pressing <code>A</code> (a keys snapshot, two usages both <code>class = 1</code>: Left Shift <code>id = 0xE1</code>, then A <code>id = 0x04</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+----------+----------+--------+
-| A5     | 0F     | 2B     | 07 00  | 02     | 01 E1 00 | 01 04 00 | lo hi  |
-+--------+--------+--------+--------+--------+----------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | n      | usage[0] | usage[1] | CRC16  |
-+--------+--------+--------+--------+--------+----------+----------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+----------+----------+--------+
+| A5     | 0F     | 2B     | 0B 00  | 40 42 0F 00 | 02     | 01 E1 00 | 01 04 00 | lo hi  |
++--------+--------+--------+--------+-------------+--------+----------+----------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | ts_us       | n      | usage[0] | usage[1] | CRC16  |
++--------+--------+--------+--------+-------------+--------+----------+----------+--------+`}</pre>
         </Card>
       </div>
     </>

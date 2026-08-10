@@ -890,6 +890,7 @@ const Types: Component = () => {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#catch-event-kind"><code>MediusCatchEventKind</code></A></td><td>Which union member is live.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>uint64_t</code></td><td>When the device's report arrived, in box microseconds, stamped on the box's mouse-facing chip in USB interrupt context. The box's own clock, unrelated to any clock on this machine, so only compare timestamps against each other; a value below the previous one means the box's clock restarted. See <A href="/library/catch#timestamps">Catch timestamps</A>.</td></tr>
               <tr><td><code>data.motion</code></td><td><A href="/bindings/c/types#motion-event"><code>MediusMotionEvent</code></A></td><td>Read when <code>kind == MOTION</code>.</td></tr>
               <tr><td><code>data.usages</code></td><td><A href="/bindings/c/types#usage-event"><code>MediusUsageEvent</code></A></td><td>Read when <code>kind == USAGES</code>.</td></tr>
             </tbody>

@@ -103,6 +103,55 @@ while let Ok(event) = events.recv() {
         </Card>
       </div>
 
+      <div id="timestamps" data-search-target>
+        <Card>
+          <CardHeader title="Timestamps" subtitle="When the report actually arrived, not when you saw it" />
+          <p>
+            Every event carries <code>ts_us</code>, the moment the real device's report arrived. The box
+            stamps it on its mouse-facing chip in USB interrupt context, the instant the device's transfer
+            completes, so it measures the device and not the box's queueing, the inter-chip link, or the
+            serial link to this machine. Timestamping when the event reaches your code would fold all of
+            that in, plus OS scheduling, which is exactly the noise that makes gaps guesswork.
+          </p>
+          <p>
+            That makes the gap between two events a measurement rather than an inference, which is what
+            you want if you are modelling movement over time: velocity, cadence, or how long a button was
+            actually held.
+          </p>
+          <div class="api-response-label">IT IS THE BOX'S CLOCK</div>
+          <p>
+            It counts microseconds since the box booted and has no relationship to any clock on this
+            machine, so only compare timestamps against each other. The library widens the wire's 32-bit
+            value to <code>u64</code>, so the ~71.6 minute rollover never reaches you. A box reboot does:
+            its clock restarts at zero, so a value lower than the one before it means the clock restarted
+            and the delta across that point is meaningless.
+          </p>
+          <div class="api-response-label">IDLE INPUT IS NOT INVENTED</div>
+          <p>
+            The box reports what it saw and never synthesizes samples for the polls where nothing
+            happened. Many mice report at every poll interval even at rest, but those idle reports only
+            become events when a subscribed class actually changed. Others are change-driven and send
+            nothing at all while idle, so the box cannot know how many polls passed. Check{' '}
+            <A href="/library/requests#query-rate"><code>query_rate</code></A>'s{' '}
+            <code>change_driven</code> flag before reconstructing a poll grid from the gaps.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{CatchEvent, CatchMask};
+
+let stream = device.catch_events(CatchMask::MOTION)?;
+let mut prev: Option<u64> = None;
+loop {
+    if let CatchEvent::Motion(m) = stream.recv()? {
+        if let Some(p) = prev {
+            // Measured on the box, not timed on arrival here.
+            println!("{} us since the last report", m.ts_us.saturating_sub(p));
+        }
+        prev = Some(m.ts_us);
+    }
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="async" data-search-target>
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="catch_events fires, the stream awaits" />

@@ -109,6 +109,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
           </p>
           <pre><code class="language-c">{`typedef struct MediusCatchEvent {
     MediusCatchEventKind kind;          // MOTION=0, USAGES=1
+    uint64_t ts_us;                     // when the device's report arrived (box clock)
     union MediusCatchEventData data;    // read the arm for kind
 } MediusCatchEvent;
 
