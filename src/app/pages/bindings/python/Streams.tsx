@@ -102,6 +102,7 @@ const Streams: Component = () => {
           </p>
           <pre class="diagram">{`CatchEvent
  ├─ kind : CatchEventKind             (MOTION = 0 · USAGES = 1)
+ ├─ ts_us : int                       (box microseconds when the report arrived)
  ├─ payload : MotionEvent | UsageSnapshot
  ├─ .motion  → MotionEvent | None     (None unless kind == MOTION)
  └─ .usages  → UsageSnapshot | None   (None unless kind == USAGES)`}</pre>

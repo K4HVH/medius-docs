@@ -151,9 +151,9 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_motion(&self, seq: u8, dx: i16, dy: i16, dz: i16)</pre>
+          <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_usages(&self, seq: u8, usages: &[Usage])</pre>
+          <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, usages: &[Usage])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
@@ -170,7 +170,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
             <code>push_usages</code> as a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A> (a{' '}
             <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>), with{' '}
-            <code>seq</code> as the rolling counter so a test can assert gap detection.
+            <code>seq</code> as the rolling counter so a test can assert gap detection and <code>ts_us</code> as the raw wire timestamp, which lets a test drive the <code>u32</code> wrap and the clock-restart case.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -187,7 +187,7 @@ assert_eq!(line.text, "overheating");
 
 // Fake a catch subscription seeing the user hold A.
 let stream = device.catch_events(CatchMask::KEYS)?;
-mock.push_usages(0, &[Usage::from(Key::A)]);
+mock.push_usages(0, 1_000, &[Usage::from(Key::A)]);
 assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));`}</code></pre>
         </Card>
       </div>
