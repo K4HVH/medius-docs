@@ -25,6 +25,7 @@ import {
   Q_VERSION,
   RATE_CHANGE_DRIVEN,
   RATE_CONFIDENT,
+  EVENT_TS_LEN,
 } from './opcode';
 import {
   type Caps,
@@ -225,28 +226,29 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse a MOTION_EVENT payload (§4.10): [dx i16][dy i16][dz i16]. Unsolicited.
+// Parse a MOTION_EVENT payload (§4.10): [ts_us u32][dx i16][dy i16][dz i16]. Unsolicited.
 export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
-  if (payload.length < 6) return null;
+  if (payload.length < EVENT_TS_LEN + 6) return null;
   return {
-    dx: i16le(payload, 0),
-    dy: i16le(payload, 2),
-    dz: i16le(payload, 4),
+    tsUs: u32le(payload, 0),
+    dx: i16le(payload, EVENT_TS_LEN),
+    dy: i16le(payload, EVENT_TS_LEN + 2),
+    dz: i16le(payload, EVENT_TS_LEN + 4),
   };
 }
 
-// Parse a USAGE_EVENT payload (§4.10): [n u8] then n × [class u8][id u16 LE]. A class-tagged held-usage
-// snapshot (buttons, keys, or media, one class per event). Unsolicited.
+// Parse a USAGE_EVENT payload (§4.10): [ts_us u32][n u8] then n × [class u8][id u16 LE]. A class-tagged
+// held-usage snapshot (buttons, keys, or media, one class per event). Unsolicited.
 export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
-  if (payload.length < 1) return null;
-  const n = payload[0];
-  if (payload.length < 1 + 3 * n) return null;
+  if (payload.length < EVENT_TS_LEN + 1) return null;
+  const n = payload[EVENT_TS_LEN];
+  if (payload.length < EVENT_TS_LEN + 1 + 3 * n) return null;
   const usages: Usage[] = [];
   for (let i = 0; i < n; i++) {
-    const off = 1 + 3 * i;
+    const off = EVENT_TS_LEN + 1 + 3 * i;
     usages.push({ cls: payload[off], id: u16le(payload, off + 1) });
   }
-  return { usages };
+  return { tsUs: u32le(payload, 0), usages };
 }
 
 const textDecoder = new TextDecoder('utf-8', { fatal: false });
