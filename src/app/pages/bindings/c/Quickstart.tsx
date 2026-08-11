@@ -85,8 +85,8 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 3.0.1 (abi 3)
-firmware 3.0.1 (proto 3)
+          <pre><code class="language-c">{`medius-capi 3.1.0 (abi 4)
+firmware 3.1.0 (proto 3)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
           <div class="callout callout--info">
             <p>
