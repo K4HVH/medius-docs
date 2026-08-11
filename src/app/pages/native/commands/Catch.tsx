@@ -138,30 +138,43 @@ const Catch: Component = () => {
         <Card>
           <CardHeader title="Timestamps" subtitle="What ts_us measures, and what it does not" />
           <p>
-            Both event frames lead with <code>ts_us</code>: when the real device's report arrived, in
-            microseconds. The box stamps it on its mouse-facing chip in USB interrupt context, the moment
-            the device's interrupt-IN transfer completes. That is the closest point to the wire in the
-            whole path, so the value measures the device rather than the box's own queueing, the inter-chip
-            link, or the control link. Timestamping on arrival at the PC instead would fold all three in,
-            plus USB CDC scheduling and OS wake-up jitter.
+            Both event frames lead with <code>ts_us</code>: when the real device's report arrived. The box
+            stamps it the instant the interrupt-IN transfer completes, so the value measures the device,
+            not the trip to your code.
           </p>
-          <div class="api-response-label">IT IS THE BOX'S CLOCK</div>
+          <div class="api-response-label">WHERE THE STAMP IS TAKEN</div>
+          <pre class="diagram">{`  real device --> [ host chip, USB ISR ] --> queue --> link --> device chip --> CH343 --> your code
+                            |                |                                              |
+                     ts_us stamped           +------------- NOT in ts_us --------------------+`}</pre>
           <p>
-            The clock counts microseconds since that chip booted. It has no relationship to any clock on
-            the control PC and there is no sync mechanism, so the values are only meaningful compared
-            against each other: gaps, cadence, and velocity over time. It wraps every ~71.6 minutes, and it
-            restarts at zero if the box reboots, so a consumer tracking elapsed time across a long session
-            handles both. A stamp lower than the one before it is a restart, not time travel; deltas across
-            that point mean nothing.
+            Everything right of the stamp is box and host latency. Timestamping on arrival instead folds
+            all of it in, plus CDC scheduling and OS wake-up jitter.
           </p>
+          <div class="api-response-label">THE CLOCK</div>
+          <table class="api-params">
+            <thead><tr><th>Property</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>unit</td><td><code>u32</code> microseconds, little-endian</td></tr>
+              <tr><td>epoch</td><td>the mouse-facing chip's boot; unrelated to any clock on the control PC</td></tr>
+              <tr><td>sync</td><td>none. Compare stamps only against each other</td></tr>
+              <tr><td>wrap</td><td>every ~71.6 minutes</td></tr>
+              <tr><td>box reboot</td><td>restarts at 0, so a stamp below the previous one is a restart, not a wrap</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">READING A GAP</div>
+          <pre class="diagram">{`event A   ts_us = 1286497017
+event B   ts_us = 1286544017
+                  ----------
+          delta =      47000 us  /  1000 us poll = 47 polls
+                                    -> 46 polls where the device said nothing`}</pre>
           <div class="api-response-label">IDLE POLLS ARE NOT SYNTHESIZED</div>
+          <pre class="diagram">{`streaming       reports every poll, even at rest   -> event only when a subscribed class changes
+change-driven   silent while idle                  -> no events at all, and none invented`}</pre>
           <p>
-            The box reports what it observed and never invents samples. Many mice report at every poll
-            interval even at rest, and those idle reports do reach the box, but they only produce an event
-            when a subscribed class actually changed. Other mice are change-driven: they send nothing at
-            all while idle, so the box never sees those polls and cannot know how many there were. Read{' '}
+            The box reports what it observed. A change-driven device never puts those idle polls on the
+            wire, so their count is unknowable rather than withheld. Read{' '}
             <A href="/native/commands/requests#rate"><code>QUERY(RATE)</code></A>'s change-driven flag to
-            tell which kind is attached before reconstructing a poll grid from the gaps between events.
+            tell which kind is attached before reconstructing a grid from the gaps.
           </p>
         </Card>
       </div>
