@@ -29,7 +29,7 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>3.0.1</code></td>
+              <td><code>3.1.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
