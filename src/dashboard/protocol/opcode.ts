@@ -106,6 +106,9 @@ export enum FrameType {
   Option = 0x11,
 }
 
+// Byte width of the ts_us field both catch event frames lead with (§4.10).
+export const EVENT_TS_LEN = 4;
+
 export function frameTypeFromU8(value: number): FrameType | null {
   switch (value) {
     case 0x01:

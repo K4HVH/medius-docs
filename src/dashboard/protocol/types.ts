@@ -296,6 +296,9 @@ export interface Usage {
 // The relative axes from the CATCH stream (a MOTION_EVENT frame, §4.10), captured at the merge point
 // before any lock suppression or injection.
 export interface MotionEvent {
+  // When the device's report arrived, in box microseconds. The box's own clock, so only compare
+  // stamps against each other; it wraps every ~71.6 min and returns to 0 on a box reboot.
+  tsUs: number;
   dx: number;
   dy: number;
   dz: number;
@@ -304,6 +307,8 @@ export interface MotionEvent {
 // A class-tagged held-usage snapshot from the CATCH stream (a USAGE_EVENT frame, §4.10). One event
 // carries usages of a single class (buttons, keys, or media). A snapshot, not edge deltas.
 export interface UsageSnapshot {
+  // See MotionEvent.tsUs.
+  tsUs: number;
   usages: Usage[];
 }
 
