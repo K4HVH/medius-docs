@@ -107,49 +107,39 @@ while let Ok(event) = events.recv() {
         <Card>
           <CardHeader title="Timestamps" subtitle="When the report actually arrived, not when you saw it" />
           <p>
-            Every event carries <code>ts_us</code>, the moment the real device's report arrived. The box
-            stamps it the instant the device's transfer completes, so a gap between two events is a
-            measurement rather than an inference.
-          </p>
-          <div class="api-response-label">WHERE THE STAMP IS TAKEN</div>
-          <pre class="diagram">{`  real device --> [ box, USB ISR ] --> link --> serial --> EventStream --> your code
-                          |             |                                     |
-                   ts_us stamped        +----------- NOT in ts_us ------------+`}</pre>
-          <p>
-            Timestamping when the event reaches your code folds in the link, the serial hop, and OS
-            scheduling, which is the noise that makes gaps guesswork.
+            Every event carries <code>ts_us</code>, when the real device's report arrived. The box stamps
+            it the instant the device's transfer completes, so a gap between two events is a measurement
+            rather than an inference.
           </p>
           <div class="api-response-label">THE CLOCK</div>
           <table class="api-params">
             <thead><tr><th>Property</th><th>Value</th></tr></thead>
             <tbody>
-              <tr><td>type</td><td><code>u64</code> microseconds. The wire carries <code>u32</code>; the library widens it, so the ~71.6 minute rollover never reaches you.</td></tr>
+              <tr><td>type</td><td><code>u32</code> microseconds, handed over as the box sent it like <A href="/library/types/structs#catch-state"><code>CatchState.dropped</code></A> and the rolling <code>SEQ</code>.</td></tr>
               <tr><td>epoch</td><td>the box's boot, with no relationship to any clock on this machine. Compare stamps only against each other.</td></tr>
-              <tr><td>box reboot</td><td>the clock restarts at zero, so a value below the previous one means the delta across that point is meaningless.</td></tr>
+              <tr><td>wrap</td><td>every ~71.6 minutes, and back to zero on a box reboot. A value below the previous one is one or the other, and the delta across it is meaningless.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">IDLE INPUT IS NOT INVENTED</div>
-          <pre class="diagram">{`streaming       reports every poll, even at rest   -> event only when a subscribed class changes
-change-driven   silent while idle                  -> no events at all, and none invented`}</pre>
-          <p>
-            Check <A href="/library/requests#query-rate"><code>query_rate</code></A>'s{' '}
-            <code>change_driven</code> flag before reconstructing a poll grid from the gaps: on a
-            change-driven device the idle polls were never on the wire to count.
-          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchEvent, CatchMask};
 
+let poll_us = device.query_rate()?.poll_period_us as u32;
 let stream = device.catch_events(CatchMask::MOTION)?;
-let mut prev: Option<u64> = None;
+let mut prev: Option<u32> = None;
 loop {
     if let CatchEvent::Motion(m) = stream.recv()? {
-        if let Some(p) = prev {
-            // Measured on the box, not timed on arrival here.
-            println!("{} us since the last report", m.ts_us.saturating_sub(p));
+        if let Some(p) = prev.filter(|p| m.ts_us > *p) {
+            let idle_polls = (m.ts_us - p) / poll_us - 1;
+            println!("{idle_polls} polls with nothing to report");
         }
         prev = Some(m.ts_us);
     }
 }`}</code></pre>
+          <p>
+            Check <A href="/library/requests#query-rate"><code>query_rate</code></A>'s{' '}
+            <code>change_driven</code> flag first: on a change-driven device the idle polls were never on
+            the wire, so a gap cannot be read as a poll count.
+          </p>
         </Card>
       </div>
 
