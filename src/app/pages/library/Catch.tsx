@@ -108,32 +108,33 @@ while let Ok(event) = events.recv() {
           <CardHeader title="Timestamps" subtitle="When the report actually arrived, not when you saw it" />
           <p>
             Every event carries <code>ts_us</code>, the moment the real device's report arrived. The box
-            stamps it on its mouse-facing chip in USB interrupt context, the instant the device's transfer
-            completes, so it measures the device and not the box's queueing, the inter-chip link, or the
-            serial link to this machine. Timestamping when the event reaches your code would fold all of
-            that in, plus OS scheduling, which is exactly the noise that makes gaps guesswork.
+            stamps it the instant the device's transfer completes, so a gap between two events is a
+            measurement rather than an inference.
           </p>
+          <div class="api-response-label">WHERE THE STAMP IS TAKEN</div>
+          <pre class="diagram">{`  real device --> [ box, USB ISR ] --> link --> serial --> EventStream --> your code
+                          |             |                                     |
+                   ts_us stamped        +----------- NOT in ts_us ------------+`}</pre>
           <p>
-            That makes the gap between two events a measurement rather than an inference, which is what
-            you want if you are modelling movement over time: velocity, cadence, or how long a button was
-            actually held.
+            Timestamping when the event reaches your code folds in the link, the serial hop, and OS
+            scheduling, which is the noise that makes gaps guesswork.
           </p>
-          <div class="api-response-label">IT IS THE BOX'S CLOCK</div>
-          <p>
-            It counts microseconds since the box booted and has no relationship to any clock on this
-            machine, so only compare timestamps against each other. The library widens the wire's 32-bit
-            value to <code>u64</code>, so the ~71.6 minute rollover never reaches you. A box reboot does:
-            its clock restarts at zero, so a value lower than the one before it means the clock restarted
-            and the delta across that point is meaningless.
-          </p>
+          <div class="api-response-label">THE CLOCK</div>
+          <table class="api-params">
+            <thead><tr><th>Property</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>type</td><td><code>u64</code> microseconds. The wire carries <code>u32</code>; the library widens it, so the ~71.6 minute rollover never reaches you.</td></tr>
+              <tr><td>epoch</td><td>the box's boot, with no relationship to any clock on this machine. Compare stamps only against each other.</td></tr>
+              <tr><td>box reboot</td><td>the clock restarts at zero, so a value below the previous one means the delta across that point is meaningless.</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">IDLE INPUT IS NOT INVENTED</div>
+          <pre class="diagram">{`streaming       reports every poll, even at rest   -> event only when a subscribed class changes
+change-driven   silent while idle                  -> no events at all, and none invented`}</pre>
           <p>
-            The box reports what it saw and never synthesizes samples for the polls where nothing
-            happened. Many mice report at every poll interval even at rest, but those idle reports only
-            become events when a subscribed class actually changed. Others are change-driven and send
-            nothing at all while idle, so the box cannot know how many polls passed. Check{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>'s{' '}
-            <code>change_driven</code> flag before reconstructing a poll grid from the gaps.
+            Check <A href="/library/requests#query-rate"><code>query_rate</code></A>'s{' '}
+            <code>change_driven</code> flag before reconstructing a poll grid from the gaps: on a
+            change-driven device the idle polls were never on the wire to count.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchEvent, CatchMask};
