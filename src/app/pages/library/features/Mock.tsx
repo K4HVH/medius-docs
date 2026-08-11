@@ -146,7 +146,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Injecting inbound traffic" subtitle="push_log and push_raw" />
+          <CardHeader title="Injecting inbound traffic" subtitle="push_log, push_raw, and the two event pushes" />
           <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
