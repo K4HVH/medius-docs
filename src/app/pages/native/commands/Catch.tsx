@@ -136,29 +136,18 @@ const Catch: Component = () => {
 
       <div id="timestamps" data-search-target>
         <Card>
-          <CardHeader title="Timestamps" subtitle="What ts_us measures, and what it does not" />
+          <CardHeader title="Timestamps" subtitle="What ts_us measures" />
           <p>
-            Both event frames lead with <code>ts_us</code>: when the real device's report arrived. The box
-            stamps it the instant the interrupt-IN transfer completes, so the value measures the device,
-            not the trip to your code.
-          </p>
-          <div class="api-response-label">WHERE THE STAMP IS TAKEN</div>
-          <pre class="diagram">{`  real device --> [ host chip, USB ISR ] --> queue --> link --> device chip --> CH343 --> your code
-                            |                |                                              |
-                     ts_us stamped           +------------- NOT in ts_us --------------------+`}</pre>
-          <p>
-            Everything right of the stamp is box and host latency. Timestamping on arrival instead folds
-            all of it in, plus CDC scheduling and OS wake-up jitter.
+            Both event frames lead with <code>ts_us</code>: when the real device's report arrived, stamped
+            the instant its interrupt-IN transfer completed rather than when the frame reached you.
           </p>
           <div class="api-response-label">THE CLOCK</div>
           <table class="api-params">
             <thead><tr><th>Property</th><th>Value</th></tr></thead>
             <tbody>
               <tr><td>unit</td><td><code>u32</code> microseconds, little-endian</td></tr>
-              <tr><td>epoch</td><td>the mouse-facing chip's boot; unrelated to any clock on the control PC</td></tr>
-              <tr><td>sync</td><td>none. Compare stamps only against each other</td></tr>
-              <tr><td>wrap</td><td>every ~71.6 minutes</td></tr>
-              <tr><td>box reboot</td><td>restarts at 0, so a stamp below the previous one is a restart, not a wrap</td></tr>
+              <tr><td>epoch</td><td>the box's boot. Unrelated to any clock on the control PC, so compare stamps only against each other.</td></tr>
+              <tr><td>wrap</td><td>every ~71.6 minutes, and back to 0 on a box reboot. A stamp below the previous one is one or the other, and the delta across it is meaningless.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READING A GAP</div>
@@ -167,14 +156,10 @@ event B   ts_us = 1286544017
                   ----------
           delta =      47000 us  /  1000 us poll = 47 polls
                                     -> 46 polls where the device said nothing`}</pre>
-          <div class="api-response-label">IDLE POLLS ARE NOT SYNTHESIZED</div>
-          <pre class="diagram">{`streaming       reports every poll, even at rest   -> event only when a subscribed class changes
-change-driven   silent while idle                  -> no events at all, and none invented`}</pre>
           <p>
-            The box reports what it observed. A change-driven device never puts those idle polls on the
-            wire, so their count is unknowable rather than withheld. Read{' '}
-            <A href="/native/commands/requests#rate"><code>QUERY(RATE)</code></A>'s change-driven flag to
-            tell which kind is attached before reconstructing a grid from the gaps.
+            The poll period is <A href="/native/commands/requests#rate"><code>QUERY(RATE)</code></A>'s{' '}
+            <code>poll_period_us</code>. Check its change-driven flag first: on a change-driven device the
+            idle polls are never on the wire, so a gap cannot be read as a poll count.
           </p>
         </Card>
       </div>

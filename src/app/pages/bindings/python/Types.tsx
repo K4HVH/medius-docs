@@ -745,7 +745,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <tbody>
                 <tr><td><code>kind</code></td><td><A href="/bindings/python/types#catcheventkind"><code>CatchEventKind</code></A></td><td>which payload is set</td></tr>
                 <tr><td><code>payload</code></td><td><code>MotionEvent | UsageSnapshot</code></td><td>the decoded event</td></tr>
-                <tr><td><code>ts_us</code></td><td><code>int</code></td><td>When the device's report arrived, in box microseconds, stamped on the box's mouse-facing chip in USB interrupt context. The box's own clock, unrelated to any clock on this machine, so only compare timestamps against each other; a value below the previous one means the box's clock restarted. See <A href="/library/catch#timestamps">Catch timestamps</A>.</td></tr>
+                <tr><td><code>ts_us</code></td><td><code>int</code></td><td>When the device's report arrived, in box microseconds. The box's own clock, so compare stamps only against each other. See <A href="/library/catch#timestamps">Catch timestamps</A>.</td></tr>
                 <tr><td><code>motion</code></td><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A><code> | None</code></td><td>payload when <code>kind == MOTION</code></td></tr>
                 <tr><td><code>usages</code></td><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A><code> | None</code></td><td>payload when <code>kind == USAGES</code></td></tr>
               </tbody>
