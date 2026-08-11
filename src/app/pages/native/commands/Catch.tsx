@@ -112,12 +112,29 @@ const Catch: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian (see <A href="/native/commands/catch#timestamps">Timestamps</A>)</td></tr>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
               <tr><td>4</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
               <tr><td>6</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
               <tr><td>8</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">TIMESTAMP</div>
+          <p>
+            <code>ts_us</code> is stamped the instant the device's interrupt-IN transfer completed, on the
+            box's own clock: unrelated to any clock on the control PC, so compare stamps only against each
+            other. It wraps every ~71.6 minutes and returns to 0 on a box reboot, like the rolling{' '}
+            <A href="/native/frame#seq"><code>SEQ</code></A> beside it.
+          </p>
+          <pre class="diagram">{`event A   ts_us = 1286497017
+event B   ts_us = 1286544017
+                  ----------
+          delta =      47000 us  /  1000 us poll = 47 polls
+                                    -> 46 polls where the device said nothing`}</pre>
+          <p>
+            The poll period is <A href="/native/commands/requests#rate"><code>QUERY(RATE)</code></A>'s{' '}
+            <code>poll_period_us</code>. Check its change-driven flag first: on such a device the idle
+            polls are never on the wire, so a gap cannot be read as a poll count.
+          </p>
           <div class="api-response-label">BEST-EFFORT</div>
           <p>
             Delivery is best-effort: under back-pressure the box drops events (counted in{' '}
@@ -131,36 +148,6 @@ const Catch: Component = () => {
 +--------+--------+--------+--------+-------------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | ts_us       | dx     | dy     | dz     | CRC16  |
 +--------+--------+--------+--------+-------------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="timestamps" data-search-target>
-        <Card>
-          <CardHeader title="Timestamps" subtitle="What ts_us measures" />
-          <p>
-            Both event frames lead with <code>ts_us</code>: when the real device's report arrived, stamped
-            the instant its interrupt-IN transfer completed rather than when the frame reached you.
-          </p>
-          <div class="api-response-label">THE CLOCK</div>
-          <table class="api-params">
-            <thead><tr><th>Property</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>unit</td><td><code>u32</code> microseconds, little-endian</td></tr>
-              <tr><td>epoch</td><td>the box's boot. Unrelated to any clock on the control PC, so compare stamps only against each other.</td></tr>
-              <tr><td>wrap</td><td>every ~71.6 minutes, and back to 0 on a box reboot. A stamp below the previous one is one or the other, and the delta across it is meaningless.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">READING A GAP</div>
-          <pre class="diagram">{`event A   ts_us = 1286497017
-event B   ts_us = 1286544017
-                  ----------
-          delta =      47000 us  /  1000 us poll = 47 polls
-                                    -> 46 polls where the device said nothing`}</pre>
-          <p>
-            The poll period is <A href="/native/commands/requests#rate"><code>QUERY(RATE)</code></A>'s{' '}
-            <code>poll_period_us</code>. Check its change-driven flag first: on a change-driven device the
-            idle polls are never on the wire, so a gap cannot be read as a poll count.
-          </p>
         </Card>
       </div>
 
@@ -183,7 +170,7 @@ event B   ts_us = 1286544017
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian (see <A href="/native/commands/catch#timestamps">Timestamps</A>)</td></tr>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
               <tr><td>4</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per usage: 0=button 1=key 2=media (as <A href="/native/commands/inject#inject"><code>INJECT</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
