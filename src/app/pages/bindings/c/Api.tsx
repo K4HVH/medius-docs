@@ -41,7 +41,10 @@ medius_device_free(dev);`}</code></pre>
             Opaque handles (<code>MediusDevice</code>, <code>MediusEventStream</code>,{' '}
             <code>MediusLogStream</code>, <code>MediusMockBox</code>) each have a <code>*_free</code>;
             you own them. Catch events and log lines are fixed-size structs, so there is nothing to
-            free per event.
+            free per event. That holds for captured packet bytes too: a{' '}
+            <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> carries its
+            payload in an inline <code>bytes[MEDIUS_TRAFFIC_MAX_BYTES]</code> array, not a pointer, so
+            an event you copied stays valid with no ownership attached to it.
           </p>
         </div>
       </Card>
@@ -182,7 +185,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>medius_device_query_stats(dev, MediusStats *out)</code></td><td><A href="/bindings/c/types#stats"><code>MediusStats</code></A>: box-side telemetry.</td></tr>
               <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A>: the active locks (entry list).</td></tr>
-              <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: subscription mask + dropped count.</td></tr>
+              <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: the accepted subscription entries with their per-entry drops, the box-wide drop count, and the inter-chip clock estimate.</td></tr>
               <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
               <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
@@ -195,11 +198,25 @@ medius_device_free(dev);`}</code></pre>
       <div id="streams" data-search-target>
         <Card>
           <CardHeader title="Streams" subtitle="Subscribe to live input and logs" />
-          <p>Consuming events is covered on <A href="/bindings/c/streams">Streams</A>; the catch feature itself on <A href="/library/catch">Catch</A> and logs on <A href="/library/diagnostics">Logs &amp; counters</A>. <code>medius_device_catch_events</code> takes an OR of the <code>MEDIUS_CATCH_MASK_*</code> bits as its subscription.</p>
+          <p>
+            Consuming events is covered on <A href="/bindings/c/streams">Streams</A>; the catch feature
+            itself on <A href="/library/catch">Catch</A> and logs on{' '}
+            <A href="/library/diagnostics">Logs &amp; counters</A>.{' '}
+            <code>medius_device_catch_events</code> takes an array of{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries: each
+            names a <A href="/bindings/c/types#catch-class">class</A>, an id inside it (or{' '}
+            <code>MEDIUS_CATCH_ID_ALL</code>), a direction, and a per-entry <code>snaplen</code>. The
+            box's table holds 32 of them; the surplus, and any malformed entry, is refused silently, so
+            read the accepted set back with <code>medius_device_query_catch</code>.
+          </p>
+          <pre class="api-signature">{`MediusStatus medius_device_catch_events(MediusDevice *dev,
+                                        const MediusCatchFilter *filters,
+                                        size_t n_filters,
+                                        MediusEventStream **out);`}</pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_catch_events(MediusDevice *dev, MediusCatchMask mask, MediusEventStream **out)</code></td><td>Subscribe to physical mouse/key/media events.</td></tr>
+              <tr><td><code>medius_device_catch_events(dev, const MediusCatchFilter *filters, size_t n_filters, MediusEventStream **out)</code></td><td>Subscribe to the addressed input and traffic classes; each element becomes one table entry.</td></tr>
               <tr><td><code>medius_event_stream_clone(const MediusEventStream *stream)</code></td><td>Another handle to the same subscription. Null in &rarr; null out.</td></tr>
               <tr><td><code>medius_event_stream_free(MediusEventStream *stream)</code></td><td>Free a handle; the subscription ends with the last one.</td></tr>
               <tr><td><code>medius_event_stream_recv(stream, MediusCatchEvent *out)</code></td><td>Block for the next event; <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close.</td></tr>
@@ -293,6 +310,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, MediusLockDirection dir)</code></td><td><code>bool</code>: is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
               <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
               <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusUsage usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>
+              <tr><td><code>medius_traffic_event_truncated(const MediusTrafficEvent *ev)</code></td><td><code>bool</code>: <code>ev-&gt;len &lt; ev-&gt;true_len</code>, so the box cut the packet at the matching entry's <code>snaplen</code>. Without the comparison a snapped packet and a genuinely short one look identical. See <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A>.</td></tr>
               <tr><td><code>medius_clip_status_is_held(const MediusClipStatus *status, MediusUsage usage)</code></td><td><code>bool</code>: is the clip holding that usage down.</td></tr>
               <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code>: a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
               <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code>: a keyboard interface is bound.</td></tr>
@@ -312,7 +330,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_last_error_proto_ver()</code></td><td>The proto-version byte from the last <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>, or 0.</td></tr>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version (bumped on any breaking header change).</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>4</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
               <tr><td><code>medius_flash(const char *port, const char *bin_path, bool host)</code></td><td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. <code>MEDIUS_FEATURE_FLASH</code> only; see <A href="/library/features/flash">Flash</A> and <A href="/bindings/c/build">Build &amp; features</A>.</td></tr>
             </tbody>

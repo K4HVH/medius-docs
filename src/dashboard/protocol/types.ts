@@ -273,16 +273,107 @@ export function isLocked(locks: Locks, target: LockTarget, direction: LockDirect
   return direction === LockDirection.Positive ? e.positive : e.negative;
 }
 
-// CATCH subscription classes (§3.9): which physical-input changes stream as event frames. Combine
-// with bitwise OR. The mask only gates which reports trigger an event; the payload is always the
-// full snapshot. Wire values match ctrl_proto.h.
+// CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
+// unchanged, so one address vocabulary covers locking a field and catching it; 4 and up reach the
+// byte-oriented traffic the box carries. Addressing doubles as the filter because the control link
+// is 4 Mbaud and vendor bulk alone measures 250 KiB/s through the box, so a subscription has to be
+// able to name one endpoint rather than a whole class. Wire values match ctrl_proto.h.
 export enum CatchClass {
-  Motion = 0x01,
-  Wheel = 0x02,
-  Buttons = 0x04,
-  Keys = 0x08,
-  Media = 0x10,
-  All = 0x1f,
+  Button = 0,
+  Key = 1,
+  Media = 2,
+  Axis = 3,
+  HidIn = 4,
+  HidOut = 5,
+  VendIntr = 6,
+  VendBulk = 7,
+  Control = 8,
+  Emit = 9,
+  Bus = 10,
+  Any = 0xff,
+}
+
+// The id sentinel that subscribes to a whole class (§3.9), matching LOCK_ID_ALL.
+export const CATCH_ID_ALL = 0xffff;
+
+// What one CATCH table entry addresses (§3.9): an address, a direction, and how much of each packet
+// to capture. snaplen is per entry because the useful value differs by orders of magnitude between
+// classes - a 64-byte vendor interrupt report wants all of it, a bulk pipe traced for framing
+// wants 16. dir is the press/release edge for the input classes and the transfer direction for the
+// traffic classes; no class is both, so one byte carries either reading unambiguously.
+export interface CatchFilter {
+  cls: CatchClass;
+  id: number;
+  dir: LockDirection;
+  snaplen: number;
+}
+
+// One entry as the box reports it back (§4.9): the filter it accepted, plus what that entry lost.
+// Kept separate from CatchFilter so a subscription request cannot carry a drop count that would
+// always read 0 and mean nothing.
+export interface CatchEntry extends CatchFilter {
+  // Per entry, because under a saturating bulk trace the box-wide counter says you are losing
+  // events but not which ones.
+  dropped: number;
+}
+
+// Named for the value they build, not for an action: `filterAll()` is the argument that clears the
+// table as readily as the one that subscribes to everything, so calling it `catchAll` would collide
+// with the reference client's `.catch_all()`, which only ever subscribes.
+export const filterAll = (): CatchFilter => ({
+  cls: CatchClass.Any,
+  id: CATCH_ID_ALL,
+  dir: LockDirection.Both,
+  snaplen: 0,
+});
+
+export const filterClass = (cls: CatchClass, snaplen = 0): CatchFilter => ({
+  cls,
+  id: CATCH_ID_ALL,
+  dir: LockDirection.Both,
+  snaplen,
+});
+
+export const filterAddr = (cls: CatchClass, id: number, snaplen = 0): CatchFilter => ({
+  cls,
+  id,
+  dir: LockDirection.Both,
+  snaplen,
+});
+
+// True when two filters address the same thing, which is how a caller reconciles the table it asked
+// for against the one RESP(CATCH) reports. Only a full-table flag marks a refusal; the other three
+// refusal reasons in §3.9 are visible solely as an entry's absence.
+export const sameFilter = (a: CatchFilter, b: CatchFilter): boolean =>
+  a.cls === b.cls && a.id === b.id && a.dir === b.dir;
+
+// Which chip's microsecond clock stamped an event (§4.10). The two ESP32-S3s boot independently, so
+// nothing relates their timers: compare stamps only within a domain, or apply RESP(CATCH)'s measured
+// offset and respect its error bound.
+export enum ClockDomain {
+  Host = 0,
+  Device = 1,
+}
+
+// An unknown byte falls back to Host, matching how deviceKindFromU8 and logLevelFromU8 absorb one:
+// the stamp is still usable within whichever domain produced it, and refusing to decode the frame
+// would lose the event outright.
+export function clockDomainFromU8(v: number): ClockDomain {
+  return v === ClockDomain.Device ? ClockDomain.Device : ClockDomain.Host;
+}
+
+// BUS event kinds (§4.10): the kind lives in the TRAFFIC_EVENT flags byte for class Bus.
+export enum BusEventKind {
+  Reset = 0,
+  Suspend = 1,
+  Resume = 2,
+  Configured = 3,
+  Deconfigured = 4,
+  SetInterface = 5,
+  DeviceAttached = 6,
+  DeviceDetached = 7,
+  CloneUp = 8,
+  CloneDown = 9,
 }
 
 // A momentary usage: a class plus its class-specific id. Buttons, keys, and media share one shape
@@ -299,6 +390,9 @@ export interface MotionEvent {
   // When the device's report arrived, in box microseconds. The box's own clock, so only compare
   // stamps against each other; it wraps every ~71.6 min and returns to 0 on a box reboot.
   tsUs: number;
+  // Which chip's clock tsUs came from. Always Host for motion: the stamp is taken in USB interrupt
+  // context on the host chip, the instant the real device's transfer completed.
+  clk: ClockDomain;
   dx: number;
   dy: number;
   dz: number;
@@ -309,7 +403,37 @@ export interface MotionEvent {
 export interface UsageSnapshot {
   // See MotionEvent.tsUs.
   tsUs: number;
+  // Always Host, like MotionEvent.clk.
+  clk: ClockDomain;
   usages: Usage[];
+}
+
+// One byte-oriented event from the CATCH stream (a TRAFFIC_EVENT frame, §4.10): the HID interfaces
+// the semantic model does not parse, the vendor endpoints, proxied control transactions, what the
+// clone emitted, and the bus lifecycle.
+export interface TrafficEvent {
+  tsUs: number;
+  // Which chip stamped it. IN traffic and the input classes come from the host chip; OUT traffic,
+  // control, emit and bus are stamped on the device chip at the tap.
+  clk: ClockDomain;
+  cls: CatchClass;
+  // Endpoint address, interface number, or endpoint number, depending on the class.
+  id: number;
+  // Positive = IN (device to PC), Negative = OUT (PC to device).
+  dir: LockDirection;
+  // Class-specific: end-of-transfer / ZLP bits for VendBulk, the device's answer for Control, the
+  // BusEventKind for Bus, 0 otherwise.
+  flags: number;
+  // The packet's length before snaplen truncation. Without it a packet cut short by snaplen and a
+  // genuinely short packet are indistinguishable.
+  trueLen: number;
+  // What arrived: up to snaplen bytes, so bytes.length < trueLen means the capture was truncated.
+  bytes: Uint8Array;
+}
+
+// True when this event's bytes were cut short by the entry's snaplen.
+export function trafficTruncated(ev: TrafficEvent): boolean {
+  return ev.bytes.length < ev.trueLen;
 }
 
 // True when the given usage is held in this snapshot.
@@ -323,15 +447,37 @@ export function snapshotClass(snap: UsageSnapshot): number | null {
 }
 
 // One decoded frame from the CATCH stream. A `motion` frame carries the relative axes; a `usages`
-// frame carries a class-tagged held-usage snapshot (buttons, keys, or media).
+// frame carries a class-tagged held-usage snapshot (buttons, keys, or media); a `traffic` frame
+// carries bytes off one of the byte-oriented classes.
 export type CatchEvent =
   | { kind: 'motion'; motion: MotionEvent }
-  | { kind: 'usages'; snapshot: UsageSnapshot };
+  | { kind: 'usages'; snapshot: UsageSnapshot }
+  | { kind: 'traffic'; traffic: TrafficEvent };
 
-// Decoded RESP(CATCH) (§4.9): the active subscription mask + box-side dropped-event count.
+// The cross-chip clock estimate carried in RESP(CATCH) (§4.9). The box measures it with a
+// four-timestamp exchange over the inter-chip link, stamped as each frame reaches the wire rather
+// than when it is queued, because queueing is the largest and most variable delay on that link.
+export interface ClockEstimate {
+  // The host chip's clock minus the device chip's, in microseconds.
+  offsetUs: number;
+  // Relative drift between the two crystals, parts per billion. Extrapolate with it rather than
+  // trusting a stale offset: two free-running crystals go stale at up to 20 us per second.
+  ratePpb: number;
+  // Best measured round trip of the window. The offset is good to about half of this.
+  delayUs: number;
+  // Age of the estimate in ms, or null when the box has not measured one yet.
+  ageMs: number | null;
+}
+
+// Decoded RESP(CATCH) (§4.9): the scalar header, then the active subscription table.
 export interface CatchState {
-  mask: number;
+  // An entry was refused because the 32-entry table is full. CATCH has no reply, so this flag plus
+  // the entry's absence from `entries` is how a refusal becomes visible.
+  tableFull: boolean;
+  // Box-wide events that could not be queued, across every entry.
   dropped: number;
+  clock: ClockEstimate;
+  entries: CatchEntry[];
 }
 
 // Decoded RESP(OPTIONS, IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is

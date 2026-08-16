@@ -57,7 +57,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x15</code>. Four values are reserved,
+            The opcodes run from <code>0x01</code> to <code>0x16</code>. Four values are reserved,
             retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
             keeps newer and older firmware compatible.
           </p>
@@ -76,8 +76,8 @@ const Frame: Component = () => {
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
               <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>5 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>10 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>11 bytes</td><td>none</td></tr>
               <tr><td><code>0x0D</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x0E</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
@@ -87,6 +87,7 @@ const Frame: Component = () => {
               <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
               <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
           <p>

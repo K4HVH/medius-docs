@@ -31,7 +31,7 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="The program" subtitle="The full listing" />
           <pre><code class="language-python">{`import time
-from medius import Device, Usage, Button, CatchMask, NotFoundError
+from medius import Device, Usage, Button, CatchFilter, NotFoundError
 
 try:
     with Device.find() as dev:                       # open first box + handshake
@@ -43,8 +43,8 @@ try:
         time.sleep(0.02)
         dev.soft_release(Usage.button(Button.LEFT))  # let it back up
 
-        with dev.catch_events(CatchMask.ALL) as stream:   # subscribe to physical input
-            event = stream.recv_timeout(5000)             # one event, or None after 5 s
+        with dev.catch_events(CatchFilter.all()) as stream:  # subscribe to everything
+            event = stream.recv_timeout(5000)               # one event, or None after 5 s
             if event is None:
                 print("no physical input within 5 s")
             elif event.motion:
@@ -52,6 +52,9 @@ try:
                 print(f"motion  dx={m.dx} dy={m.dy} wheel={m.dz}")
             elif event.usages and event.usages.is_held(Usage.button(Button.LEFT)):
                 print("left button held")
+            elif event.traffic:
+                t = event.traffic
+                print(f"traffic {t.cls.name} id={t.id:#04x} {len(t.data)} of {t.true_len} bytes")
             else:
                 print(f"event  {event.kind.name}")
         # stream + link are closed here, on block exit
@@ -101,9 +104,9 @@ except NotFoundError:
                 <td>Release, unless the user is physically holding it. See <A href="/native/injection">Injection</A>.</td>
               </tr>
               <tr>
-                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchMask.ALL)</code></A></td>
+                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.all())</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Subscribe; returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
+                <td>Subscribe with one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> (or an iterable); returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
               </tr>
               <tr>
                 <td><A href="/bindings/python/streams"><code>stream.recv_timeout(5000)</code></A></td>
@@ -124,11 +127,16 @@ except NotFoundError:
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
           <pre><code class="language-bash">{`python first.py
-# firmware 3.1.0, proto 3
+# firmware 3.1.0, proto 4
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
             The <code>motion</code> line appears once you move or click the real mouse within the 5-second window;
-            otherwise you get <code>no physical input within 5 s</code>.
+            otherwise you get <code>no physical input within 5 s</code>. <code>CatchFilter.all()</code>{' '}
+            subscribes to every class, so a <code>traffic</code> line can arrive first on a device with
+            busy vendor endpoints. Narrow it with{' '}
+            <code>CatchFilter.of_class(CatchClass.AXIS)</code> when you only want the mouse, importing{' '}
+            <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A> alongside{' '}
+            <code>CatchFilter</code>.
           </p>
         </Card>
       </div>
@@ -152,10 +160,14 @@ except NotFoundError:
             </tbody>
           </table>
           <p>
-            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of <code>.motion</code> /{' '}
-            <code>.usages</code> (the other is <code>None</code>); a{' '}
+            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
+            <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
+            <code>None</code>), plus <code>.ts_us</code> and the{' '}
+            <A href="/bindings/python/types#clockdomain"><code>.clk</code></A> domain that stamped it. A{' '}
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
-            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>. Full payload shapes on{' '}
+            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
+            a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
+            <code>truncated()</code> for whether <code>snaplen</code> cut its bytes. Full payload shapes on{' '}
             <A href="/bindings/python/streams">Streams</A>.
           </p>
         </Card>

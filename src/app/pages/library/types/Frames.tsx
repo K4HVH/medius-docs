@@ -73,7 +73,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Catch</code></td>
                 <td><code>0x0B</code></td>
-                <td>Subscribe to physical-input events (PC to box).</td>
+                <td>Add or remove one subscription-table entry (PC to box).</td>
               </tr>
               <tr>
                 <td><code>MotionEvent</code></td>
@@ -99,6 +99,11 @@ const Frames: Component = () => {
                 <td><code>ClipCtrl</code></td>
                 <td><code>0x13</code></td>
                 <td>Start/stop/arm/config buffered clip playback (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>TrafficEvent</code></td>
+                <td><code>0x16</code></td>
+                <td>An unsolicited byte-oriented catch event: HID, vendor, control, emit, or bus (box to PC).</td>
               </tr>
             </tbody>
           </table>

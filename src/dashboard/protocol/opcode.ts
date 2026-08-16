@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 3; // input-taxonomy unification (uniform LOCK class+id, list RESP(LOCKS), MOTION/USAGE catch events)
+export const PROTO_VER = 4; // CATCH is a (class, id, dir) subscription table over LOCK's address space, reaching the byte-oriented classes (HID, vendor, control, emit, bus) through TRAFFIC_EVENT; both older event frames carry a clock-domain byte
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
@@ -104,10 +104,37 @@ export enum FrameType {
   UsageEvent = 0x0f,
   // 0x10 reserved (was ConsEvent; media folded into UsageEvent)
   Option = 0x11,
+  TrafficEvent = 0x16,
 }
 
-// Byte width of the ts_us field both catch event frames lead with (§4.10).
+// Byte width of the ts_us field every catch event frame leads with (§4.10).
 export const EVENT_TS_LEN = 4;
+
+// Byte width of the header every catch event frame shares: ts_us then the clk domain byte (§4.10).
+// The two chips boot independently, so a stamp only means something against another from the same
+// domain, and every event has to say which clock produced it.
+export const EVENT_HDR = EVENT_TS_LEN + 1;
+
+// The CATCH table's size (§3.9). A refused entry is visible by its absence from RESP(CATCH) plus
+// the table-full flag, because CATCH itself has no reply. The clk byte's two values live on the
+// ClockDomain enum rather than here, so there is one vocabulary for them rather than two.
+export const CATCH_TABLE_MAX = 32;
+
+// RESP(CATCH) flags (§4.9).
+export const CATCH_FLAG_TABLE_FULL = 0x01;
+
+// RESP(CATCH) clk_age_ms sentinel (§4.9): no cross-chip clock estimate has been taken yet. It is a
+// distinct value because "no estimate" and "the offset happens to be zero" both report offset 0.
+export const CLK_AGE_NONE = 0xffff;
+
+// TRAFFIC_EVENT flags for class VEND_BULK (§4.10).
+export const TRAFFIC_BULK_END = 0x01;
+export const TRAFFIC_BULK_ZLP = 0x02;
+
+// TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.
+export const TRAFFIC_CONTROL_OK = 0x00;
+export const TRAFFIC_CONTROL_STALL = 0xfd;
+export const TRAFFIC_CONTROL_NAK = 0xfe;
 
 export function frameTypeFromU8(value: number): FrameType | null {
   switch (value) {
@@ -137,6 +164,8 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.UsageEvent;
     case 0x11:
       return FrameType.Option;
+    case 0x16:
+      return FrameType.TrafficEvent;
     default:
       return null;
   }

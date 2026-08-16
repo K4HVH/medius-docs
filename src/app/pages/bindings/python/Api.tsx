@@ -161,7 +161,7 @@ const Api: Component = () => {
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
               <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active locks (<code>.entries</code>, <code>.is_locked(...)</code>).</td></tr>
-              <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
+              <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: the live filter table (<code>.entries</code>, <code>.table_full</code>), drop counts, and the two chips' <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A>.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
               <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
@@ -178,10 +178,26 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.catch_events(mask=<A href="/bindings/python/types#catchmask">CatchMask</A>.ALL)</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of physical mouse/key/media events.</td></tr>
+              <tr><td><code>dev.catch_events(filters=<A href="/bindings/python/types#catchfilter">CatchFilter</A>.all())</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events.</td></tr>
               <tr><td><code>dev.logs()</code></td><td><A href="/bindings/python/streams"><code>LogStream</code></A> of device log lines.</td></tr>
             </tbody>
           </table>
+          <p>
+            <code>filters</code> takes one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+            or an iterable of them, each naming a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
+            and an id inside it, with an optional <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A>{' '}
+            and <code>snaplen</code>. Build them with <code>CatchFilter.all()</code>,{' '}
+            <code>.of_class(cls)</code>, or <code>.addr(cls, id)</code>, then refine with{' '}
+            <code>.with_direction()</code> / <code>.with_snaplen()</code>.
+          </p>
+          <div class="callout callout--info">
+            <p>
+              Addressing is the filter: the control link is 4 Mbaud and vendor bulk alone measures
+              250 KiB/s through the box, so a subscription has to be able to say which endpoint it
+              means. Subscribing gets no reply, so check what the box actually holds with{' '}
+              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>.
+            </p>
+          </div>
         </Card>
       </div>
 

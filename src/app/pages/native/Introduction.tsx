@@ -33,7 +33,7 @@ const NativeIntroduction: Component = () => {
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>3</code></td>
+              <td><code>4</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -65,7 +65,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>3</code>. Confirm it during the{' '}
+                These pages describe version <code>4</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -168,7 +168,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Catch" subtitle="Stream physical input" />
+                <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
               </Card>
             </A>
             <A href="/native/commands/clip" style={{ "text-decoration": "none" }}>

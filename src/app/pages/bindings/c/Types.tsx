@@ -30,7 +30,10 @@ const Types: Component = () => {
             to the integer and you pass the prefixed enumerators
             (<code>MEDIUS_BUTTON_LEFT</code>). Structs are plain PODs: pass by value, read fields
             directly. Nothing is heap-allocated, so there's nothing to free per value; only the
-            opaque handles have a <A href="/bindings/c/api"><code>*_free</code></A>.
+            opaque handles have a <A href="/bindings/c/api"><code>*_free</code></A>. Anything
+            variable-length on the wire lands in an inline fixed-cap array with a count beside it,
+            never a pointer you own. The shapes on this page are ABI version <code>4</code>, the
+            number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
           </p>
         </div>
       </Card>
@@ -54,8 +57,22 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_NAME</code></td><td><code>33</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion.name</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.triggers</code></A></td></tr>
+              <tr><td><code>MEDIUS_CATCH_TABLE_MAX</code></td><td><code>32</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState.entries</code></A></td></tr>
+              <tr><td><code>MEDIUS_TRAFFIC_MAX_BYTES</code></td><td><code>500</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent.bytes</code></A></td></tr>
             </tbody>
           </table>
+          <p>
+            The two catch caps come straight off the wire, not from a guess.{' '}
+            <code>MEDIUS_CATCH_TABLE_MAX</code> is 32 because that is the size of the box's own
+            subscription table, so a <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>{' '}
+            can always hold the whole live table with nothing left over to page through.{' '}
+            <code>MEDIUS_TRAFFIC_MAX_BYTES</code> is 500 because a <A href="/native/frame">frame</A>'s
+            payload stops at 512 bytes and a traffic event spends 12 of them on its header (timestamp,
+            clock domain, class, id, direction, flags, and <code>true_len</code>). 500 is therefore the
+            largest capture the wire can deliver in one event, so the inline array is never the thing
+            that truncates: whatever arrives fits, and a short <code>len</code> always means the box
+            cut the packet at your <code>snaplen</code>.
+          </p>
         </Card>
       </div>
 
@@ -195,15 +212,22 @@ const Types: Component = () => {
 
       <div id="lock-direction" data-search-target>
         <Card>
-          <CardHeader title="MediusLockDirection" subtitle="Which edge a lock applies to" />
+          <CardHeader title="MediusLockDirection" subtitle="An axis sign, a usage edge, or a transfer direction" />
           <pre class="api-signature">{`enum MediusLockDirection : uint8_t`}</pre>
-          <p>For an axis or wheel it's a sign; for a usage it's an edge. See <A href="/native/commands/lock">LOCK</A>.</p>
+          <p>
+            One enum with three readings, picked by what it is attached to: the sign of an axis or the
+            wheel, the edge of a usage, or the direction of a transfer when it sits on a{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> naming one of
+            the byte-oriented <A href="/bindings/c/types#catch-class">catch classes</A>. No target is
+            more than one of those, so a single byte carries whichever reading applies without
+            ambiguity. See <A href="/native/commands/lock">LOCK</A> and <A href="/library/catch">Catch</A>.
+          </p>
           <table class="api-params">
-            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Enumerator</th><th>Value</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_LOCK_DIRECTION_BOTH</code></td><td><code>0</code></td><td>Both signs, or press and release.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_DIRECTION_POSITIVE</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or a usage press.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_DIRECTION_NEGATIVE</code></td><td><code>2</code></td><td>Axis negative (<code>-</code>), or a usage release.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_DIRECTION_BOTH</code></td><td><code>0</code></td><td>Both signs.</td><td>Press and release.</td><td>Both directions.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_DIRECTION_POSITIVE</code></td><td><code>1</code></td><td>Positive (<code>+</code>).</td><td>The press edge.</td><td>IN, device to PC.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_DIRECTION_NEGATIVE</code></td><td><code>2</code></td><td>Negative (<code>-</code>).</td><td>The release edge.</td><td>OUT, PC to device.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -342,15 +366,50 @@ const Types: Component = () => {
           <pre class="api-signature">{`enum MediusCatchEventKind : uint8_t`}</pre>
           <p>
             Tells you which member of the <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>{' '}
-            union to read. See <A href="/library/catch">Catch</A>.
+            union to read. Which arms you can see follows from the{' '}
+            <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A> values you
+            subscribed to: the four input classes decode into <code>motion</code> and{' '}
+            <code>usages</code>, every byte-oriented class into <code>traffic</code>. See{' '}
+            <A href="/library/catch">Catch</A>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Enumerator</th><th>Value</th><th>Read</th></tr></thead>
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Read</th><th>Raised by</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>0</code></td><td><code>data.motion</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>1</code></td><td><code>data.usages</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>0</code></td><td><code>data.motion</code></td><td><code>AXIS</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>1</code></td><td><code>data.usages</code></td><td><code>BUTTON</code>, <code>KEY</code>, <code>MEDIA</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>2</code></td><td><code>data.traffic</code></td><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VEND_INTR</code>, <code>VEND_BULK</code>, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+
+      <div id="clock-domain" data-search-target>
+        <Card>
+          <CardHeader title="MediusClockDomain" subtitle="Which chip's clock stamped an event" />
+          <pre class="api-signature">{`enum MediusClockDomain : uint8_t`}</pre>
+          <p>
+            The <code>clk</code> field of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
+            beside <code>ts_us</code>. The <A href="/native/hardware">box</A> is two ESP32-S3s that boot
+            independently, so nothing relates their microsecond timers: a stamp is only meaningful
+            against other stamps from the <em>same</em> domain. Which domain an event carries is fixed
+            by where it is tapped, not by anything you configure.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Stamped</th><th>Carries</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CLOCK_DOMAIN_HOST</code></td><td><code>0</code></td><td>In USB interrupt context on the host chip, when the real device's transfer completed.</td><td>Motion and usage events, <code>HID_IN</code>, and the IN direction of <code>VEND_INTR</code> / <code>VEND_BULK</code>.</td></tr>
+              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, and <code>BUS</code>.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Both clocks are box-local and unrelated to any PC clock. Each wraps every ~71.6 minutes
+            (a <code>uint32_t</code> of microseconds) and returns to zero when that chip reboots, so a
+            stamp below the previous one is a wrap, a reboot, or a domain change, and{' '}
+            <code>clk</code> is what separates the third case from the first two. To relate the two
+            domains, read the clock estimate on{' '}
+            <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>; applying it is
+            optional, and a consumer that refuses to subtract across domains stays exact.
+          </p>
         </Card>
       </div>
 
@@ -372,25 +431,135 @@ const Types: Component = () => {
         </Card>
       </div>
 
-      <div id="catch-mask" data-search-target>
+      <div id="catch-class" data-search-target>
         <Card>
-          <CardHeader title="MediusCatchMask" subtitle="Which physical reports raise an event" />
-          <pre class="api-signature">{`typedef uint8_t MediusCatchMask;   /* OR the MEDIUS_CATCH_MASK_* bits */`}</pre>
+          <CardHeader title="MediusCatchClass" subtitle="What a catch filter addresses" />
+          <pre class="api-signature">{`typedef uint8_t MediusCatchClass;   /* one MEDIUS_CATCH_CLASS_* value */`}</pre>
           <p>
-            The subscription you hand to <A href="/bindings/c/api#streams"><code>medius_device_catch_events</code></A>.
-            See <A href="/library/catch">Catch</A>.
+            The class half of a <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>,
+            and the <code>class_</code> field of both{' '}
+            <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> and{' '}
+            <A href="/bindings/c/types#catch-state"><code>MediusCatchEntry</code></A>. It picks the
+            address space the filter's <code>id</code> is read in. Classes <code>0</code> to{' '}
+            <code>3</code> are the same vocabulary <A href="/library/lock">Lock</A> uses; the rest
+            address the box's USB plumbing and surface as byte-oriented traffic. See{' '}
+            <A href="/library/catch">Catch</A>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Macro</th><th>Bit</th><th>Triggers on</th></tr></thead>
+            <thead><tr><th>Enumerator</th><th>Value</th><th><code>id</code> addresses</th><th>With <code>MEDIUS_CATCH_ID_ALL</code></th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_MASK_MOTION</code></td><td><code>0x01</code></td><td>The mouse moved (dx/dy).</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_WHEEL</code></td><td><code>0x02</code></td><td>The wheel turned.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_BUTTONS</code></td><td><code>0x04</code></td><td>A button changed.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_KEYS</code></td><td><code>0x08</code></td><td>A keyboard key changed.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_MEDIA</code></td><td><code>0x10</code></td><td>A media key changed.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_MASK_ALL</code></td><td><code>0x1F</code></td><td>Every class.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_BUTTON</code></td><td><code>0</code></td><td>A mouse button id.</td><td>Every button.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_KEY</code></td><td><code>1</code></td><td>A HID keyboard usage (modifiers are <code>0xE0</code> to <code>0xE7</code>).</td><td>Every key and modifier.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_MEDIA</code></td><td><code>2</code></td><td>A 16-bit Consumer usage.</td><td>Every media usage.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_AXIS</code></td><td><code>3</code></td><td>X, Y, or the wheel.</td><td>Every axis.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_HID_IN</code></td><td><code>4</code></td><td>A cloned HID interface number.</td><td>Every HID interface.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint address.</td><td>Every interrupt-OUT endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VEND_INTR</code></td><td><code>6</code></td><td>A vendor interrupt endpoint address.</td><td>Every vendor interrupt endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VEND_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint address.</td><td>Every vendor bulk endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting interface number.</td><td>Every emitting interface.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ALL</code>.</td><td>Every bus event.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>Nothing; must be <code>MEDIUS_CATCH_ID_ALL</code>.</td><td>Every class at once.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">WHY THE ADDRESS IS ALSO THE FILTER</div>
+          <p>
+            The control link runs at 4 Mbaud, and vendor bulk alone measures 250 KiB/s through the
+            box, so bulk plus everything else at once is more than the link can carry. Every class at
+            once cannot be delivered, so a subscription has to be able to name <em>which endpoint</em>{' '}
+            it wants. That is why the classes carry an <code>id</code> at all, rather than being a set
+            of bits you OR together.
+          </p>
+          <div class="api-response-label">WHERE EACH CLASS IS TAPPED</div>
+          <p>
+            The four input classes are captured at the emission merge point <strong>before</strong>{' '}
+            lock suppression and before injection, so a locked input still reports: lock it and catch
+            it and you have intercepted it. <code>MEDIUS_CATCH_CLASS_EMIT</code> is the mirror image,
+            what the clone actually put on the wire <em>after</em> injection, locks, and the
+            suppression gate, so subscribing to both shows the whole transformation.
+          </p>
+        </Card>
+      </div>
+
+      <div id="catch-filter" data-search-target>
+        <Card>
+          <CardHeader title="MediusCatchFilter" subtitle="One subscription entry: class, id, direction, snaplen" />
+          <pre class="api-signature">{`struct MediusCatchFilter {
+    MediusCatchClass    class_;      /* MEDIUS_CATCH_CLASS_*                  */
+    uint16_t            id;          /* class-specific, or MEDIUS_CATCH_ID_ALL */
+    MediusLockDirection direction;   /* reuses the lock direction enum         */
+    uint8_t             snaplen;     /* 0 = whole packet                       */
+};`}</pre>
+          <p>
+            The array you hand to{' '}
+            <A href="/bindings/c/api#streams"><code>medius_device_catch_events(dev, filters, n_filters, &amp;out)</code></A>.
+            Each element becomes one entry in the box's subscription table; read the live table back
+            with <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>. The
+            struct is a plain POD with no constructor, so a designated initializer is the whole
+            builder. The field is spelled <code>class_</code> because <code>class</code> is a keyword
+            in C++ and the header compiles as both.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which address space this entry subscribes in.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The id inside that class, or <code>MEDIUS_CATCH_ID_ALL</code> for every id in it.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A></td><td>For an input class, the press/release edge exactly as for a lock. For a traffic class, the transfer direction: <code>POSITIVE</code> is IN (device to PC), <code>NEGATIVE</code> is OUT (PC to device). No class is both, so one byte carries either reading unambiguously.</td></tr>
+              <tr><td><code>snaplen</code></td><td><code>uint8_t</code></td><td>Bytes captured per event; <code>0</code> captures the whole packet.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">SENTINELS AND CAPACITY</div>
+          <table class="api-params">
+            <thead><tr><th>Macro</th><th>Value</th><th>Means</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CATCH_ID_ALL</code></td><td><code>0xFFFF</code></td><td>Every id in the class. A blanket is one table entry, not an expansion into per-id entries, matching how a blanket <A href="/library/lock">lock</A> works.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_TABLE_MAX</code></td><td><code>32</code></td><td>Entries the box's table holds. Pass more and the surplus is refused.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">WHY SNAPLEN IS PER ENTRY</div>
+          <p>
+            The useful capture length differs between classes by orders of magnitude. A 64-byte vendor
+            interrupt report is worth having in full; a bulk pipe you are tracing only for framing is
+            worth 16 bytes and nothing more. One box-wide snaplen would have to be wrong for one of
+            them, so it lives on the entry that matched.
+          </p>
+          <div class="api-response-label">WHICH ENTRY WINS</div>
+          <p>
+            Matching is most-specific-first, and the winning entry is the one whose{' '}
+            <code>snaplen</code> applies. That is what makes "everything at 16 bytes, except endpoint{' '}
+            <code>0x83</code> in full" two entries rather than an impossibility.
+          </p>
+          <pre class="diagram">{`  a report arrives on VEND_INTR endpoint 0x83
+          │
+          ├─ exact   { class_ = VEND_INTR, id = 0x0083 }  ──▶ wins if present
+          ├─ blanket { class_ = VEND_INTR, id = ID_ALL }  ──▶ used if no exact entry
+          └─ any     { class_ = ANY,       id = ID_ALL }  ──▶ used if neither matched
+                     ties inside one tier go to the earlier entry in your array`}</pre>
+          <div class="api-response-label">TWO ENTRIES, TWO SNAPLENS</div>
+          <pre><code class="language-c">{`MediusCatchFilter filters[2] = {
+    /* everything the box can see, first 16 bytes only */
+    { .class_ = MEDIUS_CATCH_CLASS_ANY,       .id = MEDIUS_CATCH_ID_ALL,
+      .direction = MEDIUS_LOCK_DIRECTION_BOTH, .snaplen = 16 },
+    /* except this endpoint's IN traffic, which we want whole */
+    { .class_ = MEDIUS_CATCH_CLASS_VEND_INTR, .id = 0x83,
+      .direction = MEDIUS_LOCK_DIRECTION_POSITIVE, .snaplen = 0 },
+};
+
+MediusEventStream *events = NULL;
+medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
+          <div class="callout callout--warning">
+            <p>
+              <strong>A refused entry is silent.</strong> The subscription is{' '}
+              <A href="/native/injection#fire-and-forget">fire-and-forget</A> and the box sends no
+              reply, so an entry it rejected shows up only as an absence from{' '}
+              <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>, plus{' '}
+              <A href="/bindings/c/types#catch-state"><code>table_full</code></A> when the table was
+              the reason. The box refuses an unknown class, a <code>direction</code> outside the three
+              defined values, and <code>MEDIUS_CATCH_CLASS_ANY</code> carrying a specific{' '}
+              <code>id</code> (<code>id</code> is class-specific, so a wildcard class with a real id
+              addresses nothing coherent).
+            </p>
+          </div>
         </Card>
       </div>
 
@@ -460,7 +629,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_FRAME_TYPE_REBOOT_DL</code></td><td><code>7</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_APPEND</code></td><td><code>18</code></td></tr>
               <tr><td><code>MEDIUS_FRAME_TYPE_LOG</code></td><td><code>8</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_CTRL</code></td><td><code>19</code></td></tr>
               <tr><td><code>MEDIUS_FRAME_TYPE_LED</code></td><td><code>9</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_SET</code></td><td><code>20</code></td></tr>
-              <tr><td></td><td></td><td><code>MEDIUS_FRAME_TYPE_CLIP_TRIGGER</code></td><td><code>21</code></td></tr>
+              <tr><td><code>MEDIUS_FRAME_TYPE_TRAFFIC_EVENT</code></td><td><code>22</code></td><td><code>MEDIUS_FRAME_TYPE_CLIP_TRIGGER</code></td><td><code>21</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -731,13 +900,67 @@ const Types: Component = () => {
 
       <div id="catch-state" data-search-target>
         <Card>
-          <CardHeader title="MediusCatchState" subtitle="The active catch subscription" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>. A nonzero <code>dropped</code> means the box shed events under back-pressure.</p>
+          <CardHeader title="MediusCatchState & MediusCatchEntry" subtitle="The live subscription table, plus the inter-chip clock estimate" />
+          <p>
+            From <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>: a header
+            followed by <code>entries[0..n]</code>, one per accepted{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>. The array is
+            inline and capped at <A href="/bindings/c/types#capacities"><code>MEDIUS_CATCH_TABLE_MAX</code></A>{' '}
+            (32), which is the box's own table size, so the reply always carries the whole table and
+            there is nothing to free. Comparing what you sent against what came back is the only way
+            to see a refused entry. The order is the order the box accepted them in, which is the
+            order you sent them in, and not the order it matches in: matching is worked out per event,
+            most-specific-first, with ties going to the earlier entry.
+          </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mask</code></td><td><code>uint8_t</code></td><td>Subscribed classes (the <A href="/bindings/c/types#catch-mask"><code>MEDIUS_CATCH_MASK_*</code></A> bits); 0 = none.</td></tr>
-              <tr><td><code>dropped</code></td><td><code>uint32_t</code></td><td>Box-side events dropped under back-pressure.</td></tr>
+              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>1 when an entry was refused because the table was already full.</td></tr>
+              <tr><td><code>dropped</code></td><td><code>uint32_t</code></td><td>Box-wide events shed under back-pressure, across every entry.</td></tr>
+              <tr><td><code>clk_offset_us</code></td><td><code>int32_t</code></td><td>The host chip's clock minus the device chip's, in microseconds. Add it to a <code>DEVICE</code> stamp to read that stamp on the <A href="/bindings/c/types#clock-domain"><code>HOST</code></A> timeline; subtract it to go the other way.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td><code>int32_t</code></td><td>Their relative drift in parts per billion, for extrapolating between exchanges.</td></tr>
+              <tr><td><code>clk_delay_us</code></td><td><code>uint16_t</code></td><td>The best round trip measured in the window; the offset is good to about half of it.</td></tr>
+              <tr><td><code>clk_age_ms</code></td><td><code>uint16_t</code></td><td>How old the estimate is, in ms. <code>MEDIUS_CLK_AGE_NONE</code> (<code>0xFFFF</code>) = no estimate yet.</td></tr>
+              <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>entries</code>; 0 means nothing is subscribed.</td></tr>
+              <tr><td><code>entries</code></td><td><code>MediusCatchEntry[MEDIUS_CATCH_TABLE_MAX]</code></td><td>One per accepted filter, in insertion order.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MEDIUSCATCHENTRY</div>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>The class this entry subscribes in.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The id inside that class, or <code>MEDIUS_CATCH_ID_ALL</code> for a blanket.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A></td><td>The edge (input classes) or transfer direction (traffic classes).</td></tr>
+              <tr><td><code>snaplen</code></td><td><code>uint8_t</code></td><td>Bytes captured when this entry wins the match; <code>0</code> = the whole packet.</td></tr>
+              <tr><td><code>dropped</code></td><td><code>uint16_t</code></td><td>Events <em>this entry</em> could not queue.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">WHY DROPS ARE COUNTED TWICE</div>
+          <p>
+            Delivery is three strict-priority queues: input and bus first, then the byte-oriented
+            traffic classes, then vendor bulk. Under a busy mouse, bulk can starve completely. That is
+            the honest outcome, because a half-delivered bulk trace is worse than a visibly absent one
+            when it still looks like data. The header's <code>dropped</code> tells you that you are
+            losing events; the per-entry <code>dropped</code> tells you <em>which subscription</em> is
+            losing them, and those are different problems with different fixes (back off the
+            subscription, or shorten one entry's <code>snaplen</code>).
+          </p>
+          <div class="api-response-label">THE FOUR CLOCK FIELDS</div>
+          <p>
+            The two chips boot independently, and events arrive stamped from both{' '}
+            <A href="/bindings/c/types#clock-domain">domains</A>. The box measures the difference with a
+            four-timestamp exchange across the inter-chip link, stamping each frame as it reaches the
+            wire rather than when it is queued: queueing is the largest and most variable delay on that
+            link, and stamping late removes it from the measurement instead of filtering around it.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Why it is there</th></tr></thead>
+            <tbody>
+              <tr><td><code>clk_delay_us</code></td><td>The measurement's own uncertainty. The offset is good to roughly half the round trip, so this is what tells you whether a cross-domain comparison is worth making at all.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td>Two independent crystals drift by up to 20 µs per second, which makes a stored offset stale within seconds. The rate lets you extrapolate between exchanges rather than trusting the last one.</td></tr>
+              <tr><td><code>clk_age_ms</code></td><td><code>MEDIUS_CLK_AGE_NONE</code> keeps "no estimate yet" distinct from "the offset happens to be zero". Both report <code>clk_offset_us == 0</code>, and only one of them is usable.</td></tr>
+              <tr><td><code>clk_offset_us</code></td><td>The correction itself, signed host minus device, so a <code>DEVICE</code> stamp plus the offset lands on the <code>HOST</code> timeline. Applying it is optional: the per-event <A href="/bindings/c/types#clock-domain"><code>clk</code></A> byte stays authoritative, so a consumer that never subtracts across domains is never approximating.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -843,7 +1066,12 @@ const Types: Component = () => {
           <CardHeader title="MediusMotionEvent" subtitle="One physical relative-axis snapshot" />
           <p>
             The user's real motion at the merge point, before any lock suppression or injection. Surfaces
-            as the <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>.
+            as the <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
+            raised by a <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_AXIS</code></A>{' '}
+            subscription. The struct carries no timestamp of its own: the enclosing event's{' '}
+            <code>ts_us</code> and <A href="/bindings/c/types#clock-domain"><code>clk</code></A> are
+            shared by all three arms, and for motion the domain is always{' '}
+            <code>MEDIUS_CLOCK_DOMAIN_HOST</code>, stamped when the real device's transfer completed.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -863,7 +1091,12 @@ const Types: Component = () => {
             The held usages of one class (button, key, or media; modifiers are key usages{' '}
             <code>0xE0 to 0xE7</code>) in <code>usages[0..n]</code>, buttons and keys the same shape. Test
             one with <A href="/bindings/c/api#inspectors"><code>medius_usage_event_is_held(&amp;event, usage)</code></A>, or diff
-            successive snapshots for edges.
+            successive snapshots for edges. Raised by a{' '}
+            <A href="/bindings/c/types#catch-class"><code>BUTTON</code></A>, <code>KEY</code>, or{' '}
+            <code>MEDIA</code> subscription. Like motion, it carries no timestamp of its own: it uses
+            the enclosing event's <code>ts_us</code> and{' '}
+            <A href="/bindings/c/types#clock-domain"><code>clk</code></A>, which for a usage snapshot
+            is always <code>MEDIUS_CLOCK_DOMAIN_HOST</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -875,26 +1108,154 @@ const Types: Component = () => {
         </Card>
       </div>
 
+      <div id="traffic-event" data-search-target>
+        <Card>
+          <CardHeader title="MediusTrafficEvent" subtitle="One captured packet off a traffic class" />
+          <pre class="api-signature">{`struct MediusTrafficEvent {
+    MediusCatchClass    class_;
+    uint16_t            id;
+    MediusLockDirection direction;
+    uint8_t             flags;
+    uint16_t            true_len;                      /* length before snaplen truncation */
+    uint16_t            len;                           /* bytes actually captured          */
+    uint8_t             bytes[MEDIUS_TRAFFIC_MAX_BYTES];
+};`}</pre>
+          <p>
+            The <code>Traffic</code> arm of a{' '}
+            <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>, raised by any of
+            the byte-oriented <A href="/bindings/c/types#catch-class">catch classes</A>{' '}
+            (<code>HID_IN</code>, <code>HID_OUT</code>, <code>VEND_INTR</code>, <code>VEND_BULK</code>,{' '}
+            <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>). <code>bytes</code> is an inline
+            array rather than a pointer, so the event stays a fixed-size POD you can copy, queue, and
+            drop with nothing to free; the cap is{' '}
+            <A href="/bindings/c/types#capacities"><code>MEDIUS_TRAFFIC_MAX_BYTES</code></A> (500),
+            which is the most a single frame can carry, so the struct can hold anything the wire
+            delivers.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which class produced the event; it also decides how <code>flags</code> reads.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The endpoint address, endpoint number, or interface number, per the class.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A></td><td><code>POSITIVE</code> = IN (device to PC), <code>NEGATIVE</code> = OUT (PC to device).</td></tr>
+              <tr><td><code>flags</code></td><td><code>uint8_t</code></td><td>Class-specific; see the table below. <code>0</code> for classes that define none.</td></tr>
+              <tr><td><code>true_len</code></td><td><code>uint16_t</code></td><td>The packet's length on the bus, before <code>snaplen</code> cut it.</td></tr>
+              <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Bytes actually captured; the live prefix of <code>bytes</code>.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>uint8_t[MEDIUS_TRAFFIC_MAX_BYTES]</code></td><td>The capture, valid over <code>bytes[0..len]</code>.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">WHY TRUE_LEN EXISTS</div>
+          <p>
+            Without it, a packet the box cut at your <code>snaplen</code> and a genuinely short packet
+            are indistinguishable, and a trace that quietly loses that distinction is a trace you can
+            draw a wrong conclusion from. Comparing <code>len</code> against <code>true_len</code>{' '}
+            makes every capture self-describing; <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_truncated(&amp;ev)</code></A>{' '}
+            is that comparison.
+          </p>
+          <div class="api-response-label">FLAGS, BY CLASS</div>
+          <table class="api-params">
+            <thead><tr><th>Class</th><th><code>flags</code> reads as</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VEND_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>The real device's answer: <code>0</code> it completed, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td>The bus event kind (table below).</td></tr>
+              <tr><td>every other class</td><td><code>0</code>.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">CONTROL: ONE EVENT PER TRANSACTION</div>
+          <p>
+            A <code>CONTROL</code> event covers a whole completed transaction, not one stage of one:{' '}
+            <code>bytes</code> is the 8-byte SETUP packet followed by the data stage, and{' '}
+            <code>direction</code> says which way that data went. A request the box answered from its
+            own descriptor cache still produces an event, because a trace that omitted those would show
+            a device that had apparently stopped being asked.
+          </p>
+          <div class="api-response-label">BUS EVENT KINDS</div>
+          <p>
+            A <code>BUS</code> event puts the kind in <code>flags</code> and up to two operands in{' '}
+            <code>bytes[0]</code> and <code>bytes[1]</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th><code>flags</code></th><th>Event</th><th><code>bytes[0]</code>, <code>bytes[1]</code></th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>RESET</td><td>unused</td></tr>
+              <tr><td><code>1</code></td><td>SUSPEND</td><td>unused</td></tr>
+              <tr><td><code>2</code></td><td>RESUME</td><td>unused</td></tr>
+              <tr><td><code>3</code></td><td>CONFIGURED</td><td>configuration index</td></tr>
+              <tr><td><code>4</code></td><td>DECONFIGURED</td><td>unused</td></tr>
+              <tr><td><code>5</code></td><td>SET_INTERFACE</td><td>interface, alternate setting</td></tr>
+              <tr><td><code>6</code></td><td>DEV_ATTACHED</td><td>unused</td></tr>
+              <tr><td><code>7</code></td><td>DEV_DETACHED</td><td>unused</td></tr>
+              <tr><td><code>8</code></td><td>CLONE_UP</td><td>unused</td></tr>
+              <tr><td><code>9</code></td><td>CLONE_DOWN</td><td>unused</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="catch-event" data-search-target>
         <Card>
           <CardHeader title="MediusCatchEvent" subtitle="One catch-stream event (a tagged union)" />
           <pre class="api-signature">{`struct MediusCatchEvent {
     MediusCatchEventKind kind;
-    union MediusCatchEventData { MediusMotionEvent motion; MediusUsageEvent usages; } data;
+    uint32_t             ts_us;
+    MediusClockDomain    clk;
+    union MediusCatchEventData {
+        MediusMotionEvent  motion;
+        MediusUsageEvent   usages;
+        MediusTrafficEvent traffic;
+    } data;
 }`}</pre>
           <p>
             Written by <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> and friends. Read the union member named
-            by <A href="/bindings/c/types#catch-event-kind"><code>kind</code></A>.
+            by <A href="/bindings/c/types#catch-event-kind"><code>kind</code></A>. The stamp and its
+            domain sit on the event rather than inside each arm because all three arms carry a stamp,
+            so the pair is common to every one of them and a consumer that only wants the timeline
+            never has to switch on <code>kind</code> to read it. The <code>clk</code> byte is beside{' '}
+            <code>ts_us</code> precisely because the <em>domain</em> is not common: motion and usage
+            snapshots are stamped on the host chip, while traffic is stamped on whichever chip taps
+            that class, so the stamp alone does not say what it can be compared against. See{' '}
+            <A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A> for which class
+            lands in which domain.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#catch-event-kind"><code>MediusCatchEventKind</code></A></td><td>Which union member is live.</td></tr>
-              <tr><td><code>ts_us</code></td><td><code>uint32_t</code></td><td>When the device's report arrived, in box microseconds. The box's own clock, so compare stamps only against each other. See <A href="/library/catch#timestamps">Catch timestamps</A>.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>uint32_t</code></td><td>When the report or packet was seen, in box microseconds. Wraps every ~71.6 minutes and restarts at a chip reboot. See <A href="/library/catch#timestamps">Catch timestamps</A>.</td></tr>
+              <tr><td><code>clk</code></td><td><A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A></td><td>Which chip's clock <code>ts_us</code> came from. Compare stamps only within one domain, or correct across them with the clock estimate on <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>.</td></tr>
               <tr><td><code>data.motion</code></td><td><A href="/bindings/c/types#motion-event"><code>MediusMotionEvent</code></A></td><td>Read when <code>kind == MOTION</code>.</td></tr>
               <tr><td><code>data.usages</code></td><td><A href="/bindings/c/types#usage-event"><code>MediusUsageEvent</code></A></td><td>Read when <code>kind == USAGES</code>.</td></tr>
+              <tr><td><code>data.traffic</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A></td><td>Read when <code>kind == TRAFFIC</code>.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">HOW BIG ONE EVENT IS</div>
+          <p>
+            The union is as large as its largest arm, and the largest arm is <code>usages</code>, not{' '}
+            the one carrying a captured packet. A{' '}
+            <A href="/bindings/c/types#input"><code>MediusUsage</code></A> is 4 bytes, its{' '}
+            <code>uint8_t</code> tag padded up to the alignment of its <code>uint16_t</code> id, and{' '}
+            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> is 256 of them,
+            which is twice what the 500-byte capture buffer costs. So a <code>MediusCatchEvent</code>{' '}
+            is about 1036 bytes whichever arm happens to be live: size it on the stack, or reuse one
+            across a receive loop.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Part</th><th>Bytes</th><th>Made of</th></tr></thead>
+            <tbody>
+              <tr><td><code>data.motion</code></td><td><code>6</code></td><td>Three <code>int16_t</code> deltas.</td></tr>
+              <tr><td><code>data.traffic</code></td><td><code>510</code></td><td>10 bytes of header once padded, plus <code>bytes[500]</code>.</td></tr>
+              <tr><td><code>data.usages</code></td><td><code>1026</code></td><td><code>uint16_t n</code>, plus 256 x 4-byte <code>MediusUsage</code> = 1024.</td></tr>
+              <tr><td>the union</td><td><code>1026</code></td><td>The largest arm, so <code>usages</code> sets it.</td></tr>
+              <tr><td><code>MediusCatchEvent</code></td><td><code>1036</code></td><td><code>kind</code>, <code>ts_us</code>, <code>clk</code>, their padding, and the union.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The exact padding is the compiler's, so budget with 1036 rather than treat it as a
+            guarantee, and use <code>sizeof</code> if you need the number itself. None of it is
+            heap-allocated, which is the trade the inline arrays buy: an event costs a memcpy and
+            never a free.
+          </p>
         </Card>
       </div>
 
