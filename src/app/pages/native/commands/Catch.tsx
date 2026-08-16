@@ -330,7 +330,7 @@ const Catch: Component = () => {
             diff successive snapshots per class for press / release edges.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x0F</code>.
           </p>
-          <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 7 + 3n bytes</pre>
+          <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 8 + 3n bytes</pre>
           <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -341,7 +341,8 @@ const Catch: Component = () => {
               <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
               <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>always <code>0</code> (host chip); see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
               <tr><td>5</td><td><code>cls</code></td><td><code>u8</code></td><td>the snapshot's class: 0=button 1=key 2=media</td></tr>
-              <tr><td>6</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>6</td><td><code>dir</code></td><td><code>u8</code></td><td>the edge that produced it: <code>POS</code> the set grew, <code>NEG</code> it shrank</td></tr>
+              <tr><td>7</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per usage: same vocabulary as <code>cls</code> (as <A href="/native/commands/inject#inject"><code>INJECT</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
             </tbody>
@@ -355,19 +356,28 @@ const Catch: Component = () => {
             button stays sparse even though the mouse reports at ~1&nbsp;kHz.
           </p>
           <p>
-            The class is in the header rather than read off the first usage, because the snapshot that
-            most needs it is the <strong>empty</strong> one. Releasing the last held usage is exactly
-            the edge a caller subscribed for, and it lists nothing — so without a header class, "all
-            buttons released" and "all keys released" are the same six bytes, and neither can be told
-            apart nor routed to the subscriber that asked for it.
+            <strong>Both header fields exist for the empty snapshot.</strong> A snapshot lists what is
+            currently <em>held</em>, so the release of a usage is the snapshot that no longer names it
+            — which means the event a caller most needs carries nothing to identify itself by. Without{' '}
+            <code>cls</code>, "all buttons released" and "all keys released" are the same bytes.
+            Without <code>dir</code>, a direction on an input subscription cannot be honoured at all:
+            the box resolves each usage against its entry's direction, but as soon as any other
+            subscriber holds a wider entry the box emits on both edges and nothing on the wire tells
+            them apart.
+          </p>
+          <p>
+            Route these by <strong>class</strong>, not by which usages appear, and diff successive
+            snapshots for the usages you care about. Matching on the usages present instead drops
+            exactly the release edge — and only when some other subscription's usage happens to still
+            be held, which is what makes it invisible until it matters.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Left Shift held while pressing <code>A</code> (a keys snapshot, two usages both <code>class = 1</code>: Left Shift <code>id = 0xE1</code>, then A <code>id = 0x04</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+----------+----------+--------+
-| A5     | 0F     | 2B     | 0D 00  | 40 42 0F 00 | 00     | 01     | 02     | 01 E1 00 | 01 04 00 | lo hi  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+----------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | cls    | n      | usage[0] | usage[1] | CRC16  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+----------+----------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+
+| A5     | 0F     | 2B     | 0E 00  | 40 42 0F 00 | 00     | 01     | 01     | 02     | 01 E1 00 | 01 04 00 | lo hi  |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | cls    | dir    | n      | usage[0] | usage[1] | CRC16  |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+`}</pre>
         </Card>
       </div>
 
