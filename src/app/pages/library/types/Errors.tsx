@@ -76,6 +76,15 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>CatchTableFull {'{'} needed {'}'}</code></td>
+                <td>
+                  A <A href="/library/catch"><code>catch_events</code></A> call would take the box's
+                  subscription table past the 32 entries it holds. Refused before anything is sent,
+                  because the box drops what does not fit and reports it only in a flag — so the
+                  alternative is a stream quietly missing the addresses that were refused.
+                </td>
+              </tr>
+              <tr>
                 <td><code>FlashTool(String)</code></td>
                 <td>The flash tool failed.</td>
               </tr>
