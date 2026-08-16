@@ -321,16 +321,18 @@ loop {
             <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>: the
             measured offset between the two chips, the drift rate, the round trip that bounds the
             offset's error, and the estimate's age (<code>None</code> until one has been taken, which
-            an offset of zero alone could not distinguish). Applying it is optional and the domain tag
-            stays authoritative, so a caller that does not want an approximated timeline can simply
-            refuse to subtract across domains.
+            an offset of zero alone could not distinguish). The age is that of the exchange the offset
+            <em>rests on</em>, not of the newest one — the offset comes from the least-delayed exchange
+            in the window, which is often older. Applying it is optional and the domain tag stays
+            authoritative, so a caller that does not want an approximated timeline can simply refuse to
+            subtract across domains.
           </p>
           <pre><code class="language-rust">{`let c = device.query_catch()?;
-if let Some(age) = c.clock.age_ms {
+if let Some(age) = c.clock.age {
     // Good to about half the round trip; extrapolate with rate_ppb rather than
     // trusting the offset, which two free-running crystals stale at ~20 us/s.
     let err_us = c.clock.delay_us / 2;
-    let drift_us = (age as i64 * c.clock.rate_ppb as i64) / 1_000_000;
+    let drift_us = c.clock.drift_us_over(age);
     println!("offset {} us ±{} us, +{} us of drift", c.clock.offset_us, err_us, drift_us);
 }`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>

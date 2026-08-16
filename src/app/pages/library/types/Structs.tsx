@@ -664,7 +664,7 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
       <div id="clock-estimate" data-search-target>
         <Card>
           <CardHeader title="ClockEstimate" subtitle="How the two chips' timers relate" />
-          <pre class="api-signature">struct ClockEstimate {'{'} offset_us: i32, rate_ppb: i32, delay_us: u16, age_ms: Option&lt;u16&gt; {'}'}</pre>
+          <pre class="api-signature">struct ClockEstimate {'{'} offset_us: i32, rate_ppb: Option&lt;i32&gt;, delay_us: u16, age: Option&lt;Duration&gt; {'}'}</pre>
           <p>
             The <code>clock</code> field of a{' '}
             <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, and the only thing
@@ -678,7 +678,7 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>offset_us</code></td><td><code>i32</code></td><td>The host chip's clock minus the device chip's, in microseconds. Add it to a device-domain stamp to read it on the host's timeline, subtract it to go the other way.</td></tr>
-              <tr><td><code>rate_ppb</code></td><td><code>i32</code></td><td>How fast the two are drifting apart, in parts per billion.</td></tr>
+              <tr><td><code>rate_ppb</code></td><td><code>Option&lt;i32&gt;</code></td><td>How fast the two are drifting apart, in parts per billion, or <code>None</code> when the box has fitted no rate. Not the same as a fitted <code>0</code>: on a link too busy for enough clean exchanges no fit is made at all, which is when assuming no drift costs the most.</td></tr>
               <tr><td><code>delay_us</code></td><td><code>u16</code></td><td>The best round trip measured in the window; the offset is good to about half of it.</td></tr>
               <tr><td><code>age_ms</code></td><td><code>Option&lt;u16&gt;</code></td><td>How long ago the exchange ran. <code>None</code> = no estimate yet.</td></tr>
             </tbody>
@@ -695,8 +695,15 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
             drift against each other by up to 20 µs per second. An offset taken five seconds ago can
             therefore already be 100 µs stale, which is larger than most of what a trace is trying to
             resolve. Extrapolating with the rate is what keeps an estimate usable between exchanges
-            instead of forcing a fresh query for every comparison: correct by{' '}
-            <code>rate_ppb × age_ms / 1_000_000</code> µs.
+            instead of forcing a fresh query for every comparison — <code>drift_us_over(age)</code>
+            does the arithmetic.
+          </p>
+          <p>
+            It is an <code>Option</code> for the same reason <code>age</code> is. A fitted <code>0</code>
+            says the two crystals are matched; <code>None</code> says nothing has been fitted, which is
+            the state the box stays in when the link is busy enough that too few clean exchanges reach
+            its delay filter — exactly when assuming no drift is least safe. <code>drift_us_over</code>
+            returns 0 for <code>None</code> because that is what is known, not a claim about drift.
           </p>
           <p>
             <code>age_ms</code> is an <code>Option</code> because "no estimate yet" and "the offset
