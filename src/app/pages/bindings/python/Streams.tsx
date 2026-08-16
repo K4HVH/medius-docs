@@ -71,7 +71,7 @@ CatchFilter.addr(cls, id)            # one id inside a class
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>a vendor interrupt endpoint address</td></tr>
               <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>a vendor bulk endpoint address</td></tr>
               <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>a control endpoint number (<code>0</code> = EP0)</td></tr>
-              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an emitting interface number</td></tr>
+              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an emitting endpoint address</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>nothing; the bus lifecycle</td></tr>
               <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>every class at once</td><td>all three</td></tr>
             </tbody>
@@ -96,9 +96,9 @@ CatchFilter.addr(cls, id)            # one id inside a class
           <div class="callout callout--info">
             <p>
               The address is the filter because the control link cannot carry everything: it runs at
-              4 Mbaud and vendor bulk alone measures 250 KiB/s through the box. Events drain in three
-              strict-priority queues (input and bus, then the byte-oriented classes, then vendor
-              bulk), so a busy mouse can starve a bulk trace completely. Narrow the class, or cut{' '}
+              4 Mbaud and vendor bulk alone measures 250 KiB/s through the box. Events drain in four
+              strict-priority queues (input and bus, then the byte-oriented classes, then control, then
+              vendor bulk), so a busy mouse can starve a bulk trace completely. Narrow the class, or cut{' '}
               <code>snaplen</code>, rather than subscribing wide and hoping.
             </p>
           </div>

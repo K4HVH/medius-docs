@@ -175,13 +175,14 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
             <code>push_traffic</code> as a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A> (a{' '}
             <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>), with{' '}
-            <code>seq</code> as the rolling counter so a test can assert gap detection and <code>ts_us</code> as the raw wire timestamp, which lets a test drive the <code>u32</code> wrap and the clock-restart case.
+            <code>seq</code> as the rolling counter so a test can drive it independently, and <code>ts_us</code> as the raw wire timestamp, which lets a test drive the <code>u32</code> wrap and the clock-restart case.
           </p>
 
           <p>
             The <code>seq</code> counter is shared across all three, exactly as it is on the wire, so a
-            test can interleave the three pushes and still assert that a host detects one dropped event
-            as a single gap. <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
+            test can interleave the three pushes and still assert one ordering across the mix. Real
+            losses do not show up here — the box drops before it stamps — so a test that wants to
+            exercise loss handling drives <code>CatchState::dropped</code> instead. <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
             <A href="/library/types/enums#clock-domain"><code>ClockDomain::Host</code></A>, because that
             is the only domain the box ever stamps those two frames in.{' '}
             <code>push_traffic</code> takes the whole{' '}

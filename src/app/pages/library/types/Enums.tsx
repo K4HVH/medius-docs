@@ -495,9 +495,10 @@ device.press(from_button)?;                         // press takes any impl Into
             <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>, so a stamp is only
             comparable to another stamp from the same domain until you apply the{' '}
             <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>. They also
-            share one rolling <code>SEQ</code> counter across all three frame types rather than one
-            counter each, so a host sees a dropped event as a gap in a single sequence, whatever mix of
-            frame types happened to straddle it.
+            share one rolling <code>seq</code> counter across all three frame types rather than one
+            counter each, so the stream stays ordered whatever mix of frame types is in it. It counts
+            what the box <em>sent</em>, not what it saw: dropped events never reach the counter, so a
+            gap is not how you detect loss — <A href="/library/types/structs#catch-state"><code>CatchState</code></A> is.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchClass, CatchEvent, CatchFilter};

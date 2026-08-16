@@ -457,7 +457,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_VEND_INTR</code></td><td><code>6</code></td><td>A vendor interrupt endpoint address.</td><td>Every vendor interrupt endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VEND_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint address.</td><td>Every vendor bulk endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting interface number.</td><td>Every emitting interface.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint address.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ALL</code>.</td><td>Every bus event.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>Nothing; must be <code>MEDIUS_CATCH_ID_ALL</code>.</td><td>Every class at once.</td></tr>
             </tbody>
@@ -938,8 +938,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           </table>
           <div class="api-response-label">WHY DROPS ARE COUNTED TWICE</div>
           <p>
-            Delivery is three strict-priority queues: input and bus first, then the byte-oriented
-            traffic classes, then vendor bulk. Under a busy mouse, bulk can starve completely. That is
+            Delivery is four strict-priority queues: input and bus first, then the byte-oriented
+            traffic classes, then control, then vendor bulk. Under a busy mouse, bulk can starve completely. That is
             the honest outcome, because a half-delivered bulk trace is worse than a visibly absent one
             when it still looks like data. The header's <code>dropped</code> tells you that you are
             losing events; the per-entry <code>dropped</code> tells you <em>which subscription</em> is
