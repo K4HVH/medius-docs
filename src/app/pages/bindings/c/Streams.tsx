@@ -110,9 +110,10 @@ medius_device_catch_events(dev, filters, sizeof filters / sizeof filters[0], &ev
           <div class="callout callout--info">
             <p>
               The control link runs at 4 Mbaud, and vendor bulk alone measures 250 KiB/s through the
-              box, so subscribing to everything at full length cannot be delivered. Delivery is three
-              strict-priority queues (input and bus, then the other traffic classes, then vendor bulk),
-              and bulk can starve entirely under a busy mouse. Address what you actually want, and use{' '}
+              box, so subscribing to everything at full length cannot be delivered. Delivery is four
+              strict-priority queues (input and bus, then the other traffic classes, then control, then
+              vendor bulk) over a transmit buffer that reserves a slice only input may spend, and bulk
+              can starve entirely under a busy mouse. Address what you actually want, and use{' '}
               <code>snaplen</code> to buy headroom for the rest.
             </p>
           </div>

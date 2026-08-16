@@ -641,8 +641,8 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
           </table>
           <div class="api-response-label">WHY THE DROP COUNT IS PER ENTRY</div>
           <p>
-            Delivery runs as three strict-priority queues: input and bus events first, then the
-            byte-oriented traffic classes, then vendor bulk. Under a busy mouse, bulk can starve
+            Delivery runs as four strict-priority queues: input and bus events first, then the
+            byte-oriented traffic classes, then control, then vendor bulk. Under a busy mouse, bulk can starve
             completely. That is deliberate, because a half-delivered bulk trace is worse than a visibly
             absent one: it looks like data, and nothing in it says which packets are missing.
           </p>

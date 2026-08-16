@@ -254,8 +254,8 @@ if locks.is_locked(Axis::X, LockDirection::Both) {
           <p>
             <code>CatchState::dropped</code> is box-wide and{' '}
             <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
-            entry, and the pair is deliberate. Delivery is three strict-priority queues, input and bus
-            first, then the byte-oriented classes, then vendor bulk, so under a busy mouse it is normal
+            entry, and the pair is deliberate. Delivery is four strict-priority queues, input and bus
+            first, then the byte-oriented classes, then control, then vendor bulk, so under a busy mouse it is normal
             for one entry to starve while the rest are untouched. The box-wide number says you are
             losing events; only the per-entry number says <em>which</em> ones, and that is the
             difference between a trace you can still trust and one you cannot. Bulk starving beside a

@@ -363,7 +363,7 @@ const Types: Component = () => {
                 <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>an endpoint address</td><td>every vendor interrupt endpoint</td></tr>
                 <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>an endpoint address</td><td>every vendor bulk endpoint</td></tr>
                 <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
-                <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an interface number</td><td>every emitting interface</td></tr>
+                <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint address</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused; pass <code>CATCH_ID_ALL</code></td><td>the bus lifecycle</td></tr>
                 <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>nothing; only <code>CATCH_ID_ALL</code> is accepted</td><td>every class</td></tr>
               </tbody>
@@ -383,8 +383,8 @@ const Types: Component = () => {
                 The address is also the filter, and that is what the class list buys you. The control
                 link runs at 4 Mbaud, and vendor bulk alone measures 250 KiB/s through the box, so
                 every class at once cannot be delivered. A subscription has to be able to say{' '}
-                <em>which endpoint</em> it means. Delivery is ranked in three strict-priority queues:
-                input and bus first, then the byte-oriented traffic classes, then vendor bulk. Under a
+                <em>which endpoint</em> it means. Delivery is ranked in four strict-priority queues:
+                input and bus first, then the byte-oriented traffic classes, then control, then vendor bulk. Under a
                 busy mouse, bulk can starve to nothing. That is deliberate: a half-delivered bulk trace
                 looks like data, so an absent one is the more honest failure.
               </p>

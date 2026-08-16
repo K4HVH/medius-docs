@@ -217,8 +217,8 @@ let events = device.catch_events([
           </div>
           <div class="api-response-label">DELIVERY IS RANKED</div>
           <p>
-            The box drains events through three strict-priority queues: input and bus first, then the
-            byte-oriented traffic classes, then vendor bulk. Bulk can starve completely under a busy
+            The box drains events through four strict-priority queues: input and bus first, then the
+            byte-oriented traffic classes, then control, then vendor bulk. Bulk can starve completely under a busy
             mouse. That is the honest outcome: bulk-plus-input is the combination the control link
             cannot carry, and a half-delivered bulk trace is worse than a visibly absent one because
             it looks like data.

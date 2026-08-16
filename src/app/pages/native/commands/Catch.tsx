@@ -90,7 +90,7 @@ const Catch: Component = () => {
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint address</td><td>every vendor interrupt endpoint</td></tr>
               <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint address</td><td>every vendor bulk endpoint</td></tr>
               <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
-              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>interface number</td><td>every emitting interface</td></tr>
+              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint address</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
               <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>must be <code>0xFFFF</code></td><td>every class</td></tr>
             </tbody>
@@ -282,9 +282,12 @@ const Catch: Component = () => {
             correlate), so <A href="/native/frame#seq"><code>SEQ</code></A> is a rolling per-event
             counter shared with{' '}
             <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> and{' '}
-            <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>: a host
-            detects dropped events as <code>SEQ</code> gaps regardless of which frame type they fell
-            between. <A href="/native/frame#opcodes">Opcode</A> <code>0x0C</code>.
+            <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>, stamped as
+            each event leaves the box, so it orders the stream whatever mix of frame types is in it. It
+            is not a drop detector: events are dropped before they reach the stamp, so <code>SEQ</code>
+            runs gapless and losses are read from{' '}
+            <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.{' '}
+            <A href="/native/frame#opcodes">Opcode</A> <code>0x0C</code>.
           </p>
           <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 11 bytes</pre>
           <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
@@ -493,8 +496,8 @@ const Catch: Component = () => {
         <Card>
           <CardHeader title="Delivery" subtitle="Best-effort, ranked, and counted per entry" />
           <p>
-            Events drain through three strict-priority queues. Input and bus go first, then the
-            byte-oriented traffic classes, then vendor bulk.
+            Events drain through four strict-priority queues. Input and bus go first, then the
+            byte-oriented traffic classes, then control transactions, then vendor bulk.
           </p>
           <pre class="diagram">{`  BTN KEY MEDIA AXIS BUS      -->  [ queue 0 ]  --+
                                                   |
