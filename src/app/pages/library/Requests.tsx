@@ -254,7 +254,10 @@ if locks.is_locked(Axis::X, LockDirection::Both) {
           <p>
             <code>CatchState::dropped</code> is box-wide and{' '}
             <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
-            entry, and the pair is deliberate. Delivery is four strict-priority queues, input and bus
+            entry, and the pair is deliberate. A lost event is charged to <em>every</em> entry it
+            resolved against, not one of them: a held-usage snapshot is a class's state, so two
+            subscriptions can each own a different usage inside it, and charging a single entry told
+            one of them it had lost events and the other that it had lost none, from the same drop. Delivery is four strict-priority queues, input and bus
             first, then the byte-oriented classes, then control, then vendor bulk, so under a busy mouse it is normal
             for one entry to starve while the rest are untouched. The box-wide number says you are
             losing events; only the per-entry number says <em>which</em> ones, and that is the
