@@ -111,6 +111,108 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
+      <div id="catch-class" data-search-target>
+        <Card>
+          <CardHeader title="CatchClass" subtitle="What a catch subscription addresses" />
+          <pre class="api-signature">enum CatchClass {'{'} Button, Key, Media, Axis, HidIn, HidOut, VendIntr, VendBulk, Control, Emit, Bus, Any {'}'}</pre>
+          <p>
+            The address space a{' '}
+            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> picks from, and the{' '}
+            <code>class</code> field of a{' '}
+            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> and a{' '}
+            <A href="/library/types/structs#catch-entry"><code>CatchEntry</code></A>. Convert with{' '}
+            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;CatchClass&gt;</code>.
+          </p>
+          <p>
+            The first four variants are <A href="/native/commands/lock"><code>LOCK</code></A>'s own
+            classes at the same byte values: <code>Button</code>, <code>Key</code>, and{' '}
+            <code>Media</code> are the three <A href="/library/types/enums#class"><code>Class</code></A>{' '}
+            variants, and <code>Axis</code> is the class byte a{' '}
+            <A href="/library/types/enums#lock-target"><code>LockTarget::Axis</code></A> lock travels
+            on, carrying the same <A href="/library/types/enums#axis"><code>Axis</code></A> ids (0 = X,
+            1 = Y, 2 = wheel). Locking an input and catching it are the same two numbers, which is what
+            makes the intercept-and-rebind pair readable: the lock that hides an input from the game
+            and the filter that shows it to you are written the same way. The seven variants after
+            them address USB traffic instead and have no lock counterpart, and <code>Any</code> is a
+            wildcard over all eleven.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/enums#button"><code>Button</code></A> id (0 = Left .. 4 = Side2).</td><td>every mouse button.</td></tr>
+              <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
+              <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
+              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, or the wheel.</td><td>every axis.</td></tr>
+              <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
+              <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint address.</td><td>every interrupt-OUT endpoint.</td></tr>
+              <tr><td><code>VendIntr</code></td><td><code>6</code></td><td>an endpoint address.</td><td>every vendor interrupt endpoint.</td></tr>
+              <tr><td><code>VendBulk</code></td><td><code>7</code></td><td>an endpoint address.</td><td>every vendor bulk endpoint.</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0).</td><td>every control endpoint.</td></tr>
+              <tr><td><code>Emit</code></td><td><code>9</code></td><td>an interface number on the clone.</td><td>every emitting interface.</td></tr>
+              <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
+              <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>nothing: the wildcard class only takes the blanket id.</td><td>every class at once.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">BLANKETS</div>
+          <p>
+            Every class has a blanket, the wire id <code>0xFFFF</code>, and in Rust you never write that
+            sentinel: <code>CatchFilter::class(c)</code> is the blanket for one class and{' '}
+            <code>CatchFilter::all()</code> is <code>Any</code> with the blanket already set. A blanket
+            is one table entry, not an expansion into one entry per id, exactly as a{' '}
+            <A href="/library/types/enums#lock-scope"><code>LockScope::Blanket</code></A> is one lock.
+            The wildcard class is the one that refuses a specific id: <code>id</code> means something
+            different in every row of the table above, so <code>Any</code> paired with a real id
+            addresses nothing coherent and the box drops the entry.
+          </p>
+          <div class="api-response-label">DIRECTION</div>
+          <p>
+            A filter's{' '}
+            <A href="/library/types/enums#lock-direction"><code>LockDirection</code></A> reads two ways,
+            and which one applies is decided by the class, so the single byte is never ambiguous: no
+            class carries both readings.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Classes</th><th>Positive</th><th>Negative</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button / Key / Media</code></td><td>the press edge.</td><td>the release edge.</td></tr>
+              <tr><td><code>Axis</code></td><td>the positive sign (right, down, wheel up).</td><td>the negative sign.</td></tr>
+              <tr><td>the traffic classes</td><td>IN: the device answering the PC.</td><td>OUT: the PC writing to the device.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">BEFORE AND AFTER</div>
+          <p>
+            The input classes are captured at the emission merge point, <em>before</em>{' '}
+            <A href="/library/lock#lock">lock</A> suppression and{' '}
+            <A href="/library/inject#inject">injection</A>, so a locked input still reports.{' '}
+            <code>Emit</code> is the far end of the same path: what the clone actually put on the wire
+            after injection, locks, and the suppression gate. Subscribing to both sides shows the
+            transformation the box applied rather than either end of it alone.
+          </p>
+          <pre class="diagram">{`real device --> [ merge point ] --> locks --> injection --> [ clone emits ] --> game PC
+                       |                                           |
+          Button / Key / Media / Axis                            Emit`}</pre>
+          <p>
+            The traffic classes tap the pipes themselves rather than this path, and each one taps on
+            whichever chip owns that pipe: <code>HidIn</code> and the IN direction of the vendor classes
+            on the host chip, and <code>HidOut</code>, the OUT directions, <code>Control</code>,{' '}
+            <code>Emit</code>, and <code>Bus</code> on the device chip. That split is what the{' '}
+            <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> on each event
+            records.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Button, CatchClass, CatchFilter, LockDirection};
+
+// The same two numbers, once as a lock and once as a catch.
+device.lock(Button::Side1, LockDirection::Both)?;                     // class 0, id 3: hide it from the game
+let stream = device.catch_events([CatchFilter::addr(CatchClass::Button, 3)  // class 0, id 3: still see it
+    .direction(LockDirection::Positive)])?;                           // press edges only
+
+// A byte-oriented class instead: one vendor interrupt endpoint, IN only, 16 bytes a packet.
+let trace = device.catch_events([CatchFilter::addr(CatchClass::VendIntr, 0x83)
+    .direction(LockDirection::Positive)
+    .snaplen(16)])?;`}</code></pre>
+        </Card>
+      </div>
       <div id="usage" data-search-target>
         <Card>
           <CardHeader title="Usage" subtitle="A momentary input: (class, id)" />
@@ -303,7 +405,7 @@ device.press(from_button)?;                         // press takes any impl Into
       </div>
       <div id="lock-direction" data-search-target>
         <Card>
-          <CardHeader title="LockDirection" subtitle="Which way or which edge to block" />
+          <CardHeader title="LockDirection" subtitle="Which way, which edge, or which transfer direction" />
           <pre class="api-signature">enum LockDirection {'{'} Both, Positive, Negative {'}'}</pre>
           <p>
             Which side of an input a <A href="/native/commands/lock"><code>LOCK</code></A> blocks. For
@@ -311,12 +413,19 @@ device.press(from_button)?;                         // press takes any impl Into
             <code>direction</code> byte. Convert with <code>as_u8()</code> and{' '}
             <code>from_u8(u8) -&gt; Option&lt;LockDirection&gt;</code>.
           </p>
+          <p>
+            A <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> reuses the
+            same enum and gives it a third reading: on a traffic class it is the transfer direction
+            rather than an edge. No class carries both readings, so one value is never ambiguous, and
+            reusing the enum keeps the lock that hides an input and the filter that catches it written
+            the same way.
+          </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a usage</th><th>On a traffic class</th></tr></thead>
             <tbody>
-              <tr><td><code>Both</code></td><td><code>0</code></td><td>Both signs, or press and release.</td></tr>
-              <tr><td><code>Positive</code></td><td><code>1</code></td><td>Axis positive (<code>+</code>), or usage press.</td></tr>
-              <tr><td><code>Negative</code></td><td><code>2</code></td><td>Axis negative (<code>-</code>), or usage release.</td></tr>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs</td><td>press and release</td><td>IN and OUT</td></tr>
+              <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
+              <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
             </tbody>
           </table>
         </Card>
@@ -364,21 +473,133 @@ device.press(from_button)?;                         // press takes any impl Into
       </div>
       <div id="catch-event" data-search-target>
         <Card>
-          <CardHeader title="CatchEvent" subtitle="One physical-input event off the stream" />
-          <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot) {'}'}</pre>
+          <CardHeader title="CatchEvent" subtitle="One caught event off the stream" />
+          <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot), Traffic(TrafficEvent) {'}'}</pre>
           <p>
-            What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields, captured
-            before lock suppression or injection. A relative axis is <code>Motion</code>; a held-usage
-            snapshot (buttons, keys, or media, all one shape) is <code>Usages</code>. Match on the
-            variant.
+            What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields. The three
+            variants are the three event frames the box pushes, and which ones you see is decided by the{' '}
+            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> list you
+            subscribed with: the input classes raise <code>Motion</code> and <code>Usages</code>, the
+            byte-oriented classes raise <code>Traffic</code>. Match on the variant.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
             <tbody>
-              <tr><td><code>Motion</code></td><td><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>A cursor or wheel change (the <code>MOTION</code> / <code>WHEEL</code> classes).</td></tr>
-              <tr><td><code>Usages</code></td><td><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A></td><td>A button, key, or media change (the <code>BUTTONS</code> / <code>KEYS</code> / <code>MEDIA</code> classes).</td></tr>
+              <tr><td><code>Motion</code></td><td><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>A cursor or wheel change, from a <A href="/library/types/enums#catch-class"><code>CatchClass::Axis</code></A> filter.</td></tr>
+              <tr><td><code>Usages</code></td><td><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A></td><td>A button, key, or media change, from a <code>Button / Key / Media</code> filter.</td></tr>
+              <tr><td><code>Traffic</code></td><td><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>Bytes off a pipe, from a <code>HidIn / HidOut / VendIntr / VendBulk / Control / Emit / Bus</code> filter.</td></tr>
             </tbody>
           </table>
+          <p>
+            All three carry <code>ts_us</code> and a{' '}
+            <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>, so a stamp is only
+            comparable to another stamp from the same domain until you apply the{' '}
+            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>. They also
+            share one rolling <code>SEQ</code> counter across all three frame types rather than one
+            counter each, so a host sees a dropped event as a gap in a single sequence, whatever mix of
+            frame types happened to straddle it.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{CatchClass, CatchEvent, CatchFilter};
+
+let stream = device.catch_events([CatchFilter::all()])?;
+match stream.recv()? {
+    CatchEvent::Motion(m)  => println!("{} {} {}", m.dx, m.dy, m.dz),
+    CatchEvent::Usages(s)  => println!("{} held", s.usages.len()),
+    CatchEvent::Traffic(t) => println!("{:?} 0x{:04X}: {} bytes", t.class, t.id, t.true_len),
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clock-domain" data-search-target>
+        <Card>
+          <CardHeader title="ClockDomain" subtitle="Which chip stamped the event" />
+          <pre class="api-signature">enum ClockDomain {'{'} Host, Device {'}'}</pre>
+          <p>
+            The <code>clk</code> field beside every event's <code>ts_us</code>. The box is two ESP32-S3s
+            that boot independently, so there are two microsecond timers and nothing relates them: each
+            counts from its own chip's boot. Stamping happens on whichever chip actually saw the event,
+            because a stamp applied after the inter-chip hop would be measuring the link's queueing
+            delay rather than the event. Convert with <code>as_u8()</code> and{' '}
+            <code>from_u8(u8) -&gt; Option&lt;ClockDomain&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
+            <tbody>
+              <tr><td><code>Host</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
+              <tr><td><code>Device</code></td><td><code>1</code></td><td>On the device chip, at the tap, when the clone's own traffic passed it.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">WHICH CLASS LANDS WHERE</div>
+          <table class="api-params">
+            <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
+            <tbody>
+              <tr><td><code>Host</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and the IN direction of <code>VendIntr / VendBulk</code>.</td></tr>
+              <tr><td><code>Device</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, and <code>Control / Emit / Bus</code>.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Both timers are box-local, unrelated to any clock on this machine, wrap every ~71.6 minutes
+            (a <code>u32</code> of microseconds), and restart at zero when their chip reboots. A stamp
+            below the one before it is a wrap, a reboot, or a domain change, and only the third is
+            visible in the value itself. To put two domains on one timeline, apply the{' '}
+            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> from{' '}
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>; doing so is optional,
+            and <code>clk</code> stays authoritative for a caller who would rather not subtract across
+            an approximated boundary at all.
+          </p>
+        </Card>
+      </div>
+
+      <div id="bus-event" data-search-target>
+        <Card>
+          <CardHeader title="BusEvent" subtitle="What happened on the USB bus" />
+          <pre class="api-signature">{`enum BusEvent { Reset, Suspend, Resume, Configured, Deconfigured, SetInterface,
+                DeviceAttached, DeviceDetached, CloneUp, CloneDown }`}</pre>
+          <p>
+            The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
+            event. It rides in the <code>flags</code> byte of the{' '}
+            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> rather than in a
+            field of its own, because <code>Bus</code> is the one class with no bytes on a pipe to
+            carry: read it with <code>BusEvent::from_u8(ev.flags)</code>. Two payload bytes,{' '}
+            <code>a</code> and <code>b</code>, arrive in <code>bytes</code> and are only meaningful for
+            the two kinds that use them. Convert back with <code>as_u8()</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
+              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone.</td></tr>
+              <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back.</td></tr>
+              <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
+              <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
+              <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
+              <tr><td><code>DeviceAttached</code></td><td><code>6</code></td><td>-</td><td>The real device appeared on the host chip.</td></tr>
+              <tr><td><code>DeviceDetached</code></td><td><code>7</code></td><td>-</td><td>The real device went away.</td></tr>
+              <tr><td><code>CloneUp</code></td><td><code>8</code></td><td>-</td><td>The box started presenting the clone to the game PC.</td></tr>
+              <tr><td><code>CloneDown</code></td><td><code>9</code></td><td>-</td><td>The box stopped presenting it.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The ten kinds cover both ends of the box. <code>DeviceAttached</code> and{' '}
+            <code>DeviceDetached</code> are the real device on USB3; the other eight are the clone's own
+            life on USB1, which is the bus you cannot see from the control PC because it belongs to the
+            game PC. A subscription to <code>Bus</code> is the cheapest of all the traffic classes: the
+            events are rare, so it costs nothing to leave on underneath a narrower trace as context for
+            why a pipe went quiet.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{BusEvent, CatchClass, CatchEvent, CatchFilter};
+
+let stream = device.catch_events([CatchFilter::class(CatchClass::Bus)])?;
+if let CatchEvent::Traffic(t) = stream.recv()? {
+    match BusEvent::from_u8(t.flags) {
+        Some(BusEvent::Configured)   => println!("configuration {}", t.bytes[0]),
+        Some(BusEvent::SetInterface) => println!("iface {} alt {}", t.bytes[0], t.bytes[1]),
+        Some(kind)                   => println!("{kind:?}"),
+        None                         => {}
+    }
+}`}</code></pre>
         </Card>
       </div>
 

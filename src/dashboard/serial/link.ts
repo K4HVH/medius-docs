@@ -5,6 +5,7 @@
 
 import {
   type CatchEvent,
+  type CatchFilter,
   type Caps,
   type CatchState,
   type DecodedFrame,
@@ -44,6 +45,7 @@ import {
   clearNamePayload,
   emitPayload,
   encode,
+  filterAll,
   imperfectPayload,
   injectPayload,
   ledPayload,
@@ -53,6 +55,7 @@ import {
   parseLog,
   parseMotionEvent,
   parseResp,
+  parseTrafficEvent,
   parseUsageEvent,
   queryPayload,
   rebootPayload,
@@ -231,6 +234,9 @@ export class SerialLink {
     return resp.locks;
   }
 
+  // The active CATCH table (§4.9): the box-wide drop count, the cross-chip clock estimate, and one
+  // entry per subscription with its own drop count. CATCH is fire-and-forget, so this is the only
+  // way to see that an entry landed rather than being refused by a full table.
   async queryCatch(timeoutMs?: number): Promise<CatchState> {
     const resp = parseResp(await this.query(Q_CATCH, timeoutMs));
     if (resp?.kind !== 'catch') throw new Error('unexpected reply to CATCH query');
@@ -289,15 +295,35 @@ export class SerialLink {
     );
   }
 
-  // Subscribe to the physical-input event stream (§3.9); event frames arrive on `onEvent` tagged
-  // motion or usages. mask 0 unsubscribes. The subscription clears after ~1 s of silence, so poll a
-  // query to hold it alive.
-  catch(mask: number): Promise<void> {
-    return this.send(encode(FrameType.Catch, this.nextSeq(), catchPayload(mask)));
+  // Add one entry to the CATCH subscription table (§3.9); event frames arrive on `onEvent` tagged
+  // motion, usages, or traffic. The table holds 32 entries and matching is most-specific-first, so
+  // "everything at 16 bytes, except endpoint 0x83 in full" is two calls. The subscription clears
+  // after ~1 s of control-PC silence, so poll a query to hold it alive.
+  catch(filter: CatchFilter): Promise<void> {
+    return this.send(
+      encode(
+        FrameType.Catch,
+        this.nextSeq(),
+        catchPayload(filter.cls, filter.id, filter.dir, 1, filter.snaplen),
+      ),
+    );
   }
 
+  // Drop one entry from the table. Unsubscribing matches on (class, id, dir) alone, so the
+  // filter's snaplen is carried for symmetry and ignored by the box.
+  unsubscribeCatch(filter: CatchFilter): Promise<void> {
+    return this.send(
+      encode(
+        FrameType.Catch,
+        this.nextSeq(),
+        catchPayload(filter.cls, filter.id, filter.dir, 0, filter.snaplen),
+      ),
+    );
+  }
+
+  // Clear the whole table in one frame: the all-classes wildcard with state 0.
   uncatch(): Promise<void> {
-    return this.catch(0);
+    return this.unsubscribeCatch(filterAll());
   }
 
   // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted in NVS; the box
@@ -472,6 +498,11 @@ export class SerialLink {
     if (f.ty === FrameType.UsageEvent) {
       const snapshot = parseUsageEvent(f.payload);
       if (snapshot) this.events.onEvent?.({ kind: 'usages', snapshot }, f.seq);
+      return;
+    }
+    if (f.ty === FrameType.TrafficEvent) {
+      const traffic = parseTrafficEvent(f.payload);
+      if (traffic) this.events.onEvent?.({ kind: 'traffic', traffic }, f.seq);
     }
   }
 

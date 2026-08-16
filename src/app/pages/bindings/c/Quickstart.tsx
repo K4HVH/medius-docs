@@ -10,7 +10,7 @@ const Quickstart: Component = () => {
         <CardHeader title="First program" subtitle="Find the box, send a command, read one event, free it" />
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move the
-          cursor, click the left button, wait for one physical input, then free it. C has no{' '}
+          cursor, click the left button, wait for the user to move the real mouse, then free it. C has no{' '}
           <a href="https://en.cppreference.com/w/cpp/language/exceptions" target="_blank" rel="noreferrer">exceptions</a>,
           so every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
           check, and the detail comes from{' '}
@@ -30,7 +30,7 @@ const Quickstart: Component = () => {
         <pre class="diagram">{`  find()            ──▶  open + handshake      blocks
   query_version()   ──▶  read the version      blocks
   move() / press()  ──▶  inject input          fire-and-forget
-  catch_events()    ──▶  subscribe to input    fire-and-forget
+  catch_events()    ──▶  subscribe by filter   fire-and-forget
   recv()            ──▶  next physical event   blocks
   free()            ──▶  close, NULL-safe      local`}</pre>
       </Card>
@@ -71,8 +71,14 @@ int main(void) {
     check(medius_device_press(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "press");
     check(medius_device_soft_release(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "release");
 
+    /* one subscription entry: every axis, both directions, whole packet */
+    MediusCatchFilter axes = { .class_ = MEDIUS_CATCH_CLASS_AXIS,
+                               .id = MEDIUS_CATCH_ID_ALL,
+                               .direction = MEDIUS_LOCK_DIRECTION_BOTH,
+                               .snaplen = 0 };
+
     MediusEventStream *events = NULL;
-    if (!check(medius_device_catch_events(dev, MEDIUS_CATCH_MASK_ALL, &events), "catch_events")) {
+    if (!check(medius_device_catch_events(dev, &axes, 1, &events), "catch_events")) {
         MediusCatchEvent ev;                                   /* blocks for one physical event */
         if (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK &&
             ev.kind == MEDIUS_CATCH_EVENT_KIND_MOTION)
@@ -85,14 +91,25 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 3.1.0 (abi 3)
-firmware 3.1.0 (proto 3)
+          <pre><code class="language-c">{`medius-capi 3.1.0 (abi 4)
+firmware 3.1.0 (proto 4)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
+          <p>
+            The subscription is an array of{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, and
+            this program passes one. Each entry names a{' '}
+            <A href="/bindings/c/types#catch-class">class</A>, an id inside it (here{' '}
+            <code>MEDIUS_CATCH_ID_ALL</code>, so every axis), a direction, and a <code>snaplen</code>.
+            Wanting keys as well is a second entry with <code>class_ = MEDIUS_CATCH_CLASS_KEY</code>;
+            wanting a vendor endpoint's raw packets is a third. The array is read during the call, so a
+            local like this one is fine.
+          </p>
           <div class="callout callout--info">
             <p>
-              <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until the user touches the mouse or
-              keyboard. To poll instead, or to loop over many events, see{' '}
-              <A href="/bindings/c/streams">Streams</A>.
+              <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
+              something the filters address happens, so with this one entry it returns when the user
+              moves the real mouse. To poll instead, to subscribe to more classes, or to loop over many
+              events, see <A href="/bindings/c/streams">Streams</A>.
             </p>
           </div>
         </Card>

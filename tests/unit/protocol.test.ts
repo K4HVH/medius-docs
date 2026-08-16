@@ -2,7 +2,14 @@ import { describe, it, expect } from 'vitest';
 import {
   type DecodedFrame,
 
+  BusEventKind,
   CatchClass,
+  ClockDomain,
+  CATCH_ID_ALL,
+  filterAddr,
+  filterAll,
+  filterClass,
+  sameFilter,
   DeviceKind,
   EmitMode,
   FrameDecoder,
@@ -39,11 +46,13 @@ import {
   logLevelFromU8,
   nativeHz,
   parseMotionEvent,
+  parseTrafficEvent,
   parseUsageEvent,
   parseLog,
   parseResp,
   queryPayload,
   rebootPayload,
+  trafficTruncated,
   versionString,
   vidPid,
 } from '../../src/dashboard/protocol';
@@ -293,6 +302,7 @@ describe('helpers', () => {
     expect(frameTypeFromU8(0x10)).toBeNull(); // reserved (was ConsEvent; media folded into USAGE_EVENT)
     expect(frameTypeFromU8(0x11)).toBe(FrameType.Option);
     expect(frameTypeFromU8(0x12)).toBeNull();
+    expect(frameTypeFromU8(0x16)).toBe(FrameType.TrafficEvent);
     expect(frameTypeFromU8(0x00)).toBeNull();
   });
 
@@ -458,53 +468,307 @@ describe('LOCK command (§3.8)', () => {
 });
 
 describe('CATCH command (§3.9)', () => {
-  it('catchPayload packs [mask]', () => {
-    // Motion + Buttons, no wheel.
-    expect(Array.from(catchPayload(CatchClass.Motion | CatchClass.Buttons))).toEqual([0x05]);
-    // Subscribe to everything (motion, wheel, buttons, keys, media), then unsubscribe.
-    expect(Array.from(catchPayload(CatchClass.All))).toEqual([0x1f]);
-    expect(Array.from(catchPayload(0))).toEqual([0x00]);
+  it('catchPayload packs one [class][id][dir][state][snaplen] table entry', () => {
+    // Every mouse button, both edges, whole packet.
+    expect(
+      Array.from(catchPayload(CatchClass.Button, CATCH_ID_ALL, LockDirection.Both, 1)),
+    ).toEqual([0x00, 0xff, 0xff, 0x00, 0x01, 0x00]);
+    // One vendor interrupt endpoint (0x83), IN only, first 16 bytes.
+    expect(
+      Array.from(catchPayload(CatchClass.VendIntr, 0x83, LockDirection.Positive, 1, 16)),
+    ).toEqual([0x06, 0x83, 0x00, 0x01, 0x01, 0x10]);
+    // The wildcard with state 0 clears the whole table in one frame.
+    expect(Array.from(catchPayload(CatchClass.Any, CATCH_ID_ALL, LockDirection.Both, 0))).toEqual([
+      0xff, 0xff, 0xff, 0x00, 0x00, 0x00,
+    ]);
   });
 
-  it('CatchClass wire values match ctrl_proto.h', () => {
+  it('the filter builders default to the whole class, both directions, whole packet', () => {
+    expect(filterAll()).toEqual({
+      cls: CatchClass.Any,
+      id: CATCH_ID_ALL,
+      dir: LockDirection.Both,
+      snaplen: 0,
+    });
+    expect(filterClass(CatchClass.VendBulk, 16)).toEqual({
+      cls: CatchClass.VendBulk,
+      id: CATCH_ID_ALL,
+      dir: LockDirection.Both,
+      snaplen: 16,
+    });
+    expect(filterAddr(CatchClass.VendIntr, 0x83)).toEqual({
+      cls: CatchClass.VendIntr,
+      id: 0x83,
+      dir: LockDirection.Both,
+      snaplen: 0,
+    });
+    // sameFilter ignores snaplen, because the box matches an unsubscribe on (class, id, dir).
+    expect(sameFilter(filterClass(CatchClass.Key), filterClass(CatchClass.Key, 16))).toBe(true);
+    expect(sameFilter(filterClass(CatchClass.Key), filterClass(CatchClass.Media))).toBe(false);
+    expect(sameFilter(filterAddr(CatchClass.VendIntr, 0x83), filterClass(CatchClass.VendIntr))).toBe(
+      false,
+    );
+  });
+
+  it('CatchClass wire values match ctrl_proto.h, and 0-3 are LOCK classes unchanged', () => {
+    expect([CatchClass.Button, CatchClass.Key, CatchClass.Media, CatchClass.Axis]).toEqual([
+      LockClass.Button,
+      LockClass.Key,
+      LockClass.Media,
+      LockClass.Axis,
+    ]);
     expect([
-      CatchClass.Motion,
-      CatchClass.Wheel,
-      CatchClass.Buttons,
-      CatchClass.Keys,
-      CatchClass.Media,
-    ]).toEqual([0x01, 0x02, 0x04, 0x08, 0x10]);
-    expect(CatchClass.All).toBe(0x1f);
+      CatchClass.HidIn,
+      CatchClass.HidOut,
+      CatchClass.VendIntr,
+      CatchClass.VendBulk,
+      CatchClass.Control,
+      CatchClass.Emit,
+      CatchClass.Bus,
+    ]).toEqual([4, 5, 6, 7, 8, 9, 10]);
+    expect(CatchClass.Any).toBe(0xff);
+    expect(CATCH_ID_ALL).toBe(LOCK_ID_ALL);
   });
 
-  it('parses a CATCH RESP into mask + dropped', () => {
-    // what = 7, mask = 0x05 (motion+buttons), dropped = 0x00000102 little-endian.
-    const resp = parseResp(new Uint8Array([7, 0x05, 0x02, 0x01, 0x00, 0x00]));
-    expect(resp).toEqual({ kind: 'catch', catch: { mask: 0x05, dropped: 0x00000102 } });
+  it('parses a CATCH RESP header + entry table', () => {
+    // what=7, flags=0 (table not full), dropped=0x00000102, clk offset = -250 us,
+    // rate = +1200 ppb, delay = 90 us, age = 40 ms, then two entries.
+    const resp = parseResp(
+      new Uint8Array([
+        7, 0x00, 0x02, 0x01, 0x00, 0x00, 0x06, 0xff, 0xff, 0xff, 0xb0, 0x04, 0x00, 0x00, 0x5a, 0x00,
+        0x28, 0x00, 0x02,
+        // class=Button, id=ALL, dir=Both, snaplen=0, dropped=0
+        0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
+        // class=VendBulk, id=0x02 (OUT endpoint), dir=Negative, snaplen=16, dropped=0x0111
+        0x07, 0x02, 0x00, 0x02, 0x10, 0x11, 0x01,
+      ]),
+    );
+    expect(resp).toEqual({
+      kind: 'catch',
+      catch: {
+        tableFull: false,
+        dropped: 0x00000102,
+        clock: { offsetUs: -250, ratePpb: 1200, delayUs: 90, ageMs: 40 },
+        entries: [
+          {
+            cls: CatchClass.Button,
+            id: CATCH_ID_ALL,
+            dir: LockDirection.Both,
+            snaplen: 0,
+            dropped: 0,
+          },
+          {
+            cls: CatchClass.VendBulk,
+            id: 0x02,
+            dir: LockDirection.Negative,
+            snaplen: 16,
+            dropped: 0x0111,
+          },
+        ],
+      },
+    });
+  });
+
+  it('decodes both clock fields as signed, and the delay as unsigned', () => {
+    // A decoder that read clk_rate_ppb unsigned would still pass a positive-only fixture, so pin
+    // it with a negative one: offset = -1, rate = -2000 ppb, delay = 0x8001 (past i16's range).
+    const p = new Uint8Array(19);
+    p[0] = 7;
+    p.set([0xff, 0xff, 0xff, 0xff], 6); // clk_offset_us = -1
+    p.set([0x30, 0xf8, 0xff, 0xff], 10); // clk_rate_ppb = -2000
+    p.set([0x01, 0x80], 14); // clk_delay_us = 32769, not -32767
+    p.set([0x10, 0x27], 16); // clk_age_ms = 10000
+    const resp = parseResp(p);
+    expect(resp?.kind).toBe('catch');
+    if (resp?.kind !== 'catch') throw new Error('unreachable');
+    expect(resp.catch.clock).toEqual({
+      offsetUs: -1,
+      ratePpb: -2000,
+      delayUs: 32769,
+      ageMs: 10000,
+    });
+  });
+
+  it('rejects an entry count above the box\'s 32-entry table', () => {
+    // The frame's payload ceiling would admit 70 entries; the box's table holds 32, so a larger
+    // count is a malformed reply rather than a bigger table.
+    const p = new Uint8Array(19 + 7 * 33);
+    p[0] = 7;
+    p[18] = 33;
+    expect(parseResp(p)).toBeNull();
+    const ok = new Uint8Array(19 + 7 * 32);
+    ok[0] = 7;
+    ok[18] = 32;
+    const resp = parseResp(ok);
+    expect(resp?.kind === 'catch' && resp.catch.entries).toHaveLength(32);
+  });
+
+  it('reports an unmeasured clock estimate as a null age, not an age of 0xffff', () => {
+    // An empty table with clk_age_ms = 0xFFFF: "no estimate yet", which an offset of 0 alone
+    // cannot distinguish from a genuinely coincident pair of clocks.
+    const resp = parseResp(
+      // prettier-ignore
+      new Uint8Array([
+        7, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0x00,
+      ]),
+    );
+    expect(resp).toEqual({
+      kind: 'catch',
+      catch: {
+        tableFull: true,
+        dropped: 0,
+        clock: { offsetUs: 0, ratePpb: 0, delayUs: 0, ageMs: null },
+        entries: [],
+      },
+    });
   });
 
   it('returns null for a truncated CATCH payload', () => {
-    expect(parseResp(new Uint8Array([7, 0x05, 0x00, 0x00, 0x00]))).toBeNull(); // needs 6 bytes
+    // 18 bytes: one short of the fixed header.
+    const stub = new Uint8Array(18);
+    stub[0] = 7;
+    expect(parseResp(stub)).toBeNull();
+    // A full header claiming one entry, with only 6 of its 7 bytes present.
+    const short = new Uint8Array(19 + 6);
+    short[0] = 7;
+    short[18] = 1;
+    expect(parseResp(short)).toBeNull();
   });
 
-  it('parseMotionEvent decodes [dx][dy][dz] with i16 sign-extension', () => {
-    // dx = +1, dy = -2, dz = -1.
-    const ev = parseMotionEvent(new Uint8Array([0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]));
-    expect(ev).toEqual({ dx: 1, dy: -2, dz: -1 });
+  it('parseMotionEvent decodes [ts][clk][dx][dy][dz] with i16 sign-extension', () => {
+    // ts = 1, host clock, dx = +1, dy = -2, dz = -1.
+    const ev = parseMotionEvent(
+      new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]),
+    );
+    expect(ev).toEqual({ tsUs: 1, clk: ClockDomain.Host, dx: 1, dy: -2, dz: -1 });
   });
 
   it('parseMotionEvent returns null for a short payload', () => {
-    expect(parseMotionEvent(new Uint8Array([0, 0, 0, 0, 0]))).toBeNull(); // needs 6 bytes
+    expect(parseMotionEvent(new Uint8Array(10))).toBeNull(); // needs 11 bytes
   });
 
   it('round-trips a MOTION_EVENT frame through the decoder', () => {
-    // dx = -1000, dy = +1000, dz = -120 (one notch up).
-    const payload = new Uint8Array([0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff]);
+    // ts = 0x000F4240 (1 s), host clock, dx = -1000, dy = +1000, dz = -120 (one notch up).
+    const payload = new Uint8Array([
+      0x40, 0x42, 0x0f, 0x00, 0x00, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff,
+    ]);
     const frames = decodeAll(new FrameDecoder(), encode(FrameType.MotionEvent, 200, payload));
     expect(frames).toHaveLength(1);
     expect(frames[0].ty).toBe(FrameType.MotionEvent);
     expect(frames[0].seq).toBe(200);
-    expect(parseMotionEvent(frames[0].payload)).toEqual({ dx: -1000, dy: 1000, dz: -120 });
+    expect(parseMotionEvent(frames[0].payload)).toEqual({
+      tsUs: 1_000_000,
+      clk: ClockDomain.Host,
+      dx: -1000,
+      dy: 1000,
+      dz: -120,
+    });
+  });
+});
+
+describe('TRAFFIC_EVENT (§4.10)', () => {
+  it('frameTypeFromU8 maps 0x16, so the decoder does not drop the frame', () => {
+    // An unmapped TYPE byte is silently dropped by the decoder, which would look like a dead
+    // stream rather than an error.
+    expect(frameTypeFromU8(0x16)).toBe(FrameType.TrafficEvent);
+  });
+
+  it('decodes a HID_IN capture that arrived whole', () => {
+    // ts = 0x00001000, HOST clock (an IN transfer off the real device), class HID_IN, interface 0,
+    // IN, flags 0, true_len 4, 4 bytes. §4.10 puts HID_IN in the host domain; a device-domain
+    // stamp here would be a wire-impossible combination.
+    const ev = parseTrafficEvent(
+      new Uint8Array([
+        0x00, 0x10, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x01, 0x00, 0x04, 0x00, 0x01, 0x02, 0x03,
+        0x04,
+      ]),
+    );
+    expect(ev).toEqual({
+      tsUs: 0x1000,
+      clk: ClockDomain.Host,
+      cls: CatchClass.HidIn,
+      id: 0,
+      dir: LockDirection.Positive,
+      flags: 0,
+      trueLen: 4,
+      bytes: new Uint8Array([1, 2, 3, 4]),
+    });
+    expect(trafficTruncated(ev!)).toBe(false);
+  });
+
+  it('reports a snaplen-truncated capture through true_len, not through a short byte count', () => {
+    // A 512-byte bulk packet captured at snaplen 4: without true_len this is indistinguishable
+    // from a genuinely 4-byte packet.
+    const ev = parseTrafficEvent(
+      new Uint8Array([
+        0x00, 0x00, 0x00, 0x00, 0x01, 0x07, 0x02, 0x00, 0x02, 0x01, 0x00, 0x02, 0xaa, 0xbb, 0xcc,
+        0xdd,
+      ]),
+    );
+    expect(ev?.cls).toBe(CatchClass.VendBulk);
+    expect(ev?.dir).toBe(LockDirection.Negative);
+    expect(ev?.flags).toBe(0x01); // end-of-transfer
+    expect(ev?.trueLen).toBe(512);
+    expect(ev?.bytes).toEqual(new Uint8Array([0xaa, 0xbb, 0xcc, 0xdd]));
+    expect(trafficTruncated(ev!)).toBe(true);
+  });
+
+  it('decodes a BUS event: the kind is in flags, the two operands in bytes', () => {
+    // SET_INTERFACE on interface 1, alternate 2.
+    const ev = parseTrafficEvent(
+      new Uint8Array([
+        0x00, 0x00, 0x00, 0x00, 0x01, 0x0a, 0x00, 0x00, 0x00, 0x05, 0x02, 0x00, 0x01, 0x02,
+      ]),
+    );
+    expect(ev?.cls).toBe(CatchClass.Bus);
+    expect(ev?.flags).toBe(BusEventKind.SetInterface);
+    expect(ev?.bytes).toEqual(new Uint8Array([1, 2]));
+  });
+
+  it('decodes a CONTROL transaction: setup 8 then the data stage, the answer in flags', () => {
+    // GET_DESCRIPTOR(device), the real device STALLed it.
+    const ev = parseTrafficEvent(
+      new Uint8Array([
+        0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01, 0xfd, 0x08, 0x00, 0x80, 0x06, 0x00,
+        0x01, 0x00, 0x00, 0x12, 0x00,
+      ]),
+    );
+    expect(ev?.cls).toBe(CatchClass.Control);
+    expect(ev?.id).toBe(0); // EP0
+    expect(ev?.flags).toBe(0xfd);
+    expect(ev?.bytes).toHaveLength(8); // setup only, no data stage arrived
+  });
+
+  it('accepts a header with no captured bytes, and returns null below the header', () => {
+    const ev = parseTrafficEvent(new Uint8Array(12));
+    expect(ev?.bytes).toEqual(new Uint8Array([]));
+    // true_len 0 with 0 bytes is a genuinely empty packet, not a truncated one.
+    expect(trafficTruncated(ev!)).toBe(false);
+    expect(parseTrafficEvent(new Uint8Array(11))).toBeNull();
+  });
+
+  it('round-trips a TRAFFIC_EVENT frame through the decoder', () => {
+    // EMIT is tapped on the device chip, so §4.10 puts it in the DEVICE domain: clk = 1.
+    const payload = new Uint8Array([
+      0x40, 0x42, 0x0f, 0x00, 0x01, 0x09, 0x00, 0x00, 0x01, 0x00, 0x05, 0x00, 0x00, 0x00, 0x0a,
+      0x00, 0x00,
+    ]);
+    const frames = decodeAll(new FrameDecoder(), encode(FrameType.TrafficEvent, 42, payload));
+    expect(frames).toHaveLength(1);
+    expect(frames[0].ty).toBe(FrameType.TrafficEvent);
+    expect(frames[0].seq).toBe(42);
+    const ev = parseTrafficEvent(frames[0].payload);
+    expect(ev?.cls).toBe(CatchClass.Emit); // what the clone actually put on the wire
+    expect(ev?.clk).toBe(ClockDomain.Device);
+    expect(ev?.trueLen).toBe(5);
+    expect(ev?.bytes).toEqual(new Uint8Array([0x00, 0x00, 0x0a, 0x00, 0x00]));
+  });
+
+  it('falls back to the host domain for a clk byte the build does not know', () => {
+    // A 2 is not a domain. Collapsing it to Host keeps the event rather than dropping the frame,
+    // matching how deviceKindFromU8 and logLevelFromU8 absorb an unknown byte.
+    const ev = parseTrafficEvent(new Uint8Array([0, 0, 0, 0, 0x02, 0x0a, 0, 0, 0, 0, 0, 0]));
+    expect(ev?.clk).toBe(ClockDomain.Host);
   });
 });
 
@@ -731,9 +995,12 @@ describe('keyboard + media (v2.0.0)', () => {
     expect(parseResp(new Uint8Array([3, 5, 0x07, 2]))).toBeNull(); // unified CAPS needs 7 bytes
   });
 
-  it('parseUsageEvent decodes [n] then [class][id u16 LE] class-tagged usages (§4.10)', () => {
+  it('parseUsageEvent decodes [ts][clk][n] then [class][id u16 LE] class-tagged usages (§4.10)', () => {
+    const hdr = [0, 0, 0, 0, 0]; // ts_us = 0, host clock
     // Two held buttons: Left (class 0, id 0) and Side2 (class 0, id 4).
-    expect(parseUsageEvent(new Uint8Array([2, 0, 0, 0, 0, 4, 0]))).toEqual({
+    expect(parseUsageEvent(new Uint8Array([...hdr, 2, 0, 0, 0, 0, 4, 0]))).toEqual({
+      tsUs: 0,
+      clk: ClockDomain.Host,
       usages: [
         { cls: 0, id: 0 },
         { cls: 0, id: 4 },
@@ -741,29 +1008,42 @@ describe('keyboard + media (v2.0.0)', () => {
     });
     // One held key ('A', class 1, id 0x04) and one held media usage (Volume Up, class 2, id 0x00E9),
     // each in its own event; the id stays little-endian.
-    expect(parseUsageEvent(new Uint8Array([1, 1, 0x04, 0x00]))).toEqual({
+    expect(parseUsageEvent(new Uint8Array([...hdr, 1, 1, 0x04, 0x00]))).toEqual({
+      tsUs: 0,
+      clk: ClockDomain.Host,
       usages: [{ cls: 1, id: 0x04 }],
     });
-    expect(parseUsageEvent(new Uint8Array([1, 2, 0xe9, 0x00]))).toEqual({
+    expect(parseUsageEvent(new Uint8Array([...hdr, 1, 2, 0xe9, 0x00]))).toEqual({
+      tsUs: 0,
+      clk: ClockDomain.Host,
       usages: [{ cls: 2, id: 0xe9 }],
     });
     // Empty (nothing held).
-    expect(parseUsageEvent(new Uint8Array([0]))).toEqual({ usages: [] });
+    expect(parseUsageEvent(new Uint8Array([...hdr, 0]))).toEqual({
+      tsUs: 0,
+      clk: ClockDomain.Host,
+      usages: [],
+    });
   });
 
   it('parseUsageEvent returns null for a short or truncated payload', () => {
-    expect(parseUsageEvent(new Uint8Array([]))).toBeNull(); // needs the n byte
-    expect(parseUsageEvent(new Uint8Array([2, 0, 0, 0]))).toBeNull(); // n=2 but one entry
+    expect(parseUsageEvent(new Uint8Array([]))).toBeNull(); // needs ts + clk + n
+    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0]))).toBeNull(); // no n byte
+    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0, 2, 0, 0, 0]))).toBeNull(); // n=2, one entry
   });
 
   it('round-trips a USAGE_EVENT frame through the decoder', () => {
-    // Two held keys: 'w' (class 1, id 0x1a) and 'd' (class 1, id 0x07).
-    const payload = new Uint8Array([2, 1, 0x1a, 0x00, 1, 0x07, 0x00]);
+    // ts = 1 s on the host clock, two held keys: 'w' (class 1, id 0x1a) and 'd' (class 1, id 0x07).
+    const payload = new Uint8Array([
+      0x40, 0x42, 0x0f, 0x00, 0x00, 2, 1, 0x1a, 0x00, 1, 0x07, 0x00,
+    ]);
     const frames = decodeAll(new FrameDecoder(), encode(FrameType.UsageEvent, 7, payload));
     expect(frames).toHaveLength(1);
     expect(frames[0].ty).toBe(FrameType.UsageEvent);
     expect(frames[0].seq).toBe(7);
     expect(parseUsageEvent(frames[0].payload)).toEqual({
+      tsUs: 1_000_000,
+      clk: ClockDomain.Host,
       usages: [
         { cls: 1, id: 0x1a },
         { cls: 1, id: 0x07 },

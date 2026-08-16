@@ -105,7 +105,7 @@ except MediusError as e:
             <p>
               A dropped link raises <code>DisconnectedError</code> from a normal call, but a{' '}
               <A href="/bindings/python/streams">stream</A> iterator
-              (<code>for ev in dev.catch_events():</code>) stops cleanly
+              (<code>for ev in dev.catch_events(CatchFilter.all()):</code>) stops cleanly
               instead: it returns when the link drops rather than raising. Calling <code>recv()</code>{' '}
               directly still raises. Box-side telemetry behind these errors is on{' '}
               <A href="/library/diagnostics">Diagnostics</A>.
@@ -166,11 +166,14 @@ dev.close()`}</code></pre>
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget" />
+          <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget · CatchFilter" />
           <p>
-            The <A href="/library/inject"><code>inject</code></A> / <A href="/library/inject"><code>press</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> calls take a{' '}
+            The <A href="/library/inject"><code>inject</code></A> / <A href="/library/inject"><code>press</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> /{' '}
+            <A href="/library/catch"><code>catch_events</code></A> calls take a{' '}
             <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in. One
-            <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media) feeds every inject verb.
+            <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media) feeds every inject verb,
+            and one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> is one
+            subscription entry.
           </p>
           <table class="api-params">
             <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
@@ -182,15 +185,23 @@ dev.close()`}</code></pre>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
               <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
               <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
+              <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.all()</code></A> / <code>.of_class(cls)</code> / <code>.addr(cls, id)</code></td><td rowspan="2"><code>dev.catch_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry: a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A> plus an id inside it</td></tr>
+              <tr><td><code>.with_direction(direction)</code> / <code>.with_snaplen(n)</code></td><td>a refinement of one, returned as a new filter (the dataclass is frozen)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import Device, Usage, Motion, LockTarget, Button, Action, LockDirection
+          <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchClass, CatchFilter,
+                    Button, Action, LockDirection)
 
 with Device.find() as dev:
     dev.inject(Usage.button(Button.LEFT), Action.PRESS)        # generic inject
     dev.move_axis(Motion.cursor(10, -4))                       # generic move
-    dev.lock(LockTarget.button(Button.LEFT), LockDirection.BOTH)`}</code></pre>
+    dev.lock(LockTarget.button(Button.LEFT), LockDirection.BOTH)
+
+    stream = dev.catch_events([                                # generic subscribe
+        CatchFilter.of_class(CatchClass.AXIS),
+        CatchFilter.addr(CatchClass.VEND_INTR, 0x83).with_snaplen(16),
+    ])`}</code></pre>
           <div class="callout callout--info">
             <p>
               <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
@@ -199,7 +210,10 @@ with Device.find() as dev:
               <code>Usage.button</code> takes a{' '}
               <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
               <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
-              raw <code>int</code>.
+              raw <code>int</code>. A filter's <code>direction</code> is the same{' '}
+              <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A>: on an input
+              class it picks the press or release edge, on a traffic class <code>POSITIVE</code> is IN
+              (device to PC) and <code>NEGATIVE</code> is OUT.
             </p>
           </div>
         </Card>

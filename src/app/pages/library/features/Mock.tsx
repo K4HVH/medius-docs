@@ -130,7 +130,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 3, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 4, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -146,7 +146,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Injecting inbound traffic" subtitle="push_log, push_raw, and the two event pushes" />
+          <CardHeader title="Injecting inbound traffic" subtitle="push_log, push_raw, and the three event pushes" />
           <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
@@ -155,6 +155,8 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, usages: &[Usage])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn push_traffic(&self, seq: u8, event: TrafficEvent)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
             All put bytes on the inbound stream as if the box emitted them.{' '}
@@ -162,20 +164,38 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
             <A href="/library/diagnostics#logs"><code>logs()</code></A> as a{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> ({' '}
             <A href="/library/types/enums#log-level"><code>LogLevel</code></A> plus <code>text</code>);{' '}
-            <code>push_raw</code> sends arbitrary bytes. The two event calls feed the{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>: <code>push_motion</code>{' '}
-            arrives as a{' '}
+            <code>push_raw</code> sends arbitrary bytes. The three event calls feed the{' '}
+            <A href="/library/catch#event-stream"><code>EventStream</code></A>, one per event frame the
+            box can push: <code>push_motion</code> arrives as a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A> (a{' '}
-            <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A>) and{' '}
+            <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A>),{' '}
             <code>push_usages</code> as a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A> (a{' '}
-            <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>), with{' '}
+            <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>), and{' '}
+            <code>push_traffic</code> as a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A> (a{' '}
+            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>), with{' '}
             <code>seq</code> as the rolling counter so a test can assert gap detection and <code>ts_us</code> as the raw wire timestamp, which lets a test drive the <code>u32</code> wrap and the clock-restart case.
+          </p>
+
+          <p>
+            The <code>seq</code> counter is shared across all three, exactly as it is on the wire, so a
+            test can interleave the three pushes and still assert that a host detects one dropped event
+            as a single gap. <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
+            <A href="/library/types/enums#clock-domain"><code>ClockDomain::Host</code></A>, because that
+            is the only domain the box ever stamps those two frames in.{' '}
+            <code>push_traffic</code> takes the whole{' '}
+            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> instead of a
+            field list, because it has fields a test needs to set independently of one another: the{' '}
+            <code>clk</code> that decides which domain the stamp is in, and a <code>true_len</code> that
+            does not have to agree with <code>bytes.len()</code>, which is how you exercise a host's
+            handling of <code>truncated()</code> without a real capture behind it.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;
-use medius::{CatchEvent, CatchMask, Device, Key, LogLevel, MockBox, Usage};
+use medius::{CatchClass, CatchEvent, CatchFilter, ClockDomain, Device, Key, LockDirection,
+             LogLevel, MockBox, TrafficEvent, Usage};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -186,9 +206,22 @@ let line = rx.recv_timeout(Duration::from_secs(1))?;
 assert_eq!(line.text, "overheating");
 
 // Fake a catch subscription seeing the user hold A.
-let stream = device.catch_events(CatchMask::KEYS)?;
+let stream = device.catch_events([CatchFilter::class(CatchClass::Key)])?;
 mock.push_usages(0, 1_000, &[Usage::from(Key::A)]);
-assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));`}</code></pre>
+assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));
+
+// Fake a truncated vendor-interrupt capture: 4 bytes seen of a 64-byte packet.
+mock.push_traffic(1, TrafficEvent {
+    ts_us: 2_000,
+    clk: ClockDomain::Host,
+    class: CatchClass::VendIntr,
+    id: 0x83,
+    direction: LockDirection::Positive,
+    flags: 0,
+    true_len: 64,
+    bytes: vec![0x11, 0x22, 0x33, 0x44],
+});
+assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</code></pre>
         </Card>
       </div>
 

@@ -1,7 +1,7 @@
 // Command payload builders (PC -> box).
 
 import { EmitMode, NAME_MAX, OPT_EMIT, OPT_IMPERFECT, OPT_MOVE_RIDE, OPT_NAME } from './opcode';
-import { LedMode, LedTarget, LockClass, LockDirection, RebootTarget } from './types';
+import { CatchClass, LedMode, LedTarget, LockClass, LockDirection, RebootTarget } from './types';
 
 export function queryPayload(what: number): Uint8Array {
   return new Uint8Array([what]);
@@ -27,9 +27,18 @@ export function lockPayload(
   return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, state & 0xff]);
 }
 
-// CATCH (§3.9): [mask u8] - subscribe to physical-input event classes (0 = unsubscribe).
-export function catchPayload(mask: number): Uint8Array {
-  return new Uint8Array([mask & 0xff]);
+// CATCH (§3.9): [class u8][id u16 LE][dir u8][state u8][snaplen u8]. One table entry, addressed the
+// same way a LOCK is: class 0xFF is every class and id 0xFFFF every id in the class. state 1
+// subscribes, 0 unsubscribes; the all-classes wildcard with state 0 clears the whole table in one
+// frame. snaplen caps the bytes captured per event, 0 meaning the whole packet.
+export function catchPayload(
+  cls: CatchClass,
+  id: number,
+  dir: LockDirection,
+  state: number,
+  snaplen = 0,
+): Uint8Array {
+  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, dir, state & 0xff, snaplen & 0xff]);
 }
 
 // OPTION(IMPERFECT) (§3.10): [id=0][allow u8] - 1 opts into cloning an over-capacity device, 0 is

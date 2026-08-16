@@ -57,7 +57,7 @@ const Requests: Component = () => {
               <tr><td><code>4</code></td><td>The native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
-              <tr><td><code>7</code></td><td>The active catch subscription.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
+              <tr><td><code>7</code></td><td>The active catch subscription table, plus its drop counts and the cross-chip clock estimate.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
               <tr><td><code>8</code></td><td>reserved</td><td>-</td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
               <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
@@ -143,7 +143,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 3</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 4</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -160,9 +160,9 @@ const Requests: Component = () => {
             binding: <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.1.0</code>, protocol <code>3</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.1.0</code>, protocol <code>4</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 03     | 03     | 01     | 00     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 04     | 03     | 01     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -204,7 +204,7 @@ const Requests: Component = () => {
               <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
               <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input <A href="/native/commands/lock"><code>LOCK</code></A> is active</td></tr>
-              <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: a <A href="/native/commands/catch"><code>CATCH</code></A> subscription is active, physical-input events are streaming</td></tr>
+              <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming. It says nothing about <em>what</em> is subscribed; read <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> for the table</td></tr>
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
             </tbody>
           </table>
@@ -517,11 +517,12 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 7</code>: the active <A href="/native/commands/catch"><code>CATCH</code></A>{' '}
-            subscription <code>mask</code>, plus the box-side count of event frames dropped under
-            back-pressure. A zero mask means nothing is subscribed. Mirrors the{' '}
+            subscription. A fixed scalar header, then the table, shaped like{' '}
+            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>. An empty table
+            means nothing is subscribed, which mirrors the{' '}
             <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> health bit.
           </p>
-          <pre class="api-signature">QUERY  what = 7  ·  RESP 6 bytes</pre>
+          <pre class="api-signature">QUERY  what = 7  ·  RESP 19 + 7n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -530,22 +531,89 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
-              <tr><td>1</td><td><code>mask</code></td><td><code>u8</code></td><td>subscribed event classes; bits Motion 0x01, Wheel 0x02, Buttons 0x04, Keys 0x08, Media 0x10</td></tr>
-              <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>events dropped box-side under back-pressure, little-endian</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
+              <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>box-wide events that could not be queued, little-endian</td></tr>
+              <tr><td>6</td><td><code>clk_offset_us</code></td><td><code>i32</code></td><td>the host chip's clock minus the device chip's, measured (below), little-endian</td></tr>
+              <tr><td>10</td><td><code>clk_rate_ppb</code></td><td><code>i32</code></td><td>relative drift between the two chips, parts per billion, little-endian</td></tr>
+              <tr><td>14</td><td><code>clk_delay_us</code></td><td><code>u16</code></td><td>best measured round trip; the offset's error bound is half this, little-endian</td></tr>
+              <tr><td>16</td><td><code>clk_age_ms</code></td><td><code>u16</code></td><td>age of the estimate; <code>0xFFFF</code> = no estimate yet, little-endian</td></tr>
+              <tr><td>18</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries following</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: the <A href="/native/commands/catch#catch">address class</A></td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the entry's id, or <code>0xFFFF</code> for a class blanket, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>the entry's direction</td></tr>
+              <tr><td>+</td><td><code>snaplen</code></td><td><code>u8</code></td><td>bytes captured per event, <code>0</code> = whole packet</td></tr>
+              <tr><td>+</td><td><code>dropped</code></td><td><code>u16</code></td><td>events <em>this entry</em> could not queue, little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
+          <div class="api-response-label">WHY THE DROP COUNT IS COUNTED TWICE</div>
           <p>
-            Read it to confirm a subscription landed, or to check whether you're losing events. Library
+            Each entry is 7 bytes; the header is 19. The <strong>per-entry</strong> drop count is what
+            identifies which subscription is overflowing. Under a saturating bulk trace the box-wide
+            counter tells you that you are losing events but not which ones, and those are different
+            problems: one is "my link is full", the other is "this endpoint's trace has holes in it".
+          </p>
+          <div class="api-response-label">CONFIRMING A SUBSCRIPTION</div>
+          <p>
+            <A href="/native/commands/catch#catch"><code>CATCH</code></A> is fire-and-forget, so this
+            reply is the only way to see that an entry landed. A refused entry is simply absent from
+            the list; <code>flags</code> b0 tells you the 32-entry table was the reason. Library
             binding: <A href="/library/requests#query-catch"><code>query_catch</code></A>.
           </p>
+          <div class="api-response-label">THE CLOCK FIELDS</div>
+          <p>
+            The two ESP32-S3s boot independently, so nothing relates their timers, and events carry
+            stamps from both (see{' '}
+            <A href="/native/commands/catch#clocks">the <code>clk</code> byte</A>). The box measures
+            the difference with a four-timestamp exchange across the inter-chip link, stamped as each
+            frame reaches the wire rather than when it is queued. Queueing is the largest and most
+            variable delay on that link, so stamping late removes it from the measurement instead of
+            filtering around it.
+          </p>
+          <pre class="diagram">{`  device chip                              host chip
+      t1  ------- request -------------------> t2
+                                               |
+      t4  <---------------- reply ------------ t3
+
+      offset = ((t2 - t1) + (t3 - t4)) / 2
+      delay  =  (t4 - t1) - (t3 - t2)     ->  the error bound is delay / 2`}</pre>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>What it buys you</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>clk_delay_us</code></td><td>the round trip of the best exchange in the window, so the offset is good to about half of it. A caller that needs a hard bound has one.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td>lets you extrapolate between exchanges rather than trusting a stale offset, which two independent crystals make stale at up to 20&nbsp;µs per second.</td></tr>
+              <tr><td><code>clk_age_ms</code></td><td><code>0xFFFF</code> distinguishes "no estimate yet" from "the offset happens to be zero", which both otherwise report as an offset of 0.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Applying the offset is optional and the <code>clk</code> byte on each event remains
+            authoritative, so a host that does not want an approximated timeline can simply refuse to
+            subtract across domains.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Motion and buttons subscribed, no drops (<code>mask = 0x05</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+--------+
-| A5     | 06     | 00     | 06 00  | 07     | 05     | 00 00 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | mask   | dropped      | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+          <p>
+            One entry, every mouse button, both edges, whole packet (<code>class = 0</code>,{' '}
+            <code>id = 0xFFFF</code>, <code>dir = 0</code>, <code>snaplen = 0</code>), with no drops
+            and no clock estimate taken yet:
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
+| A5     | 06     | 00     | 1A 00  | 07     | 00     | 00 00 00 00  |
++--------+--------+--------+--------+--------+--------+--------------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | dropped      |
++--------+--------+--------+--------+--------+--------+--------------+
+
++-------------+-------------+--------+--------+--------+
+| 00 00 00 00 | 00 00 00 00 | 00 00  | FF FF  | 01     |
++-------------+-------------+--------+--------+--------+
+| clk_offset  | clk_rate    |clk_dly | clk_age| n      |
++-------------+-------------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+--------+
+| 00     | FF FF  | 00     | 00     | 00 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| class  | id     | dir    |snaplen | dropped| CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

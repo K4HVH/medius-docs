@@ -33,7 +33,8 @@ export type ConnectionStatus =
   | 'error'
   | 'flashing';
 
-// One physical-input event received on the CATCH stream, with its rolling box-side sequence.
+// One event received on the CATCH stream, with its rolling box-side sequence. The sequence is
+// shared across all three event frame types, so a gap is a drop regardless of which kind fell out.
 export interface InputEventEntry {
   seq: number;
   ev: CatchEvent;

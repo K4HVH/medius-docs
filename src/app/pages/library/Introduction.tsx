@@ -126,7 +126,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Catch" subtitle="Stream physical input" />
+                <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
               </Card>
             </A>
             <A href="/library/clip" style={{ "text-decoration": "none" }}>

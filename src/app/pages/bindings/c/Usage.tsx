@@ -59,8 +59,8 @@ const Usage: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">READING THE DETAIL</div>
-          <pre class="api-signature">uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
-uint8_t   medius_last_error_proto_ver(void);</pre>
+          <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
+uint8_t   medius_last_error_proto_ver(void);`}</pre>
           <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     char buf[256];
@@ -168,7 +168,10 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
               a no-op, so cleanup paths don't need null checks. Freeing a stream unsubscribes when its
               last handle drops; catch events and log lines are fixed-size structs written into your
-              buffer, so there's nothing to free per event.
+              buffer, so there's nothing to free per event. Captured packet bytes are no exception: a{' '}
+              <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds them
+              in an inline <code>bytes[MEDIUS_TRAFFIC_MAX_BYTES]</code> array with a <code>len</code>{' '}
+              beside it, so a copied event owns nothing and outlives the stream it came from.
             </p>
           </div>
         </Card>
@@ -176,14 +179,15 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget for the generic verbs" />
+          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget, CatchFilter for the generic verbs" />
           <p>
             Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
             <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
             targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
             <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, each with a helper
-            constructor. A <code>MediusUsage</code> holds a{' '}
+            constructor, plus <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>,
+            which you fill in yourself. A <code>MediusUsage</code> holds a{' '}
             <A href="/native/commands/usage#buttons">button id</A>,{' '}
             <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
             <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
@@ -224,6 +228,51 @@ medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
               <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
               <code>medius_lock_target_axis(...)</code> an axis or the wheel. The struct fields are on{' '}
               <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
+            </p>
+          </div>
+          <div class="api-response-label">CATCH FILTERS HAVE NO CONSTRUCTOR</div>
+          <p>
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> is the fourth
+            value struct, and the only one with no <code>medius_*</code> builder. Rust's version is a
+            builder chain because its fields have defaults; C has designated initializers, which give
+            the same "name the fields that matter" shape with no call, so the header does not carry a
+            constructor that would only be spelling the struct out again. Every field must still be
+            set: an omitted one is zero, and zero is legal in all four, so a forgotten field is never
+            an error. In three of them it quietly becomes something specific and probably wrong
+            (<code>class_ = 0</code> is <code>BUTTON</code>, <code>id = 0</code> is button id 0,{' '}
+            <code>direction = 0</code> is <code>BOTH</code>); in <code>snaplen</code> it becomes the
+            widest capture there is, the whole packet, which is the one field where forgetting costs
+            you link budget rather than the wrong subscription.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Set it to</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>A <code>MEDIUS_CATCH_CLASS_*</code>. Named with the trailing underscore because <code>class</code> is a C++ keyword and the header compiles as both languages.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The id inside that class, or <code>MEDIUS_CATCH_ID_ALL</code> for every one of them.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A></td><td>The same enum a lock uses: an edge for input classes, a transfer direction for traffic classes.</td></tr>
+              <tr><td><code>snaplen</code></td><td><code>uint8_t</code></td><td>Bytes to capture per event; <code>0</code> for the whole packet.</td></tr>
+            </tbody>
+          </table>
+          <pre><code class="language-c">{`/* catch: address a class, or one id inside it, per entry */
+MediusCatchFilter filters[2] = {
+    /* every key edge, whole report */
+    { .class_ = MEDIUS_CATCH_CLASS_KEY,       .id = MEDIUS_CATCH_ID_ALL,
+      .direction = MEDIUS_LOCK_DIRECTION_BOTH, .snaplen = 0 },
+    /* one vendor endpoint's IN packets, first 16 bytes each */
+    { .class_ = MEDIUS_CATCH_CLASS_VEND_INTR, .id = 0x83,
+      .direction = MEDIUS_LOCK_DIRECTION_POSITIVE, .snaplen = 16 },
+};
+
+MediusEventStream *events = NULL;
+medius_device_catch_events(dev, filters, 2, &events);   /* the array is not retained */`}</code></pre>
+          <div class="callout callout--warning">
+            <p>
+              Locking and catching are separate subscriptions over the same address vocabulary, so the
+              same usage can be in both: catch is sampled before lock suppression, so a locked input
+              still reports. The classes above the four input ones have no lock equivalent. See{' '}
+              <A href="/bindings/c/streams">Streams</A> for what comes back.
             </p>
           </div>
         </Card>
