@@ -286,23 +286,25 @@ export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
   };
 }
 
-// Parse a USAGE_EVENT payload (§4.10): [ts_us u32][clk u8][cls u8][n u8] then n × [class u8][id u16
-// LE]. A class-tagged held-usage snapshot (buttons, keys, or media, one class per event). The class
-// is in the HEADER, not read off the first usage: the snapshot that most needs it is the empty one,
-// which is the release of the last held usage and lists nothing. Unsolicited.
+// Parse a USAGE_EVENT payload (§4.10): [ts_us u32][clk u8][cls u8][dir u8][n u8] then
+// n × [class u8][id u16 LE]. A class-tagged held-usage snapshot (buttons, keys, or media, one class
+// per event). Class and edge are in the HEADER, not read off the entries: the snapshot that most
+// needs them is the empty one -- the release of the last held usage, which lists nothing.
+// Unsolicited.
 export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
-  if (payload.length < EVENT_HDR + 2) return null;
-  const n = payload[EVENT_HDR + 1];
-  if (payload.length < EVENT_HDR + 2 + 3 * n) return null;
+  if (payload.length < EVENT_HDR + 3) return null;
+  const n = payload[EVENT_HDR + 2];
+  if (payload.length < EVENT_HDR + 3 + 3 * n) return null;
   const usages: Usage[] = [];
   for (let i = 0; i < n; i++) {
-    const off = EVENT_HDR + 2 + 3 * i;
+    const off = EVENT_HDR + 3 + 3 * i;
     usages.push({ cls: payload[off], id: u16le(payload, off + 1) });
   }
   return {
     tsUs: u32le(payload, 0),
     clk: clockDomainFromU8(payload[EVENT_TS_LEN]),
     cls: payload[EVENT_HDR],
+    dir: payload[EVENT_HDR + 1],
     usages,
   };
 }

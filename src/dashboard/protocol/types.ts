@@ -408,6 +408,8 @@ export interface UsageSnapshot {
   // Which class this snapshot is of, from the frame header rather than the first usage -- an empty
   // snapshot is a release-to-nothing and has no usage to read it from.
   cls: number;
+  // The edge that produced it: the subscribed set grew (POS) or shrank (NEG).
+  dir: number;
   usages: Usage[];
 }
 
