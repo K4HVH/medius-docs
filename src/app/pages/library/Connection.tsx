@@ -67,10 +67,11 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
 
       <div id="zero-config" data-search-target>
         <Card>
-          <CardHeader title="Zero config" subtitle="No settings struct, just two defaults" />
+          <CardHeader title="Zero config" subtitle="No settings struct, just three read-only values" />
           <p>
             Nothing to configure; two read-only defaults bound the{' '}
-            <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and keepalive timer.
+            <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and keepalive
+            timer, and a third names the protocol this build speaks.
           </p>
           <table class="api-params">
             <thead>
@@ -88,13 +89,26 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
                 <td><code>DEFAULT_KEEPALIVE_CADENCE</code></td>
                 <td><code>500 ms</code></td>
               </tr>
+              <tr>
+                <td><code>PROTO_VER</code></td>
+                <td><code>4</code></td>
+              </tr>
             </tbody>
           </table>
+          <p>
+            <code>PROTO_VER</code> is the{' '}
+            <A href="/native/frame#frame"><code>control protocol</code></A> version this build speaks.
+            A box reporting anything else is refused at the{' '}
+            <A href="/native/connection#handshake">handshake</A> — it is exposed so a caller can say so
+            in its own words, or check a box before connecting, rather than only learning it from an
+            error.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE};
+          <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE, PROTO_VER};
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
-println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms`}</code></pre>
+println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
+println!("speaks protocol:   {}", PROTO_VER);                   // 4`}</code></pre>
         </Card>
       </div>
 
