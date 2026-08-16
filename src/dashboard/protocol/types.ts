@@ -405,6 +405,9 @@ export interface UsageSnapshot {
   tsUs: number;
   // Always Host, like MotionEvent.clk.
   clk: ClockDomain;
+  // Which class this snapshot is of, from the frame header rather than the first usage -- an empty
+  // snapshot is a release-to-nothing and has no usage to read it from.
+  cls: number;
   usages: Usage[];
 }
 
