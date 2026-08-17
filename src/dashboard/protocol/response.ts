@@ -27,15 +27,28 @@ import {
   RATE_CONFIDENT,
   CATCH_FLAG_TABLE_FULL,
   CATCH_TABLE_MAX,
+  CLIP_CFG_F_FINALIZED,
+  CLIP_CFG_F_LOOP,
+  CLIP_CFG_F_RETAIN,
+  CLIP_HELD_MAX,
+  CLIP_TRIG_LEN,
+  CLIP_TRIG_MAX,
   CLK_AGE_NONE,
   EVENT_HDR,
   EVENT_TS_LEN,
+  Q_CLIP,
+  RESP_CLIP_HDR,
+  clipStateFromU8,
 } from './opcode';
 import {
   type Caps,
   type CatchEntry,
   type CatchState,
+  type ClipStatus,
+  type ClipTrigger,
+  type ClipTriggerAction,
   type DeviceInfo,
+  type Direction,
   type Health,
   type ImperfectStatus,
   type LockEntry,
@@ -76,7 +89,8 @@ export type Resp =
   | { kind: 'catch'; catch: CatchState }
   | { kind: 'imperfect'; imperfect: ImperfectStatus }
   | { kind: 'movementRiding'; windowMs: number } // 0 = off
-  | { kind: 'emitPace'; emit: EmitPace };
+  | { kind: 'emitPace'; emit: EmitPace }
+  | { kind: 'clip'; clip: ClipStatus };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -233,6 +247,57 @@ export function parseResp(payload: Uint8Array): Resp | null {
             ageMs: ageMs === CLK_AGE_NONE ? null : ageMs,
           },
           entries,
+        },
+      };
+    }
+    case Q_CLIP: {
+      // [what][state][free u32][used u32][played u32][ticks u32][underruns u16][overruns u16]
+      // [seq_gaps u16][n_held u8] then n_held x [class][id u16 LE], then [autolock][flags][n_trig]
+      // then n_trig x [class][id u16 LE][edge][action][consume].
+      if (payload.length < RESP_CLIP_HDR) return null;
+      const nHeld = payload[24];
+      if (nHeld > CLIP_HELD_MAX) return null;
+      const cfgAt = RESP_CLIP_HDR + 3 * nHeld;
+      // The config section is fixed-size and always present, so a reply that stops inside it is
+      // truncated rather than a box that omitted its configuration.
+      if (payload.length < cfgAt + 3) return null;
+      const held: Usage[] = [];
+      for (let i = 0; i < nHeld; i++) {
+        const off = RESP_CLIP_HDR + 3 * i;
+        held.push({ cls: payload[off], id: u16le(payload, off + 1) });
+      }
+      const nTrig = payload[cfgAt + 2];
+      if (nTrig > CLIP_TRIG_MAX) return null;
+      if (payload.length < cfgAt + 3 + CLIP_TRIG_LEN * nTrig) return null;
+      const triggers: ClipTrigger[] = [];
+      for (let i = 0; i < nTrig; i++) {
+        const off = cfgAt + 3 + CLIP_TRIG_LEN * i;
+        triggers.push({
+          cls: payload[off],
+          id: u16le(payload, off + 1),
+          edge: payload[off + 3] as Direction,
+          action: payload[off + 4] as ClipTriggerAction,
+          consume: payload[off + 5] !== 0,
+        });
+      }
+      const flags = payload[cfgAt + 1];
+      return {
+        kind: 'clip',
+        clip: {
+          state: clipStateFromU8(payload[1]),
+          freeBytes: u32le(payload, 2),
+          totalBytes: u32le(payload, 6),
+          played: u32le(payload, 10),
+          ticks: u32le(payload, 14),
+          underruns: u16le(payload, 18),
+          overruns: u16le(payload, 20),
+          seqGaps: u16le(payload, 22),
+          held,
+          autolock: payload[cfgAt],
+          loop: (flags & CLIP_CFG_F_LOOP) !== 0,
+          retain: (flags & CLIP_CFG_F_RETAIN) !== 0,
+          finalized: (flags & CLIP_CFG_F_FINALIZED) !== 0,
+          triggers,
         },
       };
     }

@@ -1,6 +1,14 @@
 // Decoded protocol value types, mirroring the medius crate.
 
 import {
+  CLIP_EDGES_MAX,
+  CLIP_ENTRY_MAX,
+  CLIP_F_EDGES,
+  CLIP_F_WHEEL,
+  CLIP_F_XY,
+  CLIP_TAG_GAP,
+  ClipOp,
+  ClipState,
   DEVICE_KIND_KEYBOARD,
   DEVICE_KIND_MOUSE,
   H_CATCH_ON,
@@ -540,6 +548,130 @@ export interface ImperfectStatus {
   overCapacity: boolean;
   cloneImperfect: boolean;
 }
+
+// One momentary edge inside a clip tick: the same (class, id, action) an INJECT frame carries, so a
+// recorded clip and a live injection say the same thing about the same input.
+export interface ClipEdge {
+  cls: number;
+  id: number;
+  action: Action;
+}
+
+// One clip tick's content. A tick with no fields at all cannot be encoded: its flags byte would be
+// zero, which is the gap tag. Use a gap run to say "nothing happened for N ticks".
+export interface ClipTick {
+  // Both cursor axes travel together, because the wire flag covers the pair.
+  xy?: { dx: number; dy: number };
+  wheel?: number;
+  edges?: ClipEdge[];
+}
+
+export type ClipEntry = ({ kind: 'gap'; ticks: number } | ({ kind: 'tick' } & ClipTick));
+
+// Encode one clip entry (§3.11). Returns null for an entry the box would reject or misread, rather
+// than a nearest-legal guess: a silently-clamped clip plays back as something the caller never
+// recorded.
+export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
+  if (e.kind === 'gap') {
+    if (!Number.isInteger(e.ticks) || e.ticks < 1 || e.ticks > 0xffff) return null;
+    return new Uint8Array([CLIP_TAG_GAP, e.ticks & 0xff, (e.ticks >> 8) & 0xff]);
+  }
+  const edges = e.edges ?? [];
+  if (edges.length > CLIP_EDGES_MAX) return null;
+  let flags = 0;
+  if (e.xy) flags |= CLIP_F_XY;
+  if (e.wheel !== undefined) flags |= CLIP_F_WHEEL;
+  if (edges.length > 0) flags |= CLIP_F_EDGES;
+  if (flags === 0) return null;
+  const out = new Uint8Array(CLIP_ENTRY_MAX);
+  const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+  let off = 0;
+  out[off++] = flags;
+  if (e.xy) {
+    view.setInt16(off, i16(e.xy.dx), true);
+    view.setInt16(off + 2, i16(e.xy.dy), true);
+    off += 4;
+  }
+  if (e.wheel !== undefined) {
+    view.setInt16(off, i16(e.wheel), true);
+    off += 2;
+  }
+  if (edges.length > 0) {
+    out[off++] = edges.length;
+    for (const ed of edges) {
+      out[off++] = ed.cls;
+      view.setUint16(off, ed.id & 0xffff, true);
+      off += 2;
+      out[off++] = ed.action;
+    }
+  }
+  return out.subarray(0, off);
+}
+
+function i16(v: number): number {
+  return Math.max(-32768, Math.min(32767, Math.round(v || 0)));
+}
+
+// The ops a trigger may carry. The box stores a binding only when its action is Toggle or lower,
+// and CLIP_TRIGGER has no reply, so binding Clear or Finalize puts a frame on the wire that is
+// silently discarded and never fires.
+export type ClipTriggerAction =
+  | ClipOp.Start
+  | ClipOp.Stop
+  | ClipOp.Pause
+  | ClipOp.Resume
+  | ClipOp.Restart
+  | ClipOp.Toggle;
+
+export const isTriggerAction = (op: number): op is ClipTriggerAction => op >= ClipOp.Start && op <= ClipOp.Toggle;
+
+// One stored clip trigger (§3.11): an input edge that runs an engine verb. `consume` hides the
+// trigger input from the game, so the key that starts a clip does not also reach it.
+export interface ClipTrigger {
+  cls: number;
+  id: number;
+  edge: Direction;
+  action: ClipTriggerAction;
+  consume: boolean;
+}
+
+// Decoded RESP(CLIP) (§4.15): engine state, ring accounting, what the clip is holding down right
+// now, and the stored configuration.
+export interface ClipStatus {
+  state: ClipState;
+  // Ring bytes free and used. `freeBytes` is the only flow-control signal an appending client has.
+  freeBytes: number;
+  totalBytes: number;
+  // Ticks played and ticks in the clip. Both reset on CLEAR.
+  played: number;
+  ticks: number;
+  // Ran out of buffered ticks mid-play; appended past the ring; append SEQ discontinuities.
+  underruns: number;
+  overruns: number;
+  seqGaps: number;
+  // Usages the clip is holding down. A clip stopped mid-hold leaves these set until the engine
+  // releases them, so this is how a UI shows what playback still owns.
+  held: Usage[];
+  autolock: number;
+  loop: boolean;
+  retain: boolean;
+  finalized: boolean;
+  triggers: ClipTrigger[];
+}
+
+export const clipStateLabel = (s: ClipState): string =>
+  s === ClipState.Playing
+    ? 'Playing'
+    : s === ClipState.Paused
+      ? 'Paused'
+      : s === ClipState.Faulted
+        ? 'Faulted'
+        : 'Idle';
+
+// True when two trigger bindings address the same input edge, which is the key the box stores them
+// under: setting one overwrites the other rather than adding a second binding.
+export const sameTrigger = (a: ClipTrigger, b: ClipTrigger): boolean =>
+  a.cls === b.cls && a.id === b.id && a.edge === b.edge;
 
 export enum LogLevel {
   Error = 0,

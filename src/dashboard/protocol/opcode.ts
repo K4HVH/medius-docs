@@ -21,6 +21,88 @@ export const Q_LOCKS = 6;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
+export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring accounting, held usages, config
+
+// CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
+// byte draws from, so a trigger runs the same verb the control PC would.
+export enum ClipOp {
+  Start = 0,
+  Stop = 1,
+  Pause = 2,
+  Resume = 3,
+  Restart = 4,
+  Toggle = 5, // highest value a trigger `action` may carry
+  Clear = 6, // discard the loaded clip, free the ring, clear FAULTED
+  Finalize = 7, // close a retained clip: fix the write head as the clip end
+}
+
+// CLIP_SET scalar setting ids (§3.11), shaped like OPTION: one whole-value write per id.
+export const CLIP_SET_AUTOLOCK = 0; // value = CLIP_LOCK_* scope bits
+export const CLIP_SET_LOOP = 1; // value != 0
+export const CLIP_SET_RETAIN = 2; // value != 0 (0 = streaming, the default)
+
+// CLIP_TRIGGER binding set (§3.11), shaped like LOCK. Keyed by (class, id, edge).
+export const CLIP_TRIG_MAX = 8;
+export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove
+export const CLIP_TRIG_F_CONSUME = 0x02; // suppress the trigger input from the game
+
+// Autolock scope (the CLIP_SET_AUTOLOCK value): which classes the clip blocks physical input on
+// while it plays, so the hand cannot fight the playback.
+export const CLIP_LOCK_AIM = 0x01; // the X and Y cursor axes
+export const CLIP_LOCK_WHEEL = 0x02;
+export const CLIP_LOCK_BUTTONS = 0x04;
+export const CLIP_LOCK_KEYS = 0x08;
+export const CLIP_LOCK_MEDIA = 0x10;
+export const CLIP_LOCK_ALL = 0x1f;
+
+// Trigger binding wildcards: class is an INJ_* class or CLIP_COND_ANY_CLASS; id is that class's
+// usage or CLIP_COND_ANY_ID.
+export const CLIP_COND_ANY_CLASS = 0xff;
+export const CLIP_COND_ANY_ID = 0xffff;
+
+export enum ClipState {
+  Idle = 0,
+  Playing = 1,
+  Paused = 2,
+  // An append SEQ gap or a ring overrun: the stream may be corrupt, so the engine refuses to play
+  // it. Only CLIP_OP_CLEAR leaves this state.
+  Faulted = 3,
+}
+
+// RESP(CLIP) config-section flags byte (§4.15).
+export const CLIP_CFG_F_LOOP = 0x01;
+export const CLIP_CFG_F_RETAIN = 0x02;
+export const CLIP_CFG_F_FINALIZED = 0x04;
+
+// Clip entry tags (§3.11). Tag 0 is a gap run; a content tick's tag is a nonzero field-flags byte,
+// which is why a fieldless content tick cannot be encoded: it would read back as a gap.
+export const CLIP_TAG_GAP = 0x00;
+export const CLIP_F_XY = 0x01;
+export const CLIP_F_WHEEL = 0x02;
+export const CLIP_F_EDGES = 0x04;
+export const CLIP_EDGES_MAX = 8;
+export const CLIP_ENTRY_MAX = 1 + 4 + 2 + 1 + CLIP_EDGES_MAX * 4;
+
+// Held usages in one RESP(CLIP) snapshot, the reply's fixed scalar prefix, and the width of one
+// trigger in its config section (§4.15).
+export const CLIP_HELD_MAX = 40;
+export const RESP_CLIP_HDR = 25;
+export const CLIP_TRIG_LEN = 6;
+
+// A state byte this build does not know reads as Faulted rather than Idle: an unknown engine state
+// is not one a UI should offer Start on.
+export function clipStateFromU8(v: number): ClipState {
+  switch (v) {
+    case 0:
+      return ClipState.Idle;
+    case 1:
+      return ClipState.Playing;
+    case 2:
+      return ClipState.Paused;
+    default:
+      return ClipState.Faulted;
+  }
+}
 
 // OPTION ids (§3.10): persistent box options set via OPTION, read via Q_OPTIONS. The value is id-specific.
 export const OPT_IMPERFECT = 0; // value [allow u8]
@@ -104,6 +186,10 @@ export enum FrameType {
   UsageEvent = 0x0f,
   // 0x10 reserved (was ConsEvent; media folded into UsageEvent)
   Option = 0x11,
+  ClipAppend = 0x12,
+  ClipCtrl = 0x13,
+  ClipSet = 0x14,
+  ClipTrigger = 0x15,
   TrafficEvent = 0x16,
 }
 
@@ -164,6 +250,14 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.UsageEvent;
     case 0x11:
       return FrameType.Option;
+    case 0x12:
+      return FrameType.ClipAppend;
+    case 0x13:
+      return FrameType.ClipCtrl;
+    case 0x14:
+      return FrameType.ClipSet;
+    case 0x15:
+      return FrameType.ClipTrigger;
     case 0x16:
       return FrameType.TrafficEvent;
     default:
