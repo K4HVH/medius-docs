@@ -11,12 +11,14 @@ import {
   INJ_BTN,
   INJ_KEY,
   INJ_MEDIA,
-  LockDirection,
+  Out,
   TRAFFIC_BULK_END,
   TRAFFIC_BULK_ZLP,
   TRAFFIC_CONTROL_NAK,
   TRAFFIC_CONTROL_STALL,
-  filterClass,
+  filterTrafficClass,
+  filterWatchAxes,
+  filterWatchClass,
   sameFilter,
   snapshotClass,
   trafficTruncated,
@@ -25,26 +27,26 @@ import {
 import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
 
-// Each preset is one CATCH table entry per class it covers. The byte-oriented presets carry a
-// snaplen: a HID or vendor packet runs to 64 bytes and the control link is 4 Mbaud, so capturing
+// Each preset is one CATCH table entry per class it covers. The byte-oriented presets cap the
+// capture: a HID or vendor packet runs to 64 bytes and the control link is 4 Mbaud, so capturing
 // every byte of a busy endpoint costs more link than the events are worth in a browser log.
 const PRESETS: Record<string, CatchFilter[]> = {
   input: [
-    filterClass(CatchClass.Axis),
-    filterClass(CatchClass.Button),
-    filterClass(CatchClass.Key),
-    filterClass(CatchClass.Media),
+    filterWatchAxes(),
+    filterWatchClass(CatchClass.Button),
+    filterWatchClass(CatchClass.Key),
+    filterWatchClass(CatchClass.Media),
   ],
-  buttons: [filterClass(CatchClass.Button)],
-  motion: [filterClass(CatchClass.Axis)],
-  keys: [filterClass(CatchClass.Key), filterClass(CatchClass.Media)],
+  buttons: [filterWatchClass(CatchClass.Button)],
+  motion: [filterWatchAxes()],
+  keys: [filterWatchClass(CatchClass.Key), filterWatchClass(CatchClass.Media)],
   traffic: [
-    filterClass(CatchClass.HidIn, 16),
-    filterClass(CatchClass.HidOut, 16),
-    filterClass(CatchClass.VendIntr, 16),
-    filterClass(CatchClass.Control, 16),
+    filterTrafficClass(CatchClass.HidIn, 16),
+    filterTrafficClass(CatchClass.HidOut, 16),
+    filterTrafficClass(CatchClass.VendorInterrupt, 16),
+    filterTrafficClass(CatchClass.Control, 16),
   ],
-  bus: [filterClass(CatchClass.Bus)],
+  bus: [filterTrafficClass(CatchClass.Bus)],
 };
 
 const BUTTON_NAMES = ['Left', 'Right', 'Middle', 'Side 1', 'Side 2'];
@@ -65,8 +67,8 @@ const CATCH_CLASS_NAMES: Record<number, string> = {
   [CatchClass.Axis]: 'movement',
   [CatchClass.HidIn]: 'hid-in',
   [CatchClass.HidOut]: 'hid-out',
-  [CatchClass.VendIntr]: 'vend-intr',
-  [CatchClass.VendBulk]: 'vend-bulk',
+  [CatchClass.VendorInterrupt]: 'vendor-interrupt',
+  [CatchClass.VendorBulk]: 'vendor-bulk',
   [CatchClass.Control]: 'control',
   [CatchClass.Emit]: 'emit',
   [CatchClass.Bus]: 'bus',
@@ -76,8 +78,8 @@ const CATCH_CLASS_NAMES: Record<number, string> = {
 const TRAFFIC_CLASS_NAMES: Record<number, string> = {
   [CatchClass.HidIn]: 'hid-in',
   [CatchClass.HidOut]: 'hid-out',
-  [CatchClass.VendIntr]: 'vend-intr',
-  [CatchClass.VendBulk]: 'vend-bulk',
+  [CatchClass.VendorInterrupt]: 'vendor-interrupt',
+  [CatchClass.VendorBulk]: 'vendor-bulk',
   [CatchClass.Control]: 'control',
   [CatchClass.Emit]: 'emit',
   [CatchClass.Bus]: 'bus',
@@ -106,7 +108,7 @@ const hex = (bytes: Uint8Array): string =>
 // The flags byte is class-specific, so decode it per class instead of printing the raw number: a
 // STALLed control transaction reading `0xfd` tells you nothing without the table beside you.
 const trafficFlags = (cls: CatchClass, flags: number): string => {
-  if (cls === CatchClass.VendBulk) {
+  if (cls === CatchClass.VendorBulk) {
     const bits = [];
     if (flags & TRAFFIC_BULK_END) bits.push('end');
     if (flags & TRAFFIC_BULK_ZLP) bits.push('zlp');
@@ -130,12 +132,12 @@ const eventLine = (e: InputEventEntry): string => {
   if (e.ev.kind === 'traffic') {
     const t = e.ev.traffic;
     const name = TRAFFIC_CLASS_NAMES[t.cls] ?? `class ${t.cls}`;
-    const arrow = t.dir === LockDirection.Negative ? 'out' : 'in';
+    const arrow = t.dir === Out ? 'out' : 'in';
     if (t.cls === CatchClass.Bus) {
       const kind = BUS_KINDS[t.flags as BusEventKind] ?? `kind ${t.flags}`;
       return `#${e.seq} bus ${kind} ${hex(t.bytes)}`.trimEnd();
     }
-    // bytes.length short of true_len means snaplen cut the capture, not that the packet was short.
+    // bytes.length short of true_len means capture cut it, not that the packet was short.
     const cut = trafficTruncated(t) ? ` (+${t.trueLen - t.bytes.length} cut)` : '';
     const id = `0x${t.id.toString(16)}`;
     return `#${e.seq} ${name} ${arrow} ${id}${trafficFlags(t.cls, t.flags)} [${hex(t.bytes)}]${cut}`;

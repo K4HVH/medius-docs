@@ -7,10 +7,12 @@ import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import {
   type Locks,
   type LockTarget,
+  Direction,
   LOCK_ID_ALL,
   LockAxis,
   LockClass,
-  LockDirection,
+  Press,
+  Release,
   lockAxis,
   lockButton,
 } from '../../../dashboard/protocol';
@@ -27,22 +29,20 @@ const TARGETS: { value: string; label: string; target: LockTarget }[] = [
   { value: 'side2', label: 'Side button 2', target: lockButton(4) },
 ];
 
-const DIRECTIONS: Record<string, LockDirection> = {
-  both: LockDirection.Both,
-  positive: LockDirection.Positive,
-  negative: LockDirection.Negative,
+const DIRECTIONS: Record<string, Direction> = {
+  both: Direction.Both,
+  positive: Direction.Positive,
+  negative: Direction.Negative,
 };
 
 const BLANKET_NAMES = ['buttons', 'keys', 'media', 'axes'];
 
-const dirLabel = (d: LockDirection): string =>
-  d === LockDirection.Positive ? '+' : d === LockDirection.Negative ? '-' : '';
+const dirLabel = (d: Direction): string =>
+  d === Direction.Positive ? '+' : d === Direction.Negative ? '-' : '';
 
 // Axes and the wheel lock by sign (+/-); buttons, keys, and media lock by edge (press/release).
-const dirChipLabel = (t: LockTarget, d: LockDirection): string =>
-  t.cls === LockClass.Axis
-    ? dirLabel(d)
-    : d === LockDirection.Positive ? 'press' : 'release';
+const dirChipLabel = (t: LockTarget, d: Direction): string =>
+  t.cls === LockClass.Axis ? dirLabel(d) : d === Press ? 'press' : 'release';
 
 const targetName = (t: LockTarget): string => {
   const known = TARGETS.find((o) => o.target.cls === t.cls && o.target.id === t.id);
@@ -91,8 +91,8 @@ const DeviceLock = () => {
     const out: string[] = [];
     for (const e of locks().entries) {
       const t: LockTarget = { cls: e.cls, id: e.id };
-      if (e.positive) out.push(`${targetName(t)} ${dirChipLabel(t, LockDirection.Positive)}`.trim());
-      if (e.negative) out.push(`${targetName(t)} ${dirChipLabel(t, LockDirection.Negative)}`.trim());
+      if (e.positive) out.push(`${targetName(t)} ${dirChipLabel(t, Press)}`.trim());
+      if (e.negative) out.push(`${targetName(t)} ${dirChipLabel(t, Release)}`.trim());
     }
     return out;
   };

@@ -107,7 +107,7 @@ const Api: Component = () => {
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A> picks an edge.</p>
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks an edge.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -178,23 +178,25 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.catch_events(filters=<A href="/bindings/python/types#catchfilter">CatchFilter</A>.all())</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events.</td></tr>
+              <tr><td><code>dev.catch_events(filters)</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events.</td></tr>
+              <tr><td><code>dev.input_events(filters)</code></td><td><A href="/bindings/python/streams#input"><code>InputStream</code></A> of decoded press and release edges, and motion. Every filter must name an input class and cover both edges.</td></tr>
               <tr><td><code>dev.logs()</code></td><td><A href="/bindings/python/streams"><code>LogStream</code></A> of device log lines.</td></tr>
             </tbody>
           </table>
           <p>
             <code>filters</code> takes one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
             or an iterable of them, each naming a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
-            and an id inside it, with an optional <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A>{' '}
-            and <code>snaplen</code>. Build them with <code>CatchFilter.all()</code>,{' '}
-            <code>.of_class(cls)</code>, or <code>.addr(cls, id)</code>, then refine with{' '}
-            <code>.with_direction()</code> / <code>.with_snaplen()</code>.
+            and an id inside it, with an optional <A href="/bindings/python/types#direction"><code>Direction</code></A>{' '}
+            and <A href="/bindings/python/types#capture"><code>Capture</code></A>. Build them with{' '}
+            <code>CatchFilter.watch/watch_axis/watch_class/watch_axes/all_input</code> for input and{' '}
+            <code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code>{' '}
+            for traffic, then refine with <code>.with_direction()</code> / <code>.with_capture()</code>.
           </p>
           <div class="callout callout--info">
             <p>
               Addressing is the filter: the control link is 4 Mbaud and vendor bulk alone measures
               250 KiB/s through the box, so a subscription has to be able to say which endpoint it
-              means. Subscribing gets no reply, so check what the box actually holds with{' '}
+              means. The box's own refusals get no reply, so check what it actually holds with{' '}
               <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>.
             </p>
           </div>

@@ -214,11 +214,11 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
 let locks = device.query_locks()?;
-if locks.is_locked(Axis::X, LockDirection::Both) {
+if locks.is_locked(Axis::X, Direction::Both) {
     println!("horizontal motion is frozen");
 }`}</code></pre>
         </Card>
@@ -239,31 +239,33 @@ if locks.is_locked(Axis::X, LockDirection::Both) {
             two chips' timers.
           </p>
           <p>
-            This query carries more weight than the other seven, because{' '}
-            <A href="/library/catch#catch-events"><code>catch_events</code></A> is
-            fire-and-forget: the box never answers a subscription directly. Each entry comes back with
-            the <code>class / id / direction / snaplen</code> the box accepted, so comparing the
-            returned list against the{' '}
-            <A href="/library/types/structs#catch-filter">filters</A> you sent is the only way to see
-            that all of them landed. A filter that is missing was refused; whether that was because the
-            32-entry table was full or because the filter itself was malformed is what{' '}
-            <code>table_full</code> tells you.
+            <A href="/library/catch#catch-events"><code>catch_events</code></A> is fire-and-forget:
+            the box never answers a subscription. Each entry returns the{' '}
+            <code>class / id / direction / capture</code> the box accepted, so checking the list
+            against the <A href="/library/types/structs#catch-filter">filters</A> you sent is the only
+            way to see they all landed.
+          </p>
+          <p>
+            A filter that is missing was refused. <code>table_full</code> says which reason: the
+            32-entry table was full, or the filter itself was malformed.
           </p>
 
           <div class="api-response-label">TWO DROP COUNTS</div>
           <p>
-            <code>CatchState::dropped</code> is box-wide and{' '}
+            <code>CatchState::dropped</code> is box-wide;{' '}
             <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
-            entry, and the pair is deliberate. A lost event is charged to <em>every</em> entry it
-            resolved against, not one of them: a held-usage snapshot is a class's state, so two
-            subscriptions can each own a different usage inside it, and charging a single entry told
-            one of them it had lost events and the other that it had lost none, from the same drop. Delivery is four strict-priority queues, input and bus
-            first, then the byte-oriented classes, then control, then vendor bulk, so under a busy mouse it is normal
-            for one entry to starve while the rest are untouched. The box-wide number says you are
-            losing events; only the per-entry number says <em>which</em> ones, and that is the
-            difference between a trace you can still trust and one you cannot. Bulk starving beside a
-            clean key-press entry means narrow the bulk address or cut its <code>snaplen</code>; drops
-            on the entry you actually care about mean the subscription is too broad for a 4 Mbaud link.
+            entry. The box-wide number says you are losing events, the per-entry number says which.
+          </p>
+          <p>
+            A lost event is charged to <em>every</em> entry it resolved against. A held-usage snapshot
+            is a class's state, so two subscriptions can each own a different usage inside it, and
+            charging one told the other it had lost nothing from the same drop.
+          </p>
+          <p>
+            Under a busy mouse it is normal for vendor bulk to starve while the rest are untouched.
+            Bulk starving beside a clean key entry means narrowing the bulk address or cutting its{' '}
+            <code>capture</code>; drops on the entry you care about mean the subscription is too broad
+            for a 4 Mbaud link.
           </p>
 
           <div class="api-response-label">THE CLOCK ESTIMATE</div>
@@ -275,26 +277,25 @@ if locks.is_locked(Axis::X, LockDirection::Both) {
       offset_us = ((t2 - t1) + (t3 - t4)) / 2   ->  host clock minus device clock
       delay_us  =  (t4 - t1) - (t3 - t2)        ->  the error bound is delay_us / 2`}</pre>
           <p>
-            Events are stamped by whichever chip saw them, and the two ESP32-S3s boot independently, so
-            a host-chip <code>ts_us</code> and a device-chip one have no common epoch. The{' '}
-            <code>clock</code> field is the box's own measurement of that gap, from a four-timestamp
-            exchange over the inter-chip link, and it is the only thing that lets you subtract one
-            domain's stamp from the other's. <code>delay_us</code> bounds how far you can trust it,{' '}
-            <code>rate_ppb</code> corrects it for the drift between two crystals as it ages, and{' '}
-            <code>age_ms</code> of <code>None</code> means there is no estimate yet, which is not the
-            same as an offset that happens to be zero. Applying it is optional: each event's{' '}
-            <A href="/library/types/enums#clock-domain"><code>clk</code></A> stays authoritative, so a
-            caller who does not want an approximated timeline can simply never compare across domains.
+            Events are stamped by whichever chip saw them, and the two ESP32-S3s boot independently,
+            so their <code>ts_us</code> values share no epoch. The <code>clock</code> field measures
+            the gap and is the only way to subtract across domains.
+          </p>
+          <p>
+            <code>delay_us</code> bounds how far you can trust it, <code>rate_ppb</code> corrects for
+            crystal drift as it ages, and an <code>age</code> of <code>None</code> means no estimate
+            yet, not an offset of zero. Applying it is optional: each event's{' '}
+            <A href="/library/types/enums#clock-domain"><code>clock</code></A> stays authoritative.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchFilter, Device};
+          <pre><code class="language-rust">{`use medius::{Capture, CatchFilter, Class, Device, TrafficClass};
 
 let device = Device::find()?;
 // Bind the stream: dropping it unsubscribes, and the query below would then find an empty table.
 let _events = device.catch_events([
-    CatchFilter::class(CatchClass::Key),
-    CatchFilter::addr(CatchClass::VendBulk, 0x02).snaplen(16),
+    CatchFilter::watch_class(Class::Key),
+    CatchFilter::traffic(TrafficClass::VendorBulk, 0x02).with_capture(Capture::First(16)),
 ])?;
 
 let c = device.query_catch()?;
@@ -302,11 +303,12 @@ if c.table_full {
     eprintln!("the 32-entry table is full: some filters were refused");
 }
 for e in &c.entries {
-    println!("{:?} 0x{:04X} snap={} dropped={}", e.class, e.id, e.snaplen, e.dropped);
+    let f = e.filter;
+    println!("{:?} {:?} capture={:?} dropped={}", f.class(), f.id(), f.capture(), e.dropped);
 }
 println!("{} dropped box-wide", c.dropped);
-if let Some(age) = c.clock.age_ms {
-    println!("clocks differ by {} us (+/- {}, {age} ms old)", c.clock.offset_us, c.clock.delay_us / 2);
+if let Some(age) = c.clock.age {
+    println!("clocks differ by {} us (+/- {}, {age:?} old)", c.clock.offset_us, c.clock.delay_us / 2);
 }`}</code></pre>
         </Card>
       </div>

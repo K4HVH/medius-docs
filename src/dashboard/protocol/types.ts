@@ -229,11 +229,21 @@ export enum LockAxis {
   Wheel = 2,
 }
 
-export enum LockDirection {
+// The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
+// aliases below give each reading a name and no call site has to write the ambiguous member.
+export enum Direction {
   Both = 0,
   Positive = 1,
   Negative = 2,
 }
+
+// A momentary usage's edge: buttons, keys, and media.
+export const Press = Direction.Positive;
+export const Release = Direction.Negative;
+
+// A traffic class's transfer direction.
+export const In = Direction.Positive; // device to PC
+export const Out = Direction.Negative; // PC to device
 
 // The id sentinel that blanket-locks a whole class (§3.8), e.g. every button or every key.
 export const LOCK_ID_ALL = 0xffff;
@@ -266,11 +276,11 @@ export interface Locks {
 }
 
 // True when the given target+direction is locked in the set.
-export function isLocked(locks: Locks, target: LockTarget, direction: LockDirection): boolean {
+export function isLocked(locks: Locks, target: LockTarget, direction: Direction): boolean {
   const e = locks.entries.find((x) => x.cls === target.cls && x.id === target.id);
   if (!e) return false;
-  if (direction === LockDirection.Both) return e.positive && e.negative;
-  return direction === LockDirection.Positive ? e.positive : e.negative;
+  if (direction === Direction.Both) return e.positive && e.negative;
+  return direction === Direction.Positive ? e.positive : e.negative;
 }
 
 // CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
@@ -285,8 +295,8 @@ export enum CatchClass {
   Axis = 3,
   HidIn = 4,
   HidOut = 5,
-  VendIntr = 6,
-  VendBulk = 7,
+  VendorInterrupt = 6,
+  VendorBulk = 7,
   Control = 8,
   Emit = 9,
   Bus = 10,
@@ -294,18 +304,19 @@ export enum CatchClass {
 }
 
 // The id sentinel that subscribes to a whole class (§3.9), matching LOCK_ID_ALL.
-export const CATCH_ID_ALL = 0xffff;
+export const CATCH_ID_ANY = 0xffff;
 
 // What one CATCH table entry addresses (§3.9): an address, a direction, and how much of each packet
-// to capture. snaplen is per entry because the useful value differs by orders of magnitude between
-// classes - a 64-byte vendor interrupt report wants all of it, a bulk pipe traced for framing
-// wants 16. dir is the press/release edge for the input classes and the transfer direction for the
-// traffic classes; no class is both, so one byte carries either reading unambiguously.
+// to capture. capture is a byte count per entry, 0 meaning the whole packet, because the useful
+// value differs by orders of magnitude between classes - a 64-byte vendor interrupt report wants
+// all of it, a bulk pipe traced for framing wants 16. dir is the press/release edge for the input
+// classes and the transfer direction for the traffic classes; no class is both, so one byte carries
+// either reading unambiguously.
 export interface CatchFilter {
   cls: CatchClass;
   id: number;
-  dir: LockDirection;
-  snaplen: number;
+  dir: Direction;
+  capture: number;
 }
 
 // One entry as the box reports it back (§4.9): the filter it accepted, plus what that entry lost.
@@ -317,28 +328,64 @@ export interface CatchEntry extends CatchFilter {
   dropped: number;
 }
 
-// Named for the value they build, not for an action: `filterAll()` is the argument that clears the
-// table as readily as the one that subscribes to everything, so calling it `catchAll` would collide
-// with the reference client's `.catch_all()`, which only ever subscribes.
-export const filterAll = (): CatchFilter => ({
+// Named for the value they build, not for an action: `filterEverything()` is the argument that
+// clears the table as readily as the one that subscribes to everything, so calling it `catchAll`
+// would collide with the reference client's subscribe-only verb.
+export const filterEverything = (): CatchFilter => ({
   cls: CatchClass.Any,
-  id: CATCH_ID_ALL,
-  dir: LockDirection.Both,
-  snaplen: 0,
+  id: CATCH_ID_ANY,
+  dir: Direction.Both,
+  capture: 0,
 });
 
-export const filterClass = (cls: CatchClass, snaplen = 0): CatchFilter => ({
-  cls,
-  id: CATCH_ID_ALL,
-  dir: LockDirection.Both,
-  snaplen,
-});
+// The input side (classes 0-3). These carry no bytes, so no capture length applies: an event is the
+// axis delta or the held-usage snapshot itself.
 
-export const filterAddr = (cls: CatchClass, id: number, snaplen = 0): CatchFilter => ({
+// One momentary usage: a button, a key, or a media usage.
+export const filterWatch = (cls: CatchClass, id: number): CatchFilter => ({
   cls,
   id,
-  dir: LockDirection.Both,
-  snaplen,
+  dir: Direction.Both,
+  capture: 0,
+});
+
+// One relative axis (LockAxis: X, Y, or Wheel).
+export const filterWatchAxis = (axis: number): CatchFilter => ({
+  cls: CatchClass.Axis,
+  id: axis,
+  dir: Direction.Both,
+  capture: 0,
+});
+
+// Every usage in one momentary class.
+export const filterWatchClass = (cls: CatchClass): CatchFilter => ({
+  cls,
+  id: CATCH_ID_ANY,
+  dir: Direction.Both,
+  capture: 0,
+});
+
+// Every relative axis.
+export const filterWatchAxes = (): CatchFilter => ({
+  cls: CatchClass.Axis,
+  id: CATCH_ID_ANY,
+  dir: Direction.Both,
+  capture: 0,
+});
+
+// The byte-oriented side (classes 4 and up), where capture caps the bytes taken per event.
+export const filterTrafficClass = (cls: CatchClass, capture = 0): CatchFilter => ({
+  cls,
+  id: CATCH_ID_ANY,
+  dir: Direction.Both,
+  capture,
+});
+
+export const filterTraffic = (cls: CatchClass, id: number, capture = 0): CatchFilter => ({
+  cls,
+  id,
+  dir: Direction.Both,
+  capture,
 });
 
 // True when two filters address the same thing, which is how a caller reconciles the table it asked
@@ -424,19 +471,19 @@ export interface TrafficEvent {
   cls: CatchClass;
   // Endpoint address, interface number, or endpoint number, depending on the class.
   id: number;
-  // Positive = IN (device to PC), Negative = OUT (PC to device).
-  dir: LockDirection;
-  // Class-specific: end-of-transfer / ZLP bits for VendBulk, the device's answer for Control, the
+  // In (device to PC) or Out (PC to device).
+  dir: Direction;
+  // Class-specific: end-of-transfer / ZLP bits for VendorBulk, the device's answer for Control, the
   // BusEventKind for Bus, 0 otherwise.
   flags: number;
-  // The packet's length before snaplen truncation. Without it a packet cut short by snaplen and a
+  // The packet's length before capture truncation. Without it a packet cut short by capture and a
   // genuinely short packet are indistinguishable.
   trueLen: number;
-  // What arrived: up to snaplen bytes, so bytes.length < trueLen means the capture was truncated.
+  // What arrived: up to capture bytes, so bytes.length < trueLen means the capture was truncated.
   bytes: Uint8Array;
 }
 
-// True when this event's bytes were cut short by the entry's snaplen.
+// True when this event's bytes were cut short by the entry's capture length.
 export function trafficTruncated(ev: TrafficEvent): boolean {
   return ev.bytes.length < ev.trueLen;
 }

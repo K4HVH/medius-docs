@@ -234,13 +234,13 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Axis, Button, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Axis, Button, Direction};
 
 let locks = device.query_locks()?;
-if locks.is_locked(Axis::X, LockDirection::Positive) {
+if locks.is_locked(Axis::X, Direction::Positive) {
     // the real mouse can't move right
 }
-if locks.is_locked(Button::Left, LockDirection::Negative) {
+if locks.is_locked(Button::Left, Direction::Negative) {
     // a left-click is latched down: the hand can't release it
 }
 println!("{} locks active", locks.entries().len());`}</code></pre>
@@ -267,85 +267,80 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
       <div id="catch-filter" data-search-target>
         <Card>
           <CardHeader title="CatchFilter" subtitle="One subscription entry: what to catch, and how much of it" />
-          <pre class="api-signature">struct CatchFilter {'{'} class: CatchClass, id: u16, direction: LockDirection, snaplen: u8 {'}'}</pre>
+          <pre class="api-signature">struct CatchFilter {'{'} /* private */ {'}'}</pre>
           <p>
-            One entry in the subscription table you hand to{' '}
-            <A href="/library/catch#catch-events"><code>catch_events()</code></A>, built with the
-            constructors below. A filter is an <em>address</em>: a{' '}
-            <A href="/library/types/enums#catch-class"><code>CatchClass</code></A> and an id inside it,
-            the same vocabulary a <A href="/library/lock#lock"><code>lock</code></A> uses, plus a{' '}
-            <A href="/library/types/enums#lock-direction"><code>LockDirection</code></A> and how many
-            bytes to capture per event.
+            One entry in the table you hand to{' '}
+            <A href="/library/catch#catch-events"><code>catch_events</code></A> or{' '}
+            <A href="/library/catch#input-events"><code>input_events</code></A>. Built with a
+            constructor rather than by hand, because <code>id</code> without a class addresses
+            nothing and the box refuses it.
           </p>
           <div class="api-response-label">WHY THE ADDRESS IS THE FILTER</div>
           <p>
-            The control link runs at 4 Mbaud, which is 400 KB/s of raw payload before framing, and a
-            single vendor bulk pipe measures 250 KiB/s through the box on its own. Everything at once
-            cannot physically be delivered, so a subscription has to be able to name{' '}
-            <em>which endpoint</em> it means rather than only which kind of thing. That is why the old
-            five-bit class mask was replaced rather than extended: no number of extra bits in a mask
-            distinguishes endpoint <code>0x83</code> from endpoint <code>0x84</code>.
+            The control link runs at 4 Mbaud and a single vendor bulk pipe measures 250 KiB/s on its
+            own. Everything at once cannot be delivered, so a subscription has to name{' '}
+            <em>which endpoint</em> it means.
           </p>
+          <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
-            <thead><tr><th>Constructor</th><th>Returns</th><th>Addresses</th></tr></thead>
+            <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
             <tbody>
-              <tr><td><code>CatchFilter::all()</code></td><td><code>CatchFilter</code></td><td>Class <code>Any</code>, every id, both directions: the whole firehose.</td></tr>
-              <tr><td><code>CatchFilter::class(class)</code></td><td><code>CatchFilter</code></td><td>Every id in one <A href="/library/types/enums#catch-class"><code>CatchClass</code></A>, a blanket.</td></tr>
-              <tr><td><code>CatchFilter::addr(class, id)</code></td><td><code>CatchFilter</code></td><td>One id inside one class: a button, a keycode, an axis, an endpoint, an interface.</td></tr>
-              <tr><td><code>.direction(dir)</code></td><td><code>CatchFilter</code></td><td>Narrow to one edge or one transfer direction; defaults to <code>Both</code>.</td></tr>
-              <tr><td><code>.snaplen(n)</code></td><td><code>CatchFilter</code></td><td>Capture at most <code>n</code> bytes per event; defaults to <code>0</code>, the whole packet.</td></tr>
+              <tr><td><code>CatchFilter::watch(usage)</code></td><td>One <A href="/library/types/enums#usage"><code>Usage</code></A>: a button, a key, or a media usage — the same argument <A href="/library/lock#lock"><code>lock</code></A> takes.</td></tr>
+              <tr><td><code>CatchFilter::watch_axis(axis)</code></td><td>One <A href="/library/types/enums#axis"><code>Axis</code></A>.</td></tr>
+              <tr><td><code>CatchFilter::watch_class(class)</code></td><td>Every usage in one <A href="/library/types/enums#class"><code>Class</code></A>.</td></tr>
+              <tr><td><code>CatchFilter::watch_axes()</code></td><td>Every axis.</td></tr>
+              <tr><td><code>CatchFilter::all_input()</code></td><td>All four input classes, as a <code>[CatchFilter; 4]</code>.</td></tr>
+              <tr><td><code>CatchFilter::traffic(class, id)</code></td><td>One id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an endpoint, an interface, an endpoint number.</td></tr>
+              <tr><td><code>CatchFilter::traffic_class(class)</code></td><td>Every id in one traffic class, a blanket.</td></tr>
+              <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions: the whole firehose.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">MODIFIERS AND ACCESSORS</div>
           <table class="api-params">
-            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space: an input class, a traffic class, or <code>Any</code>.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The class-specific id, or the blanket that <code>class()</code> and <code>all()</code> set for you.</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#lock-direction"><code>LockDirection</code></A></td><td>The press/release edge for an input class, the transfer direction for a traffic class (<code>Positive</code> = IN, <code>Negative</code> = OUT).</td></tr>
-              <tr><td><code>snaplen</code></td><td><code>u8</code></td><td>Bytes captured per event; <code>0</code> = the whole packet. Ignored by the input classes, which have no bytes to cut.</td></tr>
+              <tr><td><code>.on_press() / .on_release()</code></td><td><code>CatchFilter</code></td><td>One edge, on the momentary classes.</td></tr>
+              <tr><td><code>.inbound() / .outbound()</code></td><td><code>CatchFilter</code></td><td>One flow, on the traffic classes: IN is device to PC.</td></tr>
+              <tr><td><code>.with_direction(dir)</code></td><td><code>CatchFilter</code></td><td>The <A href="/library/types/enums#direction"><code>Direction</code></A> directly; defaults to <code>Both</code>.</td></tr>
+              <tr><td><code>.with_capture(cap)</code></td><td><code>CatchFilter</code></td><td>A <A href="/library/types/enums#capture"><code>Capture</code></A>; defaults to <code>Whole</code>. Traffic classes only.</td></tr>
+              <tr><td><code>.class()</code></td><td><code>Option&lt;CatchClass&gt;</code></td><td>The class, or <code>None</code> for the wildcard.</td></tr>
+              <tr><td><code>.id()</code></td><td><code>Option&lt;u16&gt;</code></td><td>The class-specific id, or <code>None</code> for a blanket.</td></tr>
+              <tr><td><code>.direction() / .capture()</code></td><td><code>Direction / Capture</code></td><td>What the filter was narrowed to.</td></tr>
+              <tr><td><code>.same_address(other)</code></td><td><code>bool</code></td><td>Whether both name the same box table entry, whatever their captures.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SNAPLEN IS PER ENTRY</div>
-          <p>
-            The useful capture length differs by orders of magnitude between classes, which is why it
-            sits on the entry rather than on the subscription as a whole. A 64-byte vendor interrupt
-            report is worth having in full, because the interesting field could be anywhere in it. A
-            bulk pipe traced only for its framing wants 16 bytes and would drown the link at any larger
-            value. One number for both would have to be wrong for one of them.
-          </p>
           <div class="api-response-label">MATCHING IS MOST-SPECIFIC-FIRST</div>
           <p>
-            An event is matched against the whole table and the most specific entry wins: an exact{' '}
-            <code>(class, id)</code> beats a class blanket, which beats <code>Any</code>. Ties between
-            equally specific entries go to the one added first. The winning entry is what supplies{' '}
-            <code>snaplen</code>, so a broad cheap trace with one deep exception is two entries, not two
-            subscriptions:
+            An exact <code>(class, id)</code> beats a class blanket, which beats the wildcard, and a
+            named direction beats <code>Both</code>. The winning entry supplies the capture, so a
+            broad cheap trace with one deep exception is two entries, not two subscriptions:
           </p>
           <pre class="diagram">{`catch_events([
-    CatchFilter::all().snaplen(16),                        // everything, 16 bytes
-    CatchFilter::addr(CatchClass::VendIntr, 0x83),         // except 0x83, in full
+    CatchFilter::everything().with_capture(Capture::First(16)),   // everything, 16 bytes
+    CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83),    // except 0x83, in full
 ])
 
-  packet on 0x83  ->  addr(VendIntr, 0x83)  wins  ->  snaplen 0  (whole packet)
-  packet on 0x84  ->  all()                 wins  ->  snaplen 16`}</pre>
+  packet on 0x83  ->  traffic(VendorInterrupt, 0x83)  wins  ->  whole packet
+  packet on 0x84  ->  everything()                    wins  ->  First(16)`}</pre>
+          <p>
+            Capture is not part of a filter's address, so two filters naming one entry at different
+            lengths are one box entry at the wider of the two. <code>same_address</code> is that
+            comparison; <code>==</code> compares everything.
+          </p>
           <div class="api-response-label">CAPACITY AND REFUSALS</div>
           <p>
-            The table holds 32 entries. Subscribing is fire-and-forget with no reply, so a refused entry
-            is not an error you can catch at the call: it shows up as an entry missing from{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A> and, when the refusal
-            was capacity, as <code>table_full</code> in that same reply. The box refuses an unknown
-            class, a direction outside the three values, and a wildcard class carrying a specific id.
-            Each filter is sent as its own frame, so an empty iterator sends none and subscribes to
-            nothing; dropping the returned stream is what clears the table.
+            The table holds 32 entries, and a subscription that would exceed it is refused before
+            anything is sent — see <A href="/library/types/errors"><code>Error</code></A>. So is an
+            empty subscription, and a capture on an input class.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchFilter, LockDirection};
+          <pre><code class="language-rust">{`use medius::{CatchFilter, Class, TrafficClass};
 
 // Press edges of every key, plus one control endpoint, plus bus context.
 let stream = device.catch_events([
-    CatchFilter::class(CatchClass::Key).direction(LockDirection::Positive),
-    CatchFilter::addr(CatchClass::Control, 0),
-    CatchFilter::class(CatchClass::Bus),
+    CatchFilter::watch_class(Class::Key).on_press(),
+    CatchFilter::traffic(TrafficClass::Control, 0),
+    CatchFilter::traffic_class(TrafficClass::Bus),
 ])?;
 
 // Dropping the stream clears the whole table.
@@ -366,24 +361,24 @@ drop(stream);`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds. See <A href="/library/catch#timestamps">Catch timestamps</A> for what the clock means.</td></tr>
-              <tr><td><code>clk</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>Host</code> here: physical motion is stamped on the host chip as the real device's transfer completes.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code> here: physical motion is stamped on the host chip as the real device's transfer completes.</td></tr>
               <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
               <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
               <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
             </tbody>
           </table>
           <p>
-            <code>clk</code> is fixed for this event and still carried on the wire, because a stream can
+            <code>clock</code> is fixed for this event and still carried on the wire, because a stream can
             mix it with <A href="/library/types/structs#traffic-event">traffic events</A> stamped on the
             device chip. Reading the field rather than assuming the domain means the same comparison
             code works whichever variant it is handed.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchEvent, CatchFilter};
+          <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
 
-let stream = device.catch_events([CatchFilter::class(CatchClass::Axis)])?;
+let stream = device.catch_events([CatchFilter::watch_axes()])?;
 if let CatchEvent::Motion(m) = stream.recv()? {
-    println!("at {} us ({:?}): moved {} {}, wheel {}", m.ts_us, m.clk, m.dx, m.dy, m.dz);
+    println!("at {} us ({:?}): moved {} {}, wheel {}", m.ts_us, m.clock, m.dx, m.dy, m.dz);
 }`}</code></pre>
         </Card>
       </div>
@@ -402,7 +397,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds. See <A href="/library/catch#timestamps">Catch timestamps</A> for what the clock means.</td></tr>
-              <tr><td><code>clk</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>Host</code>: a held-usage snapshot is taken where the real device's report lands.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code>: a held-usage snapshot is taken where the real device's report lands.</td></tr>
               <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>The currently-held usages, all of one class per event.</td></tr>
             </tbody>
           </table>
@@ -414,12 +409,40 @@ if let CatchEvent::Motion(m) = stream.recv()? {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, CatchClass, CatchEvent, CatchFilter};
+          <pre><code class="language-rust">{`use medius::{Button, CatchEvent, CatchFilter, Class};
 
-let stream = device.catch_events([CatchFilter::class(CatchClass::Button)])?;
+let stream = device.catch_events([CatchFilter::watch_class(Class::Button)])?;
 if let CatchEvent::Usages(s) = stream.recv()? {
     if s.is_held(Button::Left) {
         println!("left button held");
+    }
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="input-event" data-search-target>
+        <Card>
+          <CardHeader title="InputEvent" subtitle="One decoded input edge, and when it happened" />
+          <pre class="api-signature">struct InputEvent {'{'} ts_us: u32, clock: ClockDomain, input: Input {'}'}</pre>
+          <p>
+            What <A href="/library/catch#input-events"><code>input_events</code></A> yields. The{' '}
+            <A href="/library/types/enums#input"><code>Input</code></A> is the edge — a press, a
+            release, or a motion report — decoded from the held-usage snapshots the box sends.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>The report's arrival stamp, in the stamping chip's microseconds.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Always <code>HostChip</code> for physical input.</td></tr>
+              <tr><td><code>input</code></td><td><A href="/library/types/enums#input"><code>Input</code></A></td><td>What happened.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{CatchFilter, Input};
+
+for ev in device.input_events(CatchFilter::all_input())? {
+    if let Input::Press(u) = ev.input {
+        println!("{u:?} down at {}", ev.ts_us);
     }
 }`}</code></pre>
         </Card>
@@ -440,38 +463,38 @@ if let CatchEvent::Usages(s) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clk</code>.</td></tr>
-              <tr><td><code>clk</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clock</code>.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
               <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space the event came from.</td></tr>
               <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint address, endpoint number, or interface number inside that class.</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#lock-direction"><code>LockDirection</code></A></td><td><code>Positive</code> = IN (device to PC), <code>Negative</code> = OUT (PC to device).</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Positive</code> = IN (device to PC), <code>Negative</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>u8</code></td><td>Class-specific, see below; <code>0</code> for the classes that define none.</td></tr>
-              <tr><td><code>true_len</code></td><td><code>u16</code></td><td>The packet's length <em>before</em> <code>snaplen</code> truncation.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>What was actually captured, at most <code>snaplen</code> of it.</td></tr>
+              <tr><td><code>true_len</code></td><td><code>u16</code></td><td>The packet's length <em>before</em> the <A href="/library/types/enums#capture"><code>Capture</code></A> cut it.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>What was actually captured, at most the entry's capture length.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether <code>snaplen</code> or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
+              <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether the capture or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">WHY TRUE_LEN EXISTS</div>
           <p>
-            Without it, a packet cut short by <code>snaplen</code> and a genuinely short packet are the
-            same 16 bytes on the wire and there is nothing in the frame to tell them apart. Carrying the
-            pre-truncation length makes every capture self-describing, so a trace can be read correctly
-            without also knowing which <code>snaplen</code> was in force for that entry at that moment,
-            and <code>truncated()</code> is the two-value comparison that answers it. The ceiling
-            applies even at <code>snaplen = 0</code>: one event frame carries at most 500 bytes, the
-            512-byte payload limit minus the 12-byte traffic header, so a longer packet is still cut and
-            still says so.
+            Without it, a packet the capture cut short and a genuinely short packet are the same 16
+            bytes on the wire. The pre-truncation length makes a trace readable without knowing which
+            capture was in force, and <code>truncated()</code> answers it.
+          </p>
+          <p>
+            The ceiling applies even at <code>Capture::Whole</code>: one event frame carries at most
+            180 bytes (the firmware's <code>CTRL_TRAFFIC_DATA_MAX</code>), so a longer packet is still
+            cut and still says so.
           </p>
           <div class="api-response-label">FLAGS BY CLASS</div>
           <table class="api-params">
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
-              <tr><td><code>VendBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
+              <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
               <tr><td><code>Control</code></td><td>The real device's answer: <code>0</code> it answered, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed until the transfer timed out.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
@@ -480,16 +503,15 @@ if let CatchEvent::Usages(s) = stream.recv()? {
           <div class="api-response-label">CONTROL IS PER TRANSACTION</div>
           <p>
             A <code>Control</code> event is one completed transaction, not one per stage:{' '}
-            <code>bytes</code> is the 8-byte SETUP packet followed by the data stage, and{' '}
-            <code>direction</code> says which way that data went. A request the box answered from its
-            own descriptor cache still raises an event, because a trace that silently omitted those
-            would show a device that had stopped being asked, which is a different and much more
-            alarming thing than a device being asked and answered quickly.
+            <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
+            <code>direction</code> says which way that data went. Requests answered from the box's
+            descriptor cache still raise events.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchEvent, CatchFilter};
+          <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
 
-let stream = device.catch_events([CatchFilter::addr(CatchClass::VendIntr, 0x83).snaplen(16)])?;
+let stream = device.catch_events([CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83)
+    .with_capture(Capture::First(16))])?;
 if let CatchEvent::Traffic(t) = stream.recv()? {
     println!("ep 0x{:02X} {:?}: {:02X?}", t.id, t.direction, t.bytes);
     if t.truncated() {
@@ -611,7 +633,8 @@ if c.table_full {
     eprintln!("some filters were refused: the 32-entry table is full");
 }
 for e in &c.entries {
-    println!("{:?} 0x{:04X} {:?} snap={} dropped={}", e.class, e.id, e.direction, e.snaplen, e.dropped);
+    println!("{:?} {:?} {:?} {:?} dropped={}",
+             e.filter.class(), e.filter.id(), e.filter.direction(), e.filter.capture(), e.dropped);
 }
 println!("{} dropped box-wide", c.dropped);`}</code></pre>
         </Card>
@@ -620,43 +643,38 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
       <div id="catch-entry" data-search-target>
         <Card>
           <CardHeader title="CatchEntry" subtitle="One accepted subscription, and what it lost" />
-          <pre class="api-signature">struct CatchEntry {'{'} class: CatchClass, id: u16, direction: LockDirection, snaplen: u8, dropped: u16 {'}'}</pre>
+          <pre class="api-signature">struct CatchEntry {'{'} filter: CatchFilter, dropped: u16 {'}'}</pre>
           <p>
             One row of the box's subscription table in a{' '}
-            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>. The first four
-            fields are the <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>{' '}
-            the box accepted, echoed back, so comparing what you sent against what came back is how you
-            confirm a subscription landed. A blanket comes back as a single entry with the blanket id,
-            not expanded into one row per id.
+            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
+            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> the box
+            accepted, echoed back, so comparing it against what you sent confirms a subscription
+            landed. A blanket comes back as one entry, not expanded into one row per id.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>The address space this entry covers.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The id inside it, or the blanket.</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#lock-direction"><code>LockDirection</code></A></td><td>The edge or transfer direction it covers.</td></tr>
-              <tr><td><code>snaplen</code></td><td><code>u8</code></td><td>Bytes captured per event when this entry is the one that matched; <code>0</code> = whole packet.</td></tr>
+              <tr><td><code>filter</code></td><td><A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A></td><td>The subscription as the box holds it; read it with <code>class()</code>, <code>id()</code>, <code>direction()</code>, <code>capture()</code>.</td></tr>
               <tr><td><code>dropped</code></td><td><code>u16</code></td><td>Events <em>this entry</em> could not queue.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">WHY THE DROP COUNT IS PER ENTRY</div>
           <p>
-            Delivery runs as four strict-priority queues: input and bus events first, then the
-            byte-oriented traffic classes, then control, then vendor bulk. Under a busy mouse, bulk can starve
-            completely. That is deliberate, because a half-delivered bulk trace is worse than a visibly
-            absent one: it looks like data, and nothing in it says which packets are missing.
+            Delivery runs as strict-priority queues: input and bus first, then the byte-oriented
+            traffic classes, then control, then vendor bulk. Under a busy mouse bulk can starve
+            completely, deliberately: a half-delivered bulk trace looks like data and says nothing
+            about what is missing.
           </p>
           <p>
-            A box-wide counter tells you that you are losing events but not which ones, and those are
-            two different problems with two different fixes. A per-entry count separates them: bulk
-            starving while the key-press entry is clean means the trace is fine and the bulk capture
-            needs a smaller <code>snaplen</code> or a narrower address, whereas drops on the entry you
-            care about mean the subscription itself is too broad for the link.
+            A box-wide counter says you are losing events but not which ones. Per-entry counts
+            separate the two: bulk starving while the key entry is clean means the bulk capture needs
+            a shorter <A href="/library/types/enums#capture"><code>Capture</code></A> or a narrower
+            address.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let c = device.query_catch()?;
 for e in c.entries.iter().filter(|e| e.dropped > 0) {
-    eprintln!("{:?} 0x{:04X} lost {} events, try a smaller snaplen", e.class, e.id, e.dropped);
+    eprintln!("{:?} {:?} lost {} events", e.filter.class(), e.filter.id(), e.dropped);
 }`}</code></pre>
         </Card>
       </div>
@@ -667,12 +685,13 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
           <pre class="api-signature">struct ClockEstimate {'{'} offset_us: i32, rate_ppb: Option&lt;i32&gt;, delay_us: u16, age: Option&lt;Duration&gt; {'}'}</pre>
           <p>
             The <code>clock</code> field of a{' '}
-            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, and the only thing
-            that puts stamps from both{' '}
-            <A href="/library/types/enums#clock-domain">clock domains</A> on one timeline. The box measures the difference with a four-timestamp exchange across the
-            inter-chip link, stamping each frame as it reaches the wire rather than when it is queued:
-            queueing is the largest and most variable delay on that link, and stamping late removes it
-            from the measurement instead of leaving it to be filtered out afterwards.
+            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, and the only
+            thing that puts stamps from both{' '}
+            <A href="/library/types/enums#clock-domain">clock domains</A> on one timeline.
+          </p>
+          <p>
+            The box measures the difference with a four-timestamp exchange across the inter-chip link,
+            stamping each frame as it reaches the wire rather than when it is queued.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -680,7 +699,7 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
               <tr><td><code>offset_us</code></td><td><code>i32</code></td><td>The host chip's clock minus the device chip's, in microseconds. Add it to a device-domain stamp to read it on the host's timeline, subtract it to go the other way.</td></tr>
               <tr><td><code>rate_ppb</code></td><td><code>Option&lt;i32&gt;</code></td><td>How fast the two are drifting apart, in parts per billion, or <code>None</code> when the box has fitted no rate. Not the same as a fitted <code>0</code>: on a link too busy for enough clean exchanges no fit is made at all, which is when assuming no drift costs the most.</td></tr>
               <tr><td><code>delay_us</code></td><td><code>u16</code></td><td>The best round trip measured in the window; the offset is good to about half of it.</td></tr>
-              <tr><td><code>age_ms</code></td><td><code>Option&lt;u16&gt;</code></td><td>How long ago the exchange ran. <code>None</code> = no estimate yet.</td></tr>
+              <tr><td><code>age</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long ago the exchange ran. <code>None</code> = no estimate yet.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">WHY EACH FIELD IS THERE</div>
@@ -691,38 +710,92 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
             to trust digits that were never measured.
           </p>
           <p>
-            <code>rate_ppb</code> exists because the two ESP32-S3s run off separate crystals, which
-            drift against each other by up to 20 µs per second. An offset taken five seconds ago can
-            therefore already be 100 µs stale, which is larger than most of what a trace is trying to
-            resolve. Extrapolating with the rate is what keeps an estimate usable between exchanges
-            instead of forcing a fresh query for every comparison — <code>drift_us_over(age)</code>
-            does the arithmetic.
+            <code>rate_ppb</code> is drift. The two ESP32-S3s run off separate crystals that pull
+            apart by up to 20 µs per second, so an offset taken five seconds ago can already be 100 µs
+            stale. <code>drift_us_over(age)</code> does the arithmetic.
           </p>
           <p>
-            It is an <code>Option</code> for the same reason <code>age</code> is. A fitted <code>0</code>
-            says the two crystals are matched; <code>None</code> says nothing has been fitted, which is
-            the state the box stays in when the link is busy enough that too few clean exchanges reach
-            its delay filter — exactly when assuming no drift is least safe. <code>drift_us_over</code>
-            returns 0 for <code>None</code> because that is what is known, not a claim about drift.
+            A fitted <code>0</code> says the crystals are matched; <code>None</code> says nothing has
+            been fitted, which is where a busy link leaves it. <code>drift_us_over</code> returns 0
+            for <code>None</code>: that is what is known, not a claim about drift.
           </p>
           <p>
-            <code>age_ms</code> is an <code>Option</code> because "no estimate yet" and "the offset
-            happens to be zero" both report an offset of zero, and only one of them is a number you may
-            use. The wire distinguishes them with a sentinel age; the crate turns that into{' '}
-            <code>None</code> so the two cannot be confused by accident.
+            <code>age</code> is an <code>Option</code> because "no estimate yet" and a zero offset
+            both read as zero, and only one may be used. The wire marks the first with a sentinel age,
+            which the crate decodes to <code>None</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let clock = device.query_catch()?.clock;
-match clock.age_ms {
+match clock.age {
     None => println!("no cross-chip estimate yet: compare stamps within one domain only"),
     Some(age) => {
-        let drift_us = clock.rate_ppb as i64 * age as i64 / 1_000_000;
-        let offset_now = clock.offset_us as i64 + drift_us;
-        println!("offset {offset_now} us, +/- {} us", clock.delay_us / 2);
+        let offset_now = clock.offset_us as i64 + clock.drift_us_over(age);
+        println!("offset {offset_now} us, +/- {} us", clock.error_bound_us());
     }
 }`}</code></pre>
         </Card>
       </div>
+      <div id="timeline" data-search-target>
+        <Card>
+          <CardHeader title="Timeline" subtitle="Box stamps on this machine's clock" />
+          <pre class="api-signature">struct Timeline {'{'} /* private */ {'}'}</pre>
+          <p>
+            A catch stamp is microseconds on a chip that booted before this process did: it wraps
+            every ~71.6 minutes, restarts at zero on reboot, and has no relation to any clock here.
+            Feed every event in as it arrives, in order.
+          </p>
+          <p>
+            <code>&amp;event</code> is anything implementing <code>Timestamped</code>: an{' '}
+            <A href="/library/types/structs#input-event"><code>InputEvent</code></A>, a{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>, or one of the
+            three frame structs. The decoded and raw paths share one timeline.
+          </p>
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>observe(&amp;event)</code></td><td><A href="/library/types/structs#stamped"><code>Stamped</code></A></td><td>Place an event on this machine's clock, taking the arrival as now.</td></tr>
+              <tr><td><code>observe_at(&amp;event, now)</code></td><td><code>Stamped</code></td><td>The same with the arrival supplied, for replaying a capture.</td></tr>
+              <tr><td><code>observe_stamp(ts_us, domain, now)</code></td><td><code>Stamped</code></td><td>The same from a stamp and domain held on their own.</td></tr>
+              <tr><td><code>box_us(&amp;event)</code></td><td><code>u64</code></td><td>The stamp unwrapped past the rollover, monotonic within its domain.</td></tr>
+              <tr><td><code>reset(domain)</code></td><td><code>()</code></td><td>Forget one domain's rollover count and floor, for a chip that rebooted.</td></tr>
+              <tr><td><code>samples(domain)</code></td><td><code>u64</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Each domain is tracked separately, so both chips' stamps land on one comparable timeline.
+          </p>
+          <p>
+            The mapping keeps a per-domain minimum of (elapsed here − elapsed on the box) rather than
+            an average, because an event can arrive late but never early. It improves as it runs and
+            never steps backwards.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{CatchFilter, Timeline};
+
+let mut input = device.input_events(CatchFilter::all_input())?;
+let mut time = Timeline::new();
+for ev in input.by_ref().take(20) {
+    println!("{:?} at {:?}", ev.input, time.observe(&ev).host);
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="stamped" data-search-target>
+        <Card>
+          <CardHeader title="Stamped" subtitle="One event placed on this machine's clock" />
+          <pre class="api-signature">struct Stamped {'{'} host: Instant, box_us: u64, excess: Duration {'}'}</pre>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>host</code></td><td><code>Instant</code></td><td>When the event happened, on this machine's monotonic clock.</td></tr>
+              <tr><td><code>box_us</code></td><td><code>u64</code></td><td>The event's own stamp, unwrapped past the 32-bit rollover.</td></tr>
+              <tr><td><code>excess</code></td><td><code>Duration</code></td><td>How much later than the measured floor this event reached you. Jitter, not latency: the constant part of the delay is unknowable from here.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="imperfect-status" data-search-target>
         <Card>
           <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />

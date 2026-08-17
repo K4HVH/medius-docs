@@ -37,15 +37,15 @@ import {
   Q_VERSION,
   INJ_KEY,
   INJ_MEDIA,
+  Direction,
   LedMode,
   LedTarget,
-  LockDirection,
   RebootTarget,
   catchPayload,
   clearNamePayload,
   emitPayload,
   encode,
-  filterAll,
+  filterEverything,
   imperfectPayload,
   injectPayload,
   ledPayload,
@@ -271,13 +271,13 @@ export class SerialLink {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
-  lock(target: LockTarget, direction: LockDirection): Promise<void> {
+  lock(target: LockTarget, direction: Direction): Promise<void> {
     return this.send(
       encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 1)),
     );
   }
 
-  unlock(target: LockTarget, direction: LockDirection): Promise<void> {
+  unlock(target: LockTarget, direction: Direction): Promise<void> {
     return this.send(
       encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 0)),
     );
@@ -304,26 +304,26 @@ export class SerialLink {
       encode(
         FrameType.Catch,
         this.nextSeq(),
-        catchPayload(filter.cls, filter.id, filter.dir, 1, filter.snaplen),
+        catchPayload(filter.cls, filter.id, filter.dir, 1, filter.capture),
       ),
     );
   }
 
   // Drop one entry from the table. Unsubscribing matches on (class, id, dir) alone, so the
-  // filter's snaplen is carried for symmetry and ignored by the box.
+  // filter's capture length is carried for symmetry and ignored by the box.
   unsubscribeCatch(filter: CatchFilter): Promise<void> {
     return this.send(
       encode(
         FrameType.Catch,
         this.nextSeq(),
-        catchPayload(filter.cls, filter.id, filter.dir, 0, filter.snaplen),
+        catchPayload(filter.cls, filter.id, filter.dir, 0, filter.capture),
       ),
     );
   }
 
   // Clear the whole table in one frame: the all-classes wildcard with state 0.
   uncatch(): Promise<void> {
-    return this.unsubscribeCatch(filterAll());
+    return this.unsubscribeCatch(filterEverything());
   }
 
   // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted in NVS; the box

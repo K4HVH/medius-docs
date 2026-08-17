@@ -33,13 +33,13 @@ const Lock: Component = () => {
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="lock" subtitle="Block a physical input" />
-          <pre class="api-signature">fn lock(&self, target: impl Into&lt;LockTarget&gt;, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn lock(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> picks the input and{' '}
-            <A href="/library/types/enums#lock-direction"><code>LockDirection</code></A> picks the sign
-            or edge. For an axis or the wheel the direction is a sign, so you can block scrolling up but
-            not down; for a usage it's an edge, so you can block the press but not the release.
+            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> picks the input,{' '}
+            <A href="/library/types/enums#direction"><code>Direction</code></A> picks the sign or edge.
+            For an axis it is a sign; for a usage it is an edge, also spelled{' '}
+            <code>Direction::PRESS</code> and <code>Direction::RELEASE</code>.
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
@@ -48,7 +48,7 @@ const Lock: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#lock-direction"><code>LockDirection</code></A></td><td><code>Both</code>, <code>Positive</code> (axis +, usage press), or <code>Negative</code> (axis -, usage release).</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Both</code>, <code>Positive</code> (axis +, usage press), or <code>Negative</code> (axis -, usage release).</td></tr>
             </tbody>
           </table>
           <p>
@@ -59,20 +59,20 @@ const Lock: Component = () => {
             <A href="/native/commands/lock#lock"><code>LOCK</code></A> command for the wire layout.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, Button, Key, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, Button, Key, Direction};
 
 let device = Device::find()?;
-device.lock(Axis::X, LockDirection::Both)?;              // freeze horizontal motion
-device.lock(Button::Left, LockDirection::Positive)?;     // block left-click press
-device.lock(Key::LEFT_GUI, LockDirection::Both)?;        // block the GUI/Windows key
-device.move_rel(50, 0)?;                                 // injection still moves X`}</code></pre>
+device.lock(Axis::X, Direction::Both)?;           // freeze horizontal motion
+device.lock(Button::Left, Direction::Positive)?;  // block left-click press
+device.lock(Key::LEFT_GUI, Direction::Both)?;     // block the GUI/Windows key
+device.move_rel(50, 0)?;                          // injection still moves X`}</code></pre>
         </Card>
       </div>
 
       <div id="unlock" data-search-target>
         <Card>
           <CardHeader title="unlock" subtitle="Clear a block" />
-          <pre class="api-signature">fn unlock(&self, target: impl Into&lt;LockTarget&gt;, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn unlock(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             The inverse of <A href="/library/lock#lock"><code>lock</code></A>: same{' '}
@@ -80,18 +80,18 @@ device.move_rel(50, 0)?;                                 // injection still move
             it. Hand a physical input back to the user.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
-device.unlock(Axis::X, LockDirection::Both)?;   // hand horizontal motion back`}</code></pre>
+device.unlock(Axis::X, Direction::Both)?;   // hand horizontal motion back`}</code></pre>
         </Card>
       </div>
 
       <div id="lock-axis" data-search-target>
         <Card>
           <CardHeader title="lock_axis / unlock_axis" subtitle="Block a relative axis by sign" />
-          <pre class="api-signature">fn lock_axis(&self, axis: Axis, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
-          <pre class="api-signature">fn unlock_axis(&self, axis: Axis, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn lock_axis(&self, axis: Axis, direction: Direction) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn unlock_axis(&self, axis: Axis, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Convenience for <A href="/library/lock#lock"><code>lock</code></A> /{' '}
@@ -100,19 +100,19 @@ device.unlock(Axis::X, LockDirection::Both)?;   // hand horizontal motion back`}
             positive-only lock freezes scroll-up while scroll-down still passes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
-device.lock_axis(Axis::Wheel, LockDirection::Positive)?; // block scroll up, keep scroll down
-device.unlock_axis(Axis::Wheel, LockDirection::Positive)?;`}</code></pre>
+device.lock_axis(Axis::Wheel, Direction::Positive)?; // block scroll up, keep scroll down
+device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
         </Card>
       </div>
 
       <div id="lock-all" data-search-target>
         <Card>
           <CardHeader title="lock_all / unlock_all" subtitle="Blanket-block a whole class" />
-          <pre class="api-signature">fn lock_all(&self, what: Blanket, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
-          <pre class="api-signature">fn unlock_all(&self, what: Blanket, direction: LockDirection) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn lock_all(&self, what: Blanket, direction: Direction) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn unlock_all(&self, what: Blanket, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Block an entire input group at once with a{' '}
@@ -122,11 +122,11 @@ device.unlock_axis(Axis::Wheel, LockDirection::Positive)?;`}</code></pre>
             to.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Blanket, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Blanket, Direction};
 
 let device = Device::find()?;
-device.lock_all(Blanket::Keys, LockDirection::Both)?;   // every physical key blocked
-device.unlock_all(Blanket::Keys, LockDirection::Both)?;`}</code></pre>
+device.lock_all(Blanket::Keys, Direction::Both)?;   // every physical key blocked
+device.unlock_all(Blanket::Keys, Direction::Both)?;`}</code></pre>
         </Card>
       </div>
 
@@ -141,10 +141,10 @@ device.unlock_all(Blanket::Keys, LockDirection::Both)?;`}</code></pre>
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;
-use medius::{AsyncDevice, Axis, LockDirection};
+use medius::{AsyncDevice, Axis, Direction};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
-device.lock(Axis::Y, LockDirection::Both)?;   // sync, no await
+device.lock(Axis::Y, Direction::Both)?;       // sync, no await
 let locks = block_on(device.query_locks())?;  // query awaits`}</code></pre>
         </Card>
       </div>

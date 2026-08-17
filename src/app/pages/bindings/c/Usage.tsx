@@ -56,6 +56,13 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>9</td><td>A bad argument (e.g. a null handle).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td>10</td><td>An internal panic was caught at the boundary.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td>11</td><td>Unspecified, or a platform-gated call on an unsupported OS.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CATCH_TABLE_FULL</code></td><td>12</td><td>The subscription needs more entries than the box's table holds.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_EMPTY_SUBSCRIPTION</code></td><td>13</td><td>A catch subscription with no filters, which would never yield an event.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CAPTURE_NOT_APPLICABLE</code></td><td>14</td><td>A non-zero <code>capture</code> on an input class, which carries no packet.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NOT_AN_INPUT_FILTER</code></td><td>15</td><td>A traffic class passed to <A href="/bindings/c/streams#input"><code>medius_device_input_events</code></A>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td>16</td><td>The everything filter passed to <code>medius_device_input_events</code>; it covers traffic too.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>17</td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td>18</td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READING THE DETAIL</div>
@@ -130,6 +137,18 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
                 <td><code>medius_event_stream_free</code></td>
               </tr>
               <tr>
+                <td><A href="/bindings/c/streams#input"><code>MediusInputStream</code></A></td>
+                <td><code>medius_device_input_events</code></td>
+                <td>-</td>
+                <td><code>medius_input_stream_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A></td>
+                <td><code>medius_timeline_new</code></td>
+                <td>-</td>
+                <td><code>medius_timeline_free</code></td>
+              </tr>
+              <tr>
                 <td><A href="/library/diagnostics"><code>MediusLogStream</code></A></td>
                 <td><code>medius_device_logs</code></td>
                 <td><code>medius_log_stream_clone</code></td>
@@ -170,7 +189,7 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               last handle drops; catch events and log lines are fixed-size structs written into your
               buffer, so there's nothing to free per event. Captured packet bytes are no exception: a{' '}
               <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds them
-              in an inline <code>bytes[MEDIUS_TRAFFIC_MAX_BYTES]</code> array with a <code>len</code>{' '}
+              in an inline <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> array with a <code>len</code>{' '}
               beside it, so a copied event owns nothing and outlives the stream it came from.
             </p>
           </div>
@@ -185,9 +204,9 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
             <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
             targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
-            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, each with a helper
-            constructor, plus <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>,
-            which you fill in yourself. A <code>MediusUsage</code> holds a{' '}
+            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, plus{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>, each with a
+            helper constructor. A <code>MediusUsage</code> holds a{' '}
             <A href="/native/commands/usage#buttons">button id</A>,{' '}
             <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
             <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
@@ -205,6 +224,9 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
               <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
               <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
+              <tr><td><code>medius_catch_filter_watch(MediusUsage)</code></td><td><code>MediusCatchFilter</code></td><td rowspan="3"><A href="/library/catch">catch</A> / <A href="/bindings/c/api#catch-filters">the whole helper set</A></td></tr>
+              <tr><td><code>medius_catch_filter_watch_axis(MediusAxis)</code></td><td><code>MediusCatchFilter</code></td></tr>
+              <tr><td><code>medius_catch_filter_traffic(MediusCatchClass, uint16_t)</code></td><td><code>MediusCatchFilter</code></td></tr>
             </tbody>
           </table>
           <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
@@ -218,10 +240,10 @@ medius_device_move_axis(dev, m);
 
 /* lock: an axis, or any usage */
 MediusLockTarget x = medius_lock_target_axis(MEDIUS_LOCK_TARGET_KIND_X);
-medius_device_lock(dev, x, MEDIUS_LOCK_DIRECTION_BOTH);
+medius_device_lock(dev, x, MEDIUS_DIRECTION_BOTH);
 
 MediusLockTarget side = medius_lock_target_usage(medius_usage_button(MEDIUS_BUTTON_SIDE1));
-medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
+medius_device_lock(dev, side, MEDIUS_DIRECTION_BOTH);`}</code></pre>
           <div class="callout callout--info">
             <p>
               A button, key, and media usage all lock the same way:{' '}
@@ -230,41 +252,22 @@ medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
               <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
             </p>
           </div>
-          <div class="api-response-label">CATCH FILTERS HAVE NO CONSTRUCTOR</div>
           <p>
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> is the fourth
-            value struct, and the only one with no <code>medius_*</code> builder. Rust's version is a
-            builder chain because its fields have defaults; C has designated initializers, which give
-            the same "name the fields that matter" shape with no call, so the header does not carry a
-            constructor that would only be spelling the struct out again. Every field must still be
-            set: an omitted one is zero, and zero is legal in all four, so a forgotten field is never
-            an error. In three of them it quietly becomes something specific and probably wrong
-            (<code>class_ = 0</code> is <code>BUTTON</code>, <code>id = 0</code> is button id 0,{' '}
-            <code>direction = 0</code> is <code>BOTH</code>); in <code>snaplen</code> it becomes the
-            widest capture there is, the whole packet, which is the one field where forgetting costs
-            you link budget rather than the wrong subscription.
+            A catch filter narrows the same way: a base names what to observe, a modifier returns a
+            narrowed copy. Nothing is mutated, so one blanket can be the base for several entries.
+            Fields are on <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Set it to</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>A <code>MEDIUS_CATCH_CLASS_*</code>. Named with the trailing underscore because <code>class</code> is a C++ keyword and the header compiles as both languages.</td></tr>
-              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The id inside that class, or <code>MEDIUS_CATCH_ID_ALL</code> for every one of them.</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/bindings/c/types#lock-direction"><code>MediusLockDirection</code></A></td><td>The same enum a lock uses: an edge for input classes, a transfer direction for traffic classes.</td></tr>
-              <tr><td><code>snaplen</code></td><td><code>uint8_t</code></td><td>Bytes to capture per event; <code>0</code> for the whole packet.</td></tr>
-            </tbody>
-          </table>
-          <pre><code class="language-c">{`/* catch: address a class, or one id inside it, per entry */
-MediusCatchFilter filters[2] = {
-    /* every key edge, whole report */
-    { .class_ = MEDIUS_CATCH_CLASS_KEY,       .id = MEDIUS_CATCH_ID_ALL,
-      .direction = MEDIUS_LOCK_DIRECTION_BOTH, .snaplen = 0 },
-    /* one vendor endpoint's IN packets, first 16 bytes each */
-    { .class_ = MEDIUS_CATCH_CLASS_VEND_INTR, .id = 0x83,
-      .direction = MEDIUS_LOCK_DIRECTION_POSITIVE, .snaplen = 16 },
-};
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`/* every key edge, whole report */
+MediusCatchFilter keys = medius_catch_filter_watch_class(MEDIUS_CLASS_KEY);
 
+/* one vendor endpoint's IN packets, first 16 bytes each */
+MediusCatchFilter ep = medius_catch_filter_with_capture(
+    medius_catch_filter_inbound(
+        medius_catch_filter_traffic(MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT, 0x83)),
+    16);
+
+MediusCatchFilter filters[2] = { keys, ep };
 MediusEventStream *events = NULL;
 medius_device_catch_events(dev, filters, 2, &events);   /* the array is not retained */`}</code></pre>
           <div class="callout callout--warning">

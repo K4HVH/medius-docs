@@ -71,11 +71,8 @@ int main(void) {
     check(medius_device_press(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "press");
     check(medius_device_soft_release(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "release");
 
-    /* one subscription entry: every axis, both directions, whole packet */
-    MediusCatchFilter axes = { .class_ = MEDIUS_CATCH_CLASS_AXIS,
-                               .id = MEDIUS_CATCH_ID_ALL,
-                               .direction = MEDIUS_LOCK_DIRECTION_BOTH,
-                               .snaplen = 0 };
+    /* one subscription entry: X, Y and the wheel, both directions */
+    MediusCatchFilter axes = medius_catch_filter_watch_axes();
 
     MediusEventStream *events = NULL;
     if (!check(medius_device_catch_events(dev, &axes, 1, &events), "catch_events")) {
@@ -97,12 +94,13 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
           <p>
             The subscription is an array of{' '}
             <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, and
-            this program passes one. Each entry names a{' '}
-            <A href="/bindings/c/types#catch-class">class</A>, an id inside it (here{' '}
-            <code>MEDIUS_CATCH_ID_ALL</code>, so every axis), a direction, and a <code>snaplen</code>.
-            Wanting keys as well is a second entry with <code>class_ = MEDIUS_CATCH_CLASS_KEY</code>;
-            wanting a vendor endpoint's raw packets is a third. The array is read during the call, so a
-            local like this one is fine.
+            this program passes one. Wanting keys as well is a second entry from{' '}
+            <code>medius_catch_filter_watch_class</code>; wanting a vendor endpoint's raw packets is a
+            third from <code>medius_catch_filter_traffic</code>.
+          </p>
+          <p>
+            The array is read during the call and not retained, so a local like this one is fine. The
+            whole helper set is on <A href="/bindings/c/api#catch-filters">API index</A>.
           </p>
           <div class="callout callout--info">
             <p>
