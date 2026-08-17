@@ -69,7 +69,6 @@ const Clip: Component = () => {
             take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, so chain them or push in a
             loop; <code>clear()</code> reuses the allocation.
           </p>
-          <div class="api-response-label">METHODS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Appends</th></tr>

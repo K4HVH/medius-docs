@@ -47,7 +47,7 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
           <p>
             Every filter must name an input class and cover both edges; anything else is{' '}
             <A href="/library/types/errors">refused</A>. Without the release edge a fresh press cannot
-            be told from a chord, so filter on <code>Input::Press</code> instead.
+            be told from a chord, so match on <code>Input::Press</code> instead.
           </p>
         </Card>
       </div>
@@ -63,7 +63,6 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
             <A href="/library/catch#event-stream"><code>EventStream</code></A> receives every event any
             of them matches.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -102,7 +101,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
             The input constructors take what <A href="/library/lock#lock"><code>lock</code></A> takes,
             so hiding an input from the game and watching it are written alike.
           </p>
-          <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
             <thead>
               <tr><th>Constructor</th><th>Addresses</th></tr>
@@ -118,7 +116,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>CatchFilter::everything()</code></td><td>every class, every id. One table entry, not an expansion.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MODIFIERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Modifier</th><th>Effect</th></tr>
@@ -127,7 +124,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>.on_press() / .on_release()</code></td><td>One edge, on the momentary classes.</td></tr>
               <tr><td><code>.inbound() / .outbound()</code></td><td>One flow, on the traffic classes: IN is device to PC.</td></tr>
               <tr><td><code>.with_direction(d)</code></td><td>The <A href="/library/types/enums#direction"><code>Direction</code></A> directly; on an axis it is the sign of the delta.</td></tr>
-              <tr><td><code>.with_capture(c)</code></td><td>Bytes kept per event, as a <A href="/library/types/enums#capture"><code>Capture</code></A>. Traffic classes only — an input class carries no packet, and naming one with a capture is refused.</td></tr>
+              <tr><td><code>.with_capture(c)</code></td><td>Bytes kept per event, as a <A href="/library/types/enums#capture"><code>Capture</code></A>. Traffic classes only. An input class carries no packet, and naming one with a capture is refused.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MOST-SPECIFIC-FIRST</div>
@@ -164,11 +161,10 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
             an <code>Iterator</code>, so a <code>for</code> loop over it works.
           </p>
           <p>
-            It reports only the usages <em>this</em> subscription addressed. The box holds one table —
-            the union of every subscription in the process — so its snapshots widen as soon as
-            unrelated code subscribes; the decoder filters them back down.
+            It reports only the usages <em>this</em> subscription addressed. The box holds one table,
+            the union of every subscription in the process, so its snapshots widen as soon as
+            unrelated code subscribes. The decoder filters them back down.
           </p>
-          <div class="api-response-label">METHODS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
@@ -193,7 +189,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
             The handle <A href="/library/catch#catch-events"><code>catch_events</code></A> returns.
             Cloning shares the queue. When the stream and all its clones drop, the subscription ends.
           </p>
-          <div class="api-response-label">METHODS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
@@ -325,7 +320,7 @@ for ev in input.by_ref().take(20) {
     }
 }`}</code></pre>
           <p>
-            It keeps a per-domain minimum of (elapsed here − elapsed on the box) rather than an
+            It keeps a per-domain minimum of (elapsed here minus elapsed on the box) rather than an
             average, because the error is one-sided: an event can arrive late but never early.
           </p>
           <div class="api-response-label">CROSSING DOMAINS ON THE BOX</div>

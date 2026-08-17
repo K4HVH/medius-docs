@@ -123,7 +123,6 @@ const Clip: Component = () => {
               <tr><td>media</td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">ACTION</div>
           <table class="api-params">
             <thead>
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
@@ -241,7 +240,6 @@ const Clip: Component = () => {
           </p>
           <pre class="api-signature">CLIP_CTRL  0x13  ·  payload [op u8]</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">OPS</div>
           <table class="api-params">
             <thead>
               <tr><th>op</th><th>Name</th><th>Effect</th></tr>
@@ -400,7 +398,6 @@ link loss   the inter-chip link drops`}</pre>
               <tr><td>any</td><td><code>0xFF</code></td><td>ignored (any input fires)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EDGE</div>
           <table class="api-params">
             <thead><tr><th>Edge</th><th>Value</th><th>Fires on</th></tr></thead>
             <tbody>

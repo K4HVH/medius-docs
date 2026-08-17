@@ -153,7 +153,7 @@ const Enums: Component = () => {
             The wire sentinels never appear in Rust:{' '}
             <code>CatchFilter::watch_class(c)</code> and <code>traffic_class(c)</code> are the
             per-class blankets, and <code>CatchFilter::everything()</code> is the wildcard over all
-            eleven — it is not a <code>CatchClass</code> variant.
+            eleven, and is not a <code>CatchClass</code> variant.
           </p>
           <div class="api-response-label">BEFORE AND AFTER</div>
           <p>
@@ -208,7 +208,7 @@ let trace = device.catch_events([
           <CardHeader title="Capture" subtitle="How much of each packet to keep" />
           <pre class="api-signature">enum Capture {'{'} Whole, First(u8) {'}'}</pre>
           <p>
-            Traffic classes only — an input class carries no packet, and naming one together with a
+            Traffic classes only. An input class carries no packet, so naming one together with a
             capture is refused rather than ignored. It exists because the control link runs at
             4&nbsp;Mbaud and a vendor bulk pipe at whole packets saturates it on its own.
           </p>
@@ -522,7 +522,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <p>
             One rolling <code>seq</code> counter covers all three frame types, so the stream stays
             ordered whatever the mix. It counts what the box <em>sent</em>, not what it saw, so a
-            gap is not how you detect loss — <A href="/library/types/structs#catch-state"><code>CatchState</code></A> is.
+            gap is not how you detect loss. <A href="/library/types/structs#catch-state"><code>CatchState</code></A> is.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
@@ -608,7 +608,7 @@ match stream.recv()? {
           <p>
             The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
             event. Read it with <code>TrafficEvent::bus_event()</code>, which returns{' '}
-            <code>Option&lt;BusEvent&gt;</code> — <code>None</code> for a kind this build does not
+            <code>Option&lt;BusEvent&gt;</code>, which is <code>None</code> for a kind this build does not
             know. The two kinds that carry operands parse them into their own fields.
           </p>
           <table class="api-params">

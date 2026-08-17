@@ -356,9 +356,9 @@ const Catch: Component = () => {
             button stays sparse even though the mouse reports at ~1&nbsp;kHz.
           </p>
           <p>
-            <strong>Both header fields exist for the empty snapshot.</strong> A snapshot lists what is
-            currently <em>held</em>, so the release of a usage is the snapshot that no longer names it
-            — which means the event a caller most needs carries nothing to identify itself by. Without{' '}
+            Both header fields exist for the empty snapshot. A snapshot lists what is
+            currently <em>held</em>, so the release of a usage is the snapshot that no longer names it.
+            The event a caller most needs therefore carries nothing to identify itself by. Without{' '}
             <code>cls</code>, "all buttons released" and "all keys released" are the same bytes.
             Without <code>dir</code>, a direction on an input subscription cannot be honoured at all:
             the box resolves each usage against its entry's direction, but as soon as any other
@@ -368,7 +368,7 @@ const Catch: Component = () => {
           <p>
             Route these by <strong>class</strong>, not by which usages appear, and diff successive
             snapshots for the usages you care about. Matching on the usages present instead drops
-            exactly the release edge — and only when some other subscription's usage happens to still
+            exactly the release edge, and only when some other subscription's usage happens to still
             be held, which is what makes it invisible until it matters.
           </p>
           <div class="api-response-label">EXAMPLE</div>

@@ -54,7 +54,6 @@ const Inject: Component = () => {
               <tr><td><A href="/native/commands/inject#media">media</A></td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">ACTIONS</div>
           <table class="api-params">
             <thead>
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>

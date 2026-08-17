@@ -51,7 +51,6 @@ device.move_axis(Motion::Wheel(1))?;                  // one notch up`}</code></
             A wrapper over <A href="/library/move#move"><code>move_axis</code></A> with{' '}
             <code>Motion::Cursor</code>.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -81,7 +80,6 @@ device.move_rel(0, -10)?;  // up`}</code></pre>
             A wrapper over <A href="/library/move#move"><code>move_axis</code></A> with{' '}
             <code>Motion::Wheel</code>.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>

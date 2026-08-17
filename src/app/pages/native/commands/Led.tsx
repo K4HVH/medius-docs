@@ -36,7 +36,6 @@ const Led: Component = () => {
               <tr><td>2</td><td><code>level</code></td><td><code>u8</code></td><td>brightness 0-255; used by solid and blink, ignored for off and auto</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TARGETS</div>
           <table class="api-params">
             <thead>
               <tr><th>Target</th><th>Value</th><th>LED</th></tr>
@@ -47,7 +46,6 @@ const Led: Component = () => {
               <tr><td>both</td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MODES</div>
           <table class="api-params">
             <thead>
               <tr><th>Mode</th><th>Value</th><th>Effect</th></tr>

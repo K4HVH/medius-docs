@@ -18,7 +18,7 @@ const Types: Component = () => {
         </p>
         <div class="callout callout--info">
           <p>
-            <strong>How C models the enums.</strong> Each enum has a fixed-width backing:{' '}
+            Each enum has a fixed-width backing:{' '}
             <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> is <code>int32_t</code>;
             every other enum is <code>uint8_t</code>. On{' '}
             <a href="https://en.cppreference.com/w/c/language/enum" target="_blank" rel="noreferrer">C23</a>{' '}

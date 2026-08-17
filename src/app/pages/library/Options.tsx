@@ -37,7 +37,6 @@ const Options: Component = () => {
             setting changes for an <em>attached over-capacity</em> device the box reboots itself to
             re-clone, so it lands without unplugging anything; a normal device is unaffected (no reboot).
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -72,7 +71,6 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
             The tradeoff is deliberate: pure idle injection, moving the cursor while the user holds
             still, stops working while riding is on. Button, key, and media injection are unaffected.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -111,7 +109,6 @@ device.set_movement_riding(None)?;                             // back to gaples
             modes are for a host that models its own report density and wants the box to stop re-pacing
             an already-shaped stream.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -141,7 +138,6 @@ device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace
             bytes, and an empty string clears it. Unlike the other options it is read not by a query but
             off <A href="/library/types/structs#version"><code>Version::name</code></A>, like the MAC.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>

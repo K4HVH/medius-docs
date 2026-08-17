@@ -99,7 +99,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
             <code>PROTO_VER</code> is the{' '}
             <A href="/native/frame#layout"><code>control protocol</code></A> version this build speaks.
             A box reporting anything else is refused at the{' '}
-            <A href="/native/connection#handshake">handshake</A> — it is exposed so a caller can say so
+            <A href="/native/connection#handshake">handshake</A>. It is exposed so a caller can say so
             in its own words, or check a box before connecting, rather than only learning it from an
             error.
           </p>

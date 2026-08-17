@@ -24,7 +24,6 @@ const Tracing: Component = () => {
       <div id="targets" data-search-target>
         <Card>
           <CardHeader title="Targets and levels" subtitle="What the crate emits and where" />
-          <div class="api-response-label">TARGETS</div>
           <table class="api-params">
             <thead>
               <tr><th>Target</th><th>Levels</th><th>Emitted</th></tr>
