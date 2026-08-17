@@ -74,6 +74,27 @@ describe('dashboard search index', () => {
     }
   });
 
+  it('finds the catch rework by the names it introduced', () => {
+    // The error names are what a user pastes in after seeing one, and the existing error entries
+    // already index their constants, so these follow that convention rather than adding entries.
+    const all = allEntries.map(haystack).join(' \n ');
+    const introduced = [
+      'catchtablefull', 'emptysubscription', 'capturenotapplicable', 'notaninputfilter',
+      'wildcardnotinput', 'halfedgeinputfilter', 'reservedid',
+      'medius_status_err_catch_table_full', 'err_catch_table_full', 'catchtablefullerror',
+      'is_connected', 'timestamped', 'clockdomain', 'ts_us', 'input_events', 'watch_axes',
+      'capture', 'timeline', 'inputstream',
+    ];
+    expect(introduced.filter((t) => !all.includes(t))).toEqual([]);
+  });
+
+  it('keeps the old name for the wire field the spec still uses', () => {
+    // The crate renamed the concept to Capture, but the protocol byte is still snaplen, so the
+    // native page needs the old name and the crate page keeps it as a bridge.
+    const all = allEntries.map(haystack).join(' \n ');
+    expect(all).toContain('snaplen');
+  });
+
   it('has no duplicate labels within the group', () => {
     const labels = dash.map((e) => e.label);
     expect(labels).toEqual([...new Set(labels)]);
