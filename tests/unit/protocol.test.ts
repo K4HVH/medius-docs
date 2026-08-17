@@ -65,6 +65,9 @@ import {
   vidPid,
   moveCursorPayload,
   moveWheelPayload,
+  MV_F_DISCARD,
+  MV_F_FLUSH,
+  MV_F_NOW,
 } from '../../src/dashboard/protocol';
 
 const toHex = (b: Uint8Array) =>
@@ -826,23 +829,32 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
 });
 
 describe('MOVE command (§3.1)', () => {
-  it('cursor payload is [motion=0][dx i16 LE][dy i16 LE]', () => {
-    expect(Array.from(moveCursorPayload(5, -3))).toEqual([0, 5, 0, 0xfd, 0xff]);
+  it('cursor payload is [motion=0][dx i16 LE][dy i16 LE][flags]', () => {
+    expect(Array.from(moveCursorPayload(5, -3))).toEqual([0, 5, 0, 0xfd, 0xff, 0]);
   });
 
-  it('wheel payload is [motion=1][dz i16 LE]', () => {
-    expect(Array.from(moveWheelPayload(-2))).toEqual([1, 0xfe, 0xff]);
+  it('wheel payload is [motion=1][dz i16 LE][flags]', () => {
+    expect(Array.from(moveWheelPayload(-2))).toEqual([1, 0xfe, 0xff, 0]);
   });
 
   it('saturates rather than wrapping past the i16 the wire carries', () => {
     // Wrapping would turn a big positive delta into a big negative one and fling the cursor the
     // opposite way, which is worse than clamping.
-    expect(Array.from(moveCursorPayload(40000, -40000))).toEqual([0, 0xff, 0x7f, 0x00, 0x80]);
-    expect(Array.from(moveWheelPayload(99999))).toEqual([1, 0xff, 0x7f]);
+    expect(Array.from(moveCursorPayload(40000, -40000))).toEqual([0, 0xff, 0x7f, 0x00, 0x80, 0]);
+    expect(Array.from(moveWheelPayload(99999))).toEqual([1, 0xff, 0x7f, 0]);
   });
 
   it('rounds a fractional delta instead of truncating it into the wire', () => {
-    expect(Array.from(moveCursorPayload(1.6, -1.6))).toEqual([0, 2, 0, 0xfe, 0xff]);
+    expect(Array.from(moveCursorPayload(1.6, -1.6))).toEqual([0, 2, 0, 0xfe, 0xff, 0]);
+  });
+
+  it('carries the movement-riding override in the flags byte', () => {
+    expect(Array.from(moveCursorPayload(1, 1, MV_F_NOW))).toEqual([0, 1, 0, 1, 0, 0x01]);
+    expect(Array.from(moveCursorPayload(0, 0, MV_F_FLUSH))).toEqual([0, 0, 0, 0, 0, 0x02]);
+    expect(Array.from(moveCursorPayload(0, 0, MV_F_DISCARD))).toEqual([0, 0, 0, 0, 0, 0x04]);
+    expect(Array.from(moveWheelPayload(1, MV_F_NOW))).toEqual([1, 1, 0, 0x01]);
+    // Bits the box does not define are masked off rather than sent, since it ignores them anyway.
+    expect(Array.from(moveCursorPayload(0, 0, 0xf8))).toEqual([0, 0, 0, 0, 0, 0]);
   });
 });
 

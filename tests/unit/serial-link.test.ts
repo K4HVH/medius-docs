@@ -191,6 +191,32 @@ describe('SerialLink', () => {
     await link.close();
   });
 
+  it('gives each movement verb its own MOVE flags byte', async () => {
+    // One level above the payload builders: this is where a verb wired to the wrong flag hides, since
+    // every one of these produces a well-formed MOVE frame either way.
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.moveRel(7, -2);
+    await link.moveRelNow(7, -2);
+    await link.wheel(3);
+    await link.wheelNow(3);
+    await link.flushMotion();
+    await link.discardMotion();
+    // payload starts at byte 5: [SOF][TYPE][SEQ][LEN lo][LEN hi]
+    const payloads = mock.written.map((f) => Array.from(f.slice(5, f.length - 2)));
+    expect(payloads).toEqual([
+      [0, 7, 0, 0xfe, 0xff, 0x00],
+      [0, 7, 0, 0xfe, 0xff, 0x01],
+      [1, 3, 0, 0x00],
+      [1, 3, 0, 0x01],
+      [0, 0, 0, 0, 0, 0x02],
+      [0, 0, 0, 0, 0, 0x04],
+    ]);
+    expect(mock.written.every((f) => f[1] === FrameType.Move)).toBe(true);
+    await link.close();
+  });
+
   it('sends a REBOOT(DeviceDownload) frame on reboot', async () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));

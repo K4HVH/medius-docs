@@ -30,6 +30,7 @@ import {
   CLIP_SET_AUTOLOCK,
   CLIP_SET_LOOP,
   CLIP_SET_RETAIN,
+  CLIP_SET_RIDE,
   CLIP_TRIG_MAX,
   ClipOp,
   ClipState,
@@ -181,9 +182,12 @@ const DeviceClip = () => {
     if (want !== null && ((clip()?.autolock ?? 0) & CLIP_LOCK_ALL) === want) setScopeEdit(null);
   });
 
-  const [flagEdit, setFlagEdit] = createSignal<{ loop?: boolean; retain?: boolean }>({});
+  const [flagEdit, setFlagEdit] = createSignal<{ loop?: boolean; retain?: boolean; ride?: boolean }>(
+    {},
+  );
   const loopOn = () => flagEdit().loop ?? clip()?.loop === true;
   const retainOn = () => flagEdit().retain ?? clip()?.retain === true;
+  const rideOn = () => flagEdit().ride ?? clip()?.ride === true;
   createEffect(() => {
     const c = clip();
     if (!c) return;
@@ -191,6 +195,7 @@ const DeviceClip = () => {
     const next = { ...e };
     if (e.loop !== undefined && c.loop === e.loop) delete next.loop;
     if (e.retain !== undefined && c.retain === e.retain) delete next.retain;
+    if (e.ride !== undefined && c.ride === e.ride) delete next.ride;
     if (Object.keys(next).length !== Object.keys(e).length) setFlagEdit(next);
   });
 
@@ -242,9 +247,12 @@ const DeviceClip = () => {
     // keeps the two independently: leaving loop set would hold a flag nothing on screen shows, and
     // it would take effect again the moment replayable came back.
     const dropLoop = id === CLIP_SET_RETAIN && !on && loopOn();
+    const field =
+      id === CLIP_SET_LOOP ? 'loop' : id === CLIP_SET_RETAIN ? 'retain' : id === CLIP_SET_RIDE ? 'ride' : null;
+    if (field === null) return;   // not a boolean setting; autolock has its own optimistic path
     setFlagEdit((e) => ({
       ...e,
-      [id === CLIP_SET_LOOP ? 'loop' : 'retain']: on,
+      [field]: on,
       ...(dropLoop ? { loop: false } : {}),
     }));
     cmd.run(async () => {
@@ -318,10 +326,10 @@ const DeviceClip = () => {
         </p>
 
         <Show when={ready()} fallback={<p style={muted}>No mouse is cloned. The box refuses every clip command without one, because a clip is clocked by the mouse's report rate.</p>}>
-          <Show when={(moveRide() ?? 0) > 0}>
+          <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
             <div class="callout callout--warning">
-              Movement riding is on, so clip motion is only emitted alongside a real mouse move.
-              Button and key ticks still play.
+              Movement riding is on and this clip is set to ride it, so clip motion is only emitted
+              alongside a real mouse move. Button and key ticks still play.
             </div>
           </Show>
 
@@ -423,6 +431,14 @@ const DeviceClip = () => {
               checked={loopOn()}
               disabled={busy() || !retainOn()}
               onChange={(on) => setFlag(CLIP_SET_LOOP, on)}
+            />
+          </div>
+          <div style={checkColumn}>
+            <Checkbox
+              label="Motion rides a real report (only matters with movement riding on)"
+              checked={rideOn()}
+              disabled={busy()}
+              onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
             />
           </div>
 

@@ -4,6 +4,7 @@ import {
   CLIP_SET_AUTOLOCK,
   CLIP_SET_LOOP,
   CLIP_SET_RETAIN,
+  CLIP_SET_RIDE,
   ClipState,
   Direction,
 } from '../../src/dashboard/protocol';
@@ -192,6 +193,21 @@ describe('DeviceClip settings', () => {
     fireEvent.click(box(container, 'Replayable'));
     await settle();
     expect(mock.sets).toEqual([{ id: CLIP_SET_RETAIN, value: 1 }]);
+  });
+
+  it('sends the ride setting under its own id, and it is off by default', async () => {
+    // A clip bypasses movement riding unless this is set, so sending the wrong id here would leave a
+    // clip silently rideable (or not) with the box and the checkbox disagreeing.
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    const ride = box(container, 'Motion rides a real report');
+    expect(ride.checked).toBe(false);
+    fireEvent.click(ride);
+    await settle();
+    expect(mock.sets).toEqual([{ id: CLIP_SET_RIDE, value: 1 }]);
+    // The tick follows the box's own readback once it agrees, not the click.
+    mock.setClip(status({ ride: true }));
+    expect(box(container, 'Motion rides a real report').checked).toBe(true);
   });
 
   it('masks the autolock scope to the bits the box defines', async () => {

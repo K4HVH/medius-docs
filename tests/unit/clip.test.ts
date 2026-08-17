@@ -204,7 +204,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
     const payload = new Uint8Array([
       ...header(ClipState.Playing, 0),
       0x1f, // autolock: every class
-      0x03, // loop + retain
+      0x0b, // loop + retain + ride
       1, // one trigger
       1, 0x3a, 0x00, Direction.Positive, ClipOp.Toggle, 1,
     ]);
@@ -224,6 +224,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
       loop: true,
       retain: true,
       finalized: false,
+      ride: true,
       triggers: [
         { cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: true },
       ],
@@ -249,6 +250,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
     expect(r!.kind === 'clip' && r.clip.autolock).toBe(0x04);
     expect(r!.kind === 'clip' && r.clip.finalized).toBe(true);
     expect(r!.kind === 'clip' && r.clip.loop).toBe(false);
+    expect(r!.kind === 'clip' && r.clip.ride).toBe(false);
   });
 
   it('reads the trigger read-back byte 5 as consume, not as a flags byte', () => {

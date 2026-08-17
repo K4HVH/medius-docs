@@ -49,6 +49,7 @@ const VALUES: Record<string, unknown> = {
     loop: true,
     retain: true,
     finalized: true,
+    ride: false,
     triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: true }],
   },
   imperfect: { allowed: false, overCapacity: false, cloneImperfect: false },
@@ -166,8 +167,15 @@ describe('Control page', () => {
     expect(start!.disabled).toBe(true);
   });
 
-  it('warns that movement riding will swallow a clip\'s motion', async () => {
-    const { findByText } = mount(stub({ moveRide: 20 }));
+  it('warns about riding only when the clip is actually set to ride it', async () => {
+    // The clip bypasses riding by default, so the option being on is not enough: warning on that alone
+    // told the user their clip would be swallowed when it plays perfectly well.
+    const riding = mount(stub({ moveRide: 20 })).container;
+    expect(riding.textContent).not.toMatch(/Movement riding is on/);
+
+    const { findByText } = mount(
+      stub({ moveRide: 20, clip: { ...(VALUES.clip as object), ride: true } }),
+    );
     await findByText(/Movement riding is on/);
   });
 });

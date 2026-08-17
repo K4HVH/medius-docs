@@ -23,6 +23,18 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
     wheel: async (dz: number) => {
       mock.sent.push({ kind: 'wheel', args: [dz] });
     },
+    moveRelNow: async (dx: number, dy: number) => {
+      mock.sent.push({ kind: 'moveNow', args: [dx, dy] });
+    },
+    wheelNow: async (dz: number) => {
+      mock.sent.push({ kind: 'wheelNow', args: [dz] });
+    },
+    flushMotion: async () => {
+      mock.sent.push({ kind: 'flush', args: [] });
+    },
+    discardMotion: async () => {
+      mock.sent.push({ kind: 'discard', args: [] });
+    },
   };
   return {
     useDashboard: () => ({
@@ -211,5 +223,28 @@ describe('DeviceInject', () => {
     const { findByText } = render(() => <DeviceInject />);
     await findByText('No keyboard is attached, so the box discards key and media holds.');
     await findByText('Press');
+  });
+
+  it('routes every motion control through the bypass checkbox', async () => {
+    // The checkbox is the only thing standing between "this move waits for the user to move" and
+    // "this move lands now", so a control that ignored it would look identical until riding is on.
+    mock.setHealth(health());
+    const { findByText, findByLabelText } = render(() => <DeviceInject />);
+    fireEvent.click(await findByText('Move right'));
+    fireEvent.click(await findByText('Scroll up'));
+
+    fireEvent.click(await findByLabelText('Bypass movement riding'));
+    fireEvent.click(await findByText('Move right'));
+    fireEvent.click(await findByText('Scroll up'));
+
+    expect(mock.sent.map((s) => s.kind)).toEqual(['move', 'wheel', 'moveNow', 'wheelNow']);
+  });
+
+  it('sends and drops held motion from their own buttons', async () => {
+    mock.setHealth(health());
+    const { findByText } = render(() => <DeviceInject />);
+    fireEvent.click(await findByText('Send held motion'));
+    fireEvent.click(await findByText('Drop held motion'));
+    expect(mock.sent.map((s) => s.kind)).toEqual(['flush', 'discard']);
   });
 });
