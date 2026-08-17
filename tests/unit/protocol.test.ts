@@ -63,6 +63,8 @@ import {
   trafficTruncated,
   versionString,
   vidPid,
+  moveCursorPayload,
+  moveWheelPayload,
 } from '../../src/dashboard/protocol';
 
 const toHex = (b: Uint8Array) =>
@@ -239,7 +241,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x12; // next free opcode past IMPERFECT (0x11)
+    const ty = 0x17; // next free opcode past TRAFFIC_EVENT (0x16)
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -309,9 +311,13 @@ describe('helpers', () => {
     expect(frameTypeFromU8(0x0f)).toBe(FrameType.UsageEvent);
     expect(frameTypeFromU8(0x10)).toBeNull(); // reserved (was ConsEvent; media folded into USAGE_EVENT)
     expect(frameTypeFromU8(0x11)).toBe(FrameType.Option);
-    expect(frameTypeFromU8(0x12)).toBeNull();
+    expect(frameTypeFromU8(0x12)).toBe(FrameType.ClipAppend);
+    expect(frameTypeFromU8(0x13)).toBe(FrameType.ClipCtrl);
+    expect(frameTypeFromU8(0x14)).toBe(FrameType.ClipSet);
+    expect(frameTypeFromU8(0x15)).toBe(FrameType.ClipTrigger);
     expect(frameTypeFromU8(0x16)).toBe(FrameType.TrafficEvent);
     expect(frameTypeFromU8(0x00)).toBeNull();
+    expect(frameTypeFromU8(0x17)).toBeNull();
   });
 
   it('healthFromFlags decodes individual bits', () => {
@@ -816,6 +822,27 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     // matching how deviceKindFromU8 and logLevelFromU8 absorb an unknown byte.
     const ev = parseTrafficEvent(new Uint8Array([0, 0, 0, 0, 0x02, 0x0a, 0, 0, 0, 0, 0, 0]));
     expect(ev?.clk).toBe(ClockDomain.Host);
+  });
+});
+
+describe('MOVE command (§3.1)', () => {
+  it('cursor payload is [motion=0][dx i16 LE][dy i16 LE]', () => {
+    expect(Array.from(moveCursorPayload(5, -3))).toEqual([0, 5, 0, 0xfd, 0xff]);
+  });
+
+  it('wheel payload is [motion=1][dz i16 LE]', () => {
+    expect(Array.from(moveWheelPayload(-2))).toEqual([1, 0xfe, 0xff]);
+  });
+
+  it('saturates rather than wrapping past the i16 the wire carries', () => {
+    // Wrapping would turn a big positive delta into a big negative one and fling the cursor the
+    // opposite way, which is worse than clamping.
+    expect(Array.from(moveCursorPayload(40000, -40000))).toEqual([0, 0xff, 0x7f, 0x00, 0x80]);
+    expect(Array.from(moveWheelPayload(99999))).toEqual([1, 0xff, 0x7f]);
+  });
+
+  it('rounds a fractional delta instead of truncating it into the wire', () => {
+    expect(Array.from(moveCursorPayload(1.6, -1.6))).toEqual([0, 2, 0, 0xfe, 0xff]);
   });
 });
 

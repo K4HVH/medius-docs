@@ -1,12 +1,7 @@
-import { Show, createEffect, createSignal, onCleanup } from 'solid-js';
+import { Show } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import {
-  type Caps,
-  type DeviceInfo as DeviceInfoValue,
-  type ImperfectStatus,
-  type Rate,
-  type Stats,
   DeviceKind,
   deviceKindLabel,
   hasKeyboard,
@@ -17,8 +12,7 @@ import {
   vidPid,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
-
-const INFO_POLL_MS = 2000;
+import { Section } from './Section';
 
 // bcdUSB is binary-coded decimal: 0x0200 -> "2.00", 0x0201 -> "2.01".
 const bcd = (n: number) => `${n >> 8}.${(n >> 4) & 0xf}${n & 0xf}`;
@@ -52,50 +46,13 @@ const CapChip = (props: { on: boolean; children: unknown }) => (
 const DeviceInfo = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
-  const [device, setDevice] = createSignal<DeviceInfoValue | null>(null);
-  const [caps, setCaps] = createSignal<Caps | null>(null);
-  const [rate, setRate] = createSignal<Rate | null>(null);
-  const [stats, setStats] = createSignal<Stats | null>(null);
-  const [imperfect, setImperfect] = createSignal<ImperfectStatus | null>(null);
-
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  let running = false;
-  const stop = () => {
-    running = false;
-    if (timer !== null) {
-      clearTimeout(timer);
-      timer = null;
-    }
-  };
-
-  createEffect(() => {
-    const link = dash.link();
-    stop();
-    if (dash.status() !== 'connected' || !link) {
-      setDevice(null);
-      setCaps(null);
-      setRate(null);
-      setStats(null);
-      setImperfect(null);
-      return;
-    }
-    running = true;
-    const tick = async () => {
-      if (!running || dash.link() !== link) return;
-      try {
-        setDevice(await link.queryDeviceInfo());
-        setCaps(await link.queryCaps());
-        setRate(await link.queryRate());
-        setStats(await link.queryStats());
-        setImperfect(await link.queryImperfect());
-      } catch {
-        // transient; try again next tick
-      }
-      if (running && dash.link() === link) timer = setTimeout(() => void tick(), INFO_POLL_MS);
-    };
-    void tick();
-    onCleanup(stop);
-  });
+  // Through the shared poller rather than its own loop: five sequential round trips per tick, one
+  // of which (imperfect) the Options card polls as well.
+  const device = dash.poll('deviceInfo');
+  const caps = dash.poll('caps');
+  const rate = dash.poll('rate');
+  const stats = dash.poll('stats');
+  const imperfect = dash.poll('imperfect');
 
   return (
     <>
@@ -130,7 +87,7 @@ const DeviceInfo = () => {
               </Show>
 
               <Show when={hasMouse(c())}>
-                <div class="api-response-label">Mouse</div>
+                <Section title="Mouse">
                 <Row label="Buttons">{c().mouse.nButtons}</Row>
                 <Row label="Interfaces">
                   {c().mouse.nHid}
@@ -142,10 +99,11 @@ const DeviceInfo = () => {
                   <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
                   <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
                 </div>
+                </Section>
               </Show>
 
               <Show when={hasKeyboard(c())}>
-                <div class="api-response-label">Keyboard</div>
+                <Section title="Keyboard">
                 <Row label="Rollover">
                   {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
                 </Row>
@@ -154,12 +112,13 @@ const DeviceInfo = () => {
                   <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
                   <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
                 </div>
+                </Section>
               </Show>
 
               <Show when={imperfect()}>
                 {(imp) => (
                   <>
-                    <div class="api-response-label">Clone</div>
+                    <Section title="Clone">
                     <Row label="Full clone">
                       <Show
                         when={imp().overCapacity}
@@ -173,6 +132,7 @@ const DeviceInfo = () => {
                         {device()?.hasSerial ? 'Cloned' : 'None'}
                       </Chip>
                     </Row>
+                    </Section>
                   </>
                 )}
               </Show>

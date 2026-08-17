@@ -1,147 +1,168 @@
-import { For, Show, createSignal, onCleanup, onMount } from 'solid-js';
+// Block the real device from driving an input while the control link still can.
+//
+// The picker covers the whole lock address space. It used to offer eight fixed mouse targets, which
+// left keys, media usages, and the whole-class blanket unreachable from here even though the active
+// list below could already render them when another client set them.
+
+import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { Combobox } from '../../../components/inputs/Combobox';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import {
-  type Locks,
-  type LockTarget,
+  type LockEntry,
+  type NamedUsage,
+  BUTTONS,
   Direction,
+  KEYS,
   LOCK_ID_ALL,
   LockAxis,
   LockClass,
+  MEDIA,
   Press,
   Release,
-  lockAxis,
-  lockButton,
+  usageName,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
+import { createCommand } from './action';
+import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
+import { chips, label, row, section } from './ui';
 
-const TARGETS: { value: string; label: string; target: LockTarget }[] = [
-  { value: 'x', label: 'Move left/right (X)', target: lockAxis(LockAxis.X) },
-  { value: 'y', label: 'Move up/down (Y)', target: lockAxis(LockAxis.Y) },
-  { value: 'wheel', label: 'Scroll wheel', target: lockAxis(LockAxis.Wheel) },
-  { value: 'left', label: 'Left button', target: lockButton(0) },
-  { value: 'right', label: 'Right button', target: lockButton(1) },
-  { value: 'middle', label: 'Middle button', target: lockButton(2) },
-  { value: 'side1', label: 'Side button 1', target: lockButton(3) },
-  { value: 'side2', label: 'Side button 2', target: lockButton(4) },
+const AXES: NamedUsage[] = [
+  { id: LockAxis.X, name: 'Move left/right (X)', group: 'Axes' },
+  { id: LockAxis.Y, name: 'Move up/down (Y)', group: 'Axes' },
+  { id: LockAxis.Wheel, name: 'Scroll wheel', group: 'Axes' },
 ];
 
-const DIRECTIONS: Record<string, Direction> = {
-  both: Direction.Both,
-  positive: Direction.Positive,
-  negative: Direction.Negative,
+const CLASSES: PickerClass[] = [
+  { value: LockClass.Axis, label: 'Axis', table: AXES, blanket: LOCK_ID_ALL, blanketLabel: 'Every axis', hideId: true },
+  { value: LockClass.Button, label: 'Button', table: BUTTONS, blanket: LOCK_ID_ALL, blanketLabel: 'Every button' },
+  { value: LockClass.Key, label: 'Key', table: KEYS, blanket: LOCK_ID_ALL, blanketLabel: 'Every key' },
+  { value: LockClass.Media, label: 'Media', table: MEDIA, blanket: LOCK_ID_ALL, blanketLabel: 'Every media key' },
+];
+
+const BLANKET_NAMES: Record<number, string> = {
+  [LockClass.Button]: 'buttons',
+  [LockClass.Key]: 'keys',
+  [LockClass.Media]: 'media keys',
+  [LockClass.Axis]: 'axes',
 };
 
-const BLANKET_NAMES = ['buttons', 'keys', 'media', 'axes'];
-
-const dirLabel = (d: Direction): string =>
-  d === Direction.Positive ? '+' : d === Direction.Negative ? '-' : '';
-
-// Axes and the wheel lock by sign (+/-); buttons, keys, and media lock by edge (press/release).
-const dirChipLabel = (t: LockTarget, d: Direction): string =>
-  t.cls === LockClass.Axis ? dirLabel(d) : d === Press ? 'press' : 'release';
-
-const targetName = (t: LockTarget): string => {
-  const known = TARGETS.find((o) => o.target.cls === t.cls && o.target.id === t.id);
-  if (known) return known.label;
-  if (t.id === LOCK_ID_ALL) return `all ${BLANKET_NAMES[t.cls] ?? 'inputs'}`;
-  return `${BLANKET_NAMES[t.cls]?.replace(/s$/, '') ?? 'input'} ${t.id}`;
+// An axis locks by sign; a momentary usage locks by edge. One direction byte, two vocabularies.
+const dirName = (cls: number, d: Direction): string => {
+  if (cls === LockClass.Axis) return d === Press ? 'positive' : 'negative';
+  return d === Press ? 'press' : 'release';
 };
 
-const label = {
-  color: 'var(--g-text-muted, #8a8a8a)',
-  'font-size': 'var(--font-size-xs, 0.8rem)',
-  'margin-bottom': '4px',
-} as const;
+const targetName = (cls: number, id: number): string => {
+  if (id === LOCK_ID_ALL) return `all ${BLANKET_NAMES[cls] ?? 'inputs'}`;
+  if (cls === LockClass.Axis) return AXES.find((a) => a.id === id)?.name ?? `axis ${id}`;
+  return usageName(cls, id);
+};
 
 const DeviceLock = () => {
   const dash = useDashboard();
-  const [target, setTarget] = createSignal('x');
-  const [direction, setDirection] = createSignal('both');
-  const [locks, setLocks] = createSignal<Locks>({ entries: [] });
+  const [target, setTarget] = createSignal<UsageValue>({ cls: LockClass.Axis, id: LockAxis.X });
+  const [direction, setDirection] = createSignal(String(Direction.Both));
+  const locks = dash.poll('locks');
+  const cmd = createCommand(() => dash.refreshPoll('locks'));
 
-  const targetEnum = (): LockTarget =>
-    TARGETS.find((o) => o.value === target())?.target ?? lockAxis(LockAxis.X);
-  const dirEnum = () => DIRECTIONS[direction()];
+  const dir = (): Direction => Number(direction()) as Direction;
 
-  const refresh = async () => {
-    try {
-      const l = await dash.link()?.queryLocks();
-      if (l) setLocks(l);
-    } catch {
-      // A transient miss is fine; the next refresh tries again.
+  // An every-axis lock goes out as one frame per axis rather than the class wildcard. Firmware up
+  // to and including the current release only accepts axis ids 0 to 2, so the wildcard is carried
+  // over the wire and then dropped, and the box has no blanket representation anyway: it expands
+  // one into per-axis bits and reads it back as three entries. Sending the three is identical on a
+  // box that implements it and the only thing that works on one that does not.
+  const targets = (): { cls: LockClass; id: number }[] => {
+    const t = target();
+    if (t.cls === LockClass.Axis && t.id === LOCK_ID_ALL) {
+      return AXES.map((a) => ({ cls: LockClass.Axis, id: a.id }));
     }
+    return [{ cls: t.cls as LockClass, id: t.id }];
   };
 
-  const lock = async () => {
-    await dash.link()?.lock(targetEnum(), dirEnum());
-    await refresh();
-  };
+  const apply = (on: boolean) =>
+    cmd.run(async () => {
+      const link = dash.link()!;
+      for (const t of targets()) {
+        await (on ? link.lock(t, dir()) : link.unlock(t, dir()));
+      }
+    });
 
-  const unlock = async () => {
-    await dash.link()?.unlock(targetEnum(), dirEnum());
-    await refresh();
-  };
-
-  // List every locked target+direction in the current set.
-  const active = () => {
-    const out: string[] = [];
-    for (const e of locks().entries) {
-      const t: LockTarget = { cls: e.cls, id: e.id };
-      if (e.positive) out.push(`${targetName(t)} ${dirChipLabel(t, Press)}`.trim());
-      if (e.negative) out.push(`${targetName(t)} ${dirChipLabel(t, Release)}`.trim());
+  // Every locked (target, direction) pair the box reports, whoever set it.
+  const active = createMemo(() => {
+    const out: { key: string; text: string }[] = [];
+    for (const e of locks()?.entries ?? ([] as LockEntry[])) {
+      if (e.positive) {
+        out.push({ key: `${e.cls}:${e.id}:1`, text: `${targetName(e.cls, e.id)} ${dirName(e.cls, Press)}` });
+      }
+      if (e.negative) {
+        out.push({ key: `${e.cls}:${e.id}:2`, text: `${targetName(e.cls, e.id)} ${dirName(e.cls, Release)}` });
+      }
     }
     return out;
-  };
+  });
 
-  let timer: ReturnType<typeof setInterval> | null = null;
-  onMount(() => {
-    void refresh();
-    timer = setInterval(() => void refresh(), 1000);
-  });
-  onCleanup(() => {
-    if (timer !== null) clearInterval(timer);
-  });
+  const dirLabel = () =>
+    target().cls === LockClass.Axis
+      ? [
+          { value: String(Direction.Both), label: 'Both' },
+          { value: String(Direction.Positive), label: 'Positive' },
+          { value: String(Direction.Negative), label: 'Negative' },
+        ]
+      : [
+          { value: String(Direction.Both), label: 'Both' },
+          { value: String(Direction.Positive), label: 'Press' },
+          { value: String(Direction.Negative), label: 'Release' },
+        ];
 
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
-        <CardHeader title="Input locks" subtitle="Block the physical mouse from one input" />
+        <CardHeader title="Input locks" subtitle="Block the real device from one input" />
         <p>
-          Lock an input and the real mouse can't drive it, while you still can over the control link.
-          Locks clear on their own if the dashboard disconnects.
+          A locked input is suppressed from the real device. Injection still drives it. Locks clear on
+          their own if the dashboard disconnects.
         </p>
-        <div style={label}>Which input</div>
-        <Combobox
+
+        <UsagePicker
+          name="lock-target"
+          classes={CLASSES}
           value={target()}
-          onChange={(v) => setTarget(Array.isArray(v) ? v[0] : v)}
-          options={TARGETS.map(({ value, label: l }) => ({ value, label: l }))}
+          onChange={setTarget}
+          usageLabel="Which input"
         />
-        <div style={{ margin: 'var(--g-spacing) 0' }}>
+
+        <div style={section}>
           <div style={label}>Direction</div>
           <RadioGroup
             name="lock-direction"
             value={direction()}
             onChange={setDirection}
-            options={[
-              { value: 'both', label: 'Both' },
-              { value: 'positive', label: 'Positive / press' },
-              { value: 'negative', label: 'Negative / release' },
-            ]}
+            options={dirLabel()}
           />
         </div>
-        <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-          <Button variant="primary" onClick={() => void lock()}>Lock</Button>
-          <Button variant="secondary" onClick={() => void unlock()}>Unlock</Button>
+
+        <div style={{ ...section, ...row }}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => apply(true)}>
+            Lock
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => apply(false)}>
+            Unlock
+          </Button>
         </div>
-        <div style={{ 'margin-top': 'var(--g-spacing)' }}>
+        <Show when={cmd.error()}>
+          <div class="callout callout--danger" role="alert" style={section}>
+            {cmd.error()}
+          </div>
+        </Show>
+
+        <div style={section}>
           <div style={label}>Active locks</div>
           <Show when={active().length > 0} fallback={<p>Nothing locked.</p>}>
-            <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
-              <For each={active()}>{(item) => <Chip variant="warning">{item}</Chip>}</For>
+            <div style={chips}>
+              <For each={active()}>{(item) => <Chip variant="warning">{item.text}</Chip>}</For>
             </div>
           </Show>
         </div>

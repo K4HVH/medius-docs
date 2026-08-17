@@ -5,18 +5,13 @@ import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { Slider } from '../../../components/inputs/Slider';
 import { LedMode, LedTarget } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
+import { label, row } from './ui';
 
 const TARGETS: Record<string, LedTarget> = {
   both: LedTarget.Both,
   device: LedTarget.Device,
   host: LedTarget.Host,
 };
-
-const label = {
-  color: 'var(--g-text-muted, #8a8a8a)',
-  'font-size': 'var(--font-size-xs, 0.8rem)',
-  'margin-bottom': '4px',
-} as const;
 
 const DeviceLed = () => {
   const dash = useDashboard();
@@ -32,8 +27,8 @@ const DeviceLed = () => {
       <Card>
         <CardHeader title="Status light" subtitle="The box's green LEDs" />
         <p>
-          By default the light shows the box's status. You can take it over and set it yourself, then
-          hand it back with Status. It also returns to status on its own if the dashboard disconnects.
+          By default the light shows the box's status. Set it yourself here, or press Status to return
+          it to the box. It also returns to status on its own if the dashboard disconnects.
         </p>
         <div style={label}>Which light</div>
         <RadioGroup
@@ -57,7 +52,7 @@ const DeviceLed = () => {
             max={255}
           />
         </div>
-        <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+        <div style={row}>
           <Button variant="secondary" onClick={() => send(LedMode.Auto)}>Status</Button>
           <Button variant="secondary" onClick={() => send(LedMode.Off)}>Off</Button>
           <Button variant="primary" onClick={() => send(LedMode.Solid)}>On</Button>

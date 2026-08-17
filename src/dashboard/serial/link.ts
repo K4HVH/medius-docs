@@ -8,6 +8,9 @@ import {
   type CatchFilter,
   type Caps,
   type CatchState,
+  type ClipEntry,
+  type ClipStatus,
+  type ClipTrigger,
   type DecodedFrame,
   type DeviceInfo,
   type EmitPace,
@@ -19,10 +22,13 @@ import {
   type Rate,
   type Stats,
   type Version,
+  ClipOp,
   EmitMode,
   FrameDecoder,
   FrameType,
+  MAX_PAYLOAD,
   PROTO_VER,
+  Q_CLIP,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -35,6 +41,7 @@ import {
   Q_RATE,
   Q_STATS,
   Q_VERSION,
+  INJ_BTN,
   INJ_KEY,
   INJ_MEDIA,
   Direction,
@@ -43,13 +50,20 @@ import {
   RebootTarget,
   catchPayload,
   clearNamePayload,
+  clipAppendPayload,
+  clipCtrlPayload,
+  clipSetPayload,
+  clipTriggerPayload,
   emitPayload,
   encode,
+  encodeClipEntry,
   filterEverything,
   imperfectPayload,
   injectPayload,
   ledPayload,
   lockPayload,
+  moveCursorPayload,
+  moveWheelPayload,
   moveRidePayload,
   namePayload,
   parseLog,
@@ -133,6 +147,8 @@ export class SerialLink {
   private writeChain: Promise<void> = Promise.resolve();
   private pending = new Map<number, Pending>();
   private seq = 1;
+  // CLIP_APPEND's own sequence; see `clipAppend`.
+  private clipSeq = 0;
   private opened = false;
   private closing = false;
 
@@ -283,6 +299,38 @@ export class SerialLink {
     );
   }
 
+  // Move the cursor (§3.1). Relative, in the cloned mouse's own units. The wire field is an i16, so
+  // a larger delta saturates here rather than wrapping; the box then clamps that to the cloned
+  // report's own field width and carries the remainder into later reports.
+  moveRel(dx: number, dy: number): Promise<void> {
+    return this.send(encode(FrameType.Move, this.nextSeq(), moveCursorPayload(dx, dy)));
+  }
+
+  // Scroll the wheel (§3.1), in detents, same carry behaviour as `moveRel`.
+  wheel(dz: number): Promise<void> {
+    return this.send(encode(FrameType.Move, this.nextSeq(), moveWheelPayload(dz)));
+  }
+
+  // Inject a mouse button by semantic id (§3.2, class button), tri-state action (0/1/2).
+  button(id: number, action: number): Promise<void> {
+    return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_BTN, id, action)));
+  }
+
+  // Inject any momentary usage (§3.2): one call for all three classes, so a caller holding a mixed
+  // set does not have to branch on class to release it.
+  inject(cls: number, id: number, action: number): Promise<void> {
+    return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(cls, id, action)));
+  }
+
+  // The box-wide safety clear (§3.4). Wider than its name: in one atomic release it drops every
+  // injected usage, every lock, the whole CATCH subscription table, the loaded clip AND its
+  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it hands the
+  // status LEDs back to the box. It is the recovery for a press whose release was lost, because it
+  // does not depend on knowing what is held. Release known holds one at a time when that matters.
+  reset(): Promise<void> {
+    return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array(0)));
+  }
+
   // Inject a keyboard key or modifier by HID keycode (§3.2, class key), tri-state action (0/1/2).
   key(usage: number, action: number): Promise<void> {
     return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_KEY, usage, action)));
@@ -347,6 +395,85 @@ export class SerialLink {
   // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
   setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
+  }
+
+  // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).
+  async queryClip(timeoutMs?: number): Promise<ClipStatus> {
+    const resp = parseResp(await this.query(Q_CLIP, timeoutMs));
+    if (resp?.kind !== 'clip') throw new Error('unexpected reply to CLIP query');
+    return resp.clip;
+  }
+
+  // Append entries to the clip ring (§3.11). Rejects an unencodable batch rather than sending a
+  // partial one.
+  //
+  // CLIP_APPEND carries its own sequence: the box expects each append's SEQ to be exactly one past
+  // the last one it saw, and faults the engine on any gap so a dropped append cannot be played as
+  // if it were whole. That counter therefore cannot be the link's shared SEQ, which every query and
+  // command also advances -- a single health poll between two appends would look like a lost
+  // append. Appends count on their own.
+  //
+  // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
+  // check `freeBytes` from `queryClip` before sending. The box also drops an append silently when
+  // no mouse is cloned, and after FINALIZE on a retained clip.
+  async clipAppend(entries: ClipEntry[]): Promise<void> {
+    // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two
+    // appends misaligns everything after it rather than being rejected.
+    const batches: ClipEntry[][] = [];
+    let batch: ClipEntry[] = [];
+    let size = 0;
+    for (const e of entries) {
+      const b = encodeClipEntry(e);
+      if (!b) throw new Error('clip entries could not be encoded');
+      if (size + b.length > MAX_PAYLOAD) {
+        batches.push(batch);
+        batch = [];
+        size = 0;
+      }
+      batch.push(e);
+      size += b.length;
+    }
+    if (batch.length > 0) batches.push(batch);
+    // Encode every batch before sending any of them, so a failure cannot leave half a clip loaded.
+    const frames = batches.map(clipAppendPayload);
+    if (frames.some((f) => f === null)) throw new Error('clip entries could not be encoded');
+    for (const payload of frames as Uint8Array[]) {
+      await this.send(encode(FrameType.ClipAppend, this.clipSeq, payload));
+      // Advanced only once the frame is away. Bumping it first would leave the box expecting a
+      // sequence number that never reached it, and the next append would read as a lost one.
+      this.clipSeq = (this.clipSeq + 1) & 0xff;
+    }
+  }
+
+  // Run one clip engine verb (§3.11). Ignored by the box when no mouse is cloned: the clip is
+  // clocked by the mouse's own report tick, so without one it could never advance.
+  clipCtrl(op: ClipOp): Promise<void> {
+    return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
+  }
+
+  // Write one clip scalar setting (§3.11): autolock scope, loop, or retain. Two of the three are
+  // coerced by the box with no reply: retain is ignored unless the ring is empty, and the autolock
+  // scope is masked to the defined bits. Read the value back to see what landed.
+  clipSet(id: number, value: number): Promise<void> {
+    return this.send(encode(FrameType.ClipSet, this.nextSeq(), clipSetPayload(id, value)));
+  }
+
+  // Add or overwrite a clip trigger binding (§3.11). Keyed by (class, id, edge), so setting one
+  // that already exists replaces it rather than adding a second.
+  clipTrigger(trigger: ClipTrigger): Promise<void> {
+    return this.send(
+      encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, true)),
+    );
+  }
+
+  // Remove a trigger binding. Only its (class, id, edge) key is read; action and consume are
+  // carried for symmetry and ignored. One address is special: the any-class, any-id, both-edges
+  // binding is byte-identical to the box's clear-all sentinel, so removing that one removes them
+  // all.
+  clipUntrigger(trigger: ClipTrigger): Promise<void> {
+    return this.send(
+      encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, false)),
+    );
   }
 
   // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.

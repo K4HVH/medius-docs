@@ -12,19 +12,23 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
-  // One stable link object; the component bails if dash.link() identity changes between polls.
-  const link = {
-    queryDeviceInfo: async () => mock.mouse,
-    queryCaps: async () => mock.caps,
-    queryRate: async () => mock.rate,
-    queryStats: async () => mock.stats,
-    queryImperfect: async () => mock.imperfect,
+  // The card reads its values through the shared poller now, so the stand-in supplies `poll`
+  // rather than a link whose query methods it would call itself.
+  const VALUES: Record<string, () => unknown> = {
+    deviceInfo: () => mock.mouse,
+    caps: () => mock.caps,
+    rate: () => mock.rate,
+    stats: () => mock.stats,
+    imperfect: () => mock.imperfect,
+    health: () => mock.health,
   };
   return {
     useDashboard: () => ({
       status: () => 'connected',
       health: () => mock.health,
-      link: () => link,
+      link: () => ({}),
+      poll: (key: string) => () => VALUES[key]?.() ?? null,
+      refreshPoll: () => {},
     }),
   };
 });
