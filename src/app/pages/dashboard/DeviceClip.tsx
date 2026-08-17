@@ -594,7 +594,7 @@ const DeviceClip = () => {
             </div>
             <div style={section}>
               <Checkbox
-                label="Consume"
+                label="Consume the trigger"
                 checked={trigConsume()}
                 onChange={setTrigConsume}
               />
