@@ -141,7 +141,10 @@ const DeviceClip = () => {
   const [edgeUsage, setEdgeUsage] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [edgeAction, setEdgeAction] = createSignal(String(Action.Press));
 
-  const [trigUsage, setTrigUsage] = createSignal<Usage>({ cls: INJ_KEY, id: 0x3a });
+  const [trigUsage, setTrigUsage] = createSignal<Usage>({
+    cls: TRIGGER_CLASSES[0].value,
+    id: TRIGGER_CLASSES[0].table[0].id,
+  });
   const [trigEdge, setTrigEdge] = createSignal(String(Direction.Positive));
   const [trigOp, setTrigOp] = createSignal(String(ClipOp.Toggle));
   const [trigConsume, setTrigConsume] = createSignal(false);
