@@ -116,7 +116,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/move" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel" />
+                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel, and the riding override" />
               </Card>
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>

@@ -276,6 +276,42 @@ device.press(from_button)?;                         // press takes any impl Into
           </table>
         </Card>
       </div>
+      <div id="move-timing" data-search-target>
+        <Card>
+          <CardHeader title="MoveTiming" subtitle="When a delta reaches the game PC" />
+          <pre class="api-signature">enum MoveTiming {'{'} Ride, Now {'}'}</pre>
+          <p>
+            The <A href="/library/move#move"><code>move_axis</code></A> timing argument, against{' '}
+            <A href="/library/options#set-movement-riding">movement riding</A>. Defaults to{' '}
+            <code>Ride</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Ride</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
+              <tr><td><code>Now</code></td><td>Emit on the box's own clock, whatever movement riding is set to.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="pending-motion" data-search-target>
+        <Card>
+          <CardHeader title="PendingMotion" subtitle="What a move does to held motion" />
+          <pre class="api-signature">enum PendingMotion {'{'} Keep, Flush, Discard {'}'}</pre>
+          <p>
+            The <A href="/library/move#move"><code>move_axis</code></A> pending argument: what happens to
+            motion the box is already holding for a real move. Defaults to <code>Keep</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Keep</code></td><td>Leave it held.</td></tr>
+              <tr><td><code>Flush</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
+              <tr><td><code>Discard</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="axis" data-search-target>
         <Card>
           <CardHeader title="Axis" subtitle="A single relative axis" />

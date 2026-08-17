@@ -67,7 +67,11 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>dev.move_rel(dx, dy)</code></td><td>Nudge the cursor by a signed 16-bit delta.</td></tr>
               <tr><td><code>dev.wheel(delta)</code></td><td>Scroll the wheel.</td></tr>
-              <tr><td><code>dev.move_axis(motion)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A> or <code>Motion.wheel(delta)</code>.</td></tr>
+              <tr><td><code>dev.move_rel_now(dx, dy)</code></td><td>The same, bypassing <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
+              <tr><td><code>dev.wheel_now(delta)</code></td><td>Scroll, bypassing movement riding.</td></tr>
+              <tr><td><code>dev.flush_motion()</code></td><td>Emit the motion riding is holding, now.</td></tr>
+              <tr><td><code>dev.discard_motion()</code></td><td>Drop the motion riding is holding.</td></tr>
+              <tr><td><code>dev.move_axis(motion, timing, pending)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A> or <code>Motion.wheel(delta)</code>, with a <code>MoveTiming</code> and a <code>PendingMotion</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -232,6 +236,7 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
+              <tr><td><code>clip.set_ride(on)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default).</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>

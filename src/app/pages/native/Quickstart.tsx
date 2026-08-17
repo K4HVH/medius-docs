@@ -119,17 +119,19 @@ def encode(type, seq, payload):
     head = bytes([type, seq]) + struct.pack('<H', len(payload)) + payload
     return bytes([0xA5]) + head + struct.pack('<H', crc16_ccitt(head))
 
-frame = encode(0x01, 0, struct.pack('<Bhh', 0, 100, 0))
+frame = encode(0x01, 0, struct.pack('<BhhB', 0, 100, 0, 0))
 port.write(frame)`}</code></pre>
           <p>
             <A href="/native/commands/move#move"><code>MOVE</code></A> has opcode{' '}
-            <code>0x01</code>. Its payload is a <code>motion</code> byte (<code>0</code> = cursor)
-            then two signed 16-bit deltas, <code>dx</code> then <code>dy</code>. <code>+x</code> is
-            right, <code>+y</code> is down. The example moves 100 right, 0 down.
+            <code>0x01</code>. Its payload is a <code>motion</code> byte (<code>0</code> = cursor),
+            two signed 16-bit deltas, <code>dx</code> then <code>dy</code>, and a{' '}
+            <A href="/native/commands/move#flags"><code>flags</code></A> byte (<code>0</code> for an
+            ordinary move). <code>+x</code> is right, <code>+y</code> is down. The example moves 100
+            right, 0 down.
           </p>
           <p>
             That builds the bytes{' '}
-            <code>A5 01 00 05 00 00 64 00 00 00 &lt;crc&gt;</code>. The byte-by-byte breakdown is on{' '}
+            <code>A5 01 00 06 00 00 64 00 00 00 00 &lt;crc&gt;</code>. The byte-by-byte breakdown is on{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A>, the frame format on{' '}
             <A href="/native/frame">Frame Format</A>.
           </p>

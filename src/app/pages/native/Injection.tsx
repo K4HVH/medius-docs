@@ -90,11 +90,22 @@ const Injection: Component = () => {
             </thead>
             <tbody>
               <tr>
-                <td>accumulator</td>
+                <td>riding accumulator</td>
                 <td>
-                  A running total of sent motion and scroll not yet delivered to the PC. Each{' '}
-                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in;
-                  the box drains it into outgoing reports.
+                  A running total of sent motion and scroll not yet delivered to the PC. An ordinary{' '}
+                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
+                  It drains into outgoing reports, except while{' '}
+                  <A href="/native/commands/option#move-ride">movement riding</A> is on, where it waits
+                  for a real move to carry it.
+                </td>
+              </tr>
+              <tr>
+                <td>immediate accumulator</td>
+                <td>
+                  The same total for motion that never waits: a <code>MOVE</code> carrying{' '}
+                  <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and{' '}
+                  <A href="/native/commands/clip">clip</A> playback. Both accumulators always exist;
+                  riding decides whether the first one is held, not which one a move lands in.
                 </td>
               </tr>
               <tr>
@@ -110,7 +121,7 @@ const Injection: Component = () => {
           </table>
           <p>
             A report can only carry a limited movement size. A large injected move sends what fits
-            and keeps the remainder in the accumulator. Nothing is clipped (
+            and keeps the remainder in its own accumulator. Nothing is clipped (
             <code>total seen = total sent</code>), just spread over as many reports as it takes.
           </p>
         </Card>
@@ -130,7 +141,7 @@ const Injection: Component = () => {
               </tr>
               <tr>
                 <td>the real mouse was still, but you have motion pending</td>
-                <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond).</td>
+                <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
               </tr>
               <tr>
                 <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>

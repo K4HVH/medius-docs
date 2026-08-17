@@ -835,7 +835,8 @@ for ev in input.by_ref().take(20) {
             A clip's configuration from{' '}
             <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>. You set
             these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
-            <code>set_retain</code>, <code>finalize</code>, <code>bind</code>); this is the readback.
+            <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>);
+            this is the readback.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -844,6 +845,7 @@ for ev in input.by_ref().take(20) {
               <tr><td><code>loop_</code></td><td><code>bool</code></td><td>Playback restarts from the top instead of stopping at the end.</td></tr>
               <tr><td><code>retain</code></td><td><code>bool</code></td><td>The buffered content survives a stop, so a restart replays it instead of needing a fresh append.</td></tr>
               <tr><td><code>finalized</code></td><td><code>bool</code></td><td>The clip is sealed: no more appends, ready to replay as a fixed sequence.</td></tr>
+              <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's own clock.</td></tr>
               <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a physical edge.</td></tr>
             </tbody>
           </table>

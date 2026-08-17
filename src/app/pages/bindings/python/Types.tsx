@@ -313,6 +313,7 @@ const Types: Component = () => {
                 <tr><td><code>loop</code></td><td><code>bool</code></td><td>playback loops at the clip end (retained mode only)</td></tr>
                 <tr><td><code>retain</code></td><td><code>bool</code></td><td>the loaded clip is retained so it can rewind and replay</td></tr>
                 <tr><td><code>finalized</code></td><td><code>bool</code></td><td>a retained clip's end is fixed, ready to replay and loop</td></tr>
+                <tr><td><code>ride</code></td><td><code>bool</code></td><td>the clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A></td></tr>
                 <tr><td><code>triggers</code></td><td><code>List[<A href="/bindings/python/types#cliptrigger">ClipTrigger</A>]</code></td><td>the bound trigger set (up to 8)</td></tr>
               </tbody>
             </table>
@@ -570,7 +571,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
 
       <div id="wire-enums" data-search-target>
         <Card>
-          <CardHeader title="Wire enums" subtitle="MotionKind · Class · FrameType" />
+          <CardHeader title="Wire enums" subtitle="MotionKind · MoveTiming · PendingMotion · Class · FrameType" />
           <p>
             Mostly internal. <code>MotionKind</code> and <code>Class</code> tag the structs the{' '}
             <A href="/bindings/python/types#input">Usage</A> and <A href="/bindings/python/types#motion">Motion</A> builders produce; <code>FrameType</code> names a wire
@@ -586,6 +587,29 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <tbody>
                 <tr><td><code>CURSOR</code></td><td><code>0</code></td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>1</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="movetiming" data-search-target>
+            <div class="api-response-label">MoveTiming</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a real cursor move to carry the delta (the default)</td></tr>
+                <tr><td><code>NOW</code></td><td><code>1</code></td><td>emit on the box's own clock, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="pendingmotion" data-search-target>
+            <div class="api-response-label">PendingMotion</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>KEEP</code></td><td><code>0</code></td><td>leave motion held for a ride alone (the default)</td></tr>
+                <tr><td><code>FLUSH</code></td><td><code>1</code></td><td>emit it now, ignoring the ride window</td></tr>
+                <tr><td><code>DISCARD</code></td><td><code>2</code></td><td>drop it</td></tr>
               </tbody>
             </table>
           </div>
@@ -659,8 +683,9 @@ if ev.usage == Usage.button(Button.SIDE1):
             <div class="api-response-label">Motion</div>
             <pre class="api-signature">{`Motion.cursor(dx, dy) -> Motion
 Motion.wheel(delta)   -> Motion`}</pre>
-            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion)</code></A>. See <A href="/library/move">Move</A>.</p>
+            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>. See <A href="/library/move">Move</A>.</p>
           </div>
+
 
           <div id="locktarget" data-search-target>
             <div class="api-response-label">LockTarget</div>
