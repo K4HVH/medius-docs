@@ -238,7 +238,7 @@ medius_device_press(dev, medius_usage_key(MEDIUS_KEY_W));   /* keys and media in
 
 /* move: build a motion arm */
 MediusMotion m = medius_motion_cursor(100, -50);
-medius_device_move_axis(dev, m);
+medius_device_move_axis(dev, m, MEDIUS_MOVE_TIMING_RIDE, MEDIUS_PENDING_MOTION_KEEP);
 
 /* lock: an axis, or any usage */
 MediusLockTarget x = medius_lock_target_axis(MEDIUS_LOCK_TARGET_KIND_X);

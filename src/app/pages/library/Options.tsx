@@ -65,7 +65,9 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
           <p>
             The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms, and it
             clamps to 65535 ms. Pure idle injection, moving the cursor while the user holds still, stops
-            working while riding is on; button, key, and media injection are unaffected.
+            working while riding is on, unless a move opts out with{' '}
+            <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>; button, key, and media
+            injection are unaffected.
           </p>
           <table class="api-params">
             <thead>

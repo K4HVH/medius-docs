@@ -187,7 +187,7 @@ dev.close()`}</code></pre>
               <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
               <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
               <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
-              <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
+              <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
               <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
               <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
@@ -202,7 +202,7 @@ dev.close()`}</code></pre>
 
 with Device.find() as dev:
     dev.inject(Usage.button(Button.LEFT), Action.PRESS)        # generic inject
-    dev.move_axis(Motion.cursor(10, -4))                       # generic move
+    dev.move_axis(Motion.cursor(10, -4))                       # generic move (Ride / Keep by default)
     dev.lock(LockTarget.button(Button.LEFT), Direction.BOTH)
 
     stream = dev.catch_events([                                # generic subscribe

@@ -64,7 +64,7 @@ const Frame: Component = () => {
               <tr><th>Opcode</th><th>Name</th><th>Direction</th><th>Payload</th><th>Reply</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>3 or 5 bytes</td><td>none</td></tr>
+              <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>4 or 6 bytes</td><td>none</td></tr>
               <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
               <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>0 bytes</td><td>none</td></tr>
@@ -143,17 +143,17 @@ def encode_frame(type, seq, payload):
           </p>
           <ul>
             <li>Opcode <code>0x01</code>.</li>
-            <li>Payload is the <code>motion</code> byte (<code>00</code> = cursor) then the two 16-bit values <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>).</li>
-            <li><code>LEN</code> is <code>05 00</code>.</li>
+            <li>Payload is the <code>motion</code> byte (<code>00</code> = cursor), the two 16-bit values <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then the <code>flags</code> byte (<code>00</code>).</li>
+            <li><code>LEN</code> is <code>06 00</code>.</li>
           </ul>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 05 00  | 00     | 64 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 01     | 00     | 06 00  | 00     | 64 00  | 00 00  | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
             The CRC bytes are the little-endian <code>crc16_ccitt</code> of{' '}
-            <code>01 00 05 00 00 64 00 00 00</code>. Compute them rather than copying a literal.
+            <code>01 00 06 00 00 64 00 00 00 00</code>. Compute them rather than copying a literal.
           </p>
         </Card>
       </div>

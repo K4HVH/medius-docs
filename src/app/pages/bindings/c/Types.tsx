@@ -712,6 +712,43 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </Card>
       </div>
 
+      <div id="move-timing" data-search-target>
+        <Card>
+          <CardHeader title="MediusMoveTiming" subtitle="When a move reaches the game PC" />
+          <pre class="api-signature">{`enum MediusMoveTiming : uint8_t`}</pre>
+          <p>
+            The <code>timing</code> argument of <A href="/bindings/c/api#move"><code>medius_device_move_axis</code></A>,
+            against <A href="/library/options#set-movement-riding">movement riding</A>. See <A href="/library/move">Move</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a real cursor move to carry the delta.</td></tr>
+              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Emit on the box's own clock.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="pending-motion" data-search-target>
+        <Card>
+          <CardHeader title="MediusPendingMotion" subtitle="What a move does to held motion" />
+          <pre class="api-signature">{`enum MediusPendingMotion : uint8_t`}</pre>
+          <p>
+            The <code>pending</code> argument of <A href="/bindings/c/api#move"><code>medius_device_move_axis</code></A>.
+            See <A href="/library/move">Move</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_PENDING_MOTION_KEEP</code></td><td><code>0</code></td><td>Leave motion held for a ride alone.</td></tr>
+              <tr><td><code>MEDIUS_PENDING_MOTION_FLUSH</code></td><td><code>1</code></td><td>Emit it now, ignoring the ride window.</td></tr>
+              <tr><td><code>MEDIUS_PENDING_MOTION_DISCARD</code></td><td><code>2</code></td><td>Drop it.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="motion" data-search-target>
         <Card>
           <CardHeader title="MediusMotion" subtitle="A relative axis for move_axis" />
@@ -1394,6 +1431,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>loop_</code></td><td><code>uint8_t</code></td><td>Playback loops at the clip end (retained mode only).</td></tr>
               <tr><td><code>retain</code></td><td><code>uint8_t</code></td><td>The loaded clip is retained so it can rewind and replay (0 = streaming).</td></tr>
               <tr><td><code>finalized</code></td><td><code>uint8_t</code></td><td>A retained clip's end is fixed, so it can replay and loop.</td></tr>
+              <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
               <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound triggers, <code>triggers[0..n]</code>.</td></tr>
               <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>triggers</code>.</td></tr>
             </tbody>

@@ -20,8 +20,7 @@ const Clip: Component = () => {
         <p>
           Like <A href="/native/commands/inject"><code>INJECT</code></A> a clip is field-generic and{' '}
           <A href="/native/injection#state">additive</A>: one clip mixes mouse motion, buttons,
-          keyboard, and media, each routed to its own interface, and it follows{' '}
-          <A href="/native/commands/option#move-ride">movement riding</A> and{' '}
+          keyboard, and media, each routed to its own interface, at{' '}
           <A href="/native/commands/option#emit">the emit rate</A>.
         </p>
         <p>
@@ -305,8 +304,9 @@ link loss   the inter-chip link drops`}</pre>
             other injection.
           </p>
           <p>
-            With <A href="/native/commands/option#move-ride">movement riding</A> on, clip motion rides native
-            reports and is additive to the user's own movement, so frame-exact playback wants riding off.
+            A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
+            default, so it plays on its own timeline. <code>CLIP_SET(ride)</code> puts it back on the
+            ride, additive to the user's own movement and dropped while they hold still.
           </p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
@@ -340,6 +340,7 @@ link loss   the inter-chip link drops`}</pre>
               <tr><td><code>0</code></td><td><code>autolock</code></td><td>class bitmask</td><td>the physical-input classes <code>START</code> locks while playing (below)</td></tr>
               <tr><td><code>1</code></td><td><code>loop</code></td><td><code>0</code> / <code>1</code></td><td>a finalized clip replays from the head instead of ending</td></tr>
               <tr><td><code>2</code></td><td><code>retain</code></td><td><code>0</code> / <code>1</code></td><td>keep entries after playing so <code>START</code> / <code>RESTART</code> can replay them</td></tr>
+              <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's own clock</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">AUTO-LOCK</div>
@@ -362,7 +363,8 @@ link loss   the inter-chip link drops`}</pre>
           <p>
             Library binding: <A href="/library/clip#handle"><code>set_autolock</code></A>,{' '}
             <A href="/library/clip#handle"><code>set_loop</code></A>,{' '}
-            <A href="/library/clip#handle"><code>set_retain</code></A>.
+            <A href="/library/clip#handle"><code>set_retain</code></A>,{' '}
+            <A href="/library/clip#handle"><code>set_ride</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Turn looping on (<code>id = 1</code>, <code>value = 1</code>, so <code>LEN = 2</code>):</p>

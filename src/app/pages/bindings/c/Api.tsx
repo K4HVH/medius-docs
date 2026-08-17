@@ -97,7 +97,11 @@ medius_device_free(dev);`}</code></pre>
             <tbody>
               <tr><td><code>medius_device_move_rel(MediusDevice *dev, int16_t dx, int16_t dy)</code></td><td>Nudge the cursor by a signed 16-bit delta.</td></tr>
               <tr><td><code>medius_device_wheel(MediusDevice *dev, int16_t delta)</code></td><td>Scroll the wheel.</td></tr>
-              <tr><td><code>medius_device_move_axis(MediusDevice *dev, MediusMotion motion)</code></td><td>Drive one axis from a <code>medius_motion_cursor(...)</code> or <code>medius_motion_wheel(...)</code>.</td></tr>
+              <tr><td><code>medius_device_move_rel_now(MediusDevice *dev, int16_t dx, int16_t dy)</code></td><td>The same, bypassing <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
+              <tr><td><code>medius_device_wheel_now(MediusDevice *dev, int16_t delta)</code></td><td>Scroll, bypassing movement riding.</td></tr>
+              <tr><td><code>medius_device_flush_motion(MediusDevice *dev)</code></td><td>Emit the motion riding is holding, now.</td></tr>
+              <tr><td><code>medius_device_discard_motion(MediusDevice *dev)</code></td><td>Drop the motion riding is holding.</td></tr>
+              <tr><td><code>medius_device_move_axis(MediusDevice *dev, MediusMotion motion, MediusMoveTiming timing, MediusPendingMotion pending)</code></td><td>Drive one axis from a <code>medius_motion_cursor(...)</code> or <code>medius_motion_wheel(...)</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -333,6 +337,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>medius_clip_set_autolock(clip, const MediusBlanket *scope, uintptr_t scope_len)</code></td><td>The auto-lock scope: the <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> groups <code>scope</code> points at (<code>NULL</code> / 0 = no lock). Set before the first append.</td></tr>
               <tr><td><code>medius_clip_set_loop(clip, uint8_t on) / _set_retain(clip, uint8_t on)</code></td><td>Loop at the clip end (retained only) / retain the loaded clip so it can rewind and replay (0 = streaming, the default).</td></tr>
+              <tr><td><code>medius_clip_set_ride(clip, uint8_t on)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (0 = the box's own clock, the default).</td></tr>
               <tr><td><code>medius_clip_finalize(clip)</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>medius_clip_bind(clip, MediusClipTrigger trigger)</code></td><td>Add or overwrite a <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A>: a <A href="/bindings/c/types#edge"><code>MediusEdge</code></A> of <code>on</code> drives a <A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A>; <code>consume</code> hides the input from the game.</td></tr>
               <tr><td><code>medius_clip_unbind(clip, MediusUsage usage, MediusEdge edge) / _clear_triggers(clip)</code></td><td>Remove the binding on that usage + edge; drop every binding.</td></tr>

@@ -136,7 +136,8 @@ const Option: Component = () => {
             <p>
               While on, pure idle injection (moving the cursor while the hand is still) stops working:
               motion waits for a native move and is dropped if none comes. Button, key, and media
-              injection are unaffected.
+              injection are unaffected, and a move can opt out per command with the{' '}
+              <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
             </p>
           </div>
           <p>

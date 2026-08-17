@@ -737,7 +737,7 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
               <tr><td>+</td><td><code>autolock</code></td><td><code>u8</code></td><td>config: the <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> autolock bitmask (<code>CLIP_LOCK_*</code>)</td></tr>
-              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized, b3 ride</td></tr>
               <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound triggers that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per trigger: 0=button 1=key 2=media 0xFF=any</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
@@ -755,6 +755,7 @@ const Requests: Component = () => {
               <tr><td>b0</td><td><code>0x01</code></td><td><code>LOOP</code>: playback restarts from the top on drain instead of stopping</td></tr>
               <tr><td>b1</td><td><code>0x02</code></td><td><code>RETAIN</code>: the buffered content survives a stop instead of clearing</td></tr>
               <tr><td>b2</td><td><code>0x04</code></td><td><code>FINALIZED</code>: the clip is sealed, no more <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> accepted</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>RIDE</code>: the clip's motion waits to ride a native report instead of emitting on the box's own clock</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
