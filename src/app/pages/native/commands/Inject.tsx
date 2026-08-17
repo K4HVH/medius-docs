@@ -14,8 +14,10 @@ const Inject: Component = () => {
           <A href="/native/commands/inject#button">button</A>, a keyboard{' '}
           <A href="/native/commands/inject#key">key</A> or modifier, or a{' '}
           <A href="/native/commands/inject#media">media</A> key. One verb covers all three, tagged by a{' '}
-          <code>class</code> byte, so the same press / release logic works for every input class. The
-          continuous axes (cursor and wheel) have their own verb,{' '}
+          <code>class</code> byte.
+        </p>
+        <p>
+          The continuous axes (cursor and wheel) have their own verb,{' '}
           <A href="/native/commands/move#move"><code>MOVE</code></A>.
         </p>
       </Card>
@@ -25,10 +27,8 @@ const Inject: Component = () => {
           <CardHeader title="INJECT" subtitle="Momentary-usage override" />
           <p>
             <code>INJECT</code> sets a per-usage <A href="/native/injection#state">override</A>, the
-            box's own held decision layered over the physical input. The <code>class</code> byte picks
-            the input kind, <code>id</code> picks the usage within that class, and <code>action</code>{' '}
-            is the same tri-state for all three. <A href="/native/frame#opcodes">Opcode</A>{' '}
-            <code>0x03</code>.
+            box's own held decision layered over the physical input.{' '}
+            <A href="/native/frame#opcodes">Opcode</A> <code>0x03</code>.
           </p>
           <pre class="api-signature">INJECT  0x03  ·  payload 4 bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -54,7 +54,6 @@ const Inject: Component = () => {
               <tr><td><A href="/native/commands/inject#media">media</A></td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">ACTIONS</div>
           <table class="api-params">
             <thead>
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
@@ -100,7 +99,10 @@ RESET      releases every override at once`}</pre>
             With <code>class = 0</code>, <code>id</code> is a semantic{' '}
             <A href="/native/commands/usage#buttons">button id</A> (0=Left, 1=Right, 2=Middle,
             3=Side1, 4=Side2), bound at clone time to the real mouse's buttons. The override sets that
-            button's bit in the report the PC sees. Library bindings:{' '}
+            button's bit in the report the PC sees.
+          </p>
+          <p>
+            Library bindings:{' '}
             <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -120,10 +122,12 @@ RESET      releases every override at once`}</pre>
             With <code>class = 1</code>, <code>id</code> is a{' '}
             <A href="/native/commands/usage#keycodes">HID keyboard usage</A>. A usage of{' '}
             <code>0xE0</code>-<code>0xE7</code> folds into the modifier byte; anything else fills a
-            keycode slot (or sets its NKRO bit) in the report the PC sees. Physical keys keep their
-            slots, so injection never evicts the user's typing; past the board's rollover limit it
-            emits the board's own <code>ErrorRollOver</code>. A keycode the cloned board can't report is
-            a no-op. Library bindings:{' '}
+            keycode slot (or sets its NKRO bit) in the report the PC sees.
+          </p>
+          <p>
+            Physical keys keep their slots, so injection never evicts the user's typing; past the
+            board's rollover limit it emits the board's own <code>ErrorRollOver</code>. A keycode the
+            cloned board can't report is a no-op. Library bindings:{' '}
             <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -142,8 +146,10 @@ RESET      releases every override at once`}</pre>
           <p>
             With <code>class = 2</code>, <code>id</code> is a 16-bit{' '}
             <A href="/native/commands/usage#consumer">Consumer usage</A> (e.g. 0xCD Play/Pause, 0xE9
-            Volume Up), merged onto the cloned keyboard's Consumer report. Present-gated to a board
-            that declares a Consumer collection, read from the{' '}
+            Volume Up), merged onto the cloned keyboard's Consumer report.
+          </p>
+          <p>
+            Present-gated to a board that declares a Consumer collection, read from the{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>CONSUMER</code> flag; otherwise a no-op. Library bindings:{' '}
             <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.

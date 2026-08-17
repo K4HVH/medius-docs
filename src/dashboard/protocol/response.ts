@@ -25,11 +25,31 @@ import {
   Q_VERSION,
   RATE_CHANGE_DRIVEN,
   RATE_CONFIDENT,
+  CATCH_FLAG_TABLE_FULL,
+  CATCH_TABLE_MAX,
+  CLIP_CFG_F_FINALIZED,
+  CLIP_CFG_F_LOOP,
+  CLIP_CFG_F_RETAIN,
+  CLIP_CFG_F_RIDE,
+  CLIP_HELD_MAX,
+  CLIP_TRIG_LEN,
+  CLIP_TRIG_MAX,
+  CLK_AGE_NONE,
+  EVENT_HDR,
+  EVENT_TS_LEN,
+  Q_CLIP,
+  RESP_CLIP_HDR,
+  clipStateFromU8,
 } from './opcode';
 import {
   type Caps,
+  type CatchEntry,
   type CatchState,
+  type ClipStatus,
+  type ClipTrigger,
+  type ClipTriggerAction,
   type DeviceInfo,
+  type Direction,
   type Health,
   type ImperfectStatus,
   type LockEntry,
@@ -38,10 +58,12 @@ import {
   type MotionEvent,
   type Rate,
   type Stats,
+  type TrafficEvent,
   type Usage,
   type UsageSnapshot,
   type Version,
   LogLevel,
+  clockDomainFromU8,
   deviceKindFromU8,
   healthFromFlags,
   kbdCapsFromBytes,
@@ -68,12 +90,22 @@ export type Resp =
   | { kind: 'catch'; catch: CatchState }
   | { kind: 'imperfect'; imperfect: ImperfectStatus }
   | { kind: 'movementRiding'; windowMs: number } // 0 = off
-  | { kind: 'emitPace'; emit: EmitPace };
+  | { kind: 'emitPace'; emit: EmitPace }
+  | { kind: 'clip'; clip: ClipStatus };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
   (p[i] | (p[i + 1] << 8) | (p[i + 2] << 16) | (p[i + 3] << 24)) >>> 0;
 const i16le = (p: Uint8Array, i: number): number => ((p[i] | (p[i + 1] << 8)) << 16) >> 16;
+const i32le = (p: Uint8Array, i: number): number =>
+  p[i] | (p[i + 1] << 8) | (p[i + 2] << 16) | (p[i + 3] << 24);
+
+// RESP(CATCH) (§4.9) shape: a 19-byte scalar header, then 7 bytes per subscription entry.
+const CATCH_HDR_LEN = 19;
+const CATCH_ENTRY_LEN = 7;
+
+// TRAFFIC_EVENT (§4.10): 12 fixed header bytes before the captured payload.
+const TRAFFIC_HDR_LEN = 12;
 
 // Parse a RESP payload: [what u8][data..]. All multi-byte fields little-endian (§4).
 export function parseResp(payload: Uint8Array): Resp | null {
@@ -184,8 +216,92 @@ export function parseResp(payload: Uint8Array): Resp | null {
       return { kind: 'locks', locks: { entries } };
     }
     case Q_CATCH: {
-      if (payload.length < 6) return null;
-      return { kind: 'catch', catch: { mask: payload[1], dropped: u32le(payload, 2) } };
+      // [what][flags][dropped u32][clk_off_us i32][clk_rate_ppb i32][clk_delay_us u16]
+      // [clk_age_ms u16][n u8] then n × [class][id u16 LE][dir][capture][dropped u16].
+      if (payload.length < CATCH_HDR_LEN) return null;
+      const n = payload[18];
+      // The frame's 512-byte payload ceiling would admit 70 entries, but the box's table holds 32,
+      // so a larger count is a malformed reply rather than a bigger table.
+      if (n > CATCH_TABLE_MAX) return null;
+      if (payload.length < CATCH_HDR_LEN + CATCH_ENTRY_LEN * n) return null;
+      const ageMs = u16le(payload, 16);
+      const entries: CatchEntry[] = [];
+      for (let i = 0; i < n; i++) {
+        const off = CATCH_HDR_LEN + CATCH_ENTRY_LEN * i;
+        entries.push({
+          cls: payload[off],
+          id: u16le(payload, off + 1),
+          dir: payload[off + 3],
+          capture: payload[off + 4],
+          dropped: u16le(payload, off + 5),
+        });
+      }
+      return {
+        kind: 'catch',
+        catch: {
+          tableFull: (payload[1] & CATCH_FLAG_TABLE_FULL) !== 0,
+          dropped: u32le(payload, 2),
+          clock: {
+            offsetUs: i32le(payload, 6),
+            ratePpb: i32le(payload, 10),
+            delayUs: u16le(payload, 14),
+            ageMs: ageMs === CLK_AGE_NONE ? null : ageMs,
+          },
+          entries,
+        },
+      };
+    }
+    case Q_CLIP: {
+      // [what][state][free u32][used u32][played u32][ticks u32][underruns u16][overruns u16]
+      // [seq_gaps u16][n_held u8] then n_held x [class][id u16 LE], then [autolock][flags][n_trig]
+      // then n_trig x [class][id u16 LE][edge][action][consume].
+      if (payload.length < RESP_CLIP_HDR) return null;
+      const nHeld = payload[24];
+      if (nHeld > CLIP_HELD_MAX) return null;
+      const cfgAt = RESP_CLIP_HDR + 3 * nHeld;
+      // The config section is fixed-size and always present, so a reply that stops inside it is
+      // truncated rather than a box that omitted its configuration.
+      if (payload.length < cfgAt + 3) return null;
+      const held: Usage[] = [];
+      for (let i = 0; i < nHeld; i++) {
+        const off = RESP_CLIP_HDR + 3 * i;
+        held.push({ cls: payload[off], id: u16le(payload, off + 1) });
+      }
+      const nTrig = payload[cfgAt + 2];
+      if (nTrig > CLIP_TRIG_MAX) return null;
+      if (payload.length < cfgAt + 3 + CLIP_TRIG_LEN * nTrig) return null;
+      const triggers: ClipTrigger[] = [];
+      for (let i = 0; i < nTrig; i++) {
+        const off = cfgAt + 3 + CLIP_TRIG_LEN * i;
+        triggers.push({
+          cls: payload[off],
+          id: u16le(payload, off + 1),
+          edge: payload[off + 3] as Direction,
+          action: payload[off + 4] as ClipTriggerAction,
+          consume: payload[off + 5] !== 0,
+        });
+      }
+      const flags = payload[cfgAt + 1];
+      return {
+        kind: 'clip',
+        clip: {
+          state: clipStateFromU8(payload[1]),
+          freeBytes: u32le(payload, 2),
+          totalBytes: u32le(payload, 6),
+          played: u32le(payload, 10),
+          ticks: u32le(payload, 14),
+          underruns: u16le(payload, 18),
+          overruns: u16le(payload, 20),
+          seqGaps: u16le(payload, 22),
+          held,
+          autolock: payload[cfgAt],
+          loop: (flags & CLIP_CFG_F_LOOP) !== 0,
+          retain: (flags & CLIP_CFG_F_RETAIN) !== 0,
+          finalized: (flags & CLIP_CFG_F_FINALIZED) !== 0,
+          ride: (flags & CLIP_CFG_F_RIDE) !== 0,
+          triggers,
+        },
+      };
     }
     case Q_OPTIONS: {
       if (payload.length < 2) return null;
@@ -225,28 +341,57 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse a MOTION_EVENT payload (§4.10): [dx i16][dy i16][dz i16]. Unsolicited.
+// Parse a MOTION_EVENT payload (§4.10): [ts_us u32][clk u8][dx i16][dy i16][dz i16]. Unsolicited.
 export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
-  if (payload.length < 6) return null;
+  if (payload.length < EVENT_HDR + 6) return null;
   return {
-    dx: i16le(payload, 0),
-    dy: i16le(payload, 2),
-    dz: i16le(payload, 4),
+    tsUs: u32le(payload, 0),
+    clk: clockDomainFromU8(payload[EVENT_TS_LEN]),
+    dx: i16le(payload, EVENT_HDR),
+    dy: i16le(payload, EVENT_HDR + 2),
+    dz: i16le(payload, EVENT_HDR + 4),
   };
 }
 
-// Parse a USAGE_EVENT payload (§4.10): [n u8] then n × [class u8][id u16 LE]. A class-tagged held-usage
-// snapshot (buttons, keys, or media, one class per event). Unsolicited.
+// Parse a USAGE_EVENT payload (§4.10): [ts_us u32][clk u8][cls u8][dir u8][n u8] then
+// n × [class u8][id u16 LE]. A class-tagged held-usage snapshot (buttons, keys, or media, one class
+// per event). Class and edge are in the HEADER, not read off the entries: the snapshot that most
+// needs them is the empty one -- the release of the last held usage, which lists nothing.
+// Unsolicited.
 export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
-  if (payload.length < 1) return null;
-  const n = payload[0];
-  if (payload.length < 1 + 3 * n) return null;
+  if (payload.length < EVENT_HDR + 3) return null;
+  const n = payload[EVENT_HDR + 2];
+  if (payload.length < EVENT_HDR + 3 + 3 * n) return null;
   const usages: Usage[] = [];
   for (let i = 0; i < n; i++) {
-    const off = 1 + 3 * i;
+    const off = EVENT_HDR + 3 + 3 * i;
     usages.push({ cls: payload[off], id: u16le(payload, off + 1) });
   }
-  return { usages };
+  return {
+    tsUs: u32le(payload, 0),
+    clk: clockDomainFromU8(payload[EVENT_TS_LEN]),
+    cls: payload[EVENT_HDR],
+    dir: payload[EVENT_HDR + 1],
+    usages,
+  };
+}
+
+// Parse a TRAFFIC_EVENT payload (§4.10): [ts_us u32][clk u8][class u8][id u16 LE][dir u8][flags u8]
+// [true_len u16 LE][bytes..]. The frame LEN delimits how many bytes arrived, which is at most the
+// entry's capture length; compare that against true_len to see whether the capture was cut short.
+// Unsolicited.
+export function parseTrafficEvent(payload: Uint8Array): TrafficEvent | null {
+  if (payload.length < TRAFFIC_HDR_LEN) return null;
+  return {
+    tsUs: u32le(payload, 0),
+    clk: clockDomainFromU8(payload[4]),
+    cls: payload[5],
+    id: u16le(payload, 6),
+    dir: payload[8],
+    flags: payload[9],
+    trueLen: u16le(payload, 10),
+    bytes: payload.slice(TRAFFIC_HDR_LEN),
+  };
 }
 
 const textDecoder = new TextDecoder('utf-8', { fatal: false });

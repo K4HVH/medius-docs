@@ -10,14 +10,14 @@ const Quickstart: Component = () => {
         <CardHeader title="First program" subtitle="Find the box, send a command, read one event, free it" />
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move the
-          cursor, click the left button, wait for one physical input, then free it. C has no{' '}
-          <a href="https://en.cppreference.com/w/cpp/language/exceptions" target="_blank" rel="noreferrer">exceptions</a>,
-          so every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
+          cursor, click the left button, wait for the user to move the real mouse, then free it.
+        </p>
+        <p>
+          Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
           check, and the detail comes from{' '}
           <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A>. What the commands{' '}
           <em>mean</em> lives in the{' '}
-          <A href="/library">Library</A> and <A href="/native">Native</A> sections; this page is only
-          the C mechanics.
+          <A href="/library">Library</A> and <A href="/native">Native</A> sections.
         </p>
         <div class="callout callout--info">
           <p>
@@ -30,7 +30,7 @@ const Quickstart: Component = () => {
         <pre class="diagram">{`  find()            ──▶  open + handshake      blocks
   query_version()   ──▶  read the version      blocks
   move() / press()  ──▶  inject input          fire-and-forget
-  catch_events()    ──▶  subscribe to input    fire-and-forget
+  catch_events()    ──▶  subscribe by filter   fire-and-forget
   recv()            ──▶  next physical event   blocks
   free()            ──▶  close, NULL-safe      local`}</pre>
       </Card>
@@ -71,8 +71,11 @@ int main(void) {
     check(medius_device_press(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "press");
     check(medius_device_soft_release(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "release");
 
+    /* one subscription entry: X, Y and the wheel, both directions */
+    MediusCatchFilter axes = medius_catch_filter_watch_axes();
+
     MediusEventStream *events = NULL;
-    if (!check(medius_device_catch_events(dev, MEDIUS_CATCH_MASK_ALL, &events), "catch_events")) {
+    if (!check(medius_device_catch_events(dev, &axes, 1, &events), "catch_events")) {
         MediusCatchEvent ev;                                   /* blocks for one physical event */
         if (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK &&
             ev.kind == MEDIUS_CATCH_EVENT_KIND_MOTION)
@@ -85,14 +88,26 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 3.0.1 (abi 3)
-firmware 3.0.1 (proto 3)
+          <pre><code class="language-c">{`medius-capi 3.1.0 (abi 4)
+firmware 3.1.0 (proto 4)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
+          <p>
+            The subscription is an array of{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, and
+            this program passes one. Wanting keys as well is a second entry from{' '}
+            <code>medius_catch_filter_watch_class</code>; wanting a vendor endpoint's raw packets is a
+            third from <code>medius_catch_filter_traffic</code>.
+          </p>
+          <p>
+            The array is read during the call and not retained, so a local like this one is fine. The
+            whole helper set is on <A href="/bindings/c/api#catch-filters">API index</A>.
+          </p>
           <div class="callout callout--info">
             <p>
-              <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until the user touches the mouse or
-              keyboard. To poll instead, or to loop over many events, see{' '}
-              <A href="/bindings/c/streams">Streams</A>.
+              <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
+              something the filters address happens, so with this one entry it returns when the user
+              moves the real mouse. To poll instead, to subscribe to more classes, or to loop over many
+              events, see <A href="/bindings/c/streams">Streams</A>.
             </p>
           </div>
         </Card>

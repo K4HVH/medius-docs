@@ -6,7 +6,7 @@ Guidance for Claude Code when working in this repository. This is the **Medius d
 
 A static documentation site for Medius: replacement firmware for MAKCU-class mouse-passthrough boxes, its open binary control protocol, and the `medius` Rust library. Two sections:
 
-- **Native API** -- The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x13`).
+- **Native API** -- The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x16`).
 - **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` features.
 
 The site uses **MidnightUI** as its component library. MidnightUI components live in `src/components/` and `src/styles/` and are synced from an upstream repo. Do not modify MidnightUI component source files.
@@ -56,9 +56,9 @@ src/
           Admin.tsx                   # RESET 0x04, REBOOT 0x07, LOG 0x08
           Led.tsx                     # LED 0x09
           Lock.tsx                    # LOCK 0x0A
-          Catch.tsx                   # CATCH 0x0B, MOTION_EVENT 0x0C, USAGE_EVENT 0x0F
+          Catch.tsx                   # CATCH 0x0B, MOTION_EVENT 0x0C, USAGE_EVENT 0x0F, TRAFFIC_EVENT 0x16
           Option.tsx                  # OPTION 0x11
-          Clip.tsx                    # CLIP_APPEND 0x12, CLIP_CTRL 0x13
+          Clip.tsx                    # CLIP_APPEND 0x12, CLIP_CTRL 0x13, CLIP_SET 0x14, CLIP_TRIGGER 0x15
           Usage.tsx                   # button/keycode/consumer usage id reference
         Flashing.tsx                  # Firmware updates over REBOOT
         Troubleshooting.tsx           # Common problems and fixes

@@ -13,11 +13,15 @@ const NativeIntroduction: Component = () => {
         />
         <p>
           Medius is replacement firmware for MAKCU-class USB input-passthrough boxes plus an open
-          binary control protocol. The box sits inline between a USB device and a PC: the real device
-          (mouse, keyboard, or combo) passes through unchanged while your program injects input of its
-          own (cursor and buttons for a mouse, keys and media for a keyboard) over a separate
-          USB-serial link. Drive it from any language; the Rust <A href="/library">library</A> is the
-          official client.
+          binary control protocol.
+        </p>
+        <p>
+          The box sits inline between a USB device and a PC. The real device (mouse, keyboard, or
+          combo) passes through unchanged while your program injects over a separate USB-serial
+          link: cursor and buttons for a mouse, keys and media for a keyboard.
+        </p>
+        <p>
+          Drive it from any language; the Rust <A href="/library">library</A> is the official client.
         </p>
         <table class="api-params">
           <thead>
@@ -29,11 +33,11 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>3.0.1</code></td>
+              <td><code>3.1.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>3</code></td>
+              <td><code>4</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -65,7 +69,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>3</code>. Confirm it during the{' '}
+                These pages describe version <code>4</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -168,7 +172,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Catch" subtitle="Stream physical input" />
+                <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
               </Card>
             </A>
             <A href="/native/commands/clip" style={{ "text-decoration": "none" }}>

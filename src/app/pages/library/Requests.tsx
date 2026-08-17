@@ -10,19 +10,19 @@ const Requests: Component = () => {
         <Card>
           <CardHeader title="Requests" subtitle="Asking the box a question and waiting for the answer" />
           <p>
-            Unlike <A href="/native/injection#fire-and-forget">fire-and-forget</A>, the queries are
-            blocking: a question frame out, one answer frame back. They are{' '}
+            Unlike the <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls, the queries
+            block: a question frame out, one answer frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
             <A href="/library/requests#caps"><code>caps</code></A>,{' '}
             <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>, each covered below. The{' '}
-            <A href="/library/clip#handle">clip handle</A> adds{' '}
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>, and{' '}
+            <A href="/library/requests#query-catch"><code>query_catch</code></A>, plus{' '}
             <A href="/library/requests#clip-status"><code>query_status</code></A> and{' '}
-            <A href="/library/requests#clip-config"><code>query_config</code></A>, also here.
+            <A href="/library/requests#clip-config"><code>query_config</code></A> on the{' '}
+            <A href="/library/clip#handle">clip handle</A>.
           </p>
         </Card>
       </div>
@@ -43,8 +43,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.0.1
-println!("proto {}", v.proto_ver);     // proto 3
+println!("{v}");                       // fw 3.1.0
+println!("proto {}", v.proto_ver);     // proto 4
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -92,8 +92,7 @@ if h.link_up && h.mouse_attached && h.clone_configured {
             Returns a <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>: the{' '}
             <code>vid</code>, <code>pid</code>, USB version, a{' '}
             <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A>, and the{' '}
-            <code>product</code> string the box read off the real device. The clone sits on the game PC's
-            bus, so this is the only way to see it from the control link. Every field is zero/empty when
+            <code>product</code> string the box read off the real device. Every field is zero/empty when
             nothing is cloned. <code>Display</code> prints <code>VVVV:PPPP product</code>.
           </p>
 
@@ -122,14 +121,13 @@ if d.vid == 0 {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            One query describes the whole cloned device. Returns a{' '}
-            <A href="/library/types/structs#caps"><code>Caps</code></A> with a{' '}
-            <A href="/library/types/structs#mouse-caps"><code>mouse</code></A> half and a{' '}
-            <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, plus the per-class
-            change-driven flags. Use it for feature detection: an{' '}
+            Returns a <A href="/library/types/structs#caps"><code>Caps</code></A>: a{' '}
+            <A href="/library/types/structs#mouse-caps"><code>mouse</code></A> half, a{' '}
+            <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
+            change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
+            <code>has_keyboard()</code> say which are bound. An{' '}
             <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is a
-            silent no-op, so the counts tell you what is real. A class that is not present reads
-            all-zero; <code>has_mouse()</code> and <code>has_keyboard()</code> say which are bound.
+            silent no-op, so feature-detect here first.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -209,16 +207,15 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
             Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the list of inputs
             currently blocked by <A href="/library/lock#lock"><code>lock</code></A>.{' '}
             <code>entries()</code> walks them and <code>is_locked(target, direction)</code> answers
-            whether one particular lock is set. Read it to confirm a lock landed, or to mirror the box's
-            lock state in a UI.
+            whether one particular lock is set.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, LockDirection};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
 let locks = device.query_locks()?;
-if locks.is_locked(Axis::X, LockDirection::Both) {
+if locks.is_locked(Axis::X, Direction::Both) {
     println!("horizontal motion is frozen");
 }`}</code></pre>
         </Card>
@@ -231,20 +228,81 @@ if locks.is_locked(Axis::X, LockDirection::Both) {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
-            <code>mask</code> currently streaming via{' '}
-            <A href="/library/catch#catch-events"><code>catch_events</code></A>, plus{' '}
-            <code>dropped</code>, the box-side count of events shed under back-pressure. Read it after
-            subscribing to confirm the mask took, or to reflect the live catch mask in your own UI.
+            Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the
+            live subscription table as a list of{' '}
+            <A href="/library/types/structs#catch-entry"><code>CatchEntry</code></A>, the{' '}
+            <code>table_full</code> flag, the box-wide <code>dropped</code> count, and a{' '}
+            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> relating the
+            two chips' timers.
+          </p>
+          <p>
+            <A href="/library/catch#catch-events"><code>catch_events</code></A> is fire-and-forget:
+            the box never answers a subscription. Each entry returns the{' '}
+            <code>class / id / direction / capture</code> the box accepted, so checking the list
+            against the <A href="/library/types/structs#catch-filter">filters</A> you sent is the only
+            way to see they all landed.
+          </p>
+          <p>
+            A filter that is missing was refused. <code>table_full</code> says which reason: the
+            32-entry table was full, or the filter itself was malformed.
+          </p>
+
+          <div class="api-response-label">TWO DROP COUNTS</div>
+          <p>
+            <code>CatchState::dropped</code> is box-wide;{' '}
+            <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
+            entry.
+          </p>
+          <p>
+            A lost event is charged to <em>every</em> entry it resolved against.
+          </p>
+          <p>
+            Vendor bulk starving beside a clean key entry means narrowing the bulk address or cutting
+            its <code>capture</code>. Drops on the entry you care about mean the subscription is too
+            broad for the link.
+          </p>
+
+          <div class="api-response-label">THE CLOCK ESTIMATE</div>
+          <pre class="diagram">{`  device chip                              host chip
+      t1  ------- request -------------------> t2
+                                               |
+      t4  <---------------- reply ------------ t3
+
+      offset_us = ((t2 - t1) + (t3 - t4)) / 2   ->  host clock minus device clock
+      delay_us  =  (t4 - t1) - (t3 - t2)        ->  the error bound is delay_us / 2`}</pre>
+          <p>
+            Events are stamped by whichever chip saw them, and the two chips' <code>ts_us</code> values
+            share no epoch. The <code>clock</code> field measures the gap, the only way to subtract
+            across domains.
+          </p>
+          <p>
+            <code>delay_us</code> bounds how far you can trust it, <code>rate_ppb</code> corrects for
+            crystal drift as it ages, and an <code>age</code> of <code>None</code> means no estimate
+            yet, not an offset of zero. Applying it is optional: each event's{' '}
+            <A href="/library/types/enums#clock-domain"><code>clock</code></A> stays authoritative.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::{Capture, CatchFilter, Class, Device, TrafficClass};
 
 let device = Device::find()?;
+// Bind the stream: dropping it unsubscribes, and the query below would then find an empty table.
+let _events = device.catch_events([
+    CatchFilter::watch_class(Class::Key),
+    CatchFilter::traffic(TrafficClass::VendorBulk, 0x02).with_capture(Capture::First(16)),
+])?;
+
 let c = device.query_catch()?;
-if !c.mask.is_empty() {
-    println!("catching {:?}, {} dropped", c.mask, c.dropped);
+if c.table_full {
+    eprintln!("the 32-entry table is full: some filters were refused");
+}
+for e in &c.entries {
+    let f = e.filter;
+    println!("{:?} {:?} capture={:?} dropped={}", f.class(), f.id(), f.capture(), e.dropped);
+}
+println!("{} dropped box-wide", c.dropped);
+if let Some(age) = c.clock.age {
+    println!("clocks differ by {} us (+/- {}, {age:?} old)", c.clock.offset_us, c.clock.delay_us / 2);
 }`}</code></pre>
         </Card>
       </div>
@@ -259,11 +317,10 @@ if !c.mask.is_empty() {
             On the <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
             <A href="/library/clip#clip"><code>device.clip()</code></A>, not <code>Device</code> itself.
             Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
-            <code>state</code>, ring <code>free</code>, retained <code>played</code>/<code>total</code>, the
-            drain counters, and the <code>held</code> usages. Pace clip top-ups off <code>free</code>, and
-            watch <code>state</code> for a{' '}
-            <A href="/library/types/enums#clip-state"><code>Faulted</code></A> re-sync or for playback
-            reaching <code>Idle</code>. Backs{' '}
+            <code>state</code> (including{' '}
+            <A href="/library/types/enums#clip-state"><code>Faulted</code></A>), ring <code>free</code>,
+            retained <code>played</code>/<code>total</code>, the drain counters, and the{' '}
+            <code>held</code> usages. Backs{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
           </p>
 
@@ -290,8 +347,8 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
             <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on the{' '}
             <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
             <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
-            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set; nothing
-            is write-only, every setting round-trips.
+            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set. Every
+            setting round-trips.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

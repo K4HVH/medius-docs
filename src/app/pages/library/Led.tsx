@@ -22,14 +22,8 @@ const Led: Component = () => {
           <pre class="api-signature">fn led(&self, target: LedTarget, mode: LedMode, level: u8) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <A href="/library/types/enums#led-target"><code>LedTarget</code></A> picks which chip's LED,
-            and <A href="/library/types/enums#led-mode"><code>LedMode</code></A> picks what to drive it
-            to; both enums and their bytes are on <A href="/library/types/enums">Types</A>.
-            <code>level</code> is brightness <code>0..=255</code>, used by{' '}
-            <code>Solid</code> and <code>Blink</code> and ignored for <code>Off</code> and{' '}
-            <code>Auto</code>.
+            Both enums and their bytes are on <A href="/library/types/enums">Types</A>.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>

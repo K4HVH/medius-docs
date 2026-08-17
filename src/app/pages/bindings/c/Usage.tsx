@@ -9,10 +9,7 @@ const Usage: Component = () => {
       <Card>
         <CardHeader title="Calls & errors" subtitle="The C-specific shapes: status codes, handle lifecycle, builders" />
         <p>
-          This page covers what's specific to C: how a failed call surfaces, who frees a handle, and
-          how you build the generic <A href="/library/inject"><code>inject</code></A> /{' '}
-          <A href="/library/move"><code>move</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
-          targets. What each call <em>does</em> lives in the <A href="/library">Rust Library</A> and{' '}
+          What each call <em>does</em> lives in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A> sections. The full call list is on the{' '}
           <A href="/bindings/c/api">API index</A>; structs and enums are on{' '}
           <A href="/bindings/c/types">Types &amp; errors</A>.
@@ -56,11 +53,18 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>9</td><td>A bad argument (e.g. a null handle).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td>10</td><td>An internal panic was caught at the boundary.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td>11</td><td>Unspecified, or a platform-gated call on an unsupported OS.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CATCH_TABLE_FULL</code></td><td>12</td><td>The subscription needs more entries than the box's table holds.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_EMPTY_SUBSCRIPTION</code></td><td>13</td><td>A catch subscription with no filters, which would never yield an event.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CAPTURE_NOT_APPLICABLE</code></td><td>14</td><td>A non-zero <code>capture</code> on an input class, which carries no packet.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NOT_AN_INPUT_FILTER</code></td><td>15</td><td>A traffic class passed to <A href="/bindings/c/streams#input"><code>medius_device_input_events</code></A>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td>16</td><td>The everything filter passed to <code>medius_device_input_events</code>; it covers traffic too.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>17</td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td>18</td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READING THE DETAIL</div>
-          <pre class="api-signature">uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
-uint8_t   medius_last_error_proto_ver(void);</pre>
+          <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
+uint8_t   medius_last_error_proto_ver(void);`}</pre>
           <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     char buf[256];
@@ -98,12 +102,11 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
           <CardHeader title="Lifecycle" subtitle="Opaque pointers, manual free, no RAII or GC" />
           <p>
             Handles are opaque pointers you own. There's no destructor or{' '}
-            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>:
-            a constructor hands you a pointer, <code>medius_*_clone</code> makes another owner of the{' '}
-            <em>same</em> underlying object (reference-counted, like <code>Device::clone</code> in Rust),
-            and you must call the matching <code>medius_*_free</code> on every handle you hold. See{' '}
-            <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>{' '}
-            for what the link does between open and free.
+            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>:{' '}
+            <code>medius_*_clone</code> makes another owner of the{' '}
+            <em>same</em> underlying object (reference-counted), and you must call the matching{' '}
+            <code>medius_*_free</code> on every handle you hold. See{' '}
+            <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
           </p>
           <pre class="diagram">{`  medius_device_open / _find  ──▶  MediusDevice *    (you own it)
                                         │  medius_device_clone
@@ -128,6 +131,18 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
                 <td><code>medius_device_catch_events</code></td>
                 <td><code>medius_event_stream_clone</code></td>
                 <td><code>medius_event_stream_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/bindings/c/streams#input"><code>MediusInputStream</code></A></td>
+                <td><code>medius_device_input_events</code></td>
+                <td>-</td>
+                <td><code>medius_input_stream_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A></td>
+                <td><code>medius_timeline_new</code></td>
+                <td>-</td>
+                <td><code>medius_timeline_free</code></td>
               </tr>
               <tr>
                 <td><A href="/library/diagnostics"><code>MediusLogStream</code></A></td>
@@ -167,8 +182,14 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
             <p>
               <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
               a no-op, so cleanup paths don't need null checks. Freeing a stream unsubscribes when its
-              last handle drops; catch events and log lines are fixed-size structs written into your
-              buffer, so there's nothing to free per event.
+              last handle drops.
+            </p>
+            <p>
+              Catch events and log lines are fixed-size structs written into your
+              buffer, so there's nothing to free per event. A{' '}
+              <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds
+              captured bytes inline in <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> with a{' '}
+              <code>len</code> beside it, so a copied event owns nothing and outlives its stream.
             </p>
           </div>
         </Card>
@@ -176,14 +197,18 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget for the generic verbs" />
+          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget, CatchFilter for the generic verbs" />
           <p>
             Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
             <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
             targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
-            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, each with a helper
-            constructor. A <code>MediusUsage</code> holds a{' '}
+            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, plus{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>, each with a
+            helper constructor.
+          </p>
+          <p>
+            A <code>MediusUsage</code> holds a{' '}
             <A href="/native/commands/usage#buttons">button id</A>,{' '}
             <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
             <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
@@ -201,6 +226,9 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
               <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
               <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
+              <tr><td><code>medius_catch_filter_watch(MediusUsage)</code></td><td><code>MediusCatchFilter</code></td><td rowspan="3"><A href="/library/catch">catch</A> / <A href="/bindings/c/api#catch-filters">the whole helper set</A></td></tr>
+              <tr><td><code>medius_catch_filter_watch_axis(MediusAxis)</code></td><td><code>MediusCatchFilter</code></td></tr>
+              <tr><td><code>medius_catch_filter_traffic(MediusCatchClass, uint16_t)</code></td><td><code>MediusCatchFilter</code></td></tr>
             </tbody>
           </table>
           <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
@@ -210,20 +238,49 @@ medius_device_press(dev, medius_usage_key(MEDIUS_KEY_W));   /* keys and media in
 
 /* move: build a motion arm */
 MediusMotion m = medius_motion_cursor(100, -50);
-medius_device_move_axis(dev, m);
+medius_device_move_axis(dev, m, MEDIUS_MOVE_TIMING_RIDE, MEDIUS_PENDING_MOTION_KEEP);
 
 /* lock: an axis, or any usage */
 MediusLockTarget x = medius_lock_target_axis(MEDIUS_LOCK_TARGET_KIND_X);
-medius_device_lock(dev, x, MEDIUS_LOCK_DIRECTION_BOTH);
+medius_device_lock(dev, x, MEDIUS_DIRECTION_BOTH);
 
 MediusLockTarget side = medius_lock_target_usage(medius_usage_button(MEDIUS_BUTTON_SIDE1));
-medius_device_lock(dev, side, MEDIUS_LOCK_DIRECTION_BOTH);`}</code></pre>
+medius_device_lock(dev, side, MEDIUS_DIRECTION_BOTH);`}</code></pre>
           <div class="callout callout--info">
             <p>
               A button, key, and media usage all lock the same way:{' '}
               <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
               <code>medius_lock_target_axis(...)</code> an axis or the wheel. The struct fields are on{' '}
               <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
+            </p>
+          </div>
+          <p>
+            A catch filter narrows the same way: a base names what to observe, a modifier returns a
+            narrowed copy. Nothing is mutated, so one blanket can be the base for several entries.
+            Fields are on <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`/* every key edge, whole report */
+MediusCatchFilter keys = medius_catch_filter_watch_class(MEDIUS_CLASS_KEY);
+
+/* one vendor endpoint's IN packets, first 16 bytes each */
+MediusCatchFilter ep = medius_catch_filter_with_capture(
+    medius_catch_filter_inbound(
+        medius_catch_filter_traffic(MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT, 0x83)),
+    16);
+
+MediusCatchFilter filters[2] = { keys, ep };
+MediusEventStream *events = NULL;
+medius_device_catch_events(dev, filters, 2, &events);   /* the array is not retained */`}</code></pre>
+          <div class="callout callout--warning">
+            <p>
+              Locking and catching are separate subscriptions over the same address vocabulary, so the
+              same usage can be in both. Catch is sampled before lock suppression, so a locked input
+              still reports.
+            </p>
+            <p>
+              The classes above the four input ones have no lock equivalent. See{' '}
+              <A href="/bindings/c/streams">Streams</A> for what comes back.
             </p>
           </div>
         </Card>

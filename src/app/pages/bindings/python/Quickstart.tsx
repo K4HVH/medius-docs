@@ -9,11 +9,11 @@ const Quickstart: Component = () => {
       <Card>
         <CardHeader title="First program" subtitle="Connect, move, click, read one event" />
         <p>
-          One file that finds <A href="/native/hardware">the box</A>, reads its version, moves the
-          cursor, clicks the left button, reads one physical event, then cleans up. Install it
-          with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
-          (<code>pip install medius</code>, see <A href="/bindings/python">Install</A>). For what each
-          call does, follow the links to the <A href="/library">Rust Library</A> and{' '}
+          One file that finds <A href="/native/hardware">the box</A>, moves the cursor, clicks, and
+          reads one physical event. Install with{' '}
+          <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
+          (<code>pip install medius</code>, see <A href="/bindings/python">Install</A>). What each
+          call does lives in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A>.
         </p>
         <div class="callout callout--info">
@@ -31,7 +31,7 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="The program" subtitle="The full listing" />
           <pre><code class="language-python">{`import time
-from medius import Device, Usage, Button, CatchMask, NotFoundError
+from medius import Device, Usage, Button, CatchFilter, NotFoundError
 
 try:
     with Device.find() as dev:                       # open first box + handshake
@@ -43,8 +43,8 @@ try:
         time.sleep(0.02)
         dev.soft_release(Usage.button(Button.LEFT))  # let it back up
 
-        with dev.catch_events(CatchMask.ALL) as stream:   # subscribe to physical input
-            event = stream.recv_timeout(5000)             # one event, or None after 5 s
+        with dev.catch_events(CatchFilter.everything()) as stream:  # subscribe to everything
+            event = stream.recv_timeout(5000)                      # one event, or None after 5 s
             if event is None:
                 print("no physical input within 5 s")
             elif event.motion:
@@ -52,6 +52,10 @@ try:
                 print(f"motion  dx={m.dx} dy={m.dy} wheel={m.dz}")
             elif event.usages and event.usages.is_held(Usage.button(Button.LEFT)):
                 print("left button held")
+            elif event.traffic:
+                t = event.traffic
+                print(f"traffic {t.catch_class.name} id={t.id:#04x} "
+                      f"{len(t.bytes)} of {t.true_len} bytes")
             else:
                 print(f"event  {event.kind.name}")
         # stream + link are closed here, on block exit
@@ -59,9 +63,9 @@ except NotFoundError:
     raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
           <div class="callout callout--info">
             <p>
-              The cursor won't move and the click won't land on this machine, and that's by design:
-              injection only reaches the <em>game</em> PC through the clone port, not the control PC
-              running this script. See <A href="/native/hardware">Hardware</A> for the port map.
+              The cursor won't move and the click won't land on this machine: injection only reaches
+              the <em>game</em> PC through the clone port, not the control PC running this script.
+              See <A href="/native/hardware">Hardware</A> for the port map.
             </p>
           </div>
         </Card>
@@ -101,9 +105,9 @@ except NotFoundError:
                 <td>Release, unless the user is physically holding it. See <A href="/native/injection">Injection</A>.</td>
               </tr>
               <tr>
-                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchMask.ALL)</code></A></td>
+                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.everything())</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Subscribe; returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
+                <td>Subscribe with one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> (or an iterable); returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
               </tr>
               <tr>
                 <td><A href="/bindings/python/streams"><code>stream.recv_timeout(5000)</code></A></td>
@@ -124,11 +128,13 @@ except NotFoundError:
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
           <pre><code class="language-bash">{`python first.py
-# firmware 3.0.1, proto 3
+# firmware 3.1.0, proto 4
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
-            The <code>motion</code> line appears once you move or click the real mouse within the 5-second window;
-            otherwise you get <code>no physical input within 5 s</code>.
+            The <code>motion</code> line needs a real mouse move or click inside the 5-second window.{' '}
+            <code>CatchFilter.everything()</code> subscribes to every class, so a <code>traffic</code>{' '}
+            line can arrive first on a device with busy vendor endpoints; narrow it with{' '}
+            <code>CatchFilter.watch_axes()</code>.
           </p>
         </Card>
       </div>
@@ -137,8 +143,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Reading events" subtitle="Four ways to pull from a stream" />
           <p>
-            The program uses <code>recv_timeout</code> so it can't hang. The readers differ in
-            how they handle an empty queue and a dropped link:
+            The program uses <code>recv_timeout</code> so it can't hang.
           </p>
           <table class="api-params">
             <thead>
@@ -152,11 +157,20 @@ except NotFoundError:
             </tbody>
           </table>
           <p>
-            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of <code>.motion</code> /{' '}
-            <code>.usages</code> (the other is <code>None</code>); a{' '}
+            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
+            <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
+            <code>None</code>), plus <code>.ts_us</code> and the{' '}
+            <A href="/bindings/python/types#clockdomain"><code>.clock</code></A> domain that stamped it. A{' '}
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
-            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>. Full payload shapes on{' '}
+            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
+            a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
+            <code>truncated()</code>. Full payload shapes on{' '}
             <A href="/bindings/python/streams">Streams</A>.
+          </p>
+          <p>
+            To skip diffing snapshots yourself, subscribe with{' '}
+            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> instead: it
+            yields press and release edges directly.
           </p>
         </Card>
       </div>
@@ -165,8 +179,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Errors" subtitle="Failures raise; they're never a return code" />
           <p>
-            Every <code>Device</code> and stream call raises on failure; a plain call site is the
-            success path. Each exception is a{' '}
+            Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
             <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
             <code>.status</code>, <code>.message</code>, and <code>.proto_ver</code>.
           </p>

@@ -55,8 +55,8 @@ const Option: Component = () => {
           <CardHeader title="OPTION" subtitle="One generic, persistent option" />
           <p>
             <code>OPTION</code> carries an <code>id</code> byte then an id-specific value, and the box
-            persists the setting across a reboot. One opcode covers every persistent option; the id picks
-            which. <A href="/native/frame#opcodes">Opcode</A> <code>0x11</code>.
+            persists the setting across a reboot. <A href="/native/frame#opcodes">Opcode</A>{' '}
+            <code>0x11</code>.
           </p>
           <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -136,7 +136,8 @@ const Option: Component = () => {
             <p>
               While on, pure idle injection (moving the cursor while the hand is still) stops working:
               motion waits for a native move and is dropped if none comes. Button, key, and media
-              injection are unaffected.
+              injection are unaffected, and a move can opt out per command with the{' '}
+              <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
             </p>
           </div>
           <p>
@@ -170,10 +171,11 @@ const Option: Component = () => {
           <div class="callout callout--info">
             <p>
               Fixed snaps to <code>1000/n</code> Hz on the 1 ms frame clock and caps at 1 kHz, so 1000,
-              500, 333, 250… are exact and 750 lands on 1000 (<code>0</code> means 1000). Every mode
-              raises the ceiling only: the box still emits a frame solely when injection is pending, so
-              idle stays idle. Learnt keeps injection matched to the real mouse; the other modes are for
-              a host that shapes its own report density and wants the box to stop re-pacing it.
+              500, 333, 250… are exact and 750 lands on 1000 (<code>0</code> means 1000).
+            </p>
+            <p>
+              Every mode raises the ceiling only: the box still emits a frame solely when injection is
+              pending, so idle stays idle.
             </p>
           </div>
           <p>

@@ -4,7 +4,14 @@ import {
   QueryTimeoutError,
   SerialLink,
 } from '../../src/dashboard/serial';
-import { EmitMode, FrameDecoder, FrameType, encode } from '../../src/dashboard/protocol';
+import {
+  CatchClass,
+  EmitMode,
+  FrameDecoder,
+  FrameType,
+  Direction,
+  encode,
+} from '../../src/dashboard/protocol';
 
 type PortArg = ConstructorParameters<typeof SerialLink>[0];
 
@@ -53,9 +60,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=3][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto=4][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 3, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -63,7 +70,7 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 3,
+      protoVer: 4,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
@@ -81,14 +88,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 3, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(3);
+    expect(version.protoVer).toBe(4);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -181,6 +188,32 @@ describe('SerialLink', () => {
       mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
       name: '',
     });
+    await link.close();
+  });
+
+  it('gives each movement verb its own MOVE flags byte', async () => {
+    // One level above the payload builders: this is where a verb wired to the wrong flag hides, since
+    // every one of these produces a well-formed MOVE frame either way.
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.moveRel(7, -2);
+    await link.moveRelNow(7, -2);
+    await link.wheel(3);
+    await link.wheelNow(3);
+    await link.flushMotion();
+    await link.discardMotion();
+    // payload starts at byte 5: [SOF][TYPE][SEQ][LEN lo][LEN hi]
+    const payloads = mock.written.map((f) => Array.from(f.slice(5, f.length - 2)));
+    expect(payloads).toEqual([
+      [0, 7, 0, 0xfe, 0xff, 0x00],
+      [0, 7, 0, 0xfe, 0xff, 0x01],
+      [1, 3, 0, 0x00],
+      [1, 3, 0, 0x01],
+      [0, 0, 0, 0, 0, 0x02],
+      [0, 0, 0, 0, 0, 0x04],
+    ]);
+    expect(mock.written.every((f) => f[1] === FrameType.Move)).toBe(true);
     await link.close();
   });
 
@@ -295,14 +328,62 @@ describe('SerialLink', () => {
       onEvent: (ev, seq) => events.push({ kind: ev.kind, seq }),
     });
     await link.open();
-    // A motion event, then a class-tagged held-usage snapshot (a held button).
-    mock.push(encode(FrameType.MotionEvent, 10, new Uint8Array([1, 0, 0, 0, 0, 0])));
-    mock.push(encode(FrameType.UsageEvent, 11, new Uint8Array([1, 0, 0x04, 0x00])));
+    // A motion event, a class-tagged held-usage snapshot (a held button), then a byte-oriented
+    // traffic event. Each frame leads with [ts_us u32][clk u8].
+    mock.push(
+      encode(FrameType.MotionEvent, 10, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])),
+    );
+    // [ts u32][clk u8][cls u8][dir u8][n u8] then n x [class][id u16 LE]: one held key on the press edge.
+    mock.push(
+      encode(
+        FrameType.UsageEvent,
+        11,
+        new Uint8Array([0, 0, 0, 0, 0, 1, Direction.Positive, 1, 1, 0x04, 0x00]),
+      ),
+    );
+    mock.push(
+      encode(
+        FrameType.TrafficEvent,
+        12,
+        new Uint8Array([0, 0, 0, 0, 1, 4, 0, 0, 1, 0, 2, 0, 0xab, 0xcd]),
+      ),
+    );
     await new Promise((r) => setTimeout(r, 10));
     expect(events).toEqual([
       { kind: 'motion', seq: 10 },
       { kind: 'usages', seq: 11 },
+      { kind: 'traffic', seq: 12 },
     ]);
+    await link.close();
+  });
+
+  it('sends one CATCH frame per table entry, and clears the table with the wildcard', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    // One vendor interrupt endpoint, IN only, first 16 bytes captured.
+    await link.catch({
+      cls: CatchClass.VendorInterrupt,
+      id: 0x83,
+      dir: Direction.Positive,
+      capture: 16,
+    });
+    // Dropping one entry, rather than the whole table: state 0 with a real address.
+    await link.unsubscribeCatch({
+      cls: CatchClass.VendorInterrupt,
+      id: 0x83,
+      dir: Direction.Positive,
+      capture: 16,
+    });
+    await link.uncatch();
+    expect(mock.written).toHaveLength(3);
+    // [SOF][TYPE][SEQ][LEN lo][LEN hi] then the payload.
+    expect(mock.written[0][1]).toBe(FrameType.Catch);
+    expect(Array.from(mock.written[0].slice(5, 11))).toEqual([0x06, 0x83, 0x00, 0x01, 0x01, 0x10]);
+    // The same address with state 0 removes just that entry, leaving the rest of the table.
+    expect(Array.from(mock.written[1].slice(5, 11))).toEqual([0x06, 0x83, 0x00, 0x01, 0x00, 0x10]);
+    // uncatch is class 0xFF / id 0xFFFF / state 0: the whole table in one frame.
+    expect(Array.from(mock.written[2].slice(5, 11))).toEqual([0xff, 0xff, 0xff, 0x00, 0x00, 0x00]);
     await link.close();
   });
 

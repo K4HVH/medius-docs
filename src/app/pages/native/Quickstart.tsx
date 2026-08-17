@@ -11,8 +11,7 @@ const Quickstart: Component = () => {
         <p>
           A Medius box sits inline between a USB device and a PC. The real device passes through, and
           your program sends input of its own (cursor and buttons for a mouse, keys and media for a
-          keyboard) over a USB-serial link. Below: wire it, open the link, send one movement command.
-          Every step is byte-exact firmware behavior.
+          keyboard) over a USB-serial link.
         </p>
         <p>
           The box talks in <A href="/native/frame">frames</A>, small fixed-shape packets that each
@@ -40,8 +39,7 @@ const Quickstart: Component = () => {
             <p>
               Never connect <code>USB1</code> and <code>USB3</code> to the same machine. The{' '}
               <code>USB3</code> 5V rail can't be pulled low in firmware, so wiring both to one
-              machine back-feeds power and can force a shutdown and drain the battery. One game PC,
-              one control PC, never the same machine.
+              machine back-feeds power and can force a shutdown and drain the battery.
             </p>
           </div>
           <p>
@@ -75,8 +73,8 @@ const Quickstart: Component = () => {
               protocol version the firmware speaks.
             </li>
             <li>
-              Check <code>proto_ver == 3</code> before trusting the commands here. This documents
-              version <code>3</code>.
+              Check <code>proto_ver == 4</code> before trusting the commands here. This documents
+              version <code>4</code>.
             </li>
           </ol>
           <p>
@@ -90,8 +88,7 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="Send a MOVE" subtitle="Relative cursor movement" />
           <p>
-            <A href="/native/commands/move#move"><code>MOVE</code></A> nudges the cursor on the
-            PC. Its frame has the standard shape, laid out byte-by-byte below.
+            <A href="/native/commands/move#move"><code>MOVE</code></A> nudges the cursor on the PC.
           </p>
           <ul>
             <li>
@@ -122,19 +119,19 @@ def encode(type, seq, payload):
     head = bytes([type, seq]) + struct.pack('<H', len(payload)) + payload
     return bytes([0xA5]) + head + struct.pack('<H', crc16_ccitt(head))
 
-frame = encode(0x01, 0, struct.pack('<Bhh', 0, 100, 0))
+frame = encode(0x01, 0, struct.pack('<BhhB', 0, 100, 0, 0))
 port.write(frame)`}</code></pre>
           <p>
             <A href="/native/commands/move#move"><code>MOVE</code></A> has opcode{' '}
-            <code>0x01</code>. Its payload is a <code>motion</code> byte (<code>0</code> = cursor)
-            then two signed 16-bit deltas, <code>dx</code> then <code>dy</code>. <code>+x</code> is
-            right, <code>+y</code> is down. The example moves 100 right, 0 down.
+            <code>0x01</code>. Its payload is a <code>motion</code> byte (<code>0</code> = cursor),
+            two signed 16-bit deltas, <code>dx</code> then <code>dy</code>, and a{' '}
+            <A href="/native/commands/move#flags"><code>flags</code></A> byte (<code>0</code> for an
+            ordinary move). <code>+x</code> is right, <code>+y</code> is down. The example moves 100
+            right, 0 down.
           </p>
           <p>
             That builds the bytes{' '}
-            <code>A5 01 00 05 00 00 64 00 00 00 &lt;crc&gt;</code>: start byte, opcode{' '}
-            <code>0x01</code>, sequence, length, the <code>motion</code>/<code>dx</code>/<code>dy</code>{' '}
-            payload, then the checksum. The byte-by-byte breakdown is on{' '}
+            <code>A5 01 00 06 00 00 64 00 00 00 00 &lt;crc&gt;</code>. The byte-by-byte breakdown is on{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A>, the frame format on{' '}
             <A href="/native/frame">Frame Format</A>.
           </p>
@@ -146,8 +143,7 @@ port.write(frame)`}</code></pre>
           <CardHeader title="Confirm" subtitle="Check the chain before relying on injection" />
           <p>
             <A href="/native/injection">Injection</A> is the input your program sends on top of the
-            real mouse's passthrough. Confirm the chain (real mouse → box → PC) is live before you
-            rely on it: send{' '}
+            real mouse's passthrough. Before relying on it, send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A>, read the{' '}
             <code>flags</code> byte from the{' '}
             <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check these bits are

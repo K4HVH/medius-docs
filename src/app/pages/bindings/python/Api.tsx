@@ -9,9 +9,8 @@ const Api: Component = () => {
       <Card>
         <CardHeader title="API index" subtitle="Every Python call, linked to what it does" />
         <p>
-          The full <code>Device</code> surface, grouped. Each row gives the Python signature and a
-          one-line summary; the semantics live in the <A href="/library">Rust Library</A> and{' '}
-          <A href="/native">Native API</A>, so follow the link for what a call does. Types
+          The full <code>Device</code> surface, grouped. What each call does lives in the{' '}
+          <A href="/library">Rust Library</A> and <A href="/native">Native API</A>. Types
           and enums are on <A href="/bindings/python/types">Types &amp; errors</A>; streams on{' '}
           <A href="/bindings/python/streams">Streams</A>.
         </p>
@@ -68,7 +67,11 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>dev.move_rel(dx, dy)</code></td><td>Nudge the cursor by a signed 16-bit delta.</td></tr>
               <tr><td><code>dev.wheel(delta)</code></td><td>Scroll the wheel.</td></tr>
-              <tr><td><code>dev.move_axis(motion)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A> or <code>Motion.wheel(delta)</code>.</td></tr>
+              <tr><td><code>dev.move_rel_now(dx, dy)</code></td><td>The same, bypassing <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
+              <tr><td><code>dev.wheel_now(delta)</code></td><td>Scroll, bypassing movement riding.</td></tr>
+              <tr><td><code>dev.flush_motion()</code></td><td>Emit the motion riding is holding, now.</td></tr>
+              <tr><td><code>dev.discard_motion()</code></td><td>Drop the motion riding is holding.</td></tr>
+              <tr><td><code>dev.move_axis(motion, timing, pending)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A> or <code>Motion.wheel(delta)</code>, with a <code>MoveTiming</code> and a <code>PendingMotion</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -107,7 +110,7 @@ const Api: Component = () => {
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A> picks an edge.</p>
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks an edge.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -161,7 +164,7 @@ const Api: Component = () => {
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
               <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active locks (<code>.entries</code>, <code>.is_locked(...)</code>).</td></tr>
-              <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: subscription mask + dropped count.</td></tr>
+              <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: the live filter table (<code>.entries</code>, <code>.table_full</code>), drop counts, and the two chips' <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A>.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
               <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
@@ -178,10 +181,23 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.catch_events(mask=<A href="/bindings/python/types#catchmask">CatchMask</A>.ALL)</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of physical mouse/key/media events.</td></tr>
+              <tr><td><code>dev.catch_events(filters)</code></td><td><A href="/bindings/python/streams"><code>EventStream</code></A> of the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events.</td></tr>
+              <tr><td><code>dev.input_events(filters)</code></td><td><A href="/bindings/python/streams#input"><code>InputStream</code></A> of decoded press and release edges, and motion. Every filter must name an input class and cover both edges.</td></tr>
               <tr><td><code>dev.logs()</code></td><td><A href="/bindings/python/streams"><code>LogStream</code></A> of device log lines.</td></tr>
             </tbody>
           </table>
+          <p>
+            <code>filters</code> takes one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+            or an iterable of them, each naming a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
+            and an id inside it, with an optional <A href="/bindings/python/types#direction"><code>Direction</code></A>{' '}
+            and <A href="/bindings/python/types#capture"><code>Capture</code></A>.
+          </p>
+          <div class="callout callout--info">
+            <p>
+              The box's own refusals get no reply, so check what it actually holds with{' '}
+              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>.
+            </p>
+          </div>
         </Card>
       </div>
 
@@ -220,6 +236,7 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
+              <tr><td><code>clip.set_ride(on)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default).</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>

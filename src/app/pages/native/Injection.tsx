@@ -10,10 +10,7 @@ const Injection: Component = () => {
         <CardHeader title="Injection model" subtitle="A set of fields, two verbs, added on top of the user's input" />
         <p>
           A connected device is a set of <em>fields</em>: each is an <em>Axis</em> (relative motion: X,
-          Y, wheel) or a <em>Usage</em> (a momentary button, key, or media control).{' '}
-          <A href="/native/commands/move#move"><code>MOVE</code></A> drives an Axis,{' '}
-          <A href="/native/commands/inject#inject"><code>INJECT</code></A> drives a Usage, and a Usage is
-          one <code>(class, id)</code> shape for buttons, keys, and media alike.
+          Y, wheel) or a <em>Usage</em> (a momentary button, key, or media control).
         </p>
         <table class="api-params">
           <thead>
@@ -46,8 +43,7 @@ const Injection: Component = () => {
             <A href="/native/commands/inject#inject"><code>INJECT</code></A>,{' '}
             <A href="/native/commands/lock#lock"><code>LOCK</code></A>, and{' '}
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> all name an input with the same
-            Axis and Usage vocabulary, so one <code>(class, id)</code> works across inject, lock, and
-            catch.
+            Axis and Usage vocabulary: one <code>(class, id)</code> works across all three.
           </p>
         </div>
       </Card>
@@ -61,7 +57,7 @@ const Injection: Component = () => {
             <A href="/native/commands/requests#requests"><code>QUERY</code></A>, which returns a{' '}
             <A href="/native/commands/requests#resp"><code>RESP</code></A>.
           </p>
-          <p>Correctness comes from three places, not per-command tracking:</p>
+          <p>Correctness comes from three places:</p>
           <table class="api-params">
             <thead>
               <tr><th>Mechanism</th><th>What it does</th></tr>
@@ -94,11 +90,22 @@ const Injection: Component = () => {
             </thead>
             <tbody>
               <tr>
-                <td>accumulator</td>
+                <td>riding accumulator</td>
                 <td>
-                  A running total of sent motion and scroll not yet delivered to the PC. Each{' '}
-                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in;
-                  the box drains it into outgoing reports.
+                  A running total of sent motion and scroll not yet delivered to the PC. An ordinary{' '}
+                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
+                  It drains into outgoing reports, except while{' '}
+                  <A href="/native/commands/option#move-ride">movement riding</A> is on, where it waits
+                  for a real move to carry it.
+                </td>
+              </tr>
+              <tr>
+                <td>immediate accumulator</td>
+                <td>
+                  The same total for motion that never waits: a <code>MOVE</code> carrying{' '}
+                  <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and{' '}
+                  <A href="/native/commands/clip">clip</A> playback. Both accumulators always exist;
+                  riding decides whether the first one is held, not which one a move lands in.
                 </td>
               </tr>
               <tr>
@@ -114,7 +121,7 @@ const Injection: Component = () => {
           </table>
           <p>
             A report can only carry a limited movement size. A large injected move sends what fits
-            and keeps the remainder in the accumulator for the next report. Nothing is clipped (
+            and keeps the remainder in its own accumulator. Nothing is clipped (
             <code>total seen = total sent</code>), just spread over as many reports as it takes.
           </p>
         </Card>
@@ -134,7 +141,7 @@ const Injection: Component = () => {
               </tr>
               <tr>
                 <td>the real mouse was still, but you have motion pending</td>
-                <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond).</td>
+                <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
               </tr>
               <tr>
                 <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>
@@ -143,8 +150,8 @@ const Injection: Component = () => {
             </tbody>
           </table>
           <p>
-            Otherwise the box sends nothing, like a real mouse sitting idle. A held usage is a
-            single report (the edge), then silence until it changes.
+            Otherwise the box sends nothing. A held usage is a single report (the edge), then
+            silence until it changes.
           </p>
         </Card>
       </div>
@@ -154,8 +161,7 @@ const Injection: Component = () => {
           <CardHeader title="Safety" subtitle="Injected state can't trap the real device" />
           <p>
             A <A href="/native/commands/inject#inject">force-release</A> always wins: it clears an
-            injected hold and masks a physical press, so any held input can always be forced back to
-            inactive.
+            injected hold and masks a physical press.
           </p>
           <p>
             The box also clears all injection if your program goes quiet, dropping every override and

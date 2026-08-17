@@ -29,8 +29,8 @@ const Inject: Component = () => {
             <code>usage</code> is any <A href="/library/types/enums#usage"><code>Usage</code></A>: a{' '}
             <A href="/library/types/enums#button"><code>Button</code></A>, a{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and a{' '}
-            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one, so one
-            verb drives every input class. <code>action</code> is the shared{' '}
+            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one.{' '}
+            <code>action</code> is the shared{' '}
             <A href="/library/types/enums#action"><code>Action</code></A> tri-state: press, soft-release, or
             force-release.
           </p>

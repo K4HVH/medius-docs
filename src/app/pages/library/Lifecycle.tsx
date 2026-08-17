@@ -70,9 +70,9 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <pre class="api-signature">fn reconnect(&self) -&gt; Result&lt;()&gt;</pre>
 
           <p>
-            The reader thread auto-reconnects on any read error; call this by hand only to force a
-            rescan. It blocks while it rescans and reopens the port, and returns an error if the box
-            can't be found or opened, but it never waits on a box reply.
+            The reader thread auto-reconnects on any read error, so call this only to force a rescan.
+            It blocks while it rescans and reopens the port, and errors if the box can't be found or
+            opened, but never waits on a box reply.
           </p>
           <p>On each call:</p>
           <ol>
@@ -98,9 +98,7 @@ assert!(after > before);`}</code></pre>
           <div class="callout callout--info">
             <p>
               The reconnect count is the <code>reconnects</code> field in{' '}
-              <A href="/library/diagnostics#counters">diagnostics</A>. Held state is keyed by{' '}
-              <A href="/library/types/enums#usage"><code>Usage</code></A>, so the right inputs come
-              back after a reopen.
+              <A href="/library/diagnostics#counters">diagnostics</A>.
             </p>
           </div>
         </Card>
@@ -112,9 +110,8 @@ assert!(after > before);`}</code></pre>
 
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> exposes{' '}
-            <code>reapply</code> and <code>reconnect</code> directly, same signatures.{' '}
-            <code>reapply</code> is a fire-and-forget frame; <code>reconnect</code> blocks while it
-            rescans and reopens the port, so keep it off a latency-sensitive task.
+            <code>reapply</code> and <code>reconnect</code> directly, same signatures:{' '}
+            <code>reapply</code> fires and forgets, <code>reconnect</code> blocks.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

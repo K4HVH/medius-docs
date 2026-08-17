@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>3.0.1</code></td>
+              <td><code>3.1.0</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -116,7 +116,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/move" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel" />
+                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel, and the riding override" />
               </Card>
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>
@@ -126,7 +126,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Catch" subtitle="Stream physical input" />
+                <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
               </Card>
             </A>
             <A href="/library/clip" style={{ "text-decoration": "none" }}>

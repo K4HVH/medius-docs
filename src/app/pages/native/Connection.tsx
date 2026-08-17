@@ -10,7 +10,7 @@ const Connection: Component = () => {
         <CardHeader title="Connection & handshake" subtitle="Open, find, and handshake" />
         <p>
           The handshake confirms the device on the serial port is a Medius box and speaks a protocol
-          version you understand: one request, one reply. Open the port and start talking.
+          version you understand: one request, one reply.
         </p>
         <ul>
           <li>No baud negotiation.</li>
@@ -36,7 +36,7 @@ const Connection: Component = () => {
               <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
             </li>
             <li>
-              Read <code>proto_ver</code> from that reply and check it equals <code>3</code>.
+              Read <code>proto_ver</code> from that reply and check it equals <code>4</code>.
             </li>
           </ol>
           <table class="api-params">
@@ -44,15 +44,13 @@ const Connection: Component = () => {
               <tr><th>Reply</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>proto_ver == 3</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 3</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
+              <tr><td><code>proto_ver == 4</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 4</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
           <p>
-            The first byte echoes the <code>what</code> selector you asked for (the byte that chose which
-            thing to query), then the protocol and firmware version, the box MAC, and the box name follow.
             Full detail on the <A href="/native/commands/requests#version">Requests</A> page.
           </p>
           <table class="byte-table">
@@ -61,7 +59,7 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>the selector byte, echoed back; <code>0x00</code> = <code>VERSION</code></td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>3</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>4</code></td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -91,8 +89,8 @@ const Connection: Component = () => {
             </tbody>
           </table>
           <p>
-            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> since no request
-            prompted it, and its payload is identical to a queried reply.
+            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A>, and its payload is
+            identical to a queried reply.
           </p>
           <div class="callout callout--info">
             <p>
@@ -100,7 +98,7 @@ const Connection: Component = () => {
               <A href="/library/connection#open"><code>open</code></A> and{' '}
               <A href="/library/connection#open"><code>find</code></A>: it sends{' '}
               <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retries a
-              few times, and checks <code>proto_ver == 3</code> before handing you a working
+              few times, and checks <code>proto_ver == 4</code> before handing you a working
               connection.
             </p>
           </div>

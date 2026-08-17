@@ -12,11 +12,13 @@ const Clip: Component = () => {
           Build a sequence of per-frame input with a{' '}
           <A href="/library/clip#builder"><code>ClipBuilder</code></A>, hand it to the{' '}
           <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
-          <A href="/library/clip#clip"><code>Device::clip()</code></A>, and the box drains one entry per native
-          frame into the same injection state your live <A href="/library/move"><code>move</code></A> and{' '}
-          <A href="/library/inject"><code>inject</code></A> calls feed. Playback is box-clocked, so it carries
-          no host scheduling jitter. It's field-generic (mouse, keyboard, and media in one clip) and backs
-          the <A href="/native/commands/clip"><code>CLIP</code></A> commands.
+          <A href="/library/clip#clip"><code>Device::clip()</code></A>, and the box drains it into the same
+          injection state <A href="/library/move"><code>move</code></A> and{' '}
+          <A href="/library/inject"><code>inject</code></A> feed.
+        </p>
+        <p>
+          Playback is box-clocked, so it carries no host scheduling jitter. One clip covers mouse,
+          keyboard, and media. Backs the <A href="/native/commands/clip"><code>CLIP</code></A> commands.
         </p>
         <pre class="diagram">{`  1. build a clip with ClipBuilder
        clip.move_by(10, 0)
@@ -40,18 +42,17 @@ const Clip: Component = () => {
           <CardHeader title="clip" subtitle="Open a clip handle" />
           <pre class="api-signature">fn clip(&self) -&gt; ClipHandle</pre>
           <p>
-            Returns a <A href="/library/clip#handle"><code>ClipHandle</code></A> bound to this box. The handle
-            owns the append-sequence counter the box uses to spot a dropped append, so keep one handle for a
-            clip session (top it up through that handle) rather than reopening one per append.
+            Returns a <A href="/library/clip#handle"><code>ClipHandle</code></A> bound to this box. Keep one
+            handle per clip session and top it up through it: the handle owns the append-sequence counter
+            the box uses to spot a dropped append.
           </p>
           <div class="callout callout--info">
             <p>
-              Playback lives in the box's RAM: a <A href="/library/admin#reboot">reboot</A> or{' '}
-              <A href="/library/lifecycle#reconnect">reconnect</A> drops the loaded clip, so re-preload after one.
-              Its config (auto-lock, loop, retain, and the trigger set) goes too: unlike a held lock or
-              catch subscription, a clip isn't re-asserted for you, so re-set it after a reconnect. A clip
-              needs a cloned mouse, since its frame clock is the
-              mouse's report tick; keyboard and media edges ride that tick.
+              A <A href="/library/admin#reboot">reboot</A> or{' '}
+              <A href="/library/lifecycle#reconnect">reconnect</A> drops the clip and its config (auto-lock,
+              loop, retain, ride, triggers); nothing is re-asserted, so re-preload and re-set after one. A clip
+              needs a cloned mouse: its frame clock is the mouse's report tick, which keyboard and media
+              edges ride.
             </p>
           </div>
         </Card>
@@ -63,13 +64,10 @@ const Clip: Component = () => {
           <pre class="api-signature">fn new() -&gt; ClipBuilder</pre>
           <p>
             Each method appends one per-frame entry, so a builder is a timeline read top to bottom. Motion is
-            a relative delta; an edge (button, key, or media) is an{' '}
+            a relative delta; an edge is an{' '}
             <A href="/library/types/enums#action"><code>Action</code></A> that stays held until a later frame
-            changes it; a <code>gap</code> is N idle frames (the box NAKs, like an idle mouse). The methods
-            take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, so chain them or push in a
-            loop; <code>clear()</code> reuses the allocation.
+            changes it; a <code>gap</code> NAKs like an idle mouse.
           </p>
-          <div class="api-response-label">METHODS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Appends</th></tr>
@@ -84,10 +82,10 @@ const Clip: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>press</code>/<code>release</code>/<code>force_release</code> are wrappers over{' '}
-            <code>edge</code>, which is a wrapper over <code>frame</code>. Reach for <code>frame</code> only
-            when you need motion and edges (or several edges) on the same frame, e.g. moving while a button is
-            held, which is how a faithful recording of "aim and hold fire" looks.
+            They take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, so chain them
+            or push in a loop; <code>clear()</code> reuses the allocation.{' '}
+            <code>press</code>/<code>release</code>/<code>force_release</code> wrap <code>edge</code>, which
+            wraps <code>frame</code>. Reach for <code>frame</code> only when motion and edges share one frame.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{ClipBuilder, Button, Key};
@@ -102,9 +100,8 @@ clip.press(Key::A)                         // then type 'a'
     .release(Key::A);`}</code></pre>
           <div class="api-response-label">MOTION AND AN EDGE ON ONE FRAME</div>
           <p>
-            <code>frame</code> is the one builder call that fills more than a single field, so it's how a
-            move and an edge share a frame: one entry, one wire report. Edges are sticky, so a hold is a
-            press once then plain motion until the release.
+            <code>frame</code> fills more than one field, so a move and an edge share one entry and one
+            wire report.
           </p>
           <pre><code class="language-rust">{`use medius::{Action, Button, ClipBuilder};
 
@@ -125,11 +122,9 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
           <CardHeader title="ClipHandle" subtitle="Fill the ring, configure, and drive playback" />
           <p>
             From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method below is{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>: it queues a frame and returns.
-            The <A href="/library/lock">auto-lock</A>, loop, and retain settings and the trigger set are the
-            clip's config; the engine verbs drive playback.{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>: it queues a frame and returns.{' '}
             <A href="/library/requests#clip-status"><code>query_status</code></A> reads the ring depth and
-            playback state, and <A href="/library/requests#clip-config"><code>query_config</code></A> reads
+            playback state; <A href="/library/requests#clip-config"><code>query_config</code></A> reads
             the config back.
           </p>
           <div class="api-response-label">LOAD &amp; SETTINGS</div>
@@ -142,6 +137,7 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
               <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
               <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
               <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
+              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback.</td></tr>
               <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
             </tbody>
           </table>
@@ -245,10 +241,9 @@ handle.stop()?;`}</code></pre>
         <Card>
           <CardHeader title="Triggers" subtitle="Play, stop, or toggle on a physical key" />
           <p>
-            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> binds one{' '}
-            <A href="/library/types/enums#edge"><code>Edge</code></A> of a usage to one{' '}
-            <A href="/library/types/enums#clip-action"><code>ClipAction</code></A>, so the box drives playback
-            itself with no host round-trip.
+            A <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> runs one{' '}
+            <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> on the box when a physical{' '}
+            <A href="/library/types/enums#edge"><code>Edge</code></A> fires, with no host round-trip.
           </p>
           <div class="api-response-label">ANATOMY</div>
           <table class="api-params">
@@ -263,10 +258,8 @@ handle.stop()?;`}</code></pre>
           </table>
           <p>
             Bindings are a managed set keyed by <code>(usage, edge)</code>, like a{' '}
-            <A href="/library/lock">lock</A>: <A href="/library/clip#handle"><code>bind</code></A> adds or
-            overwrites, <A href="/library/clip#handle"><code>unbind</code></A> drops one, and{' '}
-            <A href="/library/clip#handle"><code>clear_triggers</code></A> wipes them. A physical edge runs the
-            one most-specific match, so a binding on <code>Key::F1</code> beats an any-key binding.
+            <A href="/library/lock">lock</A>. A physical edge runs the one most-specific match, so a binding
+            on <code>Key::F1</code> beats an any-key binding.
           </p>
           <div class="api-response-label">RECIPES</div>
           <table class="api-params">
@@ -282,8 +275,8 @@ handle.stop()?;`}</code></pre>
           </table>
           <div class="callout callout--info">
             <p>
-              <code>.consume()</code> swallows the triggering edge from the game for the length of the hold, so
-              the key drives the clip without also reaching what you're playing.
+              <code>.consume()</code> locks the trigger usage while it stays active. It applies to the
+              press edge only, so a <code>Edge::Release</code> binding carries the flag with no effect.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -294,9 +287,10 @@ clip.set_retain(true)?;      // set the mode before loading
 clip.append(&recording)?;
 clip.finalize()?;            // close it so it can replay
 
-// Hold-to-play: F1 down starts, F1 up stops. Consume F1 so the game never sees it.
+// Hold-to-play: F1 down starts, F1 up stops. The press binding's consume locks F1
+// for the whole hold, so the release binding does not need one.
 clip.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start).consume())?;
-clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop).consume())?;
+clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop))?;
 
 // Or one side-button that toggles play/stop:
 clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
@@ -309,7 +303,7 @@ clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}<
           <p>
             <A href="/library/features/async"><code>AsyncDevice::clip()</code></A> returns an{' '}
             <code>AsyncClipHandle</code> that keeps <code>append</code>, the settings, and the engine verbs
-            synchronous (they just queue a frame), while <code>query_status().await</code> and{' '}
+            synchronous; <code>query_status().await</code> and{' '}
             <code>query_config().await</code> are futures like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
