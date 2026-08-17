@@ -93,6 +93,25 @@ const radio = (container: HTMLElement, label: string): HTMLInputElement => {
 };
 
 describe('DeviceClip trigger edge and consume', () => {
+  it('opens on the first class in the list, like every other picker', async () => {
+    // The trigger picker opened on Key while Button sat at the top of its own radio, so the
+    // selection did not match the option the list led with.
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    const classes = [...container.querySelectorAll('input[type=radio]')].filter((i) =>
+      ['Button', 'Key', 'Media', 'Anything'].includes(
+        (i.closest('label') ?? i.parentElement)?.textContent?.trim() ?? '',
+      ),
+    ) as HTMLInputElement[];
+    // The build section has its own class radio first, so the trigger picker's is the later set.
+    const trigger = classes.slice(-4);
+    expect(trigger).toHaveLength(4);
+    expect((trigger[0].closest('label') ?? trigger[0].parentElement)?.textContent?.trim()).toBe(
+      'Button',
+    );
+    expect(trigger[0].checked).toBe(true);
+  });
+
   it('places no restriction between the edge and consume', async () => {
     // The box stores the consume flag on any edge and reports it back, so the picker has to be
     // able to build every binding the box can hold. Blocking the pair here would leave a state the
