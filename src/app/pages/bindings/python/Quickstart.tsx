@@ -43,8 +43,8 @@ try:
         time.sleep(0.02)
         dev.soft_release(Usage.button(Button.LEFT))  # let it back up
 
-        with dev.catch_events(CatchFilter.all()) as stream:  # subscribe to everything
-            event = stream.recv_timeout(5000)               # one event, or None after 5 s
+        with dev.catch_events(CatchFilter.everything()) as stream:  # subscribe to everything
+            event = stream.recv_timeout(5000)                      # one event, or None after 5 s
             if event is None:
                 print("no physical input within 5 s")
             elif event.motion:
@@ -54,7 +54,8 @@ try:
                 print("left button held")
             elif event.traffic:
                 t = event.traffic
-                print(f"traffic {t.cls.name} id={t.id:#04x} {len(t.data)} of {t.true_len} bytes")
+                print(f"traffic {t.catch_class.name} id={t.id:#04x} "
+                      f"{len(t.bytes)} of {t.true_len} bytes")
             else:
                 print(f"event  {event.kind.name}")
         # stream + link are closed here, on block exit
@@ -104,7 +105,7 @@ except NotFoundError:
                 <td>Release, unless the user is physically holding it. See <A href="/native/injection">Injection</A>.</td>
               </tr>
               <tr>
-                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.all())</code></A></td>
+                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.everything())</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Subscribe with one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> (or an iterable); returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
               </tr>
@@ -131,12 +132,10 @@ except NotFoundError:
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
             The <code>motion</code> line appears once you move or click the real mouse within the 5-second window;
-            otherwise you get <code>no physical input within 5 s</code>. <code>CatchFilter.all()</code>{' '}
-            subscribes to every class, so a <code>traffic</code> line can arrive first on a device with
-            busy vendor endpoints. Narrow it with{' '}
-            <code>CatchFilter.of_class(CatchClass.AXIS)</code> when you only want the mouse, importing{' '}
-            <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A> alongside{' '}
-            <code>CatchFilter</code>.
+            otherwise you get <code>no physical input within 5 s</code>.{' '}
+            <code>CatchFilter.everything()</code> subscribes to every class, so a <code>traffic</code>{' '}
+            line can arrive first on a device with busy vendor endpoints. Narrow it with{' '}
+            <code>CatchFilter.watch_axes()</code> when you only want the mouse.
           </p>
         </Card>
       </div>
@@ -163,12 +162,17 @@ except NotFoundError:
             A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
             <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
             <code>None</code>), plus <code>.ts_us</code> and the{' '}
-            <A href="/bindings/python/types#clockdomain"><code>.clk</code></A> domain that stamped it. A{' '}
+            <A href="/bindings/python/types#clockdomain"><code>.clock</code></A> domain that stamped it. A{' '}
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
             <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
             a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
-            <code>truncated()</code> for whether <code>snaplen</code> cut its bytes. Full payload shapes on{' '}
+            <code>truncated()</code> for whether its capture cut the bytes. Full payload shapes on{' '}
             <A href="/bindings/python/streams">Streams</A>.
+          </p>
+          <p>
+            To skip diffing snapshots yourself, subscribe with{' '}
+            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> instead: it
+            yields press and release edges directly.
           </p>
         </Card>
       </div>

@@ -88,8 +88,19 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
               <tr><td><code>ERR_INVALID_ARG</code></td><td><code>InvalidArgError</code></td><td>a bad argument value</td></tr>
               <tr><td><code>ERR_PANIC</code></td><td><code>PanicError</code></td><td>the native core panicked</td></tr>
               <tr><td><code>ERR_UNKNOWN</code></td><td><code>MediusError</code></td><td>anything unmapped</td></tr>
+              <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>CatchTableFullError</code></td><td>the subscription needs more than the box's 32 entries</td></tr>
+              <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>EmptySubscriptionError</code></td><td>a subscription with no filters</td></tr>
+              <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>CaptureNotApplicableError</code></td><td>a <A href="/bindings/python/types#capture"><code>Capture</code></A> on an input class</td></tr>
+              <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>NotAnInputFilterError</code></td><td>a traffic class passed to <code>input_events</code></td></tr>
+              <tr><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code></td></tr>
+              <tr><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge</td></tr>
+              <tr><td><code>ERR_RESERVED_ID</code></td><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel</td></tr>
             </tbody>
           </table>
+          <p>
+            The last six are subscription refusals, raised before a frame reaches the box. Each has its
+            own status so a caller can tell a wrong filter from a dead link.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
 
@@ -105,7 +116,7 @@ except MediusError as e:
             <p>
               A dropped link raises <code>DisconnectedError</code> from a normal call, but a{' '}
               <A href="/bindings/python/streams">stream</A> iterator
-              (<code>for ev in dev.catch_events(CatchFilter.all()):</code>) stops cleanly
+              (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) stops cleanly
               instead: it returns when the link drops rather than raising. Calling <code>recv()</code>{' '}
               directly still raises. Box-side telemetry behind these errors is on{' '}
               <A href="/library/diagnostics">Diagnostics</A>.
@@ -156,9 +167,10 @@ worker.close()
 dev.close()`}</code></pre>
           <div class="callout callout--info">
             <p>
-              <code>EventStream</code>, <code>LogStream</code>, and <code>MockBox</code> follow the
-              same pattern: a <code>with</code> block, <code>.close()</code>, or GC. Streams hold
-              the device alive while open; see <A href="/bindings/python/streams">Streams</A>.
+              <code>EventStream</code>, <code>InputStream</code>, <code>LogStream</code>,{' '}
+              <code>Timeline</code>, and <code>MockBox</code> follow the same pattern: a{' '}
+              <code>with</code> block, <code>.close()</code>, or GC. Streams hold the device alive
+              while open; see <A href="/bindings/python/streams">Streams</A>.
             </p>
           </div>
         </Card>
@@ -185,22 +197,23 @@ dev.close()`}</code></pre>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
               <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
               <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
-              <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.all()</code></A> / <code>.of_class(cls)</code> / <code>.addr(cls, id)</code></td><td rowspan="2"><code>dev.catch_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry: a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A> plus an id inside it</td></tr>
-              <tr><td><code>.with_direction(direction)</code> / <code>.with_snaplen(n)</code></td><td>a refinement of one, returned as a new filter (the dataclass is frozen)</td></tr>
+              <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed exactly as a lock is</td></tr>
+              <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>
+              <tr><td><code>.with_direction(direction)</code> / <code>.with_capture(n)</code> / <code>.on_press()</code> / <code>.inbound()</code></td><td>a refinement of one, returned as a new filter</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchClass, CatchFilter,
-                    Button, Action, LockDirection)
+          <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchFilter, TrafficClass,
+                    Button, Action, Direction)
 
 with Device.find() as dev:
     dev.inject(Usage.button(Button.LEFT), Action.PRESS)        # generic inject
     dev.move_axis(Motion.cursor(10, -4))                       # generic move
-    dev.lock(LockTarget.button(Button.LEFT), LockDirection.BOTH)
+    dev.lock(LockTarget.button(Button.LEFT), Direction.BOTH)
 
     stream = dev.catch_events([                                # generic subscribe
-        CatchFilter.of_class(CatchClass.AXIS),
-        CatchFilter.addr(CatchClass.VEND_INTR, 0x83).with_snaplen(16),
+        CatchFilter.watch_axes(),
+        CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16),
     ])`}</code></pre>
           <div class="callout callout--info">
             <p>
@@ -211,9 +224,9 @@ with Device.find() as dev:
               <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
               <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
               raw <code>int</code>. A filter's <code>direction</code> is the same{' '}
-              <A href="/bindings/python/types#lockdirection"><code>LockDirection</code></A>: on an input
-              class it picks the press or release edge, on a traffic class <code>POSITIVE</code> is IN
-              (device to PC) and <code>NEGATIVE</code> is OUT.
+              <A href="/bindings/python/types#direction"><code>Direction</code></A>: on an input class
+              it picks the press or release edge (<code>PRESS</code> / <code>RELEASE</code>), on a
+              traffic class the flow (<code>IN</code> / <code>OUT</code>).
             </p>
           </div>
         </Card>

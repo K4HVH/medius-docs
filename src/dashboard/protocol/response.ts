@@ -202,7 +202,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
     }
     case Q_CATCH: {
       // [what][flags][dropped u32][clk_off_us i32][clk_rate_ppb i32][clk_delay_us u16]
-      // [clk_age_ms u16][n u8] then n × [class][id u16 LE][dir][snaplen][dropped u16].
+      // [clk_age_ms u16][n u8] then n × [class][id u16 LE][dir][capture][dropped u16].
       if (payload.length < CATCH_HDR_LEN) return null;
       const n = payload[18];
       // The frame's 512-byte payload ceiling would admit 70 entries, but the box's table holds 32,
@@ -217,7 +217,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           cls: payload[off],
           id: u16le(payload, off + 1),
           dir: payload[off + 3],
-          snaplen: payload[off + 4],
+          capture: payload[off + 4],
           dropped: u16le(payload, off + 5),
         });
       }
@@ -311,7 +311,7 @@ export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
 
 // Parse a TRAFFIC_EVENT payload (§4.10): [ts_us u32][clk u8][class u8][id u16 LE][dir u8][flags u8]
 // [true_len u16 LE][bytes..]. The frame LEN delimits how many bytes arrived, which is at most the
-// entry's snaplen; compare that against true_len to see whether the capture was cut short.
+// entry's capture length; compare that against true_len to see whether the capture was cut short.
 // Unsolicited.
 export function parseTrafficEvent(payload: Uint8Array): TrafficEvent | null {
   if (payload.length < TRAFFIC_HDR_LEN) return null;

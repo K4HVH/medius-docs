@@ -153,9 +153,9 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, usages: &[Usage])</pre>
+          <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, class: Class, direction: Direction, usages: &[Usage])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_traffic(&self, seq: u8, event: TrafficEvent)</pre>
+          <pre class="api-signature">fn push_traffic(&self, seq: u8, ts_us: u32, clock: ClockDomain, class: CatchClass, id: u16, direction: Direction, flags: u8, true_len: u16, bytes: &[u8])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
@@ -180,48 +180,47 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
 
           <p>
             The <code>seq</code> counter is shared across all three, exactly as it is on the wire, so a
-            test can interleave the three pushes and still assert one ordering across the mix. Real
-            losses do not show up here — the box drops before it stamps — so a test that wants to
-            exercise loss handling drives <code>CatchState::dropped</code> instead. <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
-            <A href="/library/types/enums#clock-domain"><code>ClockDomain::Host</code></A>, because that
-            is the only domain the box ever stamps those two frames in.{' '}
-            <code>push_traffic</code> takes the whole{' '}
-            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> instead of a
-            field list, because it has fields a test needs to set independently of one another: the{' '}
-            <code>clk</code> that decides which domain the stamp is in, and a <code>true_len</code> that
-            does not have to agree with <code>bytes.len()</code>, which is how you exercise a host's
-            handling of <code>truncated()</code> without a real capture behind it.
+            test can interleave the pushes and still assert one ordering across the mix.
+          </p>
+          <p>
+            Real losses do not show up here — the box drops before it stamps — so exercise loss
+            handling through <code>CatchState::dropped</code> instead.
+          </p>
+          <p>
+            <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
+            <A href="/library/types/enums#clock-domain"><code>ClockDomain::HostChip</code></A>, the only
+            domain the box stamps those two frames in. <code>push_usages</code> carries its own{' '}
+            <code>class</code>, so a test can push the empty snapshot.
+          </p>
+          <p>
+            <code>push_traffic</code> takes <code>clock</code> and <code>true_len</code> as separate
+            arguments; <code>true_len</code> need not agree with <code>bytes.len()</code>, which is how
+            you exercise <code>truncated()</code> with no real capture behind it.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;
-use medius::{CatchClass, CatchEvent, CatchFilter, ClockDomain, Device, Key, LockDirection,
-             LogLevel, MockBox, TrafficEvent, Usage};
+use medius::{CatchClass, CatchEvent, CatchFilter, Class, ClockDomain, Device, Direction, Key,
+             LogLevel, MockBox, Usage};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
 let rx = device.logs();
 
 mock.push_log(LogLevel::Warn, "overheating");
-let line = rx.recv_timeout(Duration::from_secs(1))?;
+let line = rx.recv_timeout(Duration::from_secs(1)).expect("a log line");
 assert_eq!(line.text, "overheating");
 
 // Fake a catch subscription seeing the user hold A.
-let stream = device.catch_events([CatchFilter::class(CatchClass::Key)])?;
-mock.push_usages(0, 1_000, &[Usage::from(Key::A)]);
+let stream = device.catch_events([CatchFilter::watch_class(Class::Key)])?;
+mock.push_usages(0, 1_000, Class::Key, Direction::PRESS, &[Usage::from(Key::A)]);
 assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));
 
 // Fake a truncated vendor-interrupt capture: 4 bytes seen of a 64-byte packet.
-mock.push_traffic(1, TrafficEvent {
-    ts_us: 2_000,
-    clk: ClockDomain::Host,
-    class: CatchClass::VendIntr,
-    id: 0x83,
-    direction: LockDirection::Positive,
-    flags: 0,
-    true_len: 64,
-    bytes: vec![0x11, 0x22, 0x33, 0x44],
-});
+mock.push_traffic(
+    1, 2_000, ClockDomain::HostChip, CatchClass::VendorInterrupt, 0x83, Direction::IN,
+    0, 64, &[0x11, 0x22, 0x33, 0x44],
+);
 assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</code></pre>
         </Card>
       </div>

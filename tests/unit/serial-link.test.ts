@@ -9,7 +9,7 @@ import {
   EmitMode,
   FrameDecoder,
   FrameType,
-  LockDirection,
+  Direction,
   encode,
 } from '../../src/dashboard/protocol';
 
@@ -307,7 +307,14 @@ describe('SerialLink', () => {
     mock.push(
       encode(FrameType.MotionEvent, 10, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])),
     );
-    mock.push(encode(FrameType.UsageEvent, 11, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0x04, 0x00])));
+    // [ts u32][clk u8][cls u8][dir u8][n u8] then n x [class][id u16 LE]: one held key on the press edge.
+    mock.push(
+      encode(
+        FrameType.UsageEvent,
+        11,
+        new Uint8Array([0, 0, 0, 0, 0, 1, Direction.Positive, 1, 1, 0x04, 0x00]),
+      ),
+    );
     mock.push(
       encode(
         FrameType.TrafficEvent,
@@ -330,17 +337,17 @@ describe('SerialLink', () => {
     await link.open();
     // One vendor interrupt endpoint, IN only, first 16 bytes captured.
     await link.catch({
-      cls: CatchClass.VendIntr,
+      cls: CatchClass.VendorInterrupt,
       id: 0x83,
-      dir: LockDirection.Positive,
-      snaplen: 16,
+      dir: Direction.Positive,
+      capture: 16,
     });
     // Dropping one entry, rather than the whole table: state 0 with a real address.
     await link.unsubscribeCatch({
-      cls: CatchClass.VendIntr,
+      cls: CatchClass.VendorInterrupt,
       id: 0x83,
-      dir: LockDirection.Positive,
-      snaplen: 16,
+      dir: Direction.Positive,
+      capture: 16,
     });
     await link.uncatch();
     expect(mock.written).toHaveLength(3);

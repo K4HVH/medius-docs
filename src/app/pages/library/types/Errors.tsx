@@ -76,12 +76,51 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td><code>CatchTableFull {'{'} needed {'}'}</code></td>
+                <td><code>CatchTableFull {'{'} needed, limit {'}'}</code></td>
                 <td>
-                  A <A href="/library/catch"><code>catch_events</code></A> call would take the box's
-                  subscription table past the 32 entries it holds. Refused before anything is sent,
-                  because the box drops what does not fit and reports it only in a flag — so the
-                  alternative is a stream quietly missing the addresses that were refused.
+                  A <A href="/library/catch"><code>catch_events</code></A> call needs{' '}
+                  <code>needed</code> entries and the box holds <code>limit</code>. Refused before
+                  anything is sent, because the box reports a refusal only in a flag.
+                </td>
+              </tr>
+              <tr>
+                <td><code>EmptySubscription</code></td>
+                <td>A catch subscription named no filters, so the stream would never yield.</td>
+              </tr>
+              <tr>
+                <td><code>CaptureNotApplicable {'{'} class {'}'}</code></td>
+                <td>
+                  A <A href="/library/types/enums#capture"><code>Capture</code></A> on an input class,
+                  which arrives decoded and carries no packet.
+                </td>
+              </tr>
+              <tr>
+                <td><code>NotAnInputFilter {'{'} class {'}'}</code></td>
+                <td>
+                  <A href="/library/catch#input-events"><code>input_events</code></A> was given a
+                  traffic class, which cannot decode to an input edge.
+                </td>
+              </tr>
+              <tr>
+                <td><code>WildcardNotInput</code></td>
+                <td>
+                  <code>CatchFilter::everything()</code> covers traffic too; use{' '}
+                  <code>CatchFilter::all_input()</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>HalfEdgeInputFilter</code></td>
+                <td>
+                  An input subscription narrowed to one edge: without the release, a fresh press
+                  cannot be told from a chord. Match on <code>Input::Press</code> instead.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ReservedId {'{'} class, id {'}'}</code></td>
+                <td>
+                  An exact id of <code>0xFFFF</code>, which is the every-id sentinel on the wire, so
+                  the subscription would address the whole class instead. Only a media usage is wide
+                  enough to reach it.
                 </td>
               </tr>
               <tr>

@@ -7,36 +7,61 @@ const Catch: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Catch" subtitle="Stream the traffic the box carries, addressed like a lock" />
+        <CardHeader title="Catch" subtitle="Observe what passes through the box, addressed like a lock" />
         <p>
-          <A href="/library/catch#catch-events"><code>catch_events</code></A> subscribes to what
-          passes through the box and hands back an{' '}
-          <A href="/library/catch#event-stream"><code>EventStream</code></A> of{' '}
-          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> values: relative
-          motion, held-usage snapshots, and the raw bytes of the HID, vendor, control, emit and bus
-          taps. Physical input is captured before any{' '}
+          <A href="/library/catch#input-events"><code>input_events</code></A> gives you press and
+          release edges;{' '}
+          <A href="/library/catch#catch-events"><code>catch_events</code></A> gives you the raw frames
+          underneath. Input is observed before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
           <A href="/library/inject">injection</A>. Drop the stream to unsubscribe.
         </p>
         <p>
           A subscription is a table of{' '}
-          <A href="/library/catch#filters"><code>CatchFilter</code></A> entries, each naming an
-          address. Addressing doubles as the filter because the control link runs at 4&nbsp;Mbaud
-          while vendor bulk alone measures ~250&nbsp;KiB/s through the box: everything at once cannot
-          be delivered, so a subscription has to be able to name one endpoint.
+          <A href="/library/catch#filters"><code>CatchFilter</code></A> entries. Addressing doubles as
+          the filter: the control link runs at 4&nbsp;Mbaud and vendor bulk alone measures
+          ~250&nbsp;KiB/s, so a subscription has to be able to name one endpoint.
         </p>
       </Card>
 
+      <div id="input-events" data-search-target>
+        <Card>
+          <CardHeader title="input_events" subtitle="Subscribe to decoded input edges" />
+          <pre class="api-signature">fn input_events(&self, filters: impl IntoIterator&lt;Item = CatchFilter&gt;) -&gt; Result&lt;InputStream&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            The box sends held-usage <em>snapshots</em>; this diffs them into edges, so watching a key
+            is a match rather than a set difference.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Device, CatchFilter, Input, Key};
+
+let device = Device::find()?;
+for ev in device.input_events([CatchFilter::watch(Key::F)])? {
+    match ev.input {
+        Input::Press(u) => println!("down {u:?}"),
+        Input::Release(u) => println!("up {u:?}"),
+        Input::Motion { dx, dy, dz } => println!("moved {dx},{dy},{dz}"),
+    }
+}`}</code></pre>
+          <p>
+            Every filter must name an input class and cover both edges; anything else is{' '}
+            <A href="/library/types/errors">refused</A>. Without the release edge a fresh press cannot
+            be told from a chord, so filter on <code>Input::Press</code> instead.
+          </p>
+        </Card>
+      </div>
+
       <div id="catch-events" data-search-target>
         <Card>
-          <CardHeader title="catch_events" subtitle="Subscribe to the event stream" />
-          <pre class="api-signature">fn catch_events(&amp;self, filters: impl IntoIterator&lt;Item = CatchFilter&gt;) -&gt; Result&lt;EventStream&gt;</pre>
+          <CardHeader title="catch_events" subtitle="Subscribe to the raw event stream" />
+          <pre class="api-signature">fn catch_events(&self, filters: impl IntoIterator&lt;Item = CatchFilter&gt;) -&gt; Result&lt;EventStream&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Each <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> becomes one
             entry in the box's 32-entry table, sent as its own frame. The returned{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A> receives every event
-            any of them matches; the subscribe itself sends the frames and doesn't wait for a reply.
+            <A href="/library/catch#event-stream"><code>EventStream</code></A> receives every event any
+            of them matches.
           </p>
           <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
@@ -48,33 +73,23 @@ const Catch: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, CatchClass, CatchEvent, CatchFilter, Button};
+          <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, Device, TrafficClass};
 
 let device = Device::find()?;
 let events = device.catch_events([
-    CatchFilter::class(CatchClass::Button),
-    CatchFilter::class(CatchClass::Axis),
+    CatchFilter::everything().with_capture(Capture::First(16)),
+    CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83),
 ])?;
-while let Ok(event) = events.recv() {
-    match event {
-        CatchEvent::Motion(m) => println!("dx={} dy={} dz={}", m.dx, m.dy, m.dz),
-        CatchEvent::Usages(u) if u.is_held(Button::Side1) => {
-            // the side button is held; rebind it...
-        }
-        CatchEvent::Usages(u) => println!("{} usages held", u.usages.len()),
-        CatchEvent::Traffic(t) => println!("{:?} {} bytes", t.class, t.bytes.len()),
-    }
+while let Ok(CatchEvent::Traffic(t)) = events.recv() {
+    println!("{:?} {:#06x}: {} of {} bytes", t.class, t.id, t.bytes.len(), t.true_len);
 }
 // dropping \`events\` unsubscribes`}</code></pre>
           <div class="api-response-label">LIFECYCLE</div>
           <p>
-            The subscription is held alive by the library's keepalive (which re-asserts the whole
-            table after a device-side blip) and across a{' '}
-            <A href="/library/lifecycle#reconnect">reconnect</A>; it clears like injection: on
-            control-PC silence, a <A href="/library/admin#reset"><code>reset</code></A> (which ends the
-            stream, so its <code>recv</code> returns <code>Err</code>), or link loss. The input classes
-            report the user's <em>physical</em> input, so a locked or injected target still shows its
-            real hand value here. See the native{' '}
+            The keepalive re-asserts the table, and it survives a{' '}
+            <A href="/library/lifecycle#reconnect">reconnect</A>. It clears on control-PC silence, on{' '}
+            <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream), or on link
+            loss. See the native{' '}
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> command for the wire layout.
           </p>
         </Card>
@@ -82,103 +97,101 @@ while let Ok(event) = events.recv() {
 
       <div id="filters" data-search-target>
         <Card>
-          <CardHeader title="CatchFilter" subtitle="One table entry: an address, a direction, a snaplen" />
+          <CardHeader title="CatchFilter" subtitle="One table entry: an address, a direction, a capture" />
           <p>
-            A filter is built and then narrowed. The constructors pick the address; the two modifiers
-            are optional and default to both directions and the whole packet.
+            The input constructors take what <A href="/library/lock#lock"><code>lock</code></A> takes,
+            so hiding an input from the game and watching it are written alike.
           </p>
+          <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
             <thead>
               <tr><th>Constructor</th><th>Addresses</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>CatchFilter::all()</code></td><td>every class, every id. One table entry, not an expansion.</td></tr>
-              <tr><td><code>CatchFilter::class(c)</code></td><td>every id in one <A href="/library/types/enums#catch-class"><code>CatchClass</code></A>.</td></tr>
-              <tr><td><code>CatchFilter::addr(c, id)</code></td><td>one id inside a class: a button, a key, an endpoint address, an interface number.</td></tr>
+              <tr><td><code>CatchFilter::watch(u)</code></td><td>one <A href="/library/types/enums#usage"><code>Usage</code></A>: a button, a key, or a media usage.</td></tr>
+              <tr><td><code>CatchFilter::watch_axis(a)</code></td><td>one <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, or the wheel.</td></tr>
+              <tr><td><code>CatchFilter::watch_class(c)</code></td><td>every usage in one <A href="/library/types/enums#class"><code>Class</code></A>.</td></tr>
+              <tr><td><code>CatchFilter::watch_axes()</code></td><td>every axis.</td></tr>
+              <tr><td><code>CatchFilter::all_input()</code></td><td>all four input classes, as a <code>[CatchFilter; 4]</code>.</td></tr>
+              <tr><td><code>CatchFilter::traffic(c, id)</code></td><td>one id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an endpoint, an interface, an endpoint number.</td></tr>
+              <tr><td><code>CatchFilter::traffic_class(c)</code></td><td>every id in one traffic class.</td></tr>
+              <tr><td><code>CatchFilter::everything()</code></td><td>every class, every id. One table entry, not an expansion.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">MODIFIERS</div>
           <table class="api-params">
             <thead>
-              <tr><th>Modifier</th><th>Default</th><th>Effect</th></tr>
+              <tr><th>Modifier</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>.direction(d)</code></td><td><code>LockDirection::Both</code></td><td>For the input classes, the press or release edge, exactly as for a lock. For the traffic classes, <code>Positive</code> is IN (device to PC) and <code>Negative</code> is OUT. No class is both, so one value carries either reading.</td></tr>
-              <tr><td><code>.snaplen(n)</code></td><td><code>0</code> (whole packet)</td><td>Bytes captured per event. Per entry, because the useful value differs by orders of magnitude between classes: a 64-byte vendor interrupt report is worth having whole, a bulk pipe traced for framing needs 16 and would otherwise saturate the link on its own.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">THE CLASSES</div>
-          <p>
-            <A href="/library/types/enums#catch-class"><code>CatchClass</code></A>'s first four
-            variants are <A href="/library/lock"><code>lock</code></A>'s classes unchanged, so one
-            vocabulary covers locking a field and catching it.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Class</th><th><code>id</code> means</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>Button</code> / <code>Key</code> / <code>Media</code></td><td>the usage id, as for a lock or an inject</td></tr>
-              <tr><td><code>Axis</code></td><td>X, Y, or Wheel</td></tr>
-              <tr><td><code>HidIn</code></td><td>interface number</td></tr>
-              <tr><td><code>HidOut</code></td><td>endpoint address</td></tr>
-              <tr><td><code>VendIntr</code> / <code>VendBulk</code></td><td>endpoint address</td></tr>
-              <tr><td><code>Control</code></td><td>endpoint number (<code>0</code> = EP0)</td></tr>
-              <tr><td><code>Emit</code></td><td>interface number; what the clone actually put on the wire, after injection, locks and the suppression gate</td></tr>
-              <tr><td><code>Bus</code></td><td>unused; the class is the whole address</td></tr>
+              <tr><td><code>.on_press() / .on_release()</code></td><td>One edge, on the momentary classes.</td></tr>
+              <tr><td><code>.inbound() / .outbound()</code></td><td>One flow, on the traffic classes: IN is device to PC.</td></tr>
+              <tr><td><code>.with_direction(d)</code></td><td>The <A href="/library/types/enums#direction"><code>Direction</code></A> directly; on an axis it is the sign of the delta.</td></tr>
+              <tr><td><code>.with_capture(c)</code></td><td>Bytes kept per event, as a <A href="/library/types/enums#capture"><code>Capture</code></A>. Traffic classes only — an input class carries no packet, and naming one with a capture is refused.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MOST-SPECIFIC-FIRST</div>
           <p>
             An exact <code>(class, id)</code> beats a class blanket, which beats{' '}
-            <code>CatchFilter::all()</code>; ties go to the earlier filter. The winning entry supplies
-            the <code>snaplen</code>, so "everything at 16 bytes, except endpoint <code>0x83</code> in
-            full" is two filters rather than a special case.
+            <code>everything()</code>, and a named direction beats <code>Both</code>. The winning entry
+            supplies the capture.
           </p>
-          <pre class="diagram">{`  filters, in the order you passed them
-    [0]  CatchFilter::all().snaplen(16)
-    [1]  CatchFilter::class(CatchClass::VendIntr).snaplen(32)
-    [2]  CatchFilter::addr(CatchClass::VendIntr, 0x83)
+          <pre class="diagram">{`  CatchFilter::everything().with_capture(Capture::First(16))
+  CatchFilter::traffic_class(TrafficClass::VendorInterrupt).with_capture(Capture::First(32))
+  CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83)
 
   a 64-byte report on vendor interrupt endpoint 0x83
-    +- exact (class, id)?   [2]  HIT  --> snaplen 0   -> all 64 bytes
-    +- class blanket?       [1]  (not reached)
-    +- CatchFilter::all()?  [0]  (not reached)
+    +- exact (class, id)?  HIT   -->  whole packet  -->  all 64 bytes
 
   the same report on endpoint 0x81
-    +- exact (class, id)?        miss
-    +- class blanket?       [1]  HIT  --> snaplen 32  -> 32 bytes, true_len 64
-    +- CatchFilter::all()?  [0]  (not reached)`}</pre>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchFilter, LockDirection};
-
-let events = device.catch_events([
-    CatchFilter::all().snaplen(16),                        // a cheap floor under everything
-    CatchFilter::addr(CatchClass::VendIntr, 0x83),         // this endpoint, whole packets
-    CatchFilter::class(CatchClass::VendBulk)               // outbound bulk only, first 16 bytes
-        .direction(LockDirection::Negative)
-        .snaplen(16),
-])?;`}</code></pre>
+    +- exact (class, id)?  miss
+    +- class blanket?      HIT   -->  First(32)     -->  32 bytes, true_len 64`}</pre>
           <div class="api-response-label">CAPACITY</div>
           <p>
-            The table holds 32 entries and subscribing is fire-and-forget, so a refused filter is
-            visible only by its absence from{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>, alongside that
-            reply's <code>table_full</code> flag. A filter is also refused for an unknown class, a
-            direction outside the three values, or a wildcard class carrying a specific id.{' '}
-            <code>id</code> is class-specific, so a wildcard class with a real id addresses nothing
-            coherent.
+            The table holds 32 entries. A subscription that would exceed it is refused before anything
+            is sent, so a stream is never quietly missing an address.
           </p>
+        </Card>
+      </div>
+
+      <div id="input-stream" data-search-target>
+        <Card>
+          <CardHeader title="InputStream" subtitle="Receive decoded edges" />
+          <p>
+            The handle <A href="/library/catch#input-events"><code>input_events</code></A> returns. It
+            holds the per-class held sets it diffs, so it takes <code>&mut self</code> and one report
+            can yield several <A href="/library/types/enums#input"><code>Input</code></A> values. It is
+            an <code>Iterator</code>, so a <code>for</code> loop over it works.
+          </p>
+          <p>
+            It reports only the usages <em>this</em> subscription addressed. The box holds one table —
+            the union of every subscription in the process — so its snapshots widen as soon as
+            unrelated code subscribes; the decoder filters them back down.
+          </p>
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>recv()</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Block until the next edge.</td></tr>
+              <tr><td><code>try_recv()</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>The next decoded edge, or <code>None</code> (never blocks).</td></tr>
+              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature).</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
+              <tr><td><code>held(class)</code></td><td><code>&amp;[Usage]</code></td><td>What this stream currently has held for one class.</td></tr>
+              <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
 
       <div id="event-stream" data-search-target>
         <Card>
-          <CardHeader title="EventStream" subtitle="Receive events" />
+          <CardHeader title="EventStream" subtitle="Receive raw events" />
           <p>
             The handle <A href="/library/catch#catch-events"><code>catch_events</code></A> returns.
-            Pull <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> values with
-            whichever method fits your loop; cloning shares the queue (like{' '}
-            <A href="/library/diagnostics#logs"><code>LogStream</code></A>). When the stream and all
-            its clones drop, the subscription ends and the box returns to passthrough.
+            Cloning shares the queue. When the stream and all its clones drop, the subscription ends.
           </p>
           <div class="api-response-label">METHODS</div>
           <table class="api-params">
@@ -189,8 +202,10 @@ let events = device.catch_events([
               <tr><td><code>recv()</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Block until the next event.</td></tr>
               <tr><td><code>try_recv()</code></td><td><code>Option&lt;CatchEvent&gt;</code></td><td>The next buffered event, or <code>None</code> (never blocks).</td></tr>
               <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;CatchEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
-              <tr><td><code>try_iter()</code></td><td><code>impl Iterator</code></td><td>Drain every buffered event without blocking.</td></tr>
+              <tr><td><code>iter() / try_iter()</code></td><td><code>impl Iterator</code></td><td>Blocking, or drain what is buffered. The stream is itself an <code>Iterator</code>.</td></tr>
               <tr><td><code>recv_async().await</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Await the next event (<code>async</code> feature), runtime-agnostic.</td></tr>
+              <tr><td><code>stream()</code></td><td><code>impl Stream</code></td><td>The same queue as a <code>futures</code> stream (<code>async</code> feature).</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering, which a <code>None</code> from the two above cannot tell you.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
             </tbody>
           </table>
@@ -205,30 +220,29 @@ let events = device.catch_events([
               <tr><td><code>Traffic(</code><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A><code>)</code></td><td>bytes, plus the address they came from</td><td>every other class</td></tr>
             </tbody>
           </table>
+          <p>
+            <code>class()</code>, <code>id()</code>, <code>direction()</code>, <code>ts_us()</code>,{' '}
+            <code>clock()</code> and <code>bytes()</code> answer the same question of any variant.
+          </p>
           <div class="callout callout--info">
             <p>
-              The buffer is bounded and lossy: a slow consumer drops the OLDEST events, keeping the
-              freshest input (count them with <code>dropped()</code>). The box's own drop counts, under
-              back-pressure on the wire, are on{' '}
-              <A href="/library/requests#query-catch"><code>query_catch</code></A>: once box-wide and
-              once per table entry, because "my link is full" and "this endpoint's trace has holes"
-              are different problems.
+              The buffer is bounded and lossy: a slow consumer drops the <em>oldest</em> events. The
+              box's own drop counts are on{' '}
+              <A href="/library/requests#query-catch"><code>query_catch</code></A>, box-wide and per
+              entry.
             </p>
           </div>
           <div class="api-response-label">DELIVERY IS RANKED</div>
           <p>
-            The box drains events through four strict-priority queues: input and bus first, then the
-            byte-oriented traffic classes, then control, then vendor bulk. Bulk can starve completely under a busy
-            mouse. That is the honest outcome: bulk-plus-input is the combination the control link
-            cannot carry, and a half-delivered bulk trace is worse than a visibly absent one because
-            it looks like data.
+            The box drains through strict-priority queues. Vendor bulk can starve completely under a
+            busy mouse: bulk-plus-input is what the control link cannot carry.
           </p>
-          <pre class="diagram">{`  Button Key Media Axis Bus  -->  [ queue 0 ]  --+
-                                                 |
-  HidIn HidOut VendIntr                          |
-  Control Emit               -->  [ queue 1 ]  --+--->  control link, 4 Mbaud
-                                                 |
-  VendBulk                   -->  [ queue 2 ]  --+
+          <pre class="diagram">{`  Button Key Media Axis Bus       -->  [ queue 0 ]  --+
+                                                      |
+  HidIn HidOut VendorInterrupt                        |
+  Control Emit                    -->  [ queue 1 ]  --+--->  control link, 4 Mbaud
+                                                      |
+  VendorBulk                      -->  [ queue 2 ]  --+
 
   queue 0 drains fully before queue 1, and 1 fully before 2`}</pre>
         </Card>
@@ -239,17 +253,17 @@ let events = device.catch_events([
           <CardHeader title="Reading traffic" subtitle="Truncation, control transactions, bus events" />
           <p>
             A <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> carries the
-            address it came from, the bytes that arrived, and <code>true_len</code>: the packet's
-            length <em>before</em> <code>snaplen</code> cut it. Without that field a packet trimmed by
-            <code>snaplen</code> and a genuinely short packet look identical, so{' '}
-            <code>truncated()</code> is the only honest way to tell them apart.
+            address, the bytes, and <code>true_len</code>: the length before the capture cut it. A
+            trimmed packet and a genuinely short one are otherwise identical, so check{' '}
+            <code>truncated()</code>.
           </p>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchEvent, CatchFilter};
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
 
-let events = device.catch_events([CatchFilter::class(CatchClass::VendIntr).snaplen(16)])?;
-loop {
-    // A while-let would end the loop on the first event of another kind instead of skipping it.
-    if let CatchEvent::Traffic(t) = events.recv()? {
+let filter = CatchFilter::traffic_class(TrafficClass::VendorInterrupt)
+    .with_capture(Capture::First(16));
+for event in &device.catch_events([filter])? {
+    if let CatchEvent::Traffic(t) = event {
         if t.truncated() {
             println!("ep {:#06x}: {} of {} bytes", t.id, t.bytes.len(), t.true_len);
         }
@@ -261,119 +275,83 @@ loop {
               <tr><th>Class</th><th><code>flags</code></th></tr>
             </thead>
             <tbody>
-              <tr><td><code>VendBulk</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
-              <tr><td><code>Control</code></td><td>the real device's answer: <code>0</code> OK, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout</td></tr>
+              <tr><td><code>VendorBulk</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
+              <tr><td><code>Control</code></td><td>the real device's answer, via <A href="/library/types/enums#control-status"><code>control_status</code></A></td></tr>
               <tr><td><code>Bus</code></td><td>a <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> discriminant</td></tr>
               <tr><td>every other class</td><td><code>0</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CONTROL</div>
           <p>
-            A <code>Control</code> event is one <em>completed transaction</em>, not one stage:{' '}
-            <code>bytes</code> is <code>[setup 8][data…]</code> and <code>direction</code> says which
-            way the data stage went. That is the unit the proxy already holds both halves of, so
-            splitting it would put reassembly on every consumer. A request answered from the box's own
-            value cache still produces an event, because a trace that omitted those would show a
-            device that had stopped being asked.
-          </p>
-          <div class="api-response-label">BUS</div>
-          <p>
-            A <code>Bus</code> event carries two operand bytes and a{' '}
-            <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind: resets, suspends,
-            resumes, (de)configuration, <code>SET_INTERFACE</code>, device attach and detach, and the
-            clone coming up or down. These already drive the{' '}
-            <A href="/library/requests#health"><code>health</code></A> flags and the{' '}
-            <A href="/library/requests#query-stats"><code>stats</code></A> counters; what the stream
-            adds is a timestamped ordering. A counter says a reconfiguration happened, not when it
-            happened relative to the report stream that stopped.
+            A <code>Control</code> event is one completed transaction, not one stage:{' '}
+            <code>bytes</code> is <code>[setup 8][data…]</code>, split by <code>setup()</code> and{' '}
+            <code>data()</code>. A <code>Bus</code> event carries a{' '}
+            <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind and its operands.
           </p>
         </Card>
       </div>
 
       <div id="timestamps" data-search-target>
         <Card>
-          <CardHeader title="Timestamps" subtitle="Two chips, two clocks, and one measured offset" />
+          <CardHeader title="Timestamps" subtitle="Two chips, two clocks, one host timeline" />
           <p>
             Every event carries <code>ts_us</code> and the{' '}
             <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> that produced it.
-            The two ESP32-S3s boot independently, so nothing relates their timers: a stamp is only
-            meaningful against another from the same domain.
+            The two chips boot independently, so a stamp is only meaningful within its own domain.
           </p>
-          <div class="api-response-label">THE CLOCKS</div>
           <table class="api-params">
             <thead><tr><th>Domain</th><th>Stamped</th><th>Covers</th></tr></thead>
             <tbody>
-              <tr><td><code>ClockDomain::Host</code></td><td>in USB interrupt context on the host chip, the instant the real device's transfer completed, the earliest point at which the box knows the report exists</td><td>motion, usages, <code>HidIn</code>, vendor IN</td></tr>
-              <tr><td><code>ClockDomain::Device</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, <code>Control</code>, <code>Emit</code>, <code>Bus</code></td></tr>
+              <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, vendor IN</td></tr>
+              <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, <code>Control</code>, <code>Emit</code>, <code>Bus</code></td></tr>
             </tbody>
           </table>
-          <table class="api-params">
-            <thead><tr><th>Property</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>type</td><td><code>u32</code> microseconds, handed over as the box sent it, like the rolling <code>SEQ</code> beside it.</td></tr>
-              <tr><td>epoch</td><td>that chip's boot, with no relationship to any clock on this machine. Compare stamps only within a domain, or apply the measured offset below.</td></tr>
-              <tr><td>wrap</td><td>every ~71.6 minutes, and back to zero when that chip reboots. A value below the previous one is a wrap, a reboot, or a domain change, and the delta across it is meaningless.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">CROSSING DOMAINS</div>
           <p>
-            <A href="/library/requests#query-catch"><code>query_catch</code></A> returns a{' '}
-            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>: the
-            measured offset between the two chips, the drift rate, the round trip that bounds the
-            offset's error, and the estimate's age (<code>None</code> until one has been taken, which
-            an offset of zero alone could not distinguish). The age is that of the exchange the offset
-            <em>rests on</em>, not of the newest one — the offset comes from the least-delayed exchange
-            in the window, which is often older. Applying it is optional and the domain tag stays
-            authoritative, so a caller that does not want an approximated timeline can simply refuse to
-            subtract across domains.
+            Stamps are <code>u32</code> microseconds from that chip's boot: they wrap every ~71.6
+            minutes and restart at zero on reboot.{' '}
+            <A href="/library/types/structs#timeline"><code>Timeline</code></A> handles all of it and
+            hands back an <code>Instant</code>. It takes an{' '}
+            <A href="/library/types/structs#input-event"><code>InputEvent</code></A> or a raw{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> alike.
           </p>
-          <pre><code class="language-rust">{`let c = device.query_catch()?;
-if let Some(age) = c.clock.age {
-    // Good to about half the round trip; extrapolate with rate_ppb rather than
-    // trusting the offset, which two free-running crystals stale at ~20 us/s.
-    let err_us = c.clock.delay_us / 2;
-    let drift_us = c.clock.drift_us_over(age);
-    println!("offset {} us ±{} us, +{} us of drift", c.clock.offset_us, err_us, drift_us);
-}`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchClass, CatchEvent, CatchFilter};
+          <pre><code class="language-rust">{`use medius::{CatchFilter, Input, Key, Timeline};
 
-let poll_us = device.query_rate()?.poll_period_us as u32;
-let stream = device.catch_events([CatchFilter::class(CatchClass::Axis)])?;
-let mut prev: Option<u32> = None;
-loop {
-    if let CatchEvent::Motion(m) = stream.recv()? {
-        if let Some(p) = prev.filter(|p| m.ts_us > *p) {
-            // Two reports inside one poll period give 0, so saturate rather than underflow.
-            let idle_polls = ((m.ts_us - p) / poll_us).saturating_sub(1);
-            println!("{idle_polls} polls with nothing to report");
-        }
-        prev = Some(m.ts_us);
+let mut input = device.input_events([CatchFilter::watch(Key::F)])?;
+let mut time = Timeline::new();
+for ev in input.by_ref().take(20) {
+    let at = time.observe(&ev);
+    if let Input::Press(u) = ev.input {
+        println!("{u:?} down at {:?}, {:?} above the floor", at.host, at.excess);
     }
 }`}</code></pre>
           <p>
-            Check <A href="/library/requests#query-rate"><code>query_rate</code></A>'s{' '}
-            <code>change_driven</code> flag first: on a change-driven device the idle polls were never
-            on the wire, so a gap cannot be read as a poll count.
+            It keeps a per-domain minimum of (elapsed here − elapsed on the box) rather than an
+            average, because the error is one-sided: an event can arrive late but never early.
+          </p>
+          <div class="api-response-label">CROSSING DOMAINS ON THE BOX</div>
+          <p>
+            <A href="/library/requests#query-catch"><code>query_catch</code></A> returns a{' '}
+            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>: the box's
+            own offset between its two chips, its drift rate, and the round trip bounding the error.
           </p>
         </Card>
       </div>
 
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="On AsyncDevice" subtitle="catch_events fires, the stream awaits" />
+          <CardHeader title="On AsyncDevice" subtitle="Subscribing fires, the stream awaits" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
-            <code>catch_events</code> synchronous (it just sends the subscribe frames and returns the
-            stream) while the stream itself offers <code>recv_async().await</code>.{' '}
-            <code>query_catch</code> is a future, like the other queries.
+            <code>catch_events</code> and <code>input_events</code> synchronous; the streams offer{' '}
+            <code>recv_async().await</code>. <code>query_catch</code> is a future, like the other
+            queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{AsyncDevice, CatchClass, CatchFilter};
+          <pre><code class="language-rust">{`use medius::{AsyncDevice, CatchFilter, Key};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
-let events = device.catch_events([CatchFilter::class(CatchClass::Button)])?;  // sync, no await
-let report = events.recv_async().await?;                                    // stream awaits`}</code></pre>
+let mut input = device.input_events([CatchFilter::watch(Key::F)])?;  // sync, no await
+let edge = input.recv_async().await?;                                // stream awaits`}</code></pre>
         </Card>
       </div>
     </>

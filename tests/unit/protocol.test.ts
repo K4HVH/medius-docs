@@ -5,10 +5,14 @@ import {
   BusEventKind,
   CatchClass,
   ClockDomain,
-  CATCH_ID_ALL,
-  filterAddr,
-  filterAll,
-  filterClass,
+  CATCH_ID_ANY,
+  filterTraffic,
+  filterEverything,
+  filterTrafficClass,
+  filterWatch,
+  filterWatchAxes,
+  filterWatchAxis,
+  filterWatchClass,
   sameFilter,
   DeviceKind,
   EmitMode,
@@ -30,7 +34,11 @@ import {
   LedTarget,
   LockAxis,
   LockClass,
-  LockDirection,
+  Direction,
+  In,
+  Out,
+  Press,
+  Release,
   LOCK_ID_ALL,
   isComposite,
   isLocked,
@@ -399,22 +407,22 @@ describe('LOCK command (§3.8)', () => {
   it('lockPayload packs [class][id u16 LE][direction][state]', () => {
     // Lock the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
     expect(
-      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, LockDirection.Negative, 1)),
+      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, Direction.Negative, 1)),
     ).toEqual([3, 2, 0, 2, 1]);
     // Unlock the X axis, both signs.
-    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, LockDirection.Both, 0))).toEqual([
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, 0))).toEqual([
       3, 0, 0, 0, 0,
     ]);
     // A button locks as class button (0), id = button id, with no +3 offset.
-    expect(Array.from(lockPayload(LockClass.Button, 4, LockDirection.Positive, 1))).toEqual([
+    expect(Array.from(lockPayload(LockClass.Button, 4, Direction.Positive, 1))).toEqual([
       0, 4, 0, 1, 1,
     ]);
     // A media-class lock keeps its 16-bit usage.
-    expect(Array.from(lockPayload(LockClass.Media, 0x00e9, LockDirection.Both, 1))).toEqual([
+    expect(Array.from(lockPayload(LockClass.Media, 0x00e9, Direction.Both, 1))).toEqual([
       2, 0xe9, 0x00, 0, 1,
     ]);
     // The id sentinel 0xFFFF blanket-locks the whole class.
-    expect(Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, LockDirection.Both, 1))).toEqual([
+    expect(Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, Direction.Both, 1))).toEqual([
       1, 0xff, 0xff, 0, 1,
     ]);
   });
@@ -423,8 +431,12 @@ describe('LOCK command (§3.8)', () => {
     expect([LockClass.Button, LockClass.Key, LockClass.Media, LockClass.Axis]).toEqual([0, 1, 2, 3]);
   });
 
-  it('LockDirection wire values match ctrl_proto.h', () => {
-    expect([LockDirection.Both, LockDirection.Positive, LockDirection.Negative]).toEqual([0, 1, 2]);
+  it('Direction wire values match ctrl_proto.h, and the aliases name both readings', () => {
+    expect([Direction.Both, Direction.Positive, Direction.Negative]).toEqual([0, 1, 2]);
+    // The edge reading (momentary usages) and the transfer reading (traffic classes) are the same
+    // byte, so an alias that drifted off its member would silently mis-address a subscription.
+    expect([Press, Release]).toEqual([Direction.Positive, Direction.Negative]);
+    expect([In, Out]).toEqual([Direction.Positive, Direction.Negative]);
   });
 
   it('parses a RESP(LOCKS) entry list', () => {
@@ -452,13 +464,13 @@ describe('LOCK command (§3.8)', () => {
         { cls: LockClass.Axis, id: LockAxis.X, positive: true, negative: true },
       ],
     };
-    expect(isLocked(locks, lockAxis(LockAxis.Wheel), LockDirection.Negative)).toBe(true);
-    expect(isLocked(locks, lockAxis(LockAxis.Wheel), LockDirection.Positive)).toBe(false);
-    expect(isLocked(locks, lockAxis(LockAxis.Wheel), LockDirection.Both)).toBe(false);
+    expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Negative)).toBe(true);
+    expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Positive)).toBe(false);
+    expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Both)).toBe(false);
     // X: both directions set means Both is true.
-    expect(isLocked(locks, lockAxis(LockAxis.X), LockDirection.Both)).toBe(true);
+    expect(isLocked(locks, lockAxis(LockAxis.X), Direction.Both)).toBe(true);
     // A button not in the list reads unlocked.
-    expect(isLocked(locks, lockButton(0), LockDirection.Positive)).toBe(false);
+    expect(isLocked(locks, lockButton(0), Direction.Positive)).toBe(false);
   });
 
   it('returns null for a truncated RESP(LOCKS) payload', () => {
@@ -468,46 +480,81 @@ describe('LOCK command (§3.8)', () => {
 });
 
 describe('CATCH command (§3.9)', () => {
-  it('catchPayload packs one [class][id][dir][state][snaplen] table entry', () => {
+  it('catchPayload packs one [class][id][dir][state][capture] table entry', () => {
     // Every mouse button, both edges, whole packet.
     expect(
-      Array.from(catchPayload(CatchClass.Button, CATCH_ID_ALL, LockDirection.Both, 1)),
+      Array.from(catchPayload(CatchClass.Button, CATCH_ID_ANY, Direction.Both, 1)),
     ).toEqual([0x00, 0xff, 0xff, 0x00, 0x01, 0x00]);
     // One vendor interrupt endpoint (0x83), IN only, first 16 bytes.
     expect(
-      Array.from(catchPayload(CatchClass.VendIntr, 0x83, LockDirection.Positive, 1, 16)),
+      Array.from(catchPayload(CatchClass.VendorInterrupt, 0x83, Direction.Positive, 1, 16)),
     ).toEqual([0x06, 0x83, 0x00, 0x01, 0x01, 0x10]);
     // The wildcard with state 0 clears the whole table in one frame.
-    expect(Array.from(catchPayload(CatchClass.Any, CATCH_ID_ALL, LockDirection.Both, 0))).toEqual([
+    expect(Array.from(catchPayload(CatchClass.Any, CATCH_ID_ANY, Direction.Both, 0))).toEqual([
       0xff, 0xff, 0xff, 0x00, 0x00, 0x00,
     ]);
   });
 
   it('the filter builders default to the whole class, both directions, whole packet', () => {
-    expect(filterAll()).toEqual({
+    expect(filterEverything()).toEqual({
       cls: CatchClass.Any,
-      id: CATCH_ID_ALL,
-      dir: LockDirection.Both,
-      snaplen: 0,
+      id: CATCH_ID_ANY,
+      dir: Direction.Both,
+      capture: 0,
     });
-    expect(filterClass(CatchClass.VendBulk, 16)).toEqual({
-      cls: CatchClass.VendBulk,
-      id: CATCH_ID_ALL,
-      dir: LockDirection.Both,
-      snaplen: 16,
+    expect(filterTrafficClass(CatchClass.VendorBulk, 16)).toEqual({
+      cls: CatchClass.VendorBulk,
+      id: CATCH_ID_ANY,
+      dir: Direction.Both,
+      capture: 16,
     });
-    expect(filterAddr(CatchClass.VendIntr, 0x83)).toEqual({
-      cls: CatchClass.VendIntr,
+    expect(filterTraffic(CatchClass.VendorInterrupt, 0x83)).toEqual({
+      cls: CatchClass.VendorInterrupt,
       id: 0x83,
-      dir: LockDirection.Both,
-      snaplen: 0,
+      dir: Direction.Both,
+      capture: 0,
     });
-    // sameFilter ignores snaplen, because the box matches an unsubscribe on (class, id, dir).
-    expect(sameFilter(filterClass(CatchClass.Key), filterClass(CatchClass.Key, 16))).toBe(true);
-    expect(sameFilter(filterClass(CatchClass.Key), filterClass(CatchClass.Media))).toBe(false);
-    expect(sameFilter(filterAddr(CatchClass.VendIntr, 0x83), filterClass(CatchClass.VendIntr))).toBe(
-      false,
-    );
+    // sameFilter ignores capture, because the box matches an unsubscribe on (class, id, dir).
+    expect(
+      sameFilter(filterTrafficClass(CatchClass.HidIn), filterTrafficClass(CatchClass.HidIn, 16)),
+    ).toBe(true);
+    expect(
+      sameFilter(filterTrafficClass(CatchClass.HidIn), filterTrafficClass(CatchClass.HidOut)),
+    ).toBe(false);
+    expect(
+      sameFilter(
+        filterTraffic(CatchClass.VendorInterrupt, 0x83),
+        filterTrafficClass(CatchClass.VendorInterrupt),
+      ),
+    ).toBe(false);
+  });
+
+  it('the input-side builders address one usage, one axis, or a whole class', () => {
+    // No capture length applies on the input side: the event is the delta or the snapshot itself.
+    expect(filterWatch(CatchClass.Button, 4)).toEqual({
+      cls: CatchClass.Button,
+      id: 4,
+      dir: Direction.Both,
+      capture: 0,
+    });
+    expect(filterWatchAxis(LockAxis.Wheel)).toEqual({
+      cls: CatchClass.Axis,
+      id: LockAxis.Wheel,
+      dir: Direction.Both,
+      capture: 0,
+    });
+    expect(filterWatchClass(CatchClass.Key)).toEqual({
+      cls: CatchClass.Key,
+      id: CATCH_ID_ANY,
+      dir: Direction.Both,
+      capture: 0,
+    });
+    expect(filterWatchAxes()).toEqual({
+      cls: CatchClass.Axis,
+      id: CATCH_ID_ANY,
+      dir: Direction.Both,
+      capture: 0,
+    });
   });
 
   it('CatchClass wire values match ctrl_proto.h, and 0-3 are LOCK classes unchanged', () => {
@@ -520,14 +567,14 @@ describe('CATCH command (§3.9)', () => {
     expect([
       CatchClass.HidIn,
       CatchClass.HidOut,
-      CatchClass.VendIntr,
-      CatchClass.VendBulk,
+      CatchClass.VendorInterrupt,
+      CatchClass.VendorBulk,
       CatchClass.Control,
       CatchClass.Emit,
       CatchClass.Bus,
     ]).toEqual([4, 5, 6, 7, 8, 9, 10]);
     expect(CatchClass.Any).toBe(0xff);
-    expect(CATCH_ID_ALL).toBe(LOCK_ID_ALL);
+    expect(CATCH_ID_ANY).toBe(LOCK_ID_ALL);
   });
 
   it('parses a CATCH RESP header + entry table', () => {
@@ -537,9 +584,9 @@ describe('CATCH command (§3.9)', () => {
       new Uint8Array([
         7, 0x00, 0x02, 0x01, 0x00, 0x00, 0x06, 0xff, 0xff, 0xff, 0xb0, 0x04, 0x00, 0x00, 0x5a, 0x00,
         0x28, 0x00, 0x02,
-        // class=Button, id=ALL, dir=Both, snaplen=0, dropped=0
+        // class=Button, id=ALL, dir=Both, capture=0, dropped=0
         0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
-        // class=VendBulk, id=0x02 (OUT endpoint), dir=Negative, snaplen=16, dropped=0x0111
+        // class=VendorBulk, id=0x02 (OUT endpoint), dir=Negative, capture=16, dropped=0x0111
         0x07, 0x02, 0x00, 0x02, 0x10, 0x11, 0x01,
       ]),
     );
@@ -552,16 +599,16 @@ describe('CATCH command (§3.9)', () => {
         entries: [
           {
             cls: CatchClass.Button,
-            id: CATCH_ID_ALL,
-            dir: LockDirection.Both,
-            snaplen: 0,
+            id: CATCH_ID_ANY,
+            dir: Direction.Both,
+            capture: 0,
             dropped: 0,
           },
           {
-            cls: CatchClass.VendBulk,
+            cls: CatchClass.VendorBulk,
             id: 0x02,
-            dir: LockDirection.Negative,
-            snaplen: 16,
+            dir: Direction.Negative,
+            capture: 16,
             dropped: 0x0111,
           },
         ],
@@ -688,7 +735,7 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
       clk: ClockDomain.Host,
       cls: CatchClass.HidIn,
       id: 0,
-      dir: LockDirection.Positive,
+      dir: Direction.Positive,
       flags: 0,
       trueLen: 4,
       bytes: new Uint8Array([1, 2, 3, 4]),
@@ -696,8 +743,8 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     expect(trafficTruncated(ev!)).toBe(false);
   });
 
-  it('reports a snaplen-truncated capture through true_len, not through a short byte count', () => {
-    // A 512-byte bulk packet captured at snaplen 4: without true_len this is indistinguishable
+  it('reports a capture-truncated capture through true_len, not through a short byte count', () => {
+    // A 512-byte bulk packet captured at capture 4: without true_len this is indistinguishable
     // from a genuinely 4-byte packet.
     const ev = parseTrafficEvent(
       new Uint8Array([
@@ -705,8 +752,8 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
         0xdd,
       ]),
     );
-    expect(ev?.cls).toBe(CatchClass.VendBulk);
-    expect(ev?.dir).toBe(LockDirection.Negative);
+    expect(ev?.cls).toBe(CatchClass.VendorBulk);
+    expect(ev?.dir).toBe(Direction.Negative);
     expect(ev?.flags).toBe(0x01); // end-of-transfer
     expect(ev?.trueLen).toBe(512);
     expect(ev?.bytes).toEqual(new Uint8Array([0xaa, 0xbb, 0xcc, 0xdd]));
@@ -995,12 +1042,18 @@ describe('keyboard + media (v2.0.0)', () => {
     expect(parseResp(new Uint8Array([3, 5, 0x07, 2]))).toBeNull(); // unified CAPS needs 7 bytes
   });
 
-  it('parseUsageEvent decodes [ts][clk][n] then [class][id u16 LE] class-tagged usages (§4.10)', () => {
-    const hdr = [0, 0, 0, 0, 0]; // ts_us = 0, host clock
-    // Two held buttons: Left (class 0, id 0) and Side2 (class 0, id 4).
-    expect(parseUsageEvent(new Uint8Array([...hdr, 2, 0, 0, 0, 0, 4, 0]))).toEqual({
+  it('parseUsageEvent decodes [ts][clk][cls][dir][n] then [class][id u16 LE] usages (§4.10)', () => {
+    // cls and dir come from the frame header, not from the entries: the snapshot that most needs
+    // them is the EMPTY one, which lists nothing to read a class or an edge from.
+    const hdr = (cls: number, dir: number) => [0, 0, 0, 0, 0, cls, dir];
+    // Two held buttons: Left (class 0, id 0) and Side2 (class 0, id 4), on the press edge.
+    expect(
+      parseUsageEvent(new Uint8Array([...hdr(0, Direction.Positive), 2, 0, 0, 0, 0, 4, 0])),
+    ).toEqual({
       tsUs: 0,
       clk: ClockDomain.Host,
+      cls: 0,
+      dir: Direction.Positive,
       usages: [
         { cls: 0, id: 0 },
         { cls: 0, id: 4 },
@@ -1008,34 +1061,45 @@ describe('keyboard + media (v2.0.0)', () => {
     });
     // One held key ('A', class 1, id 0x04) and one held media usage (Volume Up, class 2, id 0x00E9),
     // each in its own event; the id stays little-endian.
-    expect(parseUsageEvent(new Uint8Array([...hdr, 1, 1, 0x04, 0x00]))).toEqual({
+    expect(
+      parseUsageEvent(new Uint8Array([...hdr(1, Direction.Positive), 1, 1, 0x04, 0x00])),
+    ).toEqual({
       tsUs: 0,
       clk: ClockDomain.Host,
+      cls: 1,
+      dir: Direction.Positive,
       usages: [{ cls: 1, id: 0x04 }],
     });
-    expect(parseUsageEvent(new Uint8Array([...hdr, 1, 2, 0xe9, 0x00]))).toEqual({
+    expect(
+      parseUsageEvent(new Uint8Array([...hdr(2, Direction.Positive), 1, 2, 0xe9, 0x00])),
+    ).toEqual({
       tsUs: 0,
       clk: ClockDomain.Host,
+      cls: 2,
+      dir: Direction.Positive,
       usages: [{ cls: 2, id: 0xe9 }],
     });
-    // Empty (nothing held).
-    expect(parseUsageEvent(new Uint8Array([...hdr, 0]))).toEqual({
+    // Empty (nothing held) on the release edge: the header is the only thing naming the class.
+    expect(parseUsageEvent(new Uint8Array([...hdr(1, Direction.Negative), 0]))).toEqual({
       tsUs: 0,
       clk: ClockDomain.Host,
+      cls: 1,
+      dir: Direction.Negative,
       usages: [],
     });
   });
 
   it('parseUsageEvent returns null for a short or truncated payload', () => {
-    expect(parseUsageEvent(new Uint8Array([]))).toBeNull(); // needs ts + clk + n
-    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0]))).toBeNull(); // no n byte
-    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0, 2, 0, 0, 0]))).toBeNull(); // n=2, one entry
+    expect(parseUsageEvent(new Uint8Array([]))).toBeNull(); // needs ts + clk + cls + dir + n
+    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0]))).toBeNull(); // no cls/dir/n
+    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0, 0, 1]))).toBeNull(); // no n byte
+    expect(parseUsageEvent(new Uint8Array([0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0]))).toBeNull(); // n=2, one entry
   });
 
   it('round-trips a USAGE_EVENT frame through the decoder', () => {
     // ts = 1 s on the host clock, two held keys: 'w' (class 1, id 0x1a) and 'd' (class 1, id 0x07).
     const payload = new Uint8Array([
-      0x40, 0x42, 0x0f, 0x00, 0x00, 2, 1, 0x1a, 0x00, 1, 0x07, 0x00,
+      0x40, 0x42, 0x0f, 0x00, 0x00, 1, Direction.Positive, 2, 1, 0x1a, 0x00, 1, 0x07, 0x00,
     ]);
     const frames = decodeAll(new FrameDecoder(), encode(FrameType.UsageEvent, 7, payload));
     expect(frames).toHaveLength(1);
@@ -1044,6 +1108,8 @@ describe('keyboard + media (v2.0.0)', () => {
     expect(parseUsageEvent(frames[0].payload)).toEqual({
       tsUs: 1_000_000,
       clk: ClockDomain.Host,
+      cls: 1,
+      dir: Direction.Positive,
       usages: [
         { cls: 1, id: 0x1a },
         { cls: 1, id: 0x07 },
