@@ -286,10 +286,10 @@ device.press(from_button)?;                         // press takes any impl Into
             <code>Ride</code>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ride</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
-              <tr><td><code>Now</code></td><td>Emit on the box's own clock, whatever movement riding is set to.</td></tr>
+              <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
+              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Emit on the box's own clock, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -303,11 +303,11 @@ device.press(from_button)?;                         // press takes any impl Into
             motion the box is already holding for a real move. Defaults to <code>Keep</code>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Keep</code></td><td>Leave it held.</td></tr>
-              <tr><td><code>Flush</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
-              <tr><td><code>Discard</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
+              <tr><td><code>Keep</code></td><td><code>0x00</code></td><td>Leave it held.</td></tr>
+              <tr><td><code>Flush</code></td><td><code>0x02</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
+              <tr><td><code>Discard</code></td><td><code>0x04</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
             </tbody>
           </table>
         </Card>
