@@ -199,18 +199,11 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>data.traffic</code></td><td><code>class_</code>, <code>id</code>, <code>direction</code>, <code>flags</code>, and <code>bytes[0..len]</code> of a <code>true_len</code>-byte packet</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">THE TIMESTAMP IS PER DOMAIN</div>
           <p>
-            <code>ts_us</code> and <A href="/bindings/c/types#clock-domain"><code>clock</code></A> sit
-            on the event, not inside the arms, because all three arms carry a stamp.{' '}
-            <code>clock</code> is there because the domain is <em>not</em> common: the two ESP32-S3s
-            boot independently and neither clock relates to the other or to your PC.
-          </p>
-          <p>
-            Host-chip stamps cover motion, usages, <code>HID_IN</code>, and IN traffic; device-chip
-            stamps cover <code>HID_OUT</code>, OUT traffic, <code>CONTROL</code>, <code>EMIT</code>,
-            and <code>BUS</code>. To put both on your own clock, use a{' '}
-            <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.
+            Host-chip stamps cover motion, usages, <code>HID_IN</code> and IN traffic; device-chip
+            stamps cover <code>HID_OUT</code>, OUT traffic, <code>CONTROL</code>, <code>EMIT</code>{' '}
+            and <code>BUS</code>. The two chips boot independently, so put both on your own clock with
+            a <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.
           </p>
           <div class="api-response-label">INSPECTORS</div>
           <table class="api-params">

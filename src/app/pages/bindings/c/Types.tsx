@@ -512,14 +512,6 @@ const Types: Component = () => {
             <A href="/bindings/c/api#inspectors"><code>medius_catch_class_is_traffic</code></A> (the
             seven byte-oriented ones).
           </p>
-          <div class="api-response-label">WHY THE ADDRESS IS ALSO THE FILTER</div>
-          <p>
-            The control link runs at 4 Mbaud, and vendor bulk alone measures 250 KiB/s through the
-            box, so bulk plus everything else at once is more than the link can carry. Every class at
-            once cannot be delivered, so a subscription has to be able to name <em>which endpoint</em>{' '}
-            it wants. That is why the classes carry an <code>id</code> at all, rather than being a set
-            of bits you OR together.
-          </p>
           <div class="api-response-label">WHERE EACH CLASS IS TAPPED</div>
           <p>
             The four input classes are captured at the emission merge point <strong>before</strong>{' '}

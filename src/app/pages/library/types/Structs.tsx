@@ -275,12 +275,6 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
             constructor rather than by hand, because <code>id</code> without a class addresses
             nothing and the box refuses it.
           </p>
-          <div class="api-response-label">WHY THE ADDRESS IS THE FILTER</div>
-          <p>
-            The control link runs at 4 Mbaud and a single vendor bulk pipe measures 250 KiB/s on its
-            own. Everything at once cannot be delivered, so a subscription has to name{' '}
-            <em>which endpoint</em> it means.
-          </p>
           <table class="api-params">
             <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
             <tbody>
@@ -453,11 +447,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
           <p>
             The payload of a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A>: one packet,
-            one completed control transaction, or one bus event, from whichever of the byte-oriented{' '}
-            <A href="/library/types/enums#catch-class"><code>CatchClass</code></A>es you subscribed to.
-            The <code>class</code> and <code>id</code> are the address the winning{' '}
-            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> matched, so a
-            broad subscription still tells you exactly which endpoint each event came off.
+            one completed control transaction, or one bus event. It carries the address it came off, so
+            a broad subscription still tells you which endpoint.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -478,16 +469,9 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether the capture or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHY TRUE_LEN EXISTS</div>
           <p>
-            Without it, a packet the capture cut short and a genuinely short packet are the same 16
-            bytes on the wire. The pre-truncation length makes a trace readable without knowing which
-            capture was in force, and <code>truncated()</code> answers it.
-          </p>
-          <p>
-            The ceiling applies even at <code>Capture::Whole</code>: one event frame carries at most
-            180 bytes (the firmware's <code>CTRL_TRAFFIC_DATA_MAX</code>), so a longer packet is still
-            cut and still says so.
+            One event frame carries at most 180 bytes, so <code>Capture::Whole</code> still truncates
+            a longer packet, and still says so.
           </p>
           <div class="api-response-label">FLAGS BY CLASS</div>
           <table class="api-params">
@@ -602,11 +586,8 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           <CardHeader title="CatchState" subtitle="The live subscription table, read back" />
           <pre class="api-signature">struct CatchState {'{'} table_full: bool, dropped: u32, clock: ClockEstimate, entries: Vec&lt;CatchEntry&gt; {'}'}</pre>
           <p>
-            The whole catch state from{' '}
-            <A href="/library/requests#query-catch"><code>query_catch()</code></A>: which entries the
-            box is actually holding, what each of them has had to drop, and the relationship between the
-            two chips' clocks. Subscribing has no reply of its own, so this is where you find out what
-            the box accepted.
+            What <A href="/library/requests#query-catch"><code>query_catch()</code></A> returns.
+            Subscribing has no reply of its own, so this is the only view of what the box accepted.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -657,18 +638,10 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
               <tr><td><code>dropped</code></td><td><code>u16</code></td><td>Events <em>this entry</em> could not queue.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHY THE DROP COUNT IS PER ENTRY</div>
           <p>
-            Delivery runs as strict-priority queues: input and bus first, then the byte-oriented
-            traffic classes, then control, then vendor bulk. Under a busy mouse bulk can starve
-            completely, deliberately: a half-delivered bulk trace looks like data and says nothing
-            about what is missing.
-          </p>
-          <p>
-            A box-wide counter says you are losing events but not which ones. Per-entry counts
-            separate the two: bulk starving while the key entry is clean means the bulk capture needs
-            a shorter <A href="/library/types/enums#capture"><code>Capture</code></A> or a narrower
-            address.
+            The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
+            says you are losing events; this one says which. Vendor bulk starves first, by{' '}
+            <A href="/library/catch#event-stream">design</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let c = device.query_catch()?;
@@ -701,27 +674,11 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
               <tr><td><code>age</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long ago the exchange ran. <code>None</code> = no estimate yet.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHY EACH FIELD IS THERE</div>
           <p>
-            <code>delay_us</code> is the error bar. A round-trip measurement cannot place the offset
-            more precisely than the asymmetry of the trip it was measured over, so half of the best
-            observed round trip is the honest bound, and quoting the offset without it invites a caller
-            to trust digits that were never measured.
-          </p>
-          <p>
-            <code>rate_ppb</code> is drift. The two ESP32-S3s run off separate crystals that pull
-            apart by up to 20 µs per second, so an offset taken five seconds ago can already be 100 µs
-            stale. <code>drift_us_over(age)</code> does the arithmetic.
-          </p>
-          <p>
-            A fitted <code>0</code> says the crystals are matched; <code>None</code> says nothing has
-            been fitted, which is where a busy link leaves it. <code>drift_us_over</code> returns 0
-            for <code>None</code>: that is what is known, not a claim about drift.
-          </p>
-          <p>
-            <code>age</code> is an <code>Option</code> because "no estimate yet" and a zero offset
-            both read as zero, and only one may be used. The wire marks the first with a sentinel age,
-            which the crate decodes to <code>None</code>.
+            <code>error_bound_us()</code> halves <code>delay_us</code> for you, and{' '}
+            <code>drift_us_over(age)</code> extrapolates <code>rate_ppb</code>; the crystals pull
+            apart by up to 20 µs per second. It returns 0 for a <code>None</code> rate, which is what
+            is known rather than a claim about drift.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let clock = device.query_catch()?.clock;

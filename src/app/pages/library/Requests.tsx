@@ -262,10 +262,9 @@ if locks.is_locked(Axis::X, Direction::Both) {
             charging one told the other it had lost nothing from the same drop.
           </p>
           <p>
-            Under a busy mouse it is normal for vendor bulk to starve while the rest are untouched.
-            Bulk starving beside a clean key entry means narrowing the bulk address or cutting its{' '}
-            <code>capture</code>; drops on the entry you care about mean the subscription is too broad
-            for a 4 Mbaud link.
+            Vendor bulk starving beside a clean key entry means narrowing the bulk address or cutting
+            its <code>capture</code>. Drops on the entry you care about mean the subscription is too
+            broad for the link.
           </p>
 
           <div class="api-response-label">THE CLOCK ESTIMATE</div>
