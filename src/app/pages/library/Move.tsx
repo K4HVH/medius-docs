@@ -10,22 +10,24 @@ const Move: Component = () => {
         <CardHeader title="Move" subtitle="Cursor motion and scroll" />
         <p>
           One field-generic verb, <A href="/library/move#move"><code>move_axis</code></A>, drives the
-          relative axes. <A href="/library/move#move-rel"><code>move_rel</code></A> and{' '}
-          <A href="/library/move#wheel"><code>wheel</code></A> are thin wrappers over it. Each call
-          queues one <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
+          relative axes; the rest are thin wrappers over it. Each call queues one{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
           <A href="/native/commands/move#move"><code>MOVE</code></A> frame.
         </p>
         <table class="api-params">
-          <thead><tr><th>You want</th><th>Method</th><th>Same as</th></tr></thead>
+          <thead><tr><th>Drive a...</th><th>Rides a real move</th><th>Goes on the box's clock</th></tr></thead>
           <tbody>
-            <tr><td>move the cursor</td><td><A href="/library/move#move-rel"><code>move_rel(dx, dy)</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx, dy {'}'}, Ride, Keep)</code></td></tr>
-            <tr><td>scroll the wheel</td><td><A href="/library/move#wheel"><code>wheel(delta)</code></A></td><td><code>move_axis(Motion::Wheel(dz), Ride, Keep)</code></td></tr>
-            <tr><td>move without waiting for a real move</td><td><A href="/library/move#move-rel-now"><code>move_rel_now(dx, dy)</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx, dy {'}'}, Now, Keep)</code></td></tr>
-            <tr><td>scroll without waiting</td><td><A href="/library/move#wheel-now"><code>wheel_now(delta)</code></A></td><td><code>move_axis(Motion::Wheel(dz), Now, Keep)</code></td></tr>
-            <tr><td>send the motion being held</td><td><A href="/library/move#flush-motion"><code>flush_motion()</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx: 0, dy: 0 {'}'}, Ride, Flush)</code></td></tr>
-            <tr><td>drop the motion being held</td><td><A href="/library/move#discard-motion"><code>discard_motion()</code></A></td><td><code>move_axis(Motion::Cursor {'{'} dx: 0, dy: 0 {'}'}, Ride, Discard)</code></td></tr>
+            <tr><td>cursor</td><td><A href="/library/move#move-rel"><code>move_rel</code></A></td><td><A href="/library/move#move-rel-now"><code>move_rel_now</code></A></td></tr>
+            <tr><td>wheel</td><td><A href="/library/move#wheel"><code>wheel</code></A></td><td><A href="/library/move#wheel-now"><code>wheel_now</code></A></td></tr>
           </tbody>
         </table>
+        <p>
+          The right-hand column only differs while{' '}
+          <A href="/library/options#set-movement-riding">movement riding</A> is on.{' '}
+          <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
+          <A href="/library/move#discard-motion"><code>discard_motion</code></A> act on motion it is
+          already holding.
+        </p>
       </Card>
 
       <div id="move" data-search-target>
@@ -33,7 +35,6 @@ const Move: Component = () => {
           <CardHeader title="move_axis" subtitle="Field-generic motion verb" />
           <pre class="api-signature">fn move_axis(&self, motion: Motion, timing: MoveTiming, pending: PendingMotion) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -123,7 +124,6 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
           <CardHeader title="move_rel_now" subtitle="Cursor movement that bypasses riding" />
           <pre class="api-signature">fn move_rel_now(&self, dx: i16, dy: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -150,7 +150,6 @@ device.move_rel_now(100, 0)?;  // lands whether they move or not`}</code></pre>
           <CardHeader title="wheel_now" subtitle="Scroll that bypasses riding" />
           <pre class="api-signature">fn wheel_now(&self, delta: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>

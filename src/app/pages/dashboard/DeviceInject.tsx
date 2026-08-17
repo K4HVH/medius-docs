@@ -292,8 +292,8 @@ const DeviceInject = () => {
             </Button>
           </div>
           <p style={muted}>
-            While movement riding is on the box holds injected motion until the real mouse moves. These
-            send it now or throw it away; the checkbox does the same per move.
+            Bypass applies to the cursor and the wheel. The buttons send or drop motion that is
+            already waiting.
           </p>
 
           </Show>

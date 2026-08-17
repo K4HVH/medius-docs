@@ -171,8 +171,8 @@ const DeviceOptions = () => {
         <Section title="Movement riding">
         <p>
           Injected motion is only emitted alongside a real mouse move within the window, and is dropped
-          if none arrives, so it keeps the real device's report timing. A single move can opt out
-          (Injection, "Bypass movement riding"), and clip motion opts out by default. Off by default.
+          if none arrives, so it keeps the real device's report timing. Off by default, and a move can
+          opt out of it.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '8rem' }}>
