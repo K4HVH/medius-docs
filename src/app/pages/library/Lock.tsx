@@ -41,7 +41,6 @@ const Lock: Component = () => {
             For an axis it is a sign; for a usage it is an edge, also spelled{' '}
             <code>Direction::PRESS</code> and <code>Direction::RELEASE</code>.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>

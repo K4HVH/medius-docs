@@ -281,11 +281,10 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
             own. Everything at once cannot be delivered, so a subscription has to name{' '}
             <em>which endpoint</em> it means.
           </p>
-          <div class="api-response-label">CONSTRUCTORS</div>
           <table class="api-params">
             <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
             <tbody>
-              <tr><td><code>CatchFilter::watch(usage)</code></td><td>One <A href="/library/types/enums#usage"><code>Usage</code></A>: a button, a key, or a media usage — the same argument <A href="/library/lock#lock"><code>lock</code></A> takes.</td></tr>
+              <tr><td><code>CatchFilter::watch(usage)</code></td><td>One <A href="/library/types/enums#usage"><code>Usage</code></A>: a button, a key, or a media usage, the same argument <A href="/library/lock#lock"><code>lock</code></A> takes.</td></tr>
               <tr><td><code>CatchFilter::watch_axis(axis)</code></td><td>One <A href="/library/types/enums#axis"><code>Axis</code></A>.</td></tr>
               <tr><td><code>CatchFilter::watch_class(class)</code></td><td>Every usage in one <A href="/library/types/enums#class"><code>Class</code></A>.</td></tr>
               <tr><td><code>CatchFilter::watch_axes()</code></td><td>Every axis.</td></tr>
@@ -330,7 +329,7 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
           <div class="api-response-label">CAPACITY AND REFUSALS</div>
           <p>
             The table holds 32 entries, and a subscription that would exceed it is refused before
-            anything is sent — see <A href="/library/types/errors"><code>Error</code></A>. So is an
+            anything is sent. See <A href="/library/types/errors"><code>Error</code></A>. So is an
             empty subscription, and a capture on an input class.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -426,8 +425,8 @@ if let CatchEvent::Usages(s) = stream.recv()? {
           <pre class="api-signature">struct InputEvent {'{'} ts_us: u32, clock: ClockDomain, input: Input {'}'}</pre>
           <p>
             What <A href="/library/catch#input-events"><code>input_events</code></A> yields. The{' '}
-            <A href="/library/types/enums#input"><code>Input</code></A> is the edge — a press, a
-            release, or a motion report — decoded from the held-usage snapshots the box sends.
+            <A href="/library/types/enums#input"><code>Input</code></A> is the edge, a press, a
+            release, or a motion report, decoded from the held-usage snapshots the box sends.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -750,7 +749,6 @@ match clock.age {
             <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>, or one of the
             three frame structs. The decoded and raw paths share one timeline.
           </p>
-          <div class="api-response-label">METHODS</div>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -766,7 +764,7 @@ match clock.age {
             Each domain is tracked separately, so both chips' stamps land on one comparable timeline.
           </p>
           <p>
-            The mapping keeps a per-domain minimum of (elapsed here − elapsed on the box) rather than
+            The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box) rather than
             an average, because an event can arrive late but never early. It improves as it runs and
             never steps backwards.
           </p>

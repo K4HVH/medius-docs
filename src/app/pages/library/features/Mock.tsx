@@ -183,7 +183,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
             test can interleave the pushes and still assert one ordering across the mix.
           </p>
           <p>
-            Real losses do not show up here — the box drops before it stamps — so exercise loss
+            Real losses do not show up here, because the box drops before it stamps, so exercise loss
             handling through <code>CatchState::dropped</code> instead.
           </p>
           <p>

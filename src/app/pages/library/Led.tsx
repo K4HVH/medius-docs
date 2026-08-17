@@ -29,7 +29,6 @@ const Led: Component = () => {
             <code>Solid</code> and <code>Blink</code> and ignored for <code>Off</code> and{' '}
             <code>Auto</code>.
           </p>
-          <div class="api-response-label">PARAMETERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>

@@ -74,7 +74,6 @@ const Usage: Component = () => {
               <tr><td>Right / Left / Down / Up</td><td><code>0x4F</code> / <code>0x50</code> / <code>0x51</code> / <code>0x52</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MODIFIERS</div>
           <table class="api-params">
             <thead><tr><th>Modifier</th><th>Usage</th></tr></thead>
             <tbody>

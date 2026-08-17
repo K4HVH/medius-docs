@@ -65,7 +65,6 @@ const Admin: Component = () => {
               <tr><td>0</td><td><code>target</code></td><td><code>u8</code></td><td>which chip and mode (see below)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TARGETS</div>
           <table class="api-params">
             <thead>
               <tr><th>Target</th><th>Value</th><th>Effect</th></tr>
