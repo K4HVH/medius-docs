@@ -8,7 +8,7 @@ import {
   BsBoxes, BsFiletypePy, BsTag,
 } from 'solid-icons/bs';
 
-interface SearchEntry {
+export interface SearchEntry {
   label: string;
   description?: string;
   path: string;
@@ -19,7 +19,8 @@ interface SearchEntry {
   external?: boolean;
 }
 
-const entries: SearchEntry[] = [
+// Exported so the index can be checked against the pages it points at.
+export const entries: SearchEntry[] = [
   // ── Community ───────────────────────────────────────────────────────────
   { label: 'Discord', description: 'Join the Medius Discord (opens in a new tab)', path: 'https://discord.gg/ArRqcA84pB', external: true, group: 'Community', icon: BsDiscord, keywords: ['discord', 'community', 'chat', 'support', 'help', 'invite', 'server'] },
 
@@ -28,15 +29,18 @@ const entries: SearchEntry[] = [
   { label: 'Connect your device', description: 'Open the control port over Web Serial and identify the box', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['connect', 'web serial', 'usb', 'identify', 'handshake'] },
   { label: 'Control', description: 'Drive the box: inject input, lock inputs, watch traffic, and play clips', path: '/dashboard/control', group: 'Dashboard', icon: BsSliders, keywords: ['control', 'controls', 'drive', 'test', 'inject', 'injection', 'move', 'cursor', 'wheel', 'button', 'key', 'media', 'lock', 'locks', 'catch', 'event', 'clip', 'playback', 'led', 'light', 'status light', 'brightness', 'blink', 'reset', 'safety clear'] },
   { label: 'Injection', description: 'Move the cursor and hold any button, key, or media usage from the dashboard', path: '/dashboard/control', group: 'Dashboard', icon: BsCursor, keywords: ['inject', 'injection', 'move', 'move_rel', 'cursor', 'drag', 'wheel', 'scroll', 'button', 'click', 'key', 'keyboard', 'type', 'media', 'consumer', 'press', 'hold', 'release', 'soft release', 'force release', 'mask', 'held', 'stuck key'] },
-  { label: 'Input locks', description: 'Block the real device from an input, anywhere in the lock address space', path: '/dashboard/control', group: 'Dashboard', icon: BsLock, keywords: ['lock', 'locks', 'unlock', 'input lock', 'block', 'freeze', 'axis', 'wheel', 'button', 'key', 'media', 'blanket', 'every', 'active locks', 'press', 'release'] },
+  { label: 'Input locks', description: 'Block the real device from an input, anywhere in the lock address space', path: '/dashboard/control', group: 'Dashboard', icon: BsLock, keywords: ['lock', 'locks', 'unlock', 'input lock', 'block', 'freeze', 'axis', 'wheel', 'button', 'key', 'media', 'blanket', 'every', 'every axis', 'active locks', 'press', 'release'] },
   { label: 'Input catch', description: 'Watch the traffic the box carries, live, with box timestamps', path: '/dashboard/control', group: 'Dashboard', icon: BsBroadcast, keywords: ['catch', 'event', 'events', 'stream', 'physical', 'input', 'watch', 'subscribe', 'motion', 'wheel', 'buttons', 'keys', 'media', 'traffic', 'raw endpoints', 'endpoint', 'bus', 'capture', 'dropped', 'timestamp', 'ts_us', 'clock', 'clock domain', 'host', 'device', 'filter', 'table'] },
-  { label: 'Clip playback', description: 'Load a clip into the box and drive the playback engine', path: '/dashboard/control', group: 'Dashboard', icon: BsFileCode, keywords: ['clip', 'playback', 'play', 'record', 'macro', 'start', 'stop', 'pause', 'resume', 'restart', 'toggle', 'clear', 'finalize', 'loop', 'retain', 'replayable', 'autolock', 'auto lock', 'trigger', 'bind', 'consume', 'ring', 'tick', 'underrun', 'overrun', 'faulted'] },
+  { label: 'Clip playback', description: 'Load a clip into the box and drive the playback engine', path: '/dashboard/control', group: 'Dashboard', icon: BsFileCode, keywords: ['clip', 'playback', 'play', 'record', 'macro', 'start', 'stop', 'pause', 'resume', 'restart', 'toggle', 'clear', 'finalize', 'mark complete', 'loop', 'retain', 'replayable', 'autolock', 'auto lock', 'trigger', 'bind', 'consume', 'consume the trigger', 'ring', 'tick', 'underrun', 'overrun', 'faulted'] },
   { label: 'Status light', description: 'Take over the box\'s green LEDs, or hand them back', path: '/dashboard/control', group: 'Dashboard', icon: BsLightbulb, keywords: ['led', 'light', 'status light', 'green', 'brightness', 'blink', 'solid', 'off', 'auto', 'override'] },
   { label: 'Safety clear', description: 'Drop every injected input, lock, subscription, and clip in one frame', path: '/dashboard/control', group: 'Dashboard', icon: BsExclamationTriangle, keywords: ['reset', 'safety', 'clear', 'stuck', 'stuck key', 'release everything', 'panic', 'unstick'] },
   { label: 'Options', description: 'Persistent box settings: name, imperfect clone, movement riding, emit rate', path: '/dashboard', group: 'Dashboard', icon: BsGear, keywords: ['option', 'options', 'persistent', 'nvs', 'saved', 'box name', 'name', 'rename'] },
   { label: 'Imperfect clone', description: 'Allow cloning an over-capacity device from the dashboard', path: '/dashboard', group: 'Dashboard', icon: BsPuzzle, keywords: ['imperfect', 'imperfect clone', 'over-capacity', 'over capacity', 'allow', 'faithful', 'opt in', 'wooting', 'endpoint'] },
   { label: 'Movement riding', description: 'Inject motion only when the real mouse moves, from the dashboard', path: '/dashboard', group: 'Dashboard', icon: BsArrowsMove, keywords: ['movement riding', 'move ride', 'move_ride', 'option', 'window', 'riding', 'idle', 'inject', 'motion', 'density', 'tell'] },
   { label: 'Emit-rate pacing', description: 'Set what paces injected motion, from the dashboard', path: '/dashboard', group: 'Dashboard', icon: BsArrowsMove, keywords: ['emit', 'emit rate', 'emit-rate', 'pacing', 'pace', 'rate', 'learned', 'interval', 'fixed', 'hz', 'option', 'ceiling', 'inject'] },
+  { label: 'Capabilities', description: 'What the box detected on the real device and clones to the game', path: '/dashboard', group: 'Dashboard', icon: BsCpu, keywords: ['capabilities', 'caps', 'detected', 'cloned', 'product', 'usb id', 'vid', 'pid', 'buttons', 'axes', 'wheel', 'rollover', 'nkro', 'report id', 'serial number', 'full clone', 'composite', 'interfaces'] },
+  { label: 'Performance', description: 'The cloned report rate and whether delivery is keeping up', path: '/dashboard', group: 'Dashboard', icon: BsActivity, keywords: ['performance', 'report rate', 'rate', 'hz', 'polling', 'delivery', 'dropped', 'drops', 'wedges', 'healthy', 'change driven'] },
+  { label: 'Device log', description: "Live diagnostic messages streamed from the box", path: '/dashboard', group: 'Dashboard', icon: BsFileCode, keywords: ['log', 'logs', 'device log', 'diagnostics', 'messages', 'console', 'debug', 'trace'] },
   { label: 'Update', description: 'Guided firmware update for your box, both chips, in plain steps', path: '/dashboard/update', group: 'Dashboard', icon: BsArrowRepeat, keywords: ['update', 'firmware', 'upgrade', 'latest', 'flash', 'both chips', 'guided'] },
   { label: 'Advanced', description: 'Manual flash: any chip, app or factory, release or upload, recover a bricked box', path: '/dashboard/advanced', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['advanced', 'manual', 'flash', 'recover', 'recovery', 'brick', 'bricked', 'device chip', 'host chip', 'factory', 'boot button', 'upload'] },
   { label: 'Changelog', description: 'Firmware release history, version by version', path: '/dashboard/changelog', group: 'Dashboard', icon: BsJournalText, keywords: ['changelog', 'releases', 'history', 'versions', 'whats new', 'notes', 'commits'] },
