@@ -9,20 +9,21 @@ const Api: Component = () => {
       <Card>
         <CardHeader title="API index" subtitle="Every C function, linked to what it does" />
         <p>
-          The whole <code>medius_*</code> surface from <A href="/bindings/c"><code>medius.h</code></A>, grouped. Each row is the
-          C signature and a one-line summary; follow the link for what the call does. The semantics
+          The whole <code>medius_*</code> surface from <A href="/bindings/c"><code>medius.h</code></A>, grouped. The semantics
           live in the <A href="/library">Rust library</A> (the{' '}
           <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">medius crate</a>)
-          and the <A href="/native">Native API</A>, not here. Structs, enums, and constants are on{' '}
+          and the <A href="/native">Native API</A>. Structs, enums, and constants are on{' '}
           <A href="/bindings/c/types">Types &amp; errors</A>; streams on{' '}
           <A href="/bindings/c/streams">Streams</A>.
         </p>
         <p>
-          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
-          return as soon as the <A href="/native/frame">frame</A> is queued and never wait on the box.
+          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: they
+          return once the <A href="/native/frame">frame</A> is queued, without waiting on the box.
           The queries, plus <code>open</code> / <code>find</code>, block for the{' '}
-          <A href="/native/hardware">box</A>'s <A href="/native/commands/requests">reply</A>. Every
-          fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>{' '}
+          <A href="/native/hardware">box</A>'s <A href="/native/commands/requests">reply</A>.
+        </p>
+        <p>
+          Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>{' '}
           (<code>MEDIUS_STATUS_OK</code> is 0) and writes its result through an out-param;{' '}
           <A href="/bindings/c/api#module"><code>medius_last_error_message()</code></A> gives the last failure's text on the calling thread.
         </p>
@@ -40,12 +41,13 @@ medius_device_free(dev);`}</code></pre>
           <p>
             Opaque handles (<code>MediusDevice</code>, <code>MediusEventStream</code>,{' '}
             <code>MediusInputStream</code>, <code>MediusTimeline</code>, <code>MediusLogStream</code>,{' '}
-            <code>MediusMockBox</code>) each have a <code>*_free</code>;
-            you own them. Catch events and log lines are fixed-size structs, so there is nothing to
-            free per event. That holds for captured packet bytes too: a{' '}
-            <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> carries its
+            <code>MediusMockBox</code>) are yours to free, each with its own <code>*_free</code>.
+          </p>
+          <p>
+            Catch events and log lines are fixed-size structs, so there's nothing to free per event. A{' '}
+            <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds its
             payload in an inline <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> array, not a pointer, so
-            an event you copied stays valid with no ownership attached to it.
+            a copied event stays valid and owns nothing.
           </p>
         </div>
       </Card>
@@ -200,13 +202,15 @@ medius_device_free(dev);`}</code></pre>
         <Card>
           <CardHeader title="Streams" subtitle="Subscribe to live input and logs" />
           <p>
-            Consuming events is covered on <A href="/bindings/c/streams">Streams</A>; the catch feature
-            itself on <A href="/library/catch">Catch</A> and logs on{' '}
-            <A href="/library/diagnostics">Logs &amp; counters</A>.{' '}
+            Consuming events is on <A href="/bindings/c/streams">Streams</A>, the catch feature
+            on <A href="/library/catch">Catch</A>, and logs on{' '}
+            <A href="/library/diagnostics">Logs &amp; counters</A>.
+          </p>
+          <p>
             <code>medius_device_catch_events</code> takes an array of{' '}
             <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, built
-            by the <A href="/bindings/c/api#catch-filters">filter helpers</A>. The box's table holds 32
-            of them; asking for more, or for an entry it cannot honour, fails the call.
+            by the <A href="/bindings/c/api#catch-filters">filter helpers</A>. The box's table holds 32;
+            asking for more, or for an entry it cannot honour, fails the call.
           </p>
           <pre class="api-signature">{`MediusStatus medius_device_catch_events(MediusDevice *dev,
                                         const MediusCatchFilter *filters,

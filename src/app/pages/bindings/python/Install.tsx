@@ -70,10 +70,9 @@ const Install: Component = () => {
         <Card>
           <CardHeader title="Connect" subtitle="Find the box, then hand it back" />
           <p>
-            Here it is in three lines, so you can check the{' '}
-            <A href="/native/hardware">box</A> is reachable.{' '}
+            Three lines that check the <A href="/native/hardware">box</A> is reachable.{' '}
             <A href="/bindings/python/api#connect"><code>Device.find()</code></A> opens the
-            first box it sees and runs the{' '}
+            first one it sees and runs the{' '}
             <A href="/native/connection#handshake">handshake</A>; the{' '}
             <code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code>{' '}
             block closes the link on exit.

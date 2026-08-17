@@ -10,8 +10,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Frame format" subtitle="The one packet shape" />
           <p>
-            Every message, both directions, is a frame with one fixed shape. The whole protocol is
-            frames; each command is the same machinery with a different opcode and payload.
+            Every message, both directions, is a frame with one fixed shape.
           </p>
           <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD ≤512][CRC16 u16 LE]</pre>
           <table class="byte-table">
@@ -57,9 +56,8 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x16</code>. Four values are reserved,
-            retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
-            keeps newer and older firmware compatible.
+            The opcodes run from <code>0x01</code> to <code>0x16</code>. An unrecognised opcode is
+            ignored harmlessly.
           </p>
           <table class="api-params">
             <thead>
@@ -107,9 +105,8 @@ const Frame: Component = () => {
           <CardHeader title="Checksum & integrity" subtitle="Rejecting corrupted frames" />
           <p>
             The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
-            <code>TYPE | SEQ | LEN | PAYLOAD</code> (everything but <code>SOF</code> and the checksum
-            itself), stored little-endian. On a mismatch the box silently drops the frame and resyncs
-            at the next <code>0xA5</code>, so corrupted frames are never acted on.
+            <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
+            silently drops the frame and resyncs at the next <code>0xA5</code>.
           </p>
           <table class="api-params">
             <thead>

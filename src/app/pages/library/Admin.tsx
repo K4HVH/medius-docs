@@ -20,7 +20,7 @@ const Admin: Component = () => {
 let device = Device::find()?;   // first box on the system, handshake done
 device.reset()?;                // back to passthrough`}</code></pre>
         <p>
-          <A href="/library/connection#open"><code>find</code></A> opens the first box; related calls{' '}
+          Related calls{' '}
           <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
           <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> are on the{' '}
           <A href="/library/lifecycle">Lifecycle</A> page.
@@ -56,7 +56,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
 
           <p>
             Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame and clears
-            the library's held state. Afterward the box behaves as if nothing was injected.
+            the library's held state.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

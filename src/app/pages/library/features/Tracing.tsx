@@ -12,7 +12,7 @@ const Tracing: Component = () => {
           The <code>tracing</code> feature wires the crate into{' '}
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
           it emits a span and events as it works the link, but adds no medius functions and changes no
-          behavior. The sections below are what it emits; you read them by installing a{' '}
+          behavior. You read them by installing a{' '}
           <A href="/library/features/tracing#subscriber">subscriber</A>.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
@@ -83,13 +83,12 @@ const Tracing: Component = () => {
         <Card>
           <CardHeader title="Frames, device logs, and reconnects" subtitle="The events worth knowing" />
           <p>
-            <code>medius::transport</code> emits one <code>TRACE</code> per frame, the per-frame mirror of
-            the <A href="/library/diagnostics#counters"><code>frames_tx</code> / <code>frames_rx</code></A>{' '}
-            counters. Each <A href="/native/commands/admin#log"><code>LOG</code></A> frame the box sends is
-            re-emitted on <code>medius::device</code> with <code>device_log=true</code> at its matching{' '}
-            <A href="/library/types/enums#log-level"><code>LogLevel</code></A> (the same data the{' '}
-            <A href="/library/diagnostics#logs"><code>logs</code></A> stream hands back). A recovered link
-            fires an <code>INFO</code> <code>reconnected</code> event with <code>port</code> and{' '}
+            The <code>medius::transport</code> events are the per-frame mirror of the{' '}
+            <A href="/library/diagnostics#counters"><code>frames_tx</code> / <code>frames_rx</code></A>{' '}
+            counters. A re-emitted <A href="/native/commands/admin#log"><code>LOG</code></A> frame keeps
+            its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and carries the same
+            text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream hands back. A
+            recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
             <code>reason</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>

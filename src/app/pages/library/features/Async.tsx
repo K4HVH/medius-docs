@@ -142,10 +142,6 @@ let device = Device::find()?.into_async();`}</code></pre>
             way. The full list is on <A href="/library/requests#async"><code>Requests</code></A>.
           </p>
 
-          <p>
-            <code>.await</code> is only legal inside an <code>async</code> function or block.
-          </p>
-
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`async fn run(device: &AsyncDevice) -> medius::Result<()> {
     let v = device.query_version().await?;

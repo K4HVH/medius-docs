@@ -282,11 +282,9 @@ const DeviceEventCatch = () => {
       <Card>
         <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
         <p>
-          The box streams the traffic it carries as it happens, even for inputs you've locked: mouse
-          buttons, wheel, and movement, plus keyboard and media keys. It also reaches the bytes
-          underneath, the HID and vendor endpoints, the proxied control transactions, and the bus
-          lifecycle. Move, click, or type to see events. The stream stops on its own if the dashboard
-          disconnects.
+          The box streams the traffic it carries as it happens, even for inputs you've locked, down to
+          the raw endpoint bytes, the proxied control transactions, and the bus lifecycle. The stream
+          stops on its own if the dashboard disconnects.
         </p>
         <div style={label}>What to watch</div>
         <RadioGroup

@@ -20,11 +20,8 @@ const Types: Component = () => {
             Every enum subclasses{' '}
             <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer"><code>enum.IntEnum</code></a>. A member{' '}
             <em>is</em> its <A href="/native/frame">wire byte</A>: <code>int(Button.LEFT) == 0</code>,
-            and anywhere an enum is accepted you can pass a bare <code>int</code> instead, which is
-            handy for a raw HID id, an endpoint address, or an interface number with no named member. The
-            dataclasses that carry several of those bytes at once (<A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>,{' '}
-            <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>) have class
-            methods that build them; reach for those rather than filling fields in by hand.
+            and anywhere an enum is accepted a bare <code>int</code> works too, for a raw HID id, an
+            endpoint address, or an interface number with no named member.
           </p>
         </div>
       </Card>
@@ -77,12 +74,9 @@ const Types: Component = () => {
           <div id="direction" data-search-target>
             <div class="api-response-label">Direction</div>
             <p>
-              One enum with three readings, picked by what it is attached to: the sign of an axis or
-              the wheel, the edge of a usage, or the direction of a transfer when it sits on a{' '}
+              One enum with three readings, picked by what it is attached to: an axis, a usage, or a{' '}
               <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> naming one of
-              the byte-oriented <A href="/bindings/python/types#catchclass">catch classes</A>. No
-              target is more than one of those, so one field carries whichever reading applies without
-              ambiguity.
+              the byte-oriented <A href="/bindings/python/types#catchclass">catch classes</A>.
             </p>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
@@ -93,8 +87,8 @@ const Types: Component = () => {
               </tbody>
             </table>
             <p>
-              The aliases are the same two values under names that read at the call site:{' '}
-              <code>Direction.PRESS is Direction.POSITIVE</code>. Which set fits is decided by the class.
+              The aliases are the same values under names that read at the call site:{' '}
+              <code>Direction.PRESS is Direction.POSITIVE</code>.
             </p>
           </div>
 
@@ -380,17 +374,6 @@ const Types: Component = () => {
               locked still reports here. <code>EMIT</code> is the opposite end, what the clone put on
               the wire afterwards.
             </p>
-            <div class="callout callout--info">
-              <p>
-                The address is also the filter, and that is what the class list buys you. The control
-                link runs at 4 Mbaud, and vendor bulk alone measures 250 KiB/s through the box, so
-                every class at once cannot be delivered. A subscription has to be able to say{' '}
-                <em>which endpoint</em> it means. Delivery is ranked in four strict-priority queues:
-                input and bus first, then the byte-oriented traffic classes, then control, then vendor bulk. Under a
-                busy mouse, bulk can starve to nothing. That is deliberate: a half-delivered bulk trace
-                looks like data, so an absent one is the more honest failure.
-              </p>
-            </div>
           </div>
 
           <div id="trafficclass" data-search-target>
@@ -430,11 +413,10 @@ const Types: Component = () => {
             <div class="api-response-label">CatchFilter</div>
             <p>
               One subscription entry: a class, an id inside it, a direction, and how many bytes to keep
-              per event. Pass one or an iterable of them to{' '}
+              per event. Pass one or an iterable to{' '}
               <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> or{' '}
-              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>. Build with
-              the class methods and refine with the instance methods, which return a new filter rather
-              than mutating in place.
+              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>. The
+              instance methods return a new filter rather than mutating in place.
             </p>
             <pre class="api-signature">{`CatchFilter.watch(usage)               -> CatchFilter         # a Usage, or a Button/Key/MediaKey
 CatchFilter.watch_axis(axis)           -> CatchFilter         # one Axis
@@ -452,10 +434,6 @@ CatchFilter.everything()               -> CatchFilter         # every class, eve
   .same_address(other)                 -> bool          # same table entry, whatever the capture
 
 CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre>
-            <p>
-              The input constructors take exactly what <A href="/bindings/python/api#lock"><code>lock</code></A>{' '}
-              takes, so hiding an input from the game and watching it are written alike.
-            </p>
             <table class="api-params">
               <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -466,27 +444,23 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               </tbody>
             </table>
             <p>
-              <code>capture</code> is per entry because the useful value differs by orders of magnitude
-              between classes: a 64-byte vendor interrupt report is worth keeping whole, while a bulk
-              pipe traced only for its framing wants 16 bytes and nothing more. Matching is
-              most-specific-first: an exact <code>(class, id)</code> beats a class blanket, which beats{' '}
-              <code>everything()</code>, and a named direction beats <code>BOTH</code>. The winning
-              entry supplies the <code>capture</code>. So "everything at 16 bytes, except endpoint{' '}
-              <code>0x83</code> in full" is two filters, not a special case.
+              Matching is most-specific-first: an exact <code>(class, id)</code> beats a class
+              blanket, which beats <code>everything()</code>, and a named direction beats{' '}
+              <code>BOTH</code>. The winning entry supplies the <code>capture</code>.
             </p>
             <p>
-              The address is not the capture: <code>same_address</code> is true across two filters that
-              differ only in <code>capture</code>, and false once one is narrowed to a direction.
+              <code>same_address</code> is true across two filters that differ only in{' '}
+              <code>capture</code>, and false once one is narrowed to a direction.
             </p>
             <div class="callout callout--warning">
               <p>
-                The box's table holds 32 entries, and{' '}
+                The box's table holds 32 entries.{' '}
                 <A href="/bindings/python/api#streams"><code>catch_events()</code></A> raises{' '}
-                <code>CatchTableFullError</code> when the union with every other subscription in this
+                <code>CatchTableFullError</code> when the union of every subscription in this
                 process exceeds it. What the box itself refuses (a class this firmware does not know)
-                still raises nothing: read{' '}
-                <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> and compare{' '}
-                <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> against
+                raises nothing: compare{' '}
+                <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> from{' '}
+                <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> against
                 what you sent.
               </p>
             </div>
@@ -497,9 +471,9 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
             <pre class="api-signature">{`Capture.WHOLE      # 0, keep the whole packet
 Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             <p>
-              What <code>with_capture</code> takes. Traffic classes only: an input class arrives
-              decoded and carries no packet, so naming one with a capture raises{' '}
-              <code>CaptureNotApplicableError</code> rather than being ignored.
+              What <code>with_capture</code> takes. Traffic classes only: an input class carries no
+              packet, so naming one with a capture raises{' '}
+              <code>CaptureNotApplicableError</code>.
             </p>
             <p>
               A ceiling request, not a guarantee. The box holds one entry per address and cuts once, so
@@ -522,9 +496,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           <div id="clockdomain" data-search-target>
             <div class="api-response-label">ClockDomain</div>
             <p>
-              Which of the box's two chips stamped an event's <code>ts_us</code>. Both{' '}
+              Which of the box's two chips stamped an event's <code>ts_us</code>. The two{' '}
               <A href="/native/hardware">ESP32-S3s</A> boot independently, so nothing relates their
-              timers and the domain has to travel with each stamp.
+              timers.
             </p>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Stamped</th><th>Covers</th></tr></thead>
@@ -535,11 +509,13 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             </table>
             <p>
               A stamp is only meaningful against another from the same domain. Both clocks are
-              box-local, unrelated to any PC clock, wrap every ~71.6 minutes, and restart at zero when
-              that chip reboots, so a value below the previous one is a wrap, a reboot, or a domain
-              change. To put stamps on this machine's clock instead, feed them to a{' '}
+              box-local, wrap every ~71.6 minutes, and restart at zero when that chip reboots, so a
+              value below the previous one is a wrap, a reboot, or a domain change.
+            </p>
+            <p>
+              To put stamps on this machine's clock, feed them to a{' '}
               <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>; to cross the two
-              domains, apply the measured offset in{' '}
+              domains, apply the offset in{' '}
               <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A> and respect
               its error bound.
             </p>
@@ -548,11 +524,10 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           <div id="busevent" data-search-target>
             <div class="api-response-label">BusEventKind</div>
             <p>
-              What a <code>CatchClass.BUS</code> event describes. These already drive{' '}
+              What a <code>CatchClass.BUS</code> event describes. These also drive{' '}
               <A href="/bindings/python/types#health"><code>Health</code></A> bits and{' '}
-              <A href="/bindings/python/types#stats"><code>Stats</code></A> counters; what catching
-              them adds is a timestamped ordering, so you can see <em>when</em> a reconfiguration
-              happened relative to the report stream that stopped.
+              <A href="/bindings/python/types#stats"><code>Stats</code></A> counters; catching them
+              adds a timestamped ordering.
             </p>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Payload fields</th></tr></thead>
@@ -668,8 +643,7 @@ usage.id             -> int`}</pre>
               An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>, and what a{' '}
               <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and a{' '}
               <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> hand back.
-              It compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>, so a
-              received one can be matched or put in a set.
+              It compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>.
             </p>
             <div class="api-response-label">EXAMPLE</div>
             <pre><code class="language-python">{`# Naming a button off the stream: id is the Button value, kind says which class it is.
@@ -889,9 +863,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <div id="catchstate" data-search-target>
             <div class="api-response-label">CatchState (query_catch())</div>
             <p>
-              The live subscription table read back from the box, plus the counters and the clock
-              estimate that go with it. Since <A href="/bindings/python/api#streams"><code>catch_events()</code></A>{' '}
-              gets no reply, this is the only way to see which filters the box actually holds.
+              The live subscription table read back from the box. Since{' '}
+              <A href="/bindings/python/api#streams"><code>catch_events()</code></A>{' '}
+              gets no reply, this is the only way to see which filters the box holds.
             </p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -907,8 +881,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <div id="catchentry" data-search-target>
             <div class="api-response-label">CatchEntry</div>
             <p>
-              One row of the box's table. It is the <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
-              you sent, as the box stored it, with a drop count attached.
+              One row of the box's table: the <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+              you sent, with a drop count attached.
             </p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -917,13 +891,6 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>dropped</code></td><td><code>int</code></td><td>events <em>this</em> entry could not queue</td></tr>
               </tbody>
             </table>
-            <p>
-              The drop count is per entry because the box-wide one cannot answer the question you
-              actually have. Under a saturating bulk trace it tells you events are being lost, not
-              which subscription is losing them, and those are different problems: one is a broken
-              trace, the other is a trace you can fix by narrowing a filter or dropping its{' '}
-              <code>capture</code>.
-            </p>
           </div>
 
           <div id="clockestimate" data-search-target>
@@ -945,10 +912,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             </p>
             <div class="callout callout--info">
               <p>
-                Applying the offset is optional. Each event's{' '}
-                <A href="/bindings/python/types#clockdomain"><code>clock</code></A> stays authoritative,
-                so a program that would rather not approximate can simply refuse to subtract stamps
-                across domains.
+                Applying the offset is optional: each event's{' '}
+                <A href="/bindings/python/types#clockdomain"><code>clock</code></A> stays
+                authoritative.
               </p>
             </div>
           </div>
@@ -1079,10 +1045,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               1 kHz.
             </p>
             <p>
-              <code>cls</code> and <code>direction</code> come from the header, not the entries,
-              because the snapshot that most needs them is the empty one: releasing the last held
-              usage lists nothing to read a class off. To skip the diffing entirely, use{' '}
-              <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A>.
+              An empty snapshot still names its class: <code>cls</code> and <code>direction</code>{' '}
+              come from the frame header, not the entries.
             </p>
           </div>
 
@@ -1110,11 +1074,6 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>bulk_end_of_transfer()</code> / <code>bulk_zlp()</code></td><td><code>bool</code></td><td>the two <code>VENDOR_BULK</code> framing bits, read off <code>flags</code></td></tr>
               </tbody>
             </table>
-            <p>
-              <code>true_len</code> is what makes a truncated capture self-describing. Without it, a
-              packet clipped by its <code>capture</code> and a genuinely short packet look identical,
-              and you would be reading a length that is really a capture setting.
-            </p>
             <div class="api-response-label">FLAGS, BY CLASS</div>
             <table class="api-params">
               <thead><tr><th>Class</th><th>flags</th><th>Read it with</th></tr></thead>
@@ -1128,9 +1087,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <p>
               A <code>CONTROL</code> event is one <em>completed transaction</em>, not one stage:{' '}
               <code>bytes</code> is <code>[setup 8][data…]</code> and <code>direction</code> says which
-              way the data stage went, so nothing has to reassemble the halves downstream. Requests the
-              box answers from its own descriptor cache still produce an event, because a trace that
-              hid those would show a device that had stopped being asked.
+              way the data stage went. Requests the box answers from its own descriptor cache still
+              produce an event.
             </p>
           </div>
 
@@ -1145,10 +1103,6 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a status byte this build does not know; the raw byte stays on <code>TrafficEvent.flags</code></td></tr>
               </tbody>
             </table>
-            <p>
-              <code>OTHER</code> keeps a future firmware's new status from reading as a device fault
-              that never happened. Before it existed, decoding one raised <code>ValueError</code>.
-            </p>
           </div>
 
           <div id="inputevent" data-search-target>
@@ -1279,8 +1233,7 @@ except MediusError as e:     # any other failure
               </tbody>
             </table>
             <p>
-              The last six are subscription refusals, raised before a frame reaches the box. Each has
-              its own status so a caller can tell a wrong filter from a dead link.
+              The last six are subscription refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>

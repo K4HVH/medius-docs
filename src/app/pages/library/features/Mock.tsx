@@ -112,18 +112,14 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            The <code>with_*</code> builders set what each query returns:{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>,{' '}
-            <A href="/library/requests#health"><code>query_health</code></A>, and the device-info queries{' '}
-            (<A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
-            <A href="/library/requests#caps"><code>caps</code></A>,{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live
-            fake in place to flip the version or health mid-test.{' '}
-            <A href="/library/types/structs#version"><code>Version</code></A>,{' '}
-            <A href="/library/types/structs#health"><code>Health</code></A>, and the device-info{' '}
-            <A href="/library/types/structs">structs</A> live on the types page, and{' '}
-            <code>Health::from_flags</code> builds one from the raw status byte.
+            The <code>with_*</code> builders set what each{' '}
+            <A href="/library/requests">query</A> returns. <code>set_*</code> changes a live fake in
+            place to flip the version or health mid-test.
+          </p>
+          <p>
+            The <A href="/library/types/structs">structs</A> they take live on the types page;{' '}
+            <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
+            from the raw status byte.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -168,12 +164,11 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           </p>
 
           <p>
-            The <code>seq</code> counter is shared across all three, exactly as it is on the wire, so a
-            test can interleave the pushes and still assert one ordering across the mix.
+            The <code>seq</code> counter is shared across all three, exactly as it is on the wire.
           </p>
           <p>
-            Real losses do not show up here, because the box drops before it stamps, so exercise loss
-            handling through <code>CatchState::dropped</code> instead.
+            Real losses do not show up here. Exercise loss handling through{' '}
+            <code>CatchState::dropped</code> instead.
           </p>
           <p>
             <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
@@ -182,9 +177,9 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
             <code>class</code>, so a test can push the empty snapshot.
           </p>
           <p>
-            <code>push_traffic</code> takes <code>clock</code> and <code>true_len</code> as separate
-            arguments; <code>true_len</code> need not agree with <code>bytes.len()</code>, which is how
-            you exercise <code>truncated()</code> with no real capture behind it.
+            On <code>push_traffic</code>, <code>true_len</code> need not agree with{' '}
+            <code>bytes.len()</code>, which is how you exercise <code>truncated()</code> with no real
+            capture behind it.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

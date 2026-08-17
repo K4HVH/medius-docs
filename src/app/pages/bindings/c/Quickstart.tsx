@@ -10,14 +10,14 @@ const Quickstart: Component = () => {
         <CardHeader title="First program" subtitle="Find the box, send a command, read one event, free it" />
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move the
-          cursor, click the left button, wait for the user to move the real mouse, then free it. C has no{' '}
-          <a href="https://en.cppreference.com/w/cpp/language/exceptions" target="_blank" rel="noreferrer">exceptions</a>,
-          so every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
+          cursor, click the left button, wait for the user to move the real mouse, then free it.
+        </p>
+        <p>
+          Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
           check, and the detail comes from{' '}
           <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A>. What the commands{' '}
           <em>mean</em> lives in the{' '}
-          <A href="/library">Library</A> and <A href="/native">Native</A> sections; this page is only
-          the C mechanics.
+          <A href="/library">Library</A> and <A href="/native">Native</A> sections.
         </p>
         <div class="callout callout--info">
           <p>

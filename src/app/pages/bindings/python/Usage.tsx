@@ -10,12 +10,10 @@ const Usage: Component = () => {
         <CardHeader title="Calls & errors" subtitle="The Python patterns: blocking, exceptions, lifecycle, builders" />
         <p>
           What every <code>Device</code> call looks like in{' '}
-          <a href="https://www.python.org" target="_blank" rel="noreferrer">Python</a>: when it blocks, how a failure
-          surfaces, when the handle is freed, and how the generic targets are built. The full call
+          <a href="https://www.python.org" target="_blank" rel="noreferrer">Python</a>. The full call
           list is on <A href="/bindings/python/api">API index</A>; the value types on{' '}
           <A href="/bindings/python/types">Types &amp; errors</A>. What each command <em>does</em>{' '}
-          lives in the <A href="/library">Rust Library</A> and <A href="/native">Native API</A>{' '}
-          sections.
+          lives in the <A href="/library">Rust Library</A> and <A href="/native">Native API</A>.
         </p>
       </Card>
 
@@ -64,7 +62,7 @@ const Usage: Component = () => {
             subclass); each{' '}
             <A href="/library/types/errors">status code</A> (a <A href="/bindings/python/types#status"><code>Status</code></A>{' '}
             <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">IntEnum</a>)
-            maps to its own <A href="/bindings/python/types#subclasses">subclass</A>, so you can catch the case you care about. Catch{' '}
+            maps to its own <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
             <code>MediusError</code> for all of them.
           </p>
           <pre class="api-signature">{`class MediusError(Exception):
@@ -98,8 +96,7 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
             </tbody>
           </table>
           <p>
-            The last six are subscription refusals, raised before a frame reaches the box. Each has its
-            own status so a caller can tell a wrong filter from a dead link.
+            The last six are subscription refusals, raised before a frame reaches the box.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
@@ -116,8 +113,8 @@ except MediusError as e:
             <p>
               A dropped link raises <code>DisconnectedError</code> from a normal call, but a{' '}
               <A href="/bindings/python/streams">stream</A> iterator
-              (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) stops cleanly
-              instead: it returns when the link drops rather than raising. Calling <code>recv()</code>{' '}
+              (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) ends cleanly
+              instead of raising. Calling <code>recv()</code>{' '}
               directly still raises. Box-side telemetry behind these errors is on{' '}
               <A href="/library/diagnostics">Diagnostics</A>.
             </p>
@@ -180,12 +177,9 @@ dev.close()`}</code></pre>
         <Card>
           <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget · CatchFilter" />
           <p>
-            The <A href="/library/inject"><code>inject</code></A> / <A href="/library/inject"><code>press</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> /{' '}
-            <A href="/library/catch"><code>catch_events</code></A> calls take a{' '}
-            <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in. One
-            <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media) feeds every inject verb,
-            and one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> is one
-            subscription entry.
+            The <A href="/library/inject">inject</A>, <A href="/library/move">move</A>,{' '}
+            <A href="/library/lock">lock</A>, and <A href="/library/catch">catch</A> calls take a{' '}
+            <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in.
           </p>
           <table class="api-params">
             <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
@@ -219,11 +213,16 @@ with Device.find() as dev:
             <p>
               <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
               <code>SOFT_RELEASE</code> / <code>FORCE_RELEASE</code>); the{' '}
-              <A href="/native/injection">injection model</A> defines what each does.{' '}
+              <A href="/native/injection">injection model</A> defines what each does.
+            </p>
+            <p>
               <code>Usage.button</code> takes a{' '}
               <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
               <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
-              raw <code>int</code>. A filter's <code>direction</code> is the same{' '}
+              raw <code>int</code>.
+            </p>
+            <p>
+              A filter's <code>direction</code> is the same{' '}
               <A href="/bindings/python/types#direction"><code>Direction</code></A>: on an input class
               it picks the press or release edge (<code>PRESS</code> / <code>RELEASE</code>), on a
               traffic class the flow (<code>IN</code> / <code>OUT</code>).

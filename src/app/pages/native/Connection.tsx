@@ -10,7 +10,7 @@ const Connection: Component = () => {
         <CardHeader title="Connection & handshake" subtitle="Open, find, and handshake" />
         <p>
           The handshake confirms the device on the serial port is a Medius box and speaks a protocol
-          version you understand: one request, one reply. Open the port and start talking.
+          version you understand: one request, one reply.
         </p>
         <ul>
           <li>No baud negotiation.</li>
@@ -51,8 +51,6 @@ const Connection: Component = () => {
           </table>
           <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
           <p>
-            The first byte echoes the <code>what</code> selector you asked for (the byte that chose which
-            thing to query), then the protocol and firmware version, the box MAC, and the box name follow.
             Full detail on the <A href="/native/commands/requests#version">Requests</A> page.
           </p>
           <table class="byte-table">
@@ -91,8 +89,8 @@ const Connection: Component = () => {
             </tbody>
           </table>
           <p>
-            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> since no request
-            prompted it, and its payload is identical to a queried reply.
+            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A>, and its payload is
+            identical to a queried reply.
           </p>
           <div class="callout callout--info">
             <p>

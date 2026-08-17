@@ -10,10 +10,11 @@ const Lock: Component = () => {
         <CardHeader title="Lock" subtitle="Block one physical input by class" />
         <p>
           <A href="/native/commands/lock#lock"><code>LOCK</code></A> stops the physical device from
-          driving one input while leaving everything else alone. It's generic over the input class: a
-          relative axis, a mouse button, a keyboard key, or a media usage, plus a blanket lock for a
-          whole class. Host <A href="/native/injection">injection</A> still drives a locked input, so a
-          script can take one over; it's{' '}
+          driving one input while leaving everything else alone. It's generic over the input class,
+          with a blanket lock for a whole class.
+        </p>
+        <p>
+          Host <A href="/native/injection">injection</A> still drives a locked input. It's{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
       </Card>
@@ -22,8 +23,7 @@ const Lock: Component = () => {
         <Card>
           <CardHeader title="LOCK" subtitle="Lock or unlock a physical input" />
           <p>
-            <code>LOCK</code> picks a <code>class</code>, an <code>id</code> within it, and a{' '}
-            <code>direction</code>, then either blocks it or clears the block. A momentary usage shares{' '}
+            A momentary usage shares{' '}
             <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s{' '}
             <code>(class, id)</code> space, so a button locks exactly like a key.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x0A</code>.
@@ -57,14 +57,12 @@ const Lock: Component = () => {
           <p>
             Classes <code>0</code>-<code>2</code> mirror{' '}
             <A href="/native/commands/inject#inject"><code>INJECT</code></A>. An <code>id</code> of{' '}
-            <code>0xFFFF</code> is a blanket: it locks every usage in that class in one command (every
-            button, every key, or every media usage).
+            <code>0xFFFF</code> is a blanket: it locks every usage in that class in one command.
           </p>
           <div class="api-response-label">DIRECTION</div>
           <p>
-            What <code>direction</code> means depends on the input. For an axis it's a sign, so you can
-            block scrolling up but not down. For a button, key, or media usage it's an edge, so you can
-            block the press but not the release.
+            What <code>direction</code> means depends on the input: a sign for an axis, an edge for a
+            button, key, or media usage.
           </p>
           <table class="api-params">
             <thead>
@@ -82,7 +80,7 @@ const Lock: Component = () => {
             <A href="/native/injection">injection</A> still reaches a locked input, so a{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A> moves a locked axis and an{' '}
             <A href="/native/commands/inject#inject"><code>INJECT</code></A> drives a locked button or
-            key. Lock an input the user shouldn't touch, then drive it yourself.
+            key.
           </p>
           <div class="api-response-label">A LOCK CLEARS ON</div>
           <pre class="diagram">{`unlock      you send the matching unlock (state = 0)
@@ -91,8 +89,7 @@ RESET       a RESET command
 link loss   the inter-chip link drops`}</pre>
           <div class="callout callout--warning">
             <p>
-              A lock isn't permanent. It auto-clears on the same safety net as injection, so hold it
-              with a keepalive if the user has to stay locked out.
+              A lock isn't permanent: hold it with a keepalive if the user has to stay locked out.
             </p>
           </div>
           <div class="api-response-label">EFFECT</div>

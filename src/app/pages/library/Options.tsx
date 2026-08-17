@@ -9,9 +9,8 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Options are persistent box settings, each one set and read on its own. There are four:
-          imperfect clones, movement riding, emit-rate pacing, and the box name. All persist in NVS and
-          survive a reboot. See the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
+          Four box settings, each set and read on its own. All persist in NVS and survive a reboot. See
+          the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command for the wire contract.
         </p>
         <table class="api-params">
@@ -31,11 +30,10 @@ const Options: Component = () => {
           <pre class="api-signature">fn allow_imperfect_clones(&self, allow: bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            By default the box refuses a device it can't clone faithfully. <code>true</code> opts into
-            cloning an over-capacity device anyway, the rest faithful and the over-capacity interface
-            dead; <code>false</code> is faithful-only (the default). It's persisted in NVS. When the
-            setting changes for an <em>attached over-capacity</em> device the box reboots itself to
-            re-clone, so it lands without unplugging anything; a normal device is unaffected (no reboot).
+            By default the box refuses a device it can't clone faithfully. <code>true</code> clones an
+            over-capacity device anyway, the rest faithful and the over-capacity interface dead. Changing
+            the setting while such a device is <em>attached</em> reboots the box to re-clone; a normal
+            device is unaffected.
           </p>
           <table class="api-params">
             <thead>
@@ -59,17 +57,15 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
           <pre class="api-signature">fn set_movement_riding(&self, window: Option&lt;Duration&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <code>Some(window)</code> turns movement riding on: injected cursor and wheel motion ride a
-            native cursor-motion report seen within <code>window</code>, the box emits no synthetic
-            motion frame, and motion left unridden past the window is dropped rather than dumped on the
-            next move. So injected motion's report density matches the real mouse's, erasing the
-            density tell. <code>None</code> turns it off (the default). The window rounds to whole
-            milliseconds, a non-zero <code>Some</code> is at least 1 ms, and it clamps to 65535 ms;
-            persisted in NVS.
+            <code>Some(window)</code> turns riding on: injected cursor and wheel motion ride a native
+            cursor-motion report seen within <code>window</code>; the box emits no synthetic motion frame.
+            Motion unridden past the window is dropped, not dumped on the next move.{' '}
+            <code>None</code> (the default) is off.
           </p>
           <p>
-            The tradeoff is deliberate: pure idle injection, moving the cursor while the user holds
-            still, stops working while riding is on. Button, key, and media injection are unaffected.
+            The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms, and it
+            clamps to 65535 ms. Pure idle injection, moving the cursor while the user holds still, stops
+            working while riding is on; button, key, and media injection are unaffected.
           </p>
           <table class="api-params">
             <thead>
@@ -95,19 +91,16 @@ device.set_movement_riding(None)?;                             // back to gaples
           <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Picks what sets the emit-rate ceiling for injected motion.{' '}
-            <A href="/library/types/enums#emit-pace"><code>EmitPace::Learned</code></A> is the default:
-            the box paces injection to the rate the real mouse actually reports at.{' '}
+            Picks the emit-rate ceiling for injected motion.{' '}
+            <A href="/library/types/enums#emit-pace"><code>EmitPace::Learned</code></A> (the default)
+            paces injection to the rate the real mouse reports at.{' '}
             <code>EmitPace::Interval</code> paces to the cloned mouse's declared poll rate (its
-            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set; the 1 ms
-            frame clock snaps it to <code>1000/n</code> Hz and caps it at 1 kHz. It raises the ceiling
-            only, so idle stays idle (the box still emits a frame solely when injection is pending).
-            Persisted in NVS.
+            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.
           </p>
           <p>
-            The learnt default keeps injected motion's cadence matched to the native mouse. The other
-            modes are for a host that models its own report density and wants the box to stop re-pacing
-            an already-shaped stream.
+            The 1 ms frame clock snaps a fixed rate to <code>1000/n</code> Hz and caps it at 1 kHz. The
+            pace raises the ceiling only: idle stays idle, and the box emits a frame solely when
+            injection is pending.
           </p>
           <table class="api-params">
             <thead>
@@ -132,11 +125,10 @@ device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace
           <pre class="api-signature">fn set_name(&self, name: &str) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Sets the box's name, its readable partner to the{' '}
-            <A href="/library/discovery#identity">MAC</A>. Like the other setters it sends the value and
-            lets the box own the rules: the firmware keeps the leading printable-ASCII run capped at 32
-            bytes, and an empty string clears it. Unlike the other options it is read not by a query but
-            off <A href="/library/types/structs#version"><code>Version::name</code></A>, like the MAC.
+            Sets the box's name, the readable partner to its{' '}
+            <A href="/library/discovery#identity">MAC</A>. The firmware keeps the leading printable-ASCII
+            run, capped at 32 bytes; an empty string clears it. Read it back off{' '}
+            <A href="/library/types/structs#version"><code>Version::name</code></A>, not a query.
           </p>
           <table class="api-params">
             <thead>
@@ -242,9 +234,7 @@ if let EmitPace::Fixed(hz) = status.mode {
         <Card>
           <CardHeader title="On AsyncDevice" subtitle="setters fire, queries await" />
           <p>
-            <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
-            <code>allow_imperfect_clones</code>, <code>set_movement_riding</code>,{' '}
-            <code>set_emit_pace</code>, <code>set_name</code>, and <code>clear_name</code>{' '}
+            <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
             <code>query_movement_riding</code>, and <code>query_emit_pace</code> futures, like the
             other queries.

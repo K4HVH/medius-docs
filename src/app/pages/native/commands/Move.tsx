@@ -12,8 +12,10 @@ const Move: Component = () => {
           <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis: the
           cursor pair (X and Y together) or the wheel, picked by a <code>motion</code>{' '}
           byte. It injects on top of the real mouse, so the PC sees the combined result, and it's{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>. The momentary inputs
-          (buttons, keys, media) have their own verb,{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+        </p>
+        <p>
+          The momentary inputs (buttons, keys, media) have their own verb,{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
         </p>
         <table class="api-params">
@@ -29,8 +31,7 @@ const Move: Component = () => {
         <Card>
           <CardHeader title="MOVE" subtitle="Relative axis injection" />
           <p>
-            <code>MOVE</code> shifts an axis by a relative amount, not a screen position. The{' '}
-            <code>motion</code> byte at offset 0 selects the axis.{' '}
+            <code>MOVE</code> shifts an axis by a relative amount, not a screen position.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x01</code>.
           </p>
           <pre class="api-signature">MOVE  0x01  ·  cursor payload 5 bytes</pre>
@@ -72,7 +73,6 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
           <CardHeader title="MOVE (wheel)" subtitle="Vertical scroll" />
           <p>
             With <code>motion = 1</code>, <code>MOVE</code> scrolls the wheel by a relative amount.
-            Same opcode, a shorter payload.
           </p>
           <pre class="api-signature">MOVE  0x01  ·  wheel payload 3 bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>

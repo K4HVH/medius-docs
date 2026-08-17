@@ -117,8 +117,10 @@ LD_LIBRARY_PATH=target/release ./hello
               library must also be findable by the dynamic loader when the program <em>runs</em>:
               Linux <code>LD_LIBRARY_PATH</code> or an rpath, macOS <code>DYLD_LIBRARY_PATH</code> /{' '}
               <code>@rpath</code>, Windows the <code>.dll</code> next to the exe or on <code>PATH</code>.
+            </p>
+            <p>
               Or link the static library (<code>.a</code> / <code>.lib</code>) to fold it into your
-              binary and skip the run-time hunt.
+              binary.
             </p>
           </div>
         </Card>
