@@ -10,12 +10,10 @@ const Usage: Component = () => {
         <CardHeader title="Calls & errors" subtitle="The Python patterns: blocking, exceptions, lifecycle, builders" />
         <p>
           What every <code>Device</code> call looks like in{' '}
-          <a href="https://www.python.org" target="_blank" rel="noreferrer">Python</a>: when it blocks, how a failure
-          surfaces, when the handle is freed, and how the generic targets are built. The full call
+          <a href="https://www.python.org" target="_blank" rel="noreferrer">Python</a>. The full call
           list is on <A href="/bindings/python/api">API index</A>; the value types on{' '}
           <A href="/bindings/python/types">Types &amp; errors</A>. What each command <em>does</em>{' '}
-          lives in the <A href="/library">Rust Library</A> and <A href="/native">Native API</A>{' '}
-          sections.
+          lives in the <A href="/library">Rust Library</A> and <A href="/native">Native API</A>.
         </p>
       </Card>
 
@@ -64,7 +62,7 @@ const Usage: Component = () => {
             subclass); each{' '}
             <A href="/library/types/errors">status code</A> (a <A href="/bindings/python/types#status"><code>Status</code></A>{' '}
             <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">IntEnum</a>)
-            maps to its own <A href="/bindings/python/types#subclasses">subclass</A>, so you can catch the case you care about. Catch{' '}
+            maps to its own <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
             <code>MediusError</code> for all of them.
           </p>
           <pre class="api-signature">{`class MediusError(Exception):
@@ -88,8 +86,18 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
               <tr><td><code>ERR_INVALID_ARG</code></td><td><code>InvalidArgError</code></td><td>a bad argument value</td></tr>
               <tr><td><code>ERR_PANIC</code></td><td><code>PanicError</code></td><td>the native core panicked</td></tr>
               <tr><td><code>ERR_UNKNOWN</code></td><td><code>MediusError</code></td><td>anything unmapped</td></tr>
+              <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>CatchTableFullError</code></td><td>the subscription needs more than the box's 32 entries</td></tr>
+              <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>EmptySubscriptionError</code></td><td>a subscription with no filters</td></tr>
+              <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>CaptureNotApplicableError</code></td><td>a <A href="/bindings/python/types#capture"><code>Capture</code></A> on an input class</td></tr>
+              <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>NotAnInputFilterError</code></td><td>a traffic class passed to <code>input_events</code></td></tr>
+              <tr><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code></td></tr>
+              <tr><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge</td></tr>
+              <tr><td><code>ERR_RESERVED_ID</code></td><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel</td></tr>
             </tbody>
           </table>
+          <p>
+            The last six are subscription refusals, raised before a frame reaches the box.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
 
@@ -105,8 +113,8 @@ except MediusError as e:
             <p>
               A dropped link raises <code>DisconnectedError</code> from a normal call, but a{' '}
               <A href="/bindings/python/streams">stream</A> iterator
-              (<code>for ev in dev.catch_events():</code>) stops cleanly
-              instead: it returns when the link drops rather than raising. Calling <code>recv()</code>{' '}
+              (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) ends cleanly
+              instead of raising. Calling <code>recv()</code>{' '}
               directly still raises. Box-side telemetry behind these errors is on{' '}
               <A href="/library/diagnostics">Diagnostics</A>.
             </p>
@@ -156,9 +164,10 @@ worker.close()
 dev.close()`}</code></pre>
           <div class="callout callout--info">
             <p>
-              <code>EventStream</code>, <code>LogStream</code>, and <code>MockBox</code> follow the
-              same pattern: a <code>with</code> block, <code>.close()</code>, or GC. Streams hold
-              the device alive while open; see <A href="/bindings/python/streams">Streams</A>.
+              <code>EventStream</code>, <code>InputStream</code>, <code>LogStream</code>,{' '}
+              <code>Timeline</code>, and <code>MockBox</code> follow the same pattern: a{' '}
+              <code>with</code> block, <code>.close()</code>, or GC. Streams hold the device alive
+              while open; see <A href="/bindings/python/streams">Streams</A>.
             </p>
           </div>
         </Card>
@@ -166,11 +175,11 @@ dev.close()`}</code></pre>
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget" />
+          <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget · CatchFilter" />
           <p>
-            The <A href="/library/inject"><code>inject</code></A> / <A href="/library/inject"><code>press</code></A> / <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A> calls take a{' '}
-            <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in. One
-            <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media) feeds every inject verb.
+            The <A href="/library/inject">inject</A>, <A href="/library/move">move</A>,{' '}
+            <A href="/library/lock">lock</A>, and <A href="/library/catch">catch</A> calls take a{' '}
+            <em>target object</em>, not a bare value. Build it with a classmethod, then pass it in.
           </p>
           <table class="api-params">
             <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
@@ -178,28 +187,45 @@ dev.close()`}</code></pre>
               <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
               <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
               <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
-              <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
+              <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor nudge</td></tr>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
               <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
               <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
+              <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed exactly as a lock is</td></tr>
+              <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>
+              <tr><td><code>.with_direction(direction)</code> / <code>.with_capture(n)</code> / <code>.on_press()</code> / <code>.inbound()</code></td><td>a refinement of one, returned as a new filter</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import Device, Usage, Motion, LockTarget, Button, Action, LockDirection
+          <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchFilter, TrafficClass,
+                    Button, Action, Direction)
 
 with Device.find() as dev:
     dev.inject(Usage.button(Button.LEFT), Action.PRESS)        # generic inject
-    dev.move_axis(Motion.cursor(10, -4))                       # generic move
-    dev.lock(LockTarget.button(Button.LEFT), LockDirection.BOTH)`}</code></pre>
+    dev.move_axis(Motion.cursor(10, -4))                       # generic move (Ride / Keep by default)
+    dev.lock(LockTarget.button(Button.LEFT), Direction.BOTH)
+
+    stream = dev.catch_events([                                # generic subscribe
+        CatchFilter.watch_axes(),
+        CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16),
+    ])`}</code></pre>
           <div class="callout callout--info">
             <p>
               <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
               <code>SOFT_RELEASE</code> / <code>FORCE_RELEASE</code>); the{' '}
-              <A href="/native/injection">injection model</A> defines what each does.{' '}
+              <A href="/native/injection">injection model</A> defines what each does.
+            </p>
+            <p>
               <code>Usage.button</code> takes a{' '}
               <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
               <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
               raw <code>int</code>.
+            </p>
+            <p>
+              A filter's <code>direction</code> is the same{' '}
+              <A href="/bindings/python/types#direction"><code>Direction</code></A>: on an input class
+              it picks the press or release edge (<code>PRESS</code> / <code>RELEASE</code>), on a
+              traffic class the flow (<code>IN</code> / <code>OUT</code>).
             </p>
           </div>
         </Card>

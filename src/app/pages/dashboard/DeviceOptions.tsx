@@ -1,30 +1,32 @@
-import { Show, createSignal, onCleanup, onMount } from 'solid-js';
+// The box's persistent options: set on the device, survive a reboot.
+//
+// Every control here reads its value back from the box until you touch it. It used to open on a
+// hardcoded default instead, so a box paced at Fixed 250 Hz showed a radio reading Learned directly
+// above a chip reading Fixed 250 Hz, and pressing Apply on what looked like a no-op reconfigured it.
+
+import { Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
-import { EmitMode, NAME_MAX } from '../../../dashboard/protocol';
-import type { EmitPace, ImperfectStatus } from '../../../dashboard/protocol';
+import { type EmitPace, EmitMode, NAME_MAX } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
-
-// One card for every persistent box option (saved on the device, survive a reboot). Each option is a
-// labelled section here; the read-only summary on the Device tab mirrors the same values.
-
-const controls = {
-  display: 'flex',
-  gap: 'var(--g-spacing-sm)',
-  'flex-wrap': 'wrap',
-  'align-items': 'flex-end',
-} as const;
-
-const status = { 'margin-top': 'var(--g-spacing-sm)' } as const;
+import { createCommand } from './action';
+import { Section } from './Section';
+import { controls, muted, section, status } from './ui';
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
   interval: EmitMode.Interval,
   fixed: EmitMode.Fixed,
+};
+
+const MODE_NAMES: Record<number, string> = {
+  [EmitMode.Learned]: 'learned',
+  [EmitMode.Interval]: 'interval',
+  [EmitMode.Fixed]: 'fixed',
 };
 
 const emitLabel = (e: EmitPace): string => {
@@ -42,113 +44,112 @@ const emitLabel = (e: EmitPace): string => {
 
 const DeviceOptions = () => {
   const dash = useDashboard();
-  const [imperfect, setImperfect] = createSignal<ImperfectStatus | null>(null);
-  const [ride, setRide] = createSignal<number | null>(null); // movement-riding window in ms, 0 = off
-  const [draft, setDraft] = createSignal(20);
-  const [emit, setEmit] = createSignal<EmitPace | null>(null);
-  const [emitMode, setEmitMode] = createSignal('learned');
-  const [hz, setHz] = createSignal(500);
-  const [boxName, setBoxName] = createSignal<string | null>(null); // the box's live name, read from RESP(VERSION)
-  const [nameDraft, setNameDraft] = createSignal('');
+  const imperfect = dash.poll('imperfect');
+  const ride = dash.poll('moveRide');
+  const emit = dash.poll('emit');
+  const version = dash.poll('version');
+  const cmd = createCommand();
 
-  const refresh = async () => {
-    try {
-      const link = dash.link();
-      if (!link) return;
-      setImperfect(await link.queryImperfect());
-      setRide(await link.queryMovementRiding());
-      setEmit(await link.queryEmitPace());
-      // The name rides on RESP(VERSION) (the ASCII tail after the MAC), not a Q_OPTIONS readback.
-      setBoxName((await link.queryVersion()).name);
-    } catch {
-      // A transient miss is fine; the next refresh tries again.
-    }
+  // Each control follows the box until the user edits it, then holds their edit until it is applied.
+  // Without the second half, a poll landing mid-edit would overwrite what they were typing.
+  const [nameEdit, setNameEdit] = createSignal<string | null>(null);
+  const [rideEdit, setRideEdit] = createSignal<number | null>(null);
+  const [modeEdit, setModeEdit] = createSignal<string | null>(null);
+  const [hzEdit, setHzEdit] = createSignal<number | null>(null);
+
+  const name = () => nameEdit() ?? version()?.name ?? '';
+  const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
+  const mode = () => modeEdit() ?? MODE_NAMES[emit()?.mode ?? EmitMode.Learned] ?? 'learned';
+  // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
+  // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
+  const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
+
+  // Each write clears its own edit only once the frame is away. A failure leaves the edit showing,
+  // so the field still holds what the user asked for rather than snapping back as if it landed.
+  const applyName = () => {
+    const v = name().trim();
+    if (v.length === 0) return;
+    cmd.run(async () => {
+      await dash.link()!.setName(v);
+      setNameEdit(null);
+      dash.refreshPoll('version');
+    });
   };
 
-  const applyName = async () => {
-    const name = nameDraft().trim();
-    if (name.length === 0) return;
-    await dash.link()?.setName(name);
-    await refresh();
-  };
+  const clearName = () =>
+    cmd.run(async () => {
+      await dash.link()!.clearName();
+      setNameEdit(null);
+      dash.refreshPoll('version');
+    });
 
-  const clearName = async () => {
-    await dash.link()?.clearName();
-    setNameDraft('');
-    await refresh();
-  };
+  const allowImperfect = (allow: boolean) =>
+    cmd.run(async () => {
+      await dash.link()!.allowImperfectClones(allow);
+      dash.refreshPoll('imperfect');
+    });
 
-  const allowImperfect = async (allow: boolean) => {
-    await dash.link()?.allowImperfectClones(allow);
-    await refresh();
-  };
+  const setRiding = (ms: number) =>
+    cmd.run(async () => {
+      await dash.link()!.setMovementRiding(ms);
+      setRideEdit(null);
+      dash.refreshPoll('moveRide');
+    });
 
-  const setRiding = async (ms: number) => {
-    await dash.link()?.setMovementRiding(ms);
-    await refresh();
-  };
-
-  const applyEmit = async () => {
-    const mode = EMIT_MODES[emitMode()];
-    await dash.link()?.setEmitPace(mode, mode === EmitMode.Fixed ? hz() : 0);
-    await refresh();
-  };
-
-  let timer: ReturnType<typeof setInterval> | null = null;
-  onMount(() => {
-    // Seed the editable draft from the name known at handshake, so the field opens on the current name.
-    setNameDraft(dash.version()?.name ?? '');
-    void refresh();
-    timer = setInterval(() => void refresh(), 1000);
-  });
-  onCleanup(() => {
-    if (timer !== null) clearInterval(timer);
-  });
+  const applyEmit = () =>
+    cmd.run(async () => {
+      const m = EMIT_MODES[mode()];
+      await dash.link()!.setEmitPace(m, m === EmitMode.Fixed ? hz() : 0);
+      setModeEdit(null);
+      setHzEdit(null);
+      dash.refreshPoll('emit');
+    });
 
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
 
-        <div class="api-response-label">Box name</div>
+        <Section title="Box name" first>
         <p>
-          A human-readable name for the box, a friendlier alternative to its id. Leave it unset and the box
-          makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters, numbers, and symbols.
+          Leave it unset and the box derives one from its id, like "Medius-1A2B". Up to {NAME_MAX}{' '}
+          letters, numbers, and symbols.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
             <TextField
               label="Name"
-              value={nameDraft()}
+              value={name()}
               maxLength={NAME_MAX}
               placeholder="Medius-1A2B"
-              onInput={setNameDraft}
+              onChange={setNameEdit}
             />
           </div>
-          <Button variant="primary" onClick={() => void applyName()}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={applyName}>
             Set
           </Button>
-          <Button variant="secondary" onClick={() => void clearName()}>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={clearName}>
             Clear
           </Button>
         </div>
-        <Show when={boxName() !== null} fallback={<p style={status}>Reading status...</p>}>
+        <Show when={version()} fallback={<p style={status}>Reading status...</p>}>
           <div style={status}>
-            <Chip variant="neutral">{boxName()}</Chip>
+            <Chip variant="neutral">{version()!.name}</Chip>
           </div>
         </Show>
 
-        <div class="api-response-label">Imperfect clone</div>
+        </Section>
+
+        <Section title="Imperfect clone">
         <p>
-          Some devices need more inputs than the box can copy (like the Wooting's analog stream), so the
-          box refuses them by default. Allow it and the box clones the device anyway with one input
-          dropped, then reboots to apply.
+          Some devices need more inputs than the box can copy, so it refuses them by default. Allow it
+          and the box clones the device anyway with one input dropped, then reboots to apply.
         </p>
         <div style={controls}>
-          <Button variant="primary" onClick={() => void allowImperfect(true)}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
             Allow imperfect
           </Button>
-          <Button variant="secondary" onClick={() => void allowImperfect(false)}>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => allowImperfect(false)}>
             Faithful only
           </Button>
         </div>
@@ -165,26 +166,28 @@ const DeviceOptions = () => {
           )}
         </Show>
 
-        <div class="api-response-label">Movement riding</div>
+        </Section>
+
+        <Section title="Movement riding">
         <p>
-          Injected motion only rides a real mouse move within the window and is dropped if no move
-          arrives, so it keeps the hand's report timing. It can't move the cursor on its own while it's
-          on. Off by default.
+          Injected motion is only emitted alongside a real mouse move within the window, and is dropped
+          if none arrives, so it keeps the real device's report timing. Off by default, and a move can
+          opt out of it.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '8rem' }}>
             <NumberInput
               label="Window (ms)"
-              value={draft()}
+              value={rideWindow()}
               min={1}
               max={65535}
-              onChange={(v) => setDraft(v ?? 1)}
+              onChange={(v) => setRideEdit(v ?? 1)}
             />
           </div>
-          <Button variant="primary" onClick={() => void setRiding(draft())}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => setRiding(rideWindow())}>
             Turn on
           </Button>
-          <Button variant="secondary" onClick={() => void setRiding(0)}>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
             Turn off
           </Button>
         </div>
@@ -196,16 +199,17 @@ const DeviceOptions = () => {
           </div>
         </Show>
 
-        <div class="api-response-label">Emit rate</div>
+        </Section>
+
+        <Section title="Emit rate">
         <p>
-          How fast the box sends injected moves. Learned matches the mouse's own report rate, Interval
-          follows its USB poll rate, and Fixed pins it to a rate you pick. It only sets the ceiling, so
-          the box still sends only when there's a move to send. Learned by default.
+          What paces injected motion. Learned matches the mouse's own report rate, Interval follows
+          its USB poll rate, and Fixed pins it to a rate you pick. It sets a ceiling only.
         </p>
         <RadioGroup
           name="emit-mode"
-          value={emitMode()}
-          onChange={setEmitMode}
+          value={mode()}
+          onChange={setModeEdit}
           options={[
             { value: 'learned', label: 'Learned' },
             { value: 'interval', label: 'Interval' },
@@ -213,30 +217,52 @@ const DeviceOptions = () => {
           ]}
         />
         <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
-          <Show when={emitMode() === 'fixed'}>
+          <Show when={mode() === 'fixed'}>
             <div style={{ 'max-width': '8rem' }}>
               <NumberInput
                 label="Rate (Hz)"
                 value={hz()}
                 min={1}
                 max={1000}
-                onChange={(v) => setHz(v ?? 1)}
+                onChange={(v) => setHzEdit(v ?? 1)}
               />
             </div>
           </Show>
-          <Button variant="primary" onClick={() => void applyEmit()}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
             Apply
           </Button>
+          <Show when={modeEdit() !== null || hzEdit() !== null}>
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setModeEdit(null);
+                setHzEdit(null);
+              }}
+            >
+              Revert
+            </Button>
+          </Show>
         </div>
+        <Show when={cmd.error()}>
+          <div class="callout callout--danger" role="alert" style={section}>
+            {cmd.error()}
+          </div>
+        </Show>
         <Show when={emit()} fallback={<p style={status}>Reading status...</p>}>
           {(s) => (
             <div style={status}>
               <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
                 {emitLabel(s())}
               </Chip>
+              <Show when={modeEdit() !== null || hzEdit() !== null}>
+                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                  not applied yet
+                </span>
+              </Show>
             </div>
           )}
         </Show>
+        </Section>
       </Card>
     </Show>
   );

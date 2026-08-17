@@ -10,8 +10,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Frame format" subtitle="The one packet shape" />
           <p>
-            Every message, both directions, is a frame with one fixed shape. The whole protocol is
-            frames; each command is the same machinery with a different opcode and payload.
+            Every message, both directions, is a frame with one fixed shape.
           </p>
           <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD ≤512][CRC16 u16 LE]</pre>
           <table class="byte-table">
@@ -57,16 +56,15 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x15</code>. Four values are reserved,
-            retired by the unified-input collapse. An unrecognised opcode is ignored harmlessly, which
-            keeps newer and older firmware compatible.
+            The opcodes run from <code>0x01</code> to <code>0x16</code>. An unrecognised opcode is
+            ignored harmlessly.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Opcode</th><th>Name</th><th>Direction</th><th>Payload</th><th>Reply</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>3 or 5 bytes</td><td>none</td></tr>
+              <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>4 or 6 bytes</td><td>none</td></tr>
               <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
               <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>0 bytes</td><td>none</td></tr>
@@ -76,8 +74,8 @@ const Frame: Component = () => {
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
               <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>5 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>11 bytes</td><td>none</td></tr>
               <tr><td><code>0x0D</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x0E</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
@@ -87,6 +85,7 @@ const Frame: Component = () => {
               <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
               <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
             </tbody>
           </table>
           <p>
@@ -106,9 +105,8 @@ const Frame: Component = () => {
           <CardHeader title="Checksum & integrity" subtitle="Rejecting corrupted frames" />
           <p>
             The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
-            <code>TYPE | SEQ | LEN | PAYLOAD</code> (everything but <code>SOF</code> and the checksum
-            itself), stored little-endian. On a mismatch the box silently drops the frame and resyncs
-            at the next <code>0xA5</code>, so corrupted frames are never acted on.
+            <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
+            silently drops the frame and resyncs at the next <code>0xA5</code>.
           </p>
           <table class="api-params">
             <thead>
@@ -145,17 +143,17 @@ def encode_frame(type, seq, payload):
           </p>
           <ul>
             <li>Opcode <code>0x01</code>.</li>
-            <li>Payload is the <code>motion</code> byte (<code>00</code> = cursor) then the two 16-bit values <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>).</li>
-            <li><code>LEN</code> is <code>05 00</code>.</li>
+            <li>Payload is the <code>motion</code> byte (<code>00</code> = cursor), the two 16-bit values <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then the <code>flags</code> byte (<code>00</code>).</li>
+            <li><code>LEN</code> is <code>06 00</code>.</li>
           </ul>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 05 00  | 00     | 64 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 01     | 00     | 06 00  | 00     | 64 00  | 00 00  | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
             The CRC bytes are the little-endian <code>crc16_ccitt</code> of{' '}
-            <code>01 00 05 00 00 64 00 00 00</code>. Compute them rather than copying a literal.
+            <code>01 00 06 00 00 64 00 00 00 00</code>. Compute them rather than copying a literal.
           </p>
         </Card>
       </div>

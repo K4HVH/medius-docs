@@ -11,8 +11,7 @@ const Build: Component = () => {
         <p>
           The <A href="/library/features/mock">mock</A> and <A href="/library/features/flash">flash</A>{' '}
           features are compiled into the native library, not switched on from Python, so turning one
-          on means building that library. The <code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code> wheel ships with both
-          off. Everything else is a{' '}
+          on means building that library. Everything else is a{' '}
           <a href="https://docs.python.org/3/library/ctypes.html" target="_blank" rel="noreferrer">ctypes</a>{' '}
           layer with no Python build step.
         </p>
@@ -50,7 +49,8 @@ const Build: Component = () => {
           </table>
           <div class="callout callout--warning">
             <p>
-              The <code>pip install medius</code> wheel has neither feature. <code>MockBox()</code>{' '}
+              The <code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code>{' '}
+              wheel has neither feature. <code>MockBox()</code>{' '}
               and <code>medius.flash(...)</code> raise <code><a href="https://docs.python.org/3/library/exceptions.html#RuntimeError" target="_blank" rel="noreferrer">RuntimeError</a></code> there. Gate on the
               flag first: <code>if medius.HAS_MOCK:</code> / <code>if medius.HAS_FLASH:</code>.
             </p>
@@ -82,9 +82,7 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
           <CardHeader title="Finding the library" subtitle="MEDIUS_LIB and the load order" />
           <p>
             On <code>import medius</code> the package loads the native library, trying these in order
-            and stopping at the first hit. Set <code>MEDIUS_LIB</code> to override the rest and run any
-            script against the build you want (a debug build, or one with{' '}
-            <A href="/library/features/mock">mock</A>/<A href="/library/features/flash">flash</A>).
+            and stopping at the first hit. <code>MEDIUS_LIB</code> overrides the rest.
           </p>
           <pre class="diagram">{`import medius
    │
@@ -94,7 +92,7 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
    ├─ 4. ctypes.util.find_library(...)?     ──▶  CDLL(found)             (ldconfig / system paths)
    └─ none                                  ──▶  OSError                 (cannot locate the library)`}</pre>
           <div class="api-response-label">POINT AT ANY BUILD WITH MEDIUS_LIB</div>
-          <pre><code class="language-python">{`MEDIUS_LIB=/path/to/target/release/libmedius_capi.so python myscript.py`}</code></pre>
+          <pre><code class="language-bash">{`MEDIUS_LIB=/path/to/target/release/libmedius_capi.so python myscript.py`}</code></pre>
           <div class="callout callout--warning">
             <p>
               An <code><a href="https://docs.python.org/3/library/exceptions.html#OSError" target="_blank" rel="noreferrer">OSError</a></code> on import means every step failed: a bad <code>MEDIUS_LIB</code>{' '}
@@ -111,8 +109,7 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
           <p>
             Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a>), macOS, and 64-bit Windows get a prebuilt wheel from{' '}
             <code>pip install medius</code>. On <a href="https://musl.libc.org" target="_blank" rel="noreferrer">musl</a> Linux (<a href="https://alpinelinux.org" target="_blank" rel="noreferrer">Alpine</a>) or 32-bit Windows there's no wheel,
-            so <code>pip</code> builds the native library from source. Force a source build anywhere,
-            or build from a checkout:
+            so <code>pip</code> builds the native library from source.
           </p>
           <pre><code class="language-bash">{`# build from source even where a wheel exists
 pip install medius --no-binary medius

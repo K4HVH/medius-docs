@@ -12,7 +12,7 @@ const Tracing: Component = () => {
           The <code>tracing</code> feature wires the crate into{' '}
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
           it emits a span and events as it works the link, but adds no medius functions and changes no
-          behavior. The sections below are what it emits; you read them by installing a{' '}
+          behavior. You read them by installing a{' '}
           <A href="/library/features/tracing#subscriber">subscriber</A>.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
@@ -24,7 +24,6 @@ const Tracing: Component = () => {
       <div id="targets" data-search-target>
         <Card>
           <CardHeader title="Targets and levels" subtitle="What the crate emits and where" />
-          <div class="api-response-label">TARGETS</div>
           <table class="api-params">
             <thead>
               <tr><th>Target</th><th>Levels</th><th>Emitted</th></tr>
@@ -75,7 +74,7 @@ const Tracing: Component = () => {
           <pre><code class="language-rust">{`// With "medius=debug" and a box that answers on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
-//   INFO  connect: medius::device: connected proto_ver=3 fw_major=1 fw_minor=3 fw_patch=0
+//   INFO  connect: medius::device: connected proto_ver=4 fw_major=1 fw_minor=3 fw_patch=0
 // "connect:" is the span; the rest is the event with its fields.`}</code></pre>
         </Card>
       </div>
@@ -84,13 +83,12 @@ const Tracing: Component = () => {
         <Card>
           <CardHeader title="Frames, device logs, and reconnects" subtitle="The events worth knowing" />
           <p>
-            <code>medius::transport</code> emits one <code>TRACE</code> per frame, the per-frame mirror of
-            the <A href="/library/diagnostics#counters"><code>frames_tx</code> / <code>frames_rx</code></A>{' '}
-            counters. Each <A href="/native/commands/admin#log"><code>LOG</code></A> frame the box sends is
-            re-emitted on <code>medius::device</code> with <code>device_log=true</code> at its matching{' '}
-            <A href="/library/types/enums#log-level"><code>LogLevel</code></A> (the same data the{' '}
-            <A href="/library/diagnostics#logs"><code>logs</code></A> stream hands back). A recovered link
-            fires an <code>INFO</code> <code>reconnected</code> event with <code>port</code> and{' '}
+            The <code>medius::transport</code> events are the per-frame mirror of the{' '}
+            <A href="/library/diagnostics#counters"><code>frames_tx</code> / <code>frames_rx</code></A>{' '}
+            counters. A re-emitted <A href="/native/commands/admin#log"><code>LOG</code></A> frame keeps
+            its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and carries the same
+            text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream hands back. A
+            recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
             <code>reason</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -122,7 +120,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr now carries the connect span and an INFO event, e.g.:
-//   INFO  connect: medius::device: connected proto_ver=3 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
+//   INFO  connect: medius::device: connected proto_ver=4 fw_major=1 fw_minor=3 fw_patch=0`}</code></pre>
         </Card>
       </div>
 
@@ -166,7 +164,7 @@ tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
 // Each event is now a JSON line, e.g.:
-//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":3}}`}</code></pre>
+//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":4}}`}</code></pre>
         </Card>
       </div>
     </>

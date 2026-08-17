@@ -114,9 +114,12 @@ int main(void) {
           <div class="callout callout--warning">
             <p>
               A linker error (<code>cannot find -lmedius_capi</code> / <code>unresolved external</code>)
-              means the library directory is wrong. A crash on start
+              means the library directory is wrong.
+            </p>
+            <p>
+              A crash on start
               (<code>cannot open shared object</code> / a missing-DLL popup) means the loader can't find
-              the library at run time. Fix the path or copy the file next to your program. More on{' '}
+              the library at run time. More on{' '}
               <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
           </div>

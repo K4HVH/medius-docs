@@ -10,9 +10,8 @@ const GuideCalls: Component = () => {
         <Card>
           <CardHeader title="Three kinds of call" subtitle="Fire-and-forget, blocking query, no round-trip" />
           <p>
-            Every <A href="/library/connection"><code>Device</code></A> method is one of three kinds.
-            The <A href="/library">API pages</A> tag each method with a badge; this is what the three
-            mean.
+            Every <A href="/library/connection"><code>Device</code></A> method is one of three kinds,
+            tagged with a badge on the <A href="/library">API pages</A>.
           </p>
 
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -131,8 +130,9 @@ println!("{v}");`}</code></pre>
 }`}</code></pre>
           <div class="callout callout--info">
             <p>
-              <code>QueryTimeout</code> means silence; <code>NoReply</code> means a reply arrived but
-              didn't parse. Both are on the <A href="/library/types/errors">Errors</A> page.
+              <code>QueryTimeout</code> is a query hitting its deadline; <code>NoReply</code> is the
+              handshake's own silence. Both are on the{' '}
+              <A href="/library/types/errors">Errors</A> page.
             </p>
           </div>
         </Card>

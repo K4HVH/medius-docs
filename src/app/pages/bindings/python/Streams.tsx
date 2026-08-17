@@ -9,24 +9,31 @@ const Streams: Component = () => {
       <Card>
         <CardHeader title="Streams" subtitle="Consume live input and device logs" />
         <p>
-          <A href="/native/hardware">The box</A> has two live channels: physical input it forwards to the PC
-          (<A href="/library/catch">Catch</A>) and its own log lines (<A href="/library/diagnostics">Logs &amp; counters</A>).
-          Subscribe to each with a method on an open <A href="/bindings/python/api">Device</A>, then pull items
-          off the returned stream. What an event <em>means</em> lives on those pages; this page covers reading
-          them in <a href="https://www.python.org" target="_blank" rel="noreferrer">Python</a>.
+          <A href="/native/hardware">The box</A> has two live channels: the traffic it carries
+          (<A href="/library/catch">Catch</A>: physical input, and the USB bytes behind it) and its own
+          log lines (<A href="/library/diagnostics">Logs &amp; counters</A>). What an event{' '}
+          <em>means</em> lives on those pages.
         </p>
-        <pre class="diagram">{`  physical mouse / keyboard
-            │   (also forwarded to the game PC)
-            ▼
+        <pre class="diagram">{`  physical mouse / keyboard          the traffic the box carries
+            │   (also forwarded       (vendor endpoints, control
+            │    to the game PC)       transactions, bus events)
+            ▼                                  ▼
    ┌─────────────────┐                         ┌─────────────┐
-   │   medius box    │  catch_events(mask)   ─▶│ EventStream │ ─▶ recv() ─▶ CatchEvent
+   │   medius box    │ catch_events(filters) ─▶│ EventStream │ ─▶ recv() ─▶ CatchEvent
    │                 │                         ├─────────────┤
-   │                 │  logs()               ─▶│  LogStream  │ ─▶ recv() ─▶ LogLine
+   │                 │ input_events(filters) ─▶│ InputStream │ ─▶ recv() ─▶ InputEvent
+   │                 │                         ├─────────────┤
+   │                 │ logs()                ─▶│  LogStream  │ ─▶ recv() ─▶ LogLine
    └─────────────────┘                         └─────────────┘`}</pre>
+        <p>
+          The first two read the same subscription. <code>catch_events</code> hands you the box's own
+          held-usage snapshots; <A href="/bindings/python/streams#input"><code>input_events</code></A>{' '}
+          diffs them into press and release edges first.
+        </p>
         <div class="callout callout--info">
           <p>
-            Both streams are{' '}
-            <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context managers</a>{' '}
+            Every stream is a{' '}
+            <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a>{' '}
             and iterable. Use <code>with</code> so the subscription is released on exit, and{' '}
             <code>for item in stream:</code> to drain it until <A href="/library/lifecycle">the link drops</A>.
           </p>
@@ -37,34 +44,78 @@ const Streams: Component = () => {
         <Card>
           <CardHeader title="Subscribe" subtitle="Open a stream from a Device" />
           <p>
-            Both calls live on the <code>Device</code>. They send a subscribe request to the box and
-            hand back a stream object.
+            All three calls live on the <A href="/bindings/python/api">Device</A> and send a
+            subscribe request to the box.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th><th>Channel</th></tr></thead>
             <tbody>
-              <tr><td><A href="/bindings/python/api#streams"><code>dev.catch_events(mask=CatchMask.ALL)</code></A></td><td><code>EventStream</code></td><td>physical mouse / key / media events (see <A href="/library/catch">Catch</A>)</td></tr>
+              <tr><td><A href="/bindings/python/api#streams"><code>dev.catch_events(filters)</code></A></td><td><code>EventStream</code></td><td>the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events (see <A href="/library/catch">Catch</A>)</td></tr>
+              <tr><td><A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A></td><td><code>InputStream</code></td><td>the same input, decoded into press and release edges (see <A href="/bindings/python/streams#input">below</A>)</td></tr>
               <tr><td><A href="/bindings/python/api#streams"><code>dev.logs()</code></A></td><td><code>LogStream</code></td><td>device log lines (see <A href="/library/diagnostics">Logs &amp; counters</A>)</td></tr>
             </tbody>
           </table>
           <p>
-            <code>mask</code> is a <A href="/bindings/python/types#catchmask"><code>CatchMask</code></A>, an{' '}
-            <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer"><code>IntFlag</code></a>,
-            so OR the categories you want (<code>CatchMask.MOTION | CatchMask.BUTTONS</code>). It
-            defaults to <code>ALL</code>.
+            <code>filters</code> is one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+            or an iterable of them. Each names an address, a{' '}
+            <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A> plus an id inside
+            that class, with an optional direction and capture. The box holds them as a 32-entry
+            table.
           </p>
+          <pre class="api-signature">{`CatchFilter.watch(usage)                # one button, key, or media usage
+CatchFilter.watch_axis(axis)            # one Axis
+CatchFilter.watch_class(input_class)    # every usage in one Class
+CatchFilter.watch_axes()                # X, Y and the wheel
+CatchFilter.all_input()                 # a list: all four input classes
+CatchFilter.traffic(traffic_class, id)  # one endpoint, interface, or EP number
+CatchFilter.traffic_class(tc)           # every id in one TrafficClass
+CatchFilter.everything()                # every class, every id, one table entry
+  .with_direction(direction)            # a Direction, default BOTH
+  .with_capture(n)                      # bytes kept per event, default 0 = whole packet
+  .on_press() / .on_release()           # one edge of an input filter
+  .inbound() / .outbound()              # one flow of a traffic filter`}</pre>
           <table class="api-params">
-            <thead><tr><th>CatchMask member</th><th>Value</th><th>Selects</th></tr></thead>
+            <thead><tr><th>CatchClass</th><th>Value</th><th>id addresses</th><th>Yields</th></tr></thead>
             <tbody>
-              <tr><td><code>CatchMask.MOTION</code></td><td><code>1</code></td><td>cursor movement (dx / dy)</td></tr>
-              <tr><td><code>CatchMask.WHEEL</code></td><td><code>2</code></td><td>wheel ticks</td></tr>
-              <tr><td><code>CatchMask.BUTTONS</code></td><td><code>4</code></td><td>mouse buttons</td></tr>
-              <tr><td><code>CatchMask.KEYS</code></td><td><code>8</code></td><td>keyboard keys</td></tr>
-              <tr><td><code>CatchMask.MEDIA</code></td><td><code>16</code></td><td>media keys</td></tr>
-              <tr><td><code>CatchMask.ALL</code></td><td><code>31</code></td><td>every category (the default)</td></tr>
+              <tr><td><code>BUTTON / KEY / MEDIA</code></td><td><code>0 / 1 / 2</code></td><td>a button slot, key usage, or Consumer usage</td><td><code>UsageSnapshot</code></td></tr>
+              <tr><td><code>AXIS</code></td><td><code>3</code></td><td>X, Y, or the wheel</td><td><code>MotionEvent</code></td></tr>
+              <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>a HID interface number</td><td rowspan="7"><code>TrafficEvent</code></td></tr>
+              <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an interrupt-OUT endpoint address</td></tr>
+              <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>a vendor interrupt endpoint address</td></tr>
+              <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>a vendor bulk endpoint address</td></tr>
+              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>a control endpoint number (<code>0</code> = EP0)</td></tr>
+              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an emitting endpoint address</td></tr>
+              <tr><td><code>BUS</code></td><td><code>10</code></td><td>nothing; the bus lifecycle</td></tr>
             </tbody>
           </table>
-          <p>Exactly what each bit selects is on <A href="/library/catch">Catch</A>.</p>
+          <p>
+            Matching is most-specific-first: an exact <code>(class, id)</code> beats a blanket, and a
+            blanket beats <code>everything()</code>. Full semantics on{' '}
+            <A href="/bindings/python/types#catchfilter">Types</A> and{' '}
+            <A href="/library/catch">Catch</A>.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              Subscribing checks the filters here and raises: <code>CatchTableFullError</code> past 32
+              entries, <code>CaptureNotApplicableError</code> for a capture on an input class,{' '}
+              <code>EmptySubscriptionError</code> for none.
+            </p>
+            <p>
+              What the <em>box</em> then refuses is{' '}
+              <A href="/native/injection#fire-and-forget">fire-and-forget</A> and gets no reply: read
+              it back with{' '}
+              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>, whose{' '}
+              <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> is what
+              it holds.
+            </p>
+          </div>
+          <div class="callout callout--info">
+            <p>
+              The control link runs at 4 Mbaud and vendor bulk alone measures 250 KiB/s through the
+              box. Events drain in four strict-priority queues (input and bus, then byte-oriented
+              classes, then control, then vendor bulk), so a busy mouse can starve a bulk trace.
+            </p>
+          </div>
         </Card>
       </div>
 
@@ -72,10 +123,11 @@ const Streams: Component = () => {
         <Card>
           <CardHeader title="Receive" subtitle="Block, poll, time out, or iterate" />
           <p>
-            Four read methods (<code>recv</code>, <code>try_recv</code>, <code>recv_timeout</code>, <code>iterate</code>) are on both
-            streams, plus <code>clone()</code> and <code>close()</code> for lifecycle. The table shows <code>EventStream</code>{' '}
-            (yielding <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>); <code>LogStream</code> is identical with{' '}
-            <A href="/bindings/python/types#logline"><code>LogLine</code></A> in place of <code>CatchEvent</code>.
+            Every stream has the same four read methods plus <code>close()</code>. The table shows <code>EventStream</code>{' '}
+            (yielding <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>);{' '}
+            <code>InputStream</code> and <code>LogStream</code> are identical with{' '}
+            <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> or{' '}
+            <A href="/bindings/python/types#logline"><code>LogLine</code></A> in place of it.
           </p>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Behaviour</th></tr></thead>
@@ -84,10 +136,11 @@ const Streams: Component = () => {
               <tr><td><code>try_recv()</code></td><td><code>Optional[CatchEvent]</code></td><td>Returns immediately; <code>None</code> if nothing is queued.</td></tr>
               <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
               <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops (no exception).</td></tr>
-              <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared.</td></tr>
+              <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared. <code>EventStream</code> and <code>LogStream</code> only.</td></tr>
               <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>Release the subscription. Automatic on <code>with</code> exit and GC.</td></tr>
             </tbody>
           </table>
+          <p><code>InputStream</code> has no <code>clone()</code>; open a second one instead.</p>
         </Card>
       </div>
 
@@ -95,34 +148,56 @@ const Streams: Component = () => {
         <Card>
           <CardHeader title="Event objects" subtitle="What recv() hands back" />
           <p>
-            A <code>CatchEvent</code> carries a <code>kind</code> and one payload. Read the payload by
-            kind, or use the typed accessors that return <code>None</code> for the wrong kind. Every
-            object here is a{' '}
+            Every object here is a{' '}
             <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>.
           </p>
           <pre class="diagram">{`CatchEvent
- ├─ kind : CatchEventKind             (MOTION = 0 · USAGES = 1)
- ├─ payload : MotionEvent | UsageSnapshot
- ├─ .motion  → MotionEvent | None     (None unless kind == MOTION)
- └─ .usages  → UsageSnapshot | None   (None unless kind == USAGES)`}</pre>
+ ├─ kind    : CatchEventKind       MOTION = 0 · USAGES = 1 · TRAFFIC = 2
+ ├─ ts_us   : int                  box microseconds; wraps every ~71.6 min
+ ├─ clock   : ClockDomain          HOST_CHIP = 0 (real device side) · DEVICE_CHIP = 1 (clone side)
+ ├─ payload : MotionEvent | UsageSnapshot | TrafficEvent
+ │
+ ├─ .motion  → MotionEvent | None      None unless kind == MOTION
+ │               dx, dy, dz
+ ├─ .usages  → UsageSnapshot | None    None unless kind == USAGES
+ │               usages[], cls, direction, is_held(usage)
+ └─ .traffic → TrafficEvent | None     None unless kind == TRAFFIC
+                 catch_class, id, direction, flags,
+                 true_len, bytes, truncated()`}</pre>
           <table class="api-params">
-            <thead><tr><th>Payload</th><th>Fields</th><th>Held test</th></tr></thead>
+            <thead><tr><th>Payload</th><th>Fields</th><th>Methods</th></tr></thead>
             <tbody>
               <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
-              <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape)</td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
+              <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape), <code>cls: Class</code>, <code>direction: Direction</code></td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
+              <tr><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td><code>catch_class: CatchClass</code>, <code>id: int</code>, <code>direction: Direction</code>, <code>flags: int</code>, <code>true_len: int</code>, <code>bytes: bytes</code></td><td><code>truncated()</code>, <code>setup()</code>, <code>data()</code>, <code>control_status()</code>, <code>bus_event()</code>, <code>bulk_end_of_transfer()</code>, <code>bulk_zlp()</code></td></tr>
+              <tr><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td><code>kind: InputKind</code>, <code>usage: Optional[Usage]</code>, <code>dx</code>/<code>dy</code>/<code>dz</code>, <code>ts_us</code>, <code>clock</code></td><td><code>is_press</code>, <code>is_release</code></td></tr>
               <tr><td><A href="/bindings/python/types#logline"><code>LogLine</code></A></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
           </table>
           <p>
-            Field meanings and the full type tables are on <A href="/bindings/python/types">Types &amp; errors</A>.
+            Field meanings are on <A href="/bindings/python/types">Types &amp; errors</A>.
             Held <A href="/native/commands/usage">usage ids</A> come from the{' '}
-            <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>.
+            <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>.{' '}
+            <code>flags</code> is class-specific, and each class has an accessor that reads it:{' '}
+            <code>bulk_end_of_transfer()</code> / <code>bulk_zlp()</code> on{' '}
+            <code>VENDOR_BULK</code>, <A href="/bindings/python/types#controlstatus"><code>control_status()</code></A>{' '}
+            on <code>CONTROL</code>, <code>bus_event()</code> on <code>BUS</code>.
           </p>
           <div class="callout callout--info">
             <p>
-              <code>EventStream</code> has a <code>dropped</code> property (an <code>int</code>): events
-              the box queued that you didn't <code>recv()</code> fast enough, so the queue shed them.
-              Read it to tell when you fell behind. <code>LogStream</code> has no such counter.
+              Subtract two stamps only when their <code>clock</code> domains match. To put them on
+              this machine's clock, use a{' '}
+              <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>.
+            </p>
+          </div>
+          <div class="callout callout--info">
+            <p>
+              <code>EventStream</code> and <code>InputStream</code> both have a <code>dropped</code>{' '}
+              property (an <code>int</code>): events the queue shed before you read them. That is the
+              host-side count; the box-side one is on{' '}
+              <A href="/bindings/python/types#catchstate"><code>CatchState</code></A>, both box-wide and{' '}
+              <A href="/bindings/python/types#catchentry">per entry</A>. <code>LogStream</code> has no
+              such counter.
             </p>
           </div>
         </Card>
@@ -131,10 +206,14 @@ const Streams: Component = () => {
       <div id="example" data-search-target>
         <Card>
           <CardHeader title="Consume loop" subtitle="Subscribe, iterate, react" />
-          <pre><code class="language-python">{`from medius import Device, CatchMask, CatchEventKind, Usage, Button
+          <pre><code class="language-python">{`from medius import (Device, CatchFilter, CatchEventKind, Usage, Button)
 
 with Device.find() as dev:
-    with dev.catch_events(CatchMask.MOTION | CatchMask.BUTTONS) as events:
+    filters = [
+        CatchFilter.watch_axes(),                     # cursor and wheel
+        CatchFilter.watch(Button.LEFT),               # one button only
+    ]
+    with dev.catch_events(filters) as events:
         for ev in events:                      # ends when the link drops
             if ev.kind == CatchEventKind.MOTION:
                 m = ev.motion
@@ -144,13 +223,116 @@ with Device.find() as dev:
                     print("left held")
             if events.dropped:
                 print("fell behind:", events.dropped, "dropped")`}</code></pre>
+          <div class="api-response-label">TRACE A VENDOR ENDPOINT AND THE BUS</div>
+          <pre><code class="language-python">{`from medius import Device, CatchFilter, CatchEventKind, TrafficClass
+
+VI = TrafficClass.VENDOR_INTERRUPT
+filters = [
+    CatchFilter.traffic_class(VI).with_capture(16),  # the rest, 16 bytes
+    CatchFilter.traffic(VI, 0x83),                   # this one, whole packets
+    CatchFilter.traffic_class(TrafficClass.BUS),     # resets, configures, detach
+]
+
+with Device.find() as dev:
+    with dev.catch_events(filters) as events:
+        for ev in events:
+            if ev.kind != CatchEventKind.TRAFFIC:
+                continue
+            t = ev.traffic
+            cut = " (cut)" if t.truncated() else ""
+            print(f"{ev.ts_us:>10} {ev.clock.name:<11} {t.catch_class.name:<16} "
+                  f"ep={t.id:#04x} {t.direction.name:<8} "
+                  f"{len(t.bytes)}/{t.true_len} bytes{cut}  {t.bytes.hex(' ')}")`}</code></pre>
+          <p>
+            <code>truncated()</code> separates a clipped capture from a genuinely short packet: a
+            16-byte capture of a 64-byte report and a real 16-byte report differ only in{' '}
+            <code>true_len</code>.
+          </p>
           <div class="api-response-label">NON-BLOCKING POLL</div>
-          <pre><code class="language-python">{`events = dev.catch_events()
+          <pre><code class="language-python">{`events = dev.catch_events(CatchFilter.everything().with_capture(16))
 while running:
     ev = events.recv_timeout(50)   # wake every 50 ms to do other work
     if ev is None:
         continue
     handle(ev)`}</code></pre>
+          <div class="api-response-label">CONFIRM THE BOX TOOK THEM</div>
+          <pre><code class="language-python">{`st = dev.query_catch()
+if st.table_full:
+    print("a filter was refused: the box's 32-entry table is full")
+for e in st.entries:
+    print(f"{e.filter!r}  dropped={e.dropped}")
+print("box-wide dropped:", st.dropped, " clock age:", st.clock.age_ms)`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="input" data-search-target>
+        <Card>
+          <CardHeader title="Decoded input" subtitle="Press and release edges, not snapshots" />
+          <p>
+            The box reports held usages as a snapshot per report.{' '}
+            <A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A> diffs
+            those against what it holds and yields the edges they represent.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>recv()</code> / <code>try_recv()</code> / <code>recv_timeout(ms)</code></td><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td>as on <code>EventStream</code>.</td></tr>
+              <tr><td><code>held(input_class)</code></td><td><code>List[Usage]</code></td><td>Which usages of one <A href="/bindings/python/types#class"><code>Class</code></A> this stream currently holds.</td></tr>
+              <tr><td><code>dropped</code></td><td><code>int</code></td><td>Events the queue shed before you read them.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Every filter must name an input class and cover both edges. A traffic class raises{' '}
+            <code>NotAnInputFilterError</code>, <code>everything()</code> raises{' '}
+            <code>WildcardNotInputError</code>, and one narrowed with <code>on_press()</code> raises{' '}
+            <code>HalfEdgeInputFilterError</code>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-python">{`from medius import Class, CatchFilter, Device, InputKind
+
+with Device.find() as dev:
+    with dev.input_events(CatchFilter.all_input()) as inputs:
+        for ev in inputs:
+            if ev.kind == InputKind.MOTION:
+                print(f"{ev.ts_us:>10}  move {ev.dx},{ev.dy} wheel {ev.dz}")
+            else:
+                edge = "down" if ev.is_press else "up"
+                print(f"{ev.ts_us:>10}  {ev.usage!r} {edge}")
+                print("   still held:", inputs.held(Class.KEY))`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="timeline" data-search-target>
+        <Card>
+          <CardHeader title="Timeline" subtitle="Put box stamps on this machine's clock" />
+          <p>
+            A catch stamp is microseconds on a chip that booted before this process did. It wraps
+            every ~71.6 minutes and relates to no clock here. <code>Timeline</code> maps it onto one.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> on this machine's clock. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
+              <tr><td><code>reset(domain)</code></td><td>none</td><td>Forget one <A href="/bindings/python/types#clockdomain"><code>ClockDomain</code></A>'s rollover count and measured floor, for a chip that rebooted.</td></tr>
+              <tr><td><code>samples(domain)</code></td><td><code>int</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Feed every event in as it arrives, in order. Each domain is tracked separately, and the
+            mapping improves as it runs.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-python">{`from medius import CatchFilter, Device, Timeline
+
+with Device.find() as dev:
+    with dev.catch_events(CatchFilter.watch_axes()) as events, Timeline() as time:
+        for ev in events:
+            at = time.observe(ev)
+            print(f"{at.host_ns:>16} ns  box {at.box_us} us  +{at.excess_ns} jitter")`}</code></pre>
+          <p>
+            <code>excess_ns</code> is how much later than the measured floor the event arrived:
+            jitter, not latency.
+          </p>
         </Card>
       </div>
 
@@ -159,11 +341,10 @@ while running:
           <CardHeader title="No async" subtitle="Build it on the timeout / non-blocking reads" />
           <div class="callout callout--warning">
             <p>
-              The streams are synchronous. There are no <code>async def</code> or <code>await</code>{' '}
-              methods. To feed an event loop, drive it yourself: run <code>recv_timeout(ms)</code> or{' '}
+              The streams are synchronous: there are no <code>async def</code> or <code>await</code>{' '}
+              methods. To feed an event loop, run <code>recv_timeout(ms)</code> or{' '}
               <code>try_recv()</code> on a worker thread (or in{' '}
-              <a href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor" target="_blank" rel="noreferrer"><code>run_in_executor</code></a>) and hand
-              items to your loop. The pattern is the same in every binding; see{' '}
+              <a href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor" target="_blank" rel="noreferrer"><code>run_in_executor</code></a>). See{' '}
               <A href="/library/features/async">Async</A>.
             </p>
           </div>

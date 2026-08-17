@@ -112,25 +112,21 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            The <code>with_*</code> builders set what each query returns:{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>,{' '}
-            <A href="/library/requests#health"><code>query_health</code></A>, and the device-info queries{' '}
-            (<A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
-            <A href="/library/requests#caps"><code>caps</code></A>,{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>). <code>set_*</code> changes a live
-            fake in place to flip the version or health mid-test.{' '}
-            <A href="/library/types/structs#version"><code>Version</code></A>,{' '}
-            <A href="/library/types/structs#health"><code>Health</code></A>, and the device-info{' '}
-            <A href="/library/types/structs">structs</A> live on the types page, and{' '}
-            <code>Health::from_flags</code> builds one from the raw status byte.
+            The <code>with_*</code> builders set what each{' '}
+            <A href="/library/requests">query</A> returns. <code>set_*</code> changes a live fake in
+            place to flip the version or health mid-test.
+          </p>
+          <p>
+            The <A href="/library/types/structs">structs</A> they take live on the types page;{' '}
+            <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
+            from the raw status byte.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 3, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 4, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -146,49 +142,70 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Injecting inbound traffic" subtitle="push_log and push_raw" />
+          <CardHeader title="Injecting inbound traffic" subtitle="push_log, push_raw, and the three event pushes" />
           <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_motion(&self, seq: u8, dx: i16, dy: i16, dz: i16)</pre>
+          <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_usages(&self, seq: u8, usages: &[Usage])</pre>
+          <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, class: Class, direction: Direction, usages: &[Usage])</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn push_traffic(&self, seq: u8, ts_us: u32, clock: ClockDomain, class: CatchClass, id: u16, direction: Direction, flags: u8, true_len: u16, bytes: &[u8])</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            All put bytes on the inbound stream as if the box emitted them.{' '}
-            <code>push_log</code> frames a <code>LOG</code> line that surfaces on{' '}
-            <A href="/library/diagnostics#logs"><code>logs()</code></A> as a{' '}
-            <A href="/library/types/structs#log-line"><code>LogLine</code></A> ({' '}
-            <A href="/library/types/enums#log-level"><code>LogLevel</code></A> plus <code>text</code>);{' '}
-            <code>push_raw</code> sends arbitrary bytes. The two event calls feed the{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>: <code>push_motion</code>{' '}
-            arrives as a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A> (a{' '}
-            <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A>) and{' '}
-            <code>push_usages</code> as a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A> (a{' '}
-            <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>), with{' '}
-            <code>seq</code> as the rolling counter so a test can assert gap detection.
+            All put bytes on the inbound stream as if the box emitted them. The three event calls each
+            raise one <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant on
+            an <A href="/library/catch#event-stream"><code>EventStream</code></A>;{' '}
+            <code>push_log</code> raises a <A href="/library/types/structs#log-line"><code>LogLine</code></A>{' '}
+            on <A href="/library/diagnostics#logs"><code>logs()</code></A>, and <code>push_raw</code>{' '}
+            sends arbitrary bytes.
+          </p>
+
+          <p>
+            The <code>seq</code> counter is shared across all three, exactly as it is on the wire.
+          </p>
+          <p>
+            Real losses do not show up here. Exercise loss handling through{' '}
+            <code>CatchState::dropped</code> instead.
+          </p>
+          <p>
+            <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
+            <A href="/library/types/enums#clock-domain"><code>ClockDomain::HostChip</code></A>, the only
+            domain the box stamps those two frames in. <code>push_usages</code> carries its own{' '}
+            <code>class</code>, so a test can push the empty snapshot.
+          </p>
+          <p>
+            On <code>push_traffic</code>, <code>true_len</code> need not agree with{' '}
+            <code>bytes.len()</code>, which is how you exercise <code>truncated()</code> with no real
+            capture behind it.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;
-use medius::{CatchEvent, CatchMask, Device, Key, LogLevel, MockBox, Usage};
+use medius::{CatchClass, CatchEvent, CatchFilter, Class, ClockDomain, Device, Direction, Key,
+             LogLevel, MockBox, Usage};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
 let rx = device.logs();
 
 mock.push_log(LogLevel::Warn, "overheating");
-let line = rx.recv_timeout(Duration::from_secs(1))?;
+let line = rx.recv_timeout(Duration::from_secs(1)).expect("a log line");
 assert_eq!(line.text, "overheating");
 
 // Fake a catch subscription seeing the user hold A.
-let stream = device.catch_events(CatchMask::KEYS)?;
-mock.push_usages(0, &[Usage::from(Key::A)]);
-assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));`}</code></pre>
+let stream = device.catch_events([CatchFilter::watch_class(Class::Key)])?;
+mock.push_usages(0, 1_000, Class::Key, Direction::PRESS, &[Usage::from(Key::A)]);
+assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));
+
+// Fake a truncated vendor-interrupt capture: 4 bytes seen of a 64-byte packet.
+mock.push_traffic(
+    1, 2_000, ClockDomain::HostChip, CatchClass::VendorInterrupt, 0x83, Direction::IN,
+    0, 64, &[0x11, 0x22, 0x33, 0x44],
+);
+assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</code></pre>
         </Card>
       </div>
 

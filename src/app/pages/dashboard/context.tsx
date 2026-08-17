@@ -25,6 +25,7 @@ import {
   requestMediusPort,
 } from '../../../dashboard/serial';
 import type { FlashKind, FlashProgress } from '../../../dashboard/flash';
+import { type Poller, createPoller } from './poll';
 
 export type ConnectionStatus =
   | 'disconnected'
@@ -33,7 +34,8 @@ export type ConnectionStatus =
   | 'error'
   | 'flashing';
 
-// One physical-input event received on the CATCH stream, with its rolling box-side sequence.
+// One event received on the CATCH stream, with its rolling box-side sequence. The sequence is
+// shared across all three event frame types, so a gap is a drop regardless of which kind fell out.
 export interface InputEventEntry {
   seq: number;
   ev: CatchEvent;
@@ -49,7 +51,12 @@ export interface DashboardContextValue {
   link: Accessor<SerialLink | null>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  setHealth: (h: Health | null) => void;
+  // Subscribe a card to one box readback for as long as it is mounted. The poller owns the timer
+  // and shares one query across every card that wants the same value.
+  poll: Poller['subscribe'];
+  // Re-read a value now. Call it straight after writing that value, so the readout shows what was
+  // just set instead of the previous value until the next tick.
+  refreshPoll: Poller['refresh'];
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
   rebootDeviceToDownload: () => Promise<SerialPort>;
@@ -71,7 +78,8 @@ function formatLogLine(line: LogLine): string {
   return `[${LogLevel[line.level]}] ${line.text}`;
 }
 
-const DashboardContext = createContext<DashboardContextValue>();
+// Exported so a card can be mounted against a stand-in value without opening a serial port.
+export const DashboardContext = createContext<DashboardContextValue>();
 
 function isUserCancel(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'NotFoundError';
@@ -93,7 +101,6 @@ export const DashboardProvider: ParentComponent = (props) => {
   const secure = isSecureContextOk();
   const [status, setStatus] = createSignal<ConnectionStatus>('disconnected');
   const [version, setVersion] = createSignal<Version | null>(null);
-  const [health, setHealth] = createSignal<Health | null>(null);
   const [error, setError] = createSignal<string | null>(null);
   const [link, setLink] = createSignal<SerialLink | null>(null);
   const [flashProgress, setFlashProgress] = createSignal<FlashProgress | null>(null);
@@ -101,33 +108,13 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
   const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
 
-  const HEALTH_POLL_MS = 1000;
-  let healthTimer: ReturnType<typeof setTimeout> | null = null;
-  let polling = false;
-
-  const startHealthPolling = (l: SerialLink) => {
-    stopHealthPolling();
-    polling = true;
-    const tick = async () => {
-      // Bail if polling stopped or this tick belongs to a superseded link.
-      if (!polling || link() !== l) return;
-      try {
-        setHealth(await l.queryHealth());
-      } catch {
-        // A transient miss is fine; a real drop is handled by onClose.
-      }
-      if (polling && link() === l) healthTimer = setTimeout(() => void tick(), HEALTH_POLL_MS);
-    };
-    void tick();
-  };
-
-  const stopHealthPolling = () => {
-    polling = false;
-    if (healthTimer !== null) {
-      clearTimeout(healthTimer);
-      healthTimer = null;
-    }
-  };
+  // Every card's readback runs through one poller. It is fed a derived link rather than `link`
+  // itself so a flash silences it in one place: during a flash esptool owns a port and the control
+  // link must not be touched, and there is no start/stop call left to forget at a new call site.
+  const poller = createPoller(() => (status() === 'flashing' ? null : link()));
+  // The poller keeps health polled on its own as the link keepalive; this subscription is only for
+  // reading the value.
+  const health = poller.subscribe('health');
 
   const makeLink = (port: SerialPort): SerialLink => {
     const nl: SerialLink = new SerialLink(port, {
@@ -135,12 +122,11 @@ export const DashboardProvider: ParentComponent = (props) => {
       onEvent: (ev, seq) => setInputEvents((prev) => [...prev, { seq, ev }].slice(-200)),
       onClose: () => {
         if (link() !== nl) return;
-        stopHealthPolling();
         setStatus('disconnected');
         setVersion(null);
-        setHealth(null);
         setError(null);
         setLink(null);
+        poller.reset();
       },
     });
     return nl;
@@ -158,8 +144,8 @@ export const DashboardProvider: ParentComponent = (props) => {
         const v = await nl.handshake();
         setVersion(v);
         setLink(nl);
+        poller.reset();
         setStatus('connected');
-        startHealthPolling(nl);
         return true;
       } catch {
         try {
@@ -199,8 +185,10 @@ export const DashboardProvider: ParentComponent = (props) => {
       }
       setVersion(v);
       setLink(l);
+      // Cleared before the cards mount, so each slot is queried once rather than by both the reset
+      // and the first subscriber.
+      poller.reset();
       setStatus('connected');
-      startHealthPolling(l);
     } catch (e) {
       if (l) {
         try {
@@ -219,14 +207,16 @@ export const DashboardProvider: ParentComponent = (props) => {
   };
 
   const disconnect = async () => {
-    stopHealthPolling();
     const l = link();
+    // Status first. The cards unmount on it, and their cleanup releases what they are holding over
+    // a link that is still open; dropping the link first left every hold set on the game PC until
+    // the box's own silence timer caught it a second later.
+    setStatus('disconnected');
     setLink(null);
     setVersion(null);
-    setHealth(null);
     setError(null);
+    poller.reset();
     setFlashProgress(null);
-    setStatus('disconnected');
     if (l) await l.close();
   };
 
@@ -241,12 +231,11 @@ export const DashboardProvider: ParentComponent = (props) => {
     const l = link();
     if (!l) throw new Error('Connect to the box before updating.');
     const ctrlPort = l.serialPort;
-    stopHealthPolling();
     setError(null);
     setFlashLog([]);
     setLink(null);
     setVersion(null);
-    setHealth(null);
+    poller.reset();
     await l.reboot(RebootTarget.DeviceDownload);
     await l.close();
     // The control link is down and the chip is in ROM download; report it as
@@ -282,14 +271,14 @@ export const DashboardProvider: ParentComponent = (props) => {
       if (!reconnected) {
         setLink(null);
         setVersion(null);
-        setHealth(null);
+        poller.reset();
         setStatus('disconnected');
       }
       return true;
     } catch (e) {
       setLink(null);
       setVersion(null);
-      setHealth(null);
+      poller.reset();
       setError(describeError(e));
       setStatus('error');
       return false;
@@ -305,7 +294,6 @@ export const DashboardProvider: ParentComponent = (props) => {
   ): Promise<boolean> => {
     if (status() === 'flashing') return false;
     const hadLink = link();
-    if (hadLink) stopHealthPolling();
     setError(null);
     setFlashLog([]);
     setFlashProgress({ phase: 'connecting' });
@@ -320,21 +308,11 @@ export const DashboardProvider: ParentComponent = (props) => {
         onLog: (line) => setFlashLog((prev) => [...prev, line].slice(-500)),
       });
       setFlashProgress({ phase: 'done' });
-      if (hadLink) {
-        setStatus('connected');
-        startHealthPolling(hadLink);
-      } else {
-        setStatus('disconnected');
-      }
+      setStatus(hadLink ? 'connected' : 'disconnected');
       return true;
     } catch (e) {
       setError(describeError(e));
-      if (hadLink) {
-        setStatus('connected');
-        startHealthPolling(hadLink);
-      } else {
-        setStatus('error');
-      }
+      setStatus(hadLink ? 'connected' : 'error');
       return false;
     }
   };
@@ -352,7 +330,6 @@ export const DashboardProvider: ParentComponent = (props) => {
 
   onCleanup(() => {
     disposed = true;
-    stopHealthPolling();
     // Never close the port mid-flash; esptool owns it during the handoff.
     if (status() !== 'flashing') void link()?.close();
   });
@@ -367,7 +344,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     link,
     connect,
     disconnect,
-    setHealth,
+    poll: poller.subscribe,
+    refreshPoll: poller.refresh,
     flashProgress,
     flashLog,
     rebootDeviceToDownload,

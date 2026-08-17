@@ -15,8 +15,7 @@ const Troubleshooting: Component = () => {
           silent. The exception is{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A>, which asks for a piece
           of the box's state and gets back one{' '}
-          <A href="/native/commands/requests#resp"><code>RESP</code></A> frame. Most checks below use
-          that round-trip.
+          <A href="/native/commands/requests#resp"><code>RESP</code></A> frame.
         </p>
       </Card>
 
@@ -56,11 +55,13 @@ const Troubleshooting: Component = () => {
             <A href="/native/injection">Injection</A> is the input your program adds on top of the
             real mouse's passthrough (movement, buttons, scroll). If it has no effect, send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and read the{' '}
-            <code>flags</code> byte. The box only merges injection once the first three flags are set:{' '}
-            <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a mouse is on{' '}
-            <A href="/native/hardware"><code>USB3</code></A>), and <code>CLONE_CONFIGURED</code> (the
-            PC has enumerated the clone). The full flags byte is on{' '}
-            <A href="/native/commands/requests#health">HEALTH</A>.
+            <code>flags</code> byte.
+          </p>
+          <p>
+            The box only merges injection once <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a
+            mouse is on <A href="/native/hardware"><code>USB3</code></A>), and{' '}
+            <code>CLONE_CONFIGURED</code> (the PC has enumerated the clone) are all set. The full
+            flags byte is on <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
       </div>

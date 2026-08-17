@@ -14,8 +14,7 @@ const Usage: Component = () => {
           <code>id</code>, and the numbers depend on the class: a{' '}
           <A href="/native/commands/usage#buttons">button id</A> for the mouse, a{' '}
           <A href="/native/commands/usage#keycodes">HID keyboard usage</A> for a key, or a 16-bit{' '}
-          <A href="/native/commands/usage#consumer">Consumer usage</A> for a media key. They're
-          gathered here so the command pages stay short.
+          <A href="/native/commands/usage#consumer">Consumer usage</A> for a media key.
         </p>
       </Card>
 
@@ -25,9 +24,7 @@ const Usage: Component = () => {
           <p>
             A small semantic id, bound at clone time to the real mouse's buttons, and the same id for{' '}
             <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> (a button locks as{' '}
-            <code>class = 0</code>, <code>id = button id</code>, the same <code>(class, id)</code> form a
-            key or media usage takes). A command for an
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A>. A command for an
             id the mouse lacks is a no-op, so read{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
             <code>n_buttons</code> first.
@@ -74,7 +71,6 @@ const Usage: Component = () => {
               <tr><td>Right / Left / Down / Up</td><td><code>0x4F</code> / <code>0x50</code> / <code>0x51</code> / <code>0x52</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MODIFIERS</div>
           <table class="api-params">
             <thead><tr><th>Modifier</th><th>Usage</th></tr></thead>
             <tbody>
