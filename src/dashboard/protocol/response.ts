@@ -30,6 +30,7 @@ import {
   CLIP_CFG_F_FINALIZED,
   CLIP_CFG_F_LOOP,
   CLIP_CFG_F_RETAIN,
+  CLIP_CFG_F_RIDE,
   CLIP_HELD_MAX,
   CLIP_TRIG_LEN,
   CLIP_TRIG_MAX,
@@ -297,6 +298,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           loop: (flags & CLIP_CFG_F_LOOP) !== 0,
           retain: (flags & CLIP_CFG_F_RETAIN) !== 0,
           finalized: (flags & CLIP_CFG_F_FINALIZED) !== 0,
+          ride: (flags & CLIP_CFG_F_RIDE) !== 0,
           triggers,
         },
       };

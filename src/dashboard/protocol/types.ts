@@ -656,6 +656,8 @@ export interface ClipStatus {
   loop: boolean;
   retain: boolean;
   finalized: boolean;
+  // Whether the clip's motion waits to ride a native report (CLIP_SET ride). Off = the box's own clock.
+  ride: boolean;
   triggers: ClipTrigger[];
 }
 

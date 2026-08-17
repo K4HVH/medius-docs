@@ -11,6 +11,12 @@ export const INJ_MEDIA = 2;
 export const MOTION_CURSOR = 0;
 export const MOTION_WHEEL = 1;
 
+// MOVE flags (§3.1): the per-command movement-riding override. Applied DISCARD, then FLUSH, then the
+// delta; FLUSH and DISCARD together contradict and the box refuses the frame.
+export const MV_F_NOW = 0x01;
+export const MV_F_FLUSH = 0x02;
+export const MV_F_DISCARD = 0x04;
+
 export const Q_VERSION = 0;
 export const Q_HEALTH = 1;
 export const Q_DEVICE_INFO = 2;
@@ -40,6 +46,7 @@ export enum ClipOp {
 export const CLIP_SET_AUTOLOCK = 0; // value = CLIP_LOCK_* scope bits
 export const CLIP_SET_LOOP = 1; // value != 0
 export const CLIP_SET_RETAIN = 2; // value != 0 (0 = streaming, the default)
+export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a native report (0 = the box's own clock, the default)
 
 // CLIP_TRIGGER binding set (§3.11), shaped like LOCK. Keyed by (class, id, edge).
 export const CLIP_TRIG_MAX = 8;
@@ -73,6 +80,7 @@ export enum ClipState {
 export const CLIP_CFG_F_LOOP = 0x01;
 export const CLIP_CFG_F_RETAIN = 0x02;
 export const CLIP_CFG_F_FINALIZED = 0x04;
+export const CLIP_CFG_F_RIDE = 0x08;
 
 // Clip entry tags (§3.11). Tag 0 is a gap run; a content tick's tag is a nonzero field-flags byte,
 // which is why a fieldless content tick cannot be encoded: it would read back as a gap.

@@ -30,22 +30,24 @@ export function queryPayload(what: number): Uint8Array {
   return new Uint8Array([what]);
 }
 
-// MOVE cursor (§3.1): [motion=0][dx i16 LE][dy i16 LE]. Saturated to the i16 the wire carries; the
-// box then clamps that to the cloned report's field width and carries the remainder into the next
-// emit.
-export function moveCursorPayload(dx: number, dy: number): Uint8Array {
-  const out = new Uint8Array(5);
+// MOVE cursor (§3.1): [motion=0][dx i16 LE][dy i16 LE][flags]. Saturated to the i16 the wire carries;
+// the box then clamps that to the cloned report's field width and carries the remainder into the next
+// emit. `flags` is the movement-riding override (MV_F_*), 0 for an ordinary move.
+export function moveCursorPayload(dx: number, dy: number, flags = 0): Uint8Array {
+  const out = new Uint8Array(6);
   out[0] = MOTION_CURSOR;
   new DataView(out.buffer).setInt16(1, clampI16(dx), true);
   new DataView(out.buffer).setInt16(3, clampI16(dy), true);
+  out[5] = flags & 0x07;
   return out;
 }
 
-// MOVE wheel (§3.1): [motion=1][dz i16 LE].
-export function moveWheelPayload(dz: number): Uint8Array {
-  const out = new Uint8Array(3);
+// MOVE wheel (§3.1): [motion=1][dz i16 LE][flags].
+export function moveWheelPayload(dz: number, flags = 0): Uint8Array {
+  const out = new Uint8Array(4);
   out[0] = MOTION_WHEEL;
   new DataView(out.buffer).setInt16(1, clampI16(dz), true);
+  out[3] = flags & 0x07;
   return out;
 }
 

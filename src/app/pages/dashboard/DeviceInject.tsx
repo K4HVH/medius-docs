@@ -7,6 +7,7 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
+import { Checkbox } from '../../../components/inputs/Checkbox';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import {
   type Usage,
@@ -22,7 +23,7 @@ import {
 import { useDashboard } from './context';
 import { UsageChips, UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
-import { chips, label, muted, row, section } from './ui';
+import { checkColumn, chips, label, muted, row, section } from './ui';
 
 const CLASSES: PickerClass[] = [
   { value: INJ_BTN, label: 'Button', table: BUTTONS },
@@ -61,6 +62,10 @@ const DeviceInject = () => {
 
   const [step, setStep] = createSignal(20);
   const [detents, setDetents] = createSignal(1);
+  // With movement riding on, an ordinary move waits for a real cursor report to carry it, so nothing
+  // this card sends reaches the game PC while the real mouse sits still. Bypassing sends it on the
+  // box's own clock instead. With riding off it changes nothing.
+  const [bypass, setBypass] = createSignal(false);
   const [pick, setPick] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [holds, setHolds] = createSignal<Hold[]>([]);
   const [dragging, setDragging] = createSignal(false);
@@ -189,15 +194,20 @@ const DeviceInject = () => {
     last = { x: e.clientX, y: e.clientY };
     if (dx === 0 && dy === 0) return;
     setMoved((m) => ({ dx: m.dx + dx, dy: m.dy + dy }));
-    void link()
-      ?.moveRel(dx, dy)
-      .catch((x: unknown) => setErr(x instanceof Error ? x.message : String(x)));
+    void moveCursor(dx, dy);
   };
 
   const endDrag = () => {
     last = null;
     setDragging(false);
   };
+
+  const fail = (x: unknown) => setErr(x instanceof Error ? x.message : String(x));
+
+  const moveCursor = (dx: number, dy: number) =>
+    (bypass() ? link()?.moveRelNow(dx, dy) : link()?.moveRel(dx, dy))?.catch(fail);
+
+  const scroll = (dz: number) => (bypass() ? link()?.wheelNow(dz) : link()?.wheel(dz))?.catch(fail);
 
   const onPadUp = (e: PointerEvent & { currentTarget: HTMLDivElement }) => {
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -252,19 +262,39 @@ const DeviceInject = () => {
                 onChange={(v) => setStep(v ?? 1)}
               />
             </div>
-            <Button variant="secondary" onClick={() => void link()?.moveRel(-step(), 0)}>
+            <Button variant="secondary" onClick={() => void moveCursor(-step(), 0)}>
               Move left
             </Button>
-            <Button variant="secondary" onClick={() => void link()?.moveRel(step(), 0)}>
+            <Button variant="secondary" onClick={() => void moveCursor(step(), 0)}>
               Move right
             </Button>
-            <Button variant="secondary" onClick={() => void link()?.moveRel(0, -step())}>
+            <Button variant="secondary" onClick={() => void moveCursor(0, -step())}>
               Move up
             </Button>
-            <Button variant="secondary" onClick={() => void link()?.moveRel(0, step())}>
+            <Button variant="secondary" onClick={() => void moveCursor(0, step())}>
               Move down
             </Button>
           </div>
+
+          <div style={checkColumn}>
+            <Checkbox
+              label="Bypass movement riding"
+              checked={bypass()}
+              onChange={setBypass}
+            />
+          </div>
+          <div style={{ ...section, ...row }}>
+            <Button variant="secondary" onClick={() => void link()?.flushMotion()?.catch(fail)}>
+              Send held motion
+            </Button>
+            <Button variant="secondary" onClick={() => void link()?.discardMotion()?.catch(fail)}>
+              Drop held motion
+            </Button>
+          </div>
+          <p style={muted}>
+            While movement riding is on the box holds injected motion until the real mouse moves. These
+            send it now or throw it away; the checkbox does the same per move.
+          </p>
 
           </Show>
         </Section>
@@ -281,10 +311,10 @@ const DeviceInject = () => {
                 onChange={(v) => setDetents(v ?? 1)}
               />
             </div>
-            <Button variant="secondary" onClick={() => void link()?.wheel(detents())}>
+            <Button variant="secondary" onClick={() => void scroll(detents())}>
               Scroll up
             </Button>
-            <Button variant="secondary" onClick={() => void link()?.wheel(-detents())}>
+            <Button variant="secondary" onClick={() => void scroll(-detents())}>
               Scroll down
             </Button>
           </div>

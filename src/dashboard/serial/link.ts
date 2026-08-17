@@ -65,6 +65,9 @@ import {
   moveCursorPayload,
   moveWheelPayload,
   moveRidePayload,
+  MV_F_DISCARD,
+  MV_F_FLUSH,
+  MV_F_NOW,
   namePayload,
   parseLog,
   parseMotionEvent,
@@ -302,13 +305,34 @@ export class SerialLink {
   // Move the cursor (§3.1). Relative, in the cloned mouse's own units. The wire field is an i16, so
   // a larger delta saturates here rather than wrapping; the box then clamps that to the cloned
   // report's own field width and carries the remainder into later reports.
-  moveRel(dx: number, dy: number): Promise<void> {
-    return this.send(encode(FrameType.Move, this.nextSeq(), moveCursorPayload(dx, dy)));
+  moveRel(dx: number, dy: number, flags = 0): Promise<void> {
+    return this.send(encode(FrameType.Move, this.nextSeq(), moveCursorPayload(dx, dy, flags)));
   }
 
   // Scroll the wheel (§3.1), in detents, same carry behaviour as `moveRel`.
-  wheel(dz: number): Promise<void> {
-    return this.send(encode(FrameType.Move, this.nextSeq(), moveWheelPayload(dz)));
+  wheel(dz: number, flags = 0): Promise<void> {
+    return this.send(encode(FrameType.Move, this.nextSeq(), moveWheelPayload(dz, flags)));
+  }
+
+  // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta emits on the box's
+  // own clock instead of waiting for a native cursor-motion report to carry it. With riding off these
+  // are the same as `moveRel` / `wheel`.
+  moveRelNow(dx: number, dy: number): Promise<void> {
+    return this.moveRel(dx, dy, MV_F_NOW);
+  }
+
+  wheelNow(dz: number): Promise<void> {
+    return this.wheel(dz, MV_F_NOW);
+  }
+
+  // Emit the motion the box is holding for a ride, now, ignoring the ride window (§3.1, MV_F_FLUSH).
+  flushMotion(): Promise<void> {
+    return this.moveRel(0, 0, MV_F_FLUSH);
+  }
+
+  // Drop the motion the box is holding for a ride (§3.1, MV_F_DISCARD).
+  discardMotion(): Promise<void> {
+    return this.moveRel(0, 0, MV_F_DISCARD);
   }
 
   // Inject a mouse button by semantic id (§3.2, class button), tri-state action (0/1/2).
@@ -451,7 +475,7 @@ export class SerialLink {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }
 
-  // Write one clip scalar setting (§3.11): autolock scope, loop, or retain. Two of the three are
+  // Write one clip scalar setting (§3.11): autolock scope, loop, retain, or ride. Two of the four are
   // coerced by the box with no reply: retain is ignored unless the ring is empty, and the autolock
   // scope is masked to the defined bits. Read the value back to see what landed.
   clipSet(id: number, value: number): Promise<void> {
