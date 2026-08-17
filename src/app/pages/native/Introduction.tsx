@@ -13,11 +13,15 @@ const NativeIntroduction: Component = () => {
         />
         <p>
           Medius is replacement firmware for MAKCU-class USB input-passthrough boxes plus an open
-          binary control protocol. The box sits inline between a USB device and a PC: the real device
-          (mouse, keyboard, or combo) passes through unchanged while your program injects input of its
-          own (cursor and buttons for a mouse, keys and media for a keyboard) over a separate
-          USB-serial link. Drive it from any language; the Rust <A href="/library">library</A> is the
-          official client.
+          binary control protocol.
+        </p>
+        <p>
+          The box sits inline between a USB device and a PC. The real device (mouse, keyboard, or
+          combo) passes through unchanged while your program injects over a separate USB-serial
+          link: cursor and buttons for a mouse, keys and media for a keyboard.
+        </p>
+        <p>
+          Drive it from any language; the Rust <A href="/library">library</A> is the official client.
         </p>
         <table class="api-params">
           <thead>

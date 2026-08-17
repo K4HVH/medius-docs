@@ -9,10 +9,7 @@ const Usage: Component = () => {
       <Card>
         <CardHeader title="Calls & errors" subtitle="The C-specific shapes: status codes, handle lifecycle, builders" />
         <p>
-          This page covers what's specific to C: how a failed call surfaces, who frees a handle, and
-          how you build the generic <A href="/library/inject"><code>inject</code></A> /{' '}
-          <A href="/library/move"><code>move</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
-          targets. What each call <em>does</em> lives in the <A href="/library">Rust Library</A> and{' '}
+          What each call <em>does</em> lives in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A> sections. The full call list is on the{' '}
           <A href="/bindings/c/api">API index</A>; structs and enums are on{' '}
           <A href="/bindings/c/types">Types &amp; errors</A>.
@@ -105,12 +102,11 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
           <CardHeader title="Lifecycle" subtitle="Opaque pointers, manual free, no RAII or GC" />
           <p>
             Handles are opaque pointers you own. There's no destructor or{' '}
-            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>:
-            a constructor hands you a pointer, <code>medius_*_clone</code> makes another owner of the{' '}
-            <em>same</em> underlying object (reference-counted, like <code>Device::clone</code> in Rust),
-            and you must call the matching <code>medius_*_free</code> on every handle you hold. See{' '}
-            <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>{' '}
-            for what the link does between open and free.
+            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>:{' '}
+            <code>medius_*_clone</code> makes another owner of the{' '}
+            <em>same</em> underlying object (reference-counted), and you must call the matching{' '}
+            <code>medius_*_free</code> on every handle you hold. See{' '}
+            <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
           </p>
           <pre class="diagram">{`  medius_device_open / _find  ──▶  MediusDevice *    (you own it)
                                         │  medius_device_clone
@@ -186,11 +182,14 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
             <p>
               <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
               a no-op, so cleanup paths don't need null checks. Freeing a stream unsubscribes when its
-              last handle drops; catch events and log lines are fixed-size structs written into your
-              buffer, so there's nothing to free per event. Captured packet bytes are no exception: a{' '}
-              <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds them
-              in an inline <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> array with a <code>len</code>{' '}
-              beside it, so a copied event owns nothing and outlives the stream it came from.
+              last handle drops.
+            </p>
+            <p>
+              Catch events and log lines are fixed-size structs written into your
+              buffer, so there's nothing to free per event. A{' '}
+              <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds
+              captured bytes inline in <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> with a{' '}
+              <code>len</code> beside it, so a copied event owns nothing and outlives its stream.
             </p>
           </div>
         </Card>
@@ -206,7 +205,10 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
             <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, plus{' '}
             <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>, each with a
-            helper constructor. A <code>MediusUsage</code> holds a{' '}
+            helper constructor.
+          </p>
+          <p>
+            A <code>MediusUsage</code> holds a{' '}
             <A href="/native/commands/usage#buttons">button id</A>,{' '}
             <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
             <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
@@ -273,8 +275,11 @@ medius_device_catch_events(dev, filters, 2, &events);   /* the array is not reta
           <div class="callout callout--warning">
             <p>
               Locking and catching are separate subscriptions over the same address vocabulary, so the
-              same usage can be in both: catch is sampled before lock suppression, so a locked input
-              still reports. The classes above the four input ones have no lock equivalent. See{' '}
+              same usage can be in both. Catch is sampled before lock suppression, so a locked input
+              still reports.
+            </p>
+            <p>
+              The classes above the four input ones have no lock equivalent. See{' '}
               <A href="/bindings/c/streams">Streams</A> for what comes back.
             </p>
           </div>

@@ -61,8 +61,8 @@ device.move_axis(Motion::Wheel(1))?;                  // one notch up`}</code></
             </tbody>
           </table>
           <p>
-            Offsets are mouse counts, not pixels, scaled by the OS pointer-speed and acceleration
-            curve. Both span the full <code>i16</code> range (<code>-32768 to 32767</code>).
+            Counts are not pixels: the OS pointer-speed and acceleration curve scale them. Both span
+            the full <code>i16</code> range (<code>-32768 to 32767</code>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.move_rel(20, 20)?;  // right and down

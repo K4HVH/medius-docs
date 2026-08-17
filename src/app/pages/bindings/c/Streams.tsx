@@ -106,11 +106,13 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
           </p>
           <div class="callout callout--info">
             <p>
-              The control link runs at 4 Mbaud, and vendor bulk alone measures 250 KiB/s through the
-              box, so subscribing to everything at full length cannot be delivered. Delivery is four
-              strict-priority queues (input and bus, then the other traffic classes, then control, then
-              vendor bulk), and bulk can starve entirely under a busy mouse. Address what you actually
-              want, and use <code>capture</code> to buy headroom for the rest.
+              The control link runs at 4 Mbaud and vendor bulk alone measures 250 KiB/s through the
+              box, so subscribing to everything at full length cannot be delivered.
+            </p>
+            <p>
+              Delivery is four strict-priority queues (input and bus, then the other traffic classes,
+              then control, then vendor bulk), and bulk can starve entirely under a busy mouse. Use{' '}
+              <code>capture</code> to buy headroom.
             </p>
           </div>
         </Card>
@@ -152,14 +154,16 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
             <code>medius_event_stream_recv</code> fills a{' '}
             <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>: a{' '}
             <code>kind</code> tag plus a{' '}
-            <a href="https://en.cppreference.com/w/c/language/union" target="_blank" rel="noreferrer">union</a>. Read the union arm that matches <code>kind</code>.
-            Every variable-length payload is an inline array with a count beside it, never a pointer:
-            the usage list is fixed at{' '}
-            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> (256) and a
-            captured packet at <code>MEDIUS_MAX_TRAFFIC_BYTES</code> (180), so an event you copy stays
-            valid and nothing needs freeing. It holds class-tagged{' '}
-            <A href="/bindings/c/types#input"><code>MediusUsage</code></A> usages
+            <a href="https://en.cppreference.com/w/c/language/union" target="_blank" rel="noreferrer">union</a>. A usage arm holds class-tagged{' '}
+            <A href="/bindings/c/types#input"><code>MediusUsage</code></A> values
             (a button, key, or media <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage</a>).
+          </p>
+          <p>
+            Every variable-length payload is an inline array with a count beside it, never a pointer:
+            the usage list caps at{' '}
+            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> (256), a
+            captured packet at <code>MEDIUS_MAX_TRAFFIC_BYTES</code> (180). An event you copy stays
+            valid, and nothing needs freeing.
           </p>
           <pre><code class="language-c">{`typedef struct MediusCatchEvent {
     MediusCatchEventKind kind;          // MOTION=0, USAGES=1, TRAFFIC=2
@@ -391,11 +395,10 @@ medius_timeline_free(tl);`}</code></pre>
           <div class="callout callout--warning">
             <p>
               The <A href="/bindings/c">C ABI</A> is synchronous; there's no <A href="/library/features/async">async</A> API.
-              For a single-threaded event loop, poll with{' '}
-              <code>medius_event_stream_try_recv</code> or block with a budget using{' '}
-              <code>medius_event_stream_recv_timeout</code>; or run the blocking{' '}
-              <code>recv</code> loop on its own thread. Catch and log handles clone, so each thread can
-              hold its own; an input stream does not, because it owns the held sets it diffs.
+              Poll with <code>medius_event_stream_try_recv</code>, block with a budget using{' '}
+              <code>medius_event_stream_recv_timeout</code>, or run the blocking{' '}
+              <code>recv</code> loop on its own thread. Catch and log handles clone; an input stream
+              does not.
             </p>
           </div>
         </Card>

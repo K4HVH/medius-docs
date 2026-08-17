@@ -9,21 +9,25 @@ const Clip: Component = () => {
       <Card>
         <CardHeader title="CLIP" subtitle="Preload input and let the box play it back, frame by frame" />
         <p>
-          <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> preloads a sequence of per-frame
-          entries into a ring on the box, then{' '}
-          <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> drives the playback engine and the box
-          drains one entry per native frame into the same{' '}
-          <A href="/native/injection#state">injection state</A> that{' '}
+          A clip is a ring of per-frame entries on the box. The box drains one entry per native frame
+          into the same <A href="/native/injection#state">injection state</A> that{' '}
           <A href="/native/commands/inject"><code>INJECT</code></A> and{' '}
-          <A href="/native/commands/move"><code>MOVE</code></A> feed. Playback is box-clocked, so it carries no
-          host scheduling jitter and no per-command send floor. Like{' '}
-          <A href="/native/commands/inject"><code>INJECT</code></A> it is field-generic and{' '}
-          <A href="/native/injection#state">additive</A>: one clip mixes mouse motion, buttons, keyboard, and
-          media, each routed to its own interface, and follows{' '}
+          <A href="/native/commands/move"><code>MOVE</code></A> feed.
+        </p>
+        <p>
+          Playback is box-clocked: no host scheduling jitter, no per-command send floor.
+        </p>
+        <p>
+          Like <A href="/native/commands/inject"><code>INJECT</code></A> a clip is field-generic and{' '}
+          <A href="/native/injection#state">additive</A>: one clip mixes mouse motion, buttons,
+          keyboard, and media, each routed to its own interface, and it follows{' '}
           <A href="/native/commands/option#move-ride">movement riding</A> and{' '}
-          <A href="/native/commands/option#emit">the emit rate</A>. A clip needs a
-          cloned mouse, whose native report tick is the box's frame clock; read the ring depth, playback state,
-          and settings back with <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+          <A href="/native/commands/option#emit">the emit rate</A>.
+        </p>
+        <p>
+          A clip needs a cloned mouse, whose native report tick is the box's frame clock. Read the ring
+          depth, playback state, and settings back with{' '}
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
         </p>
         <div class="api-response-label">TWO MODES</div>
         <p>
@@ -78,8 +82,7 @@ const Clip: Component = () => {
           </p>
           <div class="api-response-label">GAP RUN</div>
           <p>
-            Emit nothing for <code>count</code> frames. The endpoint NAKs, byte-identical to an idle mouse, so
-            a gap is the faithful way to hold still or pace between actions.
+            Emit nothing for <code>count</code> frames. The endpoint NAKs, byte-identical to an idle mouse.
           </p>
           <table class="byte-table">
             <thead>
@@ -92,8 +95,8 @@ const Clip: Component = () => {
           </table>
           <div class="api-response-label">CONTENT TICK</div>
           <p>
-            A motion delta and/or a list of edges applied on one frame. The <code>flags</code> byte (nonzero,
-            so it can't be mistaken for a gap tag) selects which fields follow.
+            A motion delta and/or a list of edges applied on one frame. The <code>flags</code> byte
+            selects which fields follow, and is nonzero so it can't be mistaken for a gap tag.
           </p>
           <table class="byte-table">
             <thead>
@@ -140,8 +143,7 @@ const Clip: Component = () => {
           <div class="api-response-label">MOTION AND EDGES ON ONE TICK</div>
           <p>
             Set several flag bits and the fields stack in a single tick, so a move and a press land on the
-            same frame and the PC sees one report. That is what keeps "aim and hold fire" faithful: motion
-            every frame, the fire button pressed on the frame it goes down.
+            same frame and the PC sees one report.
           </p>
           <pre class="diagram">{`05 0A 00 FC FF 01 00 00 00 01
    flags=XY|EDGES   dx=+10 dy=-4   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
@@ -191,19 +193,26 @@ const Clip: Component = () => {
           <p>
             The frame <A href="/native/frame#seq"><code>SEQ</code></A> doubles as an append sequence
             number: the box expects each <code>CLIP_APPEND</code> to be the previous <code>SEQ</code> plus one.
-            Because the link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, a lost frame
-            shows up as a <code>SEQ</code> gap, and the box marks the clip <code>faulted</code> in{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> so the host re-syncs
-            (<code>CLEAR</code>, then rebuild) instead of playing a stream with a hole in it. Pack whole entries
-            per frame; never split one entry across two appends.
+          </p>
+          <p>
+            The link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so a lost frame
+            shows up as a <code>SEQ</code> gap and the box marks the clip <code>faulted</code> in{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. Recover with{' '}
+            <code>CLEAR</code>, then rebuild.
+          </p>
+          <p>
+            Pack whole entries per frame; never split one entry across two appends.
           </p>
           <div class="api-response-label">FLOW CONTROL</div>
           <p>
             An append that doesn't fit the ring is dropped whole and faults the clip, never written as a
-            partial entry that would desync the stream. Keep an append under{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes to
-            avoid it: in streaming mode the box drains from the head while you append to the tail, so a
-            real-time host tops up as <code>free</code> opens back up.
+            partial entry.
+          </p>
+          <p>
+            Keep an append under{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes.
+            In streaming mode the box drains from the head while you append to the tail, so{' '}
+            <code>free</code> opens back up as it plays.
           </p>
           <pre class="diagram">{`  the ring, read by QUERY(CLIP):
 
@@ -235,8 +244,8 @@ const Clip: Component = () => {
           <CardHeader title="CLIP_CTRL" subtitle="Drive the playback engine" />
           <p>
             One byte of <code>op</code> selects an engine verb. <A href="/native/frame#opcodes">Opcode</A>{' '}
-            <code>0x13</code>. There are no args: settings live on{' '}
-            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>, so a control frame is just the verb.
+            <code>0x13</code>. There are no args; settings live on{' '}
+            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.
           </p>
           <pre class="api-signature">CLIP_CTRL  0x13  ·  payload [op u8]</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -277,7 +286,10 @@ const Clip: Component = () => {
           <p>
             In streaming mode, if the ring drains with no <code>FINALIZE</code>, the box idles (NAKs, holding
             its levels) and stays <code>playing</code> until you refill it; a topping-up host or any keepalive
-            holds the clip alive. A finalized clip ends when the ring empties, or replays from the head if{' '}
+            holds the clip alive.
+          </p>
+          <p>
+            A finalized clip ends when the ring empties, or replays from the head if{' '}
             <A href="/native/commands/clip#set"><code>loop</code></A> is set.
           </p>
           <div class="api-response-label">STOPS ON</div>
@@ -289,10 +301,12 @@ link loss   the inter-chip link drops`}</pre>
           <p>
             Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss) also flushes the
-            ring. The <A href="/native/injection#safety">1&nbsp;s safety net</A> and a{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> reach a clip like any other injection.
+            ring. The <A href="/native/injection#safety">1&nbsp;s safety net</A> reaches a clip like any
+            other injection.
+          </p>
+          <p>
             With <A href="/native/commands/option#move-ride">movement riding</A> on, clip motion rides native
-            reports and is additive to the user's own movement, so the frame-exact use case runs riding off.
+            reports and is additive to the user's own movement, so frame-exact playback wants riding off.
           </p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
@@ -310,9 +324,8 @@ link loss   the inter-chip link drops`}</pre>
         <Card>
           <CardHeader title="CLIP_SET" subtitle="Set a clip setting" />
           <p>
-            Set one of the clip's settings, <A href="/native/commands/option">OPTION</A>-shaped:{' '}
-            an <code>id</code> byte picks the setting, a <code>value</code> byte carries it. A setting sticks
-            until you change it or the clip is torn down; read them all back with{' '}
+            Set one of the clip's settings, <A href="/native/commands/option">OPTION</A>-shaped. A setting
+            sticks until you change it or the clip is torn down; read them all back with{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x14</code>.
           </p>
@@ -332,8 +345,8 @@ link loss   the inter-chip link drops`}</pre>
           <div class="api-response-label">AUTO-LOCK</div>
           <p>
             The <code>autolock</code> value is a bitmask of the physical-input classes <code>START</code> locks
-            while the clip plays (clip-owned, released on <code>STOP</code>), leaving the ones you don't name
-            free. A host <A href="/native/commands/lock"><code>LOCK</code></A> is untouched. <code>0</code> = no
+            while the clip plays, clip-owned and released on <code>STOP</code>. A host{' '}
+            <A href="/native/commands/lock"><code>LOCK</code></A> is untouched. <code>0</code> = no
             auto-lock; <code>0x1F</code> = every class.
           </p>
           <table class="api-params">
@@ -366,9 +379,12 @@ link loss   the inter-chip link drops`}</pre>
           <CardHeader title="CLIP_TRIGGER" subtitle="Bind a physical edge to an engine verb" />
           <p>
             Fire a <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> verb the instant the user
-            physically moves an input (the same physical edge{' '}
-            <A href="/native/commands/catch"><code>CATCH</code></A> reports), with no host round-trip, so even
-            the first emitted frame is box-timed. Triggers are a{' '}
+            physically moves an input, the same physical edge{' '}
+            <A href="/native/commands/catch"><code>CATCH</code></A> reports. There's no host round-trip, so
+            even the first emitted frame is box-timed.
+          </p>
+          <p>
+            Triggers are a{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A>-shaped managed set of up to eight bindings,
             keyed by <code>(class, id, edge)</code>. <A href="/native/frame#opcodes">Opcode</A>{' '}
             <code>0x15</code>.
@@ -415,10 +431,16 @@ link loss   the inter-chip link drops`}</pre>
             </tbody>
           </table>
           <p>
-            A binding is keyed by <code>(class, id, edge)</code>, so re-sending the same key replaces it and
-            clearing <code>present</code> removes it. To wipe the whole set in one frame send the clear-all
-            sentinel: <code>class = 0xFF</code>, <code>id = 0xFFFF</code>, <code>edge = 0</code> (both),{' '}
-            <code>flags = 0</code>. Preload the ring (and, for a replayable macro, mark it{' '}
+            Re-sending the same <code>(class, id, edge)</code> key replaces that binding; clearing{' '}
+            <code>present</code> removes it.
+          </p>
+          <p>
+            To wipe the whole set in one frame send the clear-all sentinel:{' '}
+            <code>class = 0xFF</code>, <code>id = 0xFFFF</code>, <code>edge = 0</code> (both),{' '}
+            <code>flags = 0</code>.
+          </p>
+          <p>
+            Preload the ring (and, for a replayable macro, mark it{' '}
             <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A>d) before you bind.
           </p>
           <p>

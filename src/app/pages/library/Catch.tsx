@@ -210,9 +210,9 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><th>Variant</th><th>Carries</th><th>Raised by</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>Motion(</code><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A><code>)</code></td><td>the relative axes of one physical report</td><td>an <code>Axis</code> filter</td></tr>
-              <tr><td><code>Usages(</code><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A><code>)</code></td><td>the held usages of one class, a full snapshot rather than edges</td><td>a <code>Button</code>, <code>Key</code>, or <code>Media</code> filter</td></tr>
-              <tr><td><code>Traffic(</code><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A><code>)</code></td><td>bytes, plus the address they came from</td><td>every other class</td></tr>
+              <tr><td><code>Motion(MotionEvent)</code></td><td>the relative axes of one physical report, as a <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>an <code>Axis</code> filter</td></tr>
+              <tr><td><code>Usages(UsageSnapshot)</code></td><td>the held usages of one class as a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>, a full snapshot rather than edges</td><td>a <code>Button</code>, <code>Key</code>, or <code>Media</code> filter</td></tr>
+              <tr><td><code>Traffic(TrafficEvent)</code></td><td>bytes plus the address they came from, as a <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>every other class</td></tr>
             </tbody>
           </table>
           <p>
@@ -232,14 +232,13 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
             The box drains through strict-priority queues. Vendor bulk can starve completely under a
             busy mouse: bulk-plus-input is what the control link cannot carry.
           </p>
-          <pre class="diagram">{`  Button Key Media Axis Bus       -->  [ queue 0 ]  --+
-                                                      |
-  HidIn HidOut VendorInterrupt                        |
-  Control Emit                    -->  [ queue 1 ]  --+--->  control link, 4 Mbaud
-                                                      |
-  VendorBulk                      -->  [ queue 2 ]  --+
+          <pre class="diagram">{`  Button Key Media Axis Bus    -->  [ queue 0 ]  --+
+  HidIn HidOut                                     |
+  VendorInterrupt Emit         -->  [ queue 1 ]  --+--->  control link, 4 Mbaud
+  Control                      -->  [ queue 2 ]  --+
+  VendorBulk                   -->  [ queue 3 ]  --+
 
-  queue 0 drains fully before queue 1, and 1 fully before 2`}</pre>
+  each queue drains fully before the next`}</pre>
         </Card>
       </div>
 

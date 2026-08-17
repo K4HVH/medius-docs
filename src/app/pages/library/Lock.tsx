@@ -10,8 +10,7 @@ const Lock: Component = () => {
         <CardHeader title="Lock" subtitle="Block one physical input; injection still drives it" />
         <p>
           A lock blocks the <em>physical</em> device from one input, while host{' '}
-          <A href="/native/injection">injection</A> still drives that same input. Lock what the user
-          shouldn't touch, then drive it yourself.
+          <A href="/native/injection">injection</A> still drives that same input.
         </p>
         <pre class="diagram">{`  a locked input:
      physical  --X   blocked
@@ -36,10 +35,9 @@ const Lock: Component = () => {
           <pre class="api-signature">fn lock(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> picks the input,{' '}
-            <A href="/library/types/enums#direction"><code>Direction</code></A> picks the sign or edge.
-            For an axis it is a sign; for a usage it is an edge, also spelled{' '}
-            <code>Direction::PRESS</code> and <code>Direction::RELEASE</code>.
+            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> picks the input and{' '}
+            <A href="/library/types/enums#direction"><code>Direction</code></A> picks the sign or edge,
+            also spelled <code>Direction::PRESS</code> and <code>Direction::RELEASE</code>.
           </p>
           <table class="api-params">
             <thead>
@@ -51,7 +49,7 @@ const Lock: Component = () => {
             </tbody>
           </table>
           <p>
-            A lock blocks the physical device only, and holds until you{' '}
+            A lock holds until you{' '}
             <A href="/library/lock#unlock"><code>unlock</code></A> it. The box also clears every lock on
             control-PC silence, on <A href="/library/admin#reset"><code>reset</code></A>, or on
             inter-chip link loss. See the native{' '}
@@ -76,7 +74,7 @@ device.move_rel(50, 0)?;                          // injection still moves X`}</
           <p>
             The inverse of <A href="/library/lock#lock"><code>lock</code></A>: same{' '}
             <code>target</code> and <code>direction</code>, but it clears the block instead of setting
-            it. Hand a physical input back to the user.
+            it.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
@@ -95,8 +93,7 @@ device.unlock(Axis::X, Direction::Both)?;   // hand horizontal motion back`}</co
           <p>
             Convenience for <A href="/library/lock#lock"><code>lock</code></A> /{' '}
             <A href="/library/lock#unlock"><code>unlock</code></A> with an{' '}
-            <A href="/library/types/enums#axis"><code>Axis</code></A>. The direction is a sign, so a
-            positive-only lock freezes scroll-up while scroll-down still passes.
+            <A href="/library/types/enums#axis"><code>Axis</code></A>, where the direction is a sign.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
@@ -117,8 +114,7 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
             Block an entire input group at once with a{' '}
             <A href="/library/types/enums#blanket"><code>Blanket</code></A> (<code>Aim</code>,{' '}
             <code>Wheel</code>, <code>Buttons</code>, <code>Keys</code>, or <code>Media</code>);{' '}
-            <code>direction</code> applies to the whole group. Injection still drives any field you choose
-            to.
+            <code>direction</code> applies to the whole group.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Blanket, Direction};

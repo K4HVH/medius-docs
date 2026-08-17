@@ -10,8 +10,7 @@ const Architecture: Component = () => {
         <Card>
           <CardHeader title="How it fits together" subtitle="Mouse, box, and PC" />
           <p>
-            The box has two chips joined by an internal link, plus a third port for your program. The
-            clone is a copy of the real mouse's USB identity.
+            The clone is a copy of the real mouse's USB identity.
           </p>
           <table class="api-params">
             <thead>
@@ -87,7 +86,7 @@ const Architecture: Component = () => {
           <p>
             To the PC the clone is the same model of mouse, with the same buttons and capabilities. Your
             input adds to the real mouse's input rather than replacing it (<A href="/native/injection">Injection
-            Model</A>), so the physical mouse keeps working either way.
+            Model</A>).
           </p>
           <table class="api-params">
             <thead>

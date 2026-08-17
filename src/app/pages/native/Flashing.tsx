@@ -9,8 +9,7 @@ const Flashing: Component = () => {
       <Card>
         <CardHeader title="Flashing" subtitle="Writing new firmware" />
         <p>
-          Flashing writes new firmware onto the box, to update or recover it. The box has two chips;
-          flash each separately. With firmware already running, no physical button is needed: a{' '}
+          With firmware already running, no physical button is needed: a{' '}
           <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> command restarts a chip into
           ROM download mode (a built-in loader that takes firmware over serial), then a flashing tool
           writes the image.

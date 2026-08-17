@@ -36,8 +36,7 @@ let dev = Device::open(&port.path)?;`}</code></pre>
           <p>
             <A href="/library/connection"><code>Device</code></A> is <code>Send + Sync</code> and clones
             cheaply (an <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html" target="_blank" rel="noreferrer"><code>Arc</code></a> inside),
-            so one connection serves any number of threads; a clone bumps the reference count and
-            doesn't reopen the port.
+            so one connection serves any number of threads; a clone doesn't reopen the port.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::thread;
@@ -79,10 +78,14 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
           <CardHeader title="Keepalive and holds" subtitle="Holding injected input past the silence window" />
           <p>
             The box clears every injected input and pending move once no frame arrives for its{' '}
-            <A href="/native/injection#safety">silence window</A>. A live <code>Device</code> holds your
-            overrides past that on its own: a background thread (<code>medius-keepalive</code>) sends a{' '}
-            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> every <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while
-            anything is held, so a press survives. There's no <code>keepalive()</code> to call.
+            <A href="/native/injection#safety">silence window</A>.
+          </p>
+          <p>
+            A <code>Device</code> holds your overrides past that itself: a background thread
+            (<code>medius-keepalive</code>) sends a{' '}
+            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> every{' '}
+            <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held. There's no{' '}
+            <code>keepalive()</code> to call.
           </p>
           <table class="api-params">
             <thead>
@@ -116,9 +119,9 @@ device.reset()?;`}</code></pre>
           <CardHeader title="Releasing the device" subtitle="Drop it; no close() call" />
           <p>
             There's no <code>close</code>: dropping the last{' '}
-            <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> tears the connection down. Its{' '}
+            <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> runs its{' '}
             <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
-            stops the threads and closes the port.
+            and tears the connection down.
           </p>
           <table class="api-params">
             <thead>

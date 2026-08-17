@@ -125,8 +125,7 @@ const Enums: Component = () => {
           </p>
           <p>
             The first four are <A href="/native/commands/lock"><code>LOCK</code></A>'s own classes at
-            the same byte values, so locking an input and catching it are the same two numbers. The
-            other seven address USB traffic and have no lock counterpart;{' '}
+            the same byte values. The other seven address USB traffic and have no lock counterpart;{' '}
             <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half on
             its own.
           </p>
@@ -148,12 +147,10 @@ const Enums: Component = () => {
           </table>
           <div class="api-response-label">BLANKETS AND THE WILDCARD</div>
           <p>
-            A blanket is one table entry, not an expansion into one per id, exactly as a{' '}
-            <A href="/library/types/enums#lock-scope"><code>LockScope::Blanket</code></A> is one lock.
-            The wire sentinels never appear in Rust:{' '}
-            <code>CatchFilter::watch_class(c)</code> and <code>traffic_class(c)</code> are the
-            per-class blankets, and <code>CatchFilter::everything()</code> is the wildcard over all
-            eleven, and is not a <code>CatchClass</code> variant.
+            A blanket is one table entry, not an expansion into one per id. The wire sentinels never
+            appear in Rust: <code>CatchFilter::watch_class(c)</code> and <code>traffic_class(c)</code>{' '}
+            are the per-class blankets, and <code>CatchFilter::everything()</code> is the wildcard
+            over all eleven, not a <code>CatchClass</code> variant.
           </p>
           <div class="api-response-label">BEFORE AND AFTER</div>
           <p>
@@ -166,9 +163,8 @@ const Enums: Component = () => {
                        |                                           |
           Button / Key / Media / Axis                            Emit`}</pre>
           <p>
-            The traffic classes tap the pipes themselves, each on whichever chip owns that pipe:{' '}
-            <code>HidIn</code> and the vendor IN directions on the host chip, everything else on the
-            device chip. That split is what each event's{' '}
+            The traffic classes tap the pipes themselves, each on whichever chip owns that pipe.
+            That split is what each event's{' '}
             <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> records.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -209,8 +205,7 @@ let trace = device.catch_events([
           <pre class="api-signature">enum Capture {'{'} Whole, First(u8) {'}'}</pre>
           <p>
             Traffic classes only. An input class carries no packet, so naming one together with a
-            capture is refused rather than ignored. It exists because the control link runs at
-            4&nbsp;Mbaud and a vendor bulk pipe at whole packets saturates it on its own.
+            capture is refused rather than ignored.
           </p>
           <p>
             A ceiling request, not a guarantee: the box holds one entry per address and cuts once, so
@@ -240,8 +235,7 @@ let trace = device.catch_events([
           <pre class="api-signature">struct Usage {'{'} class: Class, id: u16 {'}'}</pre>
           <p>
             What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
-            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks: a mouse button,
-            a keyboard key, or a media usage in one shape. A{' '}
+            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks. A{' '}
             <A href="/library/types/enums#button"><code>Button</code></A>,{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
@@ -269,8 +263,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <CardHeader title="Motion" subtitle="A relative axis for move_axis" />
           <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16) {'}'}</pre>
           <p>
-            What <A href="/library/move#move"><code>move_axis</code></A> drives: the cursor (carrying{' '}
-            <code>dx</code> and <code>dy</code>) or the wheel (a single delta). Both span the full{' '}
+            What <A href="/library/move#move"><code>move_axis</code></A> drives. Both span the full{' '}
             <code>i16</code> range. A lock names a single{' '}
             <A href="/library/types/enums#axis"><code>Axis</code></A> instead.
           </p>
@@ -288,7 +281,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <CardHeader title="Axis" subtitle="A single relative axis" />
           <pre class="api-signature">enum Axis {'{'} X, Y, Wheel {'}'}</pre>
           <p>
-            One relative axis, the input kind that is genuinely mouse-hardware-specific. A{' '}
+            One relative axis. A{' '}
             <A href="/library/lock#lock-axis"><code>lock_axis</code></A> or a{' '}
             <A href="/library/types/enums#lock-target"><code>LockTarget::Axis</code></A> names one, with
             the sign given by a <A href="/library/types/enums#direction"><code>Direction</code></A>.
@@ -389,9 +382,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <CardHeader title="LockTarget" subtitle="What a lock acts on" />
           <pre class="api-signature">enum LockTarget {'{'} Axis(Axis), Usage(Usage) {'}'}</pre>
           <p>
-            What a <A href="/native/commands/lock"><code>LOCK</code></A> command blocks: a relative{' '}
-            <A href="/library/types/enums#axis"><code>Axis</code></A> or a momentary{' '}
-            <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage). An{' '}
+            What a <A href="/native/commands/lock"><code>LOCK</code></A> command blocks. An{' '}
             <code>Axis</code> and any <code>impl Into&lt;Usage&gt;</code> each convert{' '}
             <code>Into&lt;LockTarget&gt;</code>, so you pass one straight to{' '}
             <A href="/library/lock#lock"><code>lock</code></A>. A button locks exactly like a key.
@@ -411,9 +402,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <pre class="api-signature">enum LockScope {'{'} Target(LockTarget), Blanket(Class) {'}'}</pre>
           <p>
             What a <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> in a{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A> reply covers: one specific{' '}
-            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A>, or a whole-class blanket
-            that locks every usage of a <A href="/library/types/enums#class"><code>Class</code></A> at once.
+            <A href="/library/requests#query-locks"><code>query_locks</code></A> reply covers.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Covers</th></tr></thead>
@@ -445,8 +434,8 @@ device.press(from_button)?;                         // press takes any impl Into
             </tbody>
           </table>
           <p>
-            The other two readings get their own names, so nothing has to be translated at the call
-            site: <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
+            The other two readings get their own names:{' '}
+            <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
             <code>Direction::IN</code> and <code>OUT</code> for traffic.{' '}
             <code>admits()</code> tests one against another, and <code>of_delta()</code> reads the
             sign of a movement.
@@ -500,8 +489,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot), Traffic(TrafficEvent) {'}'}</pre>
           <p>
             What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields, one
-            variant per event frame the box pushes. The input classes raise <code>Motion</code> and{' '}
-            <code>Usages</code>, the byte-oriented classes raise <code>Traffic</code>.
+            variant per event frame the box pushes.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
@@ -518,9 +506,9 @@ device.press(from_button)?;                         // press takes any impl Into
             <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>.
           </p>
           <p>
-            One rolling <code>seq</code> counter covers all three frame types, so the stream stays
-            ordered whatever the mix. It counts what the box <em>sent</em>, not what it saw, so a
-            gap is not how you detect loss. <A href="/library/types/structs#catch-state"><code>CatchState</code></A> is.
+            One rolling <code>seq</code> counter covers all three frame types. It counts what the box{' '}
+            <em>sent</em>, not what it saw, so a gap is not how you detect loss.{' '}
+            <A href="/library/types/structs#catch-state"><code>CatchState</code></A> is.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
@@ -539,9 +527,9 @@ match stream.recv()? {
           <CardHeader title="ClockDomain" subtitle="Which chip stamped the event" />
           <pre class="api-signature">enum ClockDomain {'{'} HostChip, DeviceChip {'}'}</pre>
           <p>
-            The <code>clock</code> field beside every event's <code>ts_us</code>. The box is two
-            ESP32-S3s that boot independently, so there are two microsecond timers and nothing relates
-            them. Stamping happens on whichever chip saw the event. Convert with{' '}
+            The <code>clock</code> field beside every event's <code>ts_us</code>. The box runs two
+            microsecond timers and nothing relates them; stamping happens on whichever chip saw the
+            event. Convert with{' '}
             <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;ClockDomain&gt;</code>.
           </p>
           <table class="api-params">
@@ -590,10 +578,6 @@ match stream.recv()? {
               <tr><td><code>Other(u8)</code></td><td>anything else</td><td>A status this build does not know, carried verbatim.</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>Other</code> is distinct rather than folded into the nearest known variant, so a
-            future firmware's new status is not reported as a device fault that never happened.
-          </p>
         </Card>
       </div>
 
@@ -626,12 +610,7 @@ match stream.recv()? {
           </table>
           <p>
             <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-            the other eight are the clone's own life on USB1, the bus the control PC cannot see
-            because it belongs to the game PC.
-          </p>
-          <p>
-            <code>Bus</code> is the cheapest of the traffic classes: the events are rare, so it costs
-            nothing to leave on underneath a narrower trace as context for why a pipe went quiet.
+            the other eight are the clone's own life on USB1, which the control PC cannot see.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};

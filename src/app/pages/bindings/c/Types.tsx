@@ -20,7 +20,10 @@ const Types: Component = () => {
           <p>
             Each enum has a fixed-width backing:{' '}
             <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> is <code>int32_t</code>;
-            every other enum is <code>uint8_t</code>. On{' '}
+            every other enum is <code>uint8_t</code>.
+          </p>
+          <p>
+            On{' '}
             <a href="https://en.cppreference.com/w/c/language/enum" target="_blank" rel="noreferrer">C23</a>{' '}
             and <a href="https://en.cppreference.com/w/cpp/language/enum" target="_blank" rel="noreferrer">C++</a>{' '}
             the tag carries that underlying type directly (<code>enum MediusButton : uint8_t</code>); on{' '}
@@ -28,11 +31,16 @@ const Types: Component = () => {
             the tag is{' '}
             <a href="https://en.cppreference.com/w/c/language/typedef" target="_blank" rel="noreferrer"><code>typedef</code></a>'d
             to the integer and you pass the prefixed enumerators
-            (<code>MEDIUS_BUTTON_LEFT</code>). Structs are plain PODs: pass by value, read fields
-            directly. Nothing is heap-allocated, so there's nothing to free per value; only the
-            opaque handles have a <A href="/bindings/c/api"><code>*_free</code></A>. Anything
-            variable-length on the wire lands in an inline fixed-cap array with a count beside it,
-            never a pointer you own. The shapes on this page are ABI version <code>4</code>, the
+            (<code>MEDIUS_BUTTON_LEFT</code>).
+          </p>
+          <p>
+            Structs are plain PODs, nothing heap-allocated: pass by value, read fields directly, free
+            nothing per value. Only the opaque handles have a{' '}
+            <A href="/bindings/c/api"><code>*_free</code></A>.
+          </p>
+          <p>
+            Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
+            it, never a pointer you own. The shapes on this page are ABI version <code>4</code>, the
             number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
           </p>
         </div>
@@ -62,7 +70,6 @@ const Types: Component = () => {
             </tbody>
           </table>
           <p>
-            The two catch caps are the firmware's own limits, not a guess.{' '}
             <code>MEDIUS_MAX_CATCH_ENTRIES</code> is the box's subscription table size, so a{' '}
             <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A> always carries
             the whole live table.
@@ -235,12 +242,11 @@ const Types: Component = () => {
           <CardHeader title="MediusDirection" subtitle="An axis sign, a usage edge, or a transfer direction" />
           <pre class="api-signature">{`enum MediusDirection : uint8_t`}</pre>
           <p>
-            One enum with three readings, picked by what it is attached to: the sign of an axis or the
-            wheel, the edge of a usage, or the direction of a transfer when it sits on a{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> naming one of
-            the byte-oriented <A href="/bindings/c/types#catch-class">catch classes</A>. No target is
-            more than one of those, so a single byte carries whichever reading applies without
-            ambiguity. See <A href="/native/commands/lock">LOCK</A> and <A href="/library/catch">Catch</A>.
+            One enum with three readings, picked by what it is attached to: an axis sign, a usage
+            edge, or the transfer direction on a{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> naming a
+            byte-oriented <A href="/bindings/c/types#catch-class">catch class</A>.
+            See <A href="/native/commands/lock">LOCK</A> and <A href="/library/catch">Catch</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
@@ -409,10 +415,11 @@ const Types: Component = () => {
           <pre class="api-signature">{`enum MediusClockDomain : uint8_t`}</pre>
           <p>
             The <code>clock</code> field of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
-            beside <code>ts_us</code>. The <A href="/native/hardware">box</A> is two ESP32-S3s that boot
-            independently, so nothing relates their microsecond timers: a stamp is only meaningful
-            against other stamps from the <em>same</em> domain. Which domain an event carries is fixed
-            by where it is tapped, not by anything you configure.
+            beside <code>ts_us</code>. Which domain an event carries is fixed by where it is tapped.
+          </p>
+          <p>
+            The <A href="/native/hardware">box</A> is two ESP32-S3s that boot independently, so a stamp
+            is only meaningful against other stamps from the <em>same</em> domain.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Stamped</th><th>Carries</th></tr></thead>
@@ -422,10 +429,11 @@ const Types: Component = () => {
             </tbody>
           </table>
           <p>
-            Both clocks are box-local and unrelated to any PC clock. Each wraps every ~71.6 minutes
-            (a <code>uint32_t</code> of microseconds) and returns to zero when that chip reboots, so a
-            stamp below the previous one is a wrap, a reboot, or a domain change, and{' '}
-            <code>clock</code> is what separates the third case from the first two.
+            Both clocks are box-local and unrelated to any PC clock. Each is a <code>uint32_t</code>{' '}
+            of microseconds: it wraps every ~71.6 minutes and returns to zero when that chip reboots.
+          </p>
+          <p>
+            A stamp below the previous one is a wrap, a reboot, or a domain change.
           </p>
           <p>
             To put both on this machine's clock, feed events to a{' '}
@@ -482,8 +490,10 @@ const Types: Component = () => {
             The class half of a <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>,
             and the <code>class_</code> field of both{' '}
             <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> and{' '}
-            <A href="/bindings/c/types#catch-state"><code>MediusCatchEntry</code></A>. It picks the
-            address space the filter's <code>id</code> is read in. Classes <code>0</code> to{' '}
+            <A href="/bindings/c/types#catch-state"><code>MediusCatchEntry</code></A>.
+          </p>
+          <p>
+            Classes <code>0</code> to{' '}
             <code>3</code> are the same vocabulary <A href="/library/lock">Lock</A> uses; the rest
             address the box's USB plumbing and surface as byte-oriented traffic. See{' '}
             <A href="/library/catch">Catch</A>.
@@ -515,10 +525,11 @@ const Types: Component = () => {
           <div class="api-response-label">WHERE EACH CLASS IS TAPPED</div>
           <p>
             The four input classes are captured at the emission merge point <strong>before</strong>{' '}
-            lock suppression and before injection, so a locked input still reports: lock it and catch
-            it and you have intercepted it. <code>MEDIUS_CATCH_CLASS_EMIT</code> is the mirror image,
-            what the clone actually put on the wire <em>after</em> injection, locks, and the
-            suppression gate, so subscribing to both shows the whole transformation.
+            lock suppression and before injection, so a locked input still reports.
+          </p>
+          <p>
+            <code>MEDIUS_CATCH_CLASS_EMIT</code> is the mirror image: what the clone put on the wire{' '}
+            <em>after</em> injection, locks, and the suppression gate.
           </p>
         </Card>
       </div>
@@ -1097,10 +1108,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             The user's real motion at the merge point, before any lock suppression or injection. Surfaces
             as the <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
             raised by a <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_AXIS</code></A>{' '}
-            subscription. The struct carries no timestamp of its own: the enclosing event's{' '}
-            <code>ts_us</code> and <A href="/bindings/c/types#clock-domain"><code>clock</code></A> are
-            shared by all three arms, and for motion the domain is always{' '}
-            <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>, stamped when the real device's transfer completed.
+            subscription.
+          </p>
+          <p>
+            It carries no timestamp of its own: the enclosing event's{' '}
+            <code>ts_us</code> and <A href="/bindings/c/types#clock-domain"><code>clock</code></A> cover
+            it, and for motion the domain is always{' '}
+            <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1159,13 +1173,12 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <p>
             The <code>Traffic</code> arm of a{' '}
             <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>, raised by any of
-            the byte-oriented <A href="/bindings/c/types#catch-class">catch classes</A>{' '}
-            (<code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>VENDOR_BULK</code>,{' '}
-            <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>). <code>bytes</code> is an inline
-            array rather than a pointer, so the event stays a fixed-size POD you can copy, queue, and
-            drop with nothing to free; the cap is{' '}
-            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_TRAFFIC_BYTES</code></A> (180),
-            the most one event carries, so the struct holds anything the wire delivers.
+            the byte-oriented <A href="/bindings/c/types#catch-class">catch classes</A>.
+          </p>
+          <p>
+            <code>bytes</code> is an inline array rather than a pointer, capped at{' '}
+            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_TRAFFIC_BYTES</code></A> (180), so
+            the event stays a fixed-size POD you can copy, queue, and drop with nothing to free.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1204,8 +1217,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <code>medius_traffic_event_data</code>.
           </p>
           <p>
-            A request the box answered from its own descriptor cache still produces an event: a trace
-            that omitted those would show a device that had apparently stopped being asked.
+            A request the box answered from its own descriptor cache still produces an event.
           </p>
           <div class="api-response-label">BUS EVENT KINDS</div>
           <p>
@@ -1251,13 +1263,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
 }`}</pre>
           <p>
             Written by <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> and friends. Read the union member named
-            by <A href="/bindings/c/types#catch-event-kind"><code>kind</code></A>. The stamp and its
-            domain sit on the event rather than inside each arm because all three arms carry a stamp,
-            so the pair is common to every one of them and a consumer that only wants the timeline
-            never has to switch on <code>kind</code> to read it. The <code>clock</code> byte is beside{' '}
-            <code>ts_us</code> precisely because the <em>domain</em> is not common: motion and usage
-            snapshots are stamped on the host chip, while traffic is stamped on whichever chip taps
-            that class, so the stamp alone does not say what it can be compared against. See{' '}
+            by <A href="/bindings/c/types#catch-event-kind"><code>kind</code></A>. See{' '}
             <A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A> for which class
             lands in which domain.
           </p>
@@ -1273,12 +1279,6 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">HOW BIG ONE EVENT IS</div>
-          <p>
-            The union is as large as its largest arm, and the largest arm is <code>usages</code>, not
-            the one carrying a captured packet. A{' '}
-            <A href="/bindings/c/types#input"><code>MediusUsage</code></A> is 4 bytes and{' '}
-            <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> is 256 of them.
-          </p>
           <table class="api-params">
             <thead><tr><th>Part</th><th>Bytes</th><th>Made of</th></tr></thead>
             <tbody>
@@ -1290,9 +1290,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             </tbody>
           </table>
           <p>
-            So an event is 1040 bytes whichever arm is live: size it on the stack, or reuse one across
-            a receive loop. The exact padding is the compiler's, so use <code>sizeof</code> if you need
-            the number itself.
+            An event is 1040 bytes whichever arm is live. The exact padding is the compiler's, so use{' '}
+            <code>sizeof</code> if you need the number itself.
           </p>
         </Card>
       </div>

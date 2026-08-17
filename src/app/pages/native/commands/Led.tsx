@@ -10,9 +10,8 @@ const Led: Component = () => {
         <CardHeader title="LED" subtitle="Drive a status LED" />
         <p>
           <A href="/native/commands/led#led"><code>LED</code></A> overrides one of the box's status
-          LEDs, or hands it back to the box's own status display. Each chip has a single green LED, and
-          by default each shows its own state. It's{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+          LEDs, or hands it back to the box's own status display. Each chip has a single green LED.
+          It's <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
       </Card>
 
@@ -59,10 +58,15 @@ const Led: Component = () => {
           </table>
           <div class="api-response-label">STATUS DISPLAY</div>
           <p>
-            In <code>auto</code> (the default), each chip drives its own LED from its state. The device
-            chip is solid when the inter-chip link, the real mouse, and the clone are all up, slow-blinks
-            when the link is up but the mouse or clone is missing, and is off with no link. The host chip
-            is solid while the mouse is streaming and off when it isn't.
+            In <code>auto</code> (the default), each chip drives its own LED from its state.
+          </p>
+          <p>
+            The device chip is solid when the inter-chip link, the real mouse, and the clone are all
+            up, slow-blinks when the link is up but the mouse or clone is missing, and is off with no
+            link.
+          </p>
+          <p>
+            The host chip is solid while the mouse is streaming and off when it isn't.
           </p>
           <div class="api-response-label">EFFECT</div>
           <p>
@@ -70,8 +74,10 @@ const Led: Component = () => {
             status on control-PC silence (the same ~1 s timeout that clears{' '}
             <A href="/native/injection#safety">injection</A>), on{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A>, or on inter-chip link loss.
-            The LED is PC-owned state, released like injection. There's no game-PC-visible surface: a
-            host or both override travels the inter-chip link only. Library binding:{' '}
+          </p>
+          <p>
+            There's no game-PC-visible surface: a host or both override travels the inter-chip link
+            only. Library binding:{' '}
             <A href="/library/led#led"><code>led</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>

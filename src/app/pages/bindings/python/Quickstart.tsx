@@ -9,11 +9,11 @@ const Quickstart: Component = () => {
       <Card>
         <CardHeader title="First program" subtitle="Connect, move, click, read one event" />
         <p>
-          One file that finds <A href="/native/hardware">the box</A>, reads its version, moves the
-          cursor, clicks the left button, reads one physical event, then cleans up. Install it
-          with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
-          (<code>pip install medius</code>, see <A href="/bindings/python">Install</A>). For what each
-          call does, follow the links to the <A href="/library">Rust Library</A> and{' '}
+          One file that finds <A href="/native/hardware">the box</A>, moves the cursor, clicks, and
+          reads one physical event. Install with{' '}
+          <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
+          (<code>pip install medius</code>, see <A href="/bindings/python">Install</A>). What each
+          call does lives in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A>.
         </p>
         <div class="callout callout--info">
@@ -63,9 +63,9 @@ except NotFoundError:
     raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
           <div class="callout callout--info">
             <p>
-              The cursor won't move and the click won't land on this machine, and that's by design:
-              injection only reaches the <em>game</em> PC through the clone port, not the control PC
-              running this script. See <A href="/native/hardware">Hardware</A> for the port map.
+              The cursor won't move and the click won't land on this machine: injection only reaches
+              the <em>game</em> PC through the clone port, not the control PC running this script.
+              See <A href="/native/hardware">Hardware</A> for the port map.
             </p>
           </div>
         </Card>
@@ -131,11 +131,10 @@ except NotFoundError:
 # firmware 3.1.0, proto 4
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
-            The <code>motion</code> line appears once you move or click the real mouse within the 5-second window;
-            otherwise you get <code>no physical input within 5 s</code>.{' '}
+            The <code>motion</code> line needs a real mouse move or click inside the 5-second window.{' '}
             <code>CatchFilter.everything()</code> subscribes to every class, so a <code>traffic</code>{' '}
-            line can arrive first on a device with busy vendor endpoints. Narrow it with{' '}
-            <code>CatchFilter.watch_axes()</code> when you only want the mouse.
+            line can arrive first on a device with busy vendor endpoints; narrow it with{' '}
+            <code>CatchFilter.watch_axes()</code>.
           </p>
         </Card>
       </div>
@@ -144,8 +143,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Reading events" subtitle="Four ways to pull from a stream" />
           <p>
-            The program uses <code>recv_timeout</code> so it can't hang. The readers differ in
-            how they handle an empty queue and a dropped link:
+            The program uses <code>recv_timeout</code> so it can't hang.
           </p>
           <table class="api-params">
             <thead>
@@ -166,7 +164,7 @@ except NotFoundError:
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
             <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
             a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
-            <code>truncated()</code> for whether its capture cut the bytes. Full payload shapes on{' '}
+            <code>truncated()</code>. Full payload shapes on{' '}
             <A href="/bindings/python/streams">Streams</A>.
           </p>
           <p>
@@ -181,8 +179,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Errors" subtitle="Failures raise; they're never a return code" />
           <p>
-            Every <code>Device</code> and stream call raises on failure; a plain call site is the
-            success path. Each exception is a{' '}
+            Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
             <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
             <code>.status</code>, <code>.message</code>, and <code>.proto_ver</code>.
           </p>

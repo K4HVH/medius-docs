@@ -112,8 +112,8 @@ const DeviceOptions = () => {
 
         <div class="api-response-label">Box name</div>
         <p>
-          A human-readable name for the box, a friendlier alternative to its id. Leave it unset and the box
-          makes one up from its id (like "Medius-1A2B"). Up to {NAME_MAX} letters, numbers, and symbols.
+          A human-readable name for the box. Leave it unset and the box makes one up from its id
+          (like "Medius-1A2B"). Up to {NAME_MAX} letters, numbers, and symbols.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
@@ -199,8 +199,8 @@ const DeviceOptions = () => {
         <div class="api-response-label">Emit rate</div>
         <p>
           How fast the box sends injected moves. Learned matches the mouse's own report rate, Interval
-          follows its USB poll rate, and Fixed pins it to a rate you pick. It only sets the ceiling, so
-          the box still sends only when there's a move to send. Learned by default.
+          follows its USB poll rate, and Fixed pins it to a rate you pick. It sets a ceiling only.
+          Learned by default.
         </p>
         <RadioGroup
           name="emit-mode"

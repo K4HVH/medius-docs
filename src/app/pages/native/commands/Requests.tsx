@@ -10,17 +10,17 @@ const Requests: Component = () => {
         <CardHeader title="Requests" subtitle="Query the box for state" />
         <p>
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> is the only command that
-          gets a reply, a <A href="/native/commands/requests#resp"><code>RESP</code></A>. Pick what to
-          read with the <code>what</code> selector: the firmware{' '}
-          <A href="/native/commands/requests#version">version</A>, the box's{' '}
-          <A href="/native/commands/requests#health">health</A>, the cloned{' '}
+          gets a reply, a <A href="/native/commands/requests#resp"><code>RESP</code></A>. The{' '}
+          <code>what</code> selector picks the state:{' '}
+          <A href="/native/commands/requests#version">version</A>,{' '}
+          <A href="/native/commands/requests#health">health</A>,{' '}
           <A href="/native/commands/requests#device-info">device info</A>,{' '}
-          <A href="/native/commands/requests#caps">device capabilities</A>,{' '}
-          <A href="/native/commands/requests#rate">rate</A>, delivery{' '}
-          <A href="/native/commands/requests#stats">stats</A>, the active input{' '}
+          <A href="/native/commands/requests#caps">capabilities</A>,{' '}
+          <A href="/native/commands/requests#rate">rate</A>,{' '}
+          <A href="/native/commands/requests#stats">stats</A>,{' '}
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
-          <A href="/native/commands/requests#catch">catch</A> subscription, a persistent box{' '}
-          <A href="/native/commands/requests#options">option</A>, or the buffered input{' '}
+          <A href="/native/commands/requests#catch">catch</A> subscription, an{' '}
+          <A href="/native/commands/requests#options">option</A>, or the buffered{' '}
           <A href="/native/commands/requests#clip">clip</A>.
         </p>
       </Card>
@@ -66,9 +66,11 @@ const Requests: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
-            carrying the same <code>what</code> and the requested data, one per selector in the table
-            above. <code>QUERY</code> is the only command that gets a reply; everything else is{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>. Library bindings:{' '}
+            carrying the same <code>what</code> and the requested data. Every other command is{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+          </p>
+          <p>
+            Library bindings:{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
@@ -114,10 +116,9 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            You get exactly one <code>RESP</code> per <code>QUERY</code>. Its{' '}
+            Exactly one <code>RESP</code> per <code>QUERY</code>. Its{' '}
             <A href="/native/frame#seq"><code>SEQ</code></A> matches the request's and{' '}
-            <code>what</code> echoes the selector, so you can pair a reply with its request and tell
-            which kind it is. Each selector's payload is laid out below, with an example frame.
+            <code>what</code> echoes the selector.
           </p>
         </Card>
       </div>
@@ -127,12 +128,10 @@ const Requests: Component = () => {
           <CardHeader title="VERSION" subtitle="RESP payload, what = 0" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 0</code>. <code>proto_ver</code> is the protocol version (this documentation
-            describes <code>3</code>); the box reports its own firmware version, then its base{' '}
-            <code>mac</code>, a stable per-box id, then a length-delimited ASCII{' '}
-            <A href="/native/commands/option#name"><code>name</code></A> tail (a synthesized default
-            when unset). The <code>name</code> is additive, so <code>proto_ver</code> stays{' '}
-            <code>3</code>: an older box just sends an empty tail.
+            <code>what = 0</code>: the protocol version, the box's own firmware version, its base{' '}
+            <code>mac</code>, then a length-delimited ASCII{' '}
+            <A href="/native/commands/option#name"><code>name</code></A> tail. The tail is additive,
+            so an older box sends an empty one.
           </p>
           <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -154,10 +153,9 @@ const Requests: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             The box also sends this unprompted at startup, as a{' '}
-            <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> stays fixed for a
-            box, so it identifies the same box across replugs and port renumbering; the{' '}
-            <A href="/native/commands/option#name"><code>name</code></A> is its readable label. Library
-            binding: <A href="/library/requests#version"><code>query_version</code></A>.
+            <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> identifies the
+            same box across replugs and port renumbering. Library binding:{' '}
+            <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Firmware <code>3.1.0</code>, protocol <code>4</code>, MAC <code>123456789abc</code>, name "Loki":</p>
@@ -229,9 +227,8 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 2</code>: the USB identity, kind, and product string the box read from the real
-            device. The clone shows up on the game PC, not here, so this is the only way the control PC can
-            read it. The header is fixed at 11 bytes, then a length-delimited UTF-8 <code>product</code>{' '}
-            tail (which may be empty). Every field is zero when nothing is attached.
+            device, which the control PC cannot see any other way. Every field is zero when nothing is
+            attached.
           </p>
           <pre class="api-signature">QUERY  what = 2  ·  RESP 11-byte header + product</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -297,10 +294,11 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 3</code>: one summary of the whole cloned device, mouse and keyboard, read from
-            its HID report descriptors. Counts and yes/no flags only, never raw HID field offsets. Use it
-            to check before you act: an <A href="/native/commands/inject#inject"><code>INJECT</code></A>{' '}
-            for a usage the device lacks is silently ignored, so the counts tell you what is real. A class
-            that is not present reads all-zero.
+            its HID report descriptors. Counts and yes/no flags only, never raw HID field offsets.
+          </p>
+          <p>
+            An <A href="/native/commands/inject#inject"><code>INJECT</code></A> for a usage the device
+            lacks is silently ignored. A class that is not present reads all-zero.
           </p>
           <pre class="api-signature">QUERY  what = 3  ·  RESP 7 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -363,7 +361,7 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 4</code>: how fast the active input reports, plus the poll period the clone
-            advertises. The answer is class-aware, so read the field that fits the input kind:
+            advertises. Which field to read depends on the input kind.
           </p>
           <table class="api-params">
             <thead><tr><th>Input kind</th><th><code>CHANGE_DRIVEN</code></th><th>Read</th><th>Gives</th></tr></thead>
@@ -417,10 +415,12 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 5</code>: counters the box keeps about whether your commands were delivered.
-            Commands are <A href="/native/injection#fire-and-forget">fire-and-forget</A> with no
-            acknowledgement, so these counters are the only way to tell that everything you sent landed.
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery slipped under load.
-            Wide counters clamp at their max instead of wrapping around.
+            Commands are <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so these
+            counters are the only delivery feedback there is.
+          </p>
+          <p>
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery slipped under
+            load. Counters clamp at their max instead of wrapping around.
           </p>
           <pre class="api-signature">QUERY  what = 5  ·  RESP 17 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -443,8 +443,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            <code>inject_emits</code> counts the no-halving / 1 kHz path. The rest are merge, queue,
-            wakeup, reset, and reconfig counters. Library binding:{' '}
+            <code>inject_emits</code> counts the no-halving / 1 kHz path. Library binding:{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -467,9 +466,8 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 6</code>: which physical inputs are currently locked by{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>, as a variable list of entries, one
-            per locked field across every class, so keyboard and media locks read the same as mouse
-            ones. An empty list (<code>n = 0</code>) means nothing is locked.
+            <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per locked field across
+            every class. An empty list (<code>n = 0</code>) means nothing is locked.
           </p>
           <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 4n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -498,8 +496,8 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Read it to confirm a lock landed, or to mirror the box's lock state in a UI. Library
-            binding: <A href="/library/requests#query-locks"><code>query_locks</code></A>.
+            Read it to confirm a lock landed. Library binding:{' '}
+            <A href="/library/requests#query-locks"><code>query_locks</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>One entry: the wheel's negative (scroll-down) sign locked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>dirbits = 0x02</code>):</p>
@@ -546,8 +544,8 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <p>
-            Each entry is 7 bytes and the header is 19. The box-wide <code>dropped</code> says you are
-            losing events; the per-entry one says which subscription.
+            The box-wide <code>dropped</code> says you are losing events; the per-entry one says which
+            subscription.
           </p>
           <div class="api-response-label">CONFIRMING A SUBSCRIPTION</div>
           <p>
@@ -560,11 +558,11 @@ const Requests: Component = () => {
           <p>
             The two ESP32-S3s boot independently, so nothing relates their timers, and events carry
             stamps from both (see{' '}
-            <A href="/native/commands/catch#clocks">the <code>clk</code> byte</A>). The box measures
-            the difference with a four-timestamp exchange across the inter-chip link, stamped as each
-            frame reaches the wire rather than when it is queued. Queueing is the largest and most
-            variable delay on that link, so stamping late removes it from the measurement instead of
-            filtering around it.
+            <A href="/native/commands/catch#clocks">the <code>clk</code> byte</A>).
+          </p>
+          <p>
+            The box measures the difference with a four-timestamp exchange across the inter-chip link,
+            stamped as each frame reaches the wire rather than when it is queued.
           </p>
           <pre class="diagram">{`  device chip                              host chip
       t1  ------- request -------------------> t2
@@ -584,9 +582,8 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <p>
-            Applying the offset is optional and the <code>clk</code> byte on each event remains
-            authoritative, so a host that does not want an approximated timeline can simply refuse to
-            subtract across domains.
+            Applying the offset is optional; the <code>clk</code> byte on each event stays
+            authoritative.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
@@ -621,8 +618,8 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 9</code>: the value of one persistent box{' '}
             <A href="/native/commands/option"><code>OPTION</code></A>, echoing the queried{' '}
-            <code>id</code>. The value is id-specific, so the query takes the option's <code>id</code> as
-            a second byte and each option is read on its own. An unknown id gets no reply.
+            <code>id</code>. The value is id-specific, so each option is read on its own. An unknown
+            id gets no reply.
           </p>
           <pre class="api-signature">QUERY  what = 9, id  ·  RESP varies</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -709,15 +706,15 @@ const Requests: Component = () => {
           <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 10</code>: the buffered-clip ring depth, playback state, and full config, for
-            host flow-control. A fixed 25-byte prefix, then the clip's held-usage snapshot (the same
-            class-tagged list a{' '}
+            <code>what = 10</code>: the buffered-clip ring depth, playback state, and full config. A
+            fixed prefix, then the clip's held-usage snapshot (the same class-tagged list a{' '}
             <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries), then the
-            config tail (autolock, flags, and the bound triggers). Read <code>free</code> before a{' '}
-            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun, and{' '}
-            <code>state</code> to see a fault or that playback finished. Backs{' '}
-            <A href="/library/requests#clip-status"><code>ClipHandle::query_status</code></A> and{' '}
-            <A href="/library/requests#clip-config"><code>query_config</code></A>.
+            config tail.
+          </p>
+          <p>
+            Read <code>free</code> before a{' '}
+            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun,
+            and <code>state</code> to see a fault or that playback finished.
           </p>
           <pre class="api-signature">QUERY  what = 10  ·  RESP 25-byte prefix + held usages + config</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -763,10 +760,12 @@ const Requests: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             The held snapshot lists the usages the clip is currently forcing down, one class-tagged
-            entry each (3 bytes), so buttons, keys, and media are reported one way. The config tail
-            mirrors what <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> and{' '}
-            <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> set, so a UI can read
-            back the whole clip in one query. Library bindings:{' '}
+            entry each (3 bytes). The config tail mirrors what{' '}
+            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> and{' '}
+            <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> set.
+          </p>
+          <p>
+            Library bindings:{' '}
             <A href="/library/requests#clip-status"><code>query_status</code></A>{' '}
             (<A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>) and{' '}
             <A href="/library/requests#clip-config"><code>query_config</code></A>{' '}

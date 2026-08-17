@@ -12,10 +12,13 @@ const Overview: Component = () => {
           A <A href="/native/hardware">medius box</A> sits inline between a mouse and a PC: the real
           device passes through untouched, and your program{' '}
           <A href="/native/injection">injects input</A> of its own over a{' '}
-          <A href="/native/frame">USB-serial link</A>. These bindings let you write that program in{' '}
-          <A href="/bindings/c">C / C++</A> or <A href="/bindings/python">Python</A> instead of{' '}
-          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a>. They
-          cover the whole feature set and put the exact same bytes on the wire.
+          <A href="/native/frame">USB-serial link</A>.
+        </p>
+        <p>
+          These bindings write that program in <A href="/bindings/c">C / C++</A> or{' '}
+          <A href="/bindings/python">Python</A> instead of{' '}
+          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a>, with
+          the same bytes on the wire.
         </p>
         <pre class="diagram">{`        your program   ( C / C++ / Python )
                        │
@@ -33,10 +36,10 @@ const Overview: Component = () => {
         <div class="callout callout--info">
           <p>
             C and C++ are one binding: the C header (<A href="/bindings/c"><code>medius.h</code></A>)
-            compiles as both, so a C++ program includes it and calls the same functions. If you're
-            new to medius, start with the <A href="/native/quickstart">Quickstart</A> for what the box does;
-            these pages link to the <A href="/library">Rust Library</A> and{' '}
-            <A href="/native">Native API</A> for what each command means.
+            compiles as both, so a C++ program includes it and calls the same functions. The{' '}
+            <A href="/native/quickstart">Quickstart</A> covers what the box does; the{' '}
+            <A href="/library">Rust Library</A> and <A href="/native">Native API</A> define each
+            command.
           </p>
         </div>
       </Card>

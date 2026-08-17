@@ -10,9 +10,6 @@ const Hardware: Component = () => {
         <Card>
           <CardHeader title="Ports" subtitle="The three USB ports and how to cable them" />
           <p>
-            Wire the box once at first plug-in; after that everything is software.
-          </p>
-          <p>
             Inside are two <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3 microcontrollers and a <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> USB-serial bridge. Your
             program only ever speaks to the <code>CH343</code> serial port; the two chips talk over an
             internal 5 Mbaud link you never touch, separate from the 4 Mbaud control link.
@@ -60,8 +57,7 @@ const Hardware: Component = () => {
             </p>
             <p>
               The <code>USB3</code> 5V rail can't be pulled low in firmware, so wiring both to one
-              machine back-feeds power and can force a shutdown or drain the battery. Keep them on
-              separate machines per the port table above.
+              machine back-feeds power and can force a shutdown or drain the battery.
             </p>
           </div>
         </Card>
@@ -71,9 +67,9 @@ const Hardware: Component = () => {
         <Card>
           <CardHeader title="Disconnecting" subtitle="No power switch, just unplug" />
           <p>
-            The box is USB bus-powered: no battery, no power button, nothing to power down. Turning
-            it off means unplugging it, and that is safe at any moment. Injected input never outlives
-            the program that sent it, so a button or move can't get stuck.
+            The box is USB bus-powered: no battery, no power button. Unplugging it is safe at any
+            moment, and injected input never outlives the program that sent it, so a button or move
+            can't get stuck.
           </p>
           <table class="api-params">
             <thead>

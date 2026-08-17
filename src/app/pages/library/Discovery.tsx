@@ -32,8 +32,7 @@ const Discovery: Component = () => {
             Opens each connected box in turn, handshakes, reads its{' '}
             <A href="/library/types/structs#version"><code>Version</code></A> (with the box MAC and name) and cloned{' '}
             <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, then closes it,
-            returning one <A href="/library/discovery#box-info"><code>BoxInfo</code></A> per box. Use it
-            to show a picker, or to choose a box yourself.
+            returning one <A href="/library/discovery#box-info"><code>BoxInfo</code></A> per box.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -72,10 +71,8 @@ let device = Device::open_by_id("123456789abc")?;`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Opens the first box whose clone's{' '}
-            <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. Handy when
-            one box clones a mouse and another a keyboard: it grabs the right one without naming an id.
-            Returns <A href="/library/types/errors"><code>Error::NotFound</code></A> if no connected box
-            matches.
+            <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. Returns{' '}
+            <A href="/library/types/errors"><code>Error::NotFound</code></A> if no connected box matches.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -111,7 +108,7 @@ kbd_box.press(Key::A)?;`}</code></pre>
           <p>
             The general form the <code>find_*_box</code> helpers build on: opens the first box whose{' '}
             <A href="/library/discovery#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>.
-            Match on any field, e.g. a specific vendor id or product string. Returns{' '}
+            Match on any field. Returns{' '}
             <A href="/library/types/errors"><code>Error::NotFound</code></A> when none match.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -126,9 +123,8 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
         <Card>
           <CardHeader title="BoxInfo" subtitle="One discovered box" />
           <p>
-            One entry from <A href="/library/discovery#list"><code>Device::list</code></A> (and the value
-            <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate sees): the
-            box's control port, firmware version, and the device it clones.
+            One entry from <A href="/library/discovery#list"><code>Device::list</code></A>, and the value{' '}
+            <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate sees.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -153,22 +149,15 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
         <Card>
           <CardHeader title="Identity & reconnect" subtitle="The same physical box, across replugs" />
           <p>
-            A box has a stable identity: the device chip's base MAC (from{' '}
-            <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) and the CH343{' '}
-            adapter's serial. Serial-port paths renumber when you replug, but the identity does not, so{' '}
-            <A href="/library/discovery#open-by-id"><code>open_by_id</code></A> re-finds the same box every
-            time.
+            A box's identity is its device chip's base MAC (from{' '}
+            <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) plus the CH343{' '}
+            adapter's serial. Serial paths renumber on replug; the identity does not, so{' '}
+            <A href="/library/discovery#open-by-id"><code>open_by_id</code></A> re-finds the same box.
           </p>
           <p>
             Opening a box anchors <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> to that
             identity. An automatic reconnect re-finds the <em>same</em> physical box even if the ports
             renumbered, and never adopts a different box that happens to be plugged in.
-          </p>
-          <p>
-            The readable partner to that MAC is the box's{' '}
-            <A href="/library/options#set-name">name</A> (from{' '}
-            <A href="/library/types/structs#version"><code>Version::name</code></A>), a display label for
-            telling boxes apart, not an opener key.
           </p>
         </Card>
       </div>

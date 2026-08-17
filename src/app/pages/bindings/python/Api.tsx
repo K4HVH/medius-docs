@@ -9,9 +9,8 @@ const Api: Component = () => {
       <Card>
         <CardHeader title="API index" subtitle="Every Python call, linked to what it does" />
         <p>
-          The full <code>Device</code> surface, grouped. Each row gives the Python signature and a
-          one-line summary; the semantics live in the <A href="/library">Rust Library</A> and{' '}
-          <A href="/native">Native API</A>, so follow the link for what a call does. Types
+          The full <code>Device</code> surface, grouped. What each call does lives in the{' '}
+          <A href="/library">Rust Library</A> and <A href="/native">Native API</A>. Types
           and enums are on <A href="/bindings/python/types">Types &amp; errors</A>; streams on{' '}
           <A href="/bindings/python/streams">Streams</A>.
         </p>
@@ -187,16 +186,11 @@ const Api: Component = () => {
             <code>filters</code> takes one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
             or an iterable of them, each naming a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
             and an id inside it, with an optional <A href="/bindings/python/types#direction"><code>Direction</code></A>{' '}
-            and <A href="/bindings/python/types#capture"><code>Capture</code></A>. Build them with{' '}
-            <code>CatchFilter.watch/watch_axis/watch_class/watch_axes/all_input</code> for input and{' '}
-            <code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code>{' '}
-            for traffic, then refine with <code>.with_direction()</code> / <code>.with_capture()</code>.
+            and <A href="/bindings/python/types#capture"><code>Capture</code></A>.
           </p>
           <div class="callout callout--info">
             <p>
-              Addressing is the filter: the control link is 4 Mbaud and vendor bulk alone measures
-              250 KiB/s through the box, so a subscription has to be able to say which endpoint it
-              means. The box's own refusals get no reply, so check what it actually holds with{' '}
+              The box's own refusals get no reply, so check what it actually holds with{' '}
               <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>.
             </p>
           </div>

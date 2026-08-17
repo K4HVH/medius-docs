@@ -113,12 +113,9 @@ assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product`}</
         <Card>
           <CardHeader title="Caps" subtitle="The whole device, mouse and keyboard" />
           <p>
-            One <A href="/library/requests#caps"><code>caps()</code></A> query, returned as one struct:
-            a <A href="/library/types/structs#mouse-caps"><code>MouseCaps</code></A> half and a{' '}
-            <A href="/library/types/structs#kbd-caps"><code>KbdCaps</code></A> half, plus the per-class
-            change-driven flags. <code>has_mouse()</code> / <code>has_keyboard()</code> tell you which
-            are bound; <code>is_composite()</code> is true when the device has more than one HID
-            interface.
+            Everything one <A href="/library/requests#caps"><code>caps()</code></A> query returns.{' '}
+            <code>has_mouse()</code> / <code>has_keyboard()</code> tell you which are bound;{' '}
+            <code>is_composite()</code> is true when the device has more than one HID interface.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -170,10 +167,8 @@ assert!(!c.is_composite()); // single HID interface`}</code></pre>
           <p>
             Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
             <code>native_hz()</code> converts the period to a frequency, returning <code>None</code>{' '}
-            while <code>native_period_us</code> is still <code>0</code>. The rate is class-aware: a
-            change-driven input (a keyboard or media device) has no continuous cadence, so it sets{' '}
-            <code>change_driven</code> and leaves <code>native_period_us</code> at <code>0</code>, with{' '}
-            <code>poll_period_us</code> the honest figure.
+            while <code>native_period_us</code> is still <code>0</code>. On a change-driven input,{' '}
+            <code>poll_period_us</code> is the only rate there is.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -220,8 +215,8 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <p>
             Active locks from <A href="/library/requests#query-locks"><code>query_locks()</code></A>, a
             list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across every
-            class, so mouse, key, and media locks read the same way.{' '}
-            <code>is_locked(target, dir)</code> tests one lock; <code>entries()</code> is the whole list.
+            class. <code>is_locked(target, dir)</code> tests one lock; <code>entries()</code> is the
+            whole list.
             See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the
             wire format.
           </p>
@@ -251,8 +246,7 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
           <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
           <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, positive: bool, negative: bool {'}'}</pre>
           <p>
-            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list: what is
-            locked (its <A href="/library/types/enums#lock-scope"><code>LockScope</code></A>) and which edges.
+            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -272,8 +266,7 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
             One entry in the table you hand to{' '}
             <A href="/library/catch#catch-events"><code>catch_events</code></A> or{' '}
             <A href="/library/catch#input-events"><code>input_events</code></A>. Built with a
-            constructor rather than by hand, because <code>id</code> without a class addresses
-            nothing and the box refuses it.
+            constructor rather than by hand.
           </p>
           <table class="api-params">
             <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
@@ -305,8 +298,7 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
           <div class="api-response-label">MATCHING IS MOST-SPECIFIC-FIRST</div>
           <p>
             An exact <code>(class, id)</code> beats a class blanket, which beats the wildcard, and a
-            named direction beats <code>Both</code>. The winning entry supplies the capture, so a
-            broad cheap trace with one deep exception is two entries, not two subscriptions:
+            named direction beats <code>Both</code>. The winning entry supplies the capture:
           </p>
           <pre class="diagram">{`catch_events([
     CatchFilter::everything().with_capture(Capture::First(16)),   // everything, 16 bytes
@@ -360,12 +352,6 @@ drop(stream);`}</code></pre>
               <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>clock</code> is fixed for this event and still carried on the wire, because a stream can
-            mix it with <A href="/library/types/structs#traffic-event">traffic events</A> stamped on the
-            device chip. Reading the field rather than assuming the domain means the same comparison
-            code works whichever variant it is handed.
-          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
 
@@ -419,8 +405,8 @@ if let CatchEvent::Usages(s) = stream.recv()? {
           <pre class="api-signature">struct InputEvent {'{'} ts_us: u32, clock: ClockDomain, input: Input {'}'}</pre>
           <p>
             What <A href="/library/catch#input-events"><code>input_events</code></A> yields. The{' '}
-            <A href="/library/types/enums#input"><code>Input</code></A> is the edge, a press, a
-            release, or a motion report, decoded from the held-usage snapshots the box sends.
+            <A href="/library/types/enums#input"><code>Input</code></A> is the edge, decoded from the
+            held-usage snapshots the box sends.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -447,8 +433,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
           <p>
             The payload of a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A>: one packet,
-            one completed control transaction, or one bus event. It carries the address it came off, so
-            a broad subscription still tells you which endpoint.
+            one completed control transaction, or one bus event.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -485,7 +470,6 @@ for ev in device.input_events(CatchFilter::all_input())? {
           </table>
           <div class="api-response-label">CONTROL IS PER TRANSACTION</div>
           <p>
-            A <code>Control</code> event is one completed transaction, not one per stage:{' '}
             <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
             <code>direction</code> says which way that data went. Requests answered from the box's
             descriptor cache still raise events.
@@ -511,9 +495,8 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             A newtype over a HID keyboard/keypad usage. It converts{' '}
             <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code>, so you pass one
             straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
-            <A href="/library/inject#inject"><code>press</code></A>. Named consts cover the common keys
-            (<code>Key::A</code>, <code>Key::ENTER</code>, <code>Key::LEFT_SHIFT</code>); build any
-            other with <code>Key::new(u8)</code>. Modifiers are the usages <code>0xE0</code>-<code>0xE7</code>.
+            <A href="/library/inject#inject"><code>press</code></A>. Modifiers are the usages{' '}
+            <code>0xE0</code>-<code>0xE7</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
@@ -539,9 +522,7 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
             A newtype over a 16-bit Consumer usage. It converts{' '}
             <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code>, so you pass one
             straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
-            <A href="/library/inject#inject"><code>press</code></A>. Named consts cover the common
-            media keys (<code>MediaKey::VOLUME_UP</code>, <code>MediaKey::PLAY_PAUSE</code>,{' '}
-            <code>MediaKey::MUTE</code>); build any other with <code>MediaKey::new(u16)</code>.
+            <A href="/library/inject#inject"><code>press</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
@@ -599,10 +580,8 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             </tbody>
           </table>
           <p>
-            <code>table_full</code> and a missing entry answer different questions. An entry absent
-            from <code>entries</code> was refused for some reason; <code>table_full</code> says the
-            reason was capacity rather than a malformed filter, which is the difference between "send
-            fewer entries" and "fix this one".
+            An entry absent from <code>entries</code> was refused; <code>table_full</code> says the
+            reason was capacity rather than a malformed filter.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let c = device.query_catch()?;
@@ -628,8 +607,7 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
             One row of the box's subscription table in a{' '}
             <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
             <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> the box
-            accepted, echoed back, so comparing it against what you sent confirms a subscription
-            landed. A blanket comes back as one entry, not expanded into one row per id.
+            accepted, echoed back. A blanket comes back as one entry, not one row per id.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -663,7 +641,8 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
           </p>
           <p>
             The box measures the difference with a four-timestamp exchange across the inter-chip link,
-            stamping each frame as it reaches the wire rather than when it is queued.
+            stamping each frame as it reaches the wire rather than when it is queued. The two crystals
+            pull apart by up to 20 µs per second.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -675,10 +654,9 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
             </tbody>
           </table>
           <p>
-            <code>error_bound_us()</code> halves <code>delay_us</code> for you, and{' '}
-            <code>drift_us_over(age)</code> extrapolates <code>rate_ppb</code>; the crystals pull
-            apart by up to 20 µs per second. It returns 0 for a <code>None</code> rate, which is what
-            is known rather than a claim about drift.
+            <code>error_bound_us()</code> halves <code>delay_us</code> for you;{' '}
+            <code>drift_us_over(age)</code> extrapolates <code>rate_ppb</code>, returning 0 for a{' '}
+            <code>None</code> rate.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let clock = device.query_catch()?.clock;
@@ -721,9 +699,8 @@ match clock.age {
             Each domain is tracked separately, so both chips' stamps land on one comparable timeline.
           </p>
           <p>
-            The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box) rather than
-            an average, because an event can arrive late but never early. It improves as it runs and
-            never steps backwards.
+            The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box), not an
+            average. It improves as it runs and never steps backwards.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchFilter, Timeline};
@@ -844,10 +821,8 @@ for ev in input.by_ref().take(20) {
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
-            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. Pull lines with{' '}
-            <code>recv</code> / <code>try_recv</code> / <code>recv_timeout</code> / <code>try_iter</code> /{' '}
-            <code>recv_async</code> (or <code>for line in stream</code>); none touch the wire, so cloning
-            shares the queue. The methods and an example are on{' '}
+            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No pull method touches
+            the wire, so cloning shares the queue. The methods and an example are on{' '}
             <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
           </p>
         </Card>
@@ -858,9 +833,7 @@ for ev in input.by_ref().take(20) {
           <CardHeader title="ClipSettings" subtitle="A clip's persistent config, read back" />
           <p>
             A clip's configuration from{' '}
-            <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>: the
-            auto-lock set, the loop and retain flags, whether it's finalized, and the bound{' '}
-            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> list. You set
+            <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>. You set
             these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
             <code>set_retain</code>, <code>finalize</code>, <code>bind</code>); this is the readback.
           </p>
@@ -886,15 +859,12 @@ if cfg.loop_ && cfg.finalized {
         <Card>
           <CardHeader title="ClipTrigger" subtitle="One input binding that drives a clip" />
           <p>
-            One physical-input binding for a clip: on a given <A href="/library/types/enums#usage"><code>Usage</code></A>{' '}
-            and <A href="/library/types/enums#edge"><code>Edge</code></A>, run a{' '}
-            <A href="/library/types/enums#clip-action"><code>ClipAction</code></A>. You hand these to{' '}
-            <A href="/library/clip#triggers"><code>ClipHandle::bind</code></A>; the box keeps up to 8, keyed
-            by usage and edge. <code>consume</code> hides the triggering input from the PC.
+            One physical-input binding for a clip, handed to{' '}
+            <A href="/library/clip#triggers"><code>ClipHandle::bind</code></A>. The box keeps up to 8,
+            keyed by usage and edge.
           </p>
           <p>
-            Build one with <code>ClipTrigger::new(usage, edge, action)</code> (consume defaults false),
-            then chain <code>.consume()</code> to swallow the input:
+            Build one with the constructor, where <code>consume</code> defaults to false:
           </p>
           <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
           <table class="api-params">

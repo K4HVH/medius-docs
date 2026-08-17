@@ -11,10 +11,8 @@ const Streams: Component = () => {
         <p>
           <A href="/native/hardware">The box</A> has two live channels: the traffic it carries
           (<A href="/library/catch">Catch</A>: physical input, and the USB bytes behind it) and its own
-          log lines (<A href="/library/diagnostics">Logs &amp; counters</A>).
-          Subscribe with a method on an open <A href="/bindings/python/api">Device</A>, then pull items
-          off the returned stream. What an event <em>means</em> lives on those pages; this page covers reading
-          them in <a href="https://www.python.org" target="_blank" rel="noreferrer">Python</a>.
+          log lines (<A href="/library/diagnostics">Logs &amp; counters</A>). What an event{' '}
+          <em>means</em> lives on those pages.
         </p>
         <pre class="diagram">{`  physical mouse / keyboard          the traffic the box carries
             │   (also forwarded       (vendor endpoints, control
@@ -46,8 +44,8 @@ const Streams: Component = () => {
         <Card>
           <CardHeader title="Subscribe" subtitle="Open a stream from a Device" />
           <p>
-            All three calls live on the <code>Device</code>. They send a subscribe request to the box
-            and hand back a stream object.
+            All three calls live on the <A href="/bindings/python/api">Device</A> and send a
+            subscribe request to the box.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th><th>Channel</th></tr></thead>
@@ -62,7 +60,7 @@ const Streams: Component = () => {
             or an iterable of them. Each names an address, a{' '}
             <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A> plus an id inside
             that class, with an optional direction and capture. The box holds them as a 32-entry
-            table; <code>CatchFilter.everything()</code> is the one-line "everything".
+            table.
           </p>
           <pre class="api-signature">{`CatchFilter.watch(usage)                # one button, key, or media usage
 CatchFilter.watch_axis(axis)            # one Axis
@@ -91,32 +89,31 @@ CatchFilter.everything()                # every class, every id, one table entry
             </tbody>
           </table>
           <p>
-            The <code>watch_*</code> and <code>traffic_class</code> constructors are the class
-            blankets; the wildcard across classes is <code>everything()</code>. Matching is
-            most-specific-first, so an exact <code>(class, id)</code> beats a blanket and a blanket
-            beats <code>everything()</code>; the winning filter is the one whose <code>capture</code>{' '}
-            applies. Full semantics on <A href="/bindings/python/types#catchfilter">Types</A> and{' '}
+            Matching is most-specific-first: an exact <code>(class, id)</code> beats a blanket, and a
+            blanket beats <code>everything()</code>. Full semantics on{' '}
+            <A href="/bindings/python/types#catchfilter">Types</A> and{' '}
             <A href="/library/catch">Catch</A>.
           </p>
           <div class="callout callout--warning">
             <p>
               Subscribing checks the filters here and raises: <code>CatchTableFullError</code> past 32
               entries, <code>CaptureNotApplicableError</code> for a capture on an input class,{' '}
-              <code>EmptySubscriptionError</code> for none. What the <em>box</em> then refuses (a class
-              this firmware does not know) is still{' '}
-              <A href="/native/injection#fire-and-forget">fire-and-forget</A>: read it back with{' '}
+              <code>EmptySubscriptionError</code> for none.
+            </p>
+            <p>
+              What the <em>box</em> then refuses is{' '}
+              <A href="/native/injection#fire-and-forget">fire-and-forget</A> and gets no reply: read
+              it back with{' '}
               <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>, whose{' '}
               <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> is what
-              the box actually holds.
+              it holds.
             </p>
           </div>
           <div class="callout callout--info">
             <p>
-              The address is the filter because the control link cannot carry everything: it runs at
-              4 Mbaud and vendor bulk alone measures 250 KiB/s through the box. Events drain in four
-              strict-priority queues (input and bus, then the byte-oriented classes, then control, then
-              vendor bulk), so a busy mouse can starve a bulk trace completely. Narrow the class, or cut
-              the <code>capture</code>, rather than subscribing wide and hoping.
+              The control link runs at 4 Mbaud and vendor bulk alone measures 250 KiB/s through the
+              box. Events drain in four strict-priority queues (input and bus, then byte-oriented
+              classes, then control, then vendor bulk), so a busy mouse can starve a bulk trace.
             </p>
           </div>
         </Card>
@@ -126,8 +123,7 @@ CatchFilter.everything()                # every class, every id, one table entry
         <Card>
           <CardHeader title="Receive" subtitle="Block, poll, time out, or iterate" />
           <p>
-            Four read methods (<code>recv</code>, <code>try_recv</code>, <code>recv_timeout</code>, <code>iterate</code>) are on all three
-            streams, plus <code>close()</code> for lifecycle. The table shows <code>EventStream</code>{' '}
+            Every stream has the same four read methods plus <code>close()</code>. The table shows <code>EventStream</code>{' '}
             (yielding <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>);{' '}
             <code>InputStream</code> and <code>LogStream</code> are identical with{' '}
             <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> or{' '}
@@ -152,9 +148,7 @@ CatchFilter.everything()                # every class, every id, one table entry
         <Card>
           <CardHeader title="Event objects" subtitle="What recv() hands back" />
           <p>
-            A <code>CatchEvent</code> carries a <code>kind</code>, a timestamp with the clock that
-            stamped it, and one of three payloads. Read the payload by kind, or use the typed
-            accessors that return <code>None</code> for the wrong kind. Every object here is a{' '}
+            Every object here is a{' '}
             <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>.
           </p>
           <pre class="diagram">{`CatchEvent
@@ -181,7 +175,7 @@ CatchFilter.everything()                # every class, every id, one table entry
             </tbody>
           </table>
           <p>
-            Field meanings and the full type tables are on <A href="/bindings/python/types">Types &amp; errors</A>.
+            Field meanings are on <A href="/bindings/python/types">Types &amp; errors</A>.
             Held <A href="/native/commands/usage">usage ids</A> come from the{' '}
             <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>.{' '}
             <code>flags</code> is class-specific, and each class has an accessor that reads it:{' '}
@@ -191,23 +185,19 @@ CatchFilter.everything()                # every class, every id, one table entry
           </p>
           <div class="callout callout--info">
             <p>
-              <code>clock</code> exists because the box is two chips whose timers start independently:{' '}
-              <code>HOST_CHIP</code> stamps what the real device did, <code>DEVICE_CHIP</code> stamps
-              what happened on the clone side (<code>HID_OUT</code>, every OUT transfer, and{' '}
-              <code>CONTROL / EMIT / BUS</code>). Subtract two stamps only when their domains match; to
-              put them on this machine's clock, use a{' '}
+              Subtract two stamps only when their <code>clock</code> domains match. To put them on
+              this machine's clock, use a{' '}
               <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>.
             </p>
           </div>
           <div class="callout callout--info">
             <p>
               <code>EventStream</code> and <code>InputStream</code> both have a <code>dropped</code>{' '}
-              property (an <code>int</code>): events the box queued that you didn't <code>recv()</code>{' '}
-              fast enough, so the queue shed them. That is the host-side count. The box-side one is on{' '}
+              property (an <code>int</code>): events the queue shed before you read them. That is the
+              host-side count; the box-side one is on{' '}
               <A href="/bindings/python/types#catchstate"><code>CatchState</code></A>, both box-wide and{' '}
-              <A href="/bindings/python/types#catchentry">per entry</A>. The per-entry count is the
-              one that says <em>which</em> subscription is overflowing. <code>LogStream</code> has no such
-              counter.
+              <A href="/bindings/python/types#catchentry">per entry</A>. <code>LogStream</code> has no
+              such counter.
             </p>
           </div>
         </Card>
@@ -254,10 +244,9 @@ with Device.find() as dev:
                   f"ep={t.id:#04x} {t.direction.name:<8} "
                   f"{len(t.bytes)}/{t.true_len} bytes{cut}  {t.bytes.hex(' ')}")`}</code></pre>
           <p>
-            The exact filter beats the class blanket, so <code>0x83</code> arrives whole while every
-            other vendor interrupt endpoint is clipped to 16 bytes. <code>truncated()</code> tells the
-            two apart on arrival: a 16-byte capture of a 64-byte report and a real 16-byte report look
-            identical without <code>true_len</code>.
+            <code>truncated()</code> separates a clipped capture from a genuinely short packet: a
+            16-byte capture of a 64-byte report and a real 16-byte report differ only in{' '}
+            <code>true_len</code>.
           </p>
           <div class="api-response-label">NON-BLOCKING POLL</div>
           <pre><code class="language-python">{`events = dev.catch_events(CatchFilter.everything().with_capture(16))
@@ -282,8 +271,7 @@ print("box-wide dropped:", st.dropped, " clock age:", st.clock.age_ms)`}</code><
           <p>
             The box reports held usages as a snapshot per report.{' '}
             <A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A> diffs
-            those against what it holds and yields the edges they represent, so nothing downstream has
-            to remember the last set.
+            those against what it holds and yields the edges they represent.
           </p>
           <table class="api-params">
             <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
@@ -331,8 +319,7 @@ with Device.find() as dev:
           </table>
           <p>
             Feed every event in as it arrives, in order. Each domain is tracked separately, and the
-            mapping keeps a per-domain minimum of elapsed-here minus elapsed-on-the-box rather than an
-            average, so it improves as it runs and never degrades.
+            mapping improves as it runs.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-python">{`from medius import CatchFilter, Device, Timeline
@@ -354,11 +341,10 @@ with Device.find() as dev:
           <CardHeader title="No async" subtitle="Build it on the timeout / non-blocking reads" />
           <div class="callout callout--warning">
             <p>
-              The streams are synchronous. There are no <code>async def</code> or <code>await</code>{' '}
-              methods. To feed an event loop, drive it yourself: run <code>recv_timeout(ms)</code> or{' '}
+              The streams are synchronous: there are no <code>async def</code> or <code>await</code>{' '}
+              methods. To feed an event loop, run <code>recv_timeout(ms)</code> or{' '}
               <code>try_recv()</code> on a worker thread (or in{' '}
-              <a href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor" target="_blank" rel="noreferrer"><code>run_in_executor</code></a>) and hand
-              items to your loop. The pattern is the same in every binding; see{' '}
+              <a href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor" target="_blank" rel="noreferrer"><code>run_in_executor</code></a>). See{' '}
               <A href="/library/features/async">Async</A>.
             </p>
           </div>

@@ -9,9 +9,9 @@ const Connection: Component = () => {
       <Card>
         <CardHeader title="Connecting" subtitle="Open, find, and hand the box back" />
         <p>
-          A Medius box bridges a mouse and a PC over USB-serial. The <code>medius</code> crate is the
-          Rust client and <code>Device</code> is the handle; opening one finds the box, runs the{' '}
-          <A href="/native/connection">handshake</A>, and starts the background threads in one call.
+          The <code>medius</code> crate is the Rust client and <code>Device</code> is the handle. Opening
+          one finds the box, runs the <A href="/native/connection">handshake</A>, and starts the
+          background threads in one call.
         </p>
         <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
       </Card>
@@ -69,9 +69,9 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
         <Card>
           <CardHeader title="Zero config" subtitle="No settings struct, just three read-only values" />
           <p>
-            Nothing to configure; two read-only defaults bound the{' '}
-            <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and keepalive
-            timer, and a third names the protocol this build speaks.
+            Nothing to configure. Two read-only defaults bound the{' '}
+            <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and the keepalive
+            timer.
           </p>
           <table class="api-params">
             <thead>
@@ -99,9 +99,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
             <code>PROTO_VER</code> is the{' '}
             <A href="/native/frame#layout"><code>control protocol</code></A> version this build speaks.
             A box reporting anything else is refused at the{' '}
-            <A href="/native/connection#handshake">handshake</A>. It is exposed so a caller can say so
-            in its own words, or check a box before connecting, rather than only learning it from an
-            error.
+            <A href="/native/connection#handshake">handshake</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE, PROTO_VER};
@@ -128,7 +126,7 @@ println!("speaks protocol:   {}", PROTO_VER);                   // 4`}</code></p
             queries into futures; the{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
             Construct one with <code>AsyncDevice::find</code>, <code>open</code> by path, or{' '}
-            <code>into_async</code>; full surface on the async feature page.
+            <code>into_async</code>.
           </p>
           <pre><code class="language-bash">cargo add medius --features async</code></pre>
           <div class="api-response-label">EXAMPLE</div>
