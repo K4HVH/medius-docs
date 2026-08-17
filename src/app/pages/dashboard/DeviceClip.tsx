@@ -117,7 +117,7 @@ const triggerText = (t: ClipTrigger): string => {
   const edge = t.edge === Direction.Positive ? 'press' : t.edge === Direction.Negative ? 'release' : 'both edges';
   const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
   const locks = t.consume && t.edge !== Direction.Negative;
-  return `${who} ${edge} -> ${op}${locks ? ' (locks input)' : ''}`;
+  return `${who} ${edge} -> ${op}${locks ? ' (consume)' : ''}`;
 };
 
 const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
@@ -594,7 +594,7 @@ const DeviceClip = () => {
             </div>
             <div style={section}>
               <Checkbox
-                label="Lock the trigger input while it is active"
+                label="Consume"
                 checked={trigConsume()}
                 onChange={setTrigConsume}
               />

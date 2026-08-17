@@ -118,7 +118,7 @@ describe('DeviceClip trigger edge and consume', () => {
     // list can display when another client sets it but this card cannot create.
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    const consume = box(container, 'Lock the trigger input');
+    const consume = box(container, 'Consume');
     expect(radio(container, 'Release').disabled).toBe(false);
     fireEvent.click(consume);
     await settle();
@@ -144,9 +144,9 @@ describe('DeviceClip trigger edge and consume', () => {
     const { container } = render(() => <DeviceClip />);
     const chips = [...container.querySelectorAll('.chip__label')].map((e) => e.textContent ?? '');
     const find = (name: string) => chips.find((c) => c.startsWith(name)) ?? '';
-    expect(find('F1 press')).toContain('(locks input)');
-    expect(find('F2 both edges')).toContain('(locks input)');
-    expect(find('F3 release')).not.toContain('(locks input)');
+    expect(find('F1 press')).toContain('(consume)');
+    expect(find('F2 both edges')).toContain('(consume)');
+    expect(find('F3 release')).not.toContain('(consume)');
   });
 });
 
