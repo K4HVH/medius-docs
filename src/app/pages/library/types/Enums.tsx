@@ -499,11 +499,9 @@ device.press(from_button)?;                         // press takes any impl Into
           <CardHeader title="CatchEvent" subtitle="One caught event off the stream" />
           <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot), Traffic(TrafficEvent) {'}'}</pre>
           <p>
-            What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields. The three
-            variants are the three event frames the box pushes, and which ones you see is decided by the{' '}
-            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> list you
-            subscribed with: the input classes raise <code>Motion</code> and <code>Usages</code>, the
-            byte-oriented classes raise <code>Traffic</code>. Match on the variant.
+            What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields, one
+            variant per event frame the box pushes. The input classes raise <code>Motion</code> and{' '}
+            <code>Usages</code>, the byte-oriented classes raise <code>Traffic</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>

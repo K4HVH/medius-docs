@@ -159,23 +159,12 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            All put bytes on the inbound stream as if the box emitted them.{' '}
-            <code>push_log</code> frames a <code>LOG</code> line that surfaces on{' '}
-            <A href="/library/diagnostics#logs"><code>logs()</code></A> as a{' '}
-            <A href="/library/types/structs#log-line"><code>LogLine</code></A> ({' '}
-            <A href="/library/types/enums#log-level"><code>LogLevel</code></A> plus <code>text</code>);{' '}
-            <code>push_raw</code> sends arbitrary bytes. The three event calls feed the{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>, one per event frame the
-            box can push: <code>push_motion</code> arrives as a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A> (a{' '}
-            <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A>),{' '}
-            <code>push_usages</code> as a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A> (a{' '}
-            <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>), and{' '}
-            <code>push_traffic</code> as a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A> (a{' '}
-            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>), with{' '}
-            <code>seq</code> as the rolling counter so a test can drive it independently, and <code>ts_us</code> as the raw wire timestamp, which lets a test drive the <code>u32</code> wrap and the clock-restart case.
+            All put bytes on the inbound stream as if the box emitted them. The three event calls each
+            raise one <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant on
+            an <A href="/library/catch#event-stream"><code>EventStream</code></A>;{' '}
+            <code>push_log</code> raises a <A href="/library/types/structs#log-line"><code>LogLine</code></A>{' '}
+            on <A href="/library/diagnostics#logs"><code>logs()</code></A>, and <code>push_raw</code>{' '}
+            sends arbitrary bytes.
           </p>
 
           <p>

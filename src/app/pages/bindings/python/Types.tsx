@@ -376,14 +376,9 @@ const Types: Component = () => {
               true for <code>0</code> to <code>3</code>, <code>cls.is_traffic()</code> for the rest.
             </p>
             <p>
-              Classes <code>0</code> to <code>3</code> yield <A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A>{' '}
-              and <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A>{' '}
-              payloads; <code>HID_IN</code> through <code>BUS</code> yield a{' '}
-              <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> carrying raw
-              bytes. The input classes are tapped at the emission merge point <em>before</em> lock
-              suppression and injection, so an input you have locked still reports;{' '}
-              <code>EMIT</code> is the opposite end, what the clone actually put on the wire after
-              injection, locks, and the suppression gate. Subscribe to both to watch the transformation.
+              The input classes are tapped before lock suppression and injection, so an input you have
+              locked still reports here. <code>EMIT</code> is the opposite end, what the clone put on
+              the wire afterwards.
             </p>
             <div class="callout callout--info">
               <p>
@@ -945,14 +940,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
             <p>
-              The box measures the offset with a four-timestamp exchange across the inter-chip link,
-              stamped as each frame reaches the wire rather than when it is queued: queueing is the
-              largest and most variable delay on that link, and stamping late removes it from the
-              measurement instead of filtering around it afterwards. <code>rate_ppb</code> is there so
-              a caller can extrapolate between exchanges instead of trusting a stale offset, which
-              two independent crystals make stale at up to 20 µs per second. <code>age_ms is None</code>{' '}
-              is the wire's <code>0xFFFF</code>, which exists to separate "no estimate yet" from "the
-              offset happens to be zero"; both report <code>offset_us == 0</code>.
+              Two independent crystals make an offset stale at up to 20 µs per second, so extrapolate
+              with <code>rate_ppb</code> rather than trusting it.
             </p>
             <div class="callout callout--info">
               <p>

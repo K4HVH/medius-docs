@@ -545,12 +545,9 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>dropped</code></td><td><code>u16</code></td><td>events <em>this entry</em> could not queue, little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHY THE DROP COUNT IS COUNTED TWICE</div>
           <p>
-            Each entry is 7 bytes; the header is 19. The <strong>per-entry</strong> drop count is what
-            identifies which subscription is overflowing. Under a saturating bulk trace the box-wide
-            counter tells you that you are losing events but not which ones, and those are different
-            problems: one is "my link is full", the other is "this endpoint's trace has holes in it".
+            Each entry is 7 bytes and the header is 19. The box-wide <code>dropped</code> says you are
+            losing events; the per-entry one says which subscription.
           </p>
           <div class="api-response-label">CONFIRMING A SUBSCRIPTION</div>
           <p>

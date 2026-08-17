@@ -96,12 +96,7 @@ const Catch: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">DIRECTION</div>
-          <p>
-            For the input classes <code>dir</code> is the press or release edge, exactly as it is for a
-            lock. For the traffic classes it is the transfer direction: <code>POS</code> is IN (device
-            to PC) and <code>NEG</code> is OUT (PC to device). No class is both, so one byte carries
-            either reading without ambiguity.
-          </p>
+          <p>No class carries both readings, so one byte is never ambiguous.</p>
           <table class="api-params">
             <thead>
               <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 10)</th></tr>
@@ -115,12 +110,10 @@ const Catch: Component = () => {
           <div class="api-response-label">SNAPLEN</div>
           <p>
             <code>snaplen</code> caps the bytes captured from each packet, <code>0</code> meaning all
-            of it. It is per entry because the useful value differs by orders of magnitude between
-            classes: a 64-byte vendor interrupt report is worth having whole, while a bulk pipe you
-            are tracing for framing only needs its first 16 bytes and would otherwise saturate the
-            link on its own. A capture cut short is still self-describing, because the event carries
-            the packet's real length in <code>true_len</code> (see{' '}
-            <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>).
+            of it, and it is per entry: a 64-byte vendor interrupt report is worth having whole, while
+            a bulk pipe traced for framing needs 16 and would otherwise saturate the link. A cut
+            capture still carries the packet's real length in{' '}
+            <A href="/native/commands/catch#traffic-event"><code>true_len</code></A>.
           </p>
           <div class="api-response-label">PHYSICAL ONLY, AND BEFORE SUPPRESSION</div>
           <p>
@@ -409,13 +402,7 @@ const Catch: Component = () => {
               <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> delimits how many arrived</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TRUNCATION IS SELF-DESCRIBING</div>
-          <p>
-            <code>true_len</code> against the frame's own length is what makes a cut capture legible.
-            Without it, a packet trimmed by <code>snaplen</code> and a genuinely short packet look
-            identical on the wire, which is the same mistake the bulk relay's end-of-transfer flag
-            exists to prevent.
-          </p>
+          <div class="api-response-label">TRUNCATION</div>
           <pre class="diagram">{`  frame LEN = 12 + 16   ->  16 bytes arrived
   true_len  = 64        ->  the packet was 64 bytes
                             ------------------------
