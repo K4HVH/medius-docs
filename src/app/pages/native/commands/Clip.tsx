@@ -305,7 +305,7 @@ link loss   the inter-chip link drops`}</pre>
           </p>
           <p>
             A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
-            default, so it plays on its own timeline. <code>CLIP_SET(ride)</code> puts it back on the
+            default, so it plays on its own timeline; <code>CLIP_SET(ride)</code> puts it back on the
             ride, additive to the user's own movement and dropped while they hold still.
           </p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
