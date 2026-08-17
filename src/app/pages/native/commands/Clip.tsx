@@ -427,7 +427,7 @@ link loss   the inter-chip link drops`}</pre>
             <thead><tr><th>Bit</th><th>Mask</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>b0</code></td><td><code>0x01</code></td><td>present: set to add or replace the binding, clear to remove it</td></tr>
-              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: swallow the physical edge so the app never sees it</td></tr>
+              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: lock the trigger usage while it stays active. Press edge only; a release-edge binding stores the flag and never acts on it</td></tr>
             </tbody>
           </table>
           <p>

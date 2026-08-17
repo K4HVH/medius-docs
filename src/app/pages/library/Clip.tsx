@@ -274,8 +274,8 @@ handle.stop()?;`}</code></pre>
           </table>
           <div class="callout callout--info">
             <p>
-              <code>.consume()</code> swallows the triggering edge for the length of the hold, so it never
-              reaches the game.
+              <code>.consume()</code> locks the trigger usage while it stays active. It applies to the
+              press edge only, so a <code>Edge::Release</code> binding carries the flag with no effect.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -286,9 +286,10 @@ clip.set_retain(true)?;      // set the mode before loading
 clip.append(&recording)?;
 clip.finalize()?;            // close it so it can replay
 
-// Hold-to-play: F1 down starts, F1 up stops. Consume F1 so the game never sees it.
+// Hold-to-play: F1 down starts, F1 up stops. The press binding's consume locks F1
+// for the whole hold, so the release binding does not need one.
 clip.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start).consume())?;
-clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop).consume())?;
+clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop))?;
 
 // Or one side-button that toggles play/stop:
 clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
