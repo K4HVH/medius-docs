@@ -192,7 +192,7 @@ const Catch: Component = () => {
             <tbody>
               <tr><td>the table already holds 32 entries</td><td>nothing is evicted; the header's <code>b0</code> flag says an entry was turned away</td></tr>
               <tr><td><code>class</code> is one the firmware does not know</td><td>an unknown class has no tap to attach to</td></tr>
-              <tr><td><code>dir</code> is outside <code>0..2</code></td><td>there is no fourth reading of the direction byte</td></tr>
+              <tr><td><code>dir</code> is outside <code>0..2</code></td><td>a subscription is addressed before any bearing is read, so only <code>0</code>-<code>2</code> name anything a tap can match</td></tr>
               <tr><td><code>class = 0xFF</code> with a specific <code>id</code></td><td><code>id</code> is class-specific, so a wildcard class with a real id addresses nothing coherent</td></tr>
             </tbody>
           </table>

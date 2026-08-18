@@ -495,11 +495,8 @@ const Requests: Component = () => {
               <tr><th>State</th><th>Reports as</th></tr>
             </thead>
             <tbody>
-              <tr><td>An axis weighed on three directions</td><td>Three entries, one per direction.</td></tr>
-              <tr><td>A target passing on every direction</td><td>Absent.</td></tr>
-            </tbody>
-            <tbody>
               <tr><td>An axis or button weighed on a direction</td><td>One entry under its own <code>class</code> and <code>id</code>, per direction.</td></tr>
+              <tr><td>A target passing on every direction</td><td>Absent.</td></tr>
               <tr><td>A <A href="/native/commands/lock#blanket">blanket</A> button or axis lock</td><td>One entry per member, under its own <code>id</code>; never <code>0xFFFF</code>.</td></tr>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
