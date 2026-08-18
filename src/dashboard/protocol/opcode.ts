@@ -24,6 +24,8 @@ export const Q_CAPS = 3; // unified: mouse + keyboard + per-class change_driven
 export const Q_RATE = 4;
 export const Q_STATS = 5;
 export const Q_LOCKS = 6;
+// RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale u8].
+export const LOCK_ENTRY_LEN = 5;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
@@ -117,6 +119,7 @@ export const OPT_IMPERFECT = 0; // value [allow u8]
 export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
 export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
+export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
 
 // The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
 export const NAME_MAX = 32;

@@ -4,6 +4,7 @@
 // medius crate's link/correlation behavior.
 
 import {
+  type Bearing,
   type CatchEvent,
   type CatchFilter,
   type Caps,
@@ -29,6 +30,7 @@ import {
   MAX_PAYLOAD,
   PROTO_VER,
   Q_CLIP,
+  OPT_BEARING,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -61,6 +63,10 @@ import {
   imperfectPayload,
   injectPayload,
   ledPayload,
+  BearingMode,
+  bearingPayload,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_PASS,
   lockPayload,
   moveCursorPayload,
   moveWheelPayload,
@@ -275,6 +281,13 @@ export class SerialLink {
     return resp.windowMs;
   }
 
+  // The bearing (§4.14): the window the With/Against directions are held over, and how it is read.
+  async queryBearing(timeoutMs?: number): Promise<Bearing> {
+    const resp = parseResp(await this.queryOption(OPT_BEARING, timeoutMs));
+    if (resp?.kind !== 'bearing') throw new Error('unexpected reply to OPTIONS(BEARING) query');
+    return resp.bearing;
+  }
+
   // The emit-rate pacing option (§4.14): the mode, the configured fixed rate, and the rate in effect.
   async queryEmitPace(timeoutMs?: number): Promise<EmitPace> {
     const resp = parseResp(await this.queryOption(OPT_EMIT, timeoutMs));
@@ -290,16 +303,24 @@ export class SerialLink {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
-  lock(target: LockTarget, direction: Direction): Promise<void> {
+  // Weigh physical input on a target and direction (§3.8). `scale` is the percent of the physical
+  // value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
+  // amplifies. `lock` and `unlock` are its two ends. Direction.With / .Against are measured against
+  // the bearing (§3.12) and do nothing until one is live; see `setBearing`.
+  scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
     return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 1)),
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, scale)),
     );
   }
 
+  lock(target: LockTarget, direction: Direction): Promise<void> {
+    return this.scale(target, direction, LOCK_SCALE_BLOCK);
+  }
+
+  // Back to passing untouched. Direction.Both clears every direction of the target, the
+  // bearing-relative pair included, so an unlock never leaves one weighing unseen.
   unlock(target: LockTarget, direction: Direction): Promise<void> {
-    return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 0)),
-    );
+    return this.scale(target, direction, LOCK_SCALE_PASS);
   }
 
   // Move the cursor (§3.1). Relative, in the cloned mouse's own units. The wire field is an i16, so
@@ -411,6 +432,15 @@ export class SerialLink {
   // `queryMovementRiding`.
   setMovementRiding(windowMs: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
+  }
+
+  // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
+  // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
+  // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
+  // (PerAxis) or projects the aim onto the injected XY vector (Vector). Persisted in NVS. Read back
+  // with `queryBearing`.
+  setBearing(windowMs: number, mode: BearingMode = BearingMode.PerAxis): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
   // Set emit-rate pacing (§3.10): the source the box paces injection to. Learned tracks the mouse's

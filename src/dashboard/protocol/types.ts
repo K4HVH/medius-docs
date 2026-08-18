@@ -239,11 +239,20 @@ export enum LockAxis {
 
 // The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
 // aliases below give each reading a name and no call site has to write the ambiguous member.
+// With and Against name a sign relative to the bearing, the direction the box is itself injecting
+// (§3.12), so they follow the aim rather than the axis. Axes only, and LOCK only: a subscription or a
+// trigger is addressed before there is any injection to be with or against.
 export enum Direction {
   Both = 0,
   Positive = 1,
   Negative = 2,
+  With = 3,
+  Against = 4,
 }
+
+// Whether a direction is measured against the bearing rather than a fixed sign.
+export const isRelativeDirection = (d: Direction): boolean =>
+  d === Direction.With || d === Direction.Against;
 
 // A momentary usage's edge: buttons, keys, and media.
 export const Press = Direction.Positive;
@@ -255,6 +264,31 @@ export const Out = Direction.Negative; // PC to device
 
 // The id sentinel that blanket-locks a whole class (§3.8), e.g. every button or every key.
 export const LOCK_ID_ALL = 0xffff;
+
+// LOCK scale (§3.8): the percent of the physical value the box keeps on that direction. Blocking and
+// passing are the two ends of one number, so a lock is Block and an unlock is Pass; above Pass it
+// amplifies. A momentary usage carries one bit, so anything under Pass locks it and there is nothing
+// in between.
+export const LOCK_SCALE_BLOCK = 0;
+export const LOCK_SCALE_PASS = 100;
+export const LOCK_SCALE_MAX = 255;
+
+// OPTION(BEARING) geometry (§3.12): how the box decides whether physical motion runs with or against
+// its own injection.
+export enum BearingMode {
+  PerAxis = 0,
+  Vector = 1,
+}
+
+// The configured bearing (§4.14). windowMs is how long the last injected delta's direction stays the
+// thing With/Against are measured against; 0 is off, leaving both inert whatever their scale.
+export interface Bearing {
+  windowMs: number;
+  mode: BearingMode;
+}
+
+// The bearing window the box holds before any host sets one.
+export const BEARING_WINDOW_DEFAULT_MS = 20;
 
 // One lock target: a class plus its class-specific id (axis id, button id, HID keycode, or media
 // usage; LOCK_ID_ALL for a blanket). A button locks as class Button, id = button id, like a key.
@@ -269,26 +303,47 @@ export const lockKey = (usage: number): LockTarget => ({ cls: LockClass.Key, id:
 export const lockMedia = (usage: number): LockTarget => ({ cls: LockClass.Media, id: usage });
 export const lockBlanket = (cls: LockClass): LockTarget => ({ cls, id: LOCK_ID_ALL });
 
-// One active lock (§4.8): a target plus which directions it covers. dirbits b0 = positive/press,
-// b1 = negative/release.
+// One weighed direction (§4.8): a target, which direction of it, and how much of the physical value
+// survives. Entries mirror the LOCK frame field for field, so what comes back is what you would send
+// to reproduce it, one entry per direction rather than one per target.
 export interface LockEntry {
   cls: LockClass;
   id: number;
-  positive: boolean;
-  negative: boolean;
+  direction: Direction;
+  scale: number;
 }
 
-// The active input-lock set (§4.8): a list of entries, one per locked field across every class.
+// The active input-scale set (§4.8): every direction not passing untouched, across every class.
 export interface Locks {
   entries: LockEntry[];
 }
 
-// True when the given target+direction is locked in the set.
+// The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
+// weighs it. Both reports the lowest across every direction, so the worst case a delta could meet.
+// Where several entries cover the same direction the lowest wins, matching the box multiplying them.
+export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
+  const covering = locks.entries.filter(
+    (x) =>
+      x.cls === target.cls &&
+      x.id === target.id &&
+      (direction === Direction.Both ||
+        x.direction === Direction.Both ||
+        x.direction === direction),
+  );
+  return covering.length ? Math.min(...covering.map((x) => x.scale)) : LOCK_SCALE_PASS;
+}
+
+// True when the target is blocked outright on that direction. A direction merely weighed is not
+// locked. Both asks about the two fixed signs, the pair it has always named; ask for a relative one
+// by name, because a target can be blocked against the bearing while both fixed signs pass.
 export function isLocked(locks: Locks, target: LockTarget, direction: Direction): boolean {
-  const e = locks.entries.find((x) => x.cls === target.cls && x.id === target.id);
-  if (!e) return false;
-  if (direction === Direction.Both) return e.positive && e.negative;
-  return direction === Direction.Positive ? e.positive : e.negative;
+  if (direction === Direction.Both) {
+    return (
+      scaleOf(locks, target, Direction.Positive) === LOCK_SCALE_BLOCK &&
+      scaleOf(locks, target, Direction.Negative) === LOCK_SCALE_BLOCK
+    );
+  }
+  return scaleOf(locks, target, direction) === LOCK_SCALE_BLOCK;
 }
 
 // CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
