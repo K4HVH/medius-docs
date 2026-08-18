@@ -9,6 +9,7 @@ import {
   MOTION_CURSOR,
   MOTION_WHEEL,
   NAME_MAX,
+  OPT_BEARING,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -17,9 +18,11 @@ import {
 import {
   type ClipEntry,
   type ClipTrigger,
+  BearingMode,
   CatchClass,
   Direction,
   LedMode,
+  LOCK_SCALE_MAX,
   LedTarget,
   LockClass,
   RebootTarget,
@@ -66,15 +69,21 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
   return new Uint8Array([target, mode, level & 0xff]);
 }
 
-// LOCK (§3.8): [class u8][id u16 LE][direction u8][state u8]. state 0 = unlock, 1 = lock. id is
-// class-specific (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
+// LOCK (§3.8): [class u8][id u16 LE][direction u8][scale u8]. scale is the percent of the physical
+// value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
+// amplifies to LOCK_SCALE_MAX (2.55x). Locking and unlocking are its two ends. id is class-specific
+// (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
+//
+// A delta picks up at most two scales, its absolute direction's and its bearing-relative one's, and
+// they multiply, so a block in either wins. Direction.With / .Against need a live bearing (§3.12).
 export function lockPayload(
   cls: LockClass,
   id: number,
   direction: Direction,
-  state: number,
+  scale: number,
 ): Uint8Array {
-  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, state & 0xff]);
+  const s = Math.max(0, Math.min(LOCK_SCALE_MAX, Math.round(scale)));
+  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, s]);
 }
 
 // CATCH (§3.9): [class u8][id u16 LE][dir u8][state u8][capture u8]. One table entry, addressed the
@@ -102,6 +111,15 @@ export function imperfectPayload(allow: boolean): Uint8Array {
 export function moveRidePayload(timeoutMs: number): Uint8Array {
   const ms = Math.max(0, Math.min(0xffff, Math.round(timeoutMs)));
   return new Uint8Array([OPT_MOVE_RIDE, ms & 0xff, (ms >> 8) & 0xff]);
+}
+
+// OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8] - what the With/Against lock directions
+// are measured against (§3.12). window is how long the last injected delta's direction stays the
+// bearing on that axis; 0 turns it off, leaving both directions inert whatever their scale. mode 0
+// reads each axis's own sign, mode 1 projects the aim onto the injected XY vector. Persisted in NVS.
+export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array {
+  const ms = Math.max(0, Math.min(0xffff, Math.round(windowMs)));
+  return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
 }
 
 // OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE] - emit-rate pacing. mode 0 learned (default), 1

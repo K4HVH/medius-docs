@@ -32,8 +32,15 @@ import {
   INJ_MEDIA,
   LedMode,
   LedTarget,
+  BearingMode,
+  bearingPayload,
+  isRelativeDirection,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_MAX,
+  LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
+  scaleOf,
   Direction,
   In,
   Out,
@@ -413,27 +420,41 @@ describe('LED command (§3.7)', () => {
 });
 
 describe('LOCK command (§3.8)', () => {
-  it('lockPayload packs [class][id u16 LE][direction][state]', () => {
-    // Lock the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
+  it('lockPayload packs [class][id u16 LE][direction][scale]', () => {
+    // Block the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
     expect(
-      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, Direction.Negative, 1)),
-    ).toEqual([3, 2, 0, 2, 1]);
-    // Unlock the X axis, both signs.
-    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, 0))).toEqual([
-      3, 0, 0, 0, 0,
-    ]);
+      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, Direction.Negative, LOCK_SCALE_BLOCK)),
+    ).toEqual([3, 2, 0, 2, 0]);
+    // Unlock the X axis, every direction: a full pass, not a zero.
+    expect(
+      Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, LOCK_SCALE_PASS)),
+    ).toEqual([3, 0, 0, 0, 100]);
     // A button locks as class button (0), id = button id, with no +3 offset.
-    expect(Array.from(lockPayload(LockClass.Button, 4, Direction.Positive, 1))).toEqual([
-      0, 4, 0, 1, 1,
-    ]);
+    expect(
+      Array.from(lockPayload(LockClass.Button, 4, Direction.Positive, LOCK_SCALE_BLOCK)),
+    ).toEqual([0, 4, 0, 1, 0]);
     // A media-class lock keeps its 16-bit usage.
-    expect(Array.from(lockPayload(LockClass.Media, 0x00e9, Direction.Both, 1))).toEqual([
-      2, 0xe9, 0x00, 0, 1,
-    ]);
+    expect(
+      Array.from(lockPayload(LockClass.Media, 0x00e9, Direction.Both, LOCK_SCALE_BLOCK)),
+    ).toEqual([2, 0xe9, 0x00, 0, 0]);
     // The id sentinel 0xFFFF blanket-locks the whole class.
-    expect(Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, Direction.Both, 1))).toEqual([
-      1, 0xff, 0xff, 0, 1,
+    expect(
+      Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, Direction.Both, LOCK_SCALE_BLOCK)),
+    ).toEqual([1, 0xff, 0xff, 0, 0]);
+    // A partial scale and a gain both ride the same byte.
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Against, 40))).toEqual([
+      3, 0, 0, 4, 40,
     ]);
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.Y, Direction.With, 130))).toEqual([
+      3, 1, 0, 3, 130,
+    ]);
+  });
+
+  it('lockPayload clamps a scale to the byte the wire carries', () => {
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, 999))[4]).toBe(
+      LOCK_SCALE_MAX,
+    );
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, -5))[4]).toBe(0);
   });
 
   it('LockClass wire values match ctrl_proto.h', () => {
@@ -441,22 +462,39 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('Direction wire values match ctrl_proto.h, and the aliases name both readings', () => {
-    expect([Direction.Both, Direction.Positive, Direction.Negative]).toEqual([0, 1, 2]);
+    expect([
+      Direction.Both,
+      Direction.Positive,
+      Direction.Negative,
+      Direction.With,
+      Direction.Against,
+    ]).toEqual([0, 1, 2, 3, 4]);
     // The edge reading (momentary usages) and the transfer reading (traffic classes) are the same
     // byte, so an alias that drifted off its member would silently mis-address a subscription.
     expect([Press, Release]).toEqual([Direction.Positive, Direction.Negative]);
     expect([In, Out]).toEqual([Direction.Positive, Direction.Negative]);
   });
 
+  it('only the bearing-relative directions report as relative', () => {
+    expect([Direction.With, Direction.Against].map(isRelativeDirection)).toEqual([true, true]);
+    expect(
+      [Direction.Both, Direction.Positive, Direction.Negative].map(isRelativeDirection),
+    ).toEqual([false, false, false]);
+  });
+
+  it('LOCK scale constants match ctrl_proto.h', () => {
+    expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX]).toEqual([0, 100, 255]);
+  });
+
   it('parses a RESP(LOCKS) entry list', () => {
-    // what = 6, n = 2: axis wheel negative (dirbits 0x02), then button Left both (dirbits 0x03).
-    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 0x02, 0, 0, 0, 0x03]));
+    // what = 6, n = 2: axis wheel blocked negative, then axis X weighed 40% against the bearing.
+    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 2, 0, 3, 0, 0, 4, 40]));
     expect(resp).toEqual({
       kind: 'locks',
       locks: {
         entries: [
-          { cls: LockClass.Axis, id: LockAxis.Wheel, positive: false, negative: true },
-          { cls: LockClass.Button, id: 0, positive: true, negative: true },
+          { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
+          { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 40 },
         ],
       },
     });
@@ -466,25 +504,75 @@ describe('LOCK command (§3.8)', () => {
     expect(parseResp(new Uint8Array([6, 0]))).toEqual({ kind: 'locks', locks: { entries: [] } });
   });
 
-  it('isLocked reads a per-direction lock out of the entry list', () => {
+  it('isLocked reads a per-direction block out of the entry list', () => {
     const locks = {
       entries: [
-        { cls: LockClass.Axis, id: LockAxis.Wheel, positive: false, negative: true },
-        { cls: LockClass.Axis, id: LockAxis.X, positive: true, negative: true },
+        { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Positive, scale: 0 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Negative, scale: 0 },
       ],
     };
     expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Negative)).toBe(true);
     expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Positive)).toBe(false);
     expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Both)).toBe(false);
-    // X: both directions set means Both is true.
+    // X: both fixed signs blocked means Both is true.
     expect(isLocked(locks, lockAxis(LockAxis.X), Direction.Both)).toBe(true);
     // A button not in the list reads unlocked.
     expect(isLocked(locks, lockButton(0), Direction.Positive)).toBe(false);
   });
 
+  it('a weighed direction is not a locked one', () => {
+    const locks = {
+      entries: [{ cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 40 }],
+    };
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Against)).toBe(40);
+    expect(isLocked(locks, lockAxis(LockAxis.X), Direction.Against)).toBe(false);
+    // A direction nothing covers passes untouched, and so does an unweighed target.
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.With)).toBe(LOCK_SCALE_PASS);
+    expect(scaleOf(locks, lockAxis(LockAxis.Y), Direction.Against)).toBe(LOCK_SCALE_PASS);
+    // A relative block leaves both fixed signs passing, so Both must not read it as a lock.
+    const rel = {
+      entries: [{ cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 0 }],
+    };
+    expect(isLocked(rel, lockAxis(LockAxis.X), Direction.Both)).toBe(false);
+    expect(isLocked(rel, lockAxis(LockAxis.X), Direction.Against)).toBe(true);
+  });
+
+  it('scaleOf takes the lowest of the entries covering a direction', () => {
+    const locks = {
+      entries: [
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Both, scale: 60 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Negative, scale: 25 },
+      ],
+    };
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Negative)).toBe(25);
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Positive)).toBe(60);
+  });
+
   it('returns null for a truncated RESP(LOCKS) payload', () => {
     expect(parseResp(new Uint8Array([6]))).toBeNull(); // needs the n byte
-    expect(parseResp(new Uint8Array([6, 1, 3, 2, 0]))).toBeNull(); // n=1 but only 3 entry bytes
+    expect(parseResp(new Uint8Array([6, 1, 3, 2, 0, 2]))).toBeNull(); // n=1 but only 4 entry bytes
+  });
+});
+
+describe('OPTION(BEARING) (§3.10, §3.12)', () => {
+  it('bearingPayload packs [id=4][window u16 LE][mode]', () => {
+    expect(Array.from(bearingPayload(20, BearingMode.PerAxis))).toEqual([4, 20, 0, 0]);
+    expect(Array.from(bearingPayload(500, BearingMode.Vector))).toEqual([4, 0xf4, 0x01, 1]);
+    // A zero window is off, not a zero-length one.
+    expect(Array.from(bearingPayload(0, BearingMode.PerAxis))).toEqual([4, 0, 0, 0]);
+  });
+
+  it('parses a RESP(OPTIONS, BEARING) value', () => {
+    expect(parseResp(new Uint8Array([9, 4, 20, 0, 0]))).toEqual({
+      kind: 'bearing',
+      bearing: { windowMs: 20, mode: BearingMode.PerAxis },
+    });
+    expect(parseResp(new Uint8Array([9, 4, 0, 0, 1]))).toEqual({
+      kind: 'bearing',
+      bearing: { windowMs: 0, mode: BearingMode.Vector },
+    });
+    expect(parseResp(new Uint8Array([9, 4, 20, 0]))).toBeNull();
   });
 });
 

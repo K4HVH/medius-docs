@@ -11,6 +11,7 @@ import {
   DI_HAS_SERIAL,
   EmitMode,
   emitModeFromU8,
+  OPT_BEARING,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -18,6 +19,7 @@ import {
   Q_CATCH,
   Q_DEVICE_INFO,
   Q_HEALTH,
+  LOCK_ENTRY_LEN,
   Q_LOCKS,
   Q_OPTIONS,
   Q_RATE,
@@ -52,6 +54,8 @@ import {
   type Direction,
   type Health,
   type ImperfectStatus,
+  type Bearing,
+  type BearingMode,
   type LockEntry,
   type Locks,
   type LogLine,
@@ -87,6 +91,7 @@ export type Resp =
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
+  | { kind: 'bearing'; bearing: Bearing }
   | { kind: 'catch'; catch: CatchState }
   | { kind: 'imperfect'; imperfect: ImperfectStatus }
   | { kind: 'movementRiding'; windowMs: number } // 0 = off
@@ -198,19 +203,19 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_LOCKS: {
-      // [what][n u8] then n × [class u8][id u16 LE][dirbits u8] (dirbits b0 = pos, b1 = neg).
+      // [what][n u8] then n × [class u8][id u16 LE][dir u8][scale u8], one entry per direction not
+      // passing untouched. A target absent from the list is passing on every direction.
       if (payload.length < 2) return null;
       const n = payload[1];
-      if (payload.length < 2 + 4 * n) return null;
+      if (payload.length < 2 + LOCK_ENTRY_LEN * n) return null;
       const entries: LockEntry[] = [];
       for (let i = 0; i < n; i++) {
-        const off = 2 + 4 * i;
-        const dirbits = payload[off + 3];
+        const off = 2 + LOCK_ENTRY_LEN * i;
         entries.push({
           cls: payload[off],
           id: u16le(payload, off + 1),
-          positive: (dirbits & 0x01) !== 0,
-          negative: (dirbits & 0x02) !== 0,
+          direction: payload[off + 3],
+          scale: payload[off + 4],
         });
       }
       return { kind: 'locks', locks: { entries } };
@@ -321,6 +326,13 @@ export function parseResp(payload: Uint8Array): Resp | null {
           // [what=9][id=1][timeout u16 LE ms]
           if (payload.length < 4) return null;
           return { kind: 'movementRiding', windowMs: u16le(payload, 2) };
+        case OPT_BEARING:
+          // [what=9][id=4][window u16 LE ms][mode u8]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'bearing',
+            bearing: { windowMs: u16le(payload, 2), mode: payload[4] as BearingMode },
+          };
         case OPT_EMIT:
           // [what=9][id=2][mode u8][fixed_hz u16 LE][resolved_hz u16 LE]
           if (payload.length < 7) return null;
