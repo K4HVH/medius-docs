@@ -156,8 +156,8 @@ const Catch: Component = () => {
         <Card>
           <CardHeader title="The table" subtitle="Most-specific-first matching, 32 entries, and how a refusal shows up" />
           <p>
-            An exact <code>(class, id)</code> entry beats a class blanket, which beats{' '}
-            <code>class = 0xFF</code>; ties go to the earlier entry. The winning entry supplies the{' '}
+            An exact <code>(class, id)</code> entry ranks above a class blanket, which ranks above{' '}
+            <code>class = 0xFF</code>; ties go to the earlier entry. The highest-ranked entry supplies the{' '}
             <code>snaplen</code>.
           </p>
           <pre class="diagram">{`  table (insertion order)
@@ -204,7 +204,7 @@ const Catch: Component = () => {
             link loss, or an explicit unsubscribe.
           </p>
           <p>
-            The host library holds an open table alive with the same keepalive it uses for injection
+            The host library holds an open table past the silence timeout with the same keepalive it uses for injection
             holds, re-asserting the whole table after a device-side blip and across a control-link
             reconnect; its own <code>RESET</code> ends the event stream cleanly.
           </p>
@@ -420,7 +420,7 @@ const Catch: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
-              <tr><td><code>CONTROL</code></td><td>the real device's answer: <code>0</code> OK, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout</td></tr>
+              <tr><td><code>CONTROL</code></td><td>how the transaction completed: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> NAK to timeout</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
               <tr><td>every other class</td><td><code>0</code></td></tr>
             </tbody>
@@ -432,11 +432,11 @@ const Catch: Component = () => {
             way the data stage went.
           </p>
           <p>
-            A request answered from the box's own value cache still produces an event.
+            A request served from the box's own value cache still produces an event.
           </p>
           <pre class="diagram">{`  bytes = 80 06 00 01 00 00 12 00   12 01 00 02 00 00 00 40 ...
           '------ setup (8) ------'   '---- data stage -------'
-          GET_DESCRIPTOR(device)      dir = 1 (IN), flags = 0 (the device answered)`}</pre>
+          GET_DESCRIPTOR(device)      dir = 1 (IN), flags = 0 (completed OK)`}</pre>
           <div class="api-response-label">BUS EVENT KINDS</div>
           <p>
             <code>BUS</code> carries <code>[a][b]</code> in <code>bytes</code> with the kind in{' '}
@@ -515,7 +515,7 @@ const Catch: Component = () => {
 
   strict priority: each queue drains fully before the next`}</pre>
           <p>
-            Bulk can starve completely under a busy mouse: bulk plus input is the combination the
+            Bulk can go undrained indefinitely under a busy mouse: bulk plus input is the combination the
             control link cannot carry.
           </p>
           <p>

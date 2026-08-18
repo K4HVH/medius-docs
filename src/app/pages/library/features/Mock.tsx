@@ -27,7 +27,7 @@ const Mock: Component = () => {
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            <code>new()</code> records every command and auto-answers{' '}
+            <code>new()</code> records every command and auto-replies to{' '}
             <code>QUERY(VERSION)</code> and <code>QUERY(HEALTH)</code> with defaults.
           </p>
 
@@ -63,7 +63,7 @@ let device = Device::with_mock(mock.clone());
                 <td><code>with_mock</code></td>
                 <td>No</td>
                 <td><code>Device</code></td>
-                <td>Wraps the fake and hands back the device directly.</td>
+                <td>Wraps the fake and returns the device directly.</td>
               </tr>
               <tr>
                 <td><code>open_mock</code></td>
@@ -81,7 +81,7 @@ let device = Device::open_mock(MockBox::new())?;
 device.move_rel(5, 5)?;`}</code></pre>
 
           <p>
-            See the <A href="/library/features/mock#silent">dead-box card</A> for the two ways{' '}
+            See the <A href="/library/features/mock#silent">silent-box card</A> for the two ways{' '}
             <code>open_mock</code> can fail.
           </p>
         </Card>
@@ -89,7 +89,7 @@ device.move_rel(5, 5)?;`}</code></pre>
 
       <div id="responses" data-search-target>
         <Card>
-          <CardHeader title="Scripting query answers" subtitle="Set the version, health, and device-info a query returns" />
+          <CardHeader title="Scripting query replies" subtitle="Set the version, health, and device-info a query returns" />
           <pre class="api-signature">fn with_version(self, version: Version) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
@@ -195,12 +195,12 @@ mock.push_log(LogLevel::Warn, "overheating");
 let line = rx.recv_timeout(Duration::from_secs(1)).expect("a log line");
 assert_eq!(line.text, "overheating");
 
-// Fake a catch subscription seeing the user hold A.
+// Feed the snapshot a Key subscription gets while A is held.
 let stream = device.catch_events([CatchFilter::watch_class(Class::Key)])?;
 mock.push_usages(0, 1_000, Class::Key, Direction::PRESS, &[Usage::from(Key::A)]);
 assert!(matches!(stream.recv()?, CatchEvent::Usages(s) if s.is_held(Key::A)));
 
-// Fake a truncated vendor-interrupt capture: 4 bytes seen of a 64-byte packet.
+// Fake a truncated vendor-interrupt capture: 4 bytes captured of a 64-byte packet.
 mock.push_traffic(
     1, 2_000, ClockDomain::HostChip, CatchClass::VendorInterrupt, 0x83, Direction::IN,
     0, 64, &[0x11, 0x22, 0x33, 0x44],
@@ -279,18 +279,18 @@ let inject = frames
 assert_eq!(inject.payload, vec![0, 0, 0, 1]);
 assert!(mock.saw(FrameType::Inject));
 
-mock.clear_recorded(); // next assertions see a fresh log`}</code></pre>
+mock.clear_recorded(); // next assertions start from an empty record`}</code></pre>
         </Card>
       </div>
 
       <div id="silent" data-search-target>
         <Card>
-          <CardHeader title="Simulating a dead box" subtitle="silent, and the handshake failures" />
+          <CardHeader title="Simulating a box that never replies" subtitle="silent, and the handshake failures" />
           <pre class="api-signature">fn silent(self) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            <code>silent()</code> records commands but never answers a query. The two{' '}
+            <code>silent()</code> records commands but sends no reply to a query. The two{' '}
             <A href="/library/features/mock#wrap"><code>open_mock</code></A> failures are a silent box
             (<A href="/library/types/errors"><code>Error::NoReply</code></A>) and an unknown protocol
             version (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>).
@@ -299,7 +299,7 @@ mock.clear_recorded(); // next assertions see a fresh log`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Error, MockBox, Version};
 
-// A silent box answers nothing: no reply.
+// A silent box sends no reply.
 let err = Device::open_mock(MockBox::new().silent()).unwrap_err();
 assert!(matches!(err, Error::NoReply));
 

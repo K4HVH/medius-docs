@@ -78,13 +78,13 @@ const Enums: Component = () => {
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">RESULT THE PC SEES</div>
+          <div class="api-response-label">WHAT THE EMITTED REPORT CARRIES</div>
           <p>The two releases differ only when the user physically holds the same input:</p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>User holds nothing</th><th>User is holding it</th></tr></thead>
             <tbody>
               <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
-              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (physical wins)</td></tr>
+              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (the physical bit stands)</td></tr>
               <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
             </tbody>
           </table>
@@ -171,9 +171,9 @@ const Enums: Component = () => {
           <pre><code class="language-rust">{`use medius::{Button, Capture, CatchFilter, Direction, TrafficClass};
 
 // The same target, once as a lock and once as a catch.
-device.lock(Button::Side1, Direction::Both)?;                    // hide it from the game
+device.lock(Button::Side1, Direction::Both)?;                    // suppressed in the emitted report
 let stream = device.catch_events([
-    CatchFilter::watch(Button::Side1).on_press(),                // still see the press
+    CatchFilter::watch(Button::Side1).on_press(),                // the tap is before suppression
 ])?;
 
 // A byte-oriented class instead: one vendor interrupt endpoint, IN only, 16 bytes a packet.
@@ -398,7 +398,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
           <p>
             What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to;{' '}
-            <code>Auto</code> hands it back to the box's status display. The discriminant is the wire{' '}
+            <code>Auto</code> restores the box's status display. The discriminant is the wire{' '}
             <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
             <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
           </p>
@@ -476,8 +476,7 @@ device.press(from_button)?;                         // press takes any impl Into
             what <A href="/library/requests#query-locks"><code>query_locks</code></A> reports it as.
           </p>
           <p>
-            <code>With</code> and <code>Against</code> are measured against the bearing rather than a
-            fixed sign, so they follow the aim; <code>is_relative()</code> tells them apart, and a lock or{' '}
+            <code>With</code> and <code>Against</code> are measured against the bearing rather than a fixed sign, so the sign they cover follows the injection; <code>is_relative()</code> tells them apart, and a lock or{' '}
             <A href="/library/catch#catch-events">catch</A> call on any class but an axis refuses one
             with <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
             <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
@@ -508,7 +507,7 @@ device.press(from_button)?;                         // press takes any impl Into
             </tbody>
           </table>
           <p>
-            In <code>Vector</code> the relative pair addresses the aim as a whole: the box takes the
+            In <code>Vector</code> the relative pair addresses X and Y as one vector: the box takes the
             lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
             <A href="/library/lock#lock-all"><code>scale_all</code></A>. What{' '}
             <A href="/library/types/structs#locks"><code>Locks</code></A> reports back is there.
@@ -641,7 +640,7 @@ match stream.recv()? {
 
       <div id="control-status" data-search-target>
         <Card>
-          <CardHeader title="ControlStatus" subtitle="What the device answered a proxied control transfer with" />
+          <CardHeader title="ControlStatus" subtitle="How a proxied control transfer ended" />
           <pre class="api-signature">enum ControlStatus {'{'} Ok, Stalled, Naked, Other(u8) {'}'}</pre>
           <p>
             Read it with <code>TrafficEvent::control_status()</code>, which returns{' '}
@@ -651,10 +650,10 @@ match stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>flags</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The device answered.</td></tr>
+              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed.</td></tr>
               <tr><td><code>Stalled</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
-              <tr><td><code>Naked</code></td><td><code>0xFE</code></td><td>The device NAKed to timeout, or never answered.</td></tr>
-              <tr><td><code>Other(u8)</code></td><td>anything else</td><td>A status this build does not know, carried verbatim.</td></tr>
+              <tr><td><code>Naked</code></td><td><code>0xFE</code></td><td>The device NAKed until the transfer timed out.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td>anything else</td><td>A status byte with no variant in this build, carried verbatim.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -669,8 +668,7 @@ match stream.recv()? {
           <p>
             The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
             event. Read it with <code>TrafficEvent::bus_event()</code>, which returns{' '}
-            <code>Option&lt;BusEvent&gt;</code>, which is <code>None</code> for a kind this build does not
-            know. The two kinds that carry operands parse them into their own fields.
+            <code>Option&lt;BusEvent&gt;</code>, which is <code>None</code> for a kind byte with no variant in this build. The two kinds that carry operands parse them into their own fields.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
@@ -689,7 +687,7 @@ match stream.recv()? {
           </table>
           <p>
             <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-            the other eight are the clone's own life on USB1, which the control PC cannot see.
+            the other eight are the clone's own USB1 bus, which the control PC is not on.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};

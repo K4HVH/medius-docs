@@ -57,8 +57,7 @@ const Async: Component = () => {
                 <td><code>find</code></td>
                 <td>
                   Discovers the first medius box by USB id, opens it, and runs the handshake. Blocks
-                  like <A href="/library/connection#open"><code>Device::find</code></A>, then hands
-                  back an <code>AsyncDevice</code>.
+                  like <A href="/library/connection#open"><code>Device::find</code></A>, then returns an <code>AsyncDevice</code>.
                 </td>
               </tr>
               <tr>
@@ -71,7 +70,7 @@ const Async: Component = () => {
               </tr>
               <tr>
                 <td><code>into_inner</code></td>
-                <td>Hands the sync <code>Device</code> back.</td>
+                <td>Returns the sync <code>Device</code>.</td>
               </tr>
             </tbody>
           </table>

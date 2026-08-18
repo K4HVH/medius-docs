@@ -45,8 +45,8 @@ const Frame: Component = () => {
               <tr><th>Command</th><th>Role of <code>SEQ</code></th></tr>
             </thead>
             <tbody>
-              <tr><td>Ordinary commands</td><td>Only helps you spot a dropped frame.</td></tr>
-              <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>The box copies your <code>SEQ</code> onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, so with several requests outstanding the matching <code>SEQ</code> tells you which reply answers which.</td></tr>
+              <tr><td>Ordinary commands</td><td>Only lets you spot a dropped frame.</td></tr>
+              <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>The box copies your <code>SEQ</code> onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, so with several requests outstanding the matching <code>SEQ</code> pairs each reply with its request.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -106,7 +106,7 @@ const Frame: Component = () => {
           <p>
             The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
             <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
-            silently drops the frame and resyncs at the next <code>0xA5</code>.
+            drops the frame with no reply and resyncs at the next <code>0xA5</code>.
           </p>
           <table class="api-params">
             <thead>

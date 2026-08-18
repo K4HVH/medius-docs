@@ -608,7 +608,7 @@ const Types: Component = () => {
           </p>
           <pre class="diagram">{`  a report arrives on VENDOR_INTERRUPT endpoint 0x83
           │
-          ├─ exact   { class_ = VENDOR_INTERRUPT, id = 0x0083 }  ──▶ wins if present
+          ├─ exact   { class_ = VENDOR_INTERRUPT, id = 0x0083 }  ──▶ resolves first
           ├─ blanket { class_ = VENDOR_INTERRUPT, id = ID_ANY }  ──▶ used if no exact entry
           └─ any     { class_ = ANY,              id = ID_ANY }  ──▶ used if neither matched
                      ties inside one tier go to the earlier entry in your array`}</pre>
@@ -627,7 +627,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <p>
             A malformed entry now fails the whole call with its own{' '}
             <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>, rather than being dropped
-            silently. Two filters naming the same table entry, whatever their captures, are what{' '}
+            with no status. Two filters naming the same table entry, whatever their captures, are what{' '}
             <A href="/bindings/c/api#inspectors"><code>medius_catch_filter_same_address</code></A> tests.
           </p>
         </Card>
@@ -1098,7 +1098,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>filter</code></td><td><A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A></td><td>The accepted subscription: class, id, direction, and the <code>capture</code> that applies when this entry wins the match.</td></tr>
+              <tr><td><code>filter</code></td><td><A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A></td><td>The accepted subscription: class, id, direction, and the <code>capture</code> that applies when this entry is the match.</td></tr>
               <tr><td><code>dropped</code></td><td><code>uint16_t</code></td><td>Events <em>this entry</em> could not queue.</td></tr>
             </tbody>
           </table>
@@ -1307,7 +1307,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which class produced the event; it also decides how <code>flags</code> reads.</td></tr>
+              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which class produced the event; it also selects how <code>flags</code> reads.</td></tr>
               <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The endpoint address, endpoint number, or interface number, per the class.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td><code>POSITIVE</code> = IN (device to PC), <code>NEGATIVE</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>uint8_t</code></td><td>Class-specific; see the table below. <code>0</code> for classes that define none.</td></tr>
@@ -1501,7 +1501,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>on</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The physical button, key, or media usage that fires the binding.</td></tr>
               <tr><td><code>edge</code></td><td><A href="/bindings/c/types#edge"><code>MediusEdge</code></A></td><td>Which edge of <code>on</code> fires it.</td></tr>
               <tr><td><code>action</code></td><td><A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A></td><td>What it does to the clip.</td></tr>
-              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to swallow the input so the game never sees it; 0 to let it pass through.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to suppress the input so it never reaches the PC; 0 to let it pass through.</td></tr>
             </tbody>
           </table>
         </Card>

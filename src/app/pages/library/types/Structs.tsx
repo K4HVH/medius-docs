@@ -223,7 +223,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every weighed direction, one entry each, across specific targets and whole-class blankets.</td></tr>
-              <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap the lowest wins. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
@@ -243,12 +243,12 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
 
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Positive) {
-    // the real mouse can't move right
+    // physical +X is zeroed
 }
 if locks.is_locked(Button::Left, Direction::Negative) {
-    // a left-click is latched down: the hand can't release it
+    // a left-click is latched down: the release edge is blocked
 }
-// how much counter-aim survives right now
+// how much of a delta opposing the injection survives
 println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
         </Card>
       </div>
@@ -285,7 +285,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long an axis holds the direction of its last injected delta. <code>None</code> is off, so <code>With</code> and <code>Against</code> are inert whatever their scale.</td></tr>
-              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the aim is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
           <p><code>is_live()</code> is whether a bearing is held at all.</p>
@@ -311,7 +311,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>CatchFilter::all_input()</code></td><td>All four input classes, as a <code>[CatchFilter; 4]</code>.</td></tr>
               <tr><td><code>CatchFilter::traffic(class, id)</code></td><td>One id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an endpoint, an interface, an endpoint number.</td></tr>
               <tr><td><code>CatchFilter::traffic_class(class)</code></td><td>Every id in one traffic class, a blanket.</td></tr>
-              <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions: the whole firehose.</td></tr>
+              <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MODIFIERS AND ACCESSORS</div>
@@ -330,16 +330,15 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
           </table>
           <div class="api-response-label">MATCHING IS MOST-SPECIFIC-FIRST</div>
           <p>
-            An exact <code>(class, id)</code> beats a class blanket, which beats the wildcard, and a
-            named direction beats <code>Both</code>. The winning entry supplies the capture:
+            An exact <code>(class, id)</code> is matched before a class blanket, that before the wildcard, and a named direction before <code>Both</code>. That entry supplies the capture:
           </p>
           <pre class="diagram">{`catch_events([
     CatchFilter::everything().with_capture(Capture::First(16)),   // everything, 16 bytes
     CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83),    // except 0x83, in full
 ])
 
-  packet on 0x83  ->  traffic(VendorInterrupt, 0x83)  wins  ->  whole packet
-  packet on 0x84  ->  everything()                    wins  ->  First(16)`}</pre>
+  packet on 0x83  ->  traffic(VendorInterrupt, 0x83)  resolves  ->  whole packet
+  packet on 0x84  ->  everything()                    resolves  ->  First(16)`}</pre>
           <p>
             Capture is not part of a filter's address, so two filters naming one entry at different
             lengths are one box entry at the wider of the two. <code>same_address</code> is that
@@ -496,7 +495,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
-              <tr><td><code>Control</code></td><td>The real device's answer: <code>0</code> it answered, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed until the transfer timed out.</td></tr>
+              <tr><td><code>Control</code></td><td>How the proxied transfer ended: <code>0</code> completed, <code>0xFD</code> the device STALLed, <code>0xFE</code> it NAKed until the transfer timed out.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
             </tbody>
@@ -651,7 +650,7 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
           </table>
           <p>
             The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
-            says you are losing events; this one says which. Vendor bulk starves first, by{' '}
+            says you are losing events; this one says which. Vendor bulk drops first, by{' '}
             <A href="/library/catch#event-stream">design</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -674,8 +673,7 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
           </p>
           <p>
             The box measures the difference with a four-timestamp exchange across the inter-chip link,
-            stamping each frame as it reaches the wire rather than when it is queued. The two crystals
-            pull apart by up to 20 µs per second.
+            stamping each frame as it reaches the wire rather than when it is queued. The two crystals drift by up to 20 µs per second.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -854,8 +852,7 @@ for ev in input.by_ref().take(20) {
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
-            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No pull method touches
-            the wire, so cloning shares the queue. The methods and an example are on{' '}
+            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No receive method touches the wire, so cloning shares the queue. The methods and an example are on{' '}
             <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
           </p>
         </Card>
@@ -909,13 +906,13 @@ if cfg.loop_ && cfg.finalized {
               <tr><td><code>on</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The button, key, or media usage that fires the trigger.</td></tr>
               <tr><td><code>edge</code></td><td><A href="/library/types/enums#edge"><code>Edge</code></A></td><td>Which edge fires it: <code>Press</code>, <code>Release</code>, or <code>Both</code>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run (<code>Start</code>, <code>Stop</code>, <code>Toggle</code>, ...).</td></tr>
-              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Swallow the triggering input so the PC never sees it; the <code>.consume()</code> builder sets it true.</td></tr>
+              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Lock the trigger usage while it is active, so its edge never reaches the PC; the <code>.consume()</code> builder sets it true.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
 
-// Toggle the clip on a Side1 press, and hide that press from the PC.
+// Toggle the clip on a Side1 press, and suppress that press.
 let trig = ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle).consume();
 handle.bind(trig)?;`}</code></pre>
         </Card>

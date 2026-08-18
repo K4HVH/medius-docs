@@ -197,7 +197,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/option" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Option" subtitle="Name, imperfect clones, movement riding, aim bearing, emit rate" />
+                <CardHeader title="Option" subtitle="Name, imperfect clones, movement riding, bearing, emit rate" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

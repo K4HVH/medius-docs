@@ -89,8 +89,7 @@ CatchFilter.everything()                # every class, every id, one table entry
             </tbody>
           </table>
           <p>
-            Matching is most-specific-first: an exact <code>(class, id)</code> beats a blanket, and a
-            blanket beats <code>everything()</code>. Full semantics on{' '}
+            Matching is most-specific-first: an exact <code>(class, id)</code> is matched before a blanket, and a blanket before <code>everything()</code>. Full semantics on{' '}
             <A href="/bindings/python/types#catchfilter">Types</A> and{' '}
             <A href="/library/catch">Catch</A>.
           </p>

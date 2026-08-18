@@ -9,7 +9,7 @@ const Lock: Component = () => {
       <Card>
         <CardHeader title="Lock" subtitle="Weigh one physical input; injection still drives it" />
         <p>
-          A scale decides how much of the <em>physical</em> device reaches the game PC on one input,
+          A scale sets how much of the <em>physical</em> device reaches the game PC on one input,
           while host <A href="/native/injection">injection</A> still drives that same input at full
           strength. Blocking and passing are its two ends.
         </p>
@@ -51,8 +51,7 @@ const Lock: Component = () => {
             </tbody>
           </table>
           <p>
-            A delta picks up one fixed-direction scale and one relative one, multiplied, so a block in
-            either wins. <code>With</code> and <code>Against</code> need a live bearing; see{' '}
+            A delta picks up one fixed-direction scale and one relative one, multiplied, so a block in either zeroes the product. <code>With</code> and <code>Against</code> need a live bearing; see{' '}
             <A href="/library/options#set-bearing"><code>set_bearing</code></A>. A momentary usage
             carries one bit, so any scale under 100 locks it.
           </p>
@@ -67,8 +66,8 @@ const Lock: Component = () => {
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
-device.scale(Axis::X, Direction::Against, 40)?;  // 40% of movement opposing the aim
-device.scale(Axis::X, Direction::With, 130)?;    // 130% of movement helping it
+device.scale(Axis::X, Direction::Against, 40)?;  // 40% of movement opposing the injection
+device.scale(Axis::X, Direction::With, 130)?;    // 130% of movement along it
 device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, always`}</code></pre>
         </Card>
       </div>
@@ -121,13 +120,13 @@ device.move_rel(50, 0)?;                          // injection still moves X`}</
             <A href="/library/lock#scale"><code>scale</code></A> at <code>LOCK_SCALE_PASS</code>: the
             same <code>target</code> and <code>direction</code>, back to passing untouched.{' '}
             <code>Direction::Both</code> clears every direction of the target, the bearing-relative
-            pair included, so an unlock never leaves one weighing unseen.
+            pair included, so an unlock never leaves the relative pair still weighing.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
-device.unlock(Axis::X, Direction::Both)?;   // hand horizontal motion back`}</code></pre>
+device.unlock(Axis::X, Direction::Both)?;   // X passes untouched again`}</code></pre>
         </Card>
       </div>
 
@@ -168,7 +167,7 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
             <code>Keys</code> takes an edge and <code>Media</code>, having none, sends <code>Both</code>.
           </p>
           <p>
-            <code>Blanket::Aim</code> is how you address the aim in{' '}
+            <code>Blanket::Aim</code> is how you address X and Y together in{' '}
             <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A>, where the
             box reads X and Y as one thing.
           </p>
@@ -179,7 +178,7 @@ let device = Device::find()?;
 device.lock_all(Blanket::Keys, Direction::Both)?;        // every key, both edges
 device.lock_all(Blanket::Keys, Direction::Positive)?;    // press edges only: a held key still releases
 device.unlock_all(Blanket::Keys, Direction::Both)?;
-device.scale_all(Blanket::Aim, Direction::Against, 40)?; // damp counter-aim on both axes`}</code></pre>
+device.scale_all(Blanket::Aim, Direction::Against, 40)?; // 40% of motion opposing the injection, X and Y`}</code></pre>
         </Card>
       </div>
 

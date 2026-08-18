@@ -43,7 +43,7 @@ const Device = () => {
     if (logEl) follow = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight <= 24;
   };
 
-  // Follow new lines like a terminal, unless the user has scrolled up.
+  // Scroll to the newest line unless the user has scrolled up.
   createEffect(() => {
     dash.deviceLog();
     if (logEl && follow) logEl.scrollTop = logEl.scrollHeight;

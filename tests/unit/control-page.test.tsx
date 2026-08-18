@@ -152,7 +152,7 @@ describe('Control page', () => {
 
   it('renders a weighed direction as its percentage, not as a lock', async () => {
     const { findByText } = mount();
-    await findByText('Move up/down (Y) against the aim at 40%');
+    await findByText('Move up/down (Y) against injection at 40%');
   });
 
   it('surfaces the cross-chip clock estimate rather than dropping it', async () => {

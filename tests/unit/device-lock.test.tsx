@@ -180,7 +180,7 @@ describe('DeviceLock', () => {
     // A radio whose selected value is no longer among its options keeps the old byte, so switching
     // from an axis on Against to a key would have sent a relative direction the box refuses.
     const { getByText, container } = render(() => <DeviceLock />);
-    fireEvent.click(getByText('Against the aim'));
+    fireEvent.click(getByText('Against injection'));
     await settle();
     fireEvent.click(getByText('Key'));
     await settle();
@@ -205,11 +205,11 @@ describe('DeviceLock', () => {
 
   it('offers the bearing-relative directions on an axis and not on a usage', async () => {
     const { getByText, queryByText } = render(() => <DeviceLock />);
-    expect(queryByText('Against the aim')).toBeTruthy();
+    expect(queryByText('Against injection')).toBeTruthy();
     fireEvent.click(getByText('Button'));
     await settle();
     // A button has no bearing to be with or against, so the radio set drops back to the two edges.
-    expect(queryByText('Against the aim')).toBeNull();
+    expect(queryByText('Against injection')).toBeNull();
     expect(queryByText('Press')).toBeTruthy();
   });
 });

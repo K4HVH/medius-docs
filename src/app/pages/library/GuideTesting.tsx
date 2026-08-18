@@ -71,7 +71,7 @@ fn logs_reach_the_stream() {
             There's no <code>AsyncDevice::with_mock</code>: build a mocked <code>Device</code>, then call{' '}
             <A href="/library/features/async"><code>into_async</code></A>. Drive the futures with{' '}
             <A href="/library/guides/calls#block-on"><code>block_on</code></A>, so the test needs no async
-            runtime. A <A href="/library/features/mock"><code>silent</code></A> box never answers, resolving
+            runtime. A <A href="/library/features/mock"><code>silent</code></A> box sends no reply, resolving
             the query to{' '}
             <A href="/library/types/errors"><code>Err(Error::QueryTimeout)</code></A>.
           </p>

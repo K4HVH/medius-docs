@@ -225,11 +225,11 @@ const DeviceOptions = () => {
 
         </Section>
 
-        <Section title="Aim bearing">
+        <Section title="Bearing">
         <p>
           What the with and against lock directions are measured against: the direction the box is
           injecting. Past the window an axis has no bearing and both directions stop applying, which is
-          what hands the aim back to the user when injection stops.
+          physical motion then passes at its fixed-sign scale alone.
         </p>
         <RadioGroup
           name="bearing-mode"

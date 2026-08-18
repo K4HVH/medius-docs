@@ -91,7 +91,7 @@ const Types: Component = () => {
             <p>
               The aliases are the same values under names that read at the call site:{' '}
               <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
-              <code>AGAINST</code> are measured against the aim rather than a fixed sign;{' '}
+              <code>AGAINST</code> are measured against the bearing rather than a fixed sign;{' '}
               <code>.is_relative</code> tells them apart.
             </p>
             <p>
@@ -329,7 +329,7 @@ const Types: Component = () => {
                 <tr><td><code>on</code></td><td><A href="/bindings/python/types#input"><code>Usage</code></A></td><td>the trigger usage (button, key, or media)</td></tr>
                 <tr><td><code>edge</code></td><td><A href="/bindings/python/types#edge"><code>Edge</code></A></td><td>which edge fires the action</td></tr>
                 <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs</td></tr>
-                <tr><td><code>consume</code></td><td><code>bool</code></td><td>swallow the physical edge so it doesn't pass through (default <code>False</code>)</td></tr>
+                <tr><td><code>consume</code></td><td><code>bool</code></td><td>suppress the physical edge so it does not reach the PC (default <code>False</code>)</td></tr>
               </tbody>
             </table>
             <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
@@ -475,8 +475,7 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               </tbody>
             </table>
             <p>
-              Matching is most-specific-first: an exact <code>(class, id)</code> beats a class
-              blanket, which beats <code>everything()</code>, and a named direction beats{' '}
+              Matching is most-specific-first: an exact <code>(class, id)</code> is matched before a class blanket, that before <code>everything()</code>, and a named direction before{' '}
               <code>BOTH</code>. The winning entry supplies the <code>capture</code>.
             </p>
             <p>
@@ -1192,7 +1191,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <p>
               A <code>CONTROL</code> event is one <em>completed transaction</em>, not one stage:{' '}
               <code>bytes</code> is <code>[setup 8][data…]</code> and <code>direction</code> says which
-              way the data stage went. Requests the box answers from its own descriptor cache still
+              way the data stage went. Requests the box serves from its own descriptor cache still
               produce an event.
             </p>
           </div>

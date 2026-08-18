@@ -167,7 +167,7 @@ dev.close()`}</code></pre>
             <p>
               <code>EventStream</code>, <code>InputStream</code>, <code>LogStream</code>,{' '}
               <code>Timeline</code>, and <code>MockBox</code> follow the same pattern: a{' '}
-              <code>with</code> block, <code>.close()</code>, or GC. Streams hold the device alive
+              <code>with</code> block, <code>.close()</code>, or GC. Streams keep the device open
               while open; see <A href="/bindings/python/streams">Streams</A>.
             </p>
           </div>
