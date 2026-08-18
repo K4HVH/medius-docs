@@ -264,59 +264,23 @@ const Types: Component = () => {
             edges: an edge named on one goes out as <code>MEDIUS_DIRECTION_BOTH</code>, which is what{' '}
             <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it as.
           </p>
-          <div class="api-response-label">WHERE THE TYPE APPEARS</div>
+          <div class="api-response-label">HOW IT IS SPELLED</div>
           <p>
             The enum and its constants are what you pass. The parameters and struct fields that carry
-            one are declared <code>uint8_t</code>, and a C enum constant converts to that on its own,
-            so no call site changes.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Spelled <code>uint8_t</code></th><th>Still enum-typed</th></tr></thead>
-            <tbody>
-              <tr>
-                <td>
-                  <code>MediusCatchFilter.direction</code>, <code>MediusLockEntry.direction</code>,{' '}
-                  <code>MediusUsageEvent.direction</code>, <code>MediusTrafficEvent.direction</code>;
-                  the <code>dir</code> / <code>direction</code> / <code>what</code> / <code>mode</code>{' '}
-                  parameters of <code>medius_device_scale</code>, <code>_scale_all</code>,{' '}
-                  <code>_lock</code>, <code>_unlock</code>, <code>_lock_all</code>,{' '}
-                  <code>_unlock_all</code>, <code>_set_bearing</code>,{' '}
-                  <code>medius_locks_scale_of</code>, <code>medius_locks_is_locked</code>,{' '}
-                  <code>medius_catch_filter_with_direction</code>, and{' '}
-                  <code>medius_mock_set_bearing</code>.
-                </td>
-                <td><A href="/bindings/c/types#bearing"><code>MediusBearing.mode</code></A>, and the <code>MEDIUS_*</code> constants themselves.</td>
-              </tr>
-            </tbody>
-          </table>
-          <p>
-            That is the whole invariant: no direction or mode on the boundary is enum-typed except{' '}
-            <A href="/bindings/c/types#bearing"><code>MediusBearing.mode</code></A>, which is exempt
-            because it is only ever box-produced, reaching you through an out-pointer and never going
-            the other way.
-          </p>
-          <p>
-            The boundary takes a byte so it can validate one. A value no constant names, arriving as an
-            enum-typed parameter, is undefined behaviour in Rust before any check can run, and could
-            take the process down. As a byte it is checked.
+            one are declared <code>uint8_t</code> so the boundary can check a value no constant names,
+            and a C enum constant converts to that on its own, so no call site changes. Only{' '}
+            <A href="/bindings/c/types#bearing"><code>MediusBearing.mode</code></A> is still
+            enum-typed, being box-produced and never passed in.
           </p>
           <table class="api-params">
             <thead><tr><th>A byte no constant names</th><th>Comes back as</th></tr></thead>
             <tbody>
-              <tr><td>Any call that returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code>; no frame goes out.</td></tr>
+              <tr><td>Any call returning a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code>; no frame goes out.</td></tr>
               <tr><td><code>medius_locks_scale_of</code></td><td>It names no entry, so <code>MEDIUS_LOCK_SCALE_PASS</code>.</td></tr>
               <tr><td><code>medius_locks_is_locked</code></td><td>Unlocked, for the same reason.</td></tr>
-              <tr><td><code>medius_catch_filter_with_direction</code></td><td>The byte is stored and refused at subscribe time, where there is a status to carry it.</td></tr>
+              <tr><td><code>medius_catch_filter_with_direction</code></td><td>Stored, then refused at subscribe time, where there is a status to carry it.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              The enum survives in the header only because it is pinned there. Once no signature named{' '}
-              <code>MediusDirection</code> any more, the header generator pruned the type and every{' '}
-              <code>MEDIUS_DIRECTION_*</code> constant with it: sound on the Rust side, and a hard
-              source break for every C caller. An explicit include holds it.
-            </p>
-          </div>
         </Card>
       </div>
 
