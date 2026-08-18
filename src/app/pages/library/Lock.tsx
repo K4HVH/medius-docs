@@ -49,12 +49,18 @@ const Lock: Component = () => {
             </tbody>
           </table>
           <p>
-            A delta picks up at most two scales, its fixed direction's and its relative direction's,
-            and they multiply, so a block in either wins. <code>With</code> and <code>Against</code>{' '}
-            need a live bearing; see{' '}
-            <A href="/library/options#set-bearing"><code>set_bearing</code></A>. A button, key, or
-            media usage carries one bit, so any scale under 100 locks it.
+            A delta picks up one fixed-direction scale and one relative one, multiplied, so a block in
+            either wins. <code>With</code> and <code>Against</code> need a live bearing; see{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>. A momentary usage
+            carries one bit, so any scale under 100 locks it.
           </p>
+          <div class="callout callout--info">
+            <p>
+              <code>Direction::Both</code> writes the scale to the two fixed signs and a full pass to
+              the relative pair. Writing it to all four would square it, so a plain{' '}
+              <code>Both</code> of 50 would mean 50% with no bearing live and 25% with one.
+            </p>
+          </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
@@ -159,7 +165,7 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
           </p>
           <p>
             <code>Blanket::Aim</code> is how you address the aim in{' '}
-            <A href="/library/types/structs#bearing"><code>BearingMode::Vector</code></A>, where the
+            <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A>, where the
             box reads X and Y as one thing.
           </p>
           <div class="api-response-label">EXAMPLE</div>

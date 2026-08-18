@@ -69,7 +69,7 @@ const Lock: Component = () => {
               <tr><th>Direction</th><th>Value</th><th>Axis</th><th>Button / key / media</th></tr>
             </thead>
             <tbody>
-              <tr><td>both</td><td><code>0</code></td><td>Every direction, relative ones included.</td><td>Press and release.</td></tr>
+              <tr><td>both</td><td><code>0</code></td><td>The scale to both signs, a full pass to the relative pair.</td><td>Press and release.</td></tr>
               <tr><td>positive</td><td><code>1</code></td><td>Positive sign only (<code>+</code>).</td><td>Press only (<code>0 to 1</code>).</td></tr>
               <tr><td>negative</td><td><code>2</code></td><td>Negative sign only (<code>-</code>).</td><td>Release only (<code>1 to 0</code>).</td></tr>
               <tr><td>with</td><td><code>3</code></td><td>The sign the box is injecting.</td><td>No meaning.</td></tr>
@@ -77,11 +77,16 @@ const Lock: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>0</code>-<code>2</code> name a fixed sign or edge. <code>3</code> and <code>4</code>{' '}
-            name a sign relative to the <A href="/native/commands/lock#bearing">bearing</A>, so they
-            follow the aim rather than the axis. Axes only. <code>both</code> writes every direction of
-            the target, so an unlock never leaves a relative one weighing unseen.
+            <code>0</code>-<code>2</code> name a fixed sign or edge; <code>3</code> and <code>4</code>{' '}
+            name a sign relative to the <A href="/native/commands/lock#bearing">bearing</A>, and are
+            axes only.
           </p>
+          <div class="callout callout--info">
+            <p>
+              <code>both</code> writes the scale to the two fixed signs and a full pass to the relative
+              pair. Writing it to all four would square it, since a delta picks up one of each.
+            </p>
+          </div>
           <div class="api-response-label">SCALE</div>
           <table class="api-params">
             <thead>
@@ -94,28 +99,16 @@ const Lock: Component = () => {
             </tbody>
           </table>
           <p>
-            A delta picks up at most two scales, its fixed direction's and its relative direction's, and
-            they multiply: <code>negative = 50</code> with <code>against = 40</code> lands
-            leftward-while-injecting-right at 20%. A <code>0</code> in either wins outright.
-          </p>
-          <p>
-            The fraction an integer result drops is carried across reports and spent as it reaches a
-            whole count. Without that, a scale between the two ends would behave as one of the ends: at
-            1 kHz a physical delta is almost always <code>±1</code>. A weighed value clamps to the
-            report field, so amplification saturates rather than wrapping.
-          </p>
-          <p>
-            A button, key, or media usage carries one bit, so the scale truncates: anything under{' '}
-            <code>100</code> locks the edge and <code>100</code> or above passes it, with nothing in
-            between.
+            A delta picks up one fixed-direction scale and one relative one, multiplied, so a{' '}
+            <code>0</code> in either wins. The dropped fraction carries across reports, or every scale
+            between the ends would behave as one of them at the <code>+/-1</code> deltas 1 kHz produces.
           </p>
           <div class="api-response-label">PHYSICAL ONLY</div>
           <p>
-            A scale weighs the physical device and nothing else. Host{' '}
-            <A href="/native/injection">injection</A> still reaches a weighed input at full strength,
-            so a <A href="/native/commands/move#move"><code>MOVE</code></A> moves a blocked axis and an{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A> drives a locked button or
-            key.
+            A scale weighs the physical device only; host{' '}
+            <A href="/native/injection">injection</A> reaches a weighed input at full strength. A
+            momentary usage carries one bit, so under <code>100</code> locks its edge and the box stores
+            that block rather than the number sent.
           </p>
           <div class="api-response-label">A SCALE CLEARS ON</div>
           <pre class="diagram">{`unlock      you send the matching unlock (scale = 100)
@@ -125,6 +118,14 @@ link loss   the inter-chip link drops`}</pre>
           <div class="callout callout--warning">
             <p>
               A scale isn't permanent: hold it with a keepalive if it has to outlast a second of quiet.
+            </p>
+          </div>
+          <div class="callout callout--danger">
+            <p>
+              Firmware 3.1.x and 3.2.0 both report{' '}
+              <A href="/native/connection#handshake"><code>proto_ver 4</code></A>, and this byte changed
+              between them. A 3.2 host's unlock reaches a 3.1.x box as a lock, and its lock as an unlock.
+              Check the firmware version, not the protocol version.
             </p>
           </div>
           <div class="api-response-label">EFFECT</div>
@@ -160,24 +161,29 @@ link loss   the inter-chip link drops`}</pre>
           <CardHeader title="The bearing" subtitle="What with and against are measured against" />
           <p>
             The <A href="/native/injection">additive merge</A> is symmetric: the box adds its motion to
-            yours without knowing which half of your movement helps and which fights. The bearing is
-            the direction the box is currently injecting, and it makes that asymmetric.
+            yours without knowing which half of yours helps and which fights. The bearing, the
+            direction the box is currently injecting, is what makes it asymmetric.
           </p>
           <p>
-            The decision happens on the box at the merge point, where the pending injection and the
-            arriving report are in hand at the same instant. A host doing the same thing needs a{' '}
-            <A href="/native/commands/catch#catch"><code>CATCH</code></A> to decide to a{' '}
+            It is read at the merge point, where the pending injection and the arriving report are in
+            hand at once. A host doing this needs <code>CATCH</code>, a decision, then{' '}
             <code>LOCK</code>, which is always a round trip stale.
           </p>
           <div class="api-response-label">LIFETIME</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Event</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Injected delta</td><td>Sets the bearing on each axis it moves, from a <A href="/native/commands/move#move"><code>MOVE</code></A> or a <A href="/native/commands/clip#entries">clip</A> alike.</td></tr>
+              <tr><td>Zero component</td><td>Says nothing about that axis; its bearing and deadline both stand.</td></tr>
+              <tr><td>Window elapses</td><td>That axis has no bearing. Both relative directions stop applying and it passes at its fixed-direction scale alone.</td></tr>
+            </tbody>
+          </table>
           <p>
-            Every injected delta sets the bearing on the axes it moves, from a{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A> or a{' '}
-            <A href="/native/commands/clip#clip">clip</A> alike. Each axis carries its own deadline,
-            refreshed only by a delta on that axis. Past{' '}
-            <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>'s window an axis
-            has no bearing, both relative directions stop applying, and physical input passes at its
-            fixed-direction scale alone. That expiry is what hands the aim back when injection stops.
+            Each axis carries its own deadline, set by{' '}
+            <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. The expiry is
+            what hands the aim back when injection stops, with no host command.
           </p>
           <div class="api-response-label">GEOMETRY</div>
           <table class="api-params">
@@ -186,15 +192,13 @@ link loss   the inter-chip link drops`}</pre>
             </thead>
             <tbody>
               <tr><td>per axis</td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently.</td></tr>
-              <tr><td>vector</td><td><code>1</code></td><td>The movement is projected onto the injected direction; only the part along it is weighed.</td></tr>
+              <tr><td>vector</td><td><code>1</code></td><td>The movement is projected onto the injected direction; only the part along it is weighed, so movement across it is untouched.</td></tr>
             </tbody>
           </table>
           <p>
-            Vector leaves movement across the injection exactly alone, so a sideways correction costs
-            nothing while counter-pull is still damped. X and Y stop being independent there, which is
-            why the mode is one setting for the box. In that mode the relative pair addresses the aim
-            as a whole and the box takes the lower of the X and Y scales; the fixed pair still applies
-            per axis. The wheel is never part of the aim and is always weighed per axis.
+            In vector mode the relative pair addresses the aim as a whole: the box takes the lower of
+            the X and Y scales and applies it to both axes, while the fixed pair still applies per axis.
+            The wheel is never part of the aim.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre class="diagram">{`box injecting +X, user flicks left, against = 40

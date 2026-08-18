@@ -296,8 +296,8 @@ if let EmitPace::Fixed(hz) = status.mode {
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
-            <code>query_movement_riding</code>, and <code>query_emit_pace</code> futures, like the
-            other queries.
+            <code>query_movement_riding</code>, <code>query_bearing</code>, and{' '}
+            <code>query_emit_pace</code> futures, like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;

@@ -149,6 +149,10 @@ const DeviceLock = () => {
           usageLabel="Which input"
         />
 
+        <Show when={!isAxis()}>
+          <p>A button, key, or media usage carries one bit, so Lock and Unlock are all it has.</p>
+        </Show>
+
         <div style={section}>
           <div style={label}>Direction</div>
           <RadioGroup
@@ -169,10 +173,7 @@ const DeviceLock = () => {
               step={5}
               onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
             />
-            <p>
-              0% blocks it, 100% passes it through untouched, and above that amplifies it. A button or a
-              key carries one bit, so anything under 100% simply locks it.
-            </p>
+            <p>0% blocks it, 100% passes it through untouched, and above that amplifies it.</p>
           </div>
         </Show>
 

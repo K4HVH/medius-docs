@@ -181,15 +181,16 @@ const Option: Component = () => {
           </table>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <thead><tr><th>Value</th><th>Geometry</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Per axis: each axis compares its own sign against its own bearing <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Vector: the movement is projected onto the injected direction, and only the part along it is weighed</td></tr>
+              <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
+              <tr><td><code>1</code></td><td>Vector</td></tr>
             </tbody>
           </table>
           <p>
-            Nothing here changes behaviour on its own. It only decides what the relative directions
-            mean once a scale is set on one.
+            What the two geometries do is on{' '}
+            <A href="/native/commands/lock#bearing">the bearing</A>. Nothing here changes behaviour on
+            its own; it only decides what the relative directions mean once a scale is set on one.
           </p>
           <p>
             Read{' '}

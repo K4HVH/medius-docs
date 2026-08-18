@@ -55,6 +55,7 @@ import {
   ledPayload,
   lockAxis,
   lockButton,
+  lockKey,
   lockPayload,
   moveRidePayload,
   namePayload,
@@ -536,6 +537,20 @@ describe('LOCK command (§3.8)', () => {
     };
     expect(isLocked(rel, lockAxis(LockAxis.X), Direction.Both)).toBe(false);
     expect(isLocked(rel, lockAxis(LockAxis.X), Direction.Against)).toBe(true);
+  });
+
+  it('a whole-class blanket covers a usage it never names', () => {
+    // A blanket set by another client used to read back as nothing at all here, because matching was
+    // on the exact id and a blanket carries LOCK_ID_ALL.
+    const locks = {
+      entries: [
+        { cls: LockClass.Key, id: LOCK_ID_ALL, direction: Direction.Positive, scale: 0 },
+      ],
+    };
+    expect(scaleOf(locks, lockKey(0x04), Direction.Positive)).toBe(LOCK_SCALE_BLOCK);
+    expect(isLocked(locks, lockKey(0x04), Direction.Positive)).toBe(true);
+    // and it does not leak across classes
+    expect(scaleOf(locks, lockButton(0), Direction.Positive)).toBe(LOCK_SCALE_PASS);
   });
 
   it('scaleOf takes the lowest of the entries covering a direction', () => {

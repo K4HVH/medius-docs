@@ -322,10 +322,14 @@ export interface Locks {
 // weighs it. Both reports the lowest across every direction, so the worst case a delta could meet.
 // Where several entries cover the same direction the lowest wins, matching the box multiplying them.
 export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
+  // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
+  // target it never names. Matching on the exact id alone under-reported one, which is how a blanket
+  // key lock set by another client read back as nothing at all.
+  const covers = (x: LockEntry) =>
+    x.cls === target.cls && (x.id === target.id || x.id === LOCK_ID_ALL);
   const covering = locks.entries.filter(
     (x) =>
-      x.cls === target.cls &&
-      x.id === target.id &&
+      covers(x) &&
       (direction === Direction.Both ||
         x.direction === Direction.Both ||
         x.direction === direction),

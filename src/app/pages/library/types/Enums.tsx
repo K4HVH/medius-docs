@@ -464,7 +464,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a usage</th><th>On a traffic class</th></tr></thead>
             <tbody>
-              <tr><td><code>Both</code></td><td><code>0</code></td><td>every direction</td><td>press and release</td><td>IN and OUT</td></tr>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
               <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
               <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
               <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>no meaning</td><td>no meaning</td></tr>
@@ -484,6 +484,29 @@ device.press(from_button)?;                         // press takes any impl Into
             <code>Direction::IN</code> and <code>OUT</code> for traffic.{' '}
             <code>admits()</code> tests one against another, and <code>of_delta()</code> reads the
             sign of a movement.
+          </p>
+        </Card>
+      </div>
+      <div id="bearing-mode" data-search-target>
+        <Card>
+          <CardHeader title="BearingMode" subtitle="How the box reads the direction it is injecting" />
+          <pre class="api-signature">enum BearingMode {'{'} PerAxis, Vector {'}'}</pre>
+          <p>
+            What <A href="/library/options#set-bearing"><code>set_bearing</code></A> chooses, and what{' '}
+            <code>Direction::With</code> and <code>Against</code> are resolved by. Convert with{' '}
+            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;BearingMode&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
+              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and only the part along it is weighed. Movement across the injection passes untouched.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            In <code>Vector</code> the relative pair addresses the aim as a whole: the box takes the
+            lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
+            <A href="/library/lock#lock-all"><code>scale_all</code></A>.
           </p>
         </Card>
       </div>
