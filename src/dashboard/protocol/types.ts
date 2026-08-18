@@ -309,6 +309,18 @@ export enum BearingMode {
   Vector = 1,
 }
 
+// A mode byte no constant names is not a BearingMode; the box rejects the whole write for one, so a
+// reply carrying one is not something to carry forward as a geometry it is not.
+export function bearingModeFromU8(v: number): BearingMode | null {
+  switch (v) {
+    case BearingMode.PerAxis:
+    case BearingMode.Vector:
+      return v;
+    default:
+      return null;
+  }
+}
+
 // The configured bearing (§4.14). windowMs is how long the last injected delta's direction stays the
 // thing With/Against are measured against; 0 is off, leaving both inert whatever their scale.
 export interface Bearing {

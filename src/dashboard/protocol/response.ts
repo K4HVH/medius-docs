@@ -56,7 +56,8 @@ import {
   type Health,
   type ImperfectStatus,
   type Bearing,
-  type BearingMode,
+  BearingMode,
+  bearingModeFromU8,
   type LockEntry,
   type Locks,
   type LogLine,
@@ -341,7 +342,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           if (payload.length < 5) return null;
           return {
             kind: 'bearing',
-            bearing: { windowMs: u16le(payload, 2), mode: payload[4] as BearingMode },
+            bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
           };
         case OPT_EMIT:
           // [what=9][id=2][mode u8][fixed_hz u16 LE][resolved_hz u16 LE]
