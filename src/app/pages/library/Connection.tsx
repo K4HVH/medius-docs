@@ -7,7 +7,7 @@ const Connection: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Connecting" subtitle="Open, find, and hand the box back" />
+        <CardHeader title="Connecting" subtitle="Open, find, and release the port" />
         <p>
           The <code>medius</code> crate is the Rust client and <code>Device</code> is the handle. Opening
           one finds the box, runs the <A href="/native/connection">handshake</A>, and starts the

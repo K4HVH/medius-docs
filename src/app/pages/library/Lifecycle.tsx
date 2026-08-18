@@ -7,7 +7,7 @@ const Lifecycle: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Lifecycle" subtitle="Holding injected input alive and recovering a dropped link" />
+        <CardHeader title="Lifecycle" subtitle="Re-asserting held overrides and recovering a dropped link" />
         <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them if the link drops and reopens.</p>
         <ul>
           <li>

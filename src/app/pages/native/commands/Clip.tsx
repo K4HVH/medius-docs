@@ -142,7 +142,7 @@ const Clip: Component = () => {
           <div class="api-response-label">MOTION AND EDGES ON ONE TICK</div>
           <p>
             Set several flag bits and the fields stack in a single tick, so a move and a press land on the
-            same frame and the PC sees one report.
+            same frame and the clone emits one report.
           </p>
           <pre class="diagram">{`05 0A 00 FC FF 01 00 00 00 01
    flags=XY|EDGES   dx=+10 dy=-4   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
@@ -150,7 +150,7 @@ const Clip: Component = () => {
           <p>Entries play out one per frame, left to right.</p>
           <table class="api-params">
             <thead>
-              <tr><th>Frame</th><th>Entry</th><th>The PC sees</th></tr>
+              <tr><th>Frame</th><th>Entry</th><th>The clone emits</th></tr>
             </thead>
             <tbody>
               <tr><td><code>0</code></td><td>motion</td><td>cursor moves</td></tr>
@@ -286,7 +286,7 @@ const Clip: Component = () => {
           <p>
             In streaming mode, if the ring drains with no <code>FINALIZE</code>, the box idles (NAKs, holding
             its levels) and stays <code>playing</code> until you refill it; a topping-up host or any keepalive
-            holds the clip alive.
+            resets the 1 s silence timer.
           </p>
           <p>
             A finalized clip ends when the ring empties, or replays from the head if{' '}
@@ -354,7 +354,7 @@ link loss   the inter-chip link drops`}</pre>
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Mask</th><th>Locks</th></tr></thead>
             <tbody>
-              <tr><td><code>b0</code></td><td><code>0x01</code></td><td>the X and Y aim axes</td></tr>
+              <tr><td><code>b0</code></td><td><code>0x01</code></td><td>the X and Y cursor axes</td></tr>
               <tr><td><code>b1</code></td><td><code>0x02</code></td><td>the wheel</td></tr>
               <tr><td><code>b2</code></td><td><code>0x04</code></td><td>every mouse button</td></tr>
               <tr><td><code>b3</code></td><td><code>0x08</code></td><td>every keyboard key</td></tr>

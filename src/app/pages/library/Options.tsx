@@ -18,7 +18,7 @@ const Options: Component = () => {
           <tbody>
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
-            <tr><td>aim bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
+            <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
           </tbody>
@@ -126,8 +126,8 @@ device.set_movement_riding(None)?;                             // back to gaples
           <div class="callout callout--warning">
             <p>
               <code>Vector</code> weighs a report twice, and the second pass reads whatever the
-              projection left standing on each axis, not what the hand moved. Block <code>Y</code>{' '}
-              negative while the aim runs diagonally and a purely horizontal flick can come out with its
+              projection left standing on each axis, not what the device reported. Block <code>Y</code>{' '}
+              negative while the injection runs diagonally and a purely horizontal flick can come out with its
               vertical share removed.
             </p>
             <p>
@@ -141,7 +141,7 @@ use medius::{Axis, BearingMode, Device, Direction};
 
 let device = Device::find()?;
 device.set_bearing(Some(Duration::from_millis(20)), BearingMode::PerAxis)?;
-device.scale(Axis::X, Direction::Against, 40)?;  // counter-aim damped to 40%
+device.scale(Axis::X, Direction::Against, 40)?;  // motion opposing the injection, at 40%
 device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
         </Card>
       </div>
@@ -203,7 +203,7 @@ device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace
           <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
-device.set_name("Loki")?;              // the box now answers to "Loki"
+device.set_name("Loki")?;              // stored in NVS, reported on Version
 let name = device.query_version()?.name;  // read it back off Version`}</code></pre>
         </Card>
       </div>

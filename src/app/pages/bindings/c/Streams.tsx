@@ -57,7 +57,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
           </table>
           <div class="api-response-label">ONE FILTER ENTRY</div>
           <table class="api-params">
-            <thead><tr><th>Field</th><th>Value</th><th>What it decides</th></tr></thead>
+            <thead><tr><th>Field</th><th>Value</th><th>What it selects</th></tr></thead>
             <tbody>
               <tr><td><code>class_</code></td><td>a <code>MEDIUS_CATCH_CLASS_*</code></td><td>The address space, and which event arm the matches arrive on.</td></tr>
               <tr><td><code>id</code></td><td>class-specific, or <code>MEDIUS_CATCH_ID_ANY</code></td><td>Which button, usage, axis, interface, or endpoint. <code>ID_ANY</code> is one blanket entry, not an expansion.</td></tr>

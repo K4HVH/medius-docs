@@ -100,7 +100,7 @@ const Option: Component = () => {
           <div class="callout callout--info">
             <p>
               Some devices need more interrupt-IN endpoints than the box serves (the Wooting Two HE's
-              analog stream wants a sixth, past the{' '}
+              analog stream needs a sixth, past the{' '}
               <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
               five). Changing this for an{' '}
               <em>attached</em> over-capacity device reboots the box to re-clone; a normal device is
@@ -142,7 +142,7 @@ const Option: Component = () => {
           </p>
           <div class="callout callout--warning">
             <p>
-              While on, pure idle injection (moving the cursor while the hand is still) stops working:
+              While on, pure idle injection (moving the cursor while the real device is still) stops working:
               motion waits for a native move and is dropped if none comes. Button, key, and media
               injection are unaffected, and a move can opt out per command with the{' '}
               <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.

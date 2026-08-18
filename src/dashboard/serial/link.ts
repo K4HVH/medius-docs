@@ -379,7 +379,7 @@ export class SerialLink {
 
   // The box-wide safety clear (§3.4). Wider than its name: in one atomic release it drops every
   // injected usage, every lock, the whole CATCH subscription table, the loaded clip AND its
-  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it hands the
+  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it returns the
   // status LEDs back to the box. It is the recovery for a press whose release was lost, because it
   // does not depend on knowing what is held. Release known holds one at a time when that matters.
   reset(): Promise<void> {
@@ -401,7 +401,7 @@ export class SerialLink {
   // Add one entry to the CATCH subscription table (§3.9); event frames arrive on `onEvent` tagged
   // motion, usages, or traffic. The table holds 32 entries and matching is most-specific-first, so
   // "everything at 16 bytes, except endpoint 0x83 in full" is two calls. The subscription clears
-  // after ~1 s of control-PC silence, so poll a query to hold it alive.
+  // after ~1 s of control-PC silence, so poll a query to reset the timer.
   catch(filter: CatchFilter): Promise<void> {
     return this.send(
       encode(
@@ -447,7 +447,7 @@ export class SerialLink {
   // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
   // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
   // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
-  // (PerAxis) or projects the aim onto the injected XY vector (Vector). Persisted in NVS. Read back
+  // (PerAxis) or projects the delta onto the injected XY vector (Vector). Persisted in NVS. Read back
   // with `queryBearing`.
   setBearing(windowMs: number, mode: BearingMode = BearingMode.PerAxis): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
@@ -478,7 +478,7 @@ export class SerialLink {
   // append. Appends count on their own.
   //
   // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
-  // check `freeBytes` from `queryClip` before sending. The box also drops an append silently when
+  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply when
   // no mouse is cloned, and after FINALIZE on a retained clip.
   async clipAppend(entries: ClipEntry[]): Promise<void> {
     // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two

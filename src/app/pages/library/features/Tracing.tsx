@@ -71,7 +71,7 @@ const Tracing: Component = () => {
             <A href="/library/types/structs#version"><code>Version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`// With "medius=debug" and a box that answers on the second probe, the
+          <pre><code class="language-rust">{`// With "medius=debug" and a box that replies on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
 //   INFO  connect: medius::device: connected proto_ver=5 fw_major=3 fw_minor=2 fw_patch=0
@@ -87,7 +87,7 @@ const Tracing: Component = () => {
             <A href="/library/diagnostics#counters"><code>frames_tx</code> / <code>frames_rx</code></A>{' '}
             counters. A re-emitted <A href="/native/commands/admin#log"><code>LOG</code></A> frame keeps
             its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and carries the same
-            text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream hands back. A
+            text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream yields. A
             recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
             <code>reason</code>.
           </p>
@@ -109,7 +109,7 @@ const Tracing: Component = () => {
             <a href="https://docs.rs/tracing-subscriber" target="_blank" rel="noreferrer"><code>tracing-subscriber</code></a>.
             The <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html" target="_blank" rel="noreferrer"><code>fmt</code></a>{' '}
             subscriber writes lines to stderr; call <code>init()</code> once before opening. Without one,
-            every span and event is dropped silently.
+            every span and event is discarded with no output.
           </p>
           <pre><code class="language-bash">cargo add tracing-subscriber</code></pre>
           <div class="api-response-label">EXAMPLE</div>

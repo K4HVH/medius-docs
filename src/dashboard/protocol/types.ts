@@ -256,7 +256,7 @@ export enum LockAxis {
 // A media usage is the one class with no edges: the box suppresses it whole, ignores the byte on the
 // way in, and reports Both on the way out.
 // With and Against name a sign relative to the bearing, the direction the box is itself injecting
-// (§3.12), so they follow the aim rather than the axis. Axes only, and LOCK only: a subscription or a
+// (§3.12), so the sign they select follows the injection, not the axis. Axes only, and LOCK only: a subscription or a
 // trigger is addressed before there is any injection to be with or against.
 export enum Direction {
   Both = 0,
@@ -302,7 +302,7 @@ export const LOCK_SCALE_BLOCK = 0;
 export const LOCK_SCALE_PASS = 100;
 export const LOCK_SCALE_MAX = 255;
 
-// OPTION(BEARING) geometry (§3.12): how the box decides whether physical motion runs with or against
+// OPTION(BEARING) geometry (§3.12): how the box compares physical motion against its own injection
 // its own injection.
 export enum BearingMode {
   PerAxis = 0,
@@ -361,7 +361,7 @@ export interface Locks {
 
 // The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
 // weighs it. Both reports the lowest across every direction, so the worst case a delta could meet.
-// Where several entries cover the same direction the lowest wins, matching the box multiplying them.
+// Where several entries cover the same direction the lowest is reported, matching the box multiplying them.
 export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
   // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
   // target it never names. Matching on the exact id alone under-reported one, which is how a blanket
@@ -416,8 +416,8 @@ export const CATCH_ID_ANY = 0xffff;
 
 // What one CATCH table entry addresses (§3.9): an address, a direction, and how much of each packet
 // to capture. capture is a byte count per entry, 0 meaning the whole packet, because the useful
-// value differs by orders of magnitude between classes - a 64-byte vendor interrupt report wants
-// all of it, a bulk pipe traced for framing wants 16. dir is the press/release edge for the input
+// value differs by orders of magnitude between classes - a 64-byte vendor interrupt report needs
+// all of it, a bulk pipe traced for framing needs 16. dir is the press/release edge for the input
 // classes and the transfer direction for the traffic classes; no class is both, so one byte carries
 // either reading unambiguously.
 export interface CatchFilter {
@@ -642,7 +642,7 @@ export interface CatchState {
 
 // Decoded RESP(OPTIONS, IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is
 // over-capacity (needs an interrupt-IN endpoint the box can't service), and whether the live clone was
-// cloned over-capacity anyway (an interface is silently dead).
+// cloned over-capacity anyway (one interface is not cloned).
 export interface ImperfectStatus {
   allowed: boolean;
   overCapacity: boolean;
@@ -669,7 +669,7 @@ export interface ClipTick {
 export type ClipEntry = ({ kind: 'gap'; ticks: number } | ({ kind: 'tick' } & ClipTick));
 
 // Encode one clip entry (§3.11). Returns null for an entry the box would reject or misread, rather
-// than a nearest-legal guess: a silently-clamped clip plays back as something the caller never
+// than a nearest-legal guess: a clamped clip plays back as something the caller never
 // recorded.
 export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
   if (e.kind === 'gap') {
@@ -714,7 +714,7 @@ function i16(v: number): number {
 
 // The ops a trigger may carry. The box stores a binding only when its action is Toggle or lower,
 // and CLIP_TRIGGER has no reply, so binding Clear or Finalize puts a frame on the wire that is
-// silently discarded and never fires.
+// discarded with no reply and never fires.
 export type ClipTriggerAction =
   | ClipOp.Start
   | ClipOp.Stop

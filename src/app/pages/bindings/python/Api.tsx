@@ -122,7 +122,7 @@ const Api: Component = () => {
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the aim and need a live bearing; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the bearing and need a live one; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
           </div>
         </Card>
       </div>

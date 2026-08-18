@@ -61,8 +61,8 @@ const BLANKET_NAMES: Record<number, string> = {
 // direction here would read as a distinction the box does not make.
 const dirName = (cls: number, d: Direction): string => {
   if (cls === LockClass.Media) return '';
-  if (d === Direction.With) return 'with the aim';
-  if (d === Direction.Against) return 'against the aim';
+  if (d === Direction.With) return 'with injection';
+  if (d === Direction.Against) return 'against injection';
   if (d === Direction.Both) return 'both';
   if (cls === LockClass.Axis) return d === Direction.Positive ? 'positive' : 'negative';
   return d === Direction.Positive ? 'press' : 'release';
@@ -138,8 +138,8 @@ const DeviceLock = () => {
           { value: String(Direction.Both), label: 'Both' },
           { value: String(Direction.Positive), label: 'Positive' },
           { value: String(Direction.Negative), label: 'Negative' },
-          { value: String(Direction.With), label: 'With the aim' },
-          { value: String(Direction.Against), label: 'Against the aim' },
+          { value: String(Direction.With), label: 'With injection' },
+          { value: String(Direction.Against), label: 'Against injection' },
         ]
       : isMedia()
         ? [{ value: String(Direction.Both), label: 'The whole usage' }]
@@ -209,9 +209,9 @@ const DeviceLock = () => {
 
         <Show when={isAxis() && isRelativeDirection(dir())}>
           <div class="callout callout--info" style={section}>
-            With and against are measured against the aim, the direction the box is injecting.
-            Neither applies once an axis's bearing window has elapsed with nothing injected on it,
-            which is what hands that axis back to the user.
+            With and against are measured against the bearing: the sign the box is currently
+            injecting on that axis. Neither applies once the bearing window elapses with nothing
+            injected, leaving only the fixed-sign scale.
           </div>
         </Show>
 

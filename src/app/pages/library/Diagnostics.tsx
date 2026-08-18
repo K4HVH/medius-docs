@@ -126,8 +126,7 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
 
           <div class="callout callout--warning">
             <p>
-              The channel buffers 1024 lines and evicts the oldest when full. A slow poller drops old
-              lines silently, so drain often if you can't miss any.
+              The channel buffers 1024 lines and evicts the oldest when full. A slow poller drops old lines uncounted, so drain often if you can't miss any.
             </p>
           </div>
         </Card>

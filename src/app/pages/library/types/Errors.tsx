@@ -45,7 +45,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>NoReply</code></td>
                 <td>
-                  The box never answered the version query during the{' '}
+                  No reply to the version query during the{' '}
                   <A href="/library/connection">handshake</A>: wrong port or baud, or not a Medius
                   box.
                 </td>
@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer &#123; got &#125;</code></td>
                 <td>
-                  The box answered, but its <code>proto_ver</code> wasn't <code>5</code>;{' '}
+                  The box replied, but its <code>proto_ver</code> wasn't <code>5</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>

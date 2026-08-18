@@ -32,7 +32,7 @@ const Quickstart: Component = () => {
             <li><code>USB3</code> (mouse) → real mouse</li>
           </ul>
           <p>
-            The clone copies the real mouse's USB identity, so the game PC sees the same device it
+            The clone copies the real mouse's USB identity, so the game PC enumerates the same device it
             would if the mouse were plugged in directly.
           </p>
           <div class="callout callout--danger">

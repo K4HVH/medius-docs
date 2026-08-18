@@ -105,9 +105,8 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           </p>
           <div class="api-response-label">MOST-SPECIFIC-FIRST</div>
           <p>
-            An exact <code>(class, id)</code> beats a class blanket, which beats{' '}
-            <code>everything()</code>, and a named direction beats <code>Both</code>. The winning entry
-            supplies the capture.
+            The box resolves to the most specific match: an exact <code>(class, id)</code> before a class blanket, a class blanket before{' '}
+            <code>everything()</code>, and a named direction before <code>Both</code>. That entry supplies the capture.
           </p>
           <pre class="diagram">{`  CatchFilter::everything().with_capture(Capture::First(16))
   CatchFilter::traffic_class(TrafficClass::VendorInterrupt).with_capture(Capture::First(32))
@@ -188,7 +187,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           </table>
           <p>
             <code>class()</code>, <code>id()</code>, <code>direction()</code>, <code>ts_us()</code>,{' '}
-            <code>clock()</code> and <code>bytes()</code> answer the same question of any variant.
+            <code>clock()</code> and <code>bytes()</code> read the same fields on any variant.
           </p>
           <div class="callout callout--info">
             <p>
@@ -200,8 +199,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           </div>
           <div class="api-response-label">DELIVERY IS RANKED</div>
           <p>
-            The box drains through strict-priority queues. Vendor bulk can starve completely under a
-            busy mouse: bulk-plus-input is what the control link cannot carry.
+            The box drains through strict-priority queues. Vendor bulk can go entirely undrained under a busy mouse: bulk-plus-input is what the control link cannot carry.
           </p>
           <pre class="diagram">{`  Button Key Media Axis Bus    -->  [ queue 0 ]  --+
   HidIn HidOut                                     |
@@ -266,7 +264,7 @@ for event in &device.catch_events([filter])? {
             Stamps are <code>u32</code> microseconds from that chip's boot: they wrap every ~71.6
             minutes and restart at zero on reboot.{' '}
             <A href="/library/types/structs#timeline"><code>Timeline</code></A> handles all of it and
-            hands back an <code>Instant</code>. It takes an{' '}
+            returns an <code>Instant</code>. It takes an{' '}
             <A href="/library/types/structs#input-event"><code>InputEvent</code></A> or a raw{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> alike.
           </p>

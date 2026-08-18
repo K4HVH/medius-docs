@@ -89,8 +89,7 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to
 
           <div class="callout callout--warning">
             <p>
-              A <code>Download</code> variant leaves the chip in ROM download mode: it stops acting
-              as a mouse and stops answering until reflashed or power-cycled. Don't send one unless
+              A <code>Download</code> variant leaves the chip in ROM download mode: it stops presenting the clone and stops replying on the control link until reflashed or power-cycled. Don't send one unless
               you're about to flash.
             </p>
           </div>

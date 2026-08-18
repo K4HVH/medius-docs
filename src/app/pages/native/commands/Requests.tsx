@@ -299,7 +299,7 @@ const Requests: Component = () => {
           </p>
           <p>
             An <A href="/native/commands/inject#inject"><code>INJECT</code></A> for a usage the device
-            lacks is silently ignored. A class that is not present reads all-zero.
+            lacks reaches no report field. A class that is not present reads all-zero.
           </p>
           <pre class="api-signature">QUERY  what = 3  ·  RESP 7 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -524,7 +524,7 @@ const Requests: Component = () => {
           </p>
           <div class="callout callout--warning">
             <p>
-              Truncation is silent, and it can only land on row 5: <code>n</code> stops short and the
+              Truncation can only land on row 5: <code>n</code> stops short and the
               reply has nowhere to say so. Count the key edges you asked for against what came back.
             </p>
           </div>
@@ -578,7 +578,7 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <p>
-            The box-wide <code>dropped</code> says you are losing events; the per-entry one says which
+            The box-wide <code>dropped</code> counts every lost event; the per-entry one attributes them to a
             subscription.
           </p>
           <div class="api-response-label">CONFIRMING A SUBSCRIPTION</div>
@@ -611,7 +611,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>clk_delay_us</code></td><td>the round trip of the best exchange in the window, so the offset is good to about half of it. A caller that needs a hard bound has one.</td></tr>
-              <tr><td><code>clk_rate_ppb</code></td><td>lets you extrapolate between exchanges rather than trusting a stale offset, which two independent crystals make stale at up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit has been made, a different answer from a fitted <code>0</code>, which says the crystals are matched.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td>lets you extrapolate between exchanges rather than trusting a stale offset, which two independent crystals make stale at up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit has been made, distinct from a fitted <code>0</code>, which means the crystals are matched.</td></tr>
               <tr><td><code>clk_age_ms</code></td><td>The age of the exchange the offset actually <em>rests on</em>, not of the newest one. The offset comes from the least-delayed exchange in the window, which is often older. <code>0xFFFF</code> distinguishes "no estimate yet" from "the offset happens to be zero", which both otherwise report as an offset of 0.</td></tr>
             </tbody>
           </table>
@@ -795,7 +795,7 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
               <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
               <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
-              <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = swallow the triggering edge from the host</td></tr>
+              <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = lock the trigger usage while it stays active</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>

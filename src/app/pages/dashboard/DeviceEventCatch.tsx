@@ -195,7 +195,7 @@ const DeviceEventCatch = () => {
   const [custom, setCustom] = createSignal<CatchFilter[]>([]);
   const [streaming, setStreaming] = createSignal(false);
   // What the box is actually subscribed to, which matches the picker only between a Watch and the
-  // next Stop. Reading the picker instead would let a click silently change how events already on
+  // next Stop. Reading the picker instead would let a click change, with no visible cue, how events already on
   // screen are interpreted.
   const [active, setActive] = createSignal<CatchFilter[]>([]);
 
@@ -216,7 +216,7 @@ const DeviceEventCatch = () => {
 
   const chosen = (): CatchFilter[] => (mode() === 'preset' ? PRESETS[preset()] : custom());
 
-  // Bumped by stop and by unmount, so a start still awaiting its frames knows the card has moved on.
+  // Bumped by stop and by unmount, so a start still awaiting its frames can tell the card has moved on.
   let generation = 0;
 
   const start = async () => {
@@ -280,7 +280,7 @@ const DeviceEventCatch = () => {
 
   // Refused entries are invisible except by absence from the returned table, so reconcile what we
   // asked for against what the box accepted. Only a full table raises a flag; an unknown class, a
-  // bad direction, and a wildcard class carrying a real id are all refused silently.
+  // bad direction, and a wildcard class carrying a real id are all refused with no reply.
   const refused = createMemo(() => {
     const table = accepted();
     if (!table || !streaming()) return [];

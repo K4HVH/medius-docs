@@ -9,7 +9,7 @@ const Lock: Component = () => {
       <Card>
         <CardHeader title="Lock" subtitle="Weigh one physical input by class" />
         <p>
-          <A href="/native/commands/lock#lock"><code>LOCK</code></A> decides how much of the physical
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of the physical
           device reaches the game PC on one input. Host{' '}
           <A href="/native/injection">injection</A> drives that same input at full strength whatever
           the scale says.
@@ -21,7 +21,7 @@ const Lock: Component = () => {
 
   injection     -->    full strength whatever the scale`}</pre>
         <p>
-          A relative direction weighs the hand against the{' '}
+          A relative direction weighs physical motion against the{' '}
           <A href="/native/commands/lock#bearing">bearing</A>, in one of two{' '}
           <A href="/native/commands/lock#geometry">geometries</A>.
         </p>
@@ -196,7 +196,7 @@ detach      the real device goes away`}</pre>
             <A href="/library/lock#lock"><code>lock</code></A>,{' '}
             <A href="/library/lock#unlock"><code>unlock</code></A>, and{' '}
             <A href="/library/lock#lock-all"><code>scale_all</code></A>, which sends this frame for
-            buttons, keys and media and per-axis frames for the aim and wheel.
+            buttons, keys and media and per-axis frames for X, Y and the wheel.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Block the wheel's negative (scroll-down) sign: <code>class = 3</code> (axis), <code>id = 2</code> (wheel), <code>direction = 2</code>, <code>scale = 0</code>:</p>
@@ -206,7 +206,7 @@ detach      the real device goes away`}</pre>
 | SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
-            Keep 40% of leftward movement while the box pulls right: <code>direction = 4</code>{' '}
+            Keep 40% of leftward movement while the bearing on X is positive: <code>direction = 4</code>{' '}
             (against), <code>scale = 40</code>. A physical <code>-10</code> then leaves as{' '}
             <code>-4</code>, and as <code>-10</code> again once the bearing lapses:
           </p>
@@ -261,10 +261,10 @@ detach      the real device goes away`}</pre>
 
       <div id="geometry" data-search-target>
         <Card>
-          <CardHeader title="Geometry" subtitle="Per axis, or projected onto the aim" />
+          <CardHeader title="Geometry" subtitle="Per axis, or projected onto the bearing" />
           <p>
             Set by <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. The two
-            modes agree while the box pulls along one axis, and differ once it pulls diagonally.
+            modes agree while the bearing has one nonzero component, and differ once both are.
           </p>
           <table class="api-params">
             <thead>
@@ -275,7 +275,7 @@ detach      the real device goes away`}</pre>
               <tr><td>vector</td><td><code>1</code></td><td>Only the part of the movement lying along the injected direction.</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`the box pulls down-right at 45 degrees, the hand moves straight right
+          <pre class="diagram">{`the bearing is down-right at 45 degrees, the device moves straight right
 
         o----------->  h   (+12, 0)
          \\         /   across b  (+6, -6)  untouched by with / against
@@ -285,7 +285,7 @@ detach      the real device goes away`}</pre>
              \\ /
               +        along b   (+6, +6)  weighed by with / against`}</pre>
           <p>
-            In vector mode the relative pair addresses the aim as a whole: the box takes the lower
+            In vector mode the relative pair addresses the XY bearing as a whole: the box takes the lower
             of the X and Y scales and applies it to both.
           </p>
           <p>
@@ -293,37 +293,37 @@ detach      the real device goes away`}</pre>
             effective number on both axes, so a readback replayed as commands levels the higher stored
             byte down to it.
           </p>
-          <p>The wheel is never part of the aim vector.</p>
+          <p>The wheel is never projected; it weighs against its own bearing.</p>
           <div class="api-response-label">THE TWO STAGES</div>
                     <table class="api-params">
             <thead>
               <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
             </thead>
             <tbody>
-              <tr><td>1. project</td><td>The relative pair, one number for the whole aim.</td><td>The part lying along the bearing. What survives is written back to both axes.</td></tr>
-              <tr><td>2. weigh</td><td>Each axis's own fixed pair, chosen by the sign now standing in the field.</td><td>What stage 1 left, not the delta the hand produced.</td></tr>
+              <tr><td>1. project</td><td>The relative pair, one number for both axes.</td><td>The part lying along the bearing. What survives is written back to both axes.</td></tr>
+              <tr><td>2. weigh</td><td>Each axis's own fixed pair, chosen by the sign now standing in the field.</td><td>What stage 1 left, not the delta the report carried.</td></tr>
             </tbody>
           </table>
         
           <p>
             A fixed-sign scale governs what reaches the game PC, so it covers the across part as
-            well as the hand's own delta. Only the relative pair is redistributed; the fixed pair is
+            well as the physical delta. Only the relative pair is redistributed; the fixed pair is
             per axis in both modes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre class="diagram">{`  bearing +X +Y
-  LOCK(axis X, with, 0)  LOCK(axis Y, with, 0)   the aim's relative scale is 0
+  LOCK(axis X, with, 0)  LOCK(axis Y, with, 0)   the bearing's relative scale is 0
   LOCK(axis Y, negative, 0)                      Y's negative sign is blocked
 
                           X     Y
-  hand                  +12     0   straight right, nothing on Y
+  physical              +12     0   straight right, nothing on Y
   stage 1  along b       +6    +6   scaled by 0, so it goes
            across b      +6    -6   left alone, and is all that remains
            leaves        +6    -6
   stage 2  scale        100     0   on the sign now in each field
   emitted                +6     0`}</pre>
           <p>
-            Per axis, stage 2 would have left Y alone: the hand put nothing there. Swap that block
+            Per axis, stage 2 would have left Y alone: the report carried nothing there. Swap that block
             for a scale of <code>200</code> and the same <code>-6</code> leaves as <code>-12</code>.
           </p>
         </Card>

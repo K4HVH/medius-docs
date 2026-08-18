@@ -8,10 +8,10 @@ const Requests: Component = () => {
     <>
       <div id="requests-overview" data-search-target>
         <Card>
-          <CardHeader title="Requests" subtitle="Asking the box a question and waiting for the answer" />
+          <CardHeader title="Requests" subtitle="One QUERY frame out, one RESP frame back" />
           <p>
             Unlike the <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls, the queries
-            block: a question frame out, one answer frame back. They are{' '}
+            block: one <code>QUERY</code> frame out, one <code>RESP</code> frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
@@ -58,7 +58,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
 
       <div id="health" data-search-target>
         <Card>
-          <CardHeader title="query_health" subtitle="Is the mouse-to-box-to-PC chain live" />
+          <CardHeader title="query_health" subtitle="The status bits of the device-to-box-to-PC path" />
           <pre class="api-signature">fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
@@ -66,7 +66,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
             Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eight booleans from one
             status byte. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
             <code>clone_configured</code> must all be true before{' '}
-            <A href="/native/injection">injection</A> has anywhere to land.
+            <A href="/native/injection">injection</A> is emitted at all.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -126,8 +126,7 @@ if d.vid == 0 {
             <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
             change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
             <code>has_keyboard()</code> say which are bound. An{' '}
-            <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is a
-            silent no-op, so feature-detect here first.
+            <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is dropped with no error, so feature-detect here first.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -207,7 +206,7 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
             Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction
             currently weighed by <A href="/library/lock#scale"><code>scale</code></A>.{' '}
             <code>scale_of(target, direction)</code> reads the percentage in effect and{' '}
-            <code>is_locked(target, direction)</code> answers whether it is blocked outright. What a
+            <code>is_locked(target, direction)</code> reports whether it is blocked outright. What a
             blanket, a media usage, and a vector-mode relative direction report is on{' '}
             <A href="/library/types/structs#locks">Locks</A>.
           </p>
@@ -220,7 +219,7 @@ let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Both) {
     println!("horizontal motion is frozen");
 }
-println!("counter-aim at {}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
+println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
         </Card>
       </div>
 
@@ -240,10 +239,10 @@ println!("counter-aim at {}%", locks.scale_of(Axis::X, Direction::Against));`}</
           </p>
           <p>
             <A href="/library/catch#catch-events"><code>catch_events</code></A> is fire-and-forget:
-            the box never answers a subscription. Each entry returns the{' '}
+            the box sends no reply to a subscription. Each entry returns the{' '}
             <code>class / id / direction / capture</code> the box accepted, so checking the list
             against the <A href="/library/types/structs#catch-filter">filters</A> you sent is the only
-            way to see they all landed.
+            way to confirm every one was accepted.
           </p>
           <p>
             A filter that is missing was refused. <code>table_full</code> says which reason: the

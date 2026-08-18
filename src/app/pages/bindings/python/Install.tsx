@@ -72,7 +72,7 @@ const Install: Component = () => {
           <p>
             Three lines that check the <A href="/native/hardware">box</A> is reachable.{' '}
             <A href="/bindings/python/api#connect"><code>Device.find()</code></A> opens the
-            first one it sees and runs the{' '}
+            first one it finds and runs the{' '}
             <A href="/native/connection#handshake">handshake</A>; the{' '}
             <code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code>{' '}
             block closes the link on exit.

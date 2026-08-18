@@ -75,7 +75,7 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
 // (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
 //
 // A delta picks up at most two scales, its absolute direction's and its bearing-relative one's, and
-// they multiply, so a block in either wins. Direction.With / .Against need a live bearing (§3.12).
+// they multiply, so a block in either zeroes the delta. Direction.With / .Against need a live bearing (§3.12).
 // Direction.Both is the exception: it writes `scale` to the two fixed signs and a full PASS to the
 // relative pair, so a Both of 50 means 50% whether or not a bearing is live rather than squaring to
 // 25% when one is. It is still a total clear, since a Both of PASS returns all four slots to passing.
@@ -119,7 +119,7 @@ export function moveRidePayload(timeoutMs: number): Uint8Array {
 // OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8] - what the With/Against lock directions
 // are measured against (§3.12). window is how long the last injected delta's direction stays the
 // bearing on that axis; 0 turns it off, leaving both directions inert whatever their scale. mode 0
-// reads each axis's own sign, mode 1 projects the aim onto the injected XY vector. Persisted in NVS.
+// reads each axis's own sign, mode 1 projects the delta onto the injected XY vector. Persisted in NVS.
 export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array {
   const ms = Math.max(0, Math.min(0xffff, Math.round(windowMs)));
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);

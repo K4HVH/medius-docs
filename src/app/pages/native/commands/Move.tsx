@@ -11,7 +11,7 @@ const Move: Component = () => {
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis: the
           cursor pair (X and Y together) or the wheel, picked by a <code>motion</code>{' '}
-          byte. It injects on top of the real mouse, so the PC sees the combined result, and it's{' '}
+          byte. It injects on top of the real mouse, so the emitted report carries both, and it's{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
         <p>

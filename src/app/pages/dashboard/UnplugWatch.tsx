@@ -46,7 +46,7 @@ export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolea
       <Match when={phase() === 'confirm'}>
         <div class="callout callout--danger">
           <p><strong>Make sure every cable is out, including USB1.</strong></p>
-          <p>The browser can't see the USB1 (game PC) port, so check it yourself. USB1 and USB3 plugged into the same PC can cause damage.</p>
+          <p>The browser can't reach the USB1 (game PC) port, so check it yourself. USB1 and USB3 plugged into the same PC can cause damage.</p>
         </div>
         <label style={{ display: 'flex', 'align-items': 'center', gap: 'var(--g-spacing-sm)' }}>
           <input type="checkbox" checked={ack()} onChange={(e) => setAck(e.currentTarget.checked)} />
