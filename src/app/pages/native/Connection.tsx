@@ -49,6 +49,14 @@ const Connection: Component = () => {
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
+          <div class="callout callout--warning">
+            <p>
+              <code>proto_ver</code> is not the whole answer for{' '}
+              <A href="/native/commands/lock#lock"><code>LOCK</code></A>. Firmware 3.1.x and 3.2.0 both
+              report 4, and that command's last byte changed meaning between them, so read{' '}
+              <code>fw_major.fw_minor</code> too before sending one.
+            </p>
+          </div>
           <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
           <p>
             Full detail on the <A href="/native/commands/requests#version">Requests</A> page.

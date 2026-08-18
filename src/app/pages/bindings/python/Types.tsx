@@ -64,7 +64,7 @@ const Types: Component = () => {
 
       <div id="lock-enums" data-search-target>
         <Card>
-          <CardHeader title="Lock & blanket enums" subtitle="Direction · LockTargetKind · Blanket" />
+          <CardHeader title="Lock & blanket enums" subtitle="Direction · BearingMode · LockTargetKind · Blanket" />
           <p>
             See <A href="/native/commands/lock">Lock</A> for what a direction and a blanket class
             mean, and <A href="/library/catch">Catch</A> for the third reading a direction has on a
@@ -81,7 +81,7 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
               <tbody>
-                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>every direction</td><td>press and release</td><td>both directions</td></tr>
+                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>both directions</td></tr>
                 <tr><td><code>POSITIVE</code></td><td><code>1</code></td><td><code>PRESS</code> · <code>IN</code></td><td>+x / +y / wheel-up only</td><td>the press edge</td><td>IN, device to PC</td></tr>
                 <tr><td><code>NEGATIVE</code></td><td><code>2</code></td><td><code>RELEASE</code> · <code>OUT</code></td><td>-x / -y / wheel-down only</td><td>the release edge</td><td>OUT, PC to device</td></tr>
                 <tr><td><code>WITH</code></td><td><code>3</code></td><td>-</td><td>the sign the box is injecting</td><td>no meaning</td><td>no meaning</td></tr>
@@ -94,6 +94,21 @@ const Types: Component = () => {
               <code>AGAINST</code> are measured against the aim rather than a fixed sign;{' '}
               <code>.is_relative</code> tells them apart.
             </p>
+          </div>
+
+          <div id="bearing-mode" data-search-target>
+            <div class="api-response-label">BearingMode</div>
+            <p>
+              How the box reads the direction it is injecting, which is what <code>WITH</code> and{' '}
+              <code>AGAINST</code> resolve by. Set with <code>dev.set_bearing(window_ms, mode)</code>.
+            </p>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its own sign against its own bearing, independently; the default</td></tr>
+                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and only the part along it is weighed</td></tr>
+              </tbody>
+            </table>
           </div>
 
           <div id="locktargetkind" data-search-target>
@@ -885,7 +900,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is weighed (an axis or a usage)</td></tr>
                 <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class entry, where <code>target</code> names only the class</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>which direction of the target this entry weighs</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept; a usage carries one bit and only ever reports 0</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept; a usage carries one bit, so the box stores the block or pass it renders and this never reads between them</td></tr>
                 <tr><td><code>is_block</code></td><td><code>bool</code></td><td><code>scale == 0</code>: blocked outright rather than weighed</td></tr>
               </tbody>
             </table>
@@ -901,7 +916,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>window_ms</code></td><td><code>Optional[int]</code></td><td>how long an axis holds the direction of its last injected delta; <code>None</code> is off, leaving both relative directions inert</td></tr>
-                <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PER_AXIS</code> (each axis reads its own sign) or <code>VECTOR</code> (the aim is projected onto the injected direction)</td></tr>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A></td><td>how the bearing is read</td></tr>
                 <tr><td><code>is_live</code></td><td><code>bool</code></td><td>whether a bearing is held at all</td></tr>
               </tbody>
             </table>
