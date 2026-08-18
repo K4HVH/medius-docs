@@ -22,11 +22,14 @@ const health = {
 
 const VALUES: Record<string, unknown> = {
   health,
-  version: { protoVer: 4, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
+  version: { protoVer: 4, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
   locks: {
     entries: [
-      { cls: 3, id: 0, positive: true, negative: true },
-      { cls: 1, id: 0xffff, positive: true, negative: false },
+      { cls: 3, id: 0, direction: 1, scale: 0 },
+      { cls: 3, id: 0, direction: 2, scale: 0 },
+      { cls: 1, id: 0xffff, direction: 1, scale: 0 },
+      // A weighed direction, which the list has to render as a percentage rather than a block.
+      { cls: 3, id: 1, direction: 4, scale: 40 },
     ],
   },
   catch: {
@@ -145,6 +148,11 @@ describe('Control page', () => {
     // The active list has always been able to show these; only the picker was limited.
     const { findByText } = mount();
     await findByText('all keys press');
+  });
+
+  it('renders a weighed direction as its percentage, not as a lock', async () => {
+    const { findByText } = mount();
+    await findByText('Move up/down (Y) against the aim at 40%');
   });
 
   it('surfaces the cross-chip clock estimate rather than dropping it', async () => {
