@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 4; // CATCH is a (class, id, dir) subscription table over LOCK's address space, reaching the byte-oriented classes (HID, vendor, control, emit, bus) through TRAFFIC_EVENT; both older event frames carry a clock-domain byte
+export const PROTO_VER = 5; // LOCK's trailing byte is a pass-through percentage rather than an on/off flag, its direction byte reaches two bearing-relative slots, and RESP(LOCKS) answers one entry per weighed direction
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
@@ -26,6 +26,9 @@ export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 // RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale u8].
 export const LOCK_ENTRY_LEN = 5;
+// The most entries one RESP(LOCKS) carries (§4.8). The box fills them in a fixed order and truncates
+// the granular key list silently, so a larger count is a malformed reply rather than a longer table.
+export const LOCKS_MAX = 96;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]

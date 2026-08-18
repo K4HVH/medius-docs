@@ -22,7 +22,7 @@ const health = {
 
 const VALUES: Record<string, unknown> = {
   health,
-  version: { protoVer: 4, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
+  version: { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
   locks: {
     entries: [
       { cls: 3, id: 0, direction: 1, scale: 0 },

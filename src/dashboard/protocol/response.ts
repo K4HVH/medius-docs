@@ -20,6 +20,7 @@ import {
   Q_DEVICE_INFO,
   Q_HEALTH,
   LOCK_ENTRY_LEN,
+  LOCKS_MAX,
   Q_LOCKS,
   Q_OPTIONS,
   Q_RATE,
@@ -69,8 +70,10 @@ import {
   LogLevel,
   clockDomainFromU8,
   deviceKindFromU8,
+  directionFromU8,
   healthFromFlags,
   kbdCapsFromBytes,
+  lockClassFromU8,
   logLevelFromU8,
 } from './types';
 
@@ -207,14 +210,21 @@ export function parseResp(payload: Uint8Array): Resp | null {
       // passing untouched. A target absent from the list is passing on every direction.
       if (payload.length < 2) return null;
       const n = payload[1];
+      if (n > LOCKS_MAX) return null;
       if (payload.length < 2 + LOCK_ENTRY_LEN * n) return null;
       const entries: LockEntry[] = [];
       for (let i = 0; i < n; i++) {
         const off = 2 + LOCK_ENTRY_LEN * i;
+        // An entry this build cannot name is dropped, the way the crate drops one, rather than kept as
+        // a raw byte wearing the enum's type: scaleOf would compare it against a class or direction
+        // nothing matches and report a pass over a lock the box is holding.
+        const cls = lockClassFromU8(payload[off]);
+        const direction = directionFromU8(payload[off + 3]);
+        if (cls === null || direction === null) continue;
         entries.push({
-          cls: payload[off],
+          cls,
           id: u16le(payload, off + 1),
-          direction: payload[off + 3],
+          direction,
           scale: payload[off + 4],
         });
       }

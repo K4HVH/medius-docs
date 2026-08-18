@@ -55,9 +55,12 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign; a momentary usage locks by edge. One direction byte, two vocabularies, plus
-// the two that name a sign relative to the bearing rather than a fixed one.
+// An axis locks by sign; a button or key locks by edge. One direction byte, two vocabularies, plus
+// the two that name a sign relative to the bearing rather than a fixed one. Media is the one class
+// with no edges at all: the box suppresses the usage whole and reports it as Both, so naming a
+// direction here would read as a distinction the box does not make.
 const dirName = (cls: number, d: Direction): string => {
+  if (cls === LockClass.Media) return '';
   if (d === Direction.With) return 'with the aim';
   if (d === Direction.Against) return 'against the aim';
   if (d === Direction.Both) return 'both';
@@ -81,11 +84,10 @@ const DeviceLock = () => {
 
   const dir = (): Direction => Number(direction()) as Direction;
 
-  // An every-axis lock goes out as one frame per axis rather than the class wildcard. Firmware up
-  // to and including the current release only accepts axis ids 0 to 2, so the wildcard is carried
-  // over the wire and then dropped, and the box has no blanket representation anyway: it expands
-  // one into per-axis bits and reads it back as three entries. Sending the three is identical on a
-  // box that implements it and the only thing that works on one that does not.
+  // An every-axis lock goes out as one frame per axis rather than the class wildcard. The box has no
+  // blanket representation for the mouse classes: it expands one into per-target scales and reads it
+  // back as three entries either way. Firmware that predates the axis blanket drops the wildcard on
+  // arrival, so the three frames are both equivalent and the only form that works everywhere.
   const targets = (): { cls: LockClass; id: number }[] => {
     const t = target();
     if (t.cls === LockClass.Axis && t.id === LOCK_ID_ALL) {
@@ -103,19 +105,32 @@ const DeviceLock = () => {
     });
 
   // Every weighed (target, direction) the box reports, whoever set it. One entry per direction, so a
-  // target weighed several ways shows up several times.
+  // target weighed several ways shows up several times. A blanket key lock arrives as one entry per
+  // blocked edge, which reads out here as "all keys press" rather than one both-edge chip.
   const active = createMemo(() =>
-    (locks()?.entries ?? ([] as LockEntry[])).map((e) => ({
-      key: `${e.cls}:${e.id}:${e.direction}`,
-      text:
-        e.scale === LOCK_SCALE_BLOCK
-          ? `${targetName(e.cls, e.id)} ${dirName(e.cls, e.direction)}`
-          : `${targetName(e.cls, e.id)} ${dirName(e.cls, e.direction)} at ${e.scale}%`,
-      blocked: e.scale === LOCK_SCALE_BLOCK,
-    })),
+    (locks()?.entries ?? ([] as LockEntry[])).map((e) => {
+      const dn = dirName(e.cls, e.direction);
+      const head = dn ? `${targetName(e.cls, e.id)} ${dn}` : targetName(e.cls, e.id);
+      return {
+        key: `${e.cls}:${e.id}:${e.direction}`,
+        text: e.scale === LOCK_SCALE_BLOCK ? head : `${head} at ${e.scale}%`,
+        blocked: e.scale === LOCK_SCALE_BLOCK,
+      };
+    }),
   );
 
   const isAxis = () => target().cls === LockClass.Axis;
+  const isMedia = () => target().cls === LockClass.Media;
+
+  // Picking a class can strand the selected direction on an option the new class does not offer, and
+  // a radio with no matching option keeps sending the old byte. Fall back to Both, which every class
+  // takes.
+  const chooseTarget = (v: UsageValue) => {
+    setTarget(v);
+    if (v.cls === LockClass.Media || (v.cls !== LockClass.Axis && isRelativeDirection(dir()))) {
+      setDirection(String(Direction.Both));
+    }
+  };
 
   const dirLabel = () =>
     isAxis()
@@ -126,11 +141,13 @@ const DeviceLock = () => {
           { value: String(Direction.With), label: 'With the aim' },
           { value: String(Direction.Against), label: 'Against the aim' },
         ]
-      : [
-          { value: String(Direction.Both), label: 'Both' },
-          { value: String(Direction.Positive), label: 'Press' },
-          { value: String(Direction.Negative), label: 'Release' },
-        ];
+      : isMedia()
+        ? [{ value: String(Direction.Both), label: 'The whole usage' }]
+        : [
+            { value: String(Direction.Both), label: 'Both' },
+            { value: String(Direction.Positive), label: 'Press' },
+            { value: String(Direction.Negative), label: 'Release' },
+          ];
 
   return (
     <Show when={dash.status() === 'connected'}>
@@ -145,12 +162,16 @@ const DeviceLock = () => {
           name="lock-target"
           classes={CLASSES}
           value={target()}
-          onChange={setTarget}
+          onChange={chooseTarget}
           usageLabel="Which input"
         />
 
         <Show when={!isAxis()}>
           <p>A button, key, or media usage carries one bit, so Lock and Unlock are all it has.</p>
+        </Show>
+
+        <Show when={isMedia()}>
+          <p>A media usage has no press and release edges. The box suppresses it whole.</p>
         </Show>
 
         <div style={section}>
@@ -174,6 +195,14 @@ const DeviceLock = () => {
               onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
             />
             <p>0% blocks it, 100% passes it through untouched, and above that amplifies it.</p>
+          </div>
+        </Show>
+
+        <Show when={isAxis() && dir() === Direction.Both}>
+          <div class="callout callout--info" style={section}>
+            Both writes the percentage to the two fixed signs and a full pass to with and against, so
+            it means the same whether or not the box is injecting. A Both at 100% still clears all
+            four.
           </div>
         </Show>
 
