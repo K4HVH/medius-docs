@@ -264,7 +264,7 @@ const Types: Component = () => {
             edges: an edge named on one goes out as <code>MEDIUS_DIRECTION_BOTH</code>, which is what{' '}
             <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it as.
           </p>
-          <div class="api-response-label">A BYTE NO CONSTANT NAMES</div>
+          <div class="api-response-label">UNNAMED DIRECTION BYTES</div>
           <p>
             Parameters and struct fields carrying a direction are declared <code>uint8_t</code>, so a
             value outside the enum reaches the boundary rather than the wire.
@@ -1029,9 +1029,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td>A <code>direction</code> byte no constant names</td><td>The entry is dropped rather than trusted, and <code>n</code> moves with the drop.</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>n</code> is the number of entries you can safely walk, never the raw wire count.
-          </p>
+
         </Card>
       </div>
 

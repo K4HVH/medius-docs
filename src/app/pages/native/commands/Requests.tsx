@@ -81,6 +81,7 @@ const Requests: Component = () => {
             <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
+            <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
             <A href="/library/requests#clip-status"><code>status</code></A> query.
           </p>
@@ -482,7 +483,7 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the weighed field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
               <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>which direction of it, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
-              <tr><td>+</td><td><code>scale</code></td><td><code>u8</code></td><td>percent of the physical value kept; 0 = blocked</td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>u8</code></td><td>percent of the physical value kept, <code>0-255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>

@@ -39,7 +39,7 @@ const Catch: Component = () => {
                         +- VEND_BULK  IN        +- EMIT   (after inject + lock)
                         +- BTN KEY MEDIA AXIS   +- BUS
                            at the merge point,
-                           before lock suppression and before injection`}</pre>
+                           before the lock scale and before injection`}</pre>
         <p>
           Addressing doubles as the filter. The control link runs at 4&nbsp;Mbaud and vendor bulk
           alone measures ~250&nbsp;KiB/s through the box, so every class at once cannot be delivered.
@@ -111,12 +111,12 @@ const Catch: Component = () => {
             length in{' '}
             <A href="/native/commands/catch#traffic-event"><code>true_len</code></A>.
           </p>
-          <div class="api-response-label">PHYSICAL ONLY, AND BEFORE SUPPRESSION</div>
+          <div class="api-response-label">PHYSICAL ONLY, AND BEFORE THE SCALE</div>
           <p>
             The input classes are captured at the emission merge point <em>before</em> any{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A> suppression or{' '}
-            <A href="/native/injection">injection</A>, so an input you have locked is still reported
-            here.
+            <A href="/native/commands/lock#scale"><code>LOCK</code> scale</A> or{' '}
+            <A href="/native/injection">injection</A>, so an input you have weighed down, or blocked
+            outright, is still reported here at its full physical value.
           </p>
           <p>
             <code>EMIT</code> is the mirror: what the clone put on the wire <em>after</em> injection,
@@ -144,8 +144,9 @@ const Catch: Component = () => {
 | SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | snaplen| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
-            A blanket is one table entry, not an expansion into per-id entries, which is how{' '}
-            <code>CTRL_LOCK_ID_ALL</code> already behaves. Library binding:{' '}
+            A blanket is one table entry, not an expansion into per-id entries, which is how a{' '}
+            <A href="/native/commands/lock#blanket"><code>LOCK</code> blanket</A> (<code>id = 0xFFFF</code>)
+            already behaves. Library binding:{' '}
             <A href="/library/catch#catch-events"><code>catch_events</code></A>.
           </p>
         </Card>
@@ -259,7 +260,7 @@ const Catch: Component = () => {
             Divide a gap by{' '}
             <A href="/native/commands/requests#rate"><code>RESP(RATE)</code></A>'s{' '}
             <code>poll_period_us</code> for a poll count, but only where that reply's{' '}
-            <code>CTRL_RATE_CHANGE_DRIVEN</code> flag is clear: a change-driven device never puts its
+            <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear: a change-driven device never puts its
             idle polls on the wire, so they cannot be counted.
           </p>
         </Card>

@@ -99,34 +99,10 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           <CardHeader title="CatchFilter" subtitle="One table entry: an address, a direction, a capture" />
           <p>
             The input constructors take what <A href="/library/lock#lock"><code>lock</code></A> takes,
-            so hiding an input from the game and watching it are written alike.
+            so hiding an input from the game and watching it are written alike. Every constructor,
+            modifier and accessor is on{' '}
+            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Constructor</th><th>Addresses</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>CatchFilter::watch(u)</code></td><td>one <A href="/library/types/enums#usage"><code>Usage</code></A>: a button, a key, or a media usage.</td></tr>
-              <tr><td><code>CatchFilter::watch_axis(a)</code></td><td>one <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, or the wheel.</td></tr>
-              <tr><td><code>CatchFilter::watch_class(c)</code></td><td>every usage in one <A href="/library/types/enums#class"><code>Class</code></A>.</td></tr>
-              <tr><td><code>CatchFilter::watch_axes()</code></td><td>every axis.</td></tr>
-              <tr><td><code>CatchFilter::all_input()</code></td><td>all four input classes, as a <code>[CatchFilter; 4]</code>.</td></tr>
-              <tr><td><code>CatchFilter::traffic(c, id)</code></td><td>one id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an endpoint, an interface, an endpoint number.</td></tr>
-              <tr><td><code>CatchFilter::traffic_class(c)</code></td><td>every id in one traffic class.</td></tr>
-              <tr><td><code>CatchFilter::everything()</code></td><td>every class, every id. One table entry, not an expansion.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead>
-              <tr><th>Modifier</th><th>Effect</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>.on_press() / .on_release()</code></td><td>One edge, on the momentary classes.</td></tr>
-              <tr><td><code>.inbound() / .outbound()</code></td><td>One flow, on the traffic classes: IN is device to PC.</td></tr>
-              <tr><td><code>.with_direction(d)</code></td><td>The <A href="/library/types/enums#direction"><code>Direction</code></A> directly; on an axis it is the sign of the delta.</td></tr>
-              <tr><td><code>.with_capture(c)</code></td><td>Bytes kept per event, as a <A href="/library/types/enums#capture"><code>Capture</code></A>. Traffic classes only. An input class carries no packet, and naming one with a capture is refused.</td></tr>
-            </tbody>
-          </table>
           <div class="api-response-label">MOST-SPECIFIC-FIRST</div>
           <p>
             An exact <code>(class, id)</code> beats a class blanket, which beats{' '}
@@ -143,11 +119,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
   the same report on endpoint 0x81
     +- exact (class, id)?  miss
     +- class blanket?      HIT   -->  First(32)     -->  32 bytes, true_len 64`}</pre>
-          <div class="api-response-label">CAPACITY</div>
-          <p>
-            The table holds 32 entries. A subscription that would exceed it is refused before anything
-            is sent, so a stream is never quietly missing an address.
-          </p>
         </Card>
       </div>
 
@@ -263,18 +234,10 @@ for event in &device.catch_events([filter])? {
         }
     }
 }`}</code></pre>
-          <div class="api-response-label">FLAGS BY CLASS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Class</th><th><code>flags</code></th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>VendorBulk</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
-              <tr><td><code>Control</code></td><td>the real device's answer, via <A href="/library/types/enums#control-status"><code>control_status</code></A></td></tr>
-              <tr><td><code>Bus</code></td><td>a <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> discriminant</td></tr>
-              <tr><td>every other class</td><td><code>0</code></td></tr>
-            </tbody>
-          </table>
+          <p>
+            What <code>flags</code> carries per class is on{' '}
+            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>.
+          </p>
           <p>
             A <code>Control</code> event is one completed transaction, not one stage:{' '}
             <code>bytes</code> is <code>[setup 8][data…]</code>, split by <code>setup()</code> and{' '}

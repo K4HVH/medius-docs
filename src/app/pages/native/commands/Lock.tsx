@@ -89,13 +89,13 @@ const Lock: Component = () => {
             <div class="callout callout--warning">
               <p>
                 Weighing runs before injected motion drains, so a gain that fills an axis leaves the
-                box's own motion no room. It is held, not dropped, and leaves as one report once the
-                axis has room again.
+                box's own motion no room. It is held, not dropped, and leaves as one report once there
+                is room.
               </p>
               <p>
-                The threshold is the field's declared maximum divided by the gain, so it rises as the
-                gain falls. At <code>255</code> on an 8-bit axis the field is full at a physical delta
-                of <code>50</code>, and the clamp itself first bites at <code>51</code>.
+                The threshold is the field's declared maximum divided by the gain: at <code>255</code>{' '}
+                on an 8-bit axis the field fills at a physical delta of <code>50</code>, and the clamp
+                bites at <code>51</code>.
               </p>
               <p>
                 <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> does not bound

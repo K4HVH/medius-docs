@@ -29,11 +29,18 @@ const Admin: Component = () => {
           <p>No payload (<code>LEN</code> is <code>0</code>).</p>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Zeroes the accumulators (<code>accX</code>, <code>accY</code>, <code>accWheel</code>) and
-            sets every <A href="/native/commands/inject"><code>INJECT</code></A> override back to
-            none. The report is then byte-identical to passthrough; sending it twice is a no-op. This
-            is what the{' '}
-            <A href="/native/injection#safety">safety auto-clear</A> performs. Library binding:{' '}
+            Releases every piece of PC-owned state in one frame: both{' '}
+            <A href="/native/injection#state">accumulators</A>, every{' '}
+            <A href="/native/commands/inject"><code>INJECT</code></A> override, every{' '}
+            <A href="/native/commands/lock"><code>LOCK</code></A> scale and the{' '}
+            <A href="/native/commands/lock#bearing">bearing</A>, the{' '}
+            <A href="/native/commands/catch"><code>CATCH</code></A> subscription table, the loaded{' '}
+            <A href="/native/commands/clip"><code>clip</code></A>, and any{' '}
+            <A href="/native/commands/led"><code>LED</code></A> override.
+          </p>
+          <p>
+            The report is then byte-identical to passthrough; sending it twice is a no-op. This is what
+            the <A href="/native/injection#safety">safety auto-clear</A> performs. Library binding:{' '}
             <A href="/library/admin#reset"><code>reset</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>

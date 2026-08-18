@@ -68,7 +68,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Lock</code></td>
                 <td><code>0x0A</code></td>
-                <td>Block a physical input (PC to box).</td>
+                <td>Weigh a physical input: block, pass, or amplify (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Catch</code></td>
@@ -98,7 +98,17 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipCtrl</code></td>
                 <td><code>0x13</code></td>
-                <td>Start/stop/arm/config buffered clip playback (PC to box).</td>
+                <td>Drive clip playback: start, stop, pause, resume, restart, toggle, clear, finalize (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipSet</code></td>
+                <td><code>0x14</code></td>
+                <td>Set one clip setting: auto-lock, loop, or retain (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipTrigger</code></td>
+                <td><code>0x15</code></td>
+                <td>Bind a physical edge to a clip engine verb (PC to box).</td>
               </tr>
               <tr>
                 <td><code>TrafficEvent</code></td>

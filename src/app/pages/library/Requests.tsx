@@ -250,39 +250,17 @@ println!("counter-aim at {}%", locks.scale_of(Axis::X, Direction::Against));`}</
             32-entry table was full, or the filter itself was malformed.
           </p>
 
-          <div class="api-response-label">TWO DROP COUNTS</div>
+          <div class="api-response-label">DROPS AND THE CLOCK</div>
           <p>
-            <code>CatchState::dropped</code> is box-wide;{' '}
+            <code>CatchState::dropped</code> is box-wide and{' '}
             <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
-            entry.
+            entry, with a lost event charged to every entry it resolved against. Drops on the entry you
+            care about mean the subscription is too broad for the link.
           </p>
           <p>
-            A lost event is charged to <em>every</em> entry it resolved against.
-          </p>
-          <p>
-            Vendor bulk starving beside a clean key entry means narrowing the bulk address or cutting
-            its <code>capture</code>. Drops on the entry you care about mean the subscription is too
-            broad for the link.
-          </p>
-
-          <div class="api-response-label">THE CLOCK ESTIMATE</div>
-          <pre class="diagram">{`  device chip                              host chip
-      t1  ------- request -------------------> t2
-                                               |
-      t4  <---------------- reply ------------ t3
-
-      offset_us = ((t2 - t1) + (t3 - t4)) / 2   ->  host clock minus device clock
-      delay_us  =  (t4 - t1) - (t3 - t2)        ->  the error bound is delay_us / 2`}</pre>
-          <p>
-            Events are stamped by whichever chip saw them, and the two chips' <code>ts_us</code> values
-            share no epoch. The <code>clock</code> field measures the gap, the only way to subtract
-            across domains.
-          </p>
-          <p>
-            <code>delay_us</code> bounds how far you can trust it, <code>rate_ppb</code> corrects for
-            crystal drift as it ages, and an <code>age</code> of <code>None</code> means no estimate
-            yet, not an offset of zero. Applying it is optional: each event's{' '}
-            <A href="/library/types/enums#clock-domain"><code>clock</code></A> stays authoritative.
+            The two chips stamp events on clocks that share no epoch. <code>clock</code> is the
+            measured gap between them, and what its fields mean is on{' '}
+            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -374,6 +352,12 @@ println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
           <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
           <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
           <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
+          <pre class="api-signature">async fn query_imperfect(&self) -&gt; Result&lt;ImperfectStatus&gt;</pre>
+          <pre class="api-signature">async fn query_movement_riding(&self) -&gt; Result&lt;Option&lt;Duration&gt;&gt;</pre>
+          <pre class="api-signature">async fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
+          <pre class="api-signature">async fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
+          <pre class="api-signature">async fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+          <pre class="api-signature">async fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <pre><code class="language-bash">cargo add medius --features async</code></pre>

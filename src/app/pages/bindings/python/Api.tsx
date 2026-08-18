@@ -122,8 +122,7 @@ const Api: Component = () => {
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the aim and need a live bearing; set one with <code>dev.set_bearing(window_ms, mode)</code>.</p>
-            <p>Only an axis has a bearing, so <code>Direction.WITH</code> or <code>AGAINST</code> on any other class raises <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. <code>direction</code> reaches every member of a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> the same way it reaches one, so <code>KEYS</code> takes an edge and <code>MEDIA</code>, having none, sends <code>BOTH</code>. What the readback holds is on <A href="/bindings/python/types#locks"><code>Locks</code></A>.</p>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the aim and need a live bearing; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
           </div>
         </Card>
       </div>

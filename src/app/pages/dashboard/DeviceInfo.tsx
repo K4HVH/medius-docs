@@ -143,7 +143,7 @@ const DeviceInfo = () => {
 
       <Card>
         <CardHeader title="Performance" subtitle="Report rate and delivery" />
-        <Show when={rate()} fallback={<Row label="Report rate">—</Row>}>
+        <Show when={rate()} fallback={<Row label="Report rate">not measured yet</Row>}>
           {(r) => (
             <Row label="Report rate">
               <Show

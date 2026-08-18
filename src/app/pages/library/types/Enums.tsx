@@ -426,7 +426,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
             <tbody>
-              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A></td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative, or both.</td></tr>
+              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A></td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
               <tr><td><code>Usage</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
             </tbody>
           </table>
@@ -477,9 +477,9 @@ device.press(from_button)?;                         // press takes any impl Into
           </p>
           <p>
             <code>With</code> and <code>Against</code> are measured against the bearing rather than a
-            fixed sign, so they follow the aim; <code>is_relative()</code> tells them apart, and a{' '}
-            <A href="/library/catch#catch-events">catch subscription</A> refuses one with{' '}
-            <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
+            fixed sign, so they follow the aim; <code>is_relative()</code> tells them apart, and a lock or{' '}
+            <A href="/library/catch#catch-events">catch</A> call on any class but an axis refuses one
+            with <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
             <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
           </p>
           <p>
@@ -504,7 +504,7 @@ device.press(from_button)?;                         // press takes any impl Into
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
-              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it. The fixed-sign scales still reach what the projection leaves on each axis.</td></tr>
+              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
           <p>
@@ -533,7 +533,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
             <tbody>
-              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign, on each axis.</td></tr>
+              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
               <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>
               <tr><td><code>Buttons</code></td><td>Every mouse button.</td><td>An edge, on each button.</td></tr>
               <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td><td>An edge: <code>Positive</code> blocks presses, <code>Negative</code> releases, <code>Both</code> both.</td></tr>
@@ -760,12 +760,12 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Start</code></td><td><code>0</code></td><td>Start playback from the ring's head.</td></tr>
+              <tr><td><code>Start</code></td><td><code>0</code></td><td>Play from the ring's head, or resume a pause.</td></tr>
               <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
               <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
               <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
               <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
-              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Start if idle, stop if playing.</td></tr>
+              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Play if idle or paused, stop if playing.</td></tr>
             </tbody>
           </table>
         </Card>

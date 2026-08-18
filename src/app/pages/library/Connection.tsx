@@ -23,7 +23,7 @@ const Connection: Component = () => {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn Device::find() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn Device::find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
+          <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             <code>open</code> and <code>find</code> block on the{' '}

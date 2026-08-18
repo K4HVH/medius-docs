@@ -48,7 +48,13 @@ const Flashing: Component = () => {
         <Card>
           <CardHeader title="Version scheme" subtitle="major.minor.patch" />
           <p>
-            Read the running version with{' '}
+            Both chips carry the same firmware version, stamped into their app descriptors from one
+            source, so the binary and the tag cannot drift apart.
+          </p>
+          <p>
+            The <A href="/native/connection#handshake">protocol version</A> is a separate byte and is
+            the one a host checks for compatibility; the firmware version identifies the build. Both
+            come back in the same reply, from{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
           </p>
         </Card>
@@ -57,25 +63,22 @@ const Flashing: Component = () => {
       <div id="notes" data-search-target>
         <Card>
           <CardHeader title="Notes" />
+          <p>
+            A run reboot (<code>target = 2</code> or <code>3</code>) is the only software cold-reboot;{' '}
+            <code>DTR</code>/<code>RTS</code> are not wired to a reset on this board.
+          </p>
+          <p>
+            After a download reboot the serial port sits in the ROM bootloader, plain ASCII the{' '}
+            <A href="/native/frame">frame decoder</A> ignores, until you finish flashing or
+            power-cycle. Persisted per-box data survives an app reflash.
+          </p>
           <div class="callout callout--warning">
-            <ul>
-              <li>
-                The <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> path needs working
-                firmware to receive the frame. A chip with no firmware yet (a first flash) or a bad
-                image can't, so enter download mode the hardware way: hold the chip's BOOT button while
-                you reset or power on the box.
-              </li>
-              <li>
-                A run reboot (<code>target = 2</code> or <code>3</code>) is the only software
-                cold-reboot; <code>DTR</code>/<code>RTS</code> aren't wired to a reset on this board.
-              </li>
-              <li>
-                After a download reboot the serial port sits in the ROM bootloader (plain ASCII the{' '}
-                <A href="/native/frame">frame decoder</A> ignores) until you finish flashing or
-                power-cycle.
-              </li>
-              <li>Persisted per-box data survives an app reflash.</li>
-            </ul>
+            <p>
+              The <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> path needs working
+              firmware to receive the frame. A chip with no firmware yet, or a bad image, cannot, so
+              enter download mode the hardware way: hold the chip's BOOT button while you reset or
+              power on the box.
+            </p>
           </div>
           <div class="callout callout--info">
             <p>

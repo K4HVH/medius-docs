@@ -248,6 +248,7 @@ const Clip: Component = () => {
           </p>
           <pre class="api-signature">CLIP_CTRL  0x13  ·  payload [op u8]</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <div class="api-response-label">PAYLOAD</div>
           <table class="api-params">
             <thead>
               <tr><th>op</th><th>Name</th><th>Effect</th></tr>
@@ -264,7 +265,7 @@ const Clip: Component = () => {
             </tbody>
           </table>
           <p>
-            Ops <code>0</code>-<code>5</code> (<code>START</code> through <code>TOGGLE</code>) double as the
+            Ops <code>0</code>-<code>5</code> (<code>START</code> through <code>TOGGLE</code>) double as the{' '}
             <code>action</code> byte a <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> fires
             on a physical edge; <code>CLEAR</code> and <code>FINALIZE</code> are host-only.
           </p>

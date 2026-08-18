@@ -64,10 +64,13 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
             <code>None</code> (the default) is off.
           </p>
           <p>
-            The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms, and it
-            clamps to 65535 ms. Pure idle injection, moving the cursor while the user holds still, stops
-            working while riding is on, unless a move opts out with{' '}
-            <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>; button, key, and media
+            The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms,
+            and it clamps to 65535 ms.
+          </p>
+          <p>
+            Pure idle injection, moving the cursor while the user holds still, stops working while
+            riding is on, unless a move opts out with{' '}
+            <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>. Button, key and media
             injection are unaffected.
           </p>
           <div class="callout callout--warning">
@@ -113,7 +116,7 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
-              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the aim is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -125,9 +128,7 @@ device.set_movement_riding(None)?;                             // back to gaples
               <code>Vector</code> weighs a report twice, and the second pass reads whatever the
               projection left standing on each axis, not what the hand moved. Block <code>Y</code>{' '}
               negative while the aim runs diagonally and a purely horizontal flick can come out with its
-              vertical share removed. The native{' '}
-              <A href="/native/commands/lock#geometry">geometry</A> section works the arithmetic
-              through.
+              vertical share removed.
             </p>
             <p>
               A change to either field drops the standing bearing and the box's banked fractions, which

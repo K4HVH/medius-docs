@@ -41,6 +41,7 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="clip" subtitle="Open a clip handle" />
           <pre class="api-signature">fn clip(&self) -&gt; ClipHandle</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Returns a <A href="/library/clip#handle"><code>ClipHandle</code></A> bound to this box. Keep one
             handle per clip session and top it up through it: the handle owns the append-sequence counter
@@ -62,6 +63,7 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="ClipBuilder" subtitle="Build the entry stream" />
           <pre class="api-signature">fn new() -&gt; ClipBuilder</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Each method appends one per-frame entry, so a builder is a timeline read top to bottom. Motion is
             a relative delta; an edge is an{' '}
