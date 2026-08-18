@@ -60,9 +60,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=4][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto=5][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -70,7 +70,7 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 4,
+      protoVer: 5,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
@@ -88,14 +88,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(4);
+    expect(version.protoVer).toBe(5);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });

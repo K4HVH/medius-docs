@@ -76,6 +76,9 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
 //
 // A delta picks up at most two scales, its absolute direction's and its bearing-relative one's, and
 // they multiply, so a block in either wins. Direction.With / .Against need a live bearing (§3.12).
+// Direction.Both is the exception: it writes `scale` to the two fixed signs and a full PASS to the
+// relative pair, so a Both of 50 means 50% whether or not a bearing is live rather than squaring to
+// 25% when one is. It is still a total clear, since a Both of PASS returns all four slots to passing.
 export function lockPayload(
   cls: LockClass,
   id: number,

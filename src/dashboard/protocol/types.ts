@@ -230,6 +230,20 @@ export enum LockClass {
   Axis = 3,
 }
 
+// A class byte no constant names is dropped rather than carried as a LockClass it is not; a raw
+// number wearing the enum's type reaches scaleOf and matches nothing, or matches the wrong thing.
+export function lockClassFromU8(v: number): LockClass | null {
+  switch (v) {
+    case LockClass.Button:
+    case LockClass.Key:
+    case LockClass.Media:
+    case LockClass.Axis:
+      return v;
+    default:
+      return null;
+  }
+}
+
 // LOCK axis id (§3.8): for an Axis-class lock, id picks the axis and direction carries the sign.
 export enum LockAxis {
   X = 0,
@@ -239,6 +253,8 @@ export enum LockAxis {
 
 // The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
 // aliases below give each reading a name and no call site has to write the ambiguous member.
+// A media usage is the one class with no edges: the box suppresses it whole, ignores the byte on the
+// way in, and reports Both on the way out.
 // With and Against name a sign relative to the bearing, the direction the box is itself injecting
 // (§3.12), so they follow the aim rather than the axis. Axes only, and LOCK only: a subscription or a
 // trigger is addressed before there is any injection to be with or against.
@@ -248,6 +264,19 @@ export enum Direction {
   Negative = 2,
   With = 3,
   Against = 4,
+}
+
+export function directionFromU8(v: number): Direction | null {
+  switch (v) {
+    case Direction.Both:
+    case Direction.Positive:
+    case Direction.Negative:
+    case Direction.With:
+    case Direction.Against:
+      return v;
+    default:
+      return null;
+  }
 }
 
 // Whether a direction is measured against the bearing rather than a fixed sign.

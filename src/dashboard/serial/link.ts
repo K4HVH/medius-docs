@@ -307,6 +307,8 @@ export class SerialLink {
   // value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
   // amplifies. `lock` and `unlock` are its two ends. Direction.With / .Against are measured against
   // the bearing (§3.12) and do nothing until one is live; see `setBearing`.
+  // A blanket (id LOCK_ID_ALL) carries the direction to every member, so an every-key lock can block
+  // press edges alone. A media usage has no edges and ignores the byte either way.
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
     return this.send(
       encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, scale)),

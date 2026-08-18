@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  PROTO_VER,
   type DecodedFrame,
 
   BusEventKind,
@@ -47,6 +48,9 @@ import {
   Press,
   Release,
   LOCK_ID_ALL,
+  LOCKS_MAX,
+  directionFromU8,
+  lockClassFromU8,
   isComposite,
   isLocked,
   clearNamePayload,
@@ -487,6 +491,37 @@ describe('LOCK command (§3.8)', () => {
     expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX]).toEqual([0, 100, 255]);
   });
 
+  it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
+    // The scale byte and the two bearing-relative directions arrived together with CTRL_PROTO_VER 5.
+    // Left at 4 the handshake would accept a box whose LOCK reads the last byte as an on/off flag,
+    // so every unlock this file encodes would reach it as a lock.
+    expect(PROTO_VER).toBe(5);
+  });
+
+  it('parses the readback shapes a blanket and a media lock produce', () => {
+    // A blanket key lock is one entry per blocked edge under id 0xFFFF, never a single Both entry,
+    // and a media usage has no edges at all so it always reports Both. Decoding either as the other
+    // would make the dashboard render a lock the box is not holding.
+    const resp = parseResp(
+      new Uint8Array([
+        6, 3,
+        1, 0xff, 0xff, Direction.Positive, 0,
+        1, 0xff, 0xff, Direction.Negative, 0,
+        2, 0xe9, 0x00, Direction.Both, 0,
+      ]),
+    );
+    expect(resp).toEqual({
+      kind: 'locks',
+      locks: {
+        entries: [
+          { cls: LockClass.Key, id: LOCK_ID_ALL, direction: Direction.Positive, scale: 0 },
+          { cls: LockClass.Key, id: LOCK_ID_ALL, direction: Direction.Negative, scale: 0 },
+          { cls: LockClass.Media, id: 0x00e9, direction: Direction.Both, scale: 0 },
+        ],
+      },
+    });
+  });
+
   it('parses a RESP(LOCKS) entry list', () => {
     // what = 6, n = 2: axis wheel blocked negative, then axis X weighed 40% against the bearing.
     const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 2, 0, 3, 0, 0, 4, 40]));
@@ -503,6 +538,56 @@ describe('LOCK command (§3.8)', () => {
 
   it('parses an empty RESP(LOCKS) list', () => {
     expect(parseResp(new Uint8Array([6, 0]))).toEqual({ kind: 'locks', locks: { entries: [] } });
+  });
+
+  it('drops a RESP(LOCKS) entry whose class or direction this build cannot name', () => {
+    // Kept, these decode into a LockEntry holding raw bytes while typed as the enums, and scaleOf
+    // then reports a pass over a direction the box is holding. The crate drops such an entry.
+    const resp = parseResp(
+      new Uint8Array([
+        6, 4,
+        3, 2, 0, Direction.Negative, 0,
+        127, 0, 0, Direction.Both, 0,
+        3, 0, 0, 99, 40,
+        1, 0x04, 0x00, Direction.Positive, 0,
+      ]),
+    );
+    expect(resp).toEqual({
+      kind: 'locks',
+      locks: {
+        entries: [
+          { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
+          { cls: LockClass.Key, id: 0x04, direction: Direction.Positive, scale: 0 },
+        ],
+      },
+    });
+  });
+
+  it('refuses a RESP(LOCKS) count past the wire cap', () => {
+    // The 512-byte payload ceiling admits 102 entries, but the box fills 96 and stops, so a larger
+    // count is a malformed reply rather than a longer table.
+    const over = [6, LOCKS_MAX + 1];
+    for (let i = 0; i <= LOCKS_MAX; i++) over.push(3, 0, 0, Direction.Positive, 40);
+    expect(parseResp(new Uint8Array(over))).toBeNull();
+    // and the cap itself still decodes
+    const at = [6, LOCKS_MAX];
+    for (let i = 0; i < LOCKS_MAX; i++) at.push(3, 0, 0, Direction.Positive, 40);
+    const resp = parseResp(new Uint8Array(at));
+    expect(resp?.kind).toBe('locks');
+    expect(resp?.kind === 'locks' && resp.locks.entries.length).toBe(LOCKS_MAX);
+  });
+
+  it('names every lock class and direction byte the wire defines, and no other', () => {
+    expect([0, 1, 2, 3].map(lockClassFromU8)).toEqual([
+      LockClass.Button, LockClass.Key, LockClass.Media, LockClass.Axis,
+    ]);
+    expect(lockClassFromU8(4)).toBeNull();
+    expect(lockClassFromU8(127)).toBeNull();
+    expect([0, 1, 2, 3, 4].map(directionFromU8)).toEqual([
+      Direction.Both, Direction.Positive, Direction.Negative, Direction.With, Direction.Against,
+    ]);
+    expect(directionFromU8(5)).toBeNull();
+    expect(directionFromU8(99)).toBeNull();
   });
 
   it('isLocked reads a per-direction block out of the entry list', () => {
