@@ -176,7 +176,7 @@ struct MediusMotionEvent { int16_t dx, dy, dz; };   // cursor + wheel deltas
 
 struct MediusUsageEvent {               // one class's held usages
     MediusClass class_;                 // BUTTON / KEY / MEDIA
-    MediusDirection direction;          // POSITIVE = the set grew, NEGATIVE = it shrank
+    uint8_t direction;                  // POSITIVE = the set grew, NEGATIVE = it shrank
     uint16_t n;
     MediusUsage usages[256];
 };
@@ -184,7 +184,7 @@ struct MediusUsageEvent {               // one class's held usages
 struct MediusTrafficEvent {             // one captured packet
     MediusCatchClass class_;            // which class matched
     uint16_t id;                        // endpoint address / endpoint no. / interface no.
-    MediusDirection direction;          // POSITIVE = IN, NEGATIVE = OUT
+    uint8_t direction;                  // POSITIVE = IN, NEGATIVE = OUT
     uint8_t flags;                      // class-specific; the kind, for BUS
     uint16_t true_len;                  // length on the bus, before capture
     uint16_t len;                       // bytes kept in bytes[]
@@ -312,6 +312,7 @@ medius_event_stream_free(events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_NOT_AN_INPUT_FILTER</code></td><td>A traffic class, which arrives as bytes and decodes into no edge.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td><code>medius_catch_filter_everything</code>, which covers traffic too.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>Narrowed with <code>_on_press</code> or <code>_on_release</code>: one edge cannot be diffed into two.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>Carrying a <code>class_</code> or a <code>direction</code> byte no constant names. <code>medius_device_catch_events</code> refuses the same two.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

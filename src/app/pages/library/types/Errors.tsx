@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer &#123; got &#125;</code></td>
                 <td>
-                  The box answered, but its <code>proto_ver</code> wasn't <code>4</code>;{' '}
+                  The box answered, but its <code>proto_ver</code> wasn't <code>5</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>
@@ -111,10 +111,10 @@ const Errors: Component = () => {
               <tr>
                 <td><code>RelativeDirection {'{'} direction, what {'}'}</code></td>
                 <td>
-                  A subscription addressed <code>Direction::With</code> or{' '}
-                  <code>Against</code>. Those are measured against the bearing at emit time, which a
-                  subscription is addressed before; use <code>Both</code>, <code>Positive</code>, or{' '}
-                  <code>Negative</code>.
+                  A call addressed <code>Direction::With</code> or <code>Against</code> where only a
+                  fixed sign or edge fits; <code>what</code> names it. Those are resolved against the{' '}
+                  <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is
+                  made; use <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
                 </td>
               </tr>
               <tr>

@@ -93,6 +93,7 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
               <tr><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code></td></tr>
               <tr><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge</td></tr>
               <tr><td><code>ERR_RESERVED_ID</code></td><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel</td></tr>
+              <tr><td><code>ERR_RELATIVE_DIRECTION</code></td><td><code>RelativeDirectionError</code></td><td><code>WITH</code> or <code>AGAINST</code> where only a fixed sign or edge fits</td></tr>
             </tbody>
           </table>
           <p>

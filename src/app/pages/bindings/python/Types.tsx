@@ -79,13 +79,13 @@ const Types: Component = () => {
               the byte-oriented <A href="/bindings/python/types#catchclass">catch classes</A>.
             </p>
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a button or key</th><th>On a traffic-class filter</th></tr></thead>
               <tbody>
                 <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>both directions</td></tr>
                 <tr><td><code>POSITIVE</code></td><td><code>1</code></td><td><code>PRESS</code> · <code>IN</code></td><td>+x / +y / wheel-up only</td><td>the press edge</td><td>IN, device to PC</td></tr>
                 <tr><td><code>NEGATIVE</code></td><td><code>2</code></td><td><code>RELEASE</code> · <code>OUT</code></td><td>-x / -y / wheel-down only</td><td>the release edge</td><td>OUT, PC to device</td></tr>
-                <tr><td><code>WITH</code></td><td><code>3</code></td><td>-</td><td>the sign the box is injecting</td><td>no meaning</td><td>no meaning</td></tr>
-                <tr><td><code>AGAINST</code></td><td><code>4</code></td><td>-</td><td>the sign opposing it</td><td>no meaning</td><td>no meaning</td></tr>
+                <tr><td><code>WITH</code></td><td><code>3</code></td><td>-</td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
+                <tr><td><code>AGAINST</code></td><td><code>4</code></td><td>-</td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
               </tbody>
             </table>
             <p>
@@ -93,6 +93,13 @@ const Types: Component = () => {
               <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
               <code>AGAINST</code> are measured against the aim rather than a fixed sign;{' '}
               <code>.is_relative</code> tells them apart.
+            </p>
+            <p>
+              Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
+              anywhere else raises{' '}
+              <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. A media
+              usage has no edges: an edge named on one goes out as <code>BOTH</code>, which is what{' '}
+              <A href="/bindings/python/types#locks"><code>Locks</code></A> reports it as.
             </p>
           </div>
 
@@ -106,9 +113,13 @@ const Types: Component = () => {
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its own sign against its own bearing, independently; the default</td></tr>
-                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and only the part along it is weighed</td></tr>
+                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and only the part along it is weighed; one relative scale, the lower of X's and Y's, governs the whole aim</td></tr>
               </tbody>
             </table>
+            <p>
+              Under <code>VECTOR</code>, <A href="/bindings/python/types#locks"><code>Locks</code></A>{' '}
+              reports that effective number on both axes, not each axis's stored byte.
+            </p>
           </div>
 
           <div id="locktargetkind" data-search-target>
@@ -128,13 +139,13 @@ const Types: Component = () => {
           <div id="blanket" data-search-target>
             <div class="api-response-label">Blanket</div>
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th><th>Class</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Class</th><th>What direction picks</th></tr></thead>
               <tbody>
-                <tr><td><code>AIM</code></td><td><code>0</code></td><td>the X and Y cursor axes</td></tr>
-                <tr><td><code>WHEEL</code></td><td><code>1</code></td><td>the wheel</td></tr>
-                <tr><td><code>BUTTONS</code></td><td><code>2</code></td><td>every mouse button</td></tr>
-                <tr><td><code>KEYS</code></td><td><code>3</code></td><td>every keyboard key and modifier</td></tr>
-                <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td></tr>
+                <tr><td><code>AIM</code></td><td><code>0</code></td><td>the X and Y cursor axes</td><td>a sign, on each axis</td></tr>
+                <tr><td><code>WHEEL</code></td><td><code>1</code></td><td>the wheel</td><td>a sign</td></tr>
+                <tr><td><code>BUTTONS</code></td><td><code>2</code></td><td>every mouse button</td><td>an edge, on each button</td></tr>
+                <tr><td><code>KEYS</code></td><td><code>3</code></td><td>every keyboard key and modifier</td><td>an edge: <code>POSITIVE</code> blocks presses, <code>NEGATIVE</code> releases, <code>BOTH</code> both</td></tr>
+                <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td><td>nothing; media has no edges</td></tr>
               </tbody>
             </table>
             <p>These are ABI-local ordinals (matching the crate's Blanket order), not the clip auto-lock scope bits.</p>
@@ -471,6 +482,14 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
             <p>
               <code>same_address</code> is true across two filters that differ only in{' '}
               <code>capture</code>, and false once one is narrowed to a direction.
+            </p>
+            <p>
+              The arguments are checked here, before they reach ctypes.{' '}
+              <code>with_direction</code>, <code>watch_axis</code>, <code>watch_class</code>,{' '}
+              <code>traffic</code>, and <code>traffic_class</code> want a member of their enum, and{' '}
+              <code>with_capture</code> a byte; anything else is a <code>ValueError</code> naming the
+              argument. Passing a stray integer used to truncate into whichever member shared its low
+              bits.
             </p>
             <div class="callout callout--warning">
               <p>
@@ -890,6 +909,15 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it</td></tr>
               </tbody>
             </table>
+            <table class="api-params">
+              <thead><tr><th>Readback case</th><th>What <code>entries</code> holds</th></tr></thead>
+              <tbody>
+                <tr><td>a blanket key lock</td><td>one entry per blocked edge, never <code>BOTH</code></td></tr>
+                <tr><td>a media lock, blanket or specific</td><td><code>BOTH</code>, always</td></tr>
+                <tr><td>a relative direction under <A href="/bindings/python/types#bearing-mode"><code>BearingMode.VECTOR</code></A></td><td>the effective scale, the lower of X's and Y's, on both axes</td></tr>
+                <tr><td>96 entries reached</td><td>the rest is absent, with nothing marking it; see the native <A href="/native/commands/requests#locks">LOCKS</A> budget</td></tr>
+              </tbody>
+            </table>
           </div>
 
           <div id="lockentry" data-search-target>
@@ -1296,10 +1324,11 @@ except MediusError as e:     # any other failure
                 <tr><td><code>WildcardNotInputError</code></td><td><code>ERR_WILDCARD_NOT_INPUT</code></td></tr>
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td></tr>
                 <tr><td><code>ReservedIdError</code></td><td><code>ERR_RESERVED_ID</code></td></tr>
+                <tr><td><code>RelativeDirectionError</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td></tr>
               </tbody>
             </table>
             <p>
-              The last six are subscription refusals, raised before a frame reaches the box.
+              The last eight are argument refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
@@ -1310,6 +1339,8 @@ except MediusError as e:     # any other failure
                 <tr><td><code>NotAnInputFilterError</code></td><td>a traffic class passed to <code>input_events</code>, which cannot decode one</td></tr>
                 <tr><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code>; it covers traffic too</td></tr>
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge, which cannot be decoded into press and release</td></tr>
+                <tr><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel, which would address the whole class instead</td></tr>
+                <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
               </tbody>
             </table>
             <div class="callout callout--info">
@@ -1333,10 +1364,10 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ERR_NO_REPLY</code></td><td><code>3</code></td><td><code>ERR_INVALID_ARG</code></td><td><code>9</code></td></tr>
                 <tr><td><code>ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td><code>ERR_PANIC</code></td><td><code>10</code></td></tr>
                 <tr><td><code>ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td><code>ERR_UNKNOWN</code></td><td><code>11</code></td></tr>
-                <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>12</code></td><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td></tr>
-                <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>13</code></td><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>16</code></td></tr>
-                <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>14</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td></tr>
-                <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td><td><code>ERR_RESERVED_ID</code></td><td><code>18</code></td></tr>
+                <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>12</code></td><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>16</code></td></tr>
+                <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>13</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td></tr>
+                <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>14</code></td><td><code>ERR_RESERVED_ID</code></td><td><code>18</code></td></tr>
+                <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td></tr>
               </tbody>
             </table>
           </div>

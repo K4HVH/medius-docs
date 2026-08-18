@@ -60,6 +60,7 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td>16</td><td>The everything filter passed to <code>medius_device_input_events</code>; it covers traffic too.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>17</td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td>18</td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td>19</td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READING THE DETAIL</div>

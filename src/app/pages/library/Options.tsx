@@ -113,6 +113,30 @@ device.set_movement_riding(None)?;                             // back to gaples
             The box boots at <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code>, so
             nothing engages until a scale is set on a relative direction. Persisted in NVS.
           </p>
+          <div class="api-response-label">VECTOR WEIGHS TWICE</div>
+          <p>
+            <code>Vector</code> projects first, then weighs each axis. The projection scales the part of
+            the movement lying along the bearing by the relative scale, one number for the aim, and
+            writes what is left back onto both axes. Each axis's fixed-sign scale then applies to{' '}
+            <em>that</em> value, chosen by the sign standing in the field after the projection, not by
+            the sign the hand moved.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Stage</th><th>Scale</th><th>Reads</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>project</td><td><code>With</code> / <code>Against</code>, the lower of X's and Y's</td><td>The component along the bearing</td></tr>
+              <tr><td>weigh</td><td><code>Positive</code> / <code>Negative</code>, per axis</td><td>What the projection left on that axis</td></tr>
+            </tbody>
+          </table>
+          <p>
+            So a block covers motion the projection redistributed onto that axis, and a gain reaches it
+            too: an absolute scale is a statement about what leaves for the game PC. Block <code>Y</code>{' '}
+            negative while the aim runs diagonally and a purely horizontal flick can come out with its
+            vertical share removed. The native{' '}
+            <A href="/native/commands/lock#bearing">bearing page</A> works the arithmetic through.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;
 use medius::{Axis, BearingMode, Device, Direction};

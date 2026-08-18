@@ -137,20 +137,22 @@ medius_device_free(dev);`}</code></pre>
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Weigh the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> picks a direction. <code>scale</code> is the percent of the physical value kept: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0) blocks, <code>MEDIUS_LOCK_SCALE_PASS</code> (100) passes, up to <code>MEDIUS_LOCK_SCALE_MAX</code> (255) amplifies. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
+          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> constant picks a direction. <code>scale</code> is the percent of the physical value kept: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0) blocks, <code>MEDIUS_LOCK_SCALE_PASS</code> (100) passes, up to <code>MEDIUS_LOCK_SCALE_MAX</code> (255) amplifies. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
+          <p><code>dir</code> and <code>what</code> are declared <code>uint8_t</code>, not <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> and <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A>. The constants are unchanged and are still what you pass; a C enum constant converts to <code>uint8_t</code> on its own, so no call site changes. The boundary takes a byte so it can validate one: a value no constant names arriving as an enum-typed parameter is undefined behaviour in Rust before any check can run, and used to be able to take the process down. It is now <code>MEDIUS_STATUS_ERR_INVALID_ARG</code>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, MediusDirection dir, uint8_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction.</td></tr>
-              <tr><td><code>medius_device_scale_all(MediusDevice *dev, MediusBlanket what, MediusDirection dir, uint8_t scale)</code></td><td>The same over a whole class (aim, wheel, buttons, keys, or media).</td></tr>
-              <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, MediusDirection dir)</code></td><td>Block an axis or usage on a direction: scale 0.</td></tr>
-              <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, MediusDirection dir)</code></td><td>Back to passing untouched: scale 100.</td></tr>
-              <tr><td><code>medius_device_lock_all(MediusDevice *dev, MediusBlanket what, MediusDirection dir)</code></td><td>Blanket block a whole class.</td></tr>
-              <tr><td><code>medius_device_unlock_all(MediusDevice *dev, MediusBlanket what, MediusDirection dir)</code></td><td>Release a blanket block.</td></tr>
+              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, uint8_t dir, uint8_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction.</td></tr>
+              <tr><td><code>medius_device_scale_all(MediusDevice *dev, uint8_t what, uint8_t dir, uint8_t scale)</code></td><td>The same over a whole class (aim, wheel, buttons, keys, or media).</td></tr>
+              <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Block an axis or usage on a direction: scale 0.</td></tr>
+              <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Back to passing untouched: scale 100.</td></tr>
+              <tr><td><code>medius_device_lock_all(MediusDevice *dev, uint8_t what, uint8_t dir)</code></td><td>Blanket block a whole class.</td></tr>
+              <tr><td><code>medius_device_unlock_all(MediusDevice *dev, uint8_t what, uint8_t dir)</code></td><td>Release a blanket block.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you (see <A href="/library/lock">Lock</A>). <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> are measured against the aim and need a live bearing; set one with <code>medius_device_set_bearing</code>.</p>
+            <p>Only an axis has a bearing, so <code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> on any other class is <code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code>, and a byte outside the enum entirely is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code>. <code>dir</code> reaches every member of a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> the same way it reaches one, so <code>MEDIUS_BLANKET_KEYS</code> takes an edge and <code>MEDIUS_BLANKET_MEDIA</code>, having none, sends <code>MEDIUS_DIRECTION_BOTH</code>. What the readback holds is on <A href="/bindings/c/types#locks"><code>MediusLocks</code></A>.</p>
           </div>
         </Card>
       </div>
@@ -168,7 +170,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_reboot(MediusDevice *dev, MediusRebootTarget target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>medius_device_allow_imperfect_clones(MediusDevice *dev, bool allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_movement_riding(MediusDevice *dev, bool enabled, uint32_t window_ms)</code></td><td>Set movement riding; <code>enabled == false</code> clears the window (rounded to whole ms).</td></tr>
-              <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, MediusBearingMode mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
+              <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
               <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, MediusEmitMode mode, uint16_t hz)</code></td><td>Pick what paces injected motion; <code>hz</code> is the target rate for <code>FIXED</code>. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_name(MediusDevice *dev, const char *name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
@@ -280,7 +282,7 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns a copy of <code>f</code></th></tr></thead>
             <tbody>
-              <tr><td><code>medius_catch_filter_with_direction(f, MediusDirection direction)</code></td><td>Restricted to one direction, sign, or edge.</td></tr>
+              <tr><td><code>medius_catch_filter_with_direction(f, uint8_t direction)</code></td><td>Restricted to one direction, sign, or edge.</td></tr>
               <tr><td><code>medius_catch_filter_with_capture(f, uint8_t bytes)</code></td><td>Keeping only the first <code>bytes</code> of each packet; <code>0</code> keeps the whole one. Traffic classes only.</td></tr>
               <tr><td><code>medius_catch_filter_on_press(f)</code> / <code>_on_release(f)</code></td><td>Restricted to the press / release edge.</td></tr>
               <tr><td><code>medius_catch_filter_inbound(f)</code> / <code>_outbound(f)</code></td><td>Restricted to traffic from the device to the PC / from the PC to the device.</td></tr>
@@ -382,8 +384,8 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_scale_of(const MediusLocks *locks, MediusLockTarget target, MediusDirection dir)</code></td><td><code>uint8_t</code>: percent of the physical value kept there, 100 when nothing weighs it. See <A href="/library/lock">Lock</A>.</td></tr>
-              <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, MediusDirection dir)</code></td><td><code>bool</code>: is that target/direction blocked outright (<code>Both</code> needs both fixed signs). A direction merely weighed is not locked.</td></tr>
+              <tr><td><code>medius_locks_scale_of(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>uint8_t</code>: percent of the physical value kept there, 100 when nothing weighs it. See <A href="/library/lock">Lock</A>.</td></tr>
+              <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>bool</code>: is that target/direction blocked outright (<code>Both</code> needs both fixed signs). A direction merely weighed is not locked.</td></tr>
               <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
               <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusUsage usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>
               <tr><td><code>medius_traffic_event_truncated(const MediusTrafficEvent *ev)</code></td><td><code>bool</code>: <code>ev-&gt;len &lt; ev-&gt;true_len</code>, so the box cut the packet at the matching entry's <code>capture</code>. Without the comparison a cut packet and a genuinely short one look identical. See <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A>.</td></tr>
@@ -413,7 +415,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_last_error_proto_ver()</code></td><td>The proto-version byte from the last <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>, or 0.</td></tr>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>4</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>5</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
               <tr><td><code>medius_flash(const char *port, const char *bin_path, bool host)</code></td><td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. <code>MEDIUS_FEATURE_FLASH</code> only; see <A href="/library/features/flash">Flash</A> and <A href="/bindings/c/build">Build &amp; features</A>.</td></tr>
             </tbody>
