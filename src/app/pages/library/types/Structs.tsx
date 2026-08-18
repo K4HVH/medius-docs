@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>4</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>5</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 4, fw_major: 3, fw_minor: 0, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.1.0"); // Display omits proto_ver
+let v = Version { proto_ver: 5, fw_major: 3, fw_minor: 2, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.2.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -226,6 +226,16 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it. <code>Both</code> reports the lowest across every direction, and where entries overlap the lowest wins.</td></tr>
               <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">READBACK</div>
+          <table class="api-params">
+            <thead><tr><th>Case</th><th>What the list holds</th></tr></thead>
+            <tbody>
+              <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>Both</code>.</td></tr>
+              <tr><td>A media lock, blanket or specific</td><td>Direction <code>Both</code>, always. Media has no edges.</td></tr>
+              <tr><td>A relative direction under <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
+              <tr><td>96 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

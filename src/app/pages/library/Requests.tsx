@@ -43,8 +43,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.1.0
-println!("proto {}", v.proto_ver);     // proto 4
+println!("{v}");                       // fw 3.2.0
+println!("proto {}", v.proto_ver);     // proto 5
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -207,7 +207,9 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
             Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction
             currently weighed by <A href="/library/lock#scale"><code>scale</code></A>.{' '}
             <code>scale_of(target, direction)</code> reads the percentage in effect and{' '}
-            <code>is_locked(target, direction)</code> answers whether it is blocked outright.
+            <code>is_locked(target, direction)</code> answers whether it is blocked outright. What a
+            blanket, a media usage, and a vector-mode relative direction report is on{' '}
+            <A href="/library/types/structs#locks">Locks</A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

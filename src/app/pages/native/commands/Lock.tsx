@@ -56,30 +56,80 @@ const Lock: Component = () => {
           </table>
           <p>
             Classes <code>0</code>-<code>2</code> mirror{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A>. An <code>id</code> of{' '}
-            <code>0xFFFF</code> is a blanket: it locks every usage in that class in one command.
+            <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
           </p>
-          <div class="api-response-label">DIRECTION</div>
+          <div class="api-response-label">BLANKET</div>
           <p>
-            What <code>direction</code> means depends on the input: a sign for an axis, an edge for a
-            button, key, or media usage.
+            An <code>id</code> of <code>0xFFFF</code> addresses the whole class in one command. What it
+            does with <code>direction</code>, and how it reads back, differ by class.
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Direction</th><th>Value</th><th>Axis</th><th>Button / key / media</th></tr>
+              <tr><th>Class</th><th>Covers</th><th>Direction</th><th>Reads back as</th></tr>
             </thead>
             <tbody>
-              <tr><td>both</td><td><code>0</code></td><td>The scale to both signs, a full pass to the relative pair.</td><td>Press and release.</td></tr>
-              <tr><td>positive</td><td><code>1</code></td><td>Positive sign only (<code>+</code>).</td><td>Press only (<code>0 to 1</code>).</td></tr>
-              <tr><td>negative</td><td><code>2</code></td><td>Negative sign only (<code>-</code>).</td><td>Release only (<code>1 to 0</code>).</td></tr>
-              <tr><td>with</td><td><code>3</code></td><td>The sign the box is injecting.</td><td>No meaning.</td></tr>
-              <tr><td>against</td><td><code>4</code></td><td>The sign opposing it.</td><td>No meaning.</td></tr>
+              <tr><td>button</td><td>All five buttons.</td><td>As a named button.</td><td>One entry per button and edge, under its own id.</td></tr>
+              <tr><td>key</td><td>Every keyboard usage.</td><td>Honoured: <code>1</code> blocks press edges, <code>2</code> release edges, <code>0</code> both.</td><td>One entry per blocked edge, id <code>0xFFFF</code>.</td></tr>
+              <tr><td>media</td><td>Every Consumer usage.</td><td>Ignored.</td><td>One entry, id <code>0xFFFF</code>, direction <code>0</code>.</td></tr>
+              <tr><td>axis</td><td>X, Y, and the wheel.</td><td>As a named axis.</td><td>One entry per axis and direction, under its own id.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">DIRECTION</div>
+          <p>
+            What <code>direction</code> means depends on the input: a sign for an axis, an edge for a
+            button or key, nothing at all for a media usage.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Direction</th><th>Value</th><th>Axis</th><th>Button / key</th><th>Media</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>both</td><td><code>0</code></td><td>The scale to both signs, a full pass to the relative pair.</td><td>Press and release.</td><td>The usage.</td></tr>
+              <tr><td>positive</td><td><code>1</code></td><td>Positive sign only (<code>+</code>).</td><td>Press only (<code>0 to 1</code>).</td><td>The usage.</td></tr>
+              <tr><td>negative</td><td><code>2</code></td><td>Negative sign only (<code>-</code>).</td><td>Release only (<code>1 to 0</code>).</td><td>The usage.</td></tr>
+              <tr><td>with</td><td><code>3</code></td><td>The sign the box is injecting.</td><td>No effect.</td><td>The usage.</td></tr>
+              <tr><td>against</td><td><code>4</code></td><td>The sign opposing it.</td><td>No effect.</td><td>The usage.</td></tr>
             </tbody>
           </table>
           <p>
             <code>0</code>-<code>2</code> name a fixed sign or edge; <code>3</code> and <code>4</code>{' '}
             name a sign relative to the <A href="/native/commands/lock#bearing">bearing</A>, and are
             axes only.
+          </p>
+          <p>
+            A media usage has no edges. The box suppresses it whole, ignores this byte, and reports the
+            entry at direction <code>0</code> in{' '}
+            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>.
+          </p>
+          <div class="api-response-label">A RELATIVE DIRECTION ON A USAGE</div>
+          <p>
+            Only an axis has a bearing to be with or against, so <code>3</code> and <code>4</code> on a
+            button, key, or media usage are outside what the byte means. The box does not refuse the
+            frame, and what it does instead is a different thing in each of the three classes.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Class</th><th>What the box does</th><th>Net effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>button</td><td>Refuses the write. The relative slot is skipped and reported as not written, so the frame clock is not spun for it either.</td><td>Nothing changes.</td></tr>
+              <tr><td>key</td><td>Takes the frame and drops it. <code>3</code> and <code>4</code> name neither the press edge nor the release edge, so neither is set.</td><td>Nothing changes.</td></tr>
+              <tr><td>media</td><td>Never reads the byte. The class decides on <code>scale</code> alone.</td><td>The usage locks, exactly as direction <code>0</code> would have locked it.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              <code>LOCK(media, against, 0)</code> blocks that media usage. Two of the three classes do
+              nothing and the third acts, and nothing in the reply distinguishes them.
+            </p>
+          </div>
+          <p>
+            Every shipped client refuses a relative direction on all three classes instead of leaning on
+            which of those behaviours it meets: the{' '}
+            <A href="/library/lock#scale">Rust library</A> returns{' '}
+            <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>,{' '}
+            <code>tools/medius.py</code> raises, and this site's dashboard drops the option from the
+            picker. That is the contract to code against.
           </p>
           <div class="callout callout--info">
             <p>
@@ -108,7 +158,8 @@ const Lock: Component = () => {
             A scale weighs the physical device only; host{' '}
             <A href="/native/injection">injection</A> reaches a weighed input at full strength. A
             momentary usage carries one bit, so under <code>100</code> locks its edge and the box stores
-            that block rather than the number sent.
+            that block rather than the number sent, which is what{' '}
+            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> reads back.
           </p>
           <div class="api-response-label">A SCALE CLEARS ON</div>
           <pre class="diagram">{`unlock      you send the matching unlock (scale = 100)
@@ -118,14 +169,6 @@ link loss   the inter-chip link drops`}</pre>
           <div class="callout callout--warning">
             <p>
               A scale isn't permanent: hold it with a keepalive if it has to outlast a second of quiet.
-            </p>
-          </div>
-          <div class="callout callout--danger">
-            <p>
-              Firmware 3.1.x and 3.2.0 both report{' '}
-              <A href="/native/connection#handshake"><code>proto_ver 4</code></A>, and this byte changed
-              between them. A 3.2 host's unlock reaches a 3.1.x box as a lock, and its lock as an unlock.
-              Check the firmware version, not the protocol version.
             </p>
           </div>
           <div class="api-response-label">EFFECT</div>
@@ -199,6 +242,58 @@ link loss   the inter-chip link drops`}</pre>
             In vector mode the relative pair addresses the aim as a whole: the box takes the lower of
             the X and Y scales and applies it to both axes, while the fixed pair still applies per axis.
             The wheel is never part of the aim.
+          </p>
+          <p>
+            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> reports that
+            effective number on both axes, so the readback cannot disagree with what is applied.
+          </p>
+          <pre class="diagram">{`vector mode, X against = 40, Y against = 80
+
+  applied       40% along the aim, both axes (the lower of the two)
+  RESP(LOCKS)   axis X, against, 40
+                axis Y, against, 40   (effective, not the stored 80)`}</pre>
+          <div class="api-response-label">THE TWO STAGES</div>
+          <p>
+            A report in vector mode is weighed twice, in this order.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Stage</th><th>The scale it reads</th><th>What it acts on</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. project</td><td>The relative pair, <code>with</code> or <code>against</code>, one number for the whole aim: the lower of X's and Y's.</td><td>The part of the movement lying along the bearing. The part across it is untouched. What survives is written back to both axes.</td></tr>
+              <tr><td>2. weigh</td><td>Each axis's own fixed pair, <code>positive</code> or <code>negative</code>, chosen by the sign now standing in the field.</td><td>What stage 1 left, not the delta the hand produced.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Stage 2 reading the projected value is what a fixed-sign scale means: it is a statement
+            about what reaches the game PC, so it covers motion the projection moved onto that axis, and
+            a gain reaches that motion for the same reason. This is the one place where weighing an axis
+            in one direction touches a delta the hand made somewhere else.
+          </p>
+          <pre class="diagram">{`bearing +X +Y (the box is pulling down-right, |b| irrelevant, only its direction)
+LOCK(axis X, with, 0)   LOCK(axis Y, with, 0)    -> aim scale 0 along the bearing
+LOCK(axis Y, negative, 0)                        -> Y's negative sign blocked
+
+  hand                    dx = +12   dy =   0     straight right, nothing on Y
+
+  stage 1   along  b      (+6, +6)   scaled by 0, so it goes
+            across b      (+6, -6)   untouched, and it is all that is left
+            leaves        dx =  +6   dy =  -6     Y now carries a delta the hand never made
+
+  stage 2   X: +6 is positive -> X's positive scale, 100 -> +6
+            Y: -6 is negative -> Y's negative scale,   0 ->  0
+
+  emitted                 dx =  +6   dy =   0`}</pre>
+          <p>
+            Per axis, stage 2 would have left Y alone: the hand put nothing there. Vector mode does not,
+            because the projection put <code>-6</code> there and that is what would have reached the PC.
+            Swap the block for a scale of <code>200</code> and the same <code>-6</code> leaves as{' '}
+            <code>-12</code>.
+          </p>
+          <p>
+            Only the relative pair is redistributed. The fixed pair is per axis in both modes, and in
+            vector mode the axis it belongs to is the axis the value ends up on.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre class="diagram">{`box injecting +X, user flicks left, against = 40
