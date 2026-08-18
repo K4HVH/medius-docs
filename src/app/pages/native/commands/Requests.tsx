@@ -465,11 +465,11 @@ const Requests: Component = () => {
           <CardHeader title="LOCKS" subtitle="RESP payload, what = 6" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 6</code>: which physical inputs are currently locked by{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per locked field across
-            every class. An empty list (<code>n = 0</code>) means nothing is locked.
+            <code>what = 6</code>: which physical inputs are currently weighed by{' '}
+            <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per direction that is not
+            passing untouched. An empty list (<code>n = 0</code>) means everything passes.
           </p>
-          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 4n bytes</pre>
+          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 5n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -478,34 +478,29 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of lock entries that follow</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 64</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
-              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the locked field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
-              <tr><td>+</td><td><code>dirbits</code></td><td><code>u8</code></td><td>which edges are locked, the bits below</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">DIRBITS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>b0</td><td><code>0x01</code></td><td>the positive / press edge is locked</td></tr>
-              <tr><td>b1</td><td><code>0x02</code></td><td>the negative / release edge is locked</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the weighed field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
+              <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>which direction of it, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>u8</code></td><td>percent of the physical value kept; 0 = blocked</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Read it to confirm a lock landed. Library binding:{' '}
+            Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field for
+            field, so what comes back is what you would send to reproduce it. One entry per direction,
+            not per target: an axis weighed three ways reports three times, and a target passing on
+            every direction is absent. A button, key, or media usage carries one bit, so its entries
+            only ever report <code>scale = 0</code>. Library binding:{' '}
             <A href="/library/requests#query-locks"><code>query_locks</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>One entry: the wheel's negative (scroll-down) sign locked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>dirbits = 0x02</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 06 00  | 06     | 01     | 03     | 02 00  | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dirbits| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>One entry: the wheel's negative (scroll-down) sign blocked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>direction = 2</code>, <code>scale = 0</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 07 00  | 06     | 01     | 03     | 02 00  | 02     | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dir    | scale  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
@@ -671,6 +666,24 @@ const Requests: Component = () => {
           <p>
             Library binding:{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
+          </p>
+          <div class="api-response-label">BEARING VALUE</div>
+          <p>
+            The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
+            (id 4): the window and how the box reads it.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>window</code></td><td><code>u16</code>, little-endian; the bearing window in ms, <code>0</code> = off</td></tr>
+              <tr><td>4</td><td><code>mode</code></td><td><code>0</code> per axis, <code>1</code> vector</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
           </p>
           <div class="api-response-label">EMIT VALUE</div>
           <p>

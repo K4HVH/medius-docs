@@ -167,7 +167,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lock" subtitle="Block a physical input" />
+                <CardHeader title="Lock" subtitle="Weigh a physical input" />
               </Card>
             </A>
             <A href="/native/commands/catch" style={{ "text-decoration": "none" }}>
