@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
-import { LOCK_ID_ALL, LockAxis, LockClass } from '../../src/dashboard/protocol';
+import {
+  LOCK_ID_ALL,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_PASS,
+  LockAxis,
+  LockClass,
+} from '../../src/dashboard/protocol';
 
 const settle = () => new Promise((r) => setTimeout(r, 20));
 
@@ -11,16 +17,15 @@ const findByTextIn = async (root: HTMLElement, text: string): Promise<HTMLElemen
 };
 
 const mock = vi.hoisted(() => ({
-  sent: [] as { verb: string; cls: number; id: number; dir: number }[],
+  sent: [] as { cls: number; id: number; dir: number; scale: number }[],
 }));
 
+// The page drives one verb now: lock and unlock are the two ends of the scale, so the mock records the
+// scale rather than which button was pressed, which is what actually reaches the wire.
 vi.mock('../../src/app/pages/dashboard/context', () => {
   const link = {
-    lock: async (t: { cls: number; id: number }, dir: number) => {
-      mock.sent.push({ verb: 'lock', cls: t.cls, id: t.id, dir });
-    },
-    unlock: async (t: { cls: number; id: number }, dir: number) => {
-      mock.sent.push({ verb: 'unlock', cls: t.cls, id: t.id, dir });
+    scale: async (t: { cls: number; id: number }, dir: number, scale: number) => {
+      mock.sent.push({ cls: t.cls, id: t.id, dir, scale });
     },
   };
   return {
@@ -46,7 +51,9 @@ describe('DeviceLock', () => {
     const { findByText } = render(() => <DeviceLock />);
     fireEvent.click(await findByText('Lock'));
     await settle();
-    expect(mock.sent).toEqual([{ verb: 'lock', cls: LockClass.Axis, id: LockAxis.X, dir: 0 }]);
+    expect(mock.sent).toEqual([
+      { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_BLOCK },
+    ]);
   });
 
   it('picking a class selects a real usage, never the class wildcard', async () => {
@@ -87,9 +94,9 @@ describe('DeviceLock', () => {
     fireEvent.click(await findByTextIn(container, 'Lock'));
     await settle();
     expect(mock.sent).toEqual([
-      { verb: 'lock', cls: LockClass.Axis, id: LockAxis.X, dir: 0 },
-      { verb: 'lock', cls: LockClass.Axis, id: LockAxis.Y, dir: 0 },
-      { verb: 'lock', cls: LockClass.Axis, id: LockAxis.Wheel, dir: 0 },
+      { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_BLOCK },
+      { cls: LockClass.Axis, id: LockAxis.Y, dir: 0, scale: LOCK_SCALE_BLOCK },
+      { cls: LockClass.Axis, id: LockAxis.Wheel, dir: 0, scale: LOCK_SCALE_BLOCK },
     ]);
     expect(mock.sent.some((f) => f.id === LOCK_ID_ALL)).toBe(false);
   });
@@ -125,6 +132,42 @@ describe('DeviceLock', () => {
     const { findByText } = render(() => <DeviceLock />);
     fireEvent.click(await findByText('Unlock'));
     await settle();
-    expect(mock.sent).toEqual([{ verb: 'unlock', cls: LockClass.Axis, id: LockAxis.X, dir: 0 }]);
+    // An unlock is a full pass, not a zero: sending 0 here would be a hard block under the scale wire.
+    expect(mock.sent).toEqual([
+      { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_PASS },
+    ]);
+  });
+
+  it('the slider sends its own percentage, between the two ends', async () => {
+    // The slider is a div with role=slider, driven by the arrow keys at its step.
+    const { container } = render(() => <DeviceLock />);
+    const thumb = container.querySelector('[role="slider"]') as HTMLElement;
+    expect(thumb).toBeTruthy();
+    // Defaults to a full pass, so Apply on an untouched slider changes nothing about the input.
+    fireEvent.click(await findByTextIn(container, `Apply ${LOCK_SCALE_PASS}%`));
+    await settle();
+    expect(mock.sent).toEqual([
+      { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_PASS },
+    ]);
+
+    // One step down, and the button both relabels and sends the new value.
+    mock.sent = [];
+    fireEvent.keyDown(thumb, { key: 'ArrowLeft' });
+    await settle();
+    fireEvent.click(await findByTextIn(container, `Apply ${LOCK_SCALE_PASS - 5}%`));
+    await settle();
+    expect(mock.sent).toEqual([
+      { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_PASS - 5 },
+    ]);
+  });
+
+  it('offers the bearing-relative directions on an axis and not on a usage', async () => {
+    const { getByText, queryByText } = render(() => <DeviceLock />);
+    expect(queryByText('Against the aim')).toBeTruthy();
+    fireEvent.click(getByText('Button'));
+    await settle();
+    // A button has no bearing to be with or against, so the radio set drops back to the two edges.
+    expect(queryByText('Against the aim')).toBeNull();
+    expect(queryByText('Press')).toBeTruthy();
   });
 });

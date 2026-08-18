@@ -11,7 +11,13 @@ import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
-import { type EmitPace, EmitMode, NAME_MAX } from '../../../dashboard/protocol';
+import {
+  type EmitPace,
+  BEARING_WINDOW_DEFAULT_MS,
+  BearingMode,
+  EmitMode,
+  NAME_MAX,
+} from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Section } from './Section';
@@ -46,6 +52,7 @@ const DeviceOptions = () => {
   const dash = useDashboard();
   const imperfect = dash.poll('imperfect');
   const ride = dash.poll('moveRide');
+  const bearing = dash.poll('bearing');
   const emit = dash.poll('emit');
   const version = dash.poll('version');
   const cmd = createCommand();
@@ -54,11 +61,28 @@ const DeviceOptions = () => {
   // Without the second half, a poll landing mid-edit would overwrite what they were typing.
   const [nameEdit, setNameEdit] = createSignal<string | null>(null);
   const [rideEdit, setRideEdit] = createSignal<number | null>(null);
+  const [bearEdit, setBearEdit] = createSignal<number | null>(null);
+  const [bearMode, setBearMode] = createSignal<string | null>(null);
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
 
   const name = () => nameEdit() ?? version()?.name ?? '';
   const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
+  // Reads back off the box until touched, like every other control here.
+  const bearWindow = () =>
+    bearEdit() ?? (bearing() && bearing()!.windowMs > 0 ? bearing()!.windowMs : BEARING_WINDOW_DEFAULT_MS);
+  const bearGeometry = (): BearingMode =>
+    bearMode() !== null
+      ? (Number(bearMode()) as BearingMode)
+      : (bearing()?.mode ?? BearingMode.PerAxis);
+
+  const setBearing = (windowMs: number) =>
+    cmd.run(async () => {
+      await dash.link()!.setBearing(windowMs, bearGeometry());
+      setBearEdit(null);
+      setBearMode(null);
+      dash.refreshPoll('bearing');
+    });
   const mode = () => modeEdit() ?? MODE_NAMES[emit()?.mode ?? EmitMode.Learned] ?? 'learned';
   // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
@@ -199,6 +223,53 @@ const DeviceOptions = () => {
           </div>
         </Show>
 
+        </Section>
+
+        <Section title="Aim bearing">
+        <p>
+          What the with and against lock directions are measured against: the direction the box is
+          injecting. Past the window an axis has no bearing and both directions stop applying, which is
+          what hands the aim back to the user when injection stops.
+        </p>
+        <RadioGroup
+          name="bearing-mode"
+          value={String(bearGeometry())}
+          onChange={setBearMode}
+          options={[
+            { value: String(BearingMode.PerAxis), label: 'Per axis' },
+            { value: String(BearingMode.Vector), label: 'Vector' },
+          ]}
+        />
+        <p style={muted}>
+          Per axis weighs each axis against its own bearing. Vector projects the movement onto the
+          injected direction and leaves movement across it alone, which is smoother on diagonals.
+        </p>
+        <div style={controls}>
+          <div style={{ 'max-width': '8rem' }}>
+            <NumberInput
+              label="Window (ms)"
+              value={bearWindow()}
+              min={1}
+              max={65535}
+              onChange={(v) => setBearEdit(v ?? 1)}
+            />
+          </div>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
+            Apply
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
+            Turn off
+          </Button>
+        </div>
+        <Show when={bearing() !== null} fallback={<p style={status}>Reading status...</p>}>
+          <div style={status}>
+            <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
+              {bearing()!.windowMs > 0
+                ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
+                : 'Off'}
+            </Chip>
+          </div>
+        </Show>
         </Section>
 
         <Section title="Emit rate">

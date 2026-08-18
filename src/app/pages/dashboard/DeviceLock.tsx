@@ -1,14 +1,19 @@
-// Block the real device from driving an input while the control link still can.
+// Weigh what the real device drives while the control link still drives it too.
 //
 // The picker covers the whole lock address space. It used to offer eight fixed mouse targets, which
 // left keys, media usages, and the whole-class blanket unreachable from here even though the active
 // list below could already render them when another client set them.
+//
+// Blocking and passing are the two ends of one scale, so the buttons below are the ends and the slider
+// is everything between. The two bearing-relative directions only mean anything while the box is
+// injecting, so they are offered on axes alone.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
+import { Slider } from '../../../components/inputs/Slider';
 import {
   type LockEntry,
   type NamedUsage,
@@ -16,11 +21,13 @@ import {
   Direction,
   KEYS,
   LOCK_ID_ALL,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_MAX,
+  LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
   MEDIA,
-  Press,
-  Release,
+  isRelativeDirection,
   usageName,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
@@ -48,10 +55,14 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign; a momentary usage locks by edge. One direction byte, two vocabularies.
+// An axis locks by sign; a momentary usage locks by edge. One direction byte, two vocabularies, plus
+// the two that name a sign relative to the bearing rather than a fixed one.
 const dirName = (cls: number, d: Direction): string => {
-  if (cls === LockClass.Axis) return d === Press ? 'positive' : 'negative';
-  return d === Press ? 'press' : 'release';
+  if (d === Direction.With) return 'with the aim';
+  if (d === Direction.Against) return 'against the aim';
+  if (d === Direction.Both) return 'both';
+  if (cls === LockClass.Axis) return d === Direction.Positive ? 'positive' : 'negative';
+  return d === Direction.Positive ? 'press' : 'release';
 };
 
 const targetName = (cls: number, id: number): string => {
@@ -64,6 +75,7 @@ const DeviceLock = () => {
   const dash = useDashboard();
   const [target, setTarget] = createSignal<UsageValue>({ cls: LockClass.Axis, id: LockAxis.X });
   const [direction, setDirection] = createSignal(String(Direction.Both));
+  const [scale, setScale] = createSignal(LOCK_SCALE_PASS);
   const locks = dash.poll('locks');
   const cmd = createCommand(() => dash.refreshPoll('locks'));
 
@@ -82,34 +94,37 @@ const DeviceLock = () => {
     return [{ cls: t.cls as LockClass, id: t.id }];
   };
 
-  const apply = (on: boolean) =>
+  const applyScale = (scale: number) =>
     cmd.run(async () => {
       const link = dash.link()!;
       for (const t of targets()) {
-        await (on ? link.lock(t, dir()) : link.unlock(t, dir()));
+        await link.scale(t, dir(), scale);
       }
     });
 
-  // Every locked (target, direction) pair the box reports, whoever set it.
-  const active = createMemo(() => {
-    const out: { key: string; text: string }[] = [];
-    for (const e of locks()?.entries ?? ([] as LockEntry[])) {
-      if (e.positive) {
-        out.push({ key: `${e.cls}:${e.id}:1`, text: `${targetName(e.cls, e.id)} ${dirName(e.cls, Press)}` });
-      }
-      if (e.negative) {
-        out.push({ key: `${e.cls}:${e.id}:2`, text: `${targetName(e.cls, e.id)} ${dirName(e.cls, Release)}` });
-      }
-    }
-    return out;
-  });
+  // Every weighed (target, direction) the box reports, whoever set it. One entry per direction, so a
+  // target weighed several ways shows up several times.
+  const active = createMemo(() =>
+    (locks()?.entries ?? ([] as LockEntry[])).map((e) => ({
+      key: `${e.cls}:${e.id}:${e.direction}`,
+      text:
+        e.scale === LOCK_SCALE_BLOCK
+          ? `${targetName(e.cls, e.id)} ${dirName(e.cls, e.direction)}`
+          : `${targetName(e.cls, e.id)} ${dirName(e.cls, e.direction)} at ${e.scale}%`,
+      blocked: e.scale === LOCK_SCALE_BLOCK,
+    })),
+  );
+
+  const isAxis = () => target().cls === LockClass.Axis;
 
   const dirLabel = () =>
-    target().cls === LockClass.Axis
+    isAxis()
       ? [
           { value: String(Direction.Both), label: 'Both' },
           { value: String(Direction.Positive), label: 'Positive' },
           { value: String(Direction.Negative), label: 'Negative' },
+          { value: String(Direction.With), label: 'With the aim' },
+          { value: String(Direction.Against), label: 'Against the aim' },
         ]
       : [
           { value: String(Direction.Both), label: 'Both' },
@@ -120,10 +135,10 @@ const DeviceLock = () => {
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
-        <CardHeader title="Input locks" subtitle="Block the real device from one input" />
+        <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
         <p>
-          A locked input is suppressed from the real device. Injection still drives it. Locks clear on
-          their own if the dashboard disconnects.
+          A weighed input keeps only that percent of what the real device sends. Injection still drives
+          it either way. Everything here clears on its own if the dashboard disconnects.
         </p>
 
         <UsagePicker
@@ -144,11 +159,45 @@ const DeviceLock = () => {
           />
         </div>
 
+        <Show when={isAxis()}>
+          <div style={section}>
+            <div style={label}>Keep {scale()}% of the real movement</div>
+            <Slider
+              value={scale()}
+              min={LOCK_SCALE_BLOCK}
+              max={LOCK_SCALE_MAX}
+              step={5}
+              onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
+            />
+            <p>
+              0% blocks it, 100% passes it through untouched, and above that amplifies it. A button or a
+              key carries one bit, so anything under 100% simply locks it.
+            </p>
+          </div>
+        </Show>
+
+        <Show when={isAxis() && isRelativeDirection(dir())}>
+          <div class="callout callout--info" style={section}>
+            With and against are measured against the aim, the direction the box is injecting. Neither
+            does anything while the box is injecting nothing, which is what hands the axis back to the
+            user when injection stops.
+          </div>
+        </Show>
+
         <div style={{ ...section, ...row }}>
-          <Button variant="primary" disabled={cmd.busy()} onClick={() => apply(true)}>
+          <Show when={isAxis()}>
+            <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
+              Apply {scale()}%
+            </Button>
+          </Show>
+          <Button
+            variant={isAxis() ? 'secondary' : 'primary'}
+            disabled={cmd.busy()}
+            onClick={() => applyScale(LOCK_SCALE_BLOCK)}
+          >
             Lock
           </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => apply(false)}>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => applyScale(LOCK_SCALE_PASS)}>
             Unlock
           </Button>
         </div>
@@ -159,10 +208,12 @@ const DeviceLock = () => {
         </Show>
 
         <div style={section}>
-          <div style={label}>Active locks</div>
-          <Show when={active().length > 0} fallback={<p>Nothing locked.</p>}>
+          <div style={label}>Active</div>
+          <Show when={active().length > 0} fallback={<p>Everything passing untouched.</p>}>
             <div style={chips}>
-              <For each={active()}>{(item) => <Chip variant="warning">{item.text}</Chip>}</For>
+              <For each={active()}>
+                {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
+              </For>
             </div>
           </Show>
         </div>
