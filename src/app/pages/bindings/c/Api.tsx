@@ -137,12 +137,11 @@ medius_device_free(dev);`}</code></pre>
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Weigh the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> constant picks a direction. <code>scale</code> is the percent of the physical value kept: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0) blocks, <code>MEDIUS_LOCK_SCALE_PASS</code> (100) passes, up to <code>MEDIUS_LOCK_SCALE_MAX</code> (255) amplifies. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
-          <p><code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one. Anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame goes out.</p>
+          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage, <code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one; anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame goes out. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, uint8_t dir, uint8_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction.</td></tr>
+              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, uint8_t dir, uint8_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0), <code>_PASS</code> (100), up to <code>_MAX</code> (255).</td></tr>
               <tr><td><code>medius_device_scale_all(MediusDevice *dev, uint8_t what, uint8_t dir, uint8_t scale)</code></td><td>The same over a whole class (aim, wheel, buttons, keys, or media).</td></tr>
               <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Block an axis or usage on a direction: scale 0.</td></tr>
               <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Back to passing untouched: scale 100.</td></tr>
@@ -151,8 +150,7 @@ medius_device_free(dev);`}</code></pre>
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you (see <A href="/library/lock">Lock</A>). <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> are measured against the aim and need a live bearing; set one with <code>medius_device_set_bearing</code>.</p>
-            <p>Only an axis has a bearing, so <code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> on any other class is <code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code>. <code>dir</code> reaches every member of a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> the same way it reaches one, so <code>MEDIUS_BLANKET_KEYS</code> takes an edge and <code>MEDIUS_BLANKET_MEDIA</code>, having none, sends <code>MEDIUS_DIRECTION_BOTH</code>. What the readback holds is on <A href="/bindings/c/types#locks"><code>MediusLocks</code></A>.</p>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> need a live bearing, set with <code>medius_device_set_bearing</code>; the refusal rules for them are on <A href="/bindings/c/types#direction"><code>MediusDirection</code></A>.</p>
           </div>
         </Card>
       </div>

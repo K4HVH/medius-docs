@@ -44,7 +44,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Rust Library"
-                  subtitle="The async client crate"
+                  subtitle="The official Rust client"
                 />
               </Card>
             </A>

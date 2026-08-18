@@ -4,9 +4,9 @@
 // left keys, media usages, and the whole-class blanket unreachable from here even though the active
 // list below could already render them when another client set them.
 //
-// Blocking and passing are the two ends of one scale, so the buttons below are the ends and the slider
-// is everything between. The two bearing-relative directions only mean anything while the box is
-// injecting, so they are offered on axes alone.
+// Blocking and passing are the two ends of one scale. The buttons are shortcuts to those two named
+// constants, which the slider's own range reaches as well. The two bearing-relative directions mean
+// nothing without a bearing, so they are offered on axes alone.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -154,7 +154,8 @@ const DeviceLock = () => {
       <Card>
         <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
         <p>
-          A weighed input keeps only that percent of what the real device sends. Injection still drives
+          A weighed input keeps that percent of what the real device sends, and above 100 amplifies
+          it. Injection still drives
           it either way. Everything here clears on its own if the dashboard disconnects.
         </p>
 
@@ -208,9 +209,9 @@ const DeviceLock = () => {
 
         <Show when={isAxis() && isRelativeDirection(dir())}>
           <div class="callout callout--info" style={section}>
-            With and against are measured against the aim, the direction the box is injecting. Neither
-            does anything while the box is injecting nothing, which is what hands the axis back to the
-            user when injection stops.
+            With and against are measured against the aim, the direction the box is injecting.
+            Neither applies once an axis's bearing window has elapsed with nothing injected on it,
+            which is what hands that axis back to the user.
           </div>
         </Show>
 

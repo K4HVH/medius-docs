@@ -68,6 +68,7 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <CardHeader title="reconnect" subtitle="Rescan, reopen the port, and restore held state" />
 
           <pre class="api-signature">fn reconnect(&self) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
             The reader thread auto-reconnects on any read error, so call this only to force a rescan.

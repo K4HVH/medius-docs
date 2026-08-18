@@ -902,6 +902,7 @@ if cfg.loop_ && cfg.finalized {
             Build one with the constructor, where <code>consume</code> defaults to false:
           </p>
           <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>

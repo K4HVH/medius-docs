@@ -84,6 +84,10 @@ const Injection: Component = () => {
       <div id="state" data-search-target>
         <Card>
           <CardHeader title="What the box tracks" subtitle="Pending motion and held usages" />
+          <p>
+            Injected state is a small set of pending values the box carries between reports, separate
+            from anything the real device is doing.
+          </p>
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>What it holds</th></tr>
@@ -130,6 +134,10 @@ const Injection: Component = () => {
       <div id="emission" data-search-target>
         <Card>
           <CardHeader title="When the box sends a report" subtitle="At the mouse's own report rate, only on activity" />
+          <p>
+            The box never invents a report cadence of its own. Every row below fires on the cloned
+            mouse's own tick.
+          </p>
           <table class="api-params">
             <thead>
               <tr><th>When…</th><th>The box sends</th></tr>

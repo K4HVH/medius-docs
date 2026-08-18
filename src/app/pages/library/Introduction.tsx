@@ -151,7 +151,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/options" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Options" subtitle="imperfect clones, movement riding" />
+                <CardHeader title="Options" subtitle="imperfect clones, riding, bearing, emit pace, name" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>

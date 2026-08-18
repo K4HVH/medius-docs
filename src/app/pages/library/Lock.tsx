@@ -90,14 +90,14 @@ device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, alwa
             </thead>
             <tbody>
               <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Both</code> (every direction), <code>Positive</code> (axis +, usage press), <code>Negative</code> (axis -, usage release), or <code>With</code> / <code>Against</code> the bearing, which only an axis has. A media usage has no edges, so an edge on one goes out as <code>Both</code>.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Both</code> (every direction), <code>Positive</code> (axis +, usage press), <code>Negative</code> (axis -, usage release), or <code>With</code> / <code>Against</code> the bearing, which only an axis has.</td></tr>
             </tbody>
           </table>
           <p>
             A lock holds until you{' '}
             <A href="/library/lock#unlock"><code>unlock</code></A> it. The box also clears every lock on
-            control-PC silence, on <A href="/library/admin#reset"><code>reset</code></A>, or on
-            inter-chip link loss. See the native{' '}
+            control-PC silence, on <A href="/library/admin#reset"><code>reset</code></A>, on inter-chip
+            link loss, and when the real device detaches. See the native{' '}
             <A href="/native/commands/lock#lock"><code>LOCK</code></A> command for the wire layout.
           </p>
           <div class="api-response-label">EXAMPLE</div>
