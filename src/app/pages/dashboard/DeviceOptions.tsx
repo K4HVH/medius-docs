@@ -242,7 +242,7 @@ const DeviceOptions = () => {
         />
         <p style={muted}>
           Per axis weighs each axis against its own bearing. Vector projects the movement onto the
-          injected direction and weighs only the part along it, which is smoother on diagonals.
+          injected direction and weighs only the part along it, leaving the part across it untouched.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '8rem' }}>
