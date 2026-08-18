@@ -194,10 +194,11 @@ device.flush_motion()?;       // 40 counts, now`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">EFFECT</div>
           <table class="api-params">
-            <thead><tr><th>Accumulator</th><th>What discard does</th></tr></thead>
+            <thead><tr><th>State</th><th>What discard does</th></tr></thead>
             <tbody>
-              <tr><td>Riding</td><td>Zeroed. That motion never reaches the game PC.</td></tr>
-              <tr><td>Immediate</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> still lands.</td></tr>
+              <tr><td>Riding accumulator</td><td>Zeroed. That motion never reaches the game PC.</td></tr>
+              <tr><td>Immediate accumulator</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> still lands.</td></tr>
+              <tr><td><A href="/native/commands/lock#bearing">Bearing</A></td><td>Cleared. Dropped motion is a pull that never lands, so every <code>With</code> / <code>Against</code> scale stops applying until the box injects again.</td></tr>
             </tbody>
           </table>
           <p>

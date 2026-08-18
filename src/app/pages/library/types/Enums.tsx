@@ -504,15 +504,14 @@ device.press(from_button)?;                         // press takes any impl Into
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
-              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and only the part along it is weighed. Movement across the injection passes untouched.</td></tr>
+              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it. The fixed-sign scales still reach what the projection leaves on each axis.</td></tr>
             </tbody>
           </table>
           <p>
             In <code>Vector</code> the relative pair addresses the aim as a whole: the box takes the
             lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
-            <A href="/library/lock#lock-all"><code>scale_all</code></A>.{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A> reports that effective
-            number on both axes, not each axis's stored byte.
+            <A href="/library/lock#lock-all"><code>scale_all</code></A>. What{' '}
+            <A href="/library/types/structs#locks"><code>Locks</code></A> reports back is there.
           </p>
           <p>
             The projection is the first of two stages. Each axis's <code>Positive</code> /{' '}

@@ -49,12 +49,17 @@ const Connection: Component = () => {
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
+          <div class="callout callout--warning">
             <p>
-              Firmware 3.1.x and earlier report <code>4</code>, so this check refuses them outright.{' '}
-              <A href="/native/commands/lock#lock"><code>LOCK</code></A>'s last byte changed meaning at
-              3.2.0, and the version byte is what keeps a host from reading it the old way.
+              The check is mandatory, not advisory. Firmware 3.1.x and earlier report <code>4</code>,
+              where <A href="/native/commands/lock#lock"><code>LOCK</code></A>'s last byte was a state
+              (<code>1</code> = lock, <code>0</code> = unlock) rather than a{' '}
+              <A href="/native/commands/lock#scale">scale</A>. The two readings are an exact inversion.
             </p>
+            <pre class="diagram">{`a proto-5 host talking to a proto-4 box
+
+  scale = 100  (unlock)  ->  state = 100, non-zero  ->  LOCKS it
+  scale =   0  (block)   ->  state = 0              ->  UNLOCKS it`}</pre>
           </div>
           <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
           <p>

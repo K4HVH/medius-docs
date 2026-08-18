@@ -113,12 +113,12 @@ const Types: Component = () => {
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its own sign against its own bearing, independently; the default</td></tr>
-                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and only the part along it is weighed; one relative scale, the lower of X's and Y's, governs the whole aim</td></tr>
+                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs the whole aim, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
               </tbody>
             </table>
             <p>
-              Under <code>VECTOR</code>, <A href="/bindings/python/types#locks"><code>Locks</code></A>{' '}
-              reports that effective number on both axes, not each axis's stored byte.
+              What <A href="/bindings/python/types#locks"><code>Locks</code></A> reports back under{' '}
+              <code>VECTOR</code> is there.
             </p>
           </div>
 
@@ -488,8 +488,7 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               <code>with_direction</code>, <code>watch_axis</code>, <code>watch_class</code>,{' '}
               <code>traffic</code>, and <code>traffic_class</code> want a member of their enum, and{' '}
               <code>with_capture</code> a byte; anything else is a <code>ValueError</code> naming the
-              argument. Passing a stray integer used to truncate into whichever member shared its low
-              bits.
+              argument.
             </p>
             <div class="callout callout--warning">
               <p>
@@ -905,8 +904,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per weighed direction</td></tr>
-                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction</td></tr>
-                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it</td></tr>
+                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction, which is not the figure a delta meets (it picks up one from each pair, multiplied)</td></tr>
+                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it. <code>BOTH</code> asks about the two fixed signs only, so name <code>WITH</code> or <code>AGAINST</code> to ask about one of those</td></tr>
               </tbody>
             </table>
             <table class="api-params">
@@ -916,6 +915,18 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td>a media lock, blanket or specific</td><td><code>BOTH</code>, always</td></tr>
                 <tr><td>a relative direction under <A href="/bindings/python/types#bearing-mode"><code>BearingMode.VECTOR</code></A></td><td>the effective scale, the lower of X's and Y's, on both axes</td></tr>
                 <tr><td>96 entries reached</td><td>the rest is absent, with nothing marking it; see the native <A href="/native/commands/requests#locks">LOCKS</A> budget</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="scale-constants" data-search-target>
+            <div class="api-response-label">SCALE CONSTANTS</div>
+            <table class="api-params">
+              <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>keep none of the physical value</td></tr>
+                <tr><td><code>LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>keep all of it, untouched</td></tr>
+                <tr><td><code>LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling</td></tr>
               </tbody>
             </table>
           </div>
@@ -949,8 +960,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
             <p>
-              Module constants: <code>LOCK_SCALE_BLOCK</code> (0), <code>LOCK_SCALE_PASS</code> (100),{' '}
-              <code>LOCK_SCALE_MAX</code> (255), <code>BEARING_WINDOW_DEFAULT_MS</code> (20).
+              Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window. A box
+              that has been set boots at its own value.
             </p>
           </div>
 
