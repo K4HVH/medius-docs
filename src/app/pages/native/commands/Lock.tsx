@@ -92,51 +92,12 @@ const Lock: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>0</code>-<code>2</code> name a fixed sign or edge; <code>3</code> and <code>4</code>{' '}
-            name a sign relative to the <A href="/native/commands/lock#bearing">bearing</A>, and are
-            axes only.
+            <code>0</code>-<code>2</code> name a fixed sign or edge. <code>3</code> and <code>4</code>{' '}
+            name a sign relative to the <A href="/native/commands/lock#bearing">bearing</A>, so only an
+            axis has one: on a button the box refuses the write, on a key it changes nothing, and on a
+            media usage it locks as <code>0</code> would. Every shipped client refuses all three rather
+            than depend on which, and that is what to code against.
           </p>
-          <p>
-            A media usage has no edges. The box suppresses it whole, ignores this byte, and reports the
-            entry at direction <code>0</code> in{' '}
-            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>.
-          </p>
-          <div class="api-response-label">A RELATIVE DIRECTION ON A USAGE</div>
-          <p>
-            Only an axis has a bearing to be with or against, so <code>3</code> and <code>4</code> on a
-            button, key, or media usage are outside what the byte means. The box does not refuse the
-            frame, and what it does instead is a different thing in each of the three classes.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Class</th><th>What the box does</th><th>Net effect</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>button</td><td>Refuses the write. The relative slot is skipped and reported as not written, so the frame clock is not spun for it either.</td><td>Nothing changes.</td></tr>
-              <tr><td>key</td><td>Takes the frame and drops it. <code>3</code> and <code>4</code> name neither the press edge nor the release edge, so neither is set.</td><td>Nothing changes.</td></tr>
-              <tr><td>media</td><td>Never reads the byte. The class decides on <code>scale</code> alone.</td><td>The usage locks, exactly as direction <code>0</code> would have locked it.</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--warning">
-            <p>
-              <code>LOCK(media, against, 0)</code> blocks that media usage. Two of the three classes do
-              nothing and the third acts, and nothing in the reply distinguishes them.
-            </p>
-          </div>
-          <p>
-            Every shipped client refuses a relative direction on all three classes instead of leaning on
-            which of those behaviours it meets: the{' '}
-            <A href="/library/lock#scale">Rust library</A> returns{' '}
-            <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>,{' '}
-            <code>tools/medius.py</code> raises, and this site's dashboard drops the option from the
-            picker. That is the contract to code against.
-          </p>
-          <div class="callout callout--info">
-            <p>
-              <code>both</code> writes the scale to the two fixed signs and a full pass to the relative
-              pair. Writing it to all four would square it, since a delta picks up one of each.
-            </p>
-          </div>
           <div class="api-response-label">SCALE</div>
           <table class="api-params">
             <thead>
@@ -155,9 +116,7 @@ const Lock: Component = () => {
           </p>
           <div class="api-response-label">PHYSICAL ONLY</div>
           <p>
-            A scale weighs the physical device only; host{' '}
-            <A href="/native/injection">injection</A> reaches a weighed input at full strength. A
-            momentary usage carries one bit, so under <code>100</code> locks its edge and the box stores
+            A momentary usage carries one bit, so under <code>100</code> locks its edge and the box stores
             that block rather than the number sent, which is what{' '}
             <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> reads back.
           </p>
@@ -166,11 +125,9 @@ const Lock: Component = () => {
 silence     ~1 s with no control-PC frame (same net as injection)
 RESET       a RESET command
 link loss   the inter-chip link drops`}</pre>
-          <div class="callout callout--warning">
-            <p>
-              A scale isn't permanent: hold it with a keepalive if it has to outlast a second of quiet.
-            </p>
-          </div>
+          <p>
+            Hold one with a keepalive if it has to outlast a second of quiet.
+          </p>
           <div class="api-response-label">EFFECT</div>
           <p>
             Scales are PC-owned and never visible to the game PC.{' '}
