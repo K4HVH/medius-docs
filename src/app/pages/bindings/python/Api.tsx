@@ -109,18 +109,20 @@ const Api: Component = () => {
 
       <div id="lock" data-search-target>
         <Card>
-          <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks an edge.</p>
+          <CardHeader title="Locks" subtitle="Weigh the user's own input" />
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> is the percent of the physical value kept (<code>LOCK_SCALE_BLOCK</code> 0, <code>LOCK_SCALE_PASS</code> 100, <code>LOCK_SCALE_MAX</code> 255).</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.lock(target, direction)</code></td><td>Lock an axis or usage (e.g. <code>LockTarget.button(Button.LEFT)</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
-              <tr><td><code>dev.unlock(target, direction)</code></td><td>Unlock an axis or usage.</td></tr>
-              <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket lock / unlock a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
+              <tr><td><code>dev.scale(target, direction, scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage (e.g. <code>LockTarget.x()</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
+              <tr><td><code>dev.scale_all(what, direction, scale)</code></td><td>The same over a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
+              <tr><td><code>dev.lock(target, direction)</code></td><td>Block an axis or usage: scale 0.</td></tr>
+              <tr><td><code>dev.unlock(target, direction)</code></td><td>Back to passing untouched: scale 100.</td></tr>
+              <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket block / release a whole class.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>.</p>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the aim and need a live bearing; set one with <code>dev.set_bearing(window_ms, mode)</code>.</p>
           </div>
         </Card>
       </div>
@@ -138,6 +140,7 @@ const Api: Component = () => {
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
+              <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing"><code>BearingMode</code></A>.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
@@ -163,7 +166,8 @@ const Api: Component = () => {
               <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
-              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active locks (<code>.entries</code>, <code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: every weighed direction (<code>.entries</code>, <code>.scale_of(...)</code>, <code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_bearing()</code></td><td><A href="/bindings/python/types#bearing"><code>Bearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: the live filter table (<code>.entries</code>, <code>.table_full</code>), drop counts, and the two chips' <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A>.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>

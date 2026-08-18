@@ -121,7 +121,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lock" subtitle="lock, lock_axis, lock_all" />
+                <CardHeader title="Lock" subtitle="scale, lock, unlock, scale_all" />
               </Card>
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>

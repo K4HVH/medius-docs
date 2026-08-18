@@ -109,6 +109,15 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>RelativeDirection {'{'} direction, what {'}'}</code></td>
+                <td>
+                  A subscription addressed <code>Direction::With</code> or{' '}
+                  <code>Against</code>. Those are measured against the bearing at emit time, which a
+                  subscription is addressed before; use <code>Both</code>, <code>Positive</code>, or{' '}
+                  <code>Negative</code>.
+                </td>
+              </tr>
+              <tr>
                 <td><code>HalfEdgeInputFilter</code></td>
                 <td>
                   An input subscription narrowed to one edge: without the release, a fresh press

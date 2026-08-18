@@ -18,6 +18,7 @@ const Options: Component = () => {
           <tbody>
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
+            <tr><td>aim bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
           </tbody>
@@ -84,6 +85,42 @@ use medius::Device;
 let device = Device::find()?;
 device.set_movement_riding(Some(Duration::from_millis(20)))?;  // ride native moves
 device.set_movement_riding(None)?;                             // back to gapless fill`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="set-bearing" data-search-target>
+        <Card>
+          <CardHeader title="set_bearing" subtitle="What With and Against are measured against" />
+          <pre class="api-signature">fn set_bearing(&self, window: Option&lt;Duration&gt;, mode: BearingMode) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
+            injecting, which <code>Direction::With</code> and <code>Direction::Against</code> weigh
+            against in <A href="/library/lock#scale"><code>scale</code></A>. Each axis holds the
+            direction of its last injected delta for <code>window</code>, then has no bearing at all
+            and both relative directions stop applying.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the aim is projected onto the injected direction and movement across it passes untouched.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The box boots at <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code>, so
+            nothing engages until a scale is set on a relative direction. Persisted in NVS.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use std::time::Duration;
+use medius::{Axis, BearingMode, Device, Direction};
+
+let device = Device::find()?;
+device.set_bearing(Some(Duration::from_millis(20)), BearingMode::PerAxis)?;
+device.scale(Axis::X, Direction::Against, 40)?;  // counter-aim damped to 40%
+device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
         </Card>
       </div>
 
@@ -205,6 +242,27 @@ let device = Device::find()?;
 match device.query_movement_riding()? {
     Some(window) => println!("riding, window {window:?}"),
     None => println!("off"),
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="query-bearing" data-search-target>
+        <Card>
+          <CardHeader title="query_bearing" subtitle="Read the bearing window and geometry" />
+          <pre class="api-signature">fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Returns the configured{' '}
+            <A href="/library/types/structs#bearing"><code>Bearing</code></A>: the window and how the
+            box reads it.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let bearing = device.query_bearing()?;
+if bearing.is_live() {
+    println!("{:?} over {:?}", bearing.mode, bearing.window);
 }`}</code></pre>
         </Card>
       </div>

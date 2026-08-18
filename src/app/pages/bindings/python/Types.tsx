@@ -81,14 +81,18 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
               <tbody>
-                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>either sign</td><td>press and release</td><td>both directions</td></tr>
+                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>every direction</td><td>press and release</td><td>both directions</td></tr>
                 <tr><td><code>POSITIVE</code></td><td><code>1</code></td><td><code>PRESS</code> · <code>IN</code></td><td>+x / +y / wheel-up only</td><td>the press edge</td><td>IN, device to PC</td></tr>
                 <tr><td><code>NEGATIVE</code></td><td><code>2</code></td><td><code>RELEASE</code> · <code>OUT</code></td><td>-x / -y / wheel-down only</td><td>the release edge</td><td>OUT, PC to device</td></tr>
+                <tr><td><code>WITH</code></td><td><code>3</code></td><td>-</td><td>the sign the box is injecting</td><td>no meaning</td><td>no meaning</td></tr>
+                <tr><td><code>AGAINST</code></td><td><code>4</code></td><td>-</td><td>the sign opposing it</td><td>no meaning</td><td>no meaning</td></tr>
               </tbody>
             </table>
             <p>
               The aliases are the same values under names that read at the call site:{' '}
-              <code>Direction.PRESS is Direction.POSITIVE</code>.
+              <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
+              <code>AGAINST</code> are measured against the aim rather than a fixed sign;{' '}
+              <code>.is_relative</code> tells them apart.
             </p>
           </div>
 
@@ -866,8 +870,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per active lock</td></tr>
-                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>test one <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A> + <A href="/bindings/python/types#direction"><code>Direction</code></A>; also true when a whole-class blanket covers it</td></tr>
+                <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per weighed direction</td></tr>
+                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction</td></tr>
+                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it</td></tr>
               </tbody>
             </table>
           </div>
@@ -877,12 +882,33 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is locked (an axis or a usage)</td></tr>
-                <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class lock, where <code>target</code> names only the class</td></tr>
-                <tr><td><code>positive</code></td><td><code>bool</code></td><td>the +x / +y / wheel-up / press edge is locked</td></tr>
-                <tr><td><code>negative</code></td><td><code>bool</code></td><td>the -x / -y / wheel-down / release edge is locked</td></tr>
+                <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is weighed (an axis or a usage)</td></tr>
+                <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class entry, where <code>target</code> names only the class</td></tr>
+                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>which direction of the target this entry weighs</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept; a usage carries one bit and only ever reports 0</td></tr>
+                <tr><td><code>is_block</code></td><td><code>bool</code></td><td><code>scale == 0</code>: blocked outright rather than weighed</td></tr>
               </tbody>
             </table>
+          </div>
+
+          <div id="bearing" data-search-target>
+            <div class="api-response-label">Bearing (query_bearing())</div>
+            <p>
+              What <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against;
+              see the native <A href="/native/commands/lock#bearing">bearing</A>.
+            </p>
+            <table class="api-params">
+              <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>window_ms</code></td><td><code>Optional[int]</code></td><td>how long an axis holds the direction of its last injected delta; <code>None</code> is off, leaving both relative directions inert</td></tr>
+                <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PER_AXIS</code> (each axis reads its own sign) or <code>VECTOR</code> (the aim is projected onto the injected direction)</td></tr>
+                <tr><td><code>is_live</code></td><td><code>bool</code></td><td>whether a bearing is held at all</td></tr>
+              </tbody>
+            </table>
+            <p>
+              Module constants: <code>LOCK_SCALE_BLOCK</code> (0), <code>LOCK_SCALE_PASS</code> (100),{' '}
+              <code>LOCK_SCALE_MAX</code> (255), <code>BEARING_WINDOW_DEFAULT_MS</code> (20).
+            </p>
           </div>
 
           <div id="catchstate" data-search-target>

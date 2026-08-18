@@ -199,15 +199,15 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
 
       <div id="query-locks" data-search-target>
         <Card>
-          <CardHeader title="query_locks" subtitle="Read the active input locks" />
+          <CardHeader title="query_locks" subtitle="Read the active input scales" />
           <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the list of inputs
-            currently blocked by <A href="/library/lock#lock"><code>lock</code></A>.{' '}
-            <code>entries()</code> walks them and <code>is_locked(target, direction)</code> answers
-            whether one particular lock is set.
+            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction
+            currently weighed by <A href="/library/lock#scale"><code>scale</code></A>.{' '}
+            <code>scale_of(target, direction)</code> reads the percentage in effect and{' '}
+            <code>is_locked(target, direction)</code> answers whether it is blocked outright.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -217,7 +217,8 @@ let device = Device::find()?;
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Both) {
     println!("horizontal motion is frozen");
-}`}</code></pre>
+}
+println!("counter-aim at {}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
         </Card>
       </div>
 

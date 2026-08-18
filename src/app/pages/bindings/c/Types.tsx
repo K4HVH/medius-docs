@@ -251,9 +251,11 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_DIRECTION_BOTH</code></td><td><code>0</code></td><td>Both signs.</td><td>Press and release.</td><td>Both directions.</td></tr>
+              <tr><td><code>MEDIUS_DIRECTION_BOTH</code></td><td><code>0</code></td><td>Every direction.</td><td>Press and release.</td><td>Both directions.</td></tr>
               <tr><td><code>MEDIUS_DIRECTION_POSITIVE</code></td><td><code>1</code></td><td>Positive (<code>+</code>).</td><td>The press edge.</td><td>IN, device to PC.</td></tr>
               <tr><td><code>MEDIUS_DIRECTION_NEGATIVE</code></td><td><code>2</code></td><td>Negative (<code>-</code>).</td><td>The release edge.</td><td>OUT, PC to device.</td></tr>
+              <tr><td><code>MEDIUS_DIRECTION_WITH</code></td><td><code>3</code></td><td>The sign the box is injecting.</td><td>No meaning.</td><td>No meaning.</td></tr>
+              <tr><td><code>MEDIUS_DIRECTION_AGAINST</code></td><td><code>4</code></td><td>The sign opposing it.</td><td>No meaning.</td><td>No meaning.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -957,27 +959,59 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
 
       <div id="locks" data-search-target>
         <Card>
-          <CardHeader title="MediusLocks & MediusLockEntry" subtitle="The active locks, as an entry list" />
+          <CardHeader title="MediusLocks & MediusLockEntry" subtitle="The active scales, as an entry list" />
           <p>
-            From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>: <code>entries[0..n]</code>, one per locked target. Test a target/direction with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked(&amp;locks, target, dir)</code></A>, which reports a match from a specific entry or a covering whole-class <code>is_blanket</code> lock. Wire layout on the native{' '}
+            From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>: <code>entries[0..n]</code>, one per weighed direction. Read one with{' '}
+            <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of(&amp;locks, target, dir)</code></A>, or ask whether it is blocked outright with <code>medius_locks_is_locked</code>; both count a covering whole-class <code>is_blanket</code> entry. Wire layout on the native{' '}
             <A href="/native/commands/requests#requests">LOCKS</A> reply.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Live entries in <code>entries</code>.</td></tr>
-              <tr><td><code>entries</code></td><td><code>MediusLockEntry[MEDIUS_MAX_LOCKS]</code></td><td>One per locked axis or usage.</td></tr>
+              <tr><td><code>entries</code></td><td><code>MediusLockEntry[MEDIUS_MAX_LOCKS]</code></td><td>One per weighed direction of an axis or usage.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MEDIUSLOCKENTRY</div>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The locked axis or usage.</td></tr>
-              <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The lock covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
-              <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive edge (axis <code>+</code>, or press) is locked.</td></tr>
-              <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative edge (axis <code>-</code>, or release) is locked.</td></tr>
+              <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The weighed axis or usage.</td></tr>
+              <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The entry covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/bindings/c/types#direction"><code>MediusDirection</code></A></td><td>Which direction of the target this entry weighs.</td></tr>
+              <tr><td><code>scale</code></td><td><code>uint8_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked. A momentary usage carries one bit, so it only ever reports 0.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="bearing" data-search-target>
+        <Card>
+          <CardHeader title="MediusBearing & MediusBearingMode" subtitle="What WITH and AGAINST are measured against" />
+          <pre class="api-signature">{`struct MediusBearing {
+    uint16_t          window_ms;  /* 0 = off */
+    MediusBearingMode mode;
+};`}</pre>
+          <p>
+            From <A href="/bindings/c/api#queries"><code>medius_device_query_bearing</code></A>, set
+            with <code>medius_device_set_bearing</code>. See the native{' '}
+            <A href="/native/commands/lock#bearing">bearing</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>window_ms</code></td><td><code>uint16_t</code></td><td>How long an axis holds the direction of its last injected delta. <code>0</code> is off, leaving <code>WITH</code> and <code>AGAINST</code> inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><code>MediusBearingMode</code></td><td><code>MEDIUS_BEARING_MODE_PER_AXIS</code> (0) or <code>MEDIUS_BEARING_MODE_VECTOR</code> (1).</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">SCALE CONSTANTS</div>
+          <table class="api-params">
+            <thead><tr><th>Macro</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>Keep none of the physical value.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>Keep all of it, untouched.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_WINDOW_DEFAULT_MS</code></td><td><code>20</code></td><td>What the box boots holding.</td></tr>
             </tbody>
           </table>
         </Card>

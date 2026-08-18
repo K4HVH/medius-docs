@@ -452,7 +452,7 @@ device.press(from_button)?;                         // press takes any impl Into
       <div id="direction" data-search-target>
         <Card>
           <CardHeader title="Direction" subtitle="Which way, which edge, or which transfer direction" />
-          <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative {'}'}</pre>
+          <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative, With, Against {'}'}</pre>
           <p>
             The one byte <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
             <A href="/native/commands/clip"><code>CLIP</code></A> and{' '}
@@ -464,11 +464,20 @@ device.press(from_button)?;                         // press takes any impl Into
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a usage</th><th>On a traffic class</th></tr></thead>
             <tbody>
-              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs</td><td>press and release</td><td>IN and OUT</td></tr>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>every direction</td><td>press and release</td><td>IN and OUT</td></tr>
               <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
               <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
+              <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>no meaning</td><td>no meaning</td></tr>
+              <tr><td><code>Against</code></td><td><code>4</code></td><td>the sign opposing it</td><td>no meaning</td><td>no meaning</td></tr>
             </tbody>
           </table>
+          <p>
+            <code>With</code> and <code>Against</code> are measured against the bearing rather than a
+            fixed sign, so they follow the aim; <code>is_relative()</code> tells them apart, and a{' '}
+            <A href="/library/catch#catch-events">catch subscription</A> refuses one with{' '}
+            <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+          </p>
           <p>
             The other two readings get their own names:{' '}
             <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
@@ -483,8 +492,8 @@ device.press(from_button)?;                         // press takes any impl Into
           <CardHeader title="Blanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
           <p>
-            A whole input group: which one <A href="/library/lock#lock-all"><code>lock_all</code></A> /{' '}
-            <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call, and the members of a
+            A whole input group: which one <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
+            <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh in one call, and the members of a
             clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
           </p>
           <table class="api-params">

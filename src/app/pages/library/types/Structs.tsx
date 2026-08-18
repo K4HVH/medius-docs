@@ -211,20 +211,20 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
       </div>
       <div id="locks" data-search-target>
         <Card>
-          <CardHeader title="Locks" subtitle="The active input locks" />
+          <CardHeader title="Locks" subtitle="The active input scales" />
           <p>
-            Active locks from <A href="/library/requests#query-locks"><code>query_locks()</code></A>, a
-            list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across every
-            class. <code>is_locked(target, dir)</code> tests one lock; <code>entries()</code> is the
-            whole list.
+            The active set from <A href="/library/requests#query-locks"><code>query_locks()</code></A>,
+            a list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across
+            every class, one per direction that is not passing untouched.
             See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the
             wire format.
           </p>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every active lock, one entry per locked target or whole-class blanket.</td></tr>
-              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether that target and direction is locked, by a specific entry or a covering whole-class blanket; <code>target</code> is any <code>impl Into&lt;LockTarget&gt;</code>.</td></tr>
+              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every weighed direction, one entry each, across specific targets and whole-class blankets.</td></tr>
+              <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it. <code>Both</code> reports the lowest across every direction, and where entries overlap the lowest wins.</td></tr>
+              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
           </table>
@@ -238,24 +238,47 @@ if locks.is_locked(Axis::X, Direction::Positive) {
 if locks.is_locked(Button::Left, Direction::Negative) {
     // a left-click is latched down: the hand can't release it
 }
-println!("{} locks active", locks.entries().len());`}</code></pre>
+// how much counter-aim survives right now
+println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
         </Card>
       </div>
       <div id="lock-entry" data-search-target>
         <Card>
           <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
-          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, positive: bool, negative: bool {'}'}</pre>
+          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: u8 {'}'}</pre>
           <p>
-            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list.
+            One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
+            list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
+            for field, so what comes back is what you would send to reproduce it.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
-              <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive/press edge is locked.</td></tr>
-              <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative/release edge is locked.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which direction of it this entry weighs.</td></tr>
+              <tr><td><code>scale</code></td><td><code>u8</code></td><td>Percent of the physical value kept. A momentary usage carries one bit, so it only ever reports 0.</td></tr>
             </tbody>
           </table>
+          <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
+        </Card>
+      </div>
+      <div id="bearing" data-search-target>
+        <Card>
+          <CardHeader title="Bearing" subtitle="What With and Against are measured against" />
+          <pre class="api-signature">struct Bearing {'{'} window: Option&lt;Duration&gt;, mode: BearingMode {'}'}</pre>
+          <p>
+            The configured bearing from{' '}
+            <A href="/library/options#query-bearing"><code>query_bearing()</code></A>. See the native{' '}
+            <A href="/native/commands/lock#bearing">bearing</A> for what it does.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long an axis holds the direction of its last injected delta. <code>None</code> is off, so <code>With</code> and <code>Against</code> are inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the aim is projected onto the injected direction, and movement across it passes untouched.</td></tr>
+            </tbody>
+          </table>
+          <p><code>is_live()</code> is whether a bearing is held at all.</p>
         </Card>
       </div>
       <div id="catch-filter" data-search-target>

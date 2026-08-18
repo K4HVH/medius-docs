@@ -46,6 +46,13 @@ const Option: Component = () => {
               <td>Give the box a human-readable name</td>
               <td>Medius-XXXX</td>
             </tr>
+            <tr>
+              <td><A href="/native/commands/option#bearing"><code>BEARING</code></A></td>
+              <td><code>4</code></td>
+              <td><code>[window u16 LE][mode u8]</code></td>
+              <td>What with and against are measured against</td>
+              <td>20 ms, per axis</td>
+            </tr>
           </tbody>
         </table>
       </Card>
@@ -152,6 +159,50 @@ const Option: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | timeout| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="bearing" data-search-target>
+        <Card>
+          <CardHeader title="BEARING" subtitle="What with and against are measured against" />
+          <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
+          <p>
+            Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
+            injecting, which the <code>with</code> and <code>against</code>{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A> directions weigh against.
+          </p>
+          <div class="api-response-label">WINDOW</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Off: no bearing is ever held, so with and against do nothing whatever their scale</td></tr>
+              <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MODE</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Per axis: each axis compares its own sign against its own bearing <em>(default)</em></td></tr>
+              <tr><td><code>1</code></td><td>Vector: the movement is projected onto the injected direction, and only the part along it is weighed</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Nothing here changes behaviour on its own. It only decides what the relative directions
+            mean once a scale is set on one.
+          </p>
+          <p>
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 11     | 00     | 04 00  | 04     | 14 00  | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | window | mode   | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
