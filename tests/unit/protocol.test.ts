@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   PROTO_VER,
+  BearingMode,
+  bearingModeFromU8,
   type DecodedFrame,
 
   BusEventKind,
@@ -1342,5 +1344,17 @@ describe('keyboard + media (v2.0.0)', () => {
         { cls: 1, id: 0x07 },
       ],
     });
+  });
+});
+
+describe('bearing mode decode', () => {
+  it('names only the two the box defines', () => {
+    expect(bearingModeFromU8(0)).toBe(BearingMode.PerAxis);
+    expect(bearingModeFromU8(1)).toBe(BearingMode.Vector);
+  });
+
+  it('refuses a byte no constant names rather than carrying it as a geometry', () => {
+    // The box rejects the whole write for such a mode, so a reply carrying one is not a geometry.
+    for (const v of [2, 9, 200, 255]) expect(bearingModeFromU8(v)).toBeNull();
   });
 });

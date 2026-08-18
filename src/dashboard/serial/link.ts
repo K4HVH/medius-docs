@@ -47,6 +47,7 @@ import {
   INJ_KEY,
   INJ_MEDIA,
   Direction,
+  LockClass,
   LedMode,
   LedTarget,
   RebootTarget,
@@ -310,8 +311,15 @@ export class SerialLink {
   // A blanket (id LOCK_ID_ALL) carries the direction to every member, so an every-key lock can block
   // press edges alone. A media usage has no edges and ignores the byte either way.
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
+    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent -- the
+    // box does a different thing per class with it, and every other client refuses it too. A media usage
+    // has no edges at all, so an edge named on one goes out as Both, which is what the box reports back.
+    if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
+      return Promise.reject(new Error(`${Direction[direction]} is measured against the bearing, which only an axis has`));
+    }
+    const dir = target.cls === LockClass.Media ? Direction.Both : direction;
     return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, scale)),
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, dir, scale)),
     );
   }
 

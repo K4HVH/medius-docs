@@ -133,9 +133,12 @@ one bit    a button, key or media usage locks under 100 and passes
               box's own motion no room and it waits a frame.
             </p>
             <p>
-              With <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> on, that
-              deferred motion is dropped, not held. The threshold is <code>field_max / 2.55</code>, 49
-              counts on an 8-bit axis.
+              It is held, not dropped, and it leaves as one report once the axis has room again. Hold a
+              saturating movement and the injected deltas behind it arrive together as a burst.{' '}
+              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> does not bound it:
+              a report that moved re-opens the ride window, and the immediate pot it never governed. The
+              threshold is <code>field_max / 2.55</code>, 49 counts on an 8-bit axis, which an ordinary
+              flick clears — so amplify an axis the box is also injecting on only if you mean that.
             </p>
           </div>
           <p>
@@ -274,7 +277,7 @@ detach      the real device goes away`}</pre>
               <tr><td>An injected delta on that axis</td><td>Sets it, and restarts the deadline.</td></tr>
               <tr><td>Injected motion still owed on that axis</td><td>Keeps restarting the deadline. The window does not begin while a delta is waiting for a ride or for a slow emit gate.</td></tr>
               <tr><td>The window elapses</td><td>That axis has no bearing. Both relative directions stop applying and it passes at its fixed-sign scale alone.</td></tr>
-              <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared at once. Dropped motion is a pull that never lands.</td></tr>
+              <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared. Dropped motion is a pull that never lands — though a delta still owed on the immediate pot sets it again on the next report, because that one does land.</td></tr>
               <tr><td>Motion held for a ride goes stale</td><td>Cleared with the hoard, on the next native move that would have carried it.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#move-ride"><code>OPTION(MOVE_RIDE)</code></A></td><td>Cleared, along with the held motion it pointed with.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A></td><td>Cleared, and the banked <A href="/native/commands/lock#scale">carry</A> with it.</td></tr>
