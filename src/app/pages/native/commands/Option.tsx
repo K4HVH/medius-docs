@@ -13,48 +13,49 @@ const Option: Component = () => {
           picks the option, the rest is its value. All persist in NVS, restore at boot, and are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>. An unknown id is ignored.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Option</th><th><code>id</code></th><th>Value</th><th>Does</th><th>Default</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
-              <td><code>0</code></td>
-              <td><code>[allow u8]</code></td>
-              <td>Clone an over-capacity device anyway</td>
-              <td>off</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
-              <td><code>1</code></td>
-              <td><code>[timeout u16 LE]</code></td>
-              <td>Inject motion only on a real move</td>
-              <td>off</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
-              <td><code>2</code></td>
-              <td><code>[mode u8][rate_hz u16 LE]</code></td>
-              <td>Pick what paces injected motion</td>
-              <td>learnt</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
-              <td><code>3</code></td>
-              <td><code>[name ascii 0..32]</code></td>
-              <td>Give the box a human-readable name</td>
-              <td>Medius-XXXX</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#bearing"><code>BEARING</code></A></td>
-              <td><code>4</code></td>
-              <td><code>[window u16 LE][mode u8]</code></td>
-              <td>What with and against are measured against</td>
-              <td>20 ms, per axis</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Option</th><th><code>id</code></th><th>Does</th><th>Factory default</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
+                <td><code>0</code></td>
+                <td>Clone an over-capacity device anyway</td>
+                <td>off</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
+                <td><code>1</code></td>
+                <td>Inject motion only on a real move</td>
+                <td>off</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
+                <td><code>2</code></td>
+                <td>Pick what paces injected motion</td>
+                <td>learnt</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
+                <td><code>3</code></td>
+                <td>Give the box a human-readable name</td>
+                <td>Medius-XXXX</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#bearing"><code>BEARING</code></A></td>
+                <td><code>4</code></td>
+                <td>What with and against are measured against</td>
+                <td>20 ms, per axis</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Each card carries its own value layout on its signature line. A box that has been set boots
+          at its own stored value, not the factory one.
+        </p>
       </Card>
 
       <div id="option" data-search-target>
@@ -146,6 +147,11 @@ const Option: Component = () => {
               injection are unaffected, and a move can opt out per command with the{' '}
               <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
             </p>
+            <p>
+              Changing the value drops whatever motion was held for a ride, and clears the standing{' '}
+              <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
+              <code>with</code> / <code>against</code> scale stops applying at that instant.
+            </p>
           </div>
           <p>
             Read{' '}
@@ -166,11 +172,6 @@ const Option: Component = () => {
         <Card>
           <CardHeader title="BEARING" subtitle="What with and against are measured against" />
           <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
-          <p>
-            Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
-            injecting, which the <code>with</code> and <code>against</code>{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> directions weigh against.
-          </p>
           <div class="api-response-label">WINDOW</div>
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
@@ -181,17 +182,22 @@ const Option: Component = () => {
           </table>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
-            <thead><tr><th>Value</th><th>Geometry</th></tr></thead>
+            <thead><tr><th>Value</th><th><A href="/native/commands/lock#geometry">Geometry</A></th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
               <tr><td><code>1</code></td><td>Vector</td></tr>
+              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply to say so</td></tr>
             </tbody>
           </table>
-          <p>
-            What the two geometries do is on{' '}
-            <A href="/native/commands/lock#bearing">the bearing</A>. Nothing here changes behaviour on
-            its own; it only decides what the relative directions mean once a scale is set on one.
-          </p>
+          <div class="callout callout--warning">
+            <p>
+              A write that changes either field drops the standing{' '}
+              <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
+              <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
+              <code>with</code> / <code>against</code> scale live that is a visible step in what
+              reaches the game PC, so set the geometry before the scales, not between reports.
+            </p>
+          </div>
           <p>
             Read{' '}
             <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}

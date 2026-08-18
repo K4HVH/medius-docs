@@ -264,16 +264,13 @@ const Types: Component = () => {
             edges: an edge named on one goes out as <code>MEDIUS_DIRECTION_BOTH</code>, which is what{' '}
             <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it as.
           </p>
-          <div class="api-response-label">HOW IT IS SPELLED</div>
+          <div class="api-response-label">A BYTE NO CONSTANT NAMES</div>
           <p>
-            The enum and its constants are what you pass. The parameters and struct fields that carry
-            one are declared <code>uint8_t</code> so the boundary can check a value no constant names,
-            and a C enum constant converts to that on its own, so no call site changes. Only{' '}
-            <A href="/bindings/c/types#bearing"><code>MediusBearing.mode</code></A> is still
-            enum-typed, being box-produced and never passed in.
+            Parameters and struct fields carrying a direction are declared <code>uint8_t</code>, so a
+            value outside the enum reaches the boundary rather than the wire.
           </p>
           <table class="api-params">
-            <thead><tr><th>A byte no constant names</th><th>Comes back as</th></tr></thead>
+            <thead><tr><th>Call</th><th>Comes back as</th></tr></thead>
             <tbody>
               <tr><td>Any call returning a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code>; no frame goes out.</td></tr>
               <tr><td><code>medius_locks_scale_of</code></td><td>It names no entry, so <code>MEDIUS_LOCK_SCALE_PASS</code>.</td></tr>
@@ -989,6 +986,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <A href="/native/commands/requests#requests">LOCKS</A> reply.
           </p>
           <table class="api-params">
+            <thead><tr><th>Asked with <code>MEDIUS_DIRECTION_BOTH</code></th><th>Answers about</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_locks_scale_of</code></td><td>The lowest scale across every direction, relative pair included. Not the figure a delta meets: a delta picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>medius_locks_is_locked</code></td><td>The two fixed signs only. Name <code>_WITH</code> or <code>_AGAINST</code> to ask about one of those.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Live entries in <code>entries</code>.</td></tr>
@@ -1026,10 +1030,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             </tbody>
           </table>
           <p>
-            So <code>n</code> is the number of entries you can safely walk, never the raw wire count.
-            A <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> carrying the
-            same kind of byte is refused instead of dropped, because the subscribing call has a{' '}
-            <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> to say so with.
+            <code>n</code> is the number of entries you can safely walk, never the raw wire count.
           </p>
         </Card>
       </div>
@@ -1058,14 +1059,14 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_BEARING_MODE_PER_AXIS</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
-              <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The delta is projected onto the injected XY vector; only the part along it is weighed, so movement across it passes untouched. One relative scale, the lower of X's and Y's, governs the whole aim, and <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports that effective number on both axes.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The delta is projected onto the injected XY vector, and the relative scale weighs only the part along it. The fixed-sign scales still reach what the projection leaves on each axis. One relative scale, the lower of X's and Y's, governs the whole aim; what <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports back is there.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONSTANT</div>
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_BEARING_WINDOW_DEFAULT_MS</code></td><td><code>20</code></td><td>The window the box boots holding.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_WINDOW_DEFAULT_MS</code></td><td><code>20</code></td><td>The factory window. A box that has been set boots at its own value.</td></tr>
             </tbody>
           </table>
         </Card>

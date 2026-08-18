@@ -488,17 +488,19 @@ const Requests: Component = () => {
           <div class="api-response-label">READBACK</div>
           <p>
             Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field for
-            field, so what comes back is what you would send to reproduce it. One entry per direction,
-            not per target: an axis weighed three ways reports three times, and a target passing on
-            every direction is absent.
+            field, so what comes back is what you would send to reproduce it.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>Reports as</th></tr>
             </thead>
             <tbody>
+              <tr><td>An axis weighed on three directions</td><td>Three entries, one per direction.</td></tr>
+              <tr><td>A target passing on every direction</td><td>Absent.</td></tr>
+            </tbody>
+            <tbody>
               <tr><td>An axis or button weighed on a direction</td><td>One entry under its own <code>class</code> and <code>id</code>, per direction.</td></tr>
-              <tr><td>A <A href="/native/commands/lock#lock">blanket</A> button or axis lock</td><td>One entry per member, under its own <code>id</code>; never <code>0xFFFF</code>.</td></tr>
+              <tr><td>A <A href="/native/commands/lock#blanket">blanket</A> button or axis lock</td><td>One entry per member, under its own <code>id</code>; never <code>0xFFFF</code>.</td></tr>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
@@ -506,44 +508,28 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">BUDGET</div>
-          <p>
-            One reply carries 96 entries. The box fills them in a fixed order and stops; nothing on the
-            wire marks a reply that ran out.
-          </p>
           <table class="api-params">
             <thead>
               <tr><th>Order</th><th>Source</th><th>Most it spends</th></tr>
             </thead>
             <tbody>
-              <tr><td>1</td><td>Mouse axes and buttons</td><td>22: 3 axes x 4 directions, plus 5 buttons x 2 edges. The table is 8 targets x 4 slots, but a button has no relative pair, so 10 of those 32 slots are out of reach.</td></tr>
+              <tr><td>1</td><td>Mouse axes and buttons</td><td>22: 3 axes x 4 directions, plus 5 buttons x 2 edges. A button has no relative pair, so 10 of the table's 32 slots are out of reach.</td></tr>
               <tr><td>2</td><td>The blanket key lock</td><td>2, one per blocked edge</td></tr>
               <tr><td>3</td><td>The blanket media lock</td><td>1</td></tr>
               <tr><td>4</td><td>Specific media usages</td><td>8, the whole media-lock table</td></tr>
-              <tr><td>5</td><td>Specific keys</td><td>whatever is left of the 96, one per blocked edge</td></tr>
+              <tr><td>5</td><td>Specific keys</td><td>the rest of the 96, so at least 63, one per blocked edge</td></tr>
             </tbody>
           </table>
           <p>
-            Granular keys go last because they are the one unbounded class: a keyboard usage has two
-            edges and there are 252 of them, so a host can ask for far more entries than a frame holds.
-            Everything above them is capped by the box's own tables, and the four together spend at most
-            33. Order them the other way and a host holding 90 key edges would push the media list off
-            the end of a reply that had room for it.
+            Rows 1 to 4 are capped by the box's own tables and spend 33 between them, so they are always
+            in the reply. A keyboard usage is the one unbounded class: 252 of them, two edges each.
           </p>
-          <pre class="diagram">{`96 entries, filled in order
-
-  1  mouse axes + buttons     <= 22  |
-  2  blanket key lock         <=  2  |  bounded: 33 at absolute worst
-  3  blanket media lock       <=  1  |
-  4  specific media usages    <=  8  |
-  -------------------------------------------------------------------
-  5  specific keys              63 guaranteed, the rest of the frame
-
-  truncation can only land here, and it is silent`}</pre>
-          <p>
-            So the guarantee a host can hold: every bounded class is in the reply, whatever else is
-            locked. Only the granular key list truncates, <code>n</code> simply stops short, and the
-            reply has nowhere to say so. Count the key edges you asked for against what came back.
-          </p>
+          <div class="callout callout--warning">
+            <p>
+              Truncation is silent, and it can only land on row 5: <code>n</code> stops short and the
+              reply has nowhere to say so. Count the key edges you asked for against what came back.
+            </p>
+          </div>
           <div class="api-response-label">EFFECT</div>
           <p>
             Library binding:{' '}

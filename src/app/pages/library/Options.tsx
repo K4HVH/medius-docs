@@ -9,7 +9,7 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Four box settings, each set and read on its own. All persist in NVS and survive a reboot. See
+          Five box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command for the wire contract.
         </p>
@@ -70,6 +70,13 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>; button, key, and media
             injection are unaffected.
           </p>
+          <div class="callout callout--warning">
+            <p>
+              A change to this setting drops whatever motion was held for a ride, and clears the
+              standing <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
+              <code>With</code> / <code>Against</code> scale stops applying at that instant.
+            </p>
+          </div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -97,8 +104,8 @@ device.set_movement_riding(None)?;                             // back to gaples
             Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
             injecting, which <code>Direction::With</code> and <code>Direction::Against</code> weigh
             against in <A href="/library/lock#scale"><code>scale</code></A>. Each axis holds the
-            direction of its last injected delta for <code>window</code>, then has no bearing at all
-            and both relative directions stop applying.
+            direction of its last injected delta for <code>window</code> past the last one still owed,
+            then has none and both relative directions stop applying.
           </p>
           <table class="api-params">
             <thead>
@@ -106,37 +113,27 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
-              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the aim is projected onto the injected direction and movement across it passes untouched.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the aim is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
           <p>
-            The box boots at <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code>, so
-            nothing engages until a scale is set on a relative direction. Persisted in NVS.
+            Persisted in NVS, so a box that has been set boots at its own value.{' '}
+            <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory one.
           </p>
-          <div class="api-response-label">VECTOR WEIGHS TWICE</div>
-          <p>
-            <code>Vector</code> projects first, then weighs each axis. The projection scales the part of
-            the movement lying along the bearing by the relative scale, one number for the aim, and
-            writes what is left back onto both axes. Each axis's fixed-sign scale then applies to{' '}
-            <em>that</em> value, chosen by the sign standing in the field after the projection, not by
-            the sign the hand moved.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Stage</th><th>Scale</th><th>Reads</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>project</td><td><code>With</code> / <code>Against</code>, the lower of X's and Y's</td><td>The component along the bearing</td></tr>
-              <tr><td>weigh</td><td><code>Positive</code> / <code>Negative</code>, per axis</td><td>What the projection left on that axis</td></tr>
-            </tbody>
-          </table>
-          <p>
-            So a block covers motion the projection redistributed onto that axis, and a gain reaches it
-            too: an absolute scale is a statement about what leaves for the game PC. Block <code>Y</code>{' '}
-            negative while the aim runs diagonally and a purely horizontal flick can come out with its
-            vertical share removed. The native{' '}
-            <A href="/native/commands/lock#bearing">bearing page</A> works the arithmetic through.
-          </p>
+          <div class="callout callout--warning">
+            <p>
+              <code>Vector</code> weighs a report twice, and the second pass reads whatever the
+              projection left standing on each axis, not what the hand moved. Block <code>Y</code>{' '}
+              negative while the aim runs diagonally and a purely horizontal flick can come out with its
+              vertical share removed. The native{' '}
+              <A href="/native/commands/lock#geometry">geometry</A> section works the arithmetic
+              through.
+            </p>
+            <p>
+              A change to either field drops the standing bearing and the box's banked fractions, which
+              is a visible step while a relative scale is live.
+            </p>
+          </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;
 use medius::{Axis, BearingMode, Device, Direction};

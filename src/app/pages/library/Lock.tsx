@@ -19,14 +19,16 @@ const Lock: Component = () => {
   scale 200   physical  ==>   doubled
 
   injection always -->  unweighed, whatever the scale`}</pre>
-        <table class="api-params">
-          <thead><tr><th>Weigh a...</th><th>Any percentage</th><th>Block</th><th>Release</th></tr></thead>
-          <tbody>
-            <tr><td>relative axis (X / Y / wheel)</td><td><A href="/library/lock#scale"><code>scale</code></A> / <A href="/library/lock#lock-axis"><code>scale_axis</code></A></td><td><A href="/library/lock#lock"><code>lock</code></A> / <A href="/library/lock#lock-axis"><code>lock_axis</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A> / <A href="/library/lock#lock-axis"><code>unlock_axis</code></A></td></tr>
-            <tr><td>button, key, or media usage</td><td>truncates to a lock</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
-            <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>scale_all</code></A></td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><A href="/library/lock#lock-all"><code>unlock_all</code></A></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Weigh a...</th><th>Any percentage</th><th>Block</th><th>Release</th></tr></thead>
+            <tbody>
+              <tr><td>relative axis (X / Y / wheel)</td><td><A href="/library/lock#scale"><code>scale</code></A> / <A href="/library/lock#lock-axis"><code>scale_axis</code></A></td><td><A href="/library/lock#lock"><code>lock</code></A> / <A href="/library/lock#lock-axis"><code>lock_axis</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A> / <A href="/library/lock#lock-axis"><code>unlock_axis</code></A></td></tr>
+              <tr><td>button, key, or media usage</td><td>truncates to a lock</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
+              <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>scale_all</code></A></td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><A href="/library/lock#lock-all"><code>unlock_all</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           All are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.{' '}
           <A href="/library/requests#query-locks"><code>query_locks</code></A> reads the active set.
@@ -57,8 +59,8 @@ const Lock: Component = () => {
           <div class="callout callout--info">
             <p>
               <code>Direction::Both</code> writes the scale to the two fixed signs and a full pass to
-              the relative pair. Writing it to all four would square it, so a plain{' '}
-              <code>Both</code> of 50 would mean 50% with no bearing live and 25% with one.
+              the relative pair, so <code>Both</code> of 50 means 50% whether or not a bearing is live.{' '}
+              <A href="/native/commands/lock#direction">Why</A>.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
