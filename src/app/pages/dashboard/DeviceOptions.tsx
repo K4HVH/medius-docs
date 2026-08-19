@@ -29,6 +29,12 @@ const EMIT_MODES: Record<string, EmitMode> = {
   fixed: EmitMode.Fixed,
 };
 
+const MODE_BLURB: Record<string, string> = {
+  learned: "Matches the mouse's own report rate.",
+  interval: "Follows the mouse's USB poll rate.",
+  fixed: 'Pins the rate to the number you pick.',
+};
+
 const MODE_NAMES: Record<number, string> = {
   [EmitMode.Learned]: 'learned',
   [EmitMode.Interval]: 'interval',
@@ -65,6 +71,16 @@ const DeviceOptions = () => {
   const [bearMode, setBearMode] = createSignal<string | null>(null);
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
+
+  // Every editable option below shares one shape: an unapplied edit offers Revert and marks the
+  // status chip. Emit rate was the only one that did, so a pending bearing or riding window looked
+  // applied.
+  const rideDirty = () => rideEdit() !== null;
+  const bearDirty = () => bearEdit() !== null || bearMode() !== null;
+  const emitDirty = () => modeEdit() !== null || hzEdit() !== null;
+  const revertRide = () => setRideEdit(null);
+  const revertBear = () => { setBearEdit(null); setBearMode(null); };
+  const revertEmit = () => { setModeEdit(null); setHzEdit(null); };
 
   const name = () => nameEdit() ?? version()?.name ?? '';
   const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
@@ -136,8 +152,8 @@ const DeviceOptions = () => {
 
         <Section title="Box name" first>
         <p>
-          Leave it unset and the box derives one from its id, like "Medius-1A2B". Up to {NAME_MAX}{' '}
-          letters, numbers, and symbols.
+          Up to {NAME_MAX} letters, numbers and symbols; left unset, the box derives one from its
+          id.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
@@ -166,8 +182,8 @@ const DeviceOptions = () => {
 
         <Section title="Imperfect clone">
         <p>
-          Some devices need more inputs than the box can copy, so it refuses them by default. Allow it
-          and the box clones the device anyway with one input dropped, then reboots to apply.
+          Clone a device that needs more inputs than the box can copy, dropping one of them; the box
+          reboots to apply.
         </p>
         <div style={controls}>
           <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
@@ -194,9 +210,8 @@ const DeviceOptions = () => {
 
         <Section title="Movement riding">
         <p>
-          Injected motion is only emitted alongside a real mouse move within the window, and is dropped
-          if none arrives, so it keeps the real device's report timing. Off by default, and a move can
-          opt out of it.
+          Injected motion waits for a real mouse move within the window and is dropped if none
+          arrives, so it keeps the real device's report timing.
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '8rem' }}>
@@ -214,12 +229,20 @@ const DeviceOptions = () => {
           <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
             Turn off
           </Button>
+          <Show when={rideDirty()}>
+            <Button variant="subtle" onClick={revertRide}>
+              Revert
+            </Button>
+          </Show>
         </div>
         <Show when={ride() !== null} fallback={<p style={status}>Reading status...</p>}>
           <div style={status}>
             <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
               {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
             </Chip>
+            <Show when={rideDirty()}>
+              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+            </Show>
           </div>
         </Show>
 
@@ -228,8 +251,7 @@ const DeviceOptions = () => {
         <Section title="Bearing">
         <p>
           What the with and against lock directions are measured against: the direction the box is
-          injecting. Past the window an axis has no bearing and both directions stop applying, which is
-          physical motion then passes at its fixed-sign scale alone.
+          injecting on that axis, held for the window.
         </p>
         <RadioGroup
           name="bearing-mode"
@@ -241,9 +263,9 @@ const DeviceOptions = () => {
           ]}
         />
         <p style={muted}>
-          Per axis weighs each axis against its own bearing. Vector projects the movement onto the
-          injected direction and weighs only the part along it. The fixed-sign scales still reach
-          whatever the projection leaves on each axis.
+          {bearGeometry() === BearingMode.Vector
+            ? 'The physical delta is projected onto the injected XY vector, and only the part along it is weighed.'
+            : 'Each axis is weighed against its own bearing.'}
         </p>
         <div style={controls}>
           <div style={{ 'max-width': '8rem' }}>
@@ -258,9 +280,11 @@ const DeviceOptions = () => {
           <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
             Apply
           </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
-            Turn off
-          </Button>
+          <Show when={bearDirty()}>
+            <Button variant="subtle" onClick={revertBear}>
+              Revert
+            </Button>
+          </Show>
         </div>
         <Show when={bearing() !== null} fallback={<p style={status}>Reading status...</p>}>
           <div style={status}>
@@ -269,14 +293,16 @@ const DeviceOptions = () => {
                 ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
                 : 'Off'}
             </Chip>
+            <Show when={bearDirty()}>
+              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+            </Show>
           </div>
         </Show>
         </Section>
 
         <Section title="Emit rate">
         <p>
-          What paces injected motion. Learned matches the mouse's own report rate, Interval follows
-          its USB poll rate, and Fixed pins it to a rate you pick. It sets a ceiling only.
+          Paces injected motion, as a ceiling only.
         </p>
         <RadioGroup
           name="emit-mode"
@@ -288,6 +314,7 @@ const DeviceOptions = () => {
             { value: 'fixed', label: 'Fixed' },
           ]}
         />
+        <p style={muted}>{MODE_BLURB[mode()]}</p>
         <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
           <Show when={mode() === 'fixed'}>
             <div style={{ 'max-width': '8rem' }}>
@@ -303,14 +330,8 @@ const DeviceOptions = () => {
           <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
             Apply
           </Button>
-          <Show when={modeEdit() !== null || hzEdit() !== null}>
-            <Button
-              variant="subtle"
-              onClick={() => {
-                setModeEdit(null);
-                setHzEdit(null);
-              }}
-            >
+          <Show when={emitDirty()}>
+            <Button variant="subtle" onClick={revertEmit}>
               Revert
             </Button>
           </Show>
@@ -326,7 +347,7 @@ const DeviceOptions = () => {
               <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
                 {emitLabel(s())}
               </Chip>
-              <Show when={modeEdit() !== null || hzEdit() !== null}>
+              <Show when={emitDirty()}>
                 <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
                   not applied yet
                 </span>

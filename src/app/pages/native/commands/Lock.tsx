@@ -237,8 +237,8 @@ detach      the real device goes away`}</pre>
           <p>
             Each axis carries its own bearing and its own deadline, set by{' '}
             <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. A window of{' '}
-            <code>0</code> holds no bearing at all, so <code>with</code> and <code>against</code>{' '}
-            never apply whatever their scale.
+            <code>0</code> holds no bearing at all, so <code>with</code> and <code>against</code> stop
+            weighing without being cleared.
           </p>
                     <table class="api-params">
             <thead>

@@ -176,7 +176,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Off: no bearing is ever held, so with and against do nothing whatever their scale</td></tr>
+              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> stop weighing without being cleared: <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> still reports their scales</td></tr>
               <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
             </tbody>
           </table>
