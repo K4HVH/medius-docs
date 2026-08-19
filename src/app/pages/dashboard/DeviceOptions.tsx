@@ -280,6 +280,9 @@ const DeviceOptions = () => {
           <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
             Apply
           </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
+            Turn off
+          </Button>
           <Show when={bearDirty()}>
             <Button variant="subtle" onClick={revertBear}>
               Revert
