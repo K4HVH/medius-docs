@@ -5,7 +5,7 @@ import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { Slider } from '../../../components/inputs/Slider';
 import { LedMode, LedTarget } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
-import { label, row } from './ui';
+import { label, row, stack } from './ui';
 
 const TARGETS: Record<string, LedTarget> = {
   both: LedTarget.Both,
@@ -26,6 +26,7 @@ const DeviceLed = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Status light" subtitle="The box's green LEDs" />
+        <div style={stack}>
         <div style={label}>Which light</div>
         <RadioGroup
           name="led-target"
@@ -53,6 +54,7 @@ const DeviceLed = () => {
           <Button variant="secondary" onClick={() => send(LedMode.Off)}>Off</Button>
           <Button variant="primary" onClick={() => send(LedMode.Solid)}>On</Button>
           <Button variant="primary" onClick={() => send(LedMode.Blink)}>Blink</Button>
+        </div>
         </div>
       </Card>
     </Show>

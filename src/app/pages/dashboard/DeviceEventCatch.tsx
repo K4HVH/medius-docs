@@ -40,7 +40,7 @@ import {
 } from '../../../dashboard/protocol';
 import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
-import { chips, label, muted, row, section } from './ui';
+import { chips, group, label, muted, row, stack } from './ui';
 
 // Each preset is one table entry per class it covers. The byte-oriented ones cap the capture: a HID
 // or vendor packet runs to 64 bytes and the control link is shared with everything else here, so
@@ -372,6 +372,7 @@ const DeviceEventCatch = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
+        <div style={stack}>
 
         <div style={label}>How to choose</div>
         <RadioGroup
@@ -386,7 +387,7 @@ const DeviceEventCatch = () => {
         />
 
         <Show when={mode() === 'preset'}>
-          <div style={section}>
+          <div style={group}>
             <div style={label}>What to watch</div>
             <RadioGroup
               name="catch-preset"
@@ -406,17 +407,17 @@ const DeviceEventCatch = () => {
         </Show>
 
         <Show when={mode() === 'custom'}>
-          <div style={section}>
+          <div style={group}>
             <div style={label}>Class</div>
             <Combobox
               value={String(cls())}
               onChange={(v) => setCls(Number(Array.isArray(v) ? v[0] : v))}
               options={CLASS_OPTIONS}
             />
-            <p style={{ ...muted, 'margin-top': '4px' }}>The id is {ID_MEANING[cls()] ?? 'class specific'}.</p>
+            <p style={muted}>The id is {ID_MEANING[cls()] ?? 'class specific'}.</p>
           </div>
           <Show when={cls() !== CatchClass.Bus && cls() !== CatchClass.Any}>
-            <div style={section}>
+            <div style={group}>
               <div style={label}>Which id</div>
               <RadioGroup
                 name="catch-anyid"
@@ -434,7 +435,7 @@ const DeviceEventCatch = () => {
               </Show>
             </div>
           </Show>
-          <div style={section}>
+          <div style={group}>
             <div style={label}>Direction</div>
             <RadioGroup
               name="catch-dir"
@@ -448,7 +449,7 @@ const DeviceEventCatch = () => {
             />
           </div>
           <Show when={!isInputClass(cls())}>
-            <div style={section}>
+            <div style={group}>
               <div style={label}>Capture</div>
               <div style={{ 'max-width': '9rem' }}>
                 <NumberInput
@@ -461,7 +462,7 @@ const DeviceEventCatch = () => {
               </div>
             </div>
           </Show>
-          <div style={{ ...section, ...row }}>
+          <div style={{ ...row }}>
             <Button variant="secondary" disabled={streaming()} onClick={addCustom}>
               Add entry
             </Button>
@@ -469,7 +470,7 @@ const DeviceEventCatch = () => {
               Clear
             </Button>
           </div>
-          <div style={section}>
+          <div style={group}>
             <div style={label}>
               Table ({custom().length} of {CATCH_TABLE_MAX})
             </div>
@@ -494,7 +495,7 @@ const DeviceEventCatch = () => {
           </div>
         </Show>
 
-        <div style={{ ...section, ...row }}>
+        <div style={{ ...row }}>
           <Show
             when={!streaming()}
             fallback={
@@ -514,7 +515,7 @@ const DeviceEventCatch = () => {
         </div>
 
         <Show when={droppedByBox()}>
-          <div class="callout callout--warning" style={section}>
+          <div class="callout callout--warning" style={group}>
             The box cleared the subscription. It does that after one second with no control frame, which
             a backgrounded tab can cause. Press Watch to start again.
           </div>
@@ -522,7 +523,7 @@ const DeviceEventCatch = () => {
 
         <Show when={streaming()}>
           <Show when={refused().length > 0}>
-            <div class="callout callout--warning" style={section}>
+            <div class="callout callout--warning" style={group}>
               The box refused {refused().length} of {active().length} entries:{' '}
               {refused().map(describe).join(', ')}.{' '}
               <Show
@@ -535,7 +536,7 @@ const DeviceEventCatch = () => {
           </Show>
 
           <Show when={latestButtons()}>
-            <div style={section}>
+            <div style={group}>
               <div style={label}>Buttons held now</div>
               <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
                 <div style={chips}>
@@ -545,7 +546,7 @@ const DeviceEventCatch = () => {
             </div>
           </Show>
 
-          <div style={section}>
+          <div style={group}>
             <div style={label}>Events by kind</div>
             <div style={chips}>
               <Chip variant={kindCounts().motion > 0 ? 'info' : 'neutral'}>Motion {kindCounts().motion}</Chip>
@@ -556,12 +557,12 @@ const DeviceEventCatch = () => {
             </div>
           </div>
 
-          <div style={section}>
+          <div style={group}>
             <div style={label}>Clock</div>
             <p style={muted}>{clockLine()}</p>
           </div>
 
-          <div style={section}>
+          <div style={group}>
             <div style={label}>
               Recent events ({events().length} received, {catchState()?.dropped ?? 0} dropped by the
               box, {entryDrops()} of those charged to an entry)
@@ -581,12 +582,13 @@ const DeviceEventCatch = () => {
                   .join('\n')}
               </pre>
             </Show>
-            <p style={{ ...muted, 'margin-top': '4px' }}>
+            <p style={muted}>
               H is the host chip's clock, D the device chip's. Times are from the earliest event held
               in that clock, and only comparable within one of them.
             </p>
           </div>
         </Show>
+        </div>
       </Card>
     </Show>
   );
