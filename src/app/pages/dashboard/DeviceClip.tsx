@@ -50,7 +50,7 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
-import { checkColumn, chips, group, label, muted, row } from './ui';
+import { checkColumn, chips, label, muted, row, section } from './ui';
 
 const CLASSES: PickerClass[] = [
   { value: INJ_BTN, label: 'Button', table: BUTTONS },
@@ -369,7 +369,7 @@ const DeviceClip = () => {
               <Chip variant="error">{plural(delta((s) => s.seqGaps), 'lost append')}</Chip>
             </Show>
           </div>
-          <p style={muted}>Counts are since this clip was loaded.</p>
+          <p style={{ ...muted, 'margin-top': '4px' }}>Counts are since this clip was loaded.</p>
 
           <Show when={state() === ClipState.Faulted}>
             <div class="callout callout--danger" role="alert">
@@ -379,7 +379,7 @@ const DeviceClip = () => {
           </Show>
 
           <Show when={(clip()?.held.length ?? 0) > 0}>
-            <div style={group}>
+            <div style={section}>
               <div style={label}>Held by injection now</div>
               <div style={chips}>
                 <For each={clip()?.held ?? []}>
@@ -389,7 +389,7 @@ const DeviceClip = () => {
             </div>
           </Show>
 
-          <div style={{ ...row }}>
+          <div style={{ ...section, ...row }}>
             <For each={OPS}>
               {(o) => (
                 <Button
@@ -438,7 +438,7 @@ const DeviceClip = () => {
             />
           </div>
 
-          <div style={group}>
+          <div style={section}>
             <div style={label}>Lock these inputs while a clip plays</div>
             <div style={checkColumn}>
               <For each={SCOPES}>
@@ -452,7 +452,7 @@ const DeviceClip = () => {
                 )}
               </For>
             </div>
-            <p style={muted}>Applied at the next start, not to a clip already playing.</p>
+            <p style={{ ...muted, 'margin-top': '4px' }}>Applied at the next start, not to a clip already playing.</p>
           </div>
 
           </Section>
@@ -470,7 +470,7 @@ const DeviceClip = () => {
               { value: 'edge', label: 'Button or key' },
             ]}
           />
-          <div style={{ ...row, 'align-items': 'flex-end' }}>
+          <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
             <Show when={kind() === 'move'}>
               <div style={{ 'max-width': '7rem' }}>
                 <NumberInput label="dx" value={dx()} min={-32768} max={32767} onChange={(v) => setDx(v ?? 0)} />
@@ -495,13 +495,13 @@ const DeviceClip = () => {
           </div>
           <Show when={kind() === 'edge'}>
             <UsagePicker name="clip-edge" classes={CLASSES} value={edgeUsage()} onChange={setEdgeUsage} />
-            <div style={group}>
+            <div style={section}>
               <div style={label}>Action</div>
               <RadioGroup name="clip-edge-action" value={edgeAction()} onChange={setEdgeAction} options={ACTIONS} />
             </div>
           </Show>
 
-          <div style={group}>
+          <div style={section}>
             <div style={label}>
               Not yet sent ({plural(draft().length, 'tick')}, {draftBytes()} B)
             </div>
@@ -529,7 +529,7 @@ const DeviceClip = () => {
                 loaded.
               </div>
             </Show>
-            <div style={{ ...row }}>
+            <div style={{ ...section, ...row }}>
               <Button
                 variant="primary"
                 disabled={busy() || draft().length === 0 || wontFit() || finalized()}
@@ -575,14 +575,14 @@ const DeviceClip = () => {
             </Show>
           </Show>
 
-          <div style={group}>
+          <div style={section}>
             <UsagePicker
               name="clip-trigger"
               classes={TRIGGER_CLASSES}
               value={trigUsage()}
               onChange={setTrigUsage}
             />
-            <div style={group}>
+            <div style={section}>
               <div style={label}>Edge</div>
               <RadioGroup
                 name="clip-trig-edge"
@@ -595,7 +595,7 @@ const DeviceClip = () => {
                 ]}
               />
             </div>
-            <div style={group}>
+            <div style={section}>
               <div style={label}>Runs</div>
               <RadioGroup
                 name="clip-trig-op"
@@ -604,14 +604,14 @@ const DeviceClip = () => {
                 options={OPS.map((o) => ({ value: String(o.op), label: o.name }))}
               />
             </div>
-            <div style={group}>
+            <div style={section}>
               <Checkbox
                 label="Consume the trigger"
                 checked={trigConsume()}
                 onChange={setTrigConsume}
               />
             </div>
-            <div style={{ ...row }}>
+            <div style={{ ...section, ...row }}>
               <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
                 {replacing() ? 'Replace' : 'Bind'}
               </Button>

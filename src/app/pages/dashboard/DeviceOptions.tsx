@@ -21,7 +21,7 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Section } from './Section';
-import { controls, group, muted, section, status } from './ui';
+import { controls, muted, section, status } from './ui';
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
@@ -340,7 +340,7 @@ const DeviceOptions = () => {
           </Show>
         </div>
         <Show when={cmd.error()}>
-          <div class="callout callout--danger" role="alert" style={group}>
+          <div class="callout callout--danger" role="alert" style={section}>
             {cmd.error()}
           </div>
         </Show>

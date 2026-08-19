@@ -12,7 +12,7 @@ import { Combobox } from '../../../components/inputs/Combobox';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
 import type { NamedUsage } from '../../../dashboard/protocol';
-import { chips, group, label, muted, section } from './ui';
+import { chips, label, muted, section } from './ui';
 
 export interface PickerClass {
   value: number;
@@ -95,9 +95,9 @@ export const UsagePicker = (props: {
           options={props.classes.map((c) => ({ value: String(c.value), label: c.label }))}
         />
       </Show>
-      <div style={group}>
-        <div style={{ ...label, 'margin-bottom': '0' }}>{props.usageLabel ?? 'Which input'}</div>
-        <div style={{ 'max-width': '20rem' }}>
+      <div style={section}>
+        <div style={label}>{props.usageLabel ?? 'Which input'}</div>
+        <div style={{ 'max-width': '20rem', 'margin-bottom': 'var(--g-spacing-sm)' }}>
           <TextField
             value={filter()}
             placeholder="Filter by name or id"
@@ -117,7 +117,7 @@ export const UsagePicker = (props: {
           />
         </Show>
         <Show when={cut() > 0}>
-          <p style={muted}>
+          <p style={{ ...muted, 'margin-top': '4px' }}>
             {cut()} more {cut() === 1 ? 'match' : 'matches'}. Narrow the filter to reach{' '}
             {cut() === 1 ? 'it' : 'them'}.
           </p>
