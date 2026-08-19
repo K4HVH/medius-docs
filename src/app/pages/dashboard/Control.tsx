@@ -1,4 +1,4 @@
-import { Show, createSignal } from 'solid-js';
+import { Match, Show, Switch, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
@@ -39,13 +39,44 @@ const Control = () => {
       fallback={
         <Card>
           <CardHeader title="Controls" subtitle="Drive the box to test it" />
-          <p>
-            Connect to your box on the <A href="/dashboard">Device</A> page, then come back here to
-            drive it.
-          </p>
-          <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-            Connect
-          </Button>
+          <div aria-live="polite">
+            <Switch>
+              <Match when={dash.status() === 'connecting'}>
+                <Button loading disabled>Connecting...</Button>
+              </Match>
+
+              <Match when={dash.status() === 'flashing'}>
+                <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
+              </Match>
+
+              <Match when={dash.status() === 'error'}>
+                <div class="callout callout--danger" role="alert">{dash.error()}</div>
+                <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
+                  Try again
+                </Button>
+              </Match>
+
+              <Match when={dash.status() === 'disconnected'}>
+                <Show when={!dash.supported}>
+                  <div class="callout callout--warning">
+                    This browser can't reach USB devices. Open the dashboard in Chrome, Edge, or Opera.
+                  </div>
+                </Show>
+                <Show when={dash.supported && !dash.secure}>
+                  <div class="callout callout--warning">
+                    Web Serial needs a secure context. Open this page over HTTPS, or on localhost.
+                  </div>
+                </Show>
+                <p>
+                  Connect to your box on the <A href="/dashboard">Device</A> page, then come back
+                  here to drive it.
+                </p>
+                <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
+                  Connect
+                </Button>
+              </Match>
+            </Switch>
+          </div>
         </Card>
       }
     >
