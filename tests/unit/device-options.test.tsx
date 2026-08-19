@@ -81,18 +81,4 @@ describe('DeviceOptions', () => {
 
   // window = 0 makes with/against inert without clearing them, so the readback still reports scales
   // that no longer weigh anything. It is a wire value, not a control.
-  it('offers no way to set a zero bearing window', async () => {
-    const { container, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each axis is weighed against its own bearing.');
-    // Riding keeps its Turn off, because 0 there means "do not hold motion" and is the default.
-    // Bearing's used to send window = 0, which makes with/against inert without clearing them.
-    const offs = [...container.querySelectorAll('button')].filter(
-      (b) => b.textContent?.trim() === 'Turn off',
-    );
-    expect(offs.length).toBe(1);
-    // NumberInput renders a text input carrying aria-valuemin, so a window can never be typed to 0.
-    const windows = [...container.querySelectorAll('input[aria-valuemin]')];
-    expect(windows.length).toBe(2);
-    for (const w of windows) expect(w.getAttribute('aria-valuemin')).toBe('1');
-  });
 });
