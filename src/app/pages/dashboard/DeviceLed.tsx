@@ -27,8 +27,7 @@ const DeviceLed = () => {
       <Card>
         <CardHeader title="Status light" subtitle="The box's green LEDs" />
         <p>
-          By default the light shows the box's status. Set it yourself here, or press Status to return
-          it to the box. It also returns to status on its own if the dashboard disconnects.
+          The light shows the box's status until you set it here, and Status hands it back.
         </p>
         <div style={label}>Which light</div>
         <RadioGroup

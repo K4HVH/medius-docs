@@ -322,10 +322,10 @@ const DeviceClip = () => {
         <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
         <p>
           A clip is a list of ticks the box plays at the cloned mouse's own report rate, with no
-          per-step round trip. It clears on its own if the dashboard disconnects.
+          per-step round trip.
         </p>
 
-        <Show when={ready()} fallback={<p style={muted}>No mouse is cloned. The box refuses every clip command without one, because a clip is clocked by the mouse's report rate.</p>}>
+        <Show when={ready()} fallback={<p style={muted}>The box refuses every clip command without a cloned mouse, because a clip is clocked by the mouse's report rate.</p>}>
           <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
             <div class="callout callout--warning">
               Movement riding is on and this clip is set to ride it, so clip motion is only emitted
@@ -410,7 +410,7 @@ const DeviceClip = () => {
             </Button>
           </div>
           <p style={muted}>
-            Start on a paused clip resumes it. Restart plays from the beginning.
+            Start on a paused clip resumes it rather than replaying from the beginning.
           </p>
 
           </Section>
@@ -559,7 +559,7 @@ const DeviceClip = () => {
 
           <Section title="Triggers">
           <p style={muted}>
-            Bind an input edge to a playback action. Up to {CLIP_TRIG_MAX}.
+            Bind an input edge to a playback action, up to {CLIP_TRIG_MAX} of them.
           </p>
           <Show when={(clip()?.triggers.length ?? 0) > 0} fallback={<p>No triggers bound.</p>}>
             <div style={chips}>
@@ -625,7 +625,7 @@ const DeviceClip = () => {
             </Show>
             <Show when={replacing()}>
               <p style={muted}>
-                Already bound. Binding again replaces it and re-arms every trigger's edge detector.
+                Already bound; binding again replaces it and re-arms every trigger's edge detector.
               </p>
             </Show>
           </div>

@@ -230,8 +230,8 @@ const DeviceInject = () => {
       <Card>
         <CardHeader title="Injection" subtitle="Drive the clone's inputs from here" />
         <p>
-          Injection is additive: it combines with the real device's input rather than replacing it.
-          Every hold clears on its own if the dashboard disconnects.
+          Injection is additive: it combines with the real device's input rather than replacing
+          it.
         </p>
 
         <Section title="Cursor" first>
@@ -292,8 +292,7 @@ const DeviceInject = () => {
             </Button>
           </div>
           <p style={muted}>
-            Bypass applies to the cursor and the wheel. The buttons send or drop motion that is
-            already waiting.
+            Bypass applies to the cursor and the wheel; the buttons send or drop motion already waiting.
           </p>
 
           </Show>
@@ -363,8 +362,8 @@ const DeviceInject = () => {
             </Button>
           </div>
           <p style={muted}>
-            Press forces the input down. Mask forces it up, overriding a physical hold. Release
-            clears the override.
+            Mask forces the input up, overriding a physical hold; Release clears either
+            override.
           </p>
         </Show>
         </Section>

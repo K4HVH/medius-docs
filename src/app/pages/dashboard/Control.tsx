@@ -80,6 +80,14 @@ const Control = () => {
         </Card>
       }
     >
+      <>
+      <Card>
+        <CardHeader title="Controls" subtitle="Drive the box to test it" />
+        <p>
+          Everything on this page is momentary: the box releases it after a second without a control
+          frame, so closing the dashboard hands the device back.
+        </p>
+      </Card>
       <div style={columns}>
         <div style={col}>
           <DeviceInject />
@@ -88,8 +96,8 @@ const Control = () => {
           <Card>
             <CardHeader title="Safety clear" subtitle="Clear all injection, locks, subscriptions and the clip" />
             <p>
-              One frame that releases every injected input, every lock, the whole event subscription and
-              the loaded clip. Use it to clear a stuck press. It also stops a running event stream.
+              One frame that releases every injected input, every lock, the whole event
+              subscription and the loaded clip.
             </p>
             <div style={row}>
               <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
@@ -111,6 +119,7 @@ const Control = () => {
           <DeviceClip />
         </div>
       </div>
+      </>
     </Show>
   );
 };
