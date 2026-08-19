@@ -272,7 +272,7 @@ const DeviceInject = () => {
             </Button>
           </div>
 
-          <div style={checkColumn}>
+          <div style={{ ...section, ...checkColumn }}>
             <Checkbox
               label="Bypass movement riding"
               checked={bypass()}
