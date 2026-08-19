@@ -33,7 +33,7 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
-import { chips, label, row, section } from './ui';
+import { chips, group, label, row, stack } from './ui';
 
 const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'Move left/right (X)', group: 'Axes' },
@@ -153,6 +153,7 @@ const DeviceLock = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
+        <div style={stack}>
 
         <UsagePicker
           name="lock-target"
@@ -170,7 +171,7 @@ const DeviceLock = () => {
           <p>A media usage has no press and release edges, so the box suppresses it whole.</p>
         </Show>
 
-        <div style={section}>
+        <div style={group}>
           <div style={label}>Direction</div>
           <RadioGroup
             name="lock-direction"
@@ -181,7 +182,7 @@ const DeviceLock = () => {
         </div>
 
         <Show when={isAxis()}>
-          <div style={section}>
+          <div style={group}>
             <div style={label}>Keep {scale()}% of the real movement</div>
             <Slider
               value={scale()}
@@ -194,7 +195,7 @@ const DeviceLock = () => {
         </Show>
 
         <Show when={isAxis() && dir() === Direction.Both}>
-          <div class="callout callout--info" style={section}>
+          <div class="callout callout--info" style={group}>
             Both writes the percentage to the two fixed signs and a full pass to with and against, so
             it means the same whether or not the box is injecting. A Both at 100% still clears all
             four.
@@ -202,14 +203,14 @@ const DeviceLock = () => {
         </Show>
 
         <Show when={isAxis() && isRelativeDirection(dir())}>
-          <div class="callout callout--info" style={section}>
+          <div class="callout callout--info" style={group}>
             With and against are measured against the bearing: the sign the box is currently
             injecting on that axis. Neither applies once the bearing window elapses with nothing
             injected, leaving only the fixed-sign scale.
           </div>
         </Show>
 
-        <div style={{ ...section, ...row }}>
+        <div style={{ ...row }}>
           <Show when={isAxis()}>
             <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
               Apply {scale()}%
@@ -227,12 +228,12 @@ const DeviceLock = () => {
           </Button>
         </div>
         <Show when={cmd.error()}>
-          <div class="callout callout--danger" role="alert" style={section}>
+          <div class="callout callout--danger" role="alert" style={group}>
             {cmd.error()}
           </div>
         </Show>
 
-        <div style={section}>
+        <div style={group}>
           <div style={label}>Active</div>
           <Show when={active().length > 0} fallback={<p>Everything passing untouched.</p>}>
             <div style={chips}>
@@ -241,6 +242,7 @@ const DeviceLock = () => {
               </For>
             </div>
           </Show>
+        </div>
         </div>
       </Card>
     </Show>
