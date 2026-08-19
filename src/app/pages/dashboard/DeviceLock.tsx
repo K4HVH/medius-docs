@@ -154,9 +154,8 @@ const DeviceLock = () => {
       <Card>
         <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
         <p>
-          A weighed input keeps that percent of what the real device sends, and above 100 amplifies
-          it. Injection still drives
-          it either way. Everything here clears on its own if the dashboard disconnects.
+          A weighed input keeps that percent of what the real device sends, above 100 amplifies, and
+          injection drives it at full strength either way.
         </p>
 
         <UsagePicker
@@ -172,7 +171,7 @@ const DeviceLock = () => {
         </Show>
 
         <Show when={isMedia()}>
-          <p>A media usage has no press and release edges. The box suppresses it whole.</p>
+          <p>A media usage has no press and release edges, so the box suppresses it whole.</p>
         </Show>
 
         <div style={section}>

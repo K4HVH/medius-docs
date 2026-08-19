@@ -373,9 +373,8 @@ const DeviceEventCatch = () => {
       <Card>
         <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
         <p>
-          The box streams what it carries as it happens, including inputs you have locked, down to
-          the raw endpoint bytes, the proxied control transactions, and the bus lifecycle. The stream
-          stops on its own if the dashboard disconnects.
+          The box streams what it carries as it happens, from physical input the lock scales never
+          touch down to raw endpoint bytes, proxied control transactions and the bus lifecycle.
         </p>
 
         <div style={label}>How to choose</div>
