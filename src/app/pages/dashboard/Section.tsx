@@ -6,7 +6,6 @@
 // gap on the card.
 
 import type { JSX } from 'solid-js';
-import { stack } from './ui';
 
 const first = { 'margin-top': 'var(--g-spacing-sm)' } as const;
 
@@ -26,12 +25,11 @@ const later = {
 // the seen gap the same number. The text is uppercased, so nothing descends out of the box.
 const heading = { 'line-height': '1' } as const;
 
-// The body owns the gap between its blocks, so no child carries a margin of its own.
 export const Section = (props: { title: string; first?: boolean; children: JSX.Element }) => (
   <div style={props.first ? first : later}>
     <div class="api-response-label" style={heading}>
       {props.title}
     </div>
-    <div style={stack}>{props.children}</div>
+    {props.children}
   </div>
 );

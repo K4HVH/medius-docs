@@ -4,7 +4,6 @@ import { Button } from '../../../components/inputs/Button';
 import { Combobox } from '../../../components/inputs/Combobox';
 import { FileUpload } from '../../../components/inputs/FileUpload';
 import { Progress } from '../../../components/feedback/Progress';
-import { group, stack } from './ui';
 import {
   FLASH_SIZE_BYTES,
   type FlashChip,
@@ -120,9 +119,7 @@ const Advanced = () => {
             </Match>
 
             <Match when={!done()}>
-              <div style={stack}>
-              <div style={group}>
-              <div class="api-response-label" style={{ 'margin-bottom': 0 }}>CHIP</div>
+              <div class="api-response-label">CHIP</div>
               <Combobox
                 options={[
                   { value: 'device', label: 'Main chip (USB1 + USB2)' },
@@ -131,10 +128,8 @@ const Advanced = () => {
                 value={chip()}
                 onChange={(v) => setChip(v as FlashChip)}
               />
-              </div>
 
-              <div style={group}>
-              <div class="api-response-label" style={{ 'margin-bottom': 0 }}>IMAGE</div>
+              <div class="api-response-label">IMAGE</div>
               <Combobox
                 options={[
                   { value: 'factory', label: 'Factory - full image at 0x0' },
@@ -143,10 +138,8 @@ const Advanced = () => {
                 value={kind()}
                 onChange={(v) => setKind(v as FlashKind)}
               />
-              </div>
 
-              <div style={group}>
-              <div class="api-response-label" style={{ 'margin-bottom': 0 }}>SOURCE</div>
+              <div class="api-response-label">SOURCE</div>
               <Combobox
                 options={[
                   { value: 'release', label: 'Latest release' },
@@ -155,7 +148,6 @@ const Advanced = () => {
                 value={source()}
                 onChange={(v) => setSource(v as 'release' | 'upload')}
               />
-              </div>
 
               <Show when={source() === 'release'}>
                 <Switch>
@@ -195,7 +187,7 @@ const Advanced = () => {
                 </Show>
               </Show>
 
-              <p>Get the chip into update mode:</p>
+              <p style={{ 'margin-top': 'var(--g-spacing)' }}>Get the chip into update mode:</p>
               <Show
                 when={chip() === 'device' || unplugged()}
                 fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
@@ -211,7 +203,6 @@ const Advanced = () => {
                   Flash
                 </Button>
               </Show>
-              </div>
             </Match>
           </Switch>
         </Card>

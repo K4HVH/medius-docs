@@ -23,7 +23,7 @@ import {
 import { useDashboard } from './context';
 import { UsageChips, UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
-import { checkColumn, chips, group, label, muted, row } from './ui';
+import { checkColumn, chips, label, muted, row, section } from './ui';
 
 const CLASSES: PickerClass[] = [
   { value: INJ_BTN, label: 'Button', table: BUTTONS },
@@ -248,7 +248,7 @@ const DeviceInject = () => {
               </Show>
             </span>
           </div>
-          <div style={{ ...row, 'align-items': 'flex-end' }}>
+          <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
             <div style={{ 'max-width': '7rem' }}>
               <NumberInput
                 label="Step"
@@ -279,7 +279,7 @@ const DeviceInject = () => {
               onChange={setBypass}
             />
           </div>
-          <div style={{ ...row }}>
+          <div style={{ ...section, ...row }}>
             <Button variant="secondary" onClick={() => void link()?.flushMotion()?.catch(fail)}>
               Send held motion
             </Button>
@@ -343,7 +343,7 @@ const DeviceInject = () => {
             value={pick()}
             onChange={setPick}
           />
-          <div style={{ ...row }}>
+          <div style={{ ...section, ...row }}>
             <Button variant="secondary" {...holdPicked}>
               Hold {pickName()}
             </Button>
@@ -365,13 +365,13 @@ const DeviceInject = () => {
         </Section>
 
         <Show when={dropped()}>
-          <div class="callout callout--warning" style={group}>
+          <div class="callout callout--warning" style={section}>
             The box cleared every injected hold. It does that after one second with no control frame,
             which a backgrounded tab can cause.
           </div>
         </Show>
         <Show when={err()}>
-          <div class="callout callout--danger" role="alert" style={group}>
+          <div class="callout callout--danger" role="alert" style={section}>
             {err()}
           </div>
         </Show>
@@ -386,7 +386,7 @@ const DeviceInject = () => {
               if (h) release(h);
             }}
           />
-          <div style={{ ...row }}>
+          <div style={{ ...section, ...row }}>
             <Button variant="secondary" onClick={releaseAll}>
               Release all
             </Button>
