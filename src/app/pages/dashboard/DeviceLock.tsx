@@ -153,10 +153,6 @@ const DeviceLock = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
-        <p>
-          A weighed input keeps that percent of what the real device sends, above 100 amplifies, and
-          injection drives it at full strength either way.
-        </p>
 
         <UsagePicker
           name="lock-target"
@@ -194,7 +190,6 @@ const DeviceLock = () => {
               step={5}
               onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
             />
-            <p>0% blocks it, 100% passes it through untouched, and above that amplifies it.</p>
           </div>
         </Show>
 

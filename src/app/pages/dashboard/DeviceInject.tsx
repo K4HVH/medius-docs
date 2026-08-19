@@ -229,10 +229,6 @@ const DeviceInject = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Injection" subtitle="Drive the clone's inputs from here" />
-        <p>
-          Injection is additive: it combines with the real device's input rather than replacing
-          it.
-        </p>
 
         <Section title="Cursor" first>
           <Show when={mouseReady()} fallback={<p style={muted}>No mouse is cloned.</p>}>
