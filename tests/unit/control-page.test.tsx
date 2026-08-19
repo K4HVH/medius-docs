@@ -115,6 +115,29 @@ const mount = (value = stub()) =>
 afterEach(cleanup);
 
 describe('Control page', () => {
+  // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
+  // the Connect button again and said nothing. The Device page has always shown the error.
+  it('shows the connect error instead of the Connect button', async () => {
+    const { findByRole, queryByText } = mount(
+      stub({ status: () => 'error', error: () => 'No port selected.' }),
+    );
+    const alert = await findByRole('alert');
+    expect(alert.textContent).toBe('No port selected.');
+    expect(queryByText('Connect')).toBeNull();
+    expect(queryByText('Try again')).toBeTruthy();
+  });
+
+  it('says why the Connect button is disabled on an unsupported browser', async () => {
+    const { findByText } = mount(stub({ status: () => 'disconnected', supported: false }));
+    await findByText(/This browser can't reach USB devices/);
+  });
+
+  it('shows a connecting state while the handshake runs', async () => {
+    const { findByText, queryByText } = mount(stub({ status: () => 'connecting' }));
+    await findByText('Connecting...');
+    expect(queryByText('Connect')).toBeNull();
+  });
+
   it('mounts every card when connected', async () => {
     const { findByText } = mount();
     await findByText('Injection');
