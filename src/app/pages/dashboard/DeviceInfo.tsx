@@ -18,11 +18,14 @@ import { Section } from './Section';
 const bcd = (n: number) => `${n >> 8}.${(n >> 4) & 0xf}${n & 0xf}`;
 
 const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
+// Rows in one section are a single readout, so they sit an extra-small gap apart. The section rule
+// is what separates one group from the next; 6px of padding here spread related facts out until
+// they read as separate items.
 const field = {
   display: 'flex',
   'justify-content': 'space-between',
   gap: 'var(--g-spacing)',
-  padding: '6px 0',
+  padding: '2px 0',
 } as const;
 const chipRow = {
   display: 'flex',
