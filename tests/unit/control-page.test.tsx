@@ -117,6 +117,15 @@ afterEach(cleanup);
 describe('Control page', () => {
   // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
   // the Connect button again and said nothing. The Device page has always shown the error.
+  // The five cards each carried this fact. It is one fact about the page, so it is stated once and
+  // no card repeats it.
+  it('states the release-on-silence fact once for the whole page', async () => {
+    const { findAllByText, container } = mount();
+    const once = await findAllByText(/the box releases it after a second without a control frame/);
+    expect(once.length).toBe(1);
+    expect(container.textContent).not.toContain('if the dashboard disconnects');
+  });
+
   it('shows the connect error instead of the Connect button', async () => {
     const { findByRole, queryByText } = mount(
       stub({ status: () => 'error', error: () => 'No port selected.' }),
