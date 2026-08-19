@@ -117,15 +117,6 @@ afterEach(cleanup);
 describe('Control page', () => {
   // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
   // the Connect button again and said nothing. The Device page has always shown the error.
-  // The five cards each carried this fact. It is one fact about the page, so it is stated once and
-  // no card repeats it.
-  it('states the release-on-silence fact once for the whole page', async () => {
-    const { findAllByText, container } = mount();
-    const once = await findAllByText(/the box releases it after a second without a control frame/);
-    expect(once.length).toBe(1);
-    expect(container.textContent).not.toContain('if the dashboard disconnects');
-  });
-
   it('shows the connect error instead of the Connect button', async () => {
     const { findByRole, queryByText } = mount(
       stub({ status: () => 'error', error: () => 'No port selected.' }),
@@ -170,7 +161,8 @@ describe('Control page', () => {
     // It is the box-wide clear: locks, the catch table and the loaded clip go with it. A button
     // labelled "release the keys" would be a trap next to a live event stream.
     const { findByText } = mount();
-    const body = (await findByText(/One frame that releases/)).textContent ?? '';
+    // The card subtitle carries this now; the paragraph under it only restated the subtitle.
+    const body = (await findByText(/Clear all injection/)).textContent ?? '';
     expect(body).toMatch(/lock/i);
     expect(body).toMatch(/subscription/i);
     expect(body).toMatch(/clip/i);

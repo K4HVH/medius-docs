@@ -26,9 +26,6 @@ const DeviceLed = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Status light" subtitle="The box's green LEDs" />
-        <p>
-          The light shows the box's status until you set it here, and Status hands it back.
-        </p>
         <div style={label}>Which light</div>
         <RadioGroup
           name="led-target"

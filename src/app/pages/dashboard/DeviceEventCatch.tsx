@@ -372,10 +372,6 @@ const DeviceEventCatch = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
-        <p>
-          The box streams what it carries as it happens, from physical input the lock scales never
-          touch down to raw endpoint bytes, proxied control transactions and the bus lifecycle.
-        </p>
 
         <div style={label}>How to choose</div>
         <RadioGroup

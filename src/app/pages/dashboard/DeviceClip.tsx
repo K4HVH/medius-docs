@@ -320,10 +320,6 @@ const DeviceClip = () => {
     <Show when={dash.status() === 'connected'}>
       <Card>
         <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
-        <p>
-          A clip is a list of ticks the box plays at the cloned mouse's own report rate, with no
-          per-step round trip.
-        </p>
 
         <Show when={ready()} fallback={<p style={muted}>The box refuses every clip command without a cloned mouse, because a clip is clocked by the mouse's report rate.</p>}>
           <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
@@ -559,7 +555,7 @@ const DeviceClip = () => {
 
           <Section title="Triggers">
           <p style={muted}>
-            Bind an input edge to a playback action, up to {CLIP_TRIG_MAX} of them.
+            Up to {CLIP_TRIG_MAX} bindings.
           </p>
           <Show when={(clip()?.triggers.length ?? 0) > 0} fallback={<p>No triggers bound.</p>}>
             <div style={chips}>
