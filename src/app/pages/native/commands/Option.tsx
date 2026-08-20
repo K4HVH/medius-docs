@@ -176,7 +176,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> select no slot and pass; their stored scales are unchanged and <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> still reports them</td></tr>
+              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> are inert whatever their scale</td></tr>
               <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
             </tbody>
           </table>

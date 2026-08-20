@@ -503,6 +503,7 @@ const Requests: Component = () => {
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
               <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent.</td></tr>
+              <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">BUDGET</div>
