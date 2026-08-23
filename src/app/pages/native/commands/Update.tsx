@@ -264,8 +264,8 @@ const Update: Component = () => {
           </table>
           <div class="callout callout--info">
             <code>SEQ</code> echoes the command frame, except for <code>DATA</code> acknowledgements,
-            which carry a rolling <code>SEQ</code> because one answers a whole window. Correlate on{' '}
-            <code>(op, target)</code>, not <code>SEQ</code>.
+            which carry a rolling <code>SEQ</code> because one answers a whole window. Correlate on the
+            op alone, not on <code>SEQ</code>.
           </div>
           <table class="byte-table">
             <thead>
