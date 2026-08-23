@@ -39,7 +39,6 @@ import {
   INJ_MEDIA,
   LedMode,
   LedTarget,
-  BearingMode,
   bearingPayload,
   isRelativeDirection,
   LOCK_SCALE_BLOCK,
