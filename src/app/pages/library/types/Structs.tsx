@@ -989,7 +989,7 @@ handle.bind(trig)?;`}</code></pre>
           <CardHeader title="UpdateProgress" subtitle="One acknowledged window" />
           <p>
             Handed to the closure passed to{' '}
-            <A href="/library/update#stage_firmware"><code>stage_firmware()</code></A>, once per
+            <A href="/library/update#stage-firmware"><code>stage_firmware()</code></A>, once per
             acknowledged window rather than once per chunk.
           </p>
           <table class="api-params">

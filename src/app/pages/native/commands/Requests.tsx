@@ -849,32 +849,40 @@ const Requests: Component = () => {
         <Card>
           <CardHeader title="FIRMWARE" subtitle="RESP payload, what = 11" />
           <p>
-            Both chips' versions, the slot each is running, and what is staged. The only place the
-            host chip's version appears: <A href="/native/commands/requests#version"><code>VERSION</code></A>{' '}
-            reports the device chip alone, and its name tail is delimited by the frame{' '}
-            <code>LEN</code>, so nothing can follow it. Used by{' '}
-            <A href="/native/commands/update"><code>UPDATE</code></A>.
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 11</code>: both chips' versions, the slot each is running, and what is
+            staged. The only place the host chip's version appears, because{' '}
+            <A href="/native/commands/requests#version"><code>VERSION</code></A> reports the device
+            chip alone and its name tail is delimited by the frame <code>LEN</code>, so nothing can
+            follow it.
           </p>
-          <pre class="api-signature">QUERY  [11]  →  RESP  [11][device 5][host_present][host 5][slot_size u32][staged]</pre>
+          <p>
+            Read it before an <A href="/native/commands/update"><code>UPDATE</code></A>:{' '}
+            <code>slot_size</code> is the largest image a chip will take, and a chip whose{' '}
+            <code>state</code> is <code>pending-verify</code> refuses to open one.
+          </p>
+          <pre class="api-signature">QUERY  what = 11  ·  RESP 17 bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td>what</td><td>u8</td><td><code>11</code></td></tr>
-              <tr><td><code>1</code></td><td>dev_major</td><td>u8</td><td></td></tr>
-              <tr><td><code>2</code></td><td>dev_minor</td><td>u8</td><td></td></tr>
-              <tr><td><code>3</code></td><td>dev_patch</td><td>u8</td><td></td></tr>
-              <tr><td><code>4</code></td><td>dev_slot</td><td>u8</td><td>0 = <code>ota_0</code>, 1 = <code>ota_1</code></td></tr>
-              <tr><td><code>5</code></td><td>dev_state</td><td>u8</td><td>image state, below</td></tr>
-              <tr><td><code>6</code></td><td>host_present</td><td>u8</td><td>1 when the host chip has answered over the link</td></tr>
-              <tr><td><code>7</code></td><td>host_major</td><td>u8</td><td>0 when <code>host_present</code> is 0</td></tr>
-              <tr><td><code>8</code></td><td>host_minor</td><td>u8</td><td></td></tr>
-              <tr><td><code>9</code></td><td>host_patch</td><td>u8</td><td></td></tr>
-              <tr><td><code>10</code></td><td>host_slot</td><td>u8</td><td><code>0xFF</code> when <code>host_present</code> is 0</td></tr>
-              <tr><td><code>11</code></td><td>host_state</td><td>u8</td><td></td></tr>
-              <tr><td><code>12</code></td><td>slot_size</td><td>u32 LE</td><td>usable bytes in a spare slot; the same on both chips</td></tr>
-              <tr><td><code>16</code></td><td>staged</td><td>u8</td><td>bit 0 device staged, bit 1 host staged</td></tr>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td><code>11</code></td></tr>
+              <tr><td>1</td><td><code>dev_major</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>2</td><td><code>dev_minor</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>3</td><td><code>dev_patch</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>4</td><td><code>dev_slot</code></td><td><code>u8</code></td><td>0 = <code>ota_0</code>, 1 = <code>ota_1</code></td></tr>
+              <tr><td>5</td><td><code>dev_state</code></td><td><code>u8</code></td><td>image state, below</td></tr>
+              <tr><td>6</td><td><code>host_present</code></td><td><code>u8</code></td><td>1 when the host chip has answered over the link</td></tr>
+              <tr><td>7</td><td><code>host_major</code></td><td><code>u8</code></td><td>0 when <code>host_present</code> is 0</td></tr>
+              <tr><td>8</td><td><code>host_minor</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>9</td><td><code>host_patch</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>10</td><td><code>host_slot</code></td><td><code>u8</code></td><td><code>0xFF</code> when <code>host_present</code> is 0</td></tr>
+              <tr><td>11</td><td><code>host_state</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>12</td><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, little-endian; the same on both chips</td></tr>
+              <tr><td>16</td><td><code>staged</code></td><td><code>u8</code></td><td>bit 0 device staged, bit 1 host staged</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">STATE</div>
@@ -891,12 +899,23 @@ const Requests: Component = () => {
               <tr><td><code>0xFF</code></td><td>unknown</td><td>no entry for this slot</td></tr>
             </tbody>
           </table>
+          <p>
+            Library binding:{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Both chips on 3.2.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
-          <pre class="diagram">{`  0B 03 02 00 01 02   01 03 02 00 00 02   00 00 0F 00   00
-  |  |        |  |    |  |        |  |    |             |
-  |  device   |  state|  host     |  state slot_size    staged
-  what        slot    present     slot    0x000F0000    none`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+-------------+--------+
+| A5     | 06     | 01     | 11 00  | 0B     | 03 02 00 01 | ...    |
++--------+--------+--------+--------+--------+-------------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | device      | host   |
++--------+--------+--------+--------+--------+-------------+--------+
+
++--------+-------------+--------+--------+
+| 02     | 00 00 0F 00 | 00     | lo hi  |
++--------+-------------+--------+--------+
+| state  | slot_size   | staged | CRC16  |
++--------+-------------+--------+--------+`}</pre>
         </Card>
       </div>
 
