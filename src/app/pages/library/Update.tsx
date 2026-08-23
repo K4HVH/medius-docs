@@ -179,6 +179,7 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
               <tr><td><code>NO_SLOT</code></td><td>The box is on the single-app layout; it needs one flash over ROM download first</td></tr>
               <tr><td><code>TOO_BIG</code></td><td>The image does not fit; <code>arg</code> is the slot size</td></tr>
               <tr><td><code>ON_PROBATION</code></td><td>A chip has not confirmed its image yet; wait a few seconds</td></tr>
+              <tr><td><code>UNTOUCHED</code></td><td>Refused before the slot was touched, so an image already staged survives</td></tr>
               <tr><td><code>LINK_DOWN</code></td><td>The host chip was addressed and the inter-chip link is down</td></tr>
               <tr><td><code>BAD_SHA</code></td><td>The image arrived corrupted; retry</td></tr>
               <tr><td><code>NOTHING_STAGED</code></td><td><code>activate_firmware</code> with nothing to commit</td></tr>
