@@ -9,7 +9,7 @@ import { Button } from '../../components/inputs/Button';
 import { CommandPalette } from '../../components/navigation/CommandPalette';
 import {
   BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
-  BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
+  BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsDownload,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
@@ -53,6 +53,7 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
   { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
+  { value: '/native/commands/update', label: 'Update', icon: BsDownload },
   { value: '/native/commands/usage', label: 'Usage IDs', icon: BsHash },
 ];
 
