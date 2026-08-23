@@ -296,12 +296,15 @@ export const DashboardProvider: ParentComponent = (props) => {
       // activate would commit it alone and leave the two chips on different versions. Disarm it,
       // host first, the same order it was staged in. Each target gets its own try, so a box that
       // has already gone away on the first one does not skip the second.
+      // Short, because the usual reason for being here is a box that has stopped answering, and the
+      // full op timeout twice over would leave the user watching a frozen progress bar for the best
+      // part of a minute before the real error appears. A box that IS answering replies at once.
       const staged: number[] = [];
       if (images.host) staged.push(OTA_TGT_HOST);
       if (images.device) staged.push(OTA_TGT_DEVICE);
       for (const t of staged) {
         try {
-          await l.abortUpdate(t);
+          await l.abortUpdate(t, 3000);
         } catch {
           /* the activate's own error is the one worth reporting */
         }

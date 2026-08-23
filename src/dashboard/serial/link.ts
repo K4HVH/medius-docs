@@ -846,9 +846,9 @@ export class SerialLink {
   }
 
   /** Drop whatever is staged or in flight for one target; the clone comes back without a reboot. */
-  async abortUpdate(target: number): Promise<void> {
+  async abortUpdate(target: number, timeoutMs = UPDATE_OP_TIMEOUT_MS): Promise<void> {
     this.updateBacklog.length = 0;
-    const r = await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
+    const r = await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), timeoutMs);
     if (r.status !== UPD_OK) throw new UpdateError(OTA_OP_ABORT, r.status, r.arg);
   }
 
