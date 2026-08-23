@@ -22,15 +22,16 @@ const ALLOWED_ORIGINS = (process.env.MCP_ALLOWED_ORIGINS || SITE)
 
 let cachedPages: IndexPage[] | null = null;
 function loadPages(): IndexPage[] {
-  if (cachedPages === null) {
-    try {
-      const raw = JSON.parse(readFileSync(resolve(DIST, 'agent-index.json'), 'utf8'));
-      cachedPages = Array.isArray(raw?.pages) ? raw.pages : [];
-    } catch {
-      cachedPages = [];
-    }
+  if (cachedPages !== null) return cachedPages;
+  let pages: IndexPage[];
+  try {
+    const raw = JSON.parse(readFileSync(resolve(DIST, 'agent-index.json'), 'utf8'));
+    pages = Array.isArray(raw?.pages) ? raw.pages : [];
+  } catch {
+    pages = [];
   }
-  return cachedPages;
+  cachedPages = pages;
+  return pages;
 }
 
 function textResult(value: unknown, isError = false) {
