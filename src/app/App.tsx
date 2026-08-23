@@ -22,6 +22,7 @@ import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
 import CmdOption from './pages/native/commands/Option';
 import CmdClip from './pages/native/commands/Clip';
+import CmdUpdate from './pages/native/commands/Update';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import AiAccess from './pages/AiAccess';
@@ -99,6 +100,7 @@ const App: Component = () => {
           <Route path="/native/commands/move" component={CmdMove} />
           <Route path="/native/commands/requests" component={CmdRequests} />
           <Route path="/native/commands/admin" component={CmdAdmin} />
+          <Route path="/native/commands/update" component={CmdUpdate} />
           <Route path="/native/commands/led" component={CmdLed} />
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
