@@ -306,6 +306,7 @@ const Update: Component = () => {
               <tr><td><code>NOSTAGE</code></td><td><code>0x19</code></td><td>0</td><td><code>ACTIVATE</code> with nothing staged</td></tr>
               <tr><td><code>BADSTATE</code></td><td><code>0x1A</code></td><td>expected op</td><td>an op out of order, or a malformed body</td></tr>
               <tr><td><code>PROBATION</code></td><td><code>0x1B</code></td><td>0</td><td>the running image has not confirmed itself yet; wait and retry</td></tr>
+              <tr><td><code>UNTOUCHED</code></td><td><code>0x1C</code></td><td>0</td><td>refused before the slot was touched, so anything already staged is still staged and still bootable</td></tr>
             </tbody>
           </table>
         </Card>
