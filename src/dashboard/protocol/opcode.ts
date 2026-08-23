@@ -274,6 +274,7 @@ export const UPD_NAMES: Record<number, string> = {
   0x19: 'nothing-staged',
   0x1a: 'bad-state',
   0x1b: 'on-probation',
+  0x1c: 'untouched',
 };
 
 // TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.

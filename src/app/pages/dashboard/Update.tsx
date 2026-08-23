@@ -306,7 +306,7 @@ const Update = () => {
                         : 'Connect'}
                   </Button>
                 </Show>
-                <Button variant="secondary" onClick={() => { dash.clearFlashResult(); setMainCtrl(null); setStep('choose'); navigate('/dashboard'); }}>
+                <Button variant="secondary" onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}>
                   Finish
                 </Button>
               </div>

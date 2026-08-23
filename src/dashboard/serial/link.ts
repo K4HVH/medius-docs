@@ -120,8 +120,8 @@ export class QueryTimeoutError extends Error {
 }
 
 export class NoReplyError extends Error {
-  constructor() {
-    super('no reply to the version handshake');
+  constructor(what = 'the version handshake') {
+    super(`no reply to ${what}`);
     this.name = 'NoReplyError';
   }
 }
@@ -776,7 +776,7 @@ export class SerialLink {
 
   async queryFirmware(timeoutMs?: number): Promise<FirmwareInfo> {
     const resp = parseResp(await this.query(Q_FIRMWARE, timeoutMs));
-    if (resp?.kind !== 'firmware') throw new NoReplyError('FIRMWARE');
+    if (resp?.kind !== 'firmware') throw new NoReplyError('the firmware query');
     return resp.firmware;
   }
 
@@ -804,7 +804,7 @@ export class SerialLink {
     await this.waitFirmwareConfirmed();
 
     this.updateBacklog.length = 0;   // nothing queued answers the session about to start
-    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', image));
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', image as BufferSource));
     const begin = new Uint8Array(4 + digest.length);
     new DataView(begin.buffer).setUint32(0, image.length, true);
     begin.set(digest, 4);
