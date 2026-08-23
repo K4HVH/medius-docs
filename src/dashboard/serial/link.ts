@@ -203,7 +203,7 @@ export class SerialLink {
   private pending = new Map<number, Pending>();
   // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
   // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
-  private updateWaiters = new Map<number, (r: UpdateResp | null) => void>();
+  private updateWaiters = new Map<number, (r: UpdateResp | null, cause?: Error) => void>();
   // Replies that arrived before anyone was waiting. Discarding them loses every refusal raised
   // inside a credit window, because the waiter is only registered once the window closes.
   private updateBacklog: UpdateResp[] = [];
@@ -748,6 +748,7 @@ export class SerialLink {
           w(resp);
         } else {
           this.updateBacklog.push(resp);
+          // Drop the oldest only once past the cap; the newest is the one that explains a failure.
           if (this.updateBacklog.length > UPDATE_BACKLOG_MAX) this.updateBacklog.shift();
         }
       }
@@ -868,6 +869,9 @@ export class SerialLink {
     body: Uint8Array,
     timeoutMs: number,
   ): Promise<UpdateResp> {
+    // Anything queued for THIS op answers an earlier command; served here it would read as a fresh
+    // success. The other two clients drop the same thing at the same point.
+    this.updateBacklog = this.updateBacklog.filter((r) => r.op !== op);
     const frame = new Uint8Array(2 + body.length);
     frame[0] = op;
     frame[1] = target;
@@ -883,11 +887,11 @@ export class SerialLink {
     return new Promise<UpdateResp>((resolve, reject) => {
       // Delete by identity, not by key: an orphaned waiter's timer firing later must not evict a
       // live one that has since taken its place.
-      const self = (r: UpdateResp | null) => {
+      const self = (r: UpdateResp | null, cause?: Error) => {
         clearTimeout(timer);
         if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
         if (r) resolve(r);
-        else reject(new Error(`update op ${op} was superseded`));
+        else reject(cause ?? new Error(`update op ${op} was superseded`));
       };
       const timer = setTimeout(() => {
         if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
@@ -907,7 +911,7 @@ export class SerialLink {
     this.pending.clear();
     // Update waiters too: without this an in-flight op sits out its full 20 to 60 second timeout
     // after the port is already gone.
-    for (const w of this.updateWaiters.values()) w(null);
+    for (const w of this.updateWaiters.values()) w(null, err);   // the real cause, not a supersession
     this.updateWaiters.clear();
     this.updateBacklog.length = 0;
   }
