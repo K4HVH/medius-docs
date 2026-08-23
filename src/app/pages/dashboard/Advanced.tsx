@@ -177,6 +177,13 @@ const Advanced = () => {
                   onChange={onFiles}
                   label="Firmware .bin"
                 />
+                <Show when={kind() === 'app'}>
+                  <div class="callout callout--info">
+                    An application image keeps the partition layout already on the chip. Write the
+                    factory image if the box has never had one, or it will have a single app slot and
+                    cannot be updated over the control port.
+                  </div>
+                </Show>
                 <Show when={validationError()}>
                   <div class="callout callout--danger" role="alert">{validationError()}</div>
                 </Show>

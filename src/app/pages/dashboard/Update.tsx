@@ -13,7 +13,7 @@ import { PortDiagram } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
-type Step = 'choose' | 'main' | 'grantMain' | 'mouse' | 'setupMain' | 'setupMouse' | 'done';
+type Step = 'choose' | 'update' | 'setupMain' | 'setupMouse' | 'done';
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
@@ -26,30 +26,33 @@ const Update = () => {
   const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
   const [step, setStep] = createSignal<Step>('choose');
-  const [alsoMouse, setAlsoMouse] = createSignal(false);
+  const [which, setWhich] = createSignal<'both' | 'main' | 'mouse'>('both');
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
   const [unplugged, setUnplugged] = createSignal(false);
-  // The control port held across the main-chip reboot, reused to reconnect/verify
-  // and to resume if the ESP32 port grant is canceled.
-  const [mainCtrl, setMainCtrl] = createSignal<SerialPort | null>(null);
 
-  // Re-arm the unplug gate on each step that needs a fresh BOOT-button plug-in.
+  // Re-arm the unplug gate on each step that needs a fresh BOOT-button plug-in. Only the first-install
+  // path has one now: updating an existing box never touches a cable.
   createEffect(() => {
     const s = step();
-    if (s === 'mouse' || s === 'setupMain' || s === 'setupMouse') setUnplugged(false);
+    if (s === 'setupMain' || s === 'setupMouse') setUnplugged(false);
   });
 
-  // While the main chip sits in update mode awaiting its port, warn before a
-  // refresh/close that would strand it (it would then need a power-cycle).
+  // An update writes flash on both chips, so a refresh mid-transfer leaves a half-written spare slot.
+  // Nothing is bricked (the running slot is untouched and the box times the session out), but the
+  // transfer is wasted, so it is worth a prompt.
   createEffect(() => {
-    if (step() !== 'grantMain') return;
+    if (dash.status() !== 'flashing') return;
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     onCleanup(() => window.removeEventListener('beforeunload', handler));
+  });
+
+  createEffect(() => {
+    if (dash.status() === 'connected') void dash.readFirmwareInfo();
   });
 
   const latest = () => releases()?.[0] ?? null;
@@ -73,59 +76,33 @@ const Update = () => {
   const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
     dash.clearFlashResult();
-    setMainCtrl(null);
-    setAlsoMouse(mode === 'both');
-    setStep(mode === 'mouse' ? 'mouse' : 'main');
+    setWhich(mode);
+    setStep('update');
   };
 
-  // Main-chip update. First call reboots the chip into update mode over the
-  // control cable; `resume` re-runs the port grant + flash without rebooting
-  // again (the chip is already in download), used after a canceled port grant.
-  const flashMain = async (resume: boolean) => {
+  // Update over the control port the box is already connected on. Both chips write the slot they are
+  // not running and boot it, and the box reverts anything that will not run. No reboot into ROM
+  // download, no second port grant, no cable move: the mouse-side chip's image is relayed over the
+  // inter-chip link, which is the only route to it.
+  const runUpdate = async () => {
     setErr(null);
     dash.clearFlashResult();
-    const a = deviceAsset();
-    if (!a) return setErr('No main-chip update in this release.');
+    const wantDevice = which() !== 'mouse';
+    const wantHost = which() !== 'main';
+    const da = deviceAsset();
+    const ha = hostAsset();
+    if (wantDevice && !da) return setErr('No main-chip update in this release.');
+    if (wantHost && !ha) return setErr('No mouse-side update in this release.');
     setBusy(true);
     try {
-      let ctrlPort = mainCtrl();
-      if (!resume || !ctrlPort) {
-        ctrlPort = await dash.rebootDeviceToDownload();
-        setMainCtrl(ctrlPort);
-      }
-      // Show the update-mode screen so a canceled or slow port grant has a clear
-      // home (with a deliberate retry) instead of a dead end.
-      setStep('grantMain');
-      const romPort = await requestRomPort();
-      const image = await downloadAsset(a);
-      const ok = await dash.flashDeviceNative(romPort, ctrlPort, image, 'app');
-      if (ok) {
-        setMainCtrl(null);
-        setStep(alsoMouse() ? 'mouse' : 'done');
-      } else {
-        setErr(dash.error() ?? "That didn't finish. Pick the port to retry, or power-cycle the box.");
-      }
-    } catch (e) {
-      // A canceled port grant leaves us on grantMain to retry; surface real errors.
-      if (!isUserCancel(e)) setErr((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const installMouse = async () => {
-    setErr(null);
-    dash.clearFlashResult();
-    const a = hostAsset();
-    if (!a) return setErr('No mouse-side update in this release.');
-    setBusy(true);
-    try {
-      const port = await requestRomPort();
-      const ok = await dash.flashNative(port, await downloadAsset(a), 'app');
+      const images: { device?: Uint8Array; host?: Uint8Array } = {};
+      if (wantDevice && da) images.device = await downloadAsset(da);
+      if (wantHost && ha) images.host = await downloadAsset(ha);
+      const ok = await dash.updateOverControl(images);
       if (ok) setStep('done');
-      else setErr(dash.error() ?? "That didn't finish. Hold the BOOT button and try again.");
+      else setErr(dash.error() ?? "That didn't finish. The box kept the firmware it was running.");
     } catch (e) {
-      if (!isUserCancel(e)) setErr((e as Error).message);
+      setErr((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -233,8 +210,11 @@ const Update = () => {
               </Switch>
             </Match>
 
-            <Match when={step() === 'main'}>
-              <p><strong>Main chip.</strong> Plug in like this.</p>
+            <Match when={step() === 'update'}>
+              <p>
+                Everything happens over the cable you are already connected on. The mouse stops working
+                for a few seconds, then comes back.
+              </p>
               <PortDiagram plug={['usb1', 'usb2']} />
               <Show
                 when={dash.status() === 'connected'}
@@ -242,31 +222,18 @@ const Update = () => {
                   <p style={muted}>Not connected. <A href="/dashboard">Connect first</A>.</p>
                 }
               >
-                <Button variant="primary" disabled={busy()} onClick={() => void flashMain(false)}>
-                  Install
-                </Button>
-              </Show>
-            </Match>
-
-            <Match when={step() === 'grantMain'}>
-              <p><strong>The box is in update mode.</strong> Pick the ESP32-S3 port to finish.</p>
-              <Button variant="primary" disabled={busy()} onClick={() => void flashMain(true)}>
-                {busy() ? 'Waiting for the port...' : 'Pick ESP32-S3 port'}
-              </Button>
-              <p style={muted}>Or power-cycle the box (unplug and replug USB1) to cancel.</p>
-            </Match>
-
-            <Match when={step() === 'mouse'}>
-              <Show
-                when={unplugged()}
-                fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
-              >
-                <p><strong>Mouse-side chip.</strong> Now plug in like this.</p>
-                <PortDiagram plug={['usb3']} boot="mouse" />
-                <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
-                <Button variant="primary" disabled={busy()} onClick={() => void installMouse()}>
-                  Install
-                </Button>
+                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Button variant="primary" disabled={busy()} onClick={() => void runUpdate()}>
+                    {busy() ? 'Updating...' : 'Update'}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    disabled={busy()}
+                    onClick={() => { setErr(null); setStep('choose'); }}
+                  >
+                    Back
+                  </Button>
+                </div>
               </Show>
             </Match>
 

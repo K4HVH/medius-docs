@@ -15,6 +15,9 @@ import {
   type Version,
   LogLevel,
   RebootTarget,
+  type FirmwareInfo,
+  OTA_TGT_DEVICE,
+  OTA_TGT_HOST,
 } from '../../../dashboard/protocol';
 import {
   BadProtoVerError,
@@ -60,6 +63,9 @@ export interface DashboardContextValue {
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
   rebootDeviceToDownload: () => Promise<SerialPort>;
+  firmwareInfo: Accessor<FirmwareInfo | null>;
+  readFirmwareInfo: () => Promise<FirmwareInfo | null>;
+  updateOverControl: (images: { device?: Uint8Array; host?: Uint8Array }) => Promise<boolean>;
   flashDeviceNative: (
     romPort: SerialPort,
     ctrlPort: SerialPort,
@@ -104,6 +110,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [error, setError] = createSignal<string | null>(null);
   const [link, setLink] = createSignal<SerialLink | null>(null);
   const [flashProgress, setFlashProgress] = createSignal<FlashProgress | null>(null);
+  const [firmwareInfo, setFirmwareInfo] = createSignal<FirmwareInfo | null>(null);
   const [flashLog, setFlashLog] = createSignal<string[]>([]);
   const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
   const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
@@ -223,6 +230,73 @@ export const DashboardProvider: ParentComponent = (props) => {
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
   const clearInputEvents = () => setInputEvents([]);
+
+  const readFirmwareInfo = async (): Promise<FirmwareInfo | null> => {
+    const l = link();
+    if (!l) return null;
+    try {
+      const info = await l.queryFirmware();
+      setFirmwareInfo(info);
+      return info;
+    } catch {
+      return null;
+    }
+  };
+
+  // Update over the control port the user is already connected to. Nothing reboots into ROM download
+  // and no second port grant is needed: each chip writes the slot it is not running, and the box
+  // reverts anything that will not boot. The host chip's image is relayed over the inter-chip link,
+  // which is the only route to it.
+  const updateOverControl = async (images: {
+    device?: Uint8Array;
+    host?: Uint8Array;
+  }): Promise<boolean> => {
+    const l = link();
+    if (!l) {
+      setError('Connect to the box before updating.');
+      return false;
+    }
+    if (!images.device && !images.host) return false;
+    setError(null);
+    setFlashLog([]);
+    setStatus('flashing');
+    const ctrlPort = l.serialPort;
+    try {
+      // The host chip first: its image travels through the device chip, so it has to be staged while
+      // the device chip is still running the firmware that can relay it.
+      if (images.host) {
+        setFlashProgress({ phase: 'writing', written: 0, total: images.host.length });
+        await l.stageFirmware(OTA_TGT_HOST, images.host, (written, total) =>
+          setFlashProgress({ phase: 'writing', written, total }),
+        );
+      }
+      if (images.device) {
+        setFlashProgress({ phase: 'writing', written: 0, total: images.device.length });
+        await l.stageFirmware(OTA_TGT_DEVICE, images.device, (written, total) =>
+          setFlashProgress({ phase: 'writing', written, total }),
+        );
+      }
+      setFlashProgress({ phase: 'connecting' });
+      await l.activateFirmware();
+      // The device chip reboots a moment after it answers, so the link this call rode is gone.
+      setLink(null);
+      setVersion(null);
+      poller.reset();
+      await l.close().catch(() => undefined);
+      const reconnected = await tryReconnect(ctrlPort);
+      setFlashProgress({ phase: 'done' });
+      if (!reconnected) {
+        setStatus('disconnected');
+      } else {
+        await readFirmwareInfo();
+      }
+      return true;
+    } catch (e) {
+      setError(describeError(e));
+      setStatus('error');
+      return false;
+    }
+  };
 
   // Reboot the device chip into ROM download over the control link, then close
   // it. The chip re-enumerates on its native USB (0x303a); the returned CH343
@@ -349,6 +423,9 @@ export const DashboardProvider: ParentComponent = (props) => {
     flashProgress,
     flashLog,
     rebootDeviceToDownload,
+    firmwareInfo,
+    readFirmwareInfo,
+    updateOverControl,
     flashDeviceNative,
     flashNative,
     clearFlashResult,
