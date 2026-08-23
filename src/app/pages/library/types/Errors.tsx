@@ -133,21 +133,18 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td><code>FlashTool(String)</code></td>
-                <td>The flash tool failed.</td>
+                <td><code>Update &#123; op, status, arg &#125;</code></td>
+                <td>
+                  The box refused a{' '}
+                  <A href="/library/update">firmware update</A> op. Carries the op, the{' '}
+                  <A href="/native/commands/update#resp"><code>UpdateStatus</code></A> and its arg.
+                </td>
               </tr>
             </tbody>
           </table>
 
 
-          <div class="callout callout--warning">
-            <p>
-              <code>FlashTool(String)</code> only exists with the{' '}
-              <A href="/library/features/flash"><code>flash</code></A> feature. On a default build the
-              variant isn't in the enum, so a <code>match</code> arm naming it won't compile. Gate
-              such arms behind <code>#[cfg(feature = "flash")]</code> or lean on the wildcard.
-            </p>
-          </div>
+
         </Card>
       </div>
     </>

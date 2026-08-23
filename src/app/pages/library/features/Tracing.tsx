@@ -48,7 +48,7 @@ const Tracing: Component = () => {
               <tr>
                 <td><code>medius::flash</code></td>
                 <td><code>INFO</code>, <code>ERROR</code></td>
-                <td>Reboot-into-download and esptool progress, then tool failure. Present only with the <A href="/library/features/flash"><code>flash</code></A> feature.</td>
+                <td><A href="/library/update">Firmware update</A> progress and refusals.</td>
               </tr>
             </tbody>
           </table>

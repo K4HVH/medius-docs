@@ -23,8 +23,10 @@ const Flashing: Component = () => {
         <div class="callout callout--info">
           Write the bootloader, the partition table, the app and a blank <code>otadata</code> together,
           or use the factory image, which contains all four. An app image on its own keeps whatever
-          layout the chip already has, and a chip with one app slot cannot take an{' '}
-          <A href="/native/commands/update"><code>UPDATE</code></A>.
+          layout the chip already has, and a chip with one app slot answers <code>NOSLOT</code> to an{' '}
+          <A href="/native/commands/update"><code>UPDATE</code></A>. Installing the two slots is a
+          partition-table change, which an update cannot perform, so it takes one flash from here per
+          chip, once per box.
         </div>
       </Card>
 
@@ -94,8 +96,9 @@ const Flashing: Component = () => {
           </div>
           <div class="callout callout--info">
             <p>
-              The <code>medius</code> crate's{' '}
-              <A href="/library/features/flash">flash feature</A> does this from Rust.
+              None of this is needed for a box that already runs Medius. From Rust, the crate's{' '}
+              <A href="/library/update">firmware update</A> calls write both chips over the open
+              connection.
             </p>
           </div>
         </Card>

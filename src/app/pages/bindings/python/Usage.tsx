@@ -82,7 +82,7 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
               <tr><td><code>ERR_QUERY_TIMEOUT</code></td><td><code>QueryTimeoutError</code></td><td>a <code>query_*</code> outran its wait</td></tr>
               <tr><td><code>ERR_DISCONNECTED</code></td><td><code>DisconnectedError</code></td><td>the link dropped (see below)</td></tr>
               <tr><td><code>ERR_FRAME_TOO_LONG</code></td><td><code>FrameTooLongError</code></td><td>payload over the frame limit</td></tr>
-              <tr><td><code>ERR_FLASH_TOOL</code></td><td><code>FlashToolError</code></td><td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a> flash failed</td></tr>
+              <tr><td><code>ERR_UPDATE</code></td><td><code>UpdateError</code></td><td>the box refused a <A href="/library/update">firmware update</A> op</td></tr>
               <tr><td><code>ERR_INVALID_ARG</code></td><td><code>InvalidArgError</code></td><td>a bad argument value</td></tr>
               <tr><td><code>ERR_PANIC</code></td><td><code>PanicError</code></td><td>the native core panicked</td></tr>
               <tr><td><code>ERR_UNKNOWN</code></td><td><code>MediusError</code></td><td>anything unmapped</td></tr>

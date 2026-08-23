@@ -49,7 +49,7 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td>5</td><td>The RESP wait elapsed.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td>6</td><td>Link dropped or a stream closed (see below).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td>7</td><td>Payload exceeded the wire limit.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_FLASH_TOOL</code></td><td>8</td><td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a> failed (<A href="/library/features/flash">flash</A> feature).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_UPDATE</code></td><td>8</td><td>The box refused a <A href="/library/update">firmware update</A> op.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>9</td><td>A bad argument (e.g. a null handle).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td>10</td><td>An internal panic was caught at the boundary.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td>11</td><td>Unspecified, or a platform-gated call on an unsupported OS.</td></tr>

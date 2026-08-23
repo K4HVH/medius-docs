@@ -74,10 +74,7 @@ const Introduction: Component = () => {
                 <td><A href="/library/features/mock"><code>mock</code></A></td>
                 <td>In-process fake box for tests.</td>
               </tr>
-              <tr>
-                <td><A href="/library/features/flash"><code>flash</code></A></td>
-                <td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a> firmware flashing.</td>
-              </tr>
+
               <tr>
                 <td><A href="/library/features/tracing"><code>tracing</code></A></td>
                 <td>Tracing instrumentation across the connection lifecycle.</td>
@@ -180,11 +177,6 @@ const Introduction: Component = () => {
             <A href="/library/features/mock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="mock" subtitle="In-process fake box" />
-              </Card>
-            </A>
-            <A href="/library/features/flash" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="flash" subtitle="esptool flashing" />
               </Card>
             </A>
             <A href="/library/features/tracing" style={{ "text-decoration": "none" }}>

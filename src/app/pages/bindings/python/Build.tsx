@@ -7,11 +7,10 @@ const Build: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Build & features" subtitle="Turning on mock and flash, and building from source" />
+        <CardHeader title="Build & features" subtitle="Turning on mock, and building from source" />
         <p>
-          The <A href="/library/features/mock">mock</A> and <A href="/library/features/flash">flash</A>{' '}
-          features are compiled into the native library, not switched on from Python, so turning one
-          on means building that library. Everything else is a{' '}
+          The <A href="/library/features/mock">mock</A> feature is compiled into the native library,
+          not switched on from Python, so turning it on means building that library. Everything else is a{' '}
           <a href="https://docs.python.org/3/library/ctypes.html" target="_blank" rel="noreferrer">ctypes</a>{' '}
           layer with no Python build step.
         </p>
@@ -24,7 +23,7 @@ const Build: Component = () => {
             Both are <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">Cargo features</a>{' '}
             on the <a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer"><code>medius-capi</code></a>{' '}
             crate. On import, Python reads what the loaded library exposes and sets{' '}
-            <code>medius.HAS_MOCK</code> and <code>medius.HAS_FLASH</code> to match.
+            <code>medius.HAS_MOCK</code> to match.
           </p>
           <table class="api-params">
             <thead>
@@ -38,26 +37,19 @@ const Build: Component = () => {
                 <td><code>HAS_MOCK</code></td>
                 <td>A scriptable in-process fake box. See <A href="/library/features/mock">Mock box</A>.</td>
               </tr>
-              <tr>
-                <td><code>flash</code></td>
-                <td><code>--features flash</code></td>
-                <td><A href="/bindings/python/api#module"><code>medius.flash(port, bin_path, host=False)</code></A></td>
-                <td><code>HAS_FLASH</code></td>
-                <td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>, Linux and Windows. See <A href="/library/features/flash">Flash</A>.</td>
-              </tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>
               The <code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code>{' '}
-              wheel has neither feature. <code>MockBox()</code>{' '}
-              and <code>medius.flash(...)</code> raise <code><a href="https://docs.python.org/3/library/exceptions.html#RuntimeError" target="_blank" rel="noreferrer">RuntimeError</a></code> there. Gate on the
-              flag first: <code>if medius.HAS_MOCK:</code> / <code>if medius.HAS_FLASH:</code>.
+              wheel does not have it. <code>MockBox()</code> raises{' '}
+              <code><a href="https://docs.python.org/3/library/exceptions.html#RuntimeError" target="_blank" rel="noreferrer">RuntimeError</a></code> there.
+              Gate on the flag first: <code>if medius.HAS_MOCK:</code>.
             </p>
           </div>
           <div class="api-response-label">CHECK WHAT'S BUILT IN</div>
-          <pre><code class="language-bash">{`python -c "import medius; print('mock', medius.HAS_MOCK, 'flash', medius.HAS_FLASH)"
-# mock False flash False   <- the published wheel`}</code></pre>
+          <pre><code class="language-bash">{`python -c "import medius; print('mock', medius.HAS_MOCK)"
+# mock False   <- the published wheel`}</code></pre>
           <div class="api-response-label">ENABLE A FEATURE</div>
           <p>
             Build the library with the features you want, then point Python at it with{' '}
@@ -67,7 +59,7 @@ const Build: Component = () => {
 cargo build --release -p medius-capi --features mock,flash
 
 export MEDIUS_LIB=$PWD/target/release/libmedius_capi.so
-python -c "import medius; print(medius.HAS_MOCK, medius.HAS_FLASH)"
+python -c "import medius; print(medius.HAS_MOCK)"
 # True True`}</code></pre>
           <p>
             To bake features into an installed wheel, build the library first and let pip reuse it:

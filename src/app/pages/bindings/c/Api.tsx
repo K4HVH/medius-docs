@@ -206,6 +206,26 @@ medius_device_free(dev);`}</code></pre>
         </Card>
       </div>
 
+      <div id="update" data-search-target>
+        <Card>
+          <CardHeader title="Firmware update" subtitle="Write either chip over the open connection" />
+          <p>
+            See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer;
+            a refusal returns <code>MEDIUS_STATUS_ERR_UPDATE</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_device_firmware_info(dev, MediusFirmwareInfo *out)</code></td><td>Both chips' versions, the slot each runs, and what is staged.</td></tr>
+              <tr><td><code>medius_device_stage_firmware(dev, target, image, len, progress, user)</code></td><td>Write <code>len</code> bytes into <code>target</code>'s spare slot (0 = device chip, 1 = host chip). Inert until activated; <code>progress</code> may be <code>NULL</code>.</td></tr>
+              <tr><td><code>medius_device_activate_firmware(dev)</code></td><td>Commit every staged image and reboot into it. Blocks while the host chip reboots and comes back.</td></tr>
+              <tr><td><code>medius_device_abort_update(dev, target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
+            </tbody>
+          </table>
+          <pre class="api-signature">typedef void (*MediusUpdateProgress)(void *user, size_t sent, size_t total);</pre>
+        </Card>
+      </div>
+
       <div id="streams" data-search-target>
         <Card>
           <CardHeader title="Streams" subtitle="Subscribe to live input and logs" />
@@ -415,7 +435,6 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
               <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>5</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
-              <tr><td><code>medius_flash(const char *port, const char *bin_path, bool host)</code></td><td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. <code>MEDIUS_FEATURE_FLASH</code> only; see <A href="/library/features/flash">Flash</A> and <A href="/bindings/c/build">Build &amp; features</A>.</td></tr>
             </tbody>
           </table>
         </Card>

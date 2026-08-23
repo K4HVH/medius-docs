@@ -137,8 +137,7 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
           <div class="callout callout--info">
             <p>
               Static linking (<code>libmedius_capi.a</code>), Windows, and the{' '}
-              <A href="/library/features/mock">mock</A> / <A href="/library/features/flash">flash</A>{' '}
-              feature macros are on <A href="/bindings/c/build">Build &amp; features</A>.
+              <A href="/library/features/mock">mock</A> feature macro are on <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
           </div>
         </Card>
