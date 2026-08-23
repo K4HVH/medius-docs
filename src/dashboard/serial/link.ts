@@ -226,7 +226,13 @@ export class SerialLink {
   async open(): Promise<void> {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;
-    await this.port.open({ baudRate: CTRL_BAUD });
+    // Adopt a port that is already open rather than opening it again. A close that could not finish
+    // -- the usual cause is the box re-enumerating underneath it as it reboots into a new image --
+    // leaves the port open, and Web Serial answers the next open() with "the port is already open",
+    // which strands the page with no way back except a replug.
+    if (!this.port.readable || !this.port.writable) {
+      await this.port.open({ baudRate: CTRL_BAUD });
+    }
     // Deassert DTR/RTS so opening the port cannot strap or reset the device chip.
     try {
       await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
@@ -629,10 +635,14 @@ export class SerialLink {
     }
     this.writer = null;
     try {
-      await this.port.close();
+      this.reader?.releaseLock();
     } catch {
-      // ignore
+      // already released by the read loop
     }
+    this.reader = null;
+    // Not swallowed: a port that would not close is the one thing the next open() has to know about,
+    // and it is recoverable by adopting it rather than by giving up.
+    await this.port.close();
   }
 
   private query(what: number, timeoutMs = DEFAULT_QUERY_TIMEOUT_MS): Promise<Uint8Array> {
