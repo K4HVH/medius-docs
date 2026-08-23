@@ -61,6 +61,7 @@ const Requests: Component = () => {
               <tr><td><code>8</code></td><td>reserved</td><td>-</td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
               <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
+              <tr><td><code>11</code></td><td>Both chips' firmware versions, the slot each runs, and what is staged.</td><td><A href="/native/commands/requests#firmware"><code>FIRMWARE</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -83,7 +84,8 @@ const Requests: Component = () => {
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
             <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
-            <A href="/library/requests#clip-status"><code>status</code></A> query.
+            <A href="/library/requests#clip-status"><code>status</code></A> query, and{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -840,6 +842,61 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+
 | held_n | autolk | flags  | n_trig | CRC16  |
 +--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="firmware" data-search-target>
+        <Card>
+          <CardHeader title="FIRMWARE" subtitle="RESP payload, what = 11" />
+          <p>
+            Both chips' versions, the slot each is running, and what is staged. The only place the
+            host chip's version appears: <A href="/native/commands/requests#version"><code>VERSION</code></A>{' '}
+            reports the device chip alone, and its name tail is delimited by the frame{' '}
+            <code>LEN</code>, so nothing can follow it. Used by{' '}
+            <A href="/native/commands/update"><code>UPDATE</code></A>.
+          </p>
+          <pre class="api-signature">QUERY  [11]  →  RESP  [11][device 5][host_present][host 5][slot_size u32][staged]</pre>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>what</td><td>u8</td><td><code>11</code></td></tr>
+              <tr><td><code>1</code></td><td>dev_major</td><td>u8</td><td></td></tr>
+              <tr><td><code>2</code></td><td>dev_minor</td><td>u8</td><td></td></tr>
+              <tr><td><code>3</code></td><td>dev_patch</td><td>u8</td><td></td></tr>
+              <tr><td><code>4</code></td><td>dev_slot</td><td>u8</td><td>0 = <code>ota_0</code>, 1 = <code>ota_1</code></td></tr>
+              <tr><td><code>5</code></td><td>dev_state</td><td>u8</td><td>image state, below</td></tr>
+              <tr><td><code>6</code></td><td>host_present</td><td>u8</td><td>1 when the host chip has answered over the link</td></tr>
+              <tr><td><code>7</code></td><td>host_major</td><td>u8</td><td>0 when <code>host_present</code> is 0</td></tr>
+              <tr><td><code>8</code></td><td>host_minor</td><td>u8</td><td></td></tr>
+              <tr><td><code>9</code></td><td>host_patch</td><td>u8</td><td></td></tr>
+              <tr><td><code>10</code></td><td>host_slot</td><td>u8</td><td><code>0xFF</code> when <code>host_present</code> is 0</td></tr>
+              <tr><td><code>11</code></td><td>host_state</td><td>u8</td><td></td></tr>
+              <tr><td><code>12</code></td><td>slot_size</td><td>u32 LE</td><td>usable bytes in a spare slot; the same on both chips</td></tr>
+              <tr><td><code>16</code></td><td>staged</td><td>u8</td><td>bit 0 device staged, bit 1 host staged</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">STATE</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>State</th><th>Means</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>new</td><td>selected but not yet booted</td></tr>
+              <tr><td><code>1</code></td><td>pending-verify</td><td>booted, on probation; this is the window rollback lives in</td></tr>
+              <tr><td><code>2</code></td><td>valid</td><td>confirmed by the image itself</td></tr>
+              <tr><td><code>3</code></td><td>invalid</td><td>the image asked to be rolled back</td></tr>
+              <tr><td><code>4</code></td><td>aborted</td><td>booted once and never confirmed</td></tr>
+              <tr><td><code>0xFF</code></td><td>unknown</td><td>no entry for this slot</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Both chips on 3.2.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
+          <pre class="diagram">{`  0B 03 02 00 01 02   01 03 02 00 00 02   00 00 0F 00   00
+  |  |        |  |    |  |        |  |    |             |
+  |  device   |  state|  host     |  state slot_size    staged
+  what        slot    present     slot    0x000F0000    none`}</pre>
         </Card>
       </div>
 

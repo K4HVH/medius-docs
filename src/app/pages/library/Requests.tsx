@@ -340,6 +340,44 @@ println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 
+      <div id="firmware-info" data-search-target>
+        <Card>
+          <CardHeader title="firmware_info" subtitle="Read both chips' versions, slots, and what is staged" />
+          <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Backs <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>. The
+            other firmware calls live on{' '}
+            <A href="/library/update">the update page</A>.
+          </p>
+          <div class="api-response-label">RETURNS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>device</code></td><td><code>ChipFirmware</code></td><td>version, slot, and image state</td></tr>
+              <tr><td><code>host</code></td><td><code>Option&lt;ChipFirmware&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link</td></tr>
+              <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
+              <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
+              <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
+            </tbody>
+          </table>
+          <p>
+            This is the only call that reports the host chip's version.{' '}
+            <A href="/library/requests#version"><code>query_version</code></A> reports the device
+            chip alone.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let fw = device.firmware_info()?;
+println!("device {}", fw.device);
+match fw.host {
+    Some(h) => println!("host {h}"),
+    None => println!("host chip not answering"),
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="async" data-search-target>
         <Card>
           <CardHeader title="Async queries" subtitle="The same queries on AsyncDevice" />
@@ -357,6 +395,7 @@ println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
           <pre class="api-signature">async fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
           <pre class="api-signature">async fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
           <pre class="api-signature">async fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+          <pre class="api-signature">async fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <pre><code class="language-bash">cargo add medius --features async</code></pre>

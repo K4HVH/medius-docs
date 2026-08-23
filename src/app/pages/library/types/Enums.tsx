@@ -768,6 +768,40 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           </table>
         </Card>
       </div>
+      <div id="update-target" data-search-target>
+        <Card>
+          <CardHeader title="UpdateTarget" subtitle="Which chip an update op addresses" />
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Wire</th><th>Means</th></tr></thead>
+            <tbody>
+              <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
+              <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="image-state" data-search-target>
+        <Card>
+          <CardHeader title="ImageState" subtitle="Where a booted image is in its probation" />
+          <p>
+            The bootloader's own record for a slot. See{' '}
+            <A href="/native/commands/update#rollback">rollback</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Wire</th><th>Means</th></tr></thead>
+            <tbody>
+              <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
+              <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>
+              <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
+              <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
+              <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
+              <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
     </>
   );
 };

@@ -944,6 +944,65 @@ handle.bind(trig)?;`}</code></pre>
         </Card>
       </div>
 
+      <div id="chip-firmware" data-search-target>
+        <Card>
+          <CardHeader title="ChipFirmware" subtitle="What one chip is running" />
+          <p>
+            One chip's half of{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
+            <code>Display</code> renders it as <code>major.minor.patch</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>major</code>, <code>minor</code>, <code>patch</code></td><td><code>u8</code></td><td>The firmware version this chip is running.</td></tr>
+              <tr><td><code>slot</code></td><td><code>u8</code></td><td>Which app slot it booted: <code>0</code> or <code>1</code>.</td></tr>
+              <tr><td><code>state</code></td><td><A href="/library/types/enums#image-state"><code>ImageState</code></A></td><td>Whether that image is confirmed, on probation, or rolled back.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="firmware-info" data-search-target>
+        <Card>
+          <CardHeader title="FirmwareInfo" subtitle="Both chips, and what is staged" />
+          <p>
+            Returned by <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
+            <code>any_pending()</code> is true while either chip is still on probation, which is when{' '}
+            <A href="/library/update">an update</A> is refused.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>device</code></td><td><A href="/library/types/structs#chip-firmware"><code>ChipFirmware</code></A></td><td>The PC-facing chip.</td></tr>
+              <tr><td><code>host</code></td><td><code>Option&lt;<A href="/library/types/structs#chip-firmware">ChipFirmware</A>&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link.</td></tr>
+              <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>Usable bytes in a spare slot; the same on both chips.</td></tr>
+              <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>An image is written and waiting to be activated.</td></tr>
+              <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>The same, for the host chip.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="update-progress" data-search-target>
+        <Card>
+          <CardHeader title="UpdateProgress" subtitle="One acknowledged window" />
+          <p>
+            Handed to the closure passed to{' '}
+            <A href="/library/update#stage_firmware"><code>stage_firmware()</code></A>, once per
+            acknowledged window rather than once per chunk.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>The chip being written.</td></tr>
+              <tr><td><code>sent</code></td><td><code>usize</code></td><td>Bytes the box has acknowledged.</td></tr>
+              <tr><td><code>total</code></td><td><code>usize</code></td><td>Bytes in the whole image.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
     </>
   );
 };

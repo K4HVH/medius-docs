@@ -172,7 +172,28 @@ const Api: Component = () => {
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
               <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
+              <tr><td><code>dev.firmware_info()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A>: both chips' versions, slots, and what is staged.</td></tr>
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="update" data-search-target>
+        <Card>
+          <CardHeader title="Firmware update" subtitle="Write either chip over the open connection" />
+          <p>
+            See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer
+            and calls <code>progress(sent, total)</code> as windows are acknowledged; a refusal raises{' '}
+            <A href="/bindings/python/types#errors"><code>UpdateError</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev.stage_firmware(target, image, progress=None)</code></td><td>Write one image into that chip's spare slot, without booting it. <code>target</code> is an <A href="/bindings/python/types#updatetarget"><code>UpdateTarget</code></A>.</td></tr>
+              <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
+              <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
+              <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -267,7 +288,6 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>medius.default_keepalive_cadence_ms()</code></td><td>The default keepalive interval (500 ms).</td></tr>
               <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes.</td></tr>
               <tr><td><code>medius.version_string()</code></td><td>The library version string.</td></tr>
-              <tr><td><code>medius.flash(port, bin_path, host=False)</code></td><td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. Needs the <A href="/bindings/python/build#features">flash feature</A>.</td></tr>
             </tbody>
           </table>
         </Card>

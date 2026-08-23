@@ -93,7 +93,6 @@ const libraryApiTabs: TabOption[] = [
 const libraryFeatureTabs: TabOption[] = [
   { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
-  { value: '/library/features/flash', label: 'Flash', icon: BsBoxArrowInDown },
   { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
 ];
 

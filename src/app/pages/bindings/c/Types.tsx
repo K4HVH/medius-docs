@@ -957,6 +957,44 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </Card>
       </div>
 
+      <div id="chipfirmware" data-search-target>
+        <Card>
+          <CardHeader title="MediusChipFirmware" subtitle="What one chip is running" />
+          <p>
+            One chip's half of{' '}
+            <A href="/bindings/c/api#update"><code>medius_device_firmware_info</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>major</code>, <code>minor</code>, <code>patch</code></td><td><code>uint8_t</code></td><td>The firmware version this chip is running.</td></tr>
+              <tr><td><code>slot</code></td><td><code>uint8_t</code></td><td>Which app slot it booted: <code>0</code> or <code>1</code>.</td></tr>
+              <tr><td><code>state</code></td><td><code>uint8_t</code></td><td>Image state: <code>0</code> new, <code>1</code> pending-verify, <code>2</code> valid, <code>3</code> invalid, <code>4</code> aborted, <code>0xFF</code> unknown. See <A href="/native/commands/update#rollback">rollback</A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="firmwareinfo" data-search-target>
+        <Card>
+          <CardHeader title="MediusFirmwareInfo" subtitle="Both chips, and what is staged" />
+          <p>
+            From <A href="/bindings/c/api#update"><code>medius_device_firmware_info</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>device</code></td><td><A href="/bindings/c/types#chipfirmware"><code>MediusChipFirmware</code></A></td><td>The PC-facing chip.</td></tr>
+              <tr><td><code>host_present</code></td><td><code>uint8_t</code></td><td><code>0</code> when the host chip has not answered over the inter-chip link; <code>host</code> is then meaningless.</td></tr>
+              <tr><td><code>host</code></td><td><A href="/bindings/c/types#chipfirmware"><code>MediusChipFirmware</code></A></td><td>The chip that reads the real device.</td></tr>
+              <tr><td><code>slot_size</code></td><td><code>uint32_t</code></td><td>Usable bytes in a spare slot; the same on both chips.</td></tr>
+              <tr><td><code>device_staged</code></td><td><code>uint8_t</code></td><td>An image is written and waiting to be activated.</td></tr>
+              <tr><td><code>host_staged</code></td><td><code>uint8_t</code></td><td>The same, for the host chip.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="stats" data-search-target>
         <Card>
           <CardHeader title="MediusStats" subtitle="Box-side delivery / telemetry counters" />
@@ -1580,7 +1618,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td>A query waited past its timeout with no reply.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td><code>6</code></td><td>The link dropped (also returned by a stream when it closes).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td><td>An outbound frame exceeded the wire limit.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_FLASH_TOOL</code></td><td><code>8</code></td><td>The <A href="/library/features/flash">flash</A> subprocess (<a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>) failed.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_UPDATE</code></td><td><code>8</code></td><td>The box refused a <A href="/library/update">firmware update</A> op.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td><code>9</code></td><td>A bad argument (e.g. a null required pointer).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td><code>10</code></td><td>A Rust panic was caught at the boundary.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td><code>11</code></td><td>An unclassified failure.</td></tr>

@@ -7,7 +7,7 @@ const Build: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Build & features" subtitle="Linking and the optional surfaces" />
+        <CardHeader title="Build & features" subtitle="Linking and the optional surface" />
         <p>
           Two files: the header <A href="/bindings/c"><code>medius.h</code></A> and the native
           library <A href="/bindings/c"><code>libmedius_capi</code></A>. Point the compiler at both
@@ -18,9 +18,9 @@ const Build: Component = () => {
 
       <div id="features" data-search-target>
         <Card>
-          <CardHeader title="Feature flags" subtitle="Mock and flash, off by default" />
+          <CardHeader title="Feature flags" subtitle="Mock, off by default" />
           <p>
-            Two surfaces are gated. Each is a{' '}
+            One surface is gated. It is a{' '}
             <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">cargo feature</a>{' '}
             on <code>medius-capi</code>{' '}
             <em>and</em> a matching{' '}
@@ -38,24 +38,18 @@ const Build: Component = () => {
                 <td><A href="/bindings/c/api#mock"><code>MediusMockBox</code></A>, the <code>medius_mock_*</code> calls, <code>medius_device_with_mock</code> / <code>_open_mock</code></td>
                 <td>A scriptable fake box for tests. See <A href="/library/features/mock">Mock box</A>.</td>
               </tr>
-              <tr>
-                <td><code>flash</code></td>
-                <td><code>MEDIUS_FEATURE_FLASH</code></td>
-                <td><A href="/bindings/c/api#module"><code>medius_flash(port, bin_path, host)</code></A></td>
-                <td>Flash firmware with <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. See <A href="/library/features/flash">Flash firmware</A>.</td>
-              </tr>
             </tbody>
           </table>
           <div class="api-response-label">BUILD WITH THE SURFACES, THEN COMPILE AGAINST THEM</div>
-          <pre><code class="language-bash">{`# build the library with both surfaces
-cargo build -p medius-capi --release --features mock,flash
+          <pre><code class="language-bash">{`# build the library with the surface
+cargo build -p medius-capi --release --features mock
 
-# define the matching macros when you compile your program
-cc app.c -DMEDIUS_FEATURE_MOCK -DMEDIUS_FEATURE_FLASH \\
+# define the matching macro when you compile your program
+cc app.c -DMEDIUS_FEATURE_MOCK \\
    -I medius-capi/include -L target/release -lmedius_capi -lpthread -o app`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              The prebuilt tarball has <strong>neither</strong> surface. Define a macro whose symbols
+              The prebuilt tarball does <strong>not</strong> have it. Define a macro whose symbols
               aren't in the library and you get a link error; build the library with a feature but
               forget the macro and the declarations stay hidden. The two must match.
             </p>

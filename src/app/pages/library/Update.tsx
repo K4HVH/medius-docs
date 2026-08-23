@@ -21,7 +21,7 @@ const Update: Component = () => {
             <tr><th>Call</th><th>What it does</th></tr>
           </thead>
           <tbody>
-            <tr><td><A href="/library/update#firmware_info"><code>firmware_info</code></A></td><td>Read both chips' versions and slots</td></tr>
+            <tr><td><A href="/library/requests#firmware-info"><code>firmware_info</code></A></td><td>Read both chips' versions and slots</td></tr>
             <tr><td><A href="/library/update#stage_firmware"><code>stage_firmware</code></A></td><td>Write one image into a chip's spare slot</td></tr>
             <tr><td><A href="/library/update#activate_firmware"><code>activate_firmware</code></A></td><td>Commit everything staged and boot it</td></tr>
             <tr><td><A href="/library/update#abort_update"><code>abort_update</code></A></td><td>Throw a transfer away</td></tr>
@@ -43,38 +43,6 @@ device.stage_firmware(UpdateTarget::Device, &dev, &mut |p| {
 })?;
 device.activate_firmware()?;`}</code></pre>
       </Card>
-
-      <div id="firmware_info" data-search-target>
-        <Card>
-          <CardHeader title="firmware_info" subtitle="What each chip is running" />
-          <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
-          <div class="api-response-label">RETURNS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>device</code></td><td><code>ChipFirmware</code></td><td>version, slot, and image state</td></tr>
-              <tr><td><code>host</code></td><td><code>Option&lt;ChipFirmware&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link</td></tr>
-              <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
-              <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
-              <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
-            </tbody>
-          </table>
-          <p>
-            This is the only call that reports the host chip's version.{' '}
-            <A href="/library/requests#query_version"><code>query_version</code></A> reports the device
-            chip alone.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let fw = device.firmware_info()?;
-println!("device {}", fw.device);
-match fw.host {
-    Some(h) => println!("host {h}"),
-    None => println!("host chip not answering"),
-}`}</code></pre>
-        </Card>
-      </div>
 
       <div id="stage_firmware" data-search-target>
         <Card>

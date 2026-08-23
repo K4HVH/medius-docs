@@ -293,6 +293,30 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
+          <div id="updatetarget" data-search-target>
+            <div class="api-response-label">UpdateTarget</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>DEVICE</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
+                <tr><td><code>HOST</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="imagestate" data-search-target>
+            <div class="api-response-label">ImageState</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>NEW</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
+                <tr><td><code>PENDING_VERIFY</code></td><td><code>1</code></td><td>Booted and on probation; the window <A href="/native/commands/update#rollback">rollback</A> lives in.</td></tr>
+                <tr><td><code>VALID</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
+                <tr><td><code>INVALID</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
+                <tr><td><code>ABORTED</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
+                <tr><td><code>UNKNOWN</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+              </tbody>
+            </table>
+          </div>
           <div id="edge" data-search-target>
             <div class="api-response-label">Edge</div>
             <table class="api-params">
@@ -866,6 +890,32 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <CardHeader title="State & telemetry types" subtitle="Rate · Stats · Locks · CatchState · CatchEntry · ClockEstimate · ImperfectStatus · Counters · PortInfo" />
           <p>More query results, plus <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> from <A href="/bindings/python/api#connect"><code>find_ports()</code></A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
+          <div id="chipfirmware" data-search-target>
+            <div class="api-response-label">ChipFirmware</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>major</code>, <code>minor</code>, <code>patch</code></td><td><code>int</code></td><td>the version this chip is running</td></tr>
+                <tr><td><code>slot</code></td><td><code>int</code></td><td>which app slot it booted, <code>0</code> or <code>1</code></td></tr>
+                <tr><td><code>state</code></td><td><A href="/bindings/python/types#imagestate"><code>ImageState</code></A></td><td>confirmed, on probation, or rolled back</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="firmwareinfo" data-search-target>
+            <div class="api-response-label">FirmwareInfo (firmware_info())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>device</code></td><td><A href="/bindings/python/types#chipfirmware"><code>ChipFirmware</code></A></td><td>the PC-facing chip</td></tr>
+                <tr><td><code>host</code></td><td><code>ChipFirmware | None</code></td><td><code>None</code> when the host chip has not answered over the link</td></tr>
+                <tr><td><code>slot_size</code></td><td><code>int</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
+                <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
+                <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <div id="rate" data-search-target>
             <div class="api-response-label">Rate (query_rate())</div>
             <table class="api-params">
@@ -1324,7 +1374,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>QueryTimeoutError</code></td><td><code>ERR_QUERY_TIMEOUT</code></td></tr>
                 <tr><td><code>DisconnectedError</code></td><td><code>ERR_DISCONNECTED</code></td></tr>
                 <tr><td><code>FrameTooLongError</code></td><td><code>ERR_FRAME_TOO_LONG</code></td></tr>
-                <tr><td><code>FlashToolError</code></td><td><code>ERR_FLASH_TOOL</code></td></tr>
+                <tr><td><code>UpdateError</code></td><td><code>ERR_UPDATE</code></td></tr>
                 <tr><td><code>InvalidArgError</code></td><td><code>ERR_INVALID_ARG</code></td></tr>
                 <tr><td><code>PanicError</code></td><td><code>ERR_PANIC</code></td></tr>
                 <tr><td><code>CatchTableFullError</code></td><td><code>ERR_CATCH_TABLE_FULL</code></td></tr>
@@ -1370,7 +1420,7 @@ except MediusError as e:     # any other failure
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0</code></td><td><code>ERR_DISCONNECTED</code></td><td><code>6</code></td></tr>
                 <tr><td><code>ERR_IO</code></td><td><code>1</code></td><td><code>ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td></tr>
-                <tr><td><code>ERR_NOT_FOUND</code></td><td><code>2</code></td><td><code>ERR_FLASH_TOOL</code></td><td><code>8</code></td></tr>
+                <tr><td><code>ERR_NOT_FOUND</code></td><td><code>2</code></td><td><code>ERR_UPDATE</code></td><td><code>8</code></td></tr>
                 <tr><td><code>ERR_NO_REPLY</code></td><td><code>3</code></td><td><code>ERR_INVALID_ARG</code></td><td><code>9</code></td></tr>
                 <tr><td><code>ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td><code>ERR_PANIC</code></td><td><code>10</code></td></tr>
                 <tr><td><code>ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td><code>ERR_UNKNOWN</code></td><td><code>11</code></td></tr>

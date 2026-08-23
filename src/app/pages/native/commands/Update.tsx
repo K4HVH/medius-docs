@@ -37,7 +37,9 @@ const Update: Component = () => {
         </table>
         <p>
           <code>otadata</code> sits above the slots so <code>nvs</code> keeps its offset: the box name,
-          the options and the learned baselines survive the one flash that installs this layout.
+          the options and the learned baselines survive the one flash that installs this layout. A box
+          that has never had it answers <code>NOSLOT</code>; see{' '}
+          <A href="/native/flashing">Flashing</A>.
         </p>
       </Card>
 
@@ -318,85 +320,6 @@ const Update: Component = () => {
         </Card>
       </div>
 
-      <div id="firmware" data-search-target>
-        <Card>
-          <CardHeader title="RESP(FIRMWARE)" subtitle="What each chip is running" />
-          <p>
-            Selector <code>11</code> on <A href="/native/commands/requests"><code>QUERY</code></A>.
-            The only place the host chip's version appears:{' '}
-            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> reports the
-            device chip alone, and its name tail is delimited by the frame <code>LEN</code>, so
-            nothing can follow it.
-          </p>
-          <pre class="api-signature">QUERY  [11]  →  RESP  [11][device 5][host_present][host 5][slot_size u32][staged]</pre>
-          <table class="byte-table">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>what</td><td>u8</td><td><code>11</code></td></tr>
-              <tr><td><code>1</code></td><td>dev_major</td><td>u8</td><td></td></tr>
-              <tr><td><code>2</code></td><td>dev_minor</td><td>u8</td><td></td></tr>
-              <tr><td><code>3</code></td><td>dev_patch</td><td>u8</td><td></td></tr>
-              <tr><td><code>4</code></td><td>dev_slot</td><td>u8</td><td>0 = <code>ota_0</code>, 1 = <code>ota_1</code></td></tr>
-              <tr><td><code>5</code></td><td>dev_state</td><td>u8</td><td>image state, below</td></tr>
-              <tr><td><code>6</code></td><td>host_present</td><td>u8</td><td>1 when the host chip has answered over the link</td></tr>
-              <tr><td><code>7</code></td><td>host_major</td><td>u8</td><td>0 when <code>host_present</code> is 0</td></tr>
-              <tr><td><code>8</code></td><td>host_minor</td><td>u8</td><td></td></tr>
-              <tr><td><code>9</code></td><td>host_patch</td><td>u8</td><td></td></tr>
-              <tr><td><code>10</code></td><td>host_slot</td><td>u8</td><td><code>0xFF</code> when <code>host_present</code> is 0</td></tr>
-              <tr><td><code>11</code></td><td>host_state</td><td>u8</td><td></td></tr>
-              <tr><td><code>12</code></td><td>slot_size</td><td>u32 LE</td><td>usable bytes in a spare slot; the same on both chips</td></tr>
-              <tr><td><code>16</code></td><td>staged</td><td>u8</td><td>bit 0 device staged, bit 1 host staged</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">STATE</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Value</th><th>State</th><th>Means</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>new</td><td>selected but not yet booted</td></tr>
-              <tr><td><code>1</code></td><td>pending-verify</td><td>booted, on probation; this is the window rollback lives in</td></tr>
-              <tr><td><code>2</code></td><td>valid</td><td>confirmed by the image itself</td></tr>
-              <tr><td><code>3</code></td><td>invalid</td><td>the image asked to be rolled back</td></tr>
-              <tr><td><code>4</code></td><td>aborted</td><td>booted once and never confirmed</td></tr>
-              <tr><td><code>0xFF</code></td><td>unknown</td><td>no entry for this slot</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Both chips on 3.2.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
-          <pre class="diagram">{`  0B 03 02 00 01 02   01 03 02 00 00 02   00 00 0F 00   00
-  |  |        |  |    |  |        |  |    |             |
-  |  device   |  state|  host     |  state slot_size    staged
-  what        slot    present     slot    0x000F0000    none`}</pre>
-        </Card>
-      </div>
-
-      <div id="install" data-search-target>
-        <Card>
-          <CardHeader title="Getting onto this layout" subtitle="One flash per box, ever" />
-          <p>
-            A box on the single-app layout answers <code>NOSLOT</code>. Installing the two slots is a
-            partition-table change, which an update cannot perform, so it takes one flash over ROM
-            download per chip.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Chip</th><th>How</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Device</td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A> target 0, then esptool on its own USB</td></tr>
-              <tr><td>Host</td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A> target 1, then esptool over USB3</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Write bootloader, partition table, app and a blank <code>otadata</code> together, or use
-            the factory image, which contains all four. After that the chip takes every later image
-            over this port.
-          </p>
-        </Card>
-      </div>
     </>
   );
 };
