@@ -7,13 +7,25 @@ const Flashing: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Flashing" subtitle="Writing new firmware" />
+        <CardHeader title="Flashing" subtitle="First install and recovery" />
         <p>
-          With firmware already running, no physical button is needed: a{' '}
+          A box already running Medius takes new firmware over the control port with{' '}
+          <A href="/native/commands/update"><code>UPDATE</code></A>, and nothing on this page applies.
+          What follows is for a chip that cannot do that: one that has never had the two-slot layout
+          written, or one whose app will not boot.
+        </p>
+        <p>
+          No physical button is needed while firmware still runs. A{' '}
           <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> command restarts a chip into
           ROM download mode (a built-in loader that takes firmware over serial), then a flashing tool
           writes the image.
         </p>
+        <div class="callout callout--info">
+          Write the bootloader, the partition table, the app and a blank <code>otadata</code> together,
+          or use the factory image, which contains all four. An app image on its own keeps whatever
+          layout the chip already has, and a chip with one app slot cannot take an{' '}
+          <A href="/native/commands/update"><code>UPDATE</code></A>.
+        </div>
       </Card>
 
       <div id="two-chips" data-search-target>
