@@ -203,7 +203,7 @@ export class SerialLink {
   private pending = new Map<number, Pending>();
   // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
   // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
-  private updateWaiters = new Map<number, (r: UpdateResp) => void>();
+  private updateWaiters = new Map<number, (r: UpdateResp | null) => void>();
   // Replies that arrived before anyone was waiting. Discarding them loses every refusal raised
   // inside a credit window, because the waiter is only registered once the window closes.
   private updateBacklog: UpdateResp[] = [];
@@ -802,6 +802,7 @@ export class SerialLink {
     if (image.length === 0) throw new Error('image is empty');
     await this.waitFirmwareConfirmed();
 
+    this.updateBacklog.length = 0;   // nothing queued answers the session about to start
     const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', image));
     const begin = new Uint8Array(4 + digest.length);
     new DataView(begin.buffer).setUint32(0, image.length, true);
@@ -810,9 +811,6 @@ export class SerialLink {
     if (ready.status !== UPD_READY) throw new UpdateError(OTA_OP_BEGIN, ready.status, ready.arg);
 
     const credit = ready.arg || OTA_CREDIT;
-    // Armed before the first chunk goes out: an acknowledgement can beat the await, and a reply with
-    // nobody listening used to be thrown away.
-    let pendingAck = this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
     let seq = 0;
     let sent = 0;
     let unacked = 0;
@@ -829,8 +827,9 @@ export class SerialLink {
       sent = end;
       unacked++;
       if (unacked < credit && sent < image.length) continue;
-      const ack = await pendingAck;
-      pendingAck = this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
+      // No pre-arm: an acknowledgement that beats this await lands in the backlog and is picked up
+      // from there, and arming early leaked a rejected promise on every error path below.
+      const ack = await this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
       if (ack.status !== UPD_OK && ack.status !== UPD_ACK) {
         throw new UpdateError(OTA_OP_DATA, ack.status, ack.arg);
       }
@@ -841,13 +840,13 @@ export class SerialLink {
       onProgress?.(sent, image.length);
     }
 
-    pendingAck.catch(() => undefined);   // the last window is answered; this one is never awaited
     const staged = await this.updateOp(OTA_OP_END, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
     if (staged.status !== UPD_STAGED) throw new UpdateError(OTA_OP_END, staged.status, staged.arg);
   }
 
   /** Drop whatever is staged or in flight for one target; the clone comes back without a reboot. */
   async abortUpdate(target: number): Promise<void> {
+    this.updateBacklog.length = 0;
     const r = await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
     if (r.status !== UPD_OK) throw new UpdateError(OTA_OP_ABORT, r.status, r.arg);
   }
@@ -884,17 +883,18 @@ export class SerialLink {
     return new Promise<UpdateResp>((resolve, reject) => {
       // Delete by identity, not by key: an orphaned waiter's timer firing later must not evict a
       // live one that has since taken its place.
-      const self = (r: UpdateResp) => {
+      const self = (r: UpdateResp | null) => {
         clearTimeout(timer);
         if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
-        resolve(r);
+        if (r) resolve(r);
+        else reject(new Error(`update op ${op} was superseded`));
       };
       const timer = setTimeout(() => {
         if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
         reject(new QueryTimeoutError());
       }, timeoutMs);
       const prev = this.updateWaiters.get(op);
-      if (prev) prev({ op, target: 0, status: 0x1a, arg: 0 });   // displaced, not silently dropped
+      if (prev) prev(null);   // displaced, not silently dropped
       this.updateWaiters.set(op, self);
     });
   }
@@ -907,7 +907,7 @@ export class SerialLink {
     this.pending.clear();
     // Update waiters too: without this an in-flight op sits out its full 20 to 60 second timeout
     // after the port is already gone.
-    for (const w of this.updateWaiters.values()) w({ op: 0xff, target: 0, status: 0x17, arg: 0 });
+    for (const w of this.updateWaiters.values()) w(null);
     this.updateWaiters.clear();
     this.updateBacklog.length = 0;
   }
