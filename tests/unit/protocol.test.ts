@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
+  ImageState,
+  anyPending,
+  UPD_NAMES,
+  OTA_CHUNK,
   PROTO_VER,
   BearingMode,
   bearingModeFromU8,
@@ -258,7 +262,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x17; // next free opcode past TRAFFIC_EVENT (0x16)
+    const ty = 0x7f; // deliberately far past every allocated opcode, so adding one cannot claim it
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -334,7 +338,7 @@ describe('helpers', () => {
     expect(frameTypeFromU8(0x15)).toBe(FrameType.ClipTrigger);
     expect(frameTypeFromU8(0x16)).toBe(FrameType.TrafficEvent);
     expect(frameTypeFromU8(0x00)).toBeNull();
-    expect(frameTypeFromU8(0x17)).toBeNull();
+    expect(frameTypeFromU8(0x7f)).toBeNull();
   });
 
   it('healthFromFlags decodes individual bits', () => {
@@ -1356,5 +1360,83 @@ describe('bearing mode decode', () => {
   it('refuses a byte no constant names rather than carrying it as a geometry', () => {
     // The box rejects the whole write for such a mode, so a reply carrying one is not a geometry.
     for (const v of [2, 9, 200, 255]) expect(bearingModeFromU8(v)).toBeNull();
+  });
+});
+
+// RESP(FIRMWARE) (§4.16). Byte vectors are read off the firmware's ota_proto.h and the protocol doc,
+// not written to match this decoder: a decoder checked against its own author's expectations is a
+// false green.
+describe('RESP(FIRMWARE)', () => {
+  const payload = (hostPresent: number, staged: number) =>
+    new Uint8Array([
+      11, // what
+      3, 2, 0, // device version
+      0, // device slot ota_0
+      2, // device state valid
+      hostPresent,
+      3, 2, 0, // host version
+      1, // host slot ota_1
+      1, // host state pending-verify
+      0x00, 0x00, 0x0f, 0x00, // slot size 0x000F0000 little-endian
+      staged,
+    ]);
+
+  it('decodes both chips', () => {
+    const r = parseResp(payload(1, 0x03));
+    expect(r?.kind).toBe('firmware');
+    if (r?.kind !== 'firmware') return;
+    expect(r.firmware.device).toEqual({
+      major: 3,
+      minor: 2,
+      patch: 0,
+      slot: 0,
+      state: ImageState.Valid,
+    });
+    expect(r.firmware.host).toEqual({
+      major: 3,
+      minor: 2,
+      patch: 0,
+      slot: 1,
+      state: ImageState.PendingVerify,
+    });
+    expect(r.firmware.slotSize).toBe(0x000f0000);
+    expect(r.firmware.deviceStaged).toBe(true);
+    expect(r.firmware.hostStaged).toBe(true);
+    expect(anyPending(r.firmware)).toBe(true);
+  });
+
+  it('reports an absent host chip as null rather than zeros', () => {
+    const r = parseResp(payload(0, 0));
+    if (r?.kind !== 'firmware') throw new Error('expected firmware');
+    expect(r.firmware.host).toBeNull();
+    expect(anyPending(r.firmware)).toBe(false);
+  });
+
+  it('reads the two staged bits independently', () => {
+    const dev = parseResp(payload(1, 0x01));
+    if (dev?.kind !== 'firmware') throw new Error('expected firmware');
+    expect([dev.firmware.deviceStaged, dev.firmware.hostStaged]).toEqual([true, false]);
+    const host = parseResp(payload(1, 0x02));
+    if (host?.kind !== 'firmware') throw new Error('expected firmware');
+    expect([host.firmware.deviceStaged, host.firmware.hostStaged]).toEqual([false, true]);
+  });
+
+  it('rejects a short payload', () => {
+    expect(parseResp(payload(1, 0).subarray(0, 16))).toBeNull();
+  });
+
+  it('names every status the box can answer', () => {
+    for (const v of [
+      0x00, 0x01, 0x02, 0x03, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a,
+      0x1b,
+    ]) {
+      expect(UPD_NAMES[v], `status 0x${v.toString(16)} has no name`).toBeDefined();
+    }
+  });
+
+  it('a chunk plus its header fits one frame, aligned', () => {
+    expect(OTA_CHUNK + 4).toBe(508);
+    expect(OTA_CHUNK % 4).toBe(0);
+    expect(OTA_CHUNK * 0xffff).toBeGreaterThanOrEqual(0xf0000);
   });
 });

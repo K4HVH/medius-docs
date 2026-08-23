@@ -41,6 +41,8 @@ import {
   EVENT_HDR,
   EVENT_TS_LEN,
   Q_CLIP,
+  Q_FIRMWARE,
+  RESP_FIRMWARE_LEN,
   RESP_CLIP_HDR,
   clipStateFromU8,
 } from './opcode';
@@ -76,6 +78,8 @@ import {
   kbdCapsFromBytes,
   lockClassFromU8,
   logLevelFromU8,
+  FirmwareInfo,
+  ImageState,
 } from './types';
 
 // Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, and the rate
@@ -100,7 +104,8 @@ export type Resp =
   | { kind: 'imperfect'; imperfect: ImperfectStatus }
   | { kind: 'movementRiding'; windowMs: number } // 0 = off
   | { kind: 'emitPace'; emit: EmitPace }
-  | { kind: 'clip'; clip: ClipStatus };
+  | { kind: 'clip'; clip: ClipStatus }
+  | { kind: 'firmware'; firmware: FirmwareInfo };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -264,6 +269,29 @@ export function parseResp(payload: Uint8Array): Resp | null {
             ageMs: ageMs === CLK_AGE_NONE ? null : ageMs,
           },
           entries,
+        },
+      };
+    }
+    case Q_FIRMWARE: {
+      // [what][dev maj][min][patch][slot][state][host_present][host maj][min][patch][slot][state]
+      // [slot_size u32 LE][staged bits]. The only place the host chip's version appears: RESP(VERSION)
+      // reports the device chip alone and its name tail is LEN-delimited, so nothing can follow it.
+      if (payload.length < RESP_FIRMWARE_LEN) return null;
+      const chip = (o: number) => ({
+        major: payload[o],
+        minor: payload[o + 1],
+        patch: payload[o + 2],
+        slot: payload[o + 3],
+        state: payload[o + 4] as ImageState,
+      });
+      return {
+        kind: 'firmware',
+        firmware: {
+          device: chip(1),
+          host: payload[6] ? chip(7) : null,
+          slotSize: u32le(payload, 12),
+          deviceStaged: (payload[16] & 0x01) !== 0,
+          hostStaged: (payload[16] & 0x02) !== 0,
         },
       };
     }
