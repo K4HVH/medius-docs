@@ -151,6 +151,8 @@ const UPDATE_OP_TIMEOUT_MS = 20_000;
 const ACTIVATE_TIMEOUT_MS = 60_000;
 /** A chip confirms the image it booted after about ten seconds of running. */
 const CONFIRM_TIMEOUT_MS = 45_000;
+/** Replies held for a waiter that has not registered yet. A window is 16 frames; this is slack. */
+const UPDATE_BACKLOG_MAX = 64;
 
 export class BadProtoVerError extends Error {
   constructor(readonly got: number) {
@@ -202,6 +204,9 @@ export class SerialLink {
   // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
   // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
   private updateWaiters = new Map<number, (r: UpdateResp) => void>();
+  // Replies that arrived before anyone was waiting. Discarding them loses every refusal raised
+  // inside a credit window, because the waiter is only registered once the window closes.
+  private updateBacklog: UpdateResp[] = [];
   private seq = 1;
   // CLIP_APPEND's own sequence; see `clipAppend`.
   private clipSeq = 0;
@@ -726,20 +731,24 @@ export class SerialLink {
     if (f.ty === FrameType.UpdateResp) {
       if (f.payload.length >= UPD_RESP_LEN) {
         const op = f.payload[0];
+        const resp: UpdateResp = {
+          op,
+          target: f.payload[1],
+          status: f.payload[2],
+          arg:
+            (f.payload[3] |
+              (f.payload[4] << 8) |
+              (f.payload[5] << 16) |
+              (f.payload[6] << 24)) >>>
+            0,
+        };
         const w = this.updateWaiters.get(op);
         if (w) {
           this.updateWaiters.delete(op);
-          w({
-            op,
-            target: f.payload[1],
-            status: f.payload[2],
-            arg:
-              (f.payload[3] |
-                (f.payload[4] << 8) |
-                (f.payload[5] << 16) |
-                (f.payload[6] << 24)) >>>
-              0,
-          });
+          w(resp);
+        } else {
+          this.updateBacklog.push(resp);
+          if (this.updateBacklog.length > UPDATE_BACKLOG_MAX) this.updateBacklog.shift();
         }
       }
       return;
@@ -801,6 +810,9 @@ export class SerialLink {
     if (ready.status !== UPD_READY) throw new UpdateError(OTA_OP_BEGIN, ready.status, ready.arg);
 
     const credit = ready.arg || OTA_CREDIT;
+    // Armed before the first chunk goes out: an acknowledgement can beat the await, and a reply with
+    // nobody listening used to be thrown away.
+    let pendingAck = this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
     let seq = 0;
     let sent = 0;
     let unacked = 0;
@@ -817,7 +829,8 @@ export class SerialLink {
       sent = end;
       unacked++;
       if (unacked < credit && sent < image.length) continue;
-      const ack = await this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
+      const ack = await pendingAck;
+      pendingAck = this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
       if (ack.status !== UPD_OK && ack.status !== UPD_ACK) {
         throw new UpdateError(OTA_OP_DATA, ack.status, ack.arg);
       }
@@ -828,13 +841,15 @@ export class SerialLink {
       onProgress?.(sent, image.length);
     }
 
+    pendingAck.catch(() => undefined);   // the last window is answered; this one is never awaited
     const staged = await this.updateOp(OTA_OP_END, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
     if (staged.status !== UPD_STAGED) throw new UpdateError(OTA_OP_END, staged.status, staged.arg);
   }
 
   /** Drop whatever is staged or in flight for one target; the clone comes back without a reboot. */
   async abortUpdate(target: number): Promise<void> {
-    await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
+    const r = await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
+    if (r.status !== UPD_OK) throw new UpdateError(OTA_OP_ABORT, r.status, r.arg);
   }
 
   /** Commit every staged image and reboot into it. The host chip goes first and has to come back. */
@@ -864,15 +879,23 @@ export class SerialLink {
   }
 
   private awaitUpdate(op: number, timeoutMs: number): Promise<UpdateResp> {
+    const queued = this.updateBacklog.findIndex((r) => r.op === op);
+    if (queued >= 0) return Promise.resolve(this.updateBacklog.splice(queued, 1)[0]);
     return new Promise<UpdateResp>((resolve, reject) => {
+      // Delete by identity, not by key: an orphaned waiter's timer firing later must not evict a
+      // live one that has since taken its place.
+      const self = (r: UpdateResp) => {
+        clearTimeout(timer);
+        if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
+        resolve(r);
+      };
       const timer = setTimeout(() => {
-        this.updateWaiters.delete(op);
+        if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
         reject(new QueryTimeoutError());
       }, timeoutMs);
-      this.updateWaiters.set(op, (r) => {
-        clearTimeout(timer);
-        resolve(r);
-      });
+      const prev = this.updateWaiters.get(op);
+      if (prev) prev({ op, target: 0, status: 0x1a, arg: 0 });   // displaced, not silently dropped
+      this.updateWaiters.set(op, self);
     });
   }
 
@@ -882,5 +905,10 @@ export class SerialLink {
       p.reject(err);
     }
     this.pending.clear();
+    // Update waiters too: without this an in-flight op sits out its full 20 to 60 second timeout
+    // after the port is already gone.
+    for (const w of this.updateWaiters.values()) w({ op: 0xff, target: 0, status: 0x17, arg: 0 });
+    this.updateWaiters.clear();
+    this.updateBacklog.length = 0;
   }
 }
