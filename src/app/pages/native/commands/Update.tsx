@@ -139,13 +139,16 @@ const Update: Component = () => {
           </p>
           <div class="api-response-label">FLOW CONTROL</div>
           <p>
-            The box accepts 16 chunks before it must answer. The window is a correctness requirement,
-            not a throughput knob.
+            <code>READY</code>'s <code>arg</code> says how many chunks the box will take before it
+            must answer. Read it rather than assuming: the device chip asks for 16, the host chip for
+            6, because a relayed chunk waits in the inter-chip link's receive ring while the chip
+            behind it writes the one before to flash. The window is a correctness requirement, not a
+            throughput knob.
           </p>
-          <pre class="diagram">{`  PC   |-- 16 chunks, 8064 B --|                    |-- 16 chunks --|
-  box                          |-- write, ACK 16 --|                 |-- ACK 32 --|
-                               ^
-                               cache is off here; nothing may be in flight`}</pre>
+          <pre class="diagram">{`  PC   |-- credit chunks --|                       |-- credit chunks --|
+  box                       |-- write, ACK next --|                     |-- ACK next --|
+                            ^
+                            cache is off here; nothing may be in flight`}</pre>
           <table class="api-params">
             <thead>
               <tr><th>Quantity</th><th>Value</th></tr>
@@ -153,12 +156,14 @@ const Update: Component = () => {
             <tbody>
               <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
               <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 us at 4 Mbaud.</td></tr>
-              <tr><td>Credit window</td><td>16 chunks, 8064 bytes, about 21 ms of wire.</td></tr>
+              <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
+              <tr><td>Inter-chip link ring</td><td>4096 bytes, which is what caps the relayed window.</td></tr>
             </tbody>
           </table>
           <p>
-            An unthrottled sender overruns the FIFO during a write. The same arithmetic holds on the
-            inter-chip link at 5 Mbaud. Library binding:{' '}
+            A sender that ignores the credit it was given overruns whichever hop is smaller, and the
+            lost chunk leaves the window one short: nothing acknowledges it, and the session dies on
+            the idle timer with the sender still waiting. Library binding:{' '}
             <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
           </p>
           <div class="api-response-label">RESENDS</div>
