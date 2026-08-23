@@ -33,6 +33,7 @@ export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
 export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring accounting, held usages, config
+export const Q_FIRMWARE = 11; // both chips' versions + which app slot each booted (§4.16)
 
 // CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
 // byte draws from, so a trigger runs the same verb the control PC would.
@@ -205,6 +206,8 @@ export enum FrameType {
   ClipSet = 0x14,
   ClipTrigger = 0x15,
   TrafficEvent = 0x16,
+  Update = 0x17,
+  UpdateResp = 0x18,
 }
 
 // Byte width of the ts_us field every catch event frame leads with (§4.10).
@@ -230,6 +233,48 @@ export const CLK_AGE_NONE = 0xffff;
 // TRAFFIC_EVENT flags for class VEND_BULK (§4.10).
 export const TRAFFIC_BULK_END = 0x01;
 export const TRAFFIC_BULK_ZLP = 0x02;
+
+// UPDATE sub-ops (§3.13). Firmware reaches either chip over this port; the host chip's image is
+// relayed over the inter-chip link, which is the only route to it.
+export const OTA_OP_BEGIN = 0;
+export const OTA_OP_DATA = 1;
+export const OTA_OP_END = 2;
+export const OTA_OP_ABORT = 3;
+export const OTA_OP_ACTIVATE = 4;
+export const OTA_TGT_DEVICE = 0;
+export const OTA_TGT_HOST = 1;
+// Image bytes per DATA frame: the frame's 512 less op, target and a 2-byte chunk index, rounded down
+// to a multiple of four so every flash write on the box is aligned.
+export const OTA_CHUNK = 504;
+// DATA frames the box accepts before it must answer. Not a throughput knob: a flash page write stalls
+// both cores for 0.3-0.7 ms while the RX FIFO holds 320 us of wire, so an unthrottled sender overruns it.
+export const OTA_CREDIT = 16;
+export const UPD_RESP_LEN = 7;
+export const RESP_FIRMWARE_LEN = 17;
+
+// UPDATE_RESP status bytes (§4.16).
+export const UPD_OK = 0x00;
+export const UPD_READY = 0x01;
+export const UPD_ACK = 0x02;
+export const UPD_STAGED = 0x03;
+export const UPD_NAMES: Record<number, string> = {
+  0x00: 'ok',
+  0x01: 'ready',
+  0x02: 'ack',
+  0x03: 'staged',
+  0x10: 'busy',
+  0x11: 'no-slot',
+  0x12: 'too-big',
+  0x13: 'seq-gap',
+  0x14: 'write-failed',
+  0x15: 'bad-sha',
+  0x16: 'bad-image',
+  0x17: 'link-down',
+  0x18: 'timeout',
+  0x19: 'nothing-staged',
+  0x1a: 'bad-state',
+  0x1b: 'on-probation',
+};
 
 // TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.
 export const TRAFFIC_CONTROL_OK = 0x00;
@@ -274,6 +319,10 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.ClipTrigger;
     case 0x16:
       return FrameType.TrafficEvent;
+    case 0x17:
+      return FrameType.Update;
+    case 0x18:
+      return FrameType.UpdateResp;
     default:
       return null;
   }

@@ -83,6 +83,23 @@ import {
   parseUsageEvent,
   queryPayload,
   rebootPayload,
+  type FirmwareInfo,
+  anyPending,
+  Q_FIRMWARE,
+  OTA_OP_BEGIN,
+  OTA_OP_DATA,
+  OTA_OP_END,
+  OTA_OP_ABORT,
+  OTA_OP_ACTIVATE,
+  OTA_TGT_DEVICE,
+  OTA_CHUNK,
+  OTA_CREDIT,
+  UPD_OK,
+  UPD_READY,
+  UPD_ACK,
+  UPD_STAGED,
+  UPD_NAMES,
+  UPD_RESP_LEN,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
 
@@ -108,6 +125,32 @@ export class NoReplyError extends Error {
     this.name = 'NoReplyError';
   }
 }
+
+/** The box refused an update op (§4.16); `arg` is that status's argument. */
+export class UpdateError extends Error {
+  constructor(
+    readonly op: number,
+    readonly status: number,
+    readonly arg: number,
+  ) {
+    super(`update op ${op} refused: ${UPD_NAMES[status] ?? status} (arg ${arg})`);
+    this.name = 'UpdateError';
+  }
+}
+
+interface UpdateResp {
+  op: number;
+  target: number;
+  status: number;
+  arg: number;
+}
+
+/** One update op's budget. BEGIN erases the whole slot before it answers. */
+const UPDATE_OP_TIMEOUT_MS = 20_000;
+/** ACTIVATE reboots the host chip and waits for it back on the link before the device chip follows. */
+const ACTIVATE_TIMEOUT_MS = 60_000;
+/** A chip confirms the image it booted after about ten seconds of running. */
+const CONFIRM_TIMEOUT_MS = 45_000;
 
 export class BadProtoVerError extends Error {
   constructor(readonly got: number) {
@@ -156,6 +199,9 @@ export class SerialLink {
   private readLoop: Promise<void> | null = null;
   private writeChain: Promise<void> = Promise.resolve();
   private pending = new Map<number, Pending>();
+  // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
+  // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
+  private updateWaiters = new Map<number, (r: UpdateResp) => void>();
   private seq = 1;
   // CLIP_APPEND's own sequence; see `clipAppend`.
   private clipSeq = 0;
@@ -677,6 +723,27 @@ export class SerialLink {
       if (resp?.kind === 'version') this.events.onVersionHello?.(resp.version);
       return;
     }
+    if (f.ty === FrameType.UpdateResp) {
+      if (f.payload.length >= UPD_RESP_LEN) {
+        const op = f.payload[0];
+        const w = this.updateWaiters.get(op);
+        if (w) {
+          this.updateWaiters.delete(op);
+          w({
+            op,
+            target: f.payload[1],
+            status: f.payload[2],
+            arg:
+              (f.payload[3] |
+                (f.payload[4] << 8) |
+                (f.payload[5] << 16) |
+                (f.payload[6] << 24)) >>>
+              0,
+          });
+        }
+      }
+      return;
+    }
     if (f.ty === FrameType.Log) {
       this.events.onLog?.(parseLog(f.payload));
       return;
@@ -695,6 +762,118 @@ export class SerialLink {
       const traffic = parseTrafficEvent(f.payload);
       if (traffic) this.events.onEvent?.({ kind: 'traffic', traffic }, f.seq);
     }
+  }
+
+  async queryFirmware(timeoutMs?: number): Promise<FirmwareInfo> {
+    const resp = parseResp(await this.query(Q_FIRMWARE, timeoutMs));
+    if (resp?.kind !== 'firmware') throw new NoReplyError('FIRMWARE');
+    return resp.firmware;
+  }
+
+  /** Block until neither chip is on probation; a chip that has not confirmed its image refuses an update. */
+  async waitFirmwareConfirmed(timeoutMs = CONFIRM_TIMEOUT_MS): Promise<FirmwareInfo> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const info = await this.queryFirmware();
+      if (!anyPending(info)) return info;
+      if (Date.now() >= deadline) throw new UpdateError(OTA_OP_BEGIN, 0x1b, 0);
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+
+  /**
+   * Write one image into a chip's spare slot. It stays inert until `activateFirmware`, so nothing
+   * boots it and a power cut brings the running image back.
+   */
+  async stageFirmware(
+    target: number,
+    image: Uint8Array,
+    onProgress?: (sent: number, total: number) => void,
+  ): Promise<void> {
+    if (image.length === 0) throw new Error('image is empty');
+    await this.waitFirmwareConfirmed();
+
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', image));
+    const begin = new Uint8Array(4 + digest.length);
+    new DataView(begin.buffer).setUint32(0, image.length, true);
+    begin.set(digest, 4);
+    const ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    if (ready.status !== UPD_READY) throw new UpdateError(OTA_OP_BEGIN, ready.status, ready.arg);
+
+    const credit = ready.arg || OTA_CREDIT;
+    let seq = 0;
+    let sent = 0;
+    let unacked = 0;
+    while (sent < image.length) {
+      const end = Math.min(sent + OTA_CHUNK, image.length);
+      const frame = new Uint8Array(4 + (end - sent));
+      frame[0] = OTA_OP_DATA;
+      frame[1] = target;
+      frame[2] = seq & 0xff;
+      frame[3] = (seq >> 8) & 0xff;
+      frame.set(image.subarray(sent, end), 4);
+      await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+      seq = (seq + 1) & 0xffff;
+      sent = end;
+      unacked++;
+      if (unacked < credit && sent < image.length) continue;
+      const ack = await this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
+      if (ack.status !== UPD_OK && ack.status !== UPD_ACK) {
+        throw new UpdateError(OTA_OP_DATA, ack.status, ack.arg);
+      }
+      // The box reports the chunk it expects next. A disagreement means the two sides no longer share
+      // an offset, and writing on would put bytes in the wrong place.
+      if (ack.arg !== seq) throw new UpdateError(OTA_OP_DATA, 0x13, ack.arg);
+      unacked = 0;
+      onProgress?.(sent, image.length);
+    }
+
+    const staged = await this.updateOp(OTA_OP_END, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
+    if (staged.status !== UPD_STAGED) throw new UpdateError(OTA_OP_END, staged.status, staged.arg);
+  }
+
+  /** Drop whatever is staged or in flight for one target; the clone comes back without a reboot. */
+  async abortUpdate(target: number): Promise<void> {
+    await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
+  }
+
+  /** Commit every staged image and reboot into it. The host chip goes first and has to come back. */
+  async activateFirmware(): Promise<void> {
+    const r = await this.updateOp(
+      OTA_OP_ACTIVATE,
+      OTA_TGT_DEVICE,
+      new Uint8Array(0),
+      ACTIVATE_TIMEOUT_MS,
+    );
+    if (r.status !== UPD_OK) throw new UpdateError(OTA_OP_ACTIVATE, r.status, r.arg);
+  }
+
+  private async updateOp(
+    op: number,
+    target: number,
+    body: Uint8Array,
+    timeoutMs: number,
+  ): Promise<UpdateResp> {
+    const frame = new Uint8Array(2 + body.length);
+    frame[0] = op;
+    frame[1] = target;
+    frame.set(body, 2);
+    const wait = this.awaitUpdate(op, timeoutMs);
+    await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+    return wait;
+  }
+
+  private awaitUpdate(op: number, timeoutMs: number): Promise<UpdateResp> {
+    return new Promise<UpdateResp>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.updateWaiters.delete(op);
+        reject(new QueryTimeoutError());
+      }, timeoutMs);
+      this.updateWaiters.set(op, (r) => {
+        clearTimeout(timer);
+        resolve(r);
+      });
+    });
   }
 
   private failAll(err: Error): void {

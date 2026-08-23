@@ -804,3 +804,51 @@ export interface LogLine {
   level: LogLevel;
   text: string;
 }
+
+/** What the bootloader thinks of the image a chip is running (§4.16). */
+export enum ImageState {
+  New = 0,
+  PendingVerify = 1,
+  Valid = 2,
+  Invalid = 3,
+  Aborted = 4,
+  Unknown = 0xff,
+}
+
+/** One chip's firmware version and which of its two app slots it booted. */
+export interface ChipFirmware {
+  major: number;
+  minor: number;
+  patch: number;
+  /** 0 = ota_0, 1 = ota_1. */
+  slot: number;
+  state: ImageState;
+}
+
+/** The decoded RESP(FIRMWARE) payload (§4.16). */
+export interface FirmwareInfo {
+  device: ChipFirmware;
+  /** null when the host chip has not answered over the inter-chip link. */
+  host: ChipFirmware | null;
+  /** Usable bytes in a spare slot; the same on both chips. */
+  slotSize: number;
+  deviceStaged: boolean;
+  hostStaged: boolean;
+}
+
+/** True while either chip has not confirmed the image it booted, which is when an update is refused. */
+export function anyPending(f: FirmwareInfo): boolean {
+  return (
+    f.device.state === ImageState.PendingVerify ||
+    (f.host !== null && f.host.state === ImageState.PendingVerify)
+  );
+}
+
+export const IMAGE_STATE_NAMES: Record<number, string> = {
+  0: 'new',
+  1: 'pending-verify',
+  2: 'valid',
+  3: 'invalid',
+  4: 'aborted',
+  0xff: 'unknown',
+};
