@@ -231,6 +231,12 @@ const Update: Component = () => {
             nothing left to abort, and cancelling the reboot would leave the box running one image
             with the loader pointed at the other.
           </p>
+          <p>
+            That abort disarms <em>both</em> chips whichever target it names. One <code>ACTIVATE</code>{' '}
+            commits everything staged, so abandoning it abandons everything staged; leaving one behind
+            would let a later <code>ACTIVATE</code> commit that one alone. Outside an activate,{' '}
+            <code>ABORT</code> is per-target as usual.
+          </p>
         </Card>
       </div>
 
