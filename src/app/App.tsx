@@ -33,6 +33,7 @@ import LibInject from './pages/library/Inject';
 import LibMove from './pages/library/Move';
 import LibRequests from './pages/library/Requests';
 import LibAdmin from './pages/library/Admin';
+import LibUpdate from './pages/library/Update';
 import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
@@ -117,6 +118,7 @@ const App: Component = () => {
           <Route path="/library/move" component={LibMove} />
           <Route path="/library/requests" component={LibRequests} />
           <Route path="/library/admin" component={LibAdmin} />
+          <Route path="/library/update" component={LibUpdate} />
           <Route path="/library/led" component={LibLed} />
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
