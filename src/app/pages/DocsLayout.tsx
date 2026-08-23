@@ -85,6 +85,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/library/led', label: 'LED', icon: BsLightbulb },
   { value: '/library/admin', label: 'Admin', icon: BsGear },
+  { value: '/library/update', label: 'Update', icon: BsDownload },
   { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
