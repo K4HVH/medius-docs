@@ -127,13 +127,45 @@ export class NoReplyError extends Error {
 }
 
 /** The box refused an update op (§4.16); `arg` is that status's argument. */
+const UPDATE_DOING: Record<number, string> = {
+  0x00: 'Starting the firmware transfer',
+  0x01: 'Sending the firmware',
+  0x02: 'Finishing the firmware transfer',
+  0x03: 'Cancelling the firmware transfer',
+  0x04: 'Activating the new firmware',
+};
+
+// What each refusal means and what to do about it. The status name and arg alone read as a code dump:
+// the point of an error is that the person holding the box knows what to do next.
+function updateReason(op: number, status: number, arg: number): string {
+  switch (status) {
+    case 0x10: return 'the box already has an update open on that chip.';
+    case 0x11: return 'this box still has the single-slot firmware layout, so it cannot be updated over this port. It needs one flash over ROM download first.';
+    case 0x12: return `the image does not fit. A slot holds ${arg} bytes.`;
+    case 0x13: return `a chunk went missing, so the box dropped the transfer. It was expecting chunk ${arg}.`;
+    case 0x14: return `the box could not write to its flash (error ${arg}).`;
+    case 0x15: return 'the image arrived corrupted: its digest did not match what was declared. Try again.';
+    case 0x16: return `those bytes are not a bootable image (error ${arg}).`;
+    case 0x17: return 'the box cannot reach its mouse-side chip over the inter-chip link.';
+    case 0x18:
+      return op === 0x04
+        ? 'the mouse-side chip did not come back after committing its firmware. Power cycle the box, then check which slot each chip is running before trying again.'
+        : 'the box stopped answering partway through and dropped the transfer after ten seconds of silence.';
+    case 0x19: return 'there is nothing staged to activate.';
+    case 0x1a: return `the box was not expecting that step; it wanted op ${arg}.`;
+    case 0x1b: return 'a chip is still proving the firmware it just booted. Wait a few seconds and try again.';
+    case 0x1c: return 'the box refused before writing anything, so whatever was already staged is untouched.';
+    default: return `the box answered ${UPD_NAMES[status] ?? status} (arg ${arg}).`;
+  }
+}
+
 export class UpdateError extends Error {
   constructor(
     readonly op: number,
     readonly status: number,
     readonly arg: number,
   ) {
-    super(`update op ${op} refused: ${UPD_NAMES[status] ?? status} (arg ${arg})`);
+    super(`${UPDATE_DOING[op] ?? `Update op ${op}`} failed: ${updateReason(op, status, arg)}`);
     this.name = 'UpdateError';
   }
 }
