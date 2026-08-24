@@ -96,15 +96,15 @@ function describeError(e: unknown): string {
     return `This device speaks protocol v${e.got}, which this dashboard does not support.`;
   }
   if (e instanceof NoReplyError) {
-    return 'No reply from the box. If its log is still scrolling, the browser has stopped being able to write to the port: unplug the control cable and plug it back in. Otherwise check the cable is on the control port and that this is a Medius box.';
+    return 'No reply from the box. If its log is still scrolling, replug the control cable: the browser has stopped being able to write to the port.';
   }
   if (e instanceof Error) {
     // Web Serial's own wording surfaces raw otherwise, and none of it says what to do.
     if (/already open/i.test(e.message)) {
-      return 'That port is still held by an earlier session. Reload the page, and unplug and replug the control cable if it persists.';
+      return 'That port is still held by an earlier session. Reload the page, or replug the control cable.';
     }
     if (/[Ff]ailed to open|Access denied|NetworkError/.test(e.message)) {
-      return 'The browser could not open that port. Close anything else using it, then unplug and replug the control cable.';
+      return 'Could not open that port. Close anything else using it, then replug the control cable.';
     }
     return e.message;
   }
