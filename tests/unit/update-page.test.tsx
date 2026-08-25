@@ -257,6 +257,21 @@ describe('Update', () => {
     expect(r.container.textContent).not.toMatch(/updated and verified/i);
   });
 
+  it('Back is a normal secondary button beside the primary, not a tiny one below it', async () => {
+    mock.assets = [dev, host];
+    const r = mount();
+    mock.s!.setStatus('connected');
+    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
+    r.getByRole('button', { name: /update both chips/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /^back$/i }));
+    const back = r.getByRole('button', { name: /^back$/i });
+    expect(back.className).toContain('button--secondary');
+    expect(back.className).not.toContain('compact');
+    // Same row as Update, so it reads as the pair it is.
+    const update = r.getByRole('button', { name: /^update$/i });
+    expect(back.parentElement).toBe(update.parentElement);
+  });
+
   it('a failed update keeps a way back to the chip choice', async () => {
     mock.assets = [dev, host];
     mock.outcome = 'failed';

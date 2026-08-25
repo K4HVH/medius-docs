@@ -137,7 +137,7 @@ const Setup = () => {
                 <Button variant="primary" onClick={go('mouse')}>
                   Done
                 </Button>
-                <Button variant="subtle" size="compact" onClick={go('main')}>
+                <Button variant="secondary" onClick={go('main')}>
                   Back
                 </Button>
               </div>
@@ -154,7 +154,7 @@ const Setup = () => {
                 >
                   {busy() ? 'Installing...' : 'Install'}
                 </Button>
-                <Button variant="subtle" size="compact" disabled={busy()} onClick={go('unplug')}>
+                <Button variant="secondary" disabled={busy()} onClick={go('unplug')}>
                   Back
                 </Button>
               </div>
