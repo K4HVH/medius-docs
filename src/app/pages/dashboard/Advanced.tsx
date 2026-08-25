@@ -200,11 +200,14 @@ const Advanced = () => {
                 fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
               >
                 <PortDiagram
-                  plug={chip() === 'host' ? ['usb3'] : ['usb1', 'usb2']}
-                  boot={chip() === 'host' ? 'mouse' : 'main'}
+                  plug={chip() === 'host' ? ['usb3'] : ['usb1']}
+                  out={chip() === 'host' ? ['usb1', 'usb2'] : ['usb2', 'usb3']}
+                  boot
                 />
                 <Show when={chip() === 'host'}>
-                  <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
+                  <div class="callout callout--danger">
+                    USB1 and USB3 in the same computer can damage it.
+                  </div>
                 </Show>
                 <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
                   Flash

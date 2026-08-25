@@ -8,15 +8,35 @@ const PORTS: { id: PortId; label: string; sub: string }[] = [
   { id: 'usb3', label: 'USB3', sub: 'Mouse' },
 ];
 
-// A compact picture of the box: `plug` ports light green ("plug into PC"),
-// `mouse` ports light blue ("plug your mouse"), the rest dimmed, plus an optional
-// "hold BOOT" badge. The diagram carries the instruction; words don't.
-export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mouse?: PortId[] }) => {
-  const on = (id: PortId) => props.plug.includes(id);
+// A compact picture of the box: `plug` ports light green ("plug into PC"), `mouse` ports light blue
+// ("plug your mouse"), `out` ports light red ("unplug"), the rest dimmed, plus an optional
+// hold-both-buttons badge. `where` renames a port for the machine it ends up on. The diagram
+// carries the instruction; words don't.
+export const PortDiagram = (props: {
+  plug?: PortId[];
+  out?: PortId[];
+  mouse?: PortId[];
+  boot?: boolean;
+  where?: Partial<Record<PortId, string>>;
+}) => {
+  const isPlug = (id: PortId) => props.plug?.includes(id) ?? false;
   const isMouse = (id: PortId) => props.mouse?.includes(id) ?? false;
-  const lit = (id: PortId) => on(id) || isMouse(id);
-  const accent = (id: PortId) => (isMouse(id) ? 'var(--color-primary)' : 'var(--color-success)');
-  const note = (id: PortId) => (on(id) ? 'plug into PC' : isMouse(id) ? 'plug your mouse' : 'leave out');
+  const isOut = (id: PortId) => props.out?.includes(id) ?? false;
+  const lit = (id: PortId) => isPlug(id) || isMouse(id) || isOut(id);
+  const accent = (id: PortId) =>
+    isOut(id)
+      ? 'var(--color-danger)'
+      : isMouse(id)
+        ? 'var(--color-primary)'
+        : 'var(--color-success)';
+  const note = (id: PortId) =>
+    isOut(id)
+      ? 'unplug'
+      : isPlug(id)
+        ? 'plug into PC'
+        : isMouse(id)
+          ? 'plug your mouse'
+          : 'leave out';
   return (
     <div style={{ margin: 'var(--g-spacing) 0' }}>
       <div
@@ -53,8 +73,17 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mo
                   opacity: lit(p.id) ? '1' : '0.5',
                 }}
               >
-                <div style={{ 'font-weight': '700' }}>{p.label}</div>
-                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-muted)' }}>{p.sub}</div>
+                <div
+                  style={{
+                    'font-weight': '700',
+                    'text-decoration': isOut(p.id) ? 'line-through' : 'none',
+                  }}
+                >
+                  {p.label}
+                </div>
+                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-muted)' }}>
+                  {props.where?.[p.id] ?? p.sub}
+                </div>
                 <div
                   style={{
                     'margin-top': '4px',
@@ -82,7 +111,7 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mo
             'font-weight': '600',
           }}
         >
-          Hold the {props.boot === 'mouse' ? 'mouse-side' : 'main'} chip's BOOT button while plugging in
+          Hold BOTH buttons on the box down while you plug it in
         </div>
       </Show>
     </div>

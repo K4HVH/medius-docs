@@ -68,6 +68,7 @@ import PyApi from './pages/bindings/python/Api';
 import PyTypes from './pages/bindings/python/Types';
 import PyBuild from './pages/bindings/python/Build';
 import DashboardDevice from './pages/dashboard/Device';
+import DashboardSetup from './pages/dashboard/Setup';
 import DashboardControl from './pages/dashboard/Control';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
@@ -152,6 +153,7 @@ const App: Component = () => {
           <Route path="/bindings/python/types" component={PyTypes} />
           <Route path="/bindings/python/build" component={PyBuild} />
           <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/dashboard/setup" component={DashboardSetup} />
           <Route path="/dashboard/control" component={DashboardControl} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
