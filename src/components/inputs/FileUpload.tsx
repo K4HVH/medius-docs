@@ -208,7 +208,9 @@ export const FileUpload: Component<FileUploadProps> = (props) => {
   onCleanup(() => document.removeEventListener('paste', handleDocumentPaste));
 
   const removeFile = (file: File) => {
-    if (!local.onChange) return;
+    // `disabled` has to stop a file leaving the selection as well as joining it, or a caller that
+    // disables mid-operation still has the value change underneath it.
+    if (local.disabled || !local.onChange) return;
     local.onChange(selectedFiles().filter((f) => f !== file));
   };
 

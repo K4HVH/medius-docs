@@ -56,15 +56,48 @@ const Update = () => {
   const lv = () => parseTag(latest()?.tag);
   const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
   const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
-  const upToDate = () => {
-    const c = dash.version();
+  const matches = (c: { major: number; minor: number; patch: number } | null | undefined) => {
     const l = lv();
-    return !!(c && l && c.fwMajor === l.major && c.fwMinor === l.minor && c.fwPatch === l.patch);
+    return !!(c && l && c.major === l.major && c.minor === l.minor && c.patch === l.patch);
   };
+  const deviceOnRelease = () => {
+    const c = dash.version();
+    return matches(c ? { major: c.fwMajor, minor: c.fwMinor, patch: c.fwPatch } : null);
+  };
+  const hostOnRelease = () => matches(dash.firmwareInfo()?.host);
+  // What each chip that was ASKED to change reports now. A chip that reverted answers a handshake
+  // perfectly well, so the handshake is not the evidence -- the version it reports is.
+  const landed = () => {
+    if (which() === 'main') return deviceOnRelease();
+    if (which() === 'mouse') return hostOnRelease();
+    return deviceOnRelease() && hostOnRelease();
+  };
+  const upToDate = () => deviceOnRelease();
   const pct = () => {
     const p = dash.flashProgress();
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
+
+  // The one place either ending says what happened. Both used to claim it separately, and the
+  // sent arm was still signing a reverted box off as finished after the done arm stopped.
+  const Landed = () => (
+    <Show
+      when={landed()}
+      fallback={
+        <div class="callout callout--warning">
+          The box came back, but not on the version that was sent. It reverts anything that will not
+          run, so it is still working. Try the update again.
+        </div>
+      }
+    >
+      <div class="callout callout--info">
+        Updated and verified.{' '}
+        <Show when={dash.version()}>
+          {(v) => <>Your box is on <strong>v{versionString(v())}</strong>.</>}
+        </Show>
+      </div>
+    </Show>
+  );
 
   const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
@@ -168,8 +201,8 @@ const Update = () => {
                 Everything happens over the cable you are already connected on. The mouse stops working
                 for a few seconds, then comes back.
               </p>
-              <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
+                <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}
@@ -198,13 +231,7 @@ const Update = () => {
                 when={dash.status() === 'connected'}
                 fallback={<ConnectPanel />}
               >
-                <div class="callout callout--info">
-                  Your box is back
-                  <Show when={dash.version()}>
-                    {(v) => <> on <strong>v{versionString(v())}</strong></>}
-                  </Show>
-                  .
-                </div>
+                <Landed />
                 <Button variant="primary" onClick={() => navigate('/dashboard')}>
                   Finish
                 </Button>
@@ -213,26 +240,7 @@ const Update = () => {
 
             <Match when={step() === 'done'}>
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-                <Show
-                  when={which() === 'mouse' || upToDate()}
-                  fallback={
-                    <div class="callout callout--warning">
-                      The box came back on{' '}
-                      <Show when={dash.version()}>
-                        {(v) => <strong>v{versionString(v())}</strong>}
-                      </Show>
-                      , not the version that was sent. It reverts anything that will not run, so it
-                      is still working — try the update again.
-                    </div>
-                  }
-                >
-                  <div class="callout callout--info">
-                    Updated and verified.{' '}
-                    <Show when={dash.version()}>
-                      {(v) => <>Now on <strong>v{versionString(v())}</strong>.</>}
-                    </Show>
-                  </div>
-                </Show>
+                <Landed />
                 <Button
                   variant="primary"
                   onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}
