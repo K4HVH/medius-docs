@@ -161,7 +161,7 @@ describe('Advanced', () => {
     await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
     const alert = await r.findByRole('alert');
-    expect(alert.textContent).toMatch(/button next to USB1/i);
+    expect(alert.textContent).toMatch(/did not finish/i);
     const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
@@ -282,7 +282,7 @@ describe('Advanced', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('a failed flash says what to do, and names the button by its socket', async () => {
+  it('a failed flash says the reason, and leaves the instruction to the badge', async () => {
     mock.flashOk = false;
     const r = render(() => <Advanced />);
     await openGate(r);
@@ -292,7 +292,9 @@ describe('Advanced', () => {
     // it alone passed whether or not the click ever happened.
     const alert = await r.findByRole('alert');
     expect(alert.textContent).toMatch(/did not finish/i);
-    expect(alert.textContent).toMatch(/button next to USB1/i);
+    // The badge already says it; repeating it in the alert is the same sentence twice on one screen.
+    expect(alert.textContent).not.toMatch(/button next to/i);
+    expect(r.container.textContent).toMatch(/button next to USB1/i);
     expect(r.container.textContent).not.toMatch(/the BOOT button|left button|right button/i);
   });
 

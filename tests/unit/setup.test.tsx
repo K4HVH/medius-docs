@@ -137,7 +137,10 @@ describe('Setup', () => {
     const r = mount();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/nothing to install to/i));
+    const alert = await r.findByRole('alert');
+    expect(alert.textContent).toMatch(/nothing to install to/i);
+    expect(alert.textContent).not.toMatch(/button next to/i);
+    // The badge is what carries the instruction.
     expect(r.container.textContent).toMatch(/button next to USB1/i);
     expect(mock.flashed).toEqual([]);
   });

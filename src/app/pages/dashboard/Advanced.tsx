@@ -16,7 +16,7 @@ import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
 import { useDashboard } from './context';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
-import { ClearPort, InstallPorts, WiringPorts, holdButton } from './PortDiagram';
+import { ClearPort, InstallPorts, WiringPorts } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
@@ -138,9 +138,9 @@ const Advanced = () => {
       if (!img) return setErr('No image selected.');
       const ok = await dash.flashNative(port, img, target.kind);
       if (ok) setDone(true);
-      else setErr(dash.error() ?? `That did not finish. ${holdButton(target.chip === 'host' ? 'usb3' : 'usb1')}, then press Flash.`);
+      else setErr(dash.error() ?? 'That did not finish.');
     } catch (e) {
-      setErr(isUserCancel(e) ? `Nothing to flash. ${holdButton(target.chip === 'host' ? 'usb3' : 'usb1')}, then press Flash.` : (e as Error).message);
+      setErr(isUserCancel(e) ? 'Nothing to flash.' : (e as Error).message);
     } finally {
       setBusy(false);
     }
