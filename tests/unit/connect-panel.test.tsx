@@ -106,11 +106,23 @@ describe('ConnectPanel', () => {
     expect(primaries).toHaveLength(1);
   });
 
-  it('a flash failure left on the page is still shown, verdict or no verdict', () => {
+  it('a flash failure is shown even when an older connect verdict is still set', () => {
+    // The verdict used to win and the flash reason was dropped: connect with no box, then fail an
+    // update on another tab, then come back here.
     mock.status = 'error';
     mock.error = 'the image is too big for this box';
+    mock.verdict = { kind: 'no-port' };
     const { container } = render(() => <ConnectPanel />);
     expect(container.textContent).toContain('the image is too big for this box');
+    expect(container.textContent).toContain('USB2');
+  });
+
+  it('a browser that wants another click is not told to unplug its hardware', () => {
+    mock.verdict = { kind: 'needs-click' };
+    const { container, getByRole } = render(() => <ConnectPanel />);
+    expect(container.textContent).toMatch(/one more click/i);
+    expect(container.textContent).not.toMatch(/unplug everything/i);
+    expect(getByRole('button', { name: /try again/i })).toBeTruthy();
   });
 
   it('the retry on a silent box asks which device, so a remembered wrong one is escapable', () => {

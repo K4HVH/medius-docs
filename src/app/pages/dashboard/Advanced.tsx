@@ -13,6 +13,7 @@ import {
 } from '../../../dashboard/flash';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
+import { useNavigate } from '@solidjs/router';
 import { useDashboard } from './context';
 import { BAD_BROWSER } from './ConnectPanel';
 import { HOLD_BOTH, PortDiagram } from './PortDiagram';
@@ -27,6 +28,7 @@ const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-second
 // over the both-buttons download path (works even on a dead box).
 const Advanced = () => {
   const dash = useDashboard();
+  const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
   const [chip, setChip] = createSignal<FlashChip>('device');
   const [kind, setKind] = createSignal<FlashKind>('factory');
@@ -114,9 +116,21 @@ const Advanced = () => {
 
           <Switch>
             <Match when={done()}>
-              <div class="callout callout--info">Done. Plug back in normally, then reconnect.</div>
+              <div class="callout callout--danger">
+                Take the cable you just used out of this computer first. USB1 and USB3 plugged into
+                the same computer at once can kill it.
+              </div>
+              <PortDiagram out={chip() === 'host' ? ['usb3'] : ['usb1']} />
+              <div class="callout callout--info">Then plug in like this.</div>
               <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
-              <Button variant="secondary" onClick={() => setDone(false)}>Flash another</Button>
+              <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                  Go to my box
+                </Button>
+                <Button variant="subtle" size="compact" onClick={() => setDone(false)}>
+                  Flash another
+                </Button>
+              </div>
             </Match>
 
             <Match when={!done()}>
@@ -154,6 +168,11 @@ const Advanced = () => {
                 <Switch>
                   <Match when={releases.loading}>
                     <p>Loading releases...</p>
+                  </Match>
+                  <Match when={releases.error}>
+                    <div class="callout callout--warning">
+                      Could not reach the firmware downloads. Choose Upload a file instead.
+                    </div>
                   </Match>
                   <Match when={asset()}>
                     {(a) => (

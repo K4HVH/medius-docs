@@ -183,6 +183,13 @@ describe('Setup', () => {
     expect(mock.disconnects).toBe(1);
   });
 
+  it('drops the link again after each install, so a connect that raced the wizard cannot hold', async () => {
+    // pick() can only drop the link that exists at that moment. One arriving mid-install would
+    // otherwise leave the finish screen reporting the firmware that was just overwritten.
+    await walk(/just one computer/i);
+    await waitFor(() => expect(mock.disconnects).toBe(3));
+  });
+
   it('tells a two-computer owner where USB2 goes, and offers no connect here', async () => {
     const r = await walk(/one I play on/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/other computer/i));

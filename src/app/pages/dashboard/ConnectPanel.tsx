@@ -49,17 +49,17 @@ export const ConnectPanel = (props: {
 
   return (
     <div aria-live="polite">
+      {/* Above the switch, not inside one arm: a flash failure has no verdict of its own, and a
+          verdict left over from an earlier connect used to hide it entirely. */}
+      <Show when={dash.status() === 'error' && dash.error()}>
+        {(msg) => (
+          <div class="callout callout--danger" role="alert">
+            {msg()}
+          </div>
+        )}
+      </Show>
       <Switch>
         <Match when={!verdict()}>
-          {/* A flash or update failure has no verdict of its own, and this is the only thing the
-              Device tab renders when one leaves the page in an error state. */}
-          <Show when={dash.status() === 'error' && dash.error()}>
-            {(msg) => (
-              <div class="callout callout--danger" role="alert">
-                {msg()}
-              </div>
-            )}
-          </Show>
           <p>Plug in like this.</p>
           <PortDiagram
             plug={props.plug ?? ['usb1', 'usb2']}
@@ -92,6 +92,13 @@ export const ConnectPanel = (props: {
             <Connect label="Try again" />
             <NeverInstalled />
           </div>
+        </Match>
+
+        <Match when={verdict()?.kind === 'needs-click'}>
+          <div class="callout callout--danger" role="alert">
+            The browser wants one more click before it will ask. Press Try again.
+          </div>
+          <Connect label="Try again" />
         </Match>
 
         <Match when={verdict()?.kind === 'busy'}>

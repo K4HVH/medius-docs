@@ -61,12 +61,35 @@ describe('classifyConnectError', () => {
     });
   });
 
-  it('a browser that wants another click says so instead of leaking its own sentence', () => {
-    const v = classifyConnectError(
-      new DOMException('Must be handling a user gesture to show a permission request.', 'SecurityError'),
+  it('separates a browser that wants another click from a feature the page is not allowed', () => {
+    // Transient activation expiring is fixed by pressing the button again; a permissions policy
+    // blocking the whole feature is not, and telling someone to click again would be a loop.
+    expect(
+      classifyConnectError(
+        new DOMException('Must be handling a user gesture to show a permission request.', 'SecurityError'),
+      ),
+    ).toEqual({ kind: 'needs-click' });
+    const blocked = classifyConnectError(
+      new DOMException("Access to the feature 'serial' is disallowed by permission policy.", 'SecurityError'),
     );
-    expect(v.kind).toBe('other');
-    expect(v.kind === 'other' && v.message).toMatch(/another click/i);
+    expect(blocked.kind).toBe('other');
+  });
+
+  it('a thrown value with a hostile name getter does not take the attempt down', () => {
+    const hostile = {
+      get name(): string {
+        throw new Error('gotcha');
+      },
+      message: 'weird',
+    };
+    expect(() => classifyConnectError(hostile)).not.toThrow();
+  });
+
+  it('a failure with nothing to say still says something', () => {
+    expect(classifyConnectError(new Error(''))).toEqual({
+      kind: 'other',
+      message: 'the browser gave no reason',
+    });
   });
 
   it('anything else keeps its own message', () => {
