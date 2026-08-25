@@ -5,10 +5,27 @@ import { PortDiagram } from '../../src/app/pages/dashboard/PortDiagram';
 afterEach(cleanup);
 
 describe('PortDiagram', () => {
-  it('marks the cable that has to come out', () => {
-    const { getByText, container } = render(() => <PortDiagram plug={['usb3']} out={['usb1']} />);
-    expect(getByText('must be empty')).toBeTruthy();
-    expect(container.textContent).toContain('USB1');
+  // Which port carries which note, not just that the note exists somewhere: all three labels always
+  // render, so asserting the container contains "USB1" passed however the ports were marked.
+  const noteFor = (container: HTMLElement, label: string) => {
+    const tile = [...container.querySelectorAll('div')].find((d) => {
+      const strong = d.querySelector(':scope > div');
+      return strong?.textContent === label;
+    });
+    return tile?.textContent ?? '';
+  };
+
+  it('marks the cable that has to come out, and only that one', () => {
+    const { container } = render(() => <PortDiagram plug={['usb3']} out={['usb1']} />);
+    expect(noteFor(container, 'USB1')).toContain('must be empty');
+    expect(noteFor(container, 'USB3')).toContain('plug in');
+    expect(noteFor(container, 'USB2')).toContain('nothing here');
+  });
+
+  it('marks a port that belongs on another machine without telling anyone to plug it in here', () => {
+    const { container } = render(() => <PortDiagram plug={['usb2']} other={['usb1']} />);
+    expect(noteFor(container, 'USB1')).toContain('not this computer');
+    expect(noteFor(container, 'USB2')).toContain('plug in');
   });
 
   it('names the button by the socket beside it, never left/right or a chip', () => {

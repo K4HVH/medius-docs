@@ -49,9 +49,10 @@ export const ConnectPanel = (props: {
 
   return (
     <div aria-live="polite">
-      {/* Above the switch, not inside one arm: a flash failure has no verdict of its own, and a
-          verdict left over from an earlier connect used to hide it entirely. */}
-      <Show when={dash.status() === 'error' && dash.error()}>
+      {/* Above the switch, not inside one arm: a flash or update failure has no verdict of its own,
+          and a verdict left over from an earlier connect used to hide it entirely. Not gated on
+          status either -- an update whose box never came back leaves 'disconnected'. */}
+      <Show when={dash.error()}>
         {(msg) => (
           <div class="callout callout--danger" role="alert">
             {msg()}

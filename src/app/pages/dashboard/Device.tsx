@@ -7,7 +7,7 @@ import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
 import DeviceOptions from './DeviceOptions';
-import { ConnectPanel } from './ConnectPanel';
+import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
 import '../../../styles/docs.css';
 
 const healthItems = (h: Health) => [
@@ -49,14 +49,10 @@ const Device = () => {
   return (
     <>
       <Show when={!dash.supported}>
-        <div class="callout callout--warning">
-          This browser can't reach USB devices. Open the dashboard in Chrome, Edge, or Opera.
-        </div>
+        <div class="callout callout--warning">{BAD_BROWSER}</div>
       </Show>
       <Show when={dash.supported && !dash.secure}>
-        <div class="callout callout--warning">
-          Web Serial needs a secure context. Open this page over HTTPS, or on localhost.
-        </div>
+        <div class="callout callout--warning">{BAD_CONTEXT}</div>
       </Show>
 
       <div style={{ display: 'flex', gap: 'var(--g-spacing)', 'flex-wrap': 'wrap', 'align-items': 'flex-start' }}>

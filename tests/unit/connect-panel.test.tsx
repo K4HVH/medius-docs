@@ -57,17 +57,20 @@ describe('ConnectPanel', () => {
 
   it('no port names the cable and the computer', () => {
     mock.verdict = { kind: 'no-port' };
-    const { container, getByRole } = render(() => <ConnectPanel />);
-    expect(container.textContent).toContain('USB2');
-    expect(container.textContent).toMatch(/this computer/i);
+    const { getByRole } = render(() => <ConnectPanel />);
+    const alert = getByRole('alert');
+    expect(alert.textContent).toContain('USB2');
+    expect(alert.textContent).toMatch(/this computer/i);
     getByRole('button', { name: /try again/i }).click();
     expect(mock.connect).toHaveBeenCalled();
   });
 
   it('a silent box is told to plug the other cable in', () => {
     mock.verdict = { kind: 'silent' };
-    const { container, getByRole } = render(() => <ConnectPanel />);
-    expect(container.textContent).toContain('USB1');
+    const { getByRole } = render(() => <ConnectPanel />);
+    const alert = getByRole('alert');
+    expect(alert.textContent).toContain('USB1');
+    expect(alert.textContent).not.toContain('USB3');
     expect(getByRole('button', { name: /try again/i })).toBeTruthy();
   });
 

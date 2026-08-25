@@ -321,6 +321,9 @@ export const DashboardProvider: ParentComponent = (props) => {
       const reconnected = await tryReconnect(ctrlPort);
       setFlashProgress({ phase: 'done' });
       if (!reconnected) {
+        setError(
+          'The new firmware is installed, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
+        );
         setStatus('disconnected');
       } else {
         await readFirmwareInfo();

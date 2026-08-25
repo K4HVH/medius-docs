@@ -44,6 +44,9 @@ const Advanced = () => {
   createEffect(() => {
     chip();
     setUnplugged(false);
+    // The old failure named the other chip's socket; leaving it up puts two contradictory
+    // hold-this-button instructions on screen at once.
+    setErr(null);
   });
 
   // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
@@ -78,9 +81,11 @@ const Advanced = () => {
     const mine = ++pick;
     setFiles(fs);
     setImage(null);
-    setErr(null);
     const f = fs[0];
+    // No file means FileUpload rejected everything and has just called onError. Clearing here would
+    // wipe that message in the same tick it was set, which is worse than the silence it replaced.
     if (!f) return;
+    setErr(null);
     void f
       .arrayBuffer()
       .then((b) => {

@@ -174,7 +174,11 @@ const Update = () => {
               <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                 <div style={row}>
-                  <Button variant="primary" disabled={busy()} onClick={() => void runUpdate()}>
+                  <Button
+                    variant="primary"
+                    disabled={busy() || releases.loading}
+                    onClick={() => void runUpdate()}
+                  >
                     {busy() ? 'Updating...' : 'Update'}
                   </Button>
                   <Button
