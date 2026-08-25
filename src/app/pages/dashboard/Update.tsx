@@ -7,7 +7,7 @@ import { Chip } from '../../../components/display/Chip';
 import { versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { useDashboard } from './context';
-import { ConnectPanel } from './ConnectPanel';
+import { BAD_BROWSER, ConnectPanel } from './ConnectPanel';
 import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
@@ -86,18 +86,19 @@ const Update = () => {
     try {
       const da = deviceAsset();
       const ha = hostAsset();
-      if (!latest()) {
+      // Three different situations, and only the first is fixed by waiting. Point at the other
+      // choice only when it would actually work, and name where that choice lives: it is on the
+      // previous screen, not this one.
+      if (!latest() || (!da && !ha)) {
         setErr("There's no update available right now. Try again in a few minutes.");
         return;
       }
-      // A release that carries one image and not the other is a different thing from no release at
-      // all, and "try again in a few minutes" is false for it: point at the button that works.
-      if ((wantDevice && !da) || (wantHost && !ha)) {
-        setErr(
-          !da
-            ? 'This release has nothing for the main chip. Try Mouse-side only.'
-            : 'This release has nothing for the mouse-side chip. Try Main only.',
-        );
+      if (wantDevice && !da) {
+        setErr('This release has nothing for the main chip. Press Back and choose Mouse-side only.');
+        return;
+      }
+      if (wantHost && !ha) {
+        setErr('This release has nothing for the mouse-side chip. Press Back and choose Main only.');
         return;
       }
       const images: { device?: Uint8Array; host?: Uint8Array } = {};
@@ -116,7 +117,7 @@ const Update = () => {
   return (
     <>
       <Show when={!dash.supported}>
-        <div class="callout callout--warning">Open the dashboard in Chrome, Edge, or Opera.</div>
+        <div class="callout callout--warning">{BAD_BROWSER}</div>
       </Show>
 
       <Show when={dash.status() === 'flashing'}>

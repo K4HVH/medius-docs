@@ -78,9 +78,9 @@ async function runEsptool(
   }
 }
 
-// Flash a chip already in ROM download on its native USB port. Used for the
-// device chip (after a reboot-to-download or the LEFT BOOT button) and the host
-// chip (RIGHT BOOT button), and for recovery.
+// Flash a chip already in ROM download on its native USB port. Used for the device chip (USB1) and
+// the host chip (USB3), each entered by holding the button beside that socket while plugging the
+// cable in, with the other cables out. Also the recovery path.
 export async function flashNativePort(params: FlashNativeParams): Promise<void> {
   const { port, image, kind, onProgress, onLog } = params;
   const invalid = validateImage(image, kind);

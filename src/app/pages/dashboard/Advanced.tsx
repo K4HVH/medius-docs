@@ -15,7 +15,7 @@ import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
 import { useDashboard } from './context';
-import { BAD_BROWSER } from './ConnectPanel';
+import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
 import { PortDiagram, holdButton } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
@@ -24,8 +24,8 @@ const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'No
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
-// One manual flasher with full control: any chip, app or factory, release or upload, written
-// over the both-buttons download path (works even on a dead box).
+// One manual flasher with full control: any chip, app or factory, release or upload, written over
+// the download path (works even on a dead box).
 const Advanced = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
@@ -70,17 +70,25 @@ const Advanced = () => {
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
+  // Which selection a read belongs to. A slow read of an earlier file resolving after a newer one
+  // was picked would otherwise arm the earlier file's bytes under the newer file's name, which is
+  // the whole hazard this clearing is for.
+  let pick = 0;
   const onFiles = (fs: File[]) => {
+    const mine = ++pick;
     setFiles(fs);
-    // Clear first, and clear again if the read fails. Leaving the previous file's bytes armed under
-    // the new file's name is how the wrong image gets written to a chip.
     setImage(null);
+    setErr(null);
     const f = fs[0];
     if (!f) return;
     void f
       .arrayBuffer()
-      .then((b) => setImage(new Uint8Array(b)))
+      .then((b) => {
+        if (mine !== pick) return;
+        setImage(new Uint8Array(b));
+      })
       .catch(() => {
+        if (mine !== pick) return;
         setImage(null);
         setErr('That file could not be read. Pick it again.');
       });
@@ -115,6 +123,9 @@ const Advanced = () => {
       <Show when={!dash.supported}>
         <div class="callout callout--warning">{BAD_BROWSER}</div>
       </Show>
+      <Show when={dash.supported && !dash.secure}>
+        <div class="callout callout--warning">{BAD_CONTEXT}</div>
+      </Show>
 
       <Show when={dash.status() === 'flashing'}>
         <Card>
@@ -123,7 +134,7 @@ const Advanced = () => {
         </Card>
       </Show>
 
-      <Show when={dash.status() !== 'flashing'}>
+      <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
         <Card>
           <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
           <Show when={err()}>
@@ -220,6 +231,7 @@ const Advanced = () => {
                   maxSize={FLASH_SIZE_BYTES}
                   value={files()}
                   onChange={onFiles}
+                  onError={(m: string) => setErr(m)}
                   label="Firmware .bin"
                 />
                 <Show when={kind() === 'app'}>

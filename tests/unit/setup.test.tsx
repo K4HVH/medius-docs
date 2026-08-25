@@ -104,10 +104,20 @@ describe('Setup', () => {
     await waitFor(() => expect(container.textContent).toMatch(/which computer is this/i));
   });
 
-  it('names the button by its socket on each install screen, and never names a chip', async () => {
+  it('names the button by its socket on BOTH install screens, and never names a chip', async () => {
     const r = render(() => <Setup />);
     r.getByRole('button', { name: /just one computer/i }).click();
     await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB1/i));
+    expect(r.container.textContent).not.toMatch(/button next to USB3/i);
+    expect(r.container.textContent).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
+
+    // Walk to the second install screen: asserting only the first one let an inverted socket on the
+    // mouse-side screen -- telling the owner to hold the USB1 button while plugging USB3 in -- pass.
+    r.getByRole('button', { name: /^install$/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /unplugged/i }));
+    r.getByRole('button', { name: /unplugged/i }).click();
+    await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB3/i));
+    expect(r.container.textContent).not.toMatch(/button next to USB1/i);
     expect(r.container.textContent).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
   });
 
