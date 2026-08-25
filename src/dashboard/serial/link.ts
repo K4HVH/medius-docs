@@ -541,12 +541,14 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
-  // Set emit-rate pacing (§3.10): the source the box paces injection to. Learned tracks the mouse's
-  // native report rate (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped
-  // to 1000/n, capped at 1000). rateHz only matters in Fixed mode. It raises the emit ceiling only; idle
-  // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
-  setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
-    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
+  // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
+  // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
+  // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
+  // the clone advertises and the box polls the device at, 0 for the device's own; it needs IMPERFECT on
+  // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
+  // every call. Persisted in NVS. Read back with `queryEmitPace`.
+  setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
   }
 
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).

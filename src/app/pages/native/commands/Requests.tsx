@@ -729,8 +729,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EMIT VALUE</div>
           <p>
-            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2): the
-            mode, the configured fixed rate, and the rate actually in effect.
+            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2).
           </p>
           <table class="api-params">
             <thead>
@@ -740,8 +739,16 @@ const Requests: Component = () => {
               <tr><td>2</td><td><code>mode</code></td><td><code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
               <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
               <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet</td></tr>
+              <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
+              <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
+              <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
             </tbody>
           </table>
+          <p>
+            A <code>force_hz</code> set while{' '}
+            <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
+            <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the device's own.
+          </p>
           <p>
             Library binding:{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.

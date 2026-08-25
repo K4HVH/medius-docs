@@ -215,8 +215,8 @@ const Option: Component = () => {
 
       <div id="emit" data-search-target>
         <Card>
-          <CardHeader title="EMIT" subtitle="Pick what paces injected motion" />
-          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE]</pre>
+          <CardHeader title="EMIT" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
+          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
             <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
@@ -236,19 +236,48 @@ const Option: Component = () => {
               pending, so idle stays idle.
             </p>
           </div>
+          <div class="api-response-label">FORCE_HZ</div>
+          <table class="api-params">
+            <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
+              <tr><td>target Hz</td><td>Writes <code>1000/n</code> onto every HID interrupt-IN endpoint of the served descriptor and polls the device at that same interval</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              A forced rate applies only with{' '}
+              <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> on, because the
+              descriptor stops matching the real device. Changing the resolved interval re-clones the
+              box, which drops this port for a few seconds.
+            </p>
+            <p>
+              Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
+              low-speed clone cannot express an interval below 10 ms, so a request above 100 Hz there
+              resolves to 100.
+            </p>
+          </div>
+          <p>
+            <code>force_hz</code> is independent of <code>mode</code>: a clone can advertise 1 kHz while
+            injection still paces to the learnt native rate. Both ride one command, so every{' '}
+            <code>OPTION(EMIT)</code> writes both.
+          </p>
           <p>
             Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (mode plus the
-            rate in effect) · Library{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (mode, the
+            rate in effect, and what the clone advertises) · Library{' '}
             <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Fixed 1 kHz (<code>mode = 2</code>, <code>rate_hz = 0x03E8</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 04 00  | 02     | 02     | E8 03  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>
+            Fixed 1 kHz with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
+            <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
+| A5     | 11     | 00     | 06 00  | 02     | 02     | E8 03   | E8 03    | lo hi  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>
         </Card>
       </div>
 

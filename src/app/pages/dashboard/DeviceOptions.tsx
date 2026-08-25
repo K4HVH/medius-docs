@@ -71,16 +71,21 @@ const DeviceOptions = () => {
   const [bearMode, setBearMode] = createSignal<string | null>(null);
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
+  const [forceEdit, setForceEdit] = createSignal<number | null>(null);
+  const [forceOnEdit, setForceOnEdit] = createSignal<boolean | null>(null);
 
   // Every editable option below shares one shape: an unapplied edit offers Revert and marks the
   // status chip. Emit rate was the only one that did, so a pending bearing or riding window looked
   // applied.
   const rideDirty = () => rideEdit() !== null;
   const bearDirty = () => bearEdit() !== null || bearMode() !== null;
-  const emitDirty = () => modeEdit() !== null || hzEdit() !== null;
+  const emitDirty = () =>
+    modeEdit() !== null || hzEdit() !== null || forceEdit() !== null || forceOnEdit() !== null;
   const revertRide = () => setRideEdit(null);
   const revertBear = () => { setBearEdit(null); setBearMode(null); };
-  const revertEmit = () => { setModeEdit(null); setHzEdit(null); };
+  const revertEmit = () => {
+    setModeEdit(null); setHzEdit(null); setForceEdit(null); setForceOnEdit(null);
+  };
 
   const name = () => nameEdit() ?? version()?.name ?? '';
   const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
@@ -103,6 +108,10 @@ const DeviceOptions = () => {
   // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
+  const forceOn = () => forceOnEdit() ?? (emit()?.forceHz ?? 0) > 0;
+  // The box's own advertised rate is the sensible starting point: asking for the rate already in the
+  // descriptor changes no byte, so it costs nothing if the user applies without touching the field.
+  const forceHz = () => forceEdit() ?? emit()?.forceHz ?? emit()?.advertisedHz ?? 1000;
 
   // Each write clears its own edit only once the frame is away. A failure leaves the edit showing,
   // so the field still holds what the user asked for rather than snapping back as if it landed.
@@ -139,9 +148,11 @@ const DeviceOptions = () => {
   const applyEmit = () =>
     cmd.run(async () => {
       const m = EMIT_MODES[mode()];
-      await dash.link()!.setEmitPace(m, m === EmitMode.Fixed ? hz() : 0);
+      await dash.link()!.setEmitPace(m, m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
       setModeEdit(null);
       setHzEdit(null);
+      setForceEdit(null);
+      setForceOnEdit(null);
       dash.refreshPoll('emit');
     });
 
@@ -305,7 +316,8 @@ const DeviceOptions = () => {
 
         <Section title="Emit rate">
         <p>
-          Paces injected motion, as a ceiling only.
+          Paces injected motion as a ceiling, and sets the rate the clone itself runs at. The box saves
+          both together, so Apply writes both.
         </p>
         <RadioGroup
           name="emit-mode"
@@ -330,6 +342,34 @@ const DeviceOptions = () => {
               />
             </div>
           </Show>
+        </div>
+        <p style={{ ...muted, 'margin-top': 'var(--g-spacing-md)' }}>Wire rate</p>
+        <RadioGroup
+          name="wire-rate"
+          value={forceOn() ? 'forced' : 'device'}
+          onChange={(v) => setForceOnEdit(v === 'forced')}
+          options={[
+            { value: 'device', label: "Device's own" },
+            { value: 'forced', label: 'Forced' },
+          ]}
+        />
+        <p style={muted}>
+          {forceOn()
+            ? 'Runs the clone at a rate the mouse did not ask for; needs Allow imperfect, and the box reboots to apply.'
+            : 'Runs the clone at the rate the mouse asked for.'}
+        </p>
+        <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
+          <Show when={forceOn()}>
+            <div style={{ 'max-width': '8rem' }}>
+              <NumberInput
+                label="Rate (Hz)"
+                value={forceHz()}
+                min={4}
+                max={1000}
+                onChange={(v) => setForceEdit(v ?? 4)}
+              />
+            </div>
+          </Show>
           <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
             Apply
           </Button>
@@ -346,10 +386,20 @@ const DeviceOptions = () => {
         </Show>
         <Show when={emit()} fallback={<p style={status}>Reading status...</p>}>
           {(s) => (
-            <div style={status}>
+            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
               <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
                 {emitLabel(s())}
               </Chip>
+              <Show when={s().advertisedHz > 0}>
+                <Chip variant={s().forceActive ? 'success' : 'neutral'}>
+                  {s().forceActive
+                    ? `Forced \u00b7 ${s().advertisedHz} Hz`
+                    : `Device's own \u00b7 ${s().advertisedHz} Hz`}
+                </Chip>
+              </Show>
+              <Show when={s().forceHz > 0 && !s().forceActive}>
+                <Chip variant="warning">Set, but needs Allow imperfect</Chip>
+              </Show>
               <Show when={emitDirty()}>
                 <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
                   not applied yet
@@ -359,6 +409,7 @@ const DeviceOptions = () => {
           )}
         </Show>
         </Section>
+
       </Card>
     </Show>
   );

@@ -266,7 +266,13 @@ describe('SerialLink', () => {
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
         } else if (f.payload[1] === 2) {
           // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
-          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01])));
+          mock.push(
+            encode(
+              FrameType.Resp,
+              f.seq,
+              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01]),
+            ),
+          );
         }
       }
     };
@@ -282,6 +288,9 @@ describe('SerialLink', () => {
       mode: EmitMode.Fixed,
       fixedHz: 500,
       resolvedHz: 500,
+      forceHz: 125,
+      advertisedHz: 100,
+      forceActive: true,
     });
     expect(reqs).toEqual([
       [9, 0],
