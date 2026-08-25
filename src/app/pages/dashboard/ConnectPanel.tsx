@@ -3,7 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
-import { PortDiagram, type PortId } from './PortDiagram';
+import { WiringPorts } from './PortDiagram';
 
 // Connect, and after a failure the one thing to do about it. Every page that offers Connect renders
 // this, so the answer to "why won't it connect" is written once. `where` renames the ports for a
@@ -13,12 +13,7 @@ import { PortDiagram, type PortId } from './PortDiagram';
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
 export const BAD_CONTEXT = "This page isn't secure. Open it again from the link you were given.";
 
-export const ConnectPanel = (props: {
-  onSetup?: () => void;
-  plug?: PortId[];
-  other?: PortId[];
-  where?: Partial<Record<PortId, string>>;
-}) => {
+export const ConnectPanel = (props: { onSetup?: () => void }) => {
   const dash = useDashboard();
   const navigate = useNavigate();
   const setup = () => (props.onSetup ? props.onSetup() : navigate('/dashboard/setup'));
@@ -61,13 +56,7 @@ export const ConnectPanel = (props: {
       </Show>
       <Switch>
         <Match when={!verdict()}>
-          <p>Plug in like this.</p>
-          <PortDiagram
-            plug={props.plug ?? ['usb1', 'usb2']}
-            other={props.other}
-            mouse={['usb3']}
-            where={props.where}
-          />
+          <WiringPorts />
           <Connect />
         </Match>
 
@@ -83,12 +72,7 @@ export const ConnectPanel = (props: {
           <div class="callout callout--danger" role="alert">
             This computer can't see your box. Plug USB2 into it, then press Try again.
           </div>
-          <PortDiagram
-            plug={props.plug ?? ['usb1', 'usb2']}
-            other={props.other}
-            mouse={['usb3']}
-            where={props.where}
-          />
+          <WiringPorts />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
             <Connect label="Try again" />
             <NeverInstalled />
@@ -113,12 +97,7 @@ export const ConnectPanel = (props: {
           <div class="callout callout--danger" role="alert">
             The box is not answering. Check USB1 is plugged in too, then press Try again.
           </div>
-          <PortDiagram
-            plug={props.plug ?? ['usb1', 'usb2']}
-            other={props.other}
-            mouse={['usb3']}
-            where={props.where}
-          />
+          <WiringPorts />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
             <Connect label="Try again" force />
             <NeverInstalled />

@@ -1,86 +1,30 @@
 /// <reference types="w3c-web-serial" />
-import { For, Match, Show, Switch, createResource, createSignal } from 'solid-js';
+import { Match, Show, Switch, createResource, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { Progress } from '../../../components/feedback/Progress';
-import { versionString } from '../../../dashboard/protocol';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
-import { PortDiagram, type PortId, holdButton } from './PortDiagram';
+import { ClearPort, InstallPorts, type PortId, holdButton } from './PortDiagram';
 import '../../../styles/docs.css';
 
-// Where the box ends up. It changes the last screen and nothing else: the two installs are the same
-// wherever they are run from, including from the control PC, which plugs USB1 in for a minute.
-type Topology = 'one-pc' | 'game-here' | 'control-here';
-type Step = 'where' | 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
+type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
 
-// Both gates exist for the same reason and neither can be automated: the browser sees USB2 and
-// nothing else, so it cannot tell whether the other two cables are in.
-const STEPS: Step[] = ['where', 'main', 'unplug', 'mouse', 'unplug3', 'cables'];
+const STEPS: Step[] = ['main', 'unplug', 'mouse', 'unplug3', 'cables'];
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
-const HAZARD = 'USB1 and USB3 plugged into the same computer at once can kill it.';
-const retry = (id: PortId) => `${holdButton(id)}, then press Install.`;
+const HAZARD = 'USB1 and USB3 in the same computer at once can kill it.';
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
-
-// The whole option is the click target, label above its own picture, so there is no working out
-// which button belongs to which diagram.
-const choice = {
-  display: 'block',
-  width: '100%',
-  'text-align': 'left',
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'inherit',
-  font: 'inherit',
-  border: '2px solid var(--g-border-color)',
-  'border-radius': 'var(--g-radius)',
-  padding: 'var(--g-spacing-sm) var(--g-spacing)',
-  'margin-bottom': 'var(--g-spacing)',
-} as const;
-
-const choiceLabel = { 'font-weight': '700', 'font-size': '1.05em' } as const;
-
-const CHOICES: {
-  topo: Topology;
-  label: string;
-  plug: PortId[];
-  other: PortId[];
-  where: Partial<Record<PortId, string>>;
-}[] = [
-  {
-    topo: 'one-pc',
-    label: 'Just one computer',
-    plug: ['usb1', 'usb2'],
-    other: [],
-    where: { usb1: 'This computer', usb2: 'This computer' },
-  },
-  {
-    topo: 'game-here',
-    label: "Two computers, and I'm on the one I play on",
-    plug: ['usb1'],
-    other: ['usb2'],
-    where: { usb1: 'This computer', usb2: 'Other computer' },
-  },
-  {
-    topo: 'control-here',
-    label: "Two computers, and I'm on the other one",
-    plug: ['usb2'],
-    other: ['usb1'],
-    where: { usb1: 'Gaming PC', usb2: 'This computer' },
-  },
-];
 
 const Setup = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
-  const [step, setStep] = createSignal<Step>('where');
-  const [topo, setTopo] = createSignal<Topology>('one-pc');
+  const [step, setStep] = createSignal<Step>('main');
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
 
@@ -100,28 +44,15 @@ const Setup = () => {
       ? Math.round(((p.written ?? 0) / p.total) * 100)
       : undefined;
   };
+  const retry = (id: PortId) => `${holdButton(id)}, then press Install.`;
 
-  const pick = (t: Topology) => {
-    setTopo(t);
-    setErr(null);
-    // Drop any link and any earlier failure before touching the chips. A link left open would keep
-    // reporting the version of firmware that is about to be erased, and the last screen would greet
-    // a finished install with a connect failure from before the wizard started.
-    void dash.disconnect().catch(() => undefined);
-    setStep('main');
-  };
-
-  // Write a full factory image to whichever chip is currently in ROM download on this cable. The
-  // owner is never told which chip that is: only one chip's USB is plugged in, and the button beside
-  // that socket is the one held, so only one chip can answer.
+  // Write a full factory image to whichever chip is in download mode on this cable. Only one chip's
+  // USB is plugged in and only its own button is held, so only one chip can answer.
   const install = async (assetName: string, next: Step, socket: PortId) => {
     setErr(null);
     dash.clearFlashResult();
     setBusy(true);
     try {
-      // A resource whose fetch failed THROWS when it is read, so this cannot sit outside a catch:
-      // it threw straight past the button and left a live Install that did nothing at all. A failed
-      // fetch and a release without the image are the same thing to the owner.
       let asset: FirmwareAsset | null = null;
       try {
         asset = latest()?.assets.find((a) => a.name === assetName) ?? null;
@@ -129,39 +60,30 @@ const Setup = () => {
         asset = null;
       }
       if (!asset) {
-        setErr("The download isn't ready yet. Reload the page and try again in a few minutes.");
+        setErr("The download isn't ready. Reload the page and try again in a few minutes.");
         return;
       }
       const port = await requestRomPort();
       const image = await downloadAsset(asset);
       if (await dash.flashNative(port, image, 'factory')) {
-        // The chip has just been rewritten, so anything still holding a link is holding a stale one.
-        // Not awaited: every state write in disconnect() is synchronous, and the port teardown it
-        // ends with has no timeout -- awaiting it can strand a finished install on "Installing...".
+        // The chip has just been rewritten, so any link still open is a stale one.
         void dash.disconnect().catch(() => undefined);
         setStep(next);
       } else {
         // Read the reason BEFORE disconnecting: disconnect() nulls `error` synchronously, and the
-        // messages it was eating are the ones pressing the button again cannot fix -- a port held
-        // by another tab, a port that would not open.
+        // messages it was eating are the ones pressing the button again cannot fix.
         const why = dash.error();
-        // The chip was reset either way, so the link is just as dead on the failure path.
         void dash.disconnect().catch(() => undefined);
         setErr(why ?? `That did not finish. ${retry(socket)}`);
       }
     } catch (e) {
-      // A cancel and an empty chooser are the same DOMException, and the second is far more likely:
-      // the chip is not in update mode. Say the thing that fixes both rather than nothing.
+      // A cancel and an empty chooser are the same DOMException, and the second is far more likely.
       setErr(isUserCancel(e) ? `Nothing to install to. ${retry(socket)}` : (e as Error).message);
     } finally {
       setBusy(false);
     }
   };
 
-  const startOver = () => {
-    setErr(null);
-    setStep('where');
-  };
   const go = (to: Step) => () => {
     setErr(null);
     setStep(to);
@@ -185,10 +107,7 @@ const Setup = () => {
 
       <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
         <Card>
-          <CardHeader
-            title="Set up your box"
-            subtitle="The ports are numbered on the box itself"
-          />
+          <CardHeader title="Install Medius" subtitle="The ports are numbered on the box" />
           <Chip variant="neutral">{counter()}</Chip>
           <Show when={err()}>
             {(msg) => (
@@ -199,48 +118,23 @@ const Setup = () => {
           </Show>
 
           <Switch>
-            <Match when={step() === 'where'}>
-              <p>Which computer is this?</p>
-              <p style={{ color: 'var(--g-text-secondary)' }}>
-                The pictures show where the cables end up. The next screens install it.
-              </p>
-              <For each={CHOICES}>
-                {(c) => (
-                  <button type="button" style={choice} onClick={() => pick(c.topo)}>
-                    <div style={choiceLabel}>{c.label}</div>
-                    <PortDiagram plug={c.plug} other={c.other} mouse={['usb3']} where={c.where} />
-                  </button>
-                )}
-              </For>
-            </Match>
-
             <Match when={step() === 'main'}>
-              <PortDiagram
-                plug={['usb1']}
-                out={['usb2', 'usb3']}
-                where={{ usb1: 'This computer' }}
-                boot="usb1"
-              />
-              <div style={row}>
-                <Button
-                  variant="primary"
-                  disabled={busy() || releases.loading}
-                  onClick={() => void install('medius_device-factory.bin', 'unplug', 'usb1')}
-                >
-                  {busy() ? 'Installing...' : 'Install'}
-                </Button>
-                <Button variant="subtle" size="compact" disabled={busy()} onClick={startOver}>
-                  Back
-                </Button>
-              </div>
+              <InstallPorts socket="usb1" />
+              <Button
+                variant="primary"
+                disabled={busy() || releases.loading}
+                onClick={() => void install('medius_device-factory.bin', 'unplug', 'usb1')}
+              >
+                {busy() ? 'Installing...' : 'Install'}
+              </Button>
             </Match>
 
             <Match when={step() === 'unplug'}>
-              <PortDiagram out={['usb1']} />
-              <div class="callout callout--danger">Take USB1 out of this computer. {HAZARD}</div>
+              <ClearPort socket="usb1" />
+              <div class="callout callout--danger">{HAZARD}</div>
               <div style={row}>
                 <Button variant="primary" onClick={go('mouse')}>
-                  It's unplugged
+                  Done
                 </Button>
                 <Button variant="subtle" size="compact" onClick={go('main')}>
                   Back
@@ -249,12 +143,7 @@ const Setup = () => {
             </Match>
 
             <Match when={step() === 'mouse'}>
-              <PortDiagram
-                plug={['usb3']}
-                out={['usb1', 'usb2']}
-                where={{ usb3: 'This computer' }}
-                boot="usb3"
-              />
+              <InstallPorts socket="usb3" />
               <div class="callout callout--danger">{HAZARD}</div>
               <div style={row}>
                 <Button
@@ -271,65 +160,19 @@ const Setup = () => {
             </Match>
 
             <Match when={step() === 'unplug3'}>
-              <PortDiagram out={['usb3']} />
-              <div class="callout callout--danger">
-                Take USB3 out of this computer before you plug USB1 back in. {HAZARD}
-              </div>
+              <ClearPort socket="usb3" />
+              <div class="callout callout--danger">{HAZARD}</div>
               <Button variant="primary" onClick={go('cables')}>
-                It's unplugged
+                Done
               </Button>
             </Match>
 
             <Match when={step() === 'cables'}>
               <Show
                 when={dash.status() === 'connected'}
-                fallback={
-                  <Switch>
-                    <Match when={topo() === 'one-pc'}>
-                      <ConnectPanel
-                        plug={['usb1', 'usb2']}
-                        where={{ usb1: 'This computer', usb2: 'This computer' }}
-                        onSetup={startOver}
-                      />
-                    </Match>
-                    <Match when={topo() === 'control-here'}>
-                      <ConnectPanel
-                        plug={['usb2']}
-                        other={['usb1']}
-                        where={{ usb1: 'Gaming PC', usb2: 'This computer' }}
-                        onSetup={startOver}
-                      />
-                    </Match>
-                    <Match when={topo() === 'game-here'}>
-                      <PortDiagram
-                        plug={['usb1']}
-                        other={['usb2']}
-                        mouse={['usb3']}
-                        where={{ usb1: 'This computer', usb2: 'Other computer' }}
-                      />
-                      <div class="callout callout--info">
-                        Open this address on the other computer:{' '}
-                        <code>
-                          {typeof window === 'undefined' ? '' : `${window.location.origin}/dashboard`}
-                        </code>
-                      </div>
-                      <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                        Finish
-                      </Button>
-                    </Match>
-                  </Switch>
-                }
+                fallback={<ConnectPanel onSetup={go('main')} />}
               >
-                <div class="callout callout--info">
-                  Done.{' '}
-                  <Show when={dash.version()}>
-                    {(v) => (
-                      <>
-                        Your box is on <strong>v{versionString(v())}</strong>.
-                      </>
-                    )}
-                  </Show>
-                </div>
+                <div class="callout callout--info">Installed.</div>
                 <Button variant="primary" onClick={() => navigate('/dashboard')}>
                   Finish
                 </Button>

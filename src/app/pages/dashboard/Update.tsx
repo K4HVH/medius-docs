@@ -8,7 +8,7 @@ import { versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
-import { PortDiagram } from './PortDiagram';
+import { WiringPorts } from './PortDiagram';
 import '../../../styles/docs.css';
 
 type Step = 'choose' | 'update' | 'done' | 'sent';
@@ -202,7 +202,7 @@ const Update = () => {
                 for a few seconds, then comes back.
               </p>
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-                <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
+                <WiringPorts />
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}

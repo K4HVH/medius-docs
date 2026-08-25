@@ -16,7 +16,7 @@ import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
 import { useDashboard } from './context';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
-import { PortDiagram, holdButton } from './PortDiagram';
+import { ClearPort, InstallPorts, WiringPorts, holdButton } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
@@ -175,9 +175,9 @@ const Advanced = () => {
                 Take the cable you just used out of this computer first. USB1 and USB3 plugged into
                 the same computer at once can kill it.
               </div>
-              <PortDiagram out={flashed().chip === 'host' ? ['usb3'] : ['usb1']} />
+              <ClearPort socket={flashed().chip === 'host' ? 'usb3' : 'usb1'} />
               <div class="callout callout--info">Then plug in like this.</div>
-              <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
+              <WiringPorts />
               <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                 <Button variant="primary" onClick={() => navigate('/dashboard')}>
                   Go to my box
@@ -291,12 +291,7 @@ const Advanced = () => {
                 when={unplugged()}
                 fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
               >
-                <PortDiagram
-                  plug={chip() === 'host' ? ['usb3'] : ['usb1']}
-                  out={chip() === 'host' ? ['usb1', 'usb2'] : ['usb2', 'usb3']}
-                  where={chip() === 'host' ? { usb3: 'This computer' } : { usb1: 'This computer' }}
-                  boot={chip() === 'host' ? 'usb3' : 'usb1'}
-                />
+                <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
                 <div class="callout callout--danger">
                   USB1 and USB3 plugged into the same computer at once can kill it.
                 </div>
