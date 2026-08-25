@@ -11,9 +11,9 @@ describe('PortDiagram', () => {
     expect(container.textContent).toContain('USB1');
   });
 
-  it('asks for both buttons, never one of them', () => {
-    const { container } = render(() => <PortDiagram plug={['usb1']} boot />);
-    expect(container.textContent).toContain('BOTH');
+  it('names the button by the socket beside it, never left/right or a chip', () => {
+    const { container } = render(() => <PortDiagram plug={['usb1']} boot="usb1" />);
+    expect(container.textContent).toMatch(/button next to USB1/i);
     expect(container.textContent).not.toMatch(/\bleft\b|\bright\b|main chip|mouse-side chip/i);
   });
 

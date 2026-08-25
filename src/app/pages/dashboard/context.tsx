@@ -396,7 +396,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   onCleanup(() => {
     disposed = true;
     // Never close the port mid-flash; esptool owns it during the handoff.
-    if (status() !== 'flashing') void link()?.close();
+    if (status() !== 'flashing') void link()?.close().catch(() => undefined);
   });
 
   const value: DashboardContextValue = {
