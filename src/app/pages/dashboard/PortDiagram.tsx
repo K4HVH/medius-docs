@@ -2,75 +2,83 @@ import { For, Show } from 'solid-js';
 
 export type PortId = 'usb1' | 'usb2' | 'usb3';
 
-const PORTS: { id: PortId; label: string; sub: string }[] = [
-  { id: 'usb1', label: 'USB1', sub: 'Game PC' },
-  { id: 'usb2', label: 'USB2', sub: 'Control PC' },
-  { id: 'usb3', label: 'USB3', sub: 'Mouse' },
-];
+const LABEL: Record<PortId, string> = { usb1: 'USB1', usb2: 'USB2', usb3: 'USB3' };
+const ORDER: PortId[] = ['usb1', 'usb2', 'usb3'];
 
-// A compact picture of the box: `plug` ports light green ("plug into PC"),
-// `mouse` ports light blue ("plug your mouse"), the rest dimmed, plus an optional
-// "hold BOOT" badge. The diagram carries the instruction; words don't.
-export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mouse?: PortId[] }) => {
-  const on = (id: PortId) => props.plug.includes(id);
-  const isMouse = (id: PortId) => props.mouse?.includes(id) ?? false;
-  const lit = (id: PortId) => on(id) || isMouse(id);
-  const accent = (id: PortId) => (isMouse(id) ? 'var(--color-primary)' : 'var(--color-success)');
-  const note = (id: PortId) => (on(id) ? 'plug into PC' : isMouse(id) ? 'plug your mouse' : 'leave out');
-  return (
-    <div style={{ margin: 'var(--g-spacing) 0' }}>
-      <div
-        style={{
-          border: '1px solid var(--g-border-color)',
-          'border-radius': 'var(--g-radius)',
-          padding: 'var(--g-spacing-sm)',
-        }}
-      >
-        <div
-          style={{
-            'font-size': '0.7em',
-            color: 'var(--g-text-muted)',
-            'margin-bottom': 'var(--g-spacing-sm)',
-            'text-transform': 'uppercase',
-            'letter-spacing': '0.06em',
-          }}
-        >
-          Your box
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)' }}>
-          <For each={PORTS}>
-            {(p) => (
+export const holdButton = (id: PortId) =>
+  `Hold the button next to ${LABEL[id]} down while you plug ${LABEL[id]} in`;
+
+type Tone = 'connect' | 'device' | 'clear' | 'idle';
+
+const COLOUR: Record<Tone, string> = {
+  connect: 'var(--color-success)',
+  // The mouse or keyboard is not a computer, so it does not read as one of the other two.
+  device: 'var(--color-primary)',
+  clear: 'var(--color-danger)',
+  idle: 'var(--g-border-color-subtle)',
+};
+
+interface Cell {
+  tone: Tone;
+  sub: string;
+  note: string;
+}
+
+const Ports = (props: { cells: Record<PortId, Cell>; badge?: string }) => (
+  <div style={{ 'margin-bottom': 'var(--g-spacing)' }}>
+    <div
+      style={{
+        border: '1px solid var(--g-border-color)',
+        'border-radius': 'var(--g-radius)',
+        padding: 'var(--g-spacing-sm)',
+      }}
+    >
+      <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)' }}>
+        <For each={ORDER}>
+          {(id) => {
+            const c = () => props.cells[id];
+            const on = () => c().tone !== 'idle';
+            return (
               <div
                 style={{
                   flex: '1',
                   'text-align': 'center',
                   padding: 'var(--g-spacing-sm)',
                   'border-radius': 'var(--g-radius)',
-                  border: `2px solid ${lit(p.id) ? accent(p.id) : 'var(--g-border-color-subtle)'}`,
-                  background: lit(p.id)
-                    ? `color-mix(in srgb, ${accent(p.id)} 14%, transparent)`
+                  border: `2px solid ${COLOUR[c().tone]}`,
+                  background: on()
+                    ? `color-mix(in srgb, ${COLOUR[c().tone]} 14%, transparent)`
                     : 'transparent',
-                  opacity: lit(p.id) ? '1' : '0.5',
+                  opacity: on() ? '1' : '0.5',
                 }}
               >
-                <div style={{ 'font-weight': '700' }}>{p.label}</div>
-                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-muted)' }}>{p.sub}</div>
+                <div
+                  style={{
+                    'font-weight': '700',
+                    'text-decoration': c().tone === 'clear' ? 'line-through' : 'none',
+                  }}
+                >
+                  {LABEL[id]}
+                </div>
+                <div style={{ 'font-size': '0.8em', color: 'var(--g-text-muted)' }}>{c().sub}</div>
                 <div
                   style={{
                     'margin-top': '4px',
                     'font-size': '0.8em',
                     'font-weight': '600',
-                    color: lit(p.id) ? accent(p.id) : 'var(--g-text-muted)',
+                    color: on() ? COLOUR[c().tone] : 'var(--g-text-muted)',
                   }}
                 >
-                  {note(p.id)}
+                  {c().note}
                 </div>
               </div>
-            )}
-          </For>
-        </div>
+            );
+          }}
+        </For>
       </div>
-      <Show when={props.boot}>
+    </div>
+    <Show when={props.badge}>
+      {(text) => (
         <div
           style={{
             'margin-top': 'var(--g-spacing-sm)',
@@ -82,9 +90,56 @@ export const PortDiagram = (props: { plug: PortId[]; boot?: 'main' | 'mouse'; mo
             'font-weight': '600',
           }}
         >
-          Hold the {props.boot === 'mouse' ? 'mouse-side' : 'main'} chip's BOOT button while plugging in
+          {text()}
         </div>
-      </Show>
-    </div>
-  );
-};
+      )}
+    </Show>
+  </div>
+);
+
+const cells = (f: (id: PortId) => Cell): Record<PortId, Cell> => ({
+  usb1: f('usb1'),
+  usb2: f('usb2'),
+  usb3: f('usb3'),
+});
+
+/**
+ * Writing firmware to one chip. The cable goes into the machine running this page, whatever that
+ * socket does afterwards, and every other cable has to be out — a chip already powered through
+ * another port does not come up in download mode, and USB1 with USB3 can kill the computer.
+ */
+export const InstallPorts = (props: { socket: PortId }) => (
+  <Ports
+    badge={`${holdButton(props.socket)}.`}
+    cells={cells((id) =>
+      id === props.socket
+        ? { tone: 'connect', sub: 'This device', note: 'plug in' }
+        : { tone: 'clear', sub: '', note: 'unplug' },
+    )}
+  />
+);
+
+/** Getting one cable out, and nothing else. */
+export const ClearPort = (props: { socket: PortId }) => (
+  <Ports
+    cells={cells((id) =>
+      id === props.socket
+        ? { tone: 'clear', sub: '', note: 'unplug' }
+        : { tone: 'idle', sub: '', note: '' },
+    )}
+  />
+);
+
+/**
+ * Where the three cables live once it is installed. USB2 is the one that has to reach the machine
+ * you are reading this on, or there is nothing here to connect to.
+ */
+export const WiringPorts = () => (
+  <Ports
+    cells={{
+      usb1: { tone: 'connect', sub: 'Game PC', note: 'plug in' },
+      usb2: { tone: 'connect', sub: 'This device', note: 'plug in' },
+      usb3: { tone: 'device', sub: 'Mouse/keyboard', note: 'plug in' },
+    }}
+  />
+);

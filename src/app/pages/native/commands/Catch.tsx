@@ -39,7 +39,7 @@ const Catch: Component = () => {
                         +- VEND_BULK  IN        +- EMIT   (after inject + lock)
                         +- BTN KEY MEDIA AXIS   +- BUS
                            at the merge point,
-                           before lock suppression and before injection`}</pre>
+                           before the lock scale and before injection`}</pre>
         <p>
           Addressing doubles as the filter. The control link runs at 4&nbsp;Mbaud and vendor bulk
           alone measures ~250&nbsp;KiB/s through the box, so every class at once cannot be delivered.
@@ -111,12 +111,12 @@ const Catch: Component = () => {
             length in{' '}
             <A href="/native/commands/catch#traffic-event"><code>true_len</code></A>.
           </p>
-          <div class="api-response-label">PHYSICAL ONLY, AND BEFORE SUPPRESSION</div>
+          <div class="api-response-label">PHYSICAL ONLY, AND BEFORE THE SCALE</div>
           <p>
             The input classes are captured at the emission merge point <em>before</em> any{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A> suppression or{' '}
-            <A href="/native/injection">injection</A>, so an input you have locked is still reported
-            here.
+            <A href="/native/commands/lock#scale"><code>LOCK</code> scale</A> or{' '}
+            <A href="/native/injection">injection</A>, so an input you have weighed down, or blocked
+            outright, is still reported here at its full physical value.
           </p>
           <p>
             <code>EMIT</code> is the mirror: what the clone put on the wire <em>after</em> injection,
@@ -144,8 +144,9 @@ const Catch: Component = () => {
 | SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | snaplen| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
-            A blanket is one table entry, not an expansion into per-id entries, which is how{' '}
-            <code>CTRL_LOCK_ID_ALL</code> already behaves. Library binding:{' '}
+            A blanket is one table entry, not an expansion into per-id entries, which is how a{' '}
+            <A href="/native/commands/lock#blanket"><code>LOCK</code> blanket</A> (<code>id = 0xFFFF</code>)
+            already behaves. Library binding:{' '}
             <A href="/library/catch#catch-events"><code>catch_events</code></A>.
           </p>
         </Card>
@@ -155,8 +156,8 @@ const Catch: Component = () => {
         <Card>
           <CardHeader title="The table" subtitle="Most-specific-first matching, 32 entries, and how a refusal shows up" />
           <p>
-            An exact <code>(class, id)</code> entry beats a class blanket, which beats{' '}
-            <code>class = 0xFF</code>; ties go to the earlier entry. The winning entry supplies the{' '}
+            An exact <code>(class, id)</code> entry ranks above a class blanket, which ranks above{' '}
+            <code>class = 0xFF</code>; ties go to the earlier entry. The highest-ranked entry supplies the{' '}
             <code>snaplen</code>.
           </p>
           <pre class="diagram">{`  table (insertion order)
@@ -192,7 +193,7 @@ const Catch: Component = () => {
             <tbody>
               <tr><td>the table already holds 32 entries</td><td>nothing is evicted; the header's <code>b0</code> flag says an entry was turned away</td></tr>
               <tr><td><code>class</code> is one the firmware does not know</td><td>an unknown class has no tap to attach to</td></tr>
-              <tr><td><code>dir</code> is outside <code>0..2</code></td><td>there is no fourth reading of the direction byte</td></tr>
+              <tr><td><code>dir</code> is outside <code>0..2</code></td><td>a subscription is addressed before any bearing is read, so only <code>0</code>-<code>2</code> name anything a tap can match</td></tr>
               <tr><td><code>class = 0xFF</code> with a specific <code>id</code></td><td><code>id</code> is class-specific, so a wildcard class with a real id addresses nothing coherent</td></tr>
             </tbody>
           </table>
@@ -203,7 +204,7 @@ const Catch: Component = () => {
             link loss, or an explicit unsubscribe.
           </p>
           <p>
-            The host library holds an open table alive with the same keepalive it uses for injection
+            The host library holds an open table past the silence timeout with the same keepalive it uses for injection
             holds, re-asserting the whole table after a device-side blip and across a control-link
             reconnect; its own <code>RESET</code> ends the event stream cleanly.
           </p>
@@ -259,7 +260,7 @@ const Catch: Component = () => {
             Divide a gap by{' '}
             <A href="/native/commands/requests#rate"><code>RESP(RATE)</code></A>'s{' '}
             <code>poll_period_us</code> for a poll count, but only where that reply's{' '}
-            <code>CTRL_RATE_CHANGE_DRIVEN</code> flag is clear: a change-driven device never puts its
+            <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear: a change-driven device never puts its
             idle polls on the wire, so they cannot be counted.
           </p>
         </Card>
@@ -419,7 +420,7 @@ const Catch: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
-              <tr><td><code>CONTROL</code></td><td>the real device's answer: <code>0</code> OK, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout</td></tr>
+              <tr><td><code>CONTROL</code></td><td>how the transaction completed: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> NAK to timeout</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
               <tr><td>every other class</td><td><code>0</code></td></tr>
             </tbody>
@@ -431,11 +432,11 @@ const Catch: Component = () => {
             way the data stage went.
           </p>
           <p>
-            A request answered from the box's own value cache still produces an event.
+            A request served from the box's own value cache still produces an event.
           </p>
           <pre class="diagram">{`  bytes = 80 06 00 01 00 00 12 00   12 01 00 02 00 00 00 40 ...
           '------ setup (8) ------'   '---- data stage -------'
-          GET_DESCRIPTOR(device)      dir = 1 (IN), flags = 0 (the device answered)`}</pre>
+          GET_DESCRIPTOR(device)      dir = 1 (IN), flags = 0 (completed OK)`}</pre>
           <div class="api-response-label">BUS EVENT KINDS</div>
           <p>
             <code>BUS</code> carries <code>[a][b]</code> in <code>bytes</code> with the kind in{' '}
@@ -514,7 +515,7 @@ const Catch: Component = () => {
 
   strict priority: each queue drains fully before the next`}</pre>
           <p>
-            Bulk can starve completely under a busy mouse: bulk plus input is the combination the
+            Bulk can go undrained indefinitely under a busy mouse: bulk plus input is the combination the
             control link cannot carry.
           </p>
           <p>

@@ -1,8 +1,9 @@
-import { Show, createSignal } from 'solid-js';
+import { Match, Show, Switch, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
+import { ConnectPanel } from './ConnectPanel';
 import { createCommand } from './action';
 import DeviceInject from './DeviceInject';
 import DeviceLock from './DeviceLock';
@@ -39,16 +40,26 @@ const Control = () => {
       fallback={
         <Card>
           <CardHeader title="Controls" subtitle="Drive the box to test it" />
-          <p>
-            Connect to your box on the <A href="/dashboard">Device</A> page, then come back here to
-            drive it.
-          </p>
-          <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-            Connect
-          </Button>
+          <div aria-live="polite">
+            <Switch>
+              <Match when={dash.status() === 'connecting'}>
+                <Button loading disabled>Connecting...</Button>
+              </Match>
+
+              <Match when={dash.status() === 'flashing'}>
+                <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
+              </Match>
+
+              <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
+                <ConnectPanel />
+              </Match>
+
+            </Switch>
+          </div>
         </Card>
       }
     >
+      <>
       <div style={columns}>
         <div style={col}>
           <DeviceInject />
@@ -56,10 +67,6 @@ const Control = () => {
           <DeviceLed />
           <Card>
             <CardHeader title="Safety clear" subtitle="Clear all injection, locks, subscriptions and the clip" />
-            <p>
-              One frame that releases every injected input, every lock, the whole event subscription and
-              the loaded clip. Use it to clear a stuck press. It also stops a running event stream.
-            </p>
             <div style={row}>
               <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
                 Clear everything
@@ -80,6 +87,7 @@ const Control = () => {
           <DeviceClip />
         </div>
       </div>
+      </>
     </Show>
   );
 };

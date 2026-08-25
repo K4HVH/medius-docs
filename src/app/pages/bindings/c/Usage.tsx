@@ -49,7 +49,7 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td>5</td><td>The RESP wait elapsed.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td>6</td><td>Link dropped or a stream closed (see below).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td>7</td><td>Payload exceeded the wire limit.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_FLASH_TOOL</code></td><td>8</td><td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a> failed (<A href="/library/features/flash">flash</A> feature).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_UPDATE</code></td><td>8</td><td>The box refused a <A href="/library/update">firmware update</A> op.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>9</td><td>A bad argument (e.g. a null handle).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td>10</td><td>An internal panic was caught at the boundary.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td>11</td><td>Unspecified, or a platform-gated call on an unsupported OS.</td></tr>
@@ -60,6 +60,7 @@ const Usage: Component = () => {
               <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td>16</td><td>The everything filter passed to <code>medius_device_input_events</code>; it covers traffic too.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>17</td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td>18</td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td>19</td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READING THE DETAIL</div>

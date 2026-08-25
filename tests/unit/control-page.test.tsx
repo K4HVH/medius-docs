@@ -22,11 +22,14 @@ const health = {
 
 const VALUES: Record<string, unknown> = {
   health,
-  version: { protoVer: 4, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
+  version: { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
   locks: {
     entries: [
-      { cls: 3, id: 0, positive: true, negative: true },
-      { cls: 1, id: 0xffff, positive: true, negative: false },
+      { cls: 3, id: 0, direction: 1, scale: 0 },
+      { cls: 3, id: 0, direction: 2, scale: 0 },
+      { cls: 1, id: 0xffff, direction: 1, scale: 0 },
+      // A weighed direction, which the list has to render as a percentage rather than a block.
+      { cls: 3, id: 1, direction: 4, scale: 40 },
     ],
   },
   catch: {
@@ -65,6 +68,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     version: () => VALUES.version,
     health: () => health,
     error: () => null,
+    verdict: () => null,
     link: () => ({
       lock: async () => {},
       unlock: async () => {},
@@ -85,8 +89,6 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     disconnect: async () => {},
     flashProgress: () => null,
     flashLog: () => [],
-    rebootDeviceToDownload: async () => ({}),
-    flashDeviceNative: async () => true,
     flashNative: async () => true,
     clearFlashResult: () => {},
     deviceLog: () => [],
@@ -112,6 +114,37 @@ const mount = (value = stub()) =>
 afterEach(cleanup);
 
 describe('Control page', () => {
+  // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
+  // the Connect button again and said nothing. It says why now, through the shared panel.
+  it('says why a connect failed rather than offering a bare Connect button', async () => {
+    const { findByRole, queryByText } = mount(
+      stub({ status: () => 'disconnected', verdict: () => ({ kind: 'no-port' }) }),
+    );
+    const alert = await findByRole('alert');
+    expect(alert.textContent).toMatch(/USB2/);
+    expect(queryByText('Connect')).toBeNull();
+    expect(queryByText('Try again')).toBeTruthy();
+  });
+
+  it('still surfaces an update failure that left the page in an error state', async () => {
+    const { findByRole } = mount(
+      stub({ status: () => 'error', error: () => 'the mouse-side chip did not come back' }),
+    );
+    const alert = await findByRole('alert');
+    expect(alert.textContent).toContain('the mouse-side chip did not come back');
+  });
+
+  it('says why the Connect button is disabled on an unsupported browser', async () => {
+    const { findByText } = mount(stub({ status: () => 'disconnected', supported: false }));
+    await findByText(/This browser can't talk to your box/);
+  });
+
+  it('shows a connecting state while the handshake runs', async () => {
+    const { findByText, queryByText } = mount(stub({ status: () => 'connecting' }));
+    await findByText('Connecting...');
+    expect(queryByText('Connect')).toBeNull();
+  });
+
   it('mounts every card when connected', async () => {
     const { findByText } = mount();
     await findByText('Injection');
@@ -135,7 +168,8 @@ describe('Control page', () => {
     // It is the box-wide clear: locks, the catch table and the loaded clip go with it. A button
     // labelled "release the keys" would be a trap next to a live event stream.
     const { findByText } = mount();
-    const body = (await findByText(/One frame that releases/)).textContent ?? '';
+    // The card subtitle carries this now; the paragraph under it only restated the subtitle.
+    const body = (await findByText(/Clear all injection/)).textContent ?? '';
     expect(body).toMatch(/lock/i);
     expect(body).toMatch(/subscription/i);
     expect(body).toMatch(/clip/i);
@@ -145,6 +179,11 @@ describe('Control page', () => {
     // The active list has always been able to show these; only the picker was limited.
     const { findByText } = mount();
     await findByText('all keys press');
+  });
+
+  it('renders a weighed direction as its percentage, not as a lock', async () => {
+    const { findByText } = mount();
+    await findByText('Move up/down (Y) against injection at 40%');
   });
 
   it('surfaces the cross-chip clock estimate rather than dropping it', async () => {

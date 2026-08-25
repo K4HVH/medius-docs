@@ -78,13 +78,13 @@ const Enums: Component = () => {
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">RESULT THE PC SEES</div>
+          <div class="api-response-label">WHAT THE EMITTED REPORT CARRIES</div>
           <p>The two releases differ only when the user physically holds the same input:</p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>User holds nothing</th><th>User is holding it</th></tr></thead>
             <tbody>
               <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
-              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (physical wins)</td></tr>
+              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (the physical bit stands)</td></tr>
               <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
             </tbody>
           </table>
@@ -171,9 +171,9 @@ const Enums: Component = () => {
           <pre><code class="language-rust">{`use medius::{Button, Capture, CatchFilter, Direction, TrafficClass};
 
 // The same target, once as a lock and once as a catch.
-device.lock(Button::Side1, Direction::Both)?;                    // hide it from the game
+device.lock(Button::Side1, Direction::Both)?;                    // suppressed in the emitted report
 let stream = device.catch_events([
-    CatchFilter::watch(Button::Side1).on_press(),                // still see the press
+    CatchFilter::watch(Button::Side1).on_press(),                // the tap is before suppression
 ])?;
 
 // A byte-oriented class instead: one vendor interrupt endpoint, IN only, 16 bytes a packet.
@@ -398,7 +398,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
           <p>
             What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to;{' '}
-            <code>Auto</code> hands it back to the box's status display. The discriminant is the wire{' '}
+            <code>Auto</code> restores the box's status display. The discriminant is the wire{' '}
             <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
             <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
           </p>
@@ -426,7 +426,7 @@ device.press(from_button)?;                         // press takes any impl Into
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
             <tbody>
-              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A></td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative, or both.</td></tr>
+              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A></td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
               <tr><td><code>Usage</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
             </tbody>
           </table>
@@ -452,7 +452,7 @@ device.press(from_button)?;                         // press takes any impl Into
       <div id="direction" data-search-target>
         <Card>
           <CardHeader title="Direction" subtitle="Which way, which edge, or which transfer direction" />
-          <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative {'}'}</pre>
+          <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative, With, Against {'}'}</pre>
           <p>
             The one byte <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
             <A href="/native/commands/clip"><code>CLIP</code></A> and{' '}
@@ -462,13 +462,25 @@ device.press(from_button)?;                         // press takes any impl Into
             <code>from_u8(u8) -&gt; Option&lt;Direction&gt;</code>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a usage</th><th>On a traffic class</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a button or key</th><th>On a traffic class</th></tr></thead>
             <tbody>
-              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs</td><td>press and release</td><td>IN and OUT</td></tr>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
               <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
               <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
+              <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
+              <tr><td><code>Against</code></td><td><code>4</code></td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
             </tbody>
           </table>
+          <p>
+            A media usage has no edges. An edge named on one goes out as <code>Both</code>, which is
+            what <A href="/library/requests#query-locks"><code>query_locks</code></A> reports it as.
+          </p>
+          <p>
+            <code>With</code> and <code>Against</code> are measured against the bearing rather than a fixed sign, so the sign they cover follows the injection; <code>is_relative()</code> tells them apart, and a lock or{' '}
+            <A href="/library/catch#catch-events">catch</A> call on any class but an axis refuses one
+            with <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+          </p>
           <p>
             The other two readings get their own names:{' '}
             <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
@@ -478,23 +490,53 @@ device.press(from_button)?;                         // press takes any impl Into
           </p>
         </Card>
       </div>
+      <div id="bearing-mode" data-search-target>
+        <Card>
+          <CardHeader title="BearingMode" subtitle="How the box reads the direction it is injecting" />
+          <pre class="api-signature">enum BearingMode {'{'} PerAxis, Vector {'}'}</pre>
+          <p>
+            What <A href="/library/options#set-bearing"><code>set_bearing</code></A> chooses, and what{' '}
+            <code>Direction::With</code> and <code>Against</code> are resolved by. Convert with{' '}
+            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;BearingMode&gt;</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
+              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            In <code>Vector</code> the relative pair addresses X and Y as one vector: the box takes the
+            lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
+            <A href="/library/lock#lock-all"><code>scale_all</code></A>. What{' '}
+            <A href="/library/types/structs#locks"><code>Locks</code></A> reports back is there.
+          </p>
+          <p>
+            The projection is the first of two stages. Each axis's <code>Positive</code> /{' '}
+            <code>Negative</code> scale then applies to what the projection left on that axis, so it can
+            weigh motion the projection moved there. See{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+          </p>
+        </Card>
+      </div>
       <div id="blanket" data-search-target>
         <Card>
           <CardHeader title="Blanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
           <p>
-            A whole input group: which one <A href="/library/lock#lock-all"><code>lock_all</code></A> /{' '}
-            <A href="/library/lock#lock-all"><code>unlock_all</code></A> block in one call, and the members of a
+            A whole input group: which one <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
+            <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh in one call, and the members of a
             clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
             <tbody>
-              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td></tr>
-              <tr><td><code>Wheel</code></td><td>The wheel.</td></tr>
-              <tr><td><code>Buttons</code></td><td>Every mouse button.</td></tr>
-              <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td></tr>
-              <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td></tr>
+              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
+              <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>
+              <tr><td><code>Buttons</code></td><td>Every mouse button.</td><td>An edge, on each button.</td></tr>
+              <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td><td>An edge: <code>Positive</code> blocks presses, <code>Negative</code> releases, <code>Both</code> both.</td></tr>
+              <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td><td>Nothing. Media has no edges.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -598,7 +640,7 @@ match stream.recv()? {
 
       <div id="control-status" data-search-target>
         <Card>
-          <CardHeader title="ControlStatus" subtitle="What the device answered a proxied control transfer with" />
+          <CardHeader title="ControlStatus" subtitle="How a proxied control transfer ended" />
           <pre class="api-signature">enum ControlStatus {'{'} Ok, Stalled, Naked, Other(u8) {'}'}</pre>
           <p>
             Read it with <code>TrafficEvent::control_status()</code>, which returns{' '}
@@ -608,10 +650,10 @@ match stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>flags</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The device answered.</td></tr>
+              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed.</td></tr>
               <tr><td><code>Stalled</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
-              <tr><td><code>Naked</code></td><td><code>0xFE</code></td><td>The device NAKed to timeout, or never answered.</td></tr>
-              <tr><td><code>Other(u8)</code></td><td>anything else</td><td>A status this build does not know, carried verbatim.</td></tr>
+              <tr><td><code>Naked</code></td><td><code>0xFE</code></td><td>The device NAKed until the transfer timed out.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td>anything else</td><td>A status byte with no variant in this build, carried verbatim.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -626,8 +668,7 @@ match stream.recv()? {
           <p>
             The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
             event. Read it with <code>TrafficEvent::bus_event()</code>, which returns{' '}
-            <code>Option&lt;BusEvent&gt;</code>, which is <code>None</code> for a kind this build does not
-            know. The two kinds that carry operands parse them into their own fields.
+            <code>Option&lt;BusEvent&gt;</code>, which is <code>None</code> for a kind byte with no variant in this build. The two kinds that carry operands parse them into their own fields.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
@@ -646,7 +687,7 @@ match stream.recv()? {
           </table>
           <p>
             <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-            the other eight are the clone's own life on USB1, which the control PC cannot see.
+            the other eight are the clone's own USB1 bus, which the control PC is not on.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};
@@ -717,16 +758,50 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Start</code></td><td><code>0</code></td><td>Start playback from the ring's head.</td></tr>
+              <tr><td><code>Start</code></td><td><code>0</code></td><td>Play from the ring's head, or resume a pause.</td></tr>
               <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
               <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
               <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
               <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
-              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Start if idle, stop if playing.</td></tr>
+              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Play if idle or paused, stop if playing.</td></tr>
             </tbody>
           </table>
         </Card>
       </div>
+      <div id="update-target" data-search-target>
+        <Card>
+          <CardHeader title="UpdateTarget" subtitle="Which chip an update op addresses" />
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Wire</th><th>Means</th></tr></thead>
+            <tbody>
+              <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
+              <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="image-state" data-search-target>
+        <Card>
+          <CardHeader title="ImageState" subtitle="Where a booted image is in its probation" />
+          <p>
+            The bootloader's own record for a slot. See{' '}
+            <A href="/native/commands/update#rollback">rollback</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Wire</th><th>Means</th></tr></thead>
+            <tbody>
+              <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
+              <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>
+              <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
+              <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
+              <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
+              <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
     </>
   );
 };

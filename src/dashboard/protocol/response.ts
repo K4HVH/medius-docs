@@ -11,6 +11,7 @@ import {
   DI_HAS_SERIAL,
   EmitMode,
   emitModeFromU8,
+  OPT_BEARING,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -18,6 +19,8 @@ import {
   Q_CATCH,
   Q_DEVICE_INFO,
   Q_HEALTH,
+  LOCK_ENTRY_LEN,
+  LOCKS_MAX,
   Q_LOCKS,
   Q_OPTIONS,
   Q_RATE,
@@ -38,6 +41,8 @@ import {
   EVENT_HDR,
   EVENT_TS_LEN,
   Q_CLIP,
+  Q_FIRMWARE,
+  RESP_FIRMWARE_LEN,
   RESP_CLIP_HDR,
   clipStateFromU8,
 } from './opcode';
@@ -52,6 +57,9 @@ import {
   type Direction,
   type Health,
   type ImperfectStatus,
+  type Bearing,
+  BearingMode,
+  bearingModeFromU8,
   type LockEntry,
   type Locks,
   type LogLine,
@@ -65,18 +73,27 @@ import {
   LogLevel,
   clockDomainFromU8,
   deviceKindFromU8,
+  directionFromU8,
   healthFromFlags,
   kbdCapsFromBytes,
+  lockClassFromU8,
   logLevelFromU8,
+  FirmwareInfo,
+  ImageState,
 } from './types';
 
-// Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, and the rate
-// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode). mode null is a
-// mode the box reported that this build doesn't know.
+// Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, the rate
+// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode), the requested
+// wire rate (forceHz 0 = off), what the clone's input endpoints advertise now (advertisedHz 0 = no
+// clone), and whether a forced interval is in the served descriptor. mode null is a mode the box
+// reported that this build doesn't know.
 export interface EmitPace {
   mode: EmitMode | null;
   fixedHz: number;
   resolvedHz: number;
+  forceHz: number;
+  advertisedHz: number;
+  forceActive: boolean;
 }
 
 export type Resp =
@@ -87,11 +104,13 @@ export type Resp =
   | { kind: 'rate'; rate: Rate }
   | { kind: 'stats'; stats: Stats }
   | { kind: 'locks'; locks: Locks }
+  | { kind: 'bearing'; bearing: Bearing }
   | { kind: 'catch'; catch: CatchState }
   | { kind: 'imperfect'; imperfect: ImperfectStatus }
   | { kind: 'movementRiding'; windowMs: number } // 0 = off
   | { kind: 'emitPace'; emit: EmitPace }
-  | { kind: 'clip'; clip: ClipStatus };
+  | { kind: 'clip'; clip: ClipStatus }
+  | { kind: 'firmware'; firmware: FirmwareInfo };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -198,19 +217,26 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_LOCKS: {
-      // [what][n u8] then n × [class u8][id u16 LE][dirbits u8] (dirbits b0 = pos, b1 = neg).
+      // [what][n u8] then n × [class u8][id u16 LE][dir u8][scale u8], one entry per direction not
+      // passing untouched. A target absent from the list is passing on every direction.
       if (payload.length < 2) return null;
       const n = payload[1];
-      if (payload.length < 2 + 4 * n) return null;
+      if (n > LOCKS_MAX) return null;
+      if (payload.length < 2 + LOCK_ENTRY_LEN * n) return null;
       const entries: LockEntry[] = [];
       for (let i = 0; i < n; i++) {
-        const off = 2 + 4 * i;
-        const dirbits = payload[off + 3];
+        const off = 2 + LOCK_ENTRY_LEN * i;
+        // An entry this build cannot name is dropped, the way the crate drops one, rather than kept as
+        // a raw byte wearing the enum's type: scaleOf would compare it against a class or direction
+        // nothing matches and report a pass over a lock the box is holding.
+        const cls = lockClassFromU8(payload[off]);
+        const direction = directionFromU8(payload[off + 3]);
+        if (cls === null || direction === null) continue;
         entries.push({
-          cls: payload[off],
+          cls,
           id: u16le(payload, off + 1),
-          positive: (dirbits & 0x01) !== 0,
-          negative: (dirbits & 0x02) !== 0,
+          direction,
+          scale: payload[off + 4],
         });
       }
       return { kind: 'locks', locks: { entries } };
@@ -248,6 +274,29 @@ export function parseResp(payload: Uint8Array): Resp | null {
             ageMs: ageMs === CLK_AGE_NONE ? null : ageMs,
           },
           entries,
+        },
+      };
+    }
+    case Q_FIRMWARE: {
+      // [what][dev maj][min][patch][slot][state][host_present][host maj][min][patch][slot][state]
+      // [slot_size u32 LE][staged bits]. The only place the host chip's version appears: RESP(VERSION)
+      // reports the device chip alone and its name tail is LEN-delimited, so nothing can follow it.
+      if (payload.length < RESP_FIRMWARE_LEN) return null;
+      const chip = (o: number) => ({
+        major: payload[o],
+        minor: payload[o + 1],
+        patch: payload[o + 2],
+        slot: payload[o + 3],
+        state: payload[o + 4] as ImageState,
+      });
+      return {
+        kind: 'firmware',
+        firmware: {
+          device: chip(1),
+          host: payload[6] ? chip(7) : null,
+          slotSize: u32le(payload, 12),
+          deviceStaged: (payload[16] & 0x01) !== 0,
+          hostStaged: (payload[16] & 0x02) !== 0,
         },
       };
     }
@@ -321,15 +370,25 @@ export function parseResp(payload: Uint8Array): Resp | null {
           // [what=9][id=1][timeout u16 LE ms]
           if (payload.length < 4) return null;
           return { kind: 'movementRiding', windowMs: u16le(payload, 2) };
+        case OPT_BEARING:
+          // [what=9][id=4][window u16 LE ms][mode u8]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'bearing',
+            bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
+          };
         case OPT_EMIT:
-          // [what=9][id=2][mode u8][fixed_hz u16 LE][resolved_hz u16 LE]
-          if (payload.length < 7) return null;
+          // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8]
+          if (payload.length < 12) return null;
           return {
             kind: 'emitPace',
             emit: {
               mode: emitModeFromU8(payload[2]),
               fixedHz: u16le(payload, 3),
               resolvedHz: u16le(payload, 5),
+              forceHz: u16le(payload, 7),
+              advertisedHz: u16le(payload, 9),
+              forceActive: payload[11] !== 0,
             },
           };
         default:

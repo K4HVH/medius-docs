@@ -7,7 +7,7 @@ const Led: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="LED" subtitle="Drive a status LED, or hand it back to the box" />
+        <CardHeader title="LED" subtitle="Drive a status LED, or restore the box's display" />
         <p>
           <A href="/library/led#led"><code>led</code></A> overrides one of the box's two green status
           LEDs, or with <A href="/library/types/enums#led-mode"><code>LedMode::Auto</code></A> returns it
@@ -46,7 +46,7 @@ const Led: Component = () => {
 
 let device = Device::find()?;
 device.led(LedTarget::Both, LedMode::Blink, 200)?;   // both LEDs blink, bright
-device.led(LedTarget::Device, LedMode::Auto, 0)?;    // hand the device LED back`}</code></pre>
+device.led(LedTarget::Device, LedMode::Auto, 0)?;    // back to the status display`}</code></pre>
         </Card>
       </div>
 

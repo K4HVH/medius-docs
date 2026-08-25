@@ -45,7 +45,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>NoReply</code></td>
                 <td>
-                  The box never answered the version query during the{' '}
+                  No reply to the version query during the{' '}
                   <A href="/library/connection">handshake</A>: wrong port or baud, or not a Medius
                   box.
                 </td>
@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer &#123; got &#125;</code></td>
                 <td>
-                  The box answered, but its <code>proto_ver</code> wasn't <code>4</code>;{' '}
+                  The box replied, but its <code>proto_ver</code> wasn't <code>5</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>
@@ -109,6 +109,15 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>RelativeDirection {'{'} direction, what {'}'}</code></td>
+                <td>
+                  A call addressed <code>Direction::With</code> or <code>Against</code> where only a
+                  fixed sign or edge fits; <code>what</code> names it. Those are resolved against the{' '}
+                  <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is
+                  made; use <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
+                </td>
+              </tr>
+              <tr>
                 <td><code>HalfEdgeInputFilter</code></td>
                 <td>
                   An input subscription narrowed to one edge: without the release, a fresh press
@@ -124,21 +133,18 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td><code>FlashTool(String)</code></td>
-                <td>The flash tool failed.</td>
+                <td><code>Update &#123; op, status, arg &#125;</code></td>
+                <td>
+                  The box refused a{' '}
+                  <A href="/library/update">firmware update</A> op. Carries the op, the{' '}
+                  <A href="/native/commands/update#resp"><code>UpdateStatus</code></A> and its arg.
+                </td>
               </tr>
             </tbody>
           </table>
 
 
-          <div class="callout callout--warning">
-            <p>
-              <code>FlashTool(String)</code> only exists with the{' '}
-              <A href="/library/features/flash"><code>flash</code></A> feature. On a default build the
-              variant isn't in the enum, so a <code>match</code> arm naming it won't compile. Gate
-              such arms behind <code>#[cfg(feature = "flash")]</code> or lean on the wildcard.
-            </p>
-          </div>
+
         </Card>
       </div>
     </>

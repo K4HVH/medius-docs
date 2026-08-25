@@ -124,7 +124,7 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
           <CardHeader title="BoxInfo" subtitle="One discovered box" />
           <p>
             One entry from <A href="/library/discovery#list"><code>Device::list</code></A>, and the value{' '}
-            <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate sees.
+            <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate receives.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>

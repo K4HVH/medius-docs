@@ -7,7 +7,7 @@ const Connection: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Connecting" subtitle="Open, find, and hand the box back" />
+        <CardHeader title="Connecting" subtitle="Open, find, and release the port" />
         <p>
           The <code>medius</code> crate is the Rust client and <code>Device</code> is the handle. Opening
           one finds the box, runs the <A href="/native/connection">handshake</A>, and starts the
@@ -23,7 +23,7 @@ const Connection: Component = () => {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn Device::find() -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn Device::find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
+          <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             <code>open</code> and <code>find</code> block on the{' '}
@@ -91,7 +91,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
               </tr>
               <tr>
                 <td><code>PROTO_VER</code></td>
-                <td><code>4</code></td>
+                <td><code>5</code></td>
               </tr>
             </tbody>
           </table>
@@ -106,7 +106,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
-println!("speaks protocol:   {}", PROTO_VER);                   // 4`}</code></pre>
+println!("speaks protocol:   {}", PROTO_VER);                   // 5`}</code></pre>
         </Card>
       </div>
 

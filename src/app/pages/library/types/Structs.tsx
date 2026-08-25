@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>4</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>5</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 4, fw_major: 3, fw_minor: 0, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.1.0"); // Display omits proto_ver
+let v = Version { proto_ver: 5, fw_major: 3, fw_minor: 2, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.2.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -63,7 +63,7 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>clone_configured</code></td><td><code>bool</code></td><td>The PC has set up the cloned mouse.</td></tr>
               <tr><td><code>injection_active</code></td><td><code>bool</code></td><td>The box is holding at least one injected button or move.</td></tr>
               <tr><td><code>rate_confident</code></td><td><code>bool</code></td><td>The native-rate estimator window is full, so <A href="/library/types/structs#rate"><code>Rate</code></A> is trustworthy.</td></tr>
-              <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input <A href="/library/lock#lock"><code>lock</code></A> is active.</td></tr>
+              <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input is off a full pass, whether <A href="/library/lock#lock"><code>lock</code></A>ed or merely <A href="/library/lock#scale"><code>scale</code></A>d.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>The <A href="/library/catch#catch-events"><code>catch</code></A> table holds at least one <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>, whatever class it addresses.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
             </tbody>
@@ -211,21 +211,31 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
       </div>
       <div id="locks" data-search-target>
         <Card>
-          <CardHeader title="Locks" subtitle="The active input locks" />
+          <CardHeader title="Locks" subtitle="The active input scales" />
           <p>
-            Active locks from <A href="/library/requests#query-locks"><code>query_locks()</code></A>, a
-            list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across every
-            class. <code>is_locked(target, dir)</code> tests one lock; <code>entries()</code> is the
-            whole list.
+            The active set from <A href="/library/requests#query-locks"><code>query_locks()</code></A>,
+            a list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across
+            every class, one per direction that is not passing untouched.
             See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the
             wire format.
           </p>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every active lock, one entry per locked target or whole-class blanket.</td></tr>
-              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether that target and direction is locked, by a specific entry or a covering whole-class blanket; <code>target</code> is any <code>impl Into&lt;LockTarget&gt;</code>.</td></tr>
+              <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every weighed direction, one entry each, across specific targets and whole-class blankets.</td></tr>
+              <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">READBACK</div>
+          <table class="api-params">
+            <thead><tr><th>Case</th><th>What the list holds</th></tr></thead>
+            <tbody>
+              <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>Both</code>.</td></tr>
+              <tr><td>A media lock, blanket or specific</td><td>Direction <code>Both</code>, always. Media has no edges.</td></tr>
+              <tr><td>A relative direction under <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
+              <tr><td>96 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -233,29 +243,52 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
 
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Positive) {
-    // the real mouse can't move right
+    // physical +X is zeroed
 }
 if locks.is_locked(Button::Left, Direction::Negative) {
-    // a left-click is latched down: the hand can't release it
+    // a left-click is latched down: the release edge is blocked
 }
-println!("{} locks active", locks.entries().len());`}</code></pre>
+// how much of a delta opposing the injection survives
+println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
         </Card>
       </div>
       <div id="lock-entry" data-search-target>
         <Card>
           <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
-          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, positive: bool, negative: bool {'}'}</pre>
+          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: u8 {'}'}</pre>
           <p>
-            One active lock in a <A href="/library/types/structs#locks"><code>Locks</code></A> list.
+            One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
+            list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
+            for field, so what comes back is what you would send to reproduce it.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
-              <tr><td><code>positive</code></td><td><code>bool</code></td><td>The positive/press edge is locked.</td></tr>
-              <tr><td><code>negative</code></td><td><code>bool</code></td><td>The negative/release edge is locked.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which direction of it this entry weighs.</td></tr>
+              <tr><td><code>scale</code></td><td><code>u8</code></td><td>Percent of the physical value kept. A momentary usage carries one bit, so the box stores the block or pass it renders and this never reads between them.</td></tr>
             </tbody>
           </table>
+          <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
+        </Card>
+      </div>
+      <div id="bearing" data-search-target>
+        <Card>
+          <CardHeader title="Bearing" subtitle="What With and Against are measured against" />
+          <pre class="api-signature">struct Bearing {'{'} window: Option&lt;Duration&gt;, mode: BearingMode {'}'}</pre>
+          <p>
+            The configured bearing from{' '}
+            <A href="/library/options#query-bearing"><code>query_bearing()</code></A>. See the native{' '}
+            <A href="/native/commands/lock#bearing">bearing</A> for what it does.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long an axis holds the direction of its last injected delta. <code>None</code> is off, so <code>With</code> and <code>Against</code> are inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
+            </tbody>
+          </table>
+          <p><code>is_live()</code> is whether a bearing is held at all.</p>
         </Card>
       </div>
       <div id="catch-filter" data-search-target>
@@ -278,7 +311,7 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
               <tr><td><code>CatchFilter::all_input()</code></td><td>All four input classes, as a <code>[CatchFilter; 4]</code>.</td></tr>
               <tr><td><code>CatchFilter::traffic(class, id)</code></td><td>One id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an endpoint, an interface, an endpoint number.</td></tr>
               <tr><td><code>CatchFilter::traffic_class(class)</code></td><td>Every id in one traffic class, a blanket.</td></tr>
-              <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions: the whole firehose.</td></tr>
+              <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MODIFIERS AND ACCESSORS</div>
@@ -297,16 +330,15 @@ println!("{} locks active", locks.entries().len());`}</code></pre>
           </table>
           <div class="api-response-label">MATCHING IS MOST-SPECIFIC-FIRST</div>
           <p>
-            An exact <code>(class, id)</code> beats a class blanket, which beats the wildcard, and a
-            named direction beats <code>Both</code>. The winning entry supplies the capture:
+            An exact <code>(class, id)</code> is matched before a class blanket, that before the wildcard, and a named direction before <code>Both</code>. That entry supplies the capture:
           </p>
           <pre class="diagram">{`catch_events([
     CatchFilter::everything().with_capture(Capture::First(16)),   // everything, 16 bytes
     CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83),    // except 0x83, in full
 ])
 
-  packet on 0x83  ->  traffic(VendorInterrupt, 0x83)  wins  ->  whole packet
-  packet on 0x84  ->  everything()                    wins  ->  First(16)`}</pre>
+  packet on 0x83  ->  traffic(VendorInterrupt, 0x83)  resolves  ->  whole packet
+  packet on 0x84  ->  everything()                    resolves  ->  First(16)`}</pre>
           <p>
             Capture is not part of a filter's address, so two filters naming one entry at different
             lengths are one box entry at the wider of the two. <code>same_address</code> is that
@@ -463,7 +495,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
-              <tr><td><code>Control</code></td><td>The real device's answer: <code>0</code> it answered, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed until the transfer timed out.</td></tr>
+              <tr><td><code>Control</code></td><td>How the proxied transfer ended: <code>0</code> completed, <code>0xFD</code> the device STALLed, <code>0xFE</code> it NAKed until the transfer timed out.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
             </tbody>
@@ -618,7 +650,7 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
           </table>
           <p>
             The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
-            says you are losing events; this one says which. Vendor bulk starves first, by{' '}
+            says you are losing events; this one says which. Vendor bulk drops first, by{' '}
             <A href="/library/catch#event-stream">design</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -641,8 +673,7 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
           </p>
           <p>
             The box measures the difference with a four-timestamp exchange across the inter-chip link,
-            stamping each frame as it reaches the wire rather than when it is queued. The two crystals
-            pull apart by up to 20 µs per second.
+            stamping each frame as it reaches the wire rather than when it is queued. The two crystals drift by up to 20 µs per second.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -747,7 +778,7 @@ for ev in input.by_ref().take(20) {
       </div>
       <div id="emit-pace-status" data-search-target>
         <Card>
-          <CardHeader title="EmitPaceStatus" subtitle="The emit-rate pacing state" />
+          <CardHeader title="EmitPaceStatus" subtitle="The emit-rate pacing state and the rate the clone runs at" />
           <p>
             The emit-rate pacing state from{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace()</code></A>.
@@ -757,6 +788,9 @@ for ev in input.by_ref().take(20) {
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The selected mode; <code>Fixed</code> carries the requested rate.</td></tr>
               <tr><td><code>resolved_hz</code></td><td><code>u16</code></td><td>The ceiling in effect (Hz); 0 = learnt/adaptive, or no device yet in <code>Interval</code>.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The forced wire rate requested; <code>None</code> leaves the device's own.</td></tr>
+              <tr><td><code>advertised_hz</code></td><td><code>u16</code></td><td>What the clone's input endpoints advertise now, forced or native; 0 = no clone.</td></tr>
+              <tr><td><code>force_active</code></td><td><code>bool</code></td><td>Whether a forced interval is written into the descriptor being served.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -821,8 +855,7 @@ for ev in input.by_ref().take(20) {
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
-            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No pull method touches
-            the wire, so cloning shares the queue. The methods and an example are on{' '}
+            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No receive method touches the wire, so cloning shares the queue. The methods and an example are on{' '}
             <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
           </p>
         </Card>
@@ -869,19 +902,20 @@ if cfg.loop_ && cfg.finalized {
             Build one with the constructor, where <code>consume</code> defaults to false:
           </p>
           <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>on</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The button, key, or media usage that fires the trigger.</td></tr>
               <tr><td><code>edge</code></td><td><A href="/library/types/enums#edge"><code>Edge</code></A></td><td>Which edge fires it: <code>Press</code>, <code>Release</code>, or <code>Both</code>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run (<code>Start</code>, <code>Stop</code>, <code>Toggle</code>, ...).</td></tr>
-              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Swallow the triggering input so the PC never sees it; the <code>.consume()</code> builder sets it true.</td></tr>
+              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Lock the trigger usage while it is active, so its edge never reaches the PC; the <code>.consume()</code> builder sets it true.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
 
-// Toggle the clip on a Side1 press, and hide that press from the PC.
+// Toggle the clip on a Side1 press, and suppress that press.
 let trig = ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle).consume();
 handle.bind(trig)?;`}</code></pre>
         </Card>
@@ -908,6 +942,65 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
               <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="chip-firmware" data-search-target>
+        <Card>
+          <CardHeader title="ChipFirmware" subtitle="What one chip is running" />
+          <p>
+            One chip's half of{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
+            <code>Display</code> renders it as <code>major.minor.patch</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>major</code>, <code>minor</code>, <code>patch</code></td><td><code>u8</code></td><td>The firmware version this chip is running.</td></tr>
+              <tr><td><code>slot</code></td><td><code>u8</code></td><td>Which app slot it booted: <code>0</code> or <code>1</code>.</td></tr>
+              <tr><td><code>state</code></td><td><A href="/library/types/enums#image-state"><code>ImageState</code></A></td><td>Whether that image is confirmed, on probation, or rolled back.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="firmware-info" data-search-target>
+        <Card>
+          <CardHeader title="FirmwareInfo" subtitle="Both chips, and what is staged" />
+          <p>
+            Returned by <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
+            <code>any_pending()</code> is true while either chip is still on probation, which is when{' '}
+            <A href="/library/update">an update</A> is refused.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>device</code></td><td><A href="/library/types/structs#chip-firmware"><code>ChipFirmware</code></A></td><td>The PC-facing chip.</td></tr>
+              <tr><td><code>host</code></td><td><code>Option&lt;<A href="/library/types/structs#chip-firmware">ChipFirmware</A>&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link.</td></tr>
+              <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>Usable bytes in a spare slot; the same on both chips.</td></tr>
+              <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>An image is written and waiting to be activated.</td></tr>
+              <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>The same, for the host chip.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="update-progress" data-search-target>
+        <Card>
+          <CardHeader title="UpdateProgress" subtitle="One acknowledged window" />
+          <p>
+            Handed to the closure passed to{' '}
+            <A href="/library/update#stage-firmware"><code>stage_firmware()</code></A>, once per
+            acknowledged window rather than once per chunk.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>The chip being written.</td></tr>
+              <tr><td><code>sent</code></td><td><code>usize</code></td><td>Bytes the box has acknowledged.</td></tr>
+              <tr><td><code>total</code></td><td><code>usize</code></td><td>Bytes in the whole image.</td></tr>
             </tbody>
           </table>
         </Card>

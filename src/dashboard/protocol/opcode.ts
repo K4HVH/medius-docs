@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 4; // CATCH is a (class, id, dir) subscription table over LOCK's address space, reaching the byte-oriented classes (HID, vendor, control, emit, bus) through TRAFFIC_EVENT; both older event frames carry a clock-domain byte
+export const PROTO_VER = 5; // LOCK's trailing byte is a pass-through percentage rather than an on/off flag, its direction byte reaches two bearing-relative slots, and RESP(LOCKS) carries one entry per weighed direction
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
@@ -24,10 +24,16 @@ export const Q_CAPS = 3; // unified: mouse + keyboard + per-class change_driven
 export const Q_RATE = 4;
 export const Q_STATS = 5;
 export const Q_LOCKS = 6;
+// RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale u8].
+export const LOCK_ENTRY_LEN = 5;
+// The most entries one RESP(LOCKS) carries (§4.8). The box fills them in a fixed order and truncates
+// the granular key list with nothing marking the cut, so a larger count is a malformed reply rather than a longer table.
+export const LOCKS_MAX = 96;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
 export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring accounting, held usages, config
+export const Q_FIRMWARE = 11; // both chips' versions + which app slot each booted (§4.16)
 
 // CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
 // byte draws from, so a trigger runs the same verb the control PC would.
@@ -54,7 +60,7 @@ export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove
 export const CLIP_TRIG_F_CONSUME = 0x02; // suppress the trigger input from the game
 
 // Autolock scope (the CLIP_SET_AUTOLOCK value): which classes the clip blocks physical input on
-// while it plays, so the hand cannot fight the playback.
+// while it plays, so physical input cannot add to what it plays.
 export const CLIP_LOCK_AIM = 0x01; // the X and Y cursor axes
 export const CLIP_LOCK_WHEEL = 0x02;
 export const CLIP_LOCK_BUTTONS = 0x04;
@@ -115,8 +121,9 @@ export function clipStateFromU8(v: number): ClipState {
 // OPTION ids (§3.10): persistent box options set via OPTION, read via Q_OPTIONS. The value is id-specific.
 export const OPT_IMPERFECT = 0; // value [allow u8]
 export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
-export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
+export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
+export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
 
 // The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
 export const NAME_MAX = 32;
@@ -199,6 +206,8 @@ export enum FrameType {
   ClipSet = 0x14,
   ClipTrigger = 0x15,
   TrafficEvent = 0x16,
+  Update = 0x17,
+  UpdateResp = 0x18,
 }
 
 // Byte width of the ts_us field every catch event frame leads with (§4.10).
@@ -224,6 +233,49 @@ export const CLK_AGE_NONE = 0xffff;
 // TRAFFIC_EVENT flags for class VEND_BULK (§4.10).
 export const TRAFFIC_BULK_END = 0x01;
 export const TRAFFIC_BULK_ZLP = 0x02;
+
+// UPDATE sub-ops (§3.13). Firmware reaches either chip over this port; the host chip's image is
+// relayed over the inter-chip link, which is the only route to it.
+export const OTA_OP_BEGIN = 0;
+export const OTA_OP_DATA = 1;
+export const OTA_OP_END = 2;
+export const OTA_OP_ABORT = 3;
+export const OTA_OP_ACTIVATE = 4;
+export const OTA_TGT_DEVICE = 0;
+export const OTA_TGT_HOST = 1;
+// Image bytes per DATA frame: the frame's 512 less op, target and a 2-byte chunk index, rounded down
+// to a multiple of four so every flash write on the box is aligned.
+export const OTA_CHUNK = 504;
+// DATA frames the box accepts before it must answer. Not a throughput knob: a flash page write stalls
+// both cores for 0.3-0.7 ms while the RX FIFO holds 320 us of wire, so an unthrottled sender overruns it.
+export const OTA_CREDIT = 16;
+export const UPD_RESP_LEN = 7;
+export const RESP_FIRMWARE_LEN = 17;
+
+// UPDATE_RESP status bytes (§4.16).
+export const UPD_OK = 0x00;
+export const UPD_READY = 0x01;
+export const UPD_ACK = 0x02;
+export const UPD_STAGED = 0x03;
+export const UPD_NAMES: Record<number, string> = {
+  0x00: 'ok',
+  0x01: 'ready',
+  0x02: 'ack',
+  0x03: 'staged',
+  0x10: 'busy',
+  0x11: 'no-slot',
+  0x12: 'too-big',
+  0x13: 'seq-gap',
+  0x14: 'write-failed',
+  0x15: 'bad-sha',
+  0x16: 'bad-image',
+  0x17: 'link-down',
+  0x18: 'timeout',
+  0x19: 'nothing-staged',
+  0x1a: 'bad-state',
+  0x1b: 'on-probation',
+  0x1c: 'untouched',
+};
 
 // TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.
 export const TRAFFIC_CONTROL_OK = 0x00;
@@ -268,6 +320,10 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.ClipTrigger;
     case 0x16:
       return FrameType.TrafficEvent;
+    case 0x17:
+      return FrameType.Update;
+    case 0x18:
+      return FrameType.UpdateResp;
     default:
       return null;
   }

@@ -140,10 +140,9 @@ println!("{v}");`}</code></pre>
 
       <div id="smooth-motion" data-search-target>
         <Card>
-          <CardHeader title="Smooth motion" subtitle="Glide instead of teleport" />
+          <CardHeader title="Smooth motion" subtitle="Subdivide the delta, pace the steps" />
           <p>
-            <A href="/library/move#move-rel"><code>move_rel</code></A> applies one delta at once. For
-            a glide rather than a jump, subdivide the move and pace the steps yourself, roughly one per
+            <A href="/library/move#move-rel"><code>move_rel</code></A> applies one delta at once. To spread it over time, subdivide the move and pace the steps yourself, roughly one per
             millisecond. There's no <code>move_smooth</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -157,7 +156,7 @@ for _ in 0..200 {
 }`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              The library applies no rate limit. A no-sleep loop floods the 4 Mbaud link; pace your
+              The library applies no rate limit. A no-sleep loop queues frames faster than 4 Mbaud drains; pace your
               own steps.
             </p>
           </div>
@@ -170,8 +169,7 @@ for _ in 0..200 {
           <p>
             There's no one-shot <code>click</code>:{' '}
             <A href="/library/inject#inject"><code>press</code></A>, wait, then release with{' '}
-            <A href="/library/inject#inject"><code>release</code></A> so you don't stomp a
-            physical hold.
+            <A href="/library/inject#inject"><code>release</code></A> which clears only the box's own override.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::{thread, time::Duration};

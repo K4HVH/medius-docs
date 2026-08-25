@@ -109,18 +109,20 @@ const Api: Component = () => {
 
       <div id="lock" data-search-target>
         <Card>
-          <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks an edge.</p>
+          <CardHeader title="Locks" subtitle="Weigh the user's own input" />
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> is the percent of the physical value kept (<code>LOCK_SCALE_BLOCK</code> 0, <code>LOCK_SCALE_PASS</code> 100, <code>LOCK_SCALE_MAX</code> 255).</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.lock(target, direction)</code></td><td>Lock an axis or usage (e.g. <code>LockTarget.button(Button.LEFT)</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
-              <tr><td><code>dev.unlock(target, direction)</code></td><td>Unlock an axis or usage.</td></tr>
-              <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket lock / unlock a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
+              <tr><td><code>dev.scale(target, direction, scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage (e.g. <code>LockTarget.x()</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
+              <tr><td><code>dev.scale_all(what, direction, scale)</code></td><td>The same over a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
+              <tr><td><code>dev.lock(target, direction)</code></td><td>Block an axis or usage: scale 0.</td></tr>
+              <tr><td><code>dev.unlock(target, direction)</code></td><td>Back to passing untouched: scale 100.</td></tr>
+              <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket block / release a whole class.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>.</p>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the bearing and need a live one; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
           </div>
         </Card>
       </div>
@@ -138,7 +140,8 @@ const Api: Component = () => {
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
-              <tr><td><code>dev.set_emit_pace(pace)</code></td><td>Pick what paces injected motion: <code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
+              <tr><td><code>dev.set_emit_pace(pace, force_hz=None)</code></td><td>Pick what paces injected motion (<code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>) and what rate the clone advertises (<code>force_hz</code>, None = the device's own). See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
             </tbody>
@@ -163,12 +166,34 @@ const Api: Component = () => {
               <tr><td><code>dev.caps()</code></td><td><A href="/bindings/python/types#caps"><code>Caps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
-              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: active locks (<code>.entries</code>, <code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: every weighed direction (<code>.entries</code>, <code>.scale_of(...)</code>, <code>.is_locked(...)</code>).</td></tr>
+              <tr><td><code>dev.query_bearing()</code></td><td><A href="/bindings/python/types#bearing"><code>Bearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: the live filter table (<code>.entries</code>, <code>.table_full</code>), drop counts, and the two chips' <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A>.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
-              <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
+              <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
+              <tr><td><code>dev.firmware_info()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A>: both chips' versions, slots, and what is staged.</td></tr>
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="update" data-search-target>
+        <Card>
+          <CardHeader title="Firmware update" subtitle="Write either chip over the open connection" />
+          <p>
+            See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer
+            and calls <code>progress(sent, total)</code> as windows are acknowledged; a refusal raises{' '}
+            <A href="/bindings/python/types#errors"><code>UpdateError</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev.stage_firmware(target, image, progress=None)</code></td><td>Write one image into that chip's spare slot, without booting it. <code>target</code> is an <A href="/bindings/python/types#updatetarget"><code>UpdateTarget</code></A>.</td></tr>
+              <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
+              <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
+              <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -263,7 +288,6 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>medius.default_keepalive_cadence_ms()</code></td><td>The default keepalive interval (500 ms).</td></tr>
               <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes.</td></tr>
               <tr><td><code>medius.version_string()</code></td><td>The library version string.</td></tr>
-              <tr><td><code>medius.flash(port, bin_path, host=False)</code></td><td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. Needs the <A href="/bindings/python/build#features">flash feature</A>.</td></tr>
             </tbody>
           </table>
         </Card>

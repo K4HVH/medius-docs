@@ -61,7 +61,7 @@ export const UsagePicker = (props: {
     return out;
   });
 
-  // Long tables are cut rather than rendered whole, and the cut is stated: a silently truncated
+  // Long tables are cut rather than rendered whole, and the cut is stated: a truncated-with-no-count
   // list reads as "the box cannot address the rest". The current selection is always carried, or
   // filtering past it would blank the control while the caller still held that value.
   const shown = createMemo(() => {
@@ -76,7 +76,7 @@ export const UsagePicker = (props: {
 
   // Land on the first real usage, never on the class wildcard. Defaulting to the blanket made
   // picking a class an instruction to act on all of it, which is both a surprising default and,
-  // for a class whose blanket the box does not implement, one that silently does nothing.
+  // for a class whose blanket the box does not implement, one the box drops with no reply.
   const pickClass = (v: string) => {
     const c = props.classes.find((x) => String(x.value) === v);
     if (!c) return;

@@ -230,6 +230,20 @@ export enum LockClass {
   Axis = 3,
 }
 
+// A class byte no constant names is dropped rather than carried as a LockClass it is not; a raw
+// number wearing the enum's type reaches scaleOf and matches nothing, or matches the wrong thing.
+export function lockClassFromU8(v: number): LockClass | null {
+  switch (v) {
+    case LockClass.Button:
+    case LockClass.Key:
+    case LockClass.Media:
+    case LockClass.Axis:
+      return v;
+    default:
+      return null;
+  }
+}
+
 // LOCK axis id (§3.8): for an Axis-class lock, id picks the axis and direction carries the sign.
 export enum LockAxis {
   X = 0,
@@ -239,11 +253,35 @@ export enum LockAxis {
 
 // The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
 // aliases below give each reading a name and no call site has to write the ambiguous member.
+// A media usage is the one class with no edges: the box suppresses it whole, ignores the byte on the
+// way in, and reports Both on the way out.
+// With and Against name a sign relative to the bearing, the direction the box is itself injecting
+// (§3.12), so the sign they select follows the injection, not the axis. Axes only, and LOCK only: a subscription or a
+// trigger is addressed before there is any injection to be with or against.
 export enum Direction {
   Both = 0,
   Positive = 1,
   Negative = 2,
+  With = 3,
+  Against = 4,
 }
+
+export function directionFromU8(v: number): Direction | null {
+  switch (v) {
+    case Direction.Both:
+    case Direction.Positive:
+    case Direction.Negative:
+    case Direction.With:
+    case Direction.Against:
+      return v;
+    default:
+      return null;
+  }
+}
+
+// Whether a direction is measured against the bearing rather than a fixed sign.
+export const isRelativeDirection = (d: Direction): boolean =>
+  d === Direction.With || d === Direction.Against;
 
 // A momentary usage's edge: buttons, keys, and media.
 export const Press = Direction.Positive;
@@ -255,6 +293,43 @@ export const Out = Direction.Negative; // PC to device
 
 // The id sentinel that blanket-locks a whole class (§3.8), e.g. every button or every key.
 export const LOCK_ID_ALL = 0xffff;
+
+// LOCK scale (§3.8): the percent of the physical value the box keeps on that direction. Blocking and
+// passing are the two ends of one number, so a lock is Block and an unlock is Pass; above Pass it
+// amplifies. A momentary usage carries one bit, so anything under Pass locks it and there is nothing
+// in between.
+export const LOCK_SCALE_BLOCK = 0;
+export const LOCK_SCALE_PASS = 100;
+export const LOCK_SCALE_MAX = 255;
+
+// OPTION(BEARING) geometry (§3.12): how the box compares physical motion against its own injection
+// its own injection.
+export enum BearingMode {
+  PerAxis = 0,
+  Vector = 1,
+}
+
+// A mode byte no constant names is not a BearingMode; the box rejects the whole write for one, so a
+// reply carrying one is not something to carry forward as a geometry it is not.
+export function bearingModeFromU8(v: number): BearingMode | null {
+  switch (v) {
+    case BearingMode.PerAxis:
+    case BearingMode.Vector:
+      return v;
+    default:
+      return null;
+  }
+}
+
+// The configured bearing (§4.14). windowMs is how long the last injected delta's direction stays the
+// thing With/Against are measured against; 0 is off, leaving both inert whatever their scale.
+export interface Bearing {
+  windowMs: number;
+  mode: BearingMode;
+}
+
+// The bearing window the box holds before any host sets one.
+export const BEARING_WINDOW_DEFAULT_MS = 20;
 
 // One lock target: a class plus its class-specific id (axis id, button id, HID keycode, or media
 // usage; LOCK_ID_ALL for a blanket). A button locks as class Button, id = button id, like a key.
@@ -269,26 +344,51 @@ export const lockKey = (usage: number): LockTarget => ({ cls: LockClass.Key, id:
 export const lockMedia = (usage: number): LockTarget => ({ cls: LockClass.Media, id: usage });
 export const lockBlanket = (cls: LockClass): LockTarget => ({ cls, id: LOCK_ID_ALL });
 
-// One active lock (§4.8): a target plus which directions it covers. dirbits b0 = positive/press,
-// b1 = negative/release.
+// One weighed direction (§4.8): a target, which direction of it, and how much of the physical value
+// survives. Entries mirror the LOCK frame field for field, so what comes back is what you would send
+// to reproduce it, one entry per direction rather than one per target.
 export interface LockEntry {
   cls: LockClass;
   id: number;
-  positive: boolean;
-  negative: boolean;
+  direction: Direction;
+  scale: number;
 }
 
-// The active input-lock set (§4.8): a list of entries, one per locked field across every class.
+// The active input-scale set (§4.8): every direction not passing untouched, across every class.
 export interface Locks {
   entries: LockEntry[];
 }
 
-// True when the given target+direction is locked in the set.
+// The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
+// weighs it. Both reports the lowest across every direction, so the worst case a delta could meet.
+// Where several entries cover the same direction the lowest is reported, matching the box multiplying them.
+export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
+  // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
+  // target it never names. Matching on the exact id alone under-reported one, which is how a blanket
+  // key lock set by another client read back as nothing at all.
+  const covers = (x: LockEntry) =>
+    x.cls === target.cls && (x.id === target.id || x.id === LOCK_ID_ALL);
+  const covering = locks.entries.filter(
+    (x) =>
+      covers(x) &&
+      (direction === Direction.Both ||
+        x.direction === Direction.Both ||
+        x.direction === direction),
+  );
+  return covering.length ? Math.min(...covering.map((x) => x.scale)) : LOCK_SCALE_PASS;
+}
+
+// True when the target is blocked outright on that direction. A direction merely weighed is not
+// locked. Both asks about the two fixed signs, the pair it has always named; ask for a relative one
+// by name, because a target can be blocked against the bearing while both fixed signs pass.
 export function isLocked(locks: Locks, target: LockTarget, direction: Direction): boolean {
-  const e = locks.entries.find((x) => x.cls === target.cls && x.id === target.id);
-  if (!e) return false;
-  if (direction === Direction.Both) return e.positive && e.negative;
-  return direction === Direction.Positive ? e.positive : e.negative;
+  if (direction === Direction.Both) {
+    return (
+      scaleOf(locks, target, Direction.Positive) === LOCK_SCALE_BLOCK &&
+      scaleOf(locks, target, Direction.Negative) === LOCK_SCALE_BLOCK
+    );
+  }
+  return scaleOf(locks, target, direction) === LOCK_SCALE_BLOCK;
 }
 
 // CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
@@ -316,8 +416,8 @@ export const CATCH_ID_ANY = 0xffff;
 
 // What one CATCH table entry addresses (§3.9): an address, a direction, and how much of each packet
 // to capture. capture is a byte count per entry, 0 meaning the whole packet, because the useful
-// value differs by orders of magnitude between classes - a 64-byte vendor interrupt report wants
-// all of it, a bulk pipe traced for framing wants 16. dir is the press/release edge for the input
+// value differs by orders of magnitude between classes - a 64-byte vendor interrupt report needs
+// all of it, a bulk pipe traced for framing needs 16. dir is the press/release edge for the input
 // classes and the transfer direction for the traffic classes; no class is both, so one byte carries
 // either reading unambiguously.
 export interface CatchFilter {
@@ -542,7 +642,7 @@ export interface CatchState {
 
 // Decoded RESP(OPTIONS, IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is
 // over-capacity (needs an interrupt-IN endpoint the box can't service), and whether the live clone was
-// cloned over-capacity anyway (an interface is silently dead).
+// cloned over-capacity anyway (one interface is not cloned).
 export interface ImperfectStatus {
   allowed: boolean;
   overCapacity: boolean;
@@ -569,7 +669,7 @@ export interface ClipTick {
 export type ClipEntry = ({ kind: 'gap'; ticks: number } | ({ kind: 'tick' } & ClipTick));
 
 // Encode one clip entry (§3.11). Returns null for an entry the box would reject or misread, rather
-// than a nearest-legal guess: a silently-clamped clip plays back as something the caller never
+// than a nearest-legal guess: a clamped clip plays back as something the caller never
 // recorded.
 export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
   if (e.kind === 'gap') {
@@ -614,7 +714,7 @@ function i16(v: number): number {
 
 // The ops a trigger may carry. The box stores a binding only when its action is Toggle or lower,
 // and CLIP_TRIGGER has no reply, so binding Clear or Finalize puts a frame on the wire that is
-// silently discarded and never fires.
+// discarded with no reply and never fires.
 export type ClipTriggerAction =
   | ClipOp.Start
   | ClipOp.Stop
@@ -704,3 +804,51 @@ export interface LogLine {
   level: LogLevel;
   text: string;
 }
+
+/** What the bootloader thinks of the image a chip is running (§4.16). */
+export enum ImageState {
+  New = 0,
+  PendingVerify = 1,
+  Valid = 2,
+  Invalid = 3,
+  Aborted = 4,
+  Unknown = 0xff,
+}
+
+/** One chip's firmware version and which of its two app slots it booted. */
+export interface ChipFirmware {
+  major: number;
+  minor: number;
+  patch: number;
+  /** 0 = ota_0, 1 = ota_1. */
+  slot: number;
+  state: ImageState;
+}
+
+/** The decoded RESP(FIRMWARE) payload (§4.16). */
+export interface FirmwareInfo {
+  device: ChipFirmware;
+  /** null when the host chip has not answered over the inter-chip link. */
+  host: ChipFirmware | null;
+  /** Usable bytes in a spare slot; the same on both chips. */
+  slotSize: number;
+  deviceStaged: boolean;
+  hostStaged: boolean;
+}
+
+/** True while either chip has not confirmed the image it booted, which is when an update is refused. */
+export function anyPending(f: FirmwareInfo): boolean {
+  return (
+    f.device.state === ImageState.PendingVerify ||
+    (f.host !== null && f.host.state === ImageState.PendingVerify)
+  );
+}
+
+export const IMAGE_STATE_NAMES: Record<number, string> = {
+  0: 'new',
+  1: 'pending-verify',
+  2: 'valid',
+  3: 'invalid',
+  4: 'aborted',
+  0xff: 'unknown',
+};

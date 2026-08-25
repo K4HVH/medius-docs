@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>3.1.0</code></td>
+              <td><code>3.2.0</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -74,10 +74,7 @@ const Introduction: Component = () => {
                 <td><A href="/library/features/mock"><code>mock</code></A></td>
                 <td>In-process fake box for tests.</td>
               </tr>
-              <tr>
-                <td><A href="/library/features/flash"><code>flash</code></A></td>
-                <td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a> firmware flashing.</td>
-              </tr>
+
               <tr>
                 <td><A href="/library/features/tracing"><code>tracing</code></A></td>
                 <td>Tracing instrumentation across the connection lifecycle.</td>
@@ -121,7 +118,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lock" subtitle="lock, lock_axis, lock_all" />
+                <CardHeader title="Lock" subtitle="scale, lock, unlock, scale_all" />
               </Card>
             </A>
             <A href="/library/catch" style={{ "text-decoration": "none" }}>
@@ -151,7 +148,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/options" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Options" subtitle="imperfect clones, movement riding" />
+                <CardHeader title="Options" subtitle="imperfect clones, riding, bearing, emit pace, name" />
               </Card>
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
@@ -180,11 +177,6 @@ const Introduction: Component = () => {
             <A href="/library/features/mock" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="mock" subtitle="In-process fake box" />
-              </Card>
-            </A>
-            <A href="/library/features/flash" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="flash" subtitle="esptool flashing" />
               </Card>
             </A>
             <A href="/library/features/tracing" style={{ "text-decoration": "none" }}>

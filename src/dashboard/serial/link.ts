@@ -4,6 +4,7 @@
 // medius crate's link/correlation behavior.
 
 import {
+  type Bearing,
   type CatchEvent,
   type CatchFilter,
   type Caps,
@@ -29,6 +30,7 @@ import {
   MAX_PAYLOAD,
   PROTO_VER,
   Q_CLIP,
+  OPT_BEARING,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -45,6 +47,7 @@ import {
   INJ_KEY,
   INJ_MEDIA,
   Direction,
+  LockClass,
   LedMode,
   LedTarget,
   RebootTarget,
@@ -61,6 +64,10 @@ import {
   imperfectPayload,
   injectPayload,
   ledPayload,
+  BearingMode,
+  bearingPayload,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_PASS,
   lockPayload,
   moveCursorPayload,
   moveWheelPayload,
@@ -76,6 +83,23 @@ import {
   parseUsageEvent,
   queryPayload,
   rebootPayload,
+  type FirmwareInfo,
+  anyPending,
+  Q_FIRMWARE,
+  OTA_OP_BEGIN,
+  OTA_OP_DATA,
+  OTA_OP_END,
+  OTA_OP_ABORT,
+  OTA_OP_ACTIVATE,
+  OTA_TGT_DEVICE,
+  OTA_CHUNK,
+  OTA_CREDIT,
+  UPD_OK,
+  UPD_READY,
+  UPD_ACK,
+  UPD_STAGED,
+  UPD_NAMES,
+  UPD_RESP_LEN,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
 
@@ -96,15 +120,74 @@ export class QueryTimeoutError extends Error {
 }
 
 export class NoReplyError extends Error {
-  constructor() {
-    super('no reply to the version handshake');
+  constructor(what = 'the version handshake') {
+    super(`no reply to ${what}`);
     this.name = 'NoReplyError';
   }
 }
 
+/** The box refused an update op (§4.16); `arg` is that status's argument. */
+const UPDATE_DOING: Record<number, string> = {
+  0x00: 'Starting the transfer',
+  0x01: 'Sending the firmware',
+  0x02: 'Finishing the transfer',
+  0x03: 'Cancelling the transfer',
+  0x04: 'Activating',
+};
+
+// Why it was refused, and what to do where that is not obvious. A status name and an arg read as a
+// code dump.
+function updateReason(op: number, status: number, arg: number): string {
+  switch (status) {
+    case 0x10: return 'an update is already open on that chip.';
+    case 0x11: return 'the box has one firmware slot. It needs a ROM-download flash first.';
+    case 0x12: return `the image is too big. A slot holds ${arg} bytes.`;
+    case 0x13: return `a chunk went missing. The box wanted ${arg}.`;
+    case 0x14: return `the flash write failed (error ${arg}).`;
+    case 0x15: return 'the image was corrupted in transit. Try again.';
+    case 0x16: return `that is not a bootable image (error ${arg}).`;
+    case 0x17: return 'the mouse-side chip is not reachable.';
+    case 0x18: return op === 0x04
+      ? 'the mouse-side chip did not come back. Power cycle the box.'
+      : 'the box stopped answering and dropped the transfer.';
+    case 0x19: return 'nothing is staged.';
+    case 0x1a: return `out of order. The box wanted op ${arg}.`;
+    case 0x1b: return 'a chip is still verifying its new firmware. Try again in a few seconds.';
+    case 0x1c: return 'refused before writing, so anything staged is untouched.';
+    default: return `${UPD_NAMES[status] ?? status} (arg ${arg}).`;
+  }
+}
+
+export class UpdateError extends Error {
+  constructor(
+    readonly op: number,
+    readonly status: number,
+    readonly arg: number,
+  ) {
+    super(`${UPDATE_DOING[op] ?? `Update op ${op}`} failed: ${updateReason(op, status, arg)}`);
+    this.name = 'UpdateError';
+  }
+}
+
+interface UpdateResp {
+  op: number;
+  target: number;
+  status: number;
+  arg: number;
+}
+
+/** One update op's budget. BEGIN erases the whole slot before it answers. */
+const UPDATE_OP_TIMEOUT_MS = 20_000;
+/** ACTIVATE reboots the host chip and waits for it back on the link before the device chip follows. */
+const ACTIVATE_TIMEOUT_MS = 60_000;
+/** A chip confirms the image it booted after about ten seconds of running. */
+const CONFIRM_TIMEOUT_MS = 45_000;
+/** Replies held for a waiter that has not registered yet. A window is 16 frames; this is slack. */
+const UPDATE_BACKLOG_MAX = 64;
+
 export class BadProtoVerError extends Error {
-  constructor(readonly got: number) {
-    super(`unsupported protocol version ${got} (expected ${PROTO_VER})`);
+  constructor(readonly version: Version) {
+    super(`unsupported protocol version ${version.protoVer} (expected ${PROTO_VER})`);
     this.name = 'BadProtoVerError';
   }
 }
@@ -135,6 +218,17 @@ export async function requestMediusPort(): Promise<SerialPort> {
   });
 }
 
+// Ports this origin has already been granted that are a CH343. Opening one of these needs no
+// chooser, so a box that has been connected once before never asks for permission again.
+export async function grantedMediusPorts(): Promise<SerialPort[]> {
+  if (!isWebSerialSupported()) return [];
+  const ports = await navigator.serial.getPorts();
+  return ports.filter((p) => {
+    const info = p.getInfo();
+    return info.usbVendorId === WCH_VID && info.usbProductId === CH343_PID;
+  });
+}
+
 // Open a chooser filtered to an ESP32-S3 in ROM download mode (native USB).
 export async function requestRomPort(): Promise<SerialPort> {
   if (!isWebSerialSupported()) {
@@ -149,6 +243,12 @@ export class SerialLink {
   private readLoop: Promise<void> | null = null;
   private writeChain: Promise<void> = Promise.resolve();
   private pending = new Map<number, Pending>();
+  // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
+  // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
+  private updateWaiters = new Map<number, (r: UpdateResp | null, cause?: Error) => void>();
+  // Replies that arrived before anyone was waiting. Discarding them loses every refusal raised
+  // inside a credit window, because the waiter is only registered once the window closes.
+  private updateBacklog: UpdateResp[] = [];
   private seq = 1;
   // CLIP_APPEND's own sequence; see `clipAppend`.
   private clipSeq = 0;
@@ -168,7 +268,13 @@ export class SerialLink {
   async open(): Promise<void> {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;
-    await this.port.open({ baudRate: CTRL_BAUD });
+    // Adopt a port that is already open rather than opening it again. A close that could not finish
+    // -- the usual cause is the box re-enumerating underneath it as it reboots into a new image --
+    // leaves the port open, and Web Serial answers the next open() with "the port is already open",
+    // which strands the page with no way back except a replug.
+    if (!this.port.readable || !this.port.writable) {
+      await this.port.open({ baudRate: CTRL_BAUD });
+    }
     // Deassert DTR/RTS so opening the port cannot strap or reset the device chip.
     try {
       await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
@@ -184,7 +290,7 @@ export class SerialLink {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
         if (version.protoVer !== PROTO_VER) {
-          throw new BadProtoVerError(version.protoVer);
+          throw new BadProtoVerError(version);
         }
         return version;
       } catch (e) {
@@ -275,6 +381,13 @@ export class SerialLink {
     return resp.windowMs;
   }
 
+  // The bearing (§4.14): the window the With/Against directions are held over, and how it is read.
+  async queryBearing(timeoutMs?: number): Promise<Bearing> {
+    const resp = parseResp(await this.queryOption(OPT_BEARING, timeoutMs));
+    if (resp?.kind !== 'bearing') throw new Error('unexpected reply to OPTIONS(BEARING) query');
+    return resp.bearing;
+  }
+
   // The emit-rate pacing option (§4.14): the mode, the configured fixed rate, and the rate in effect.
   async queryEmitPace(timeoutMs?: number): Promise<EmitPace> {
     const resp = parseResp(await this.queryOption(OPT_EMIT, timeoutMs));
@@ -290,16 +403,33 @@ export class SerialLink {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
-  lock(target: LockTarget, direction: Direction): Promise<void> {
+  // Weigh physical input on a target and direction (§3.8). `scale` is the percent of the physical
+  // value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
+  // amplifies. `lock` and `unlock` are its two ends. Direction.With / .Against are measured against
+  // the bearing (§3.12) and do nothing until one is live; see `setBearing`.
+  // A blanket (id LOCK_ID_ALL) carries the direction to every member, so an every-key lock can block
+  // press edges alone. A media usage has no edges and ignores the byte either way.
+  scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
+    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent -- the
+    // box does a different thing per class with it, and every other client refuses it too. A media usage
+    // has no edges at all, so an edge named on one goes out as Both, which is what the box reports back.
+    if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
+      return Promise.reject(new Error(`${Direction[direction]} is measured against the bearing, which only an axis has`));
+    }
+    const dir = target.cls === LockClass.Media ? Direction.Both : direction;
     return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 1)),
+      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, dir, scale)),
     );
   }
 
+  lock(target: LockTarget, direction: Direction): Promise<void> {
+    return this.scale(target, direction, LOCK_SCALE_BLOCK);
+  }
+
+  // Back to passing untouched. Direction.Both clears every direction of the target, the
+  // bearing-relative pair included, so an unlock never leaves one weighing unseen.
   unlock(target: LockTarget, direction: Direction): Promise<void> {
-    return this.send(
-      encode(FrameType.Lock, this.nextSeq(), lockPayload(target.cls, target.id, direction, 0)),
-    );
+    return this.scale(target, direction, LOCK_SCALE_PASS);
   }
 
   // Move the cursor (§3.1). Relative, in the cloned mouse's own units. The wire field is an i16, so
@@ -348,7 +478,7 @@ export class SerialLink {
 
   // The box-wide safety clear (§3.4). Wider than its name: in one atomic release it drops every
   // injected usage, every lock, the whole CATCH subscription table, the loaded clip AND its
-  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it hands the
+  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it returns the
   // status LEDs back to the box. It is the recovery for a press whose release was lost, because it
   // does not depend on knowing what is held. Release known holds one at a time when that matters.
   reset(): Promise<void> {
@@ -370,7 +500,7 @@ export class SerialLink {
   // Add one entry to the CATCH subscription table (§3.9); event frames arrive on `onEvent` tagged
   // motion, usages, or traffic. The table holds 32 entries and matching is most-specific-first, so
   // "everything at 16 bytes, except endpoint 0x83 in full" is two calls. The subscription clears
-  // after ~1 s of control-PC silence, so poll a query to hold it alive.
+  // after ~1 s of control-PC silence, so poll a query to reset the timer.
   catch(filter: CatchFilter): Promise<void> {
     return this.send(
       encode(
@@ -413,12 +543,23 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
   }
 
-  // Set emit-rate pacing (§3.10): the source the box paces injection to. Learned tracks the mouse's
-  // native report rate (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped
-  // to 1000/n, capped at 1000). rateHz only matters in Fixed mode. It raises the emit ceiling only; idle
-  // still emits when pending. Persisted in NVS. Read back with `queryEmitPace`.
-  setEmitPace(mode: EmitMode, rateHz = 0): Promise<void> {
-    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz)));
+  // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
+  // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
+  // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
+  // (PerAxis) or projects the delta onto the injected XY vector (Vector). Persisted in NVS. Read back
+  // with `queryBearing`.
+  setBearing(windowMs: number, mode: BearingMode = BearingMode.PerAxis): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
+  }
+
+  // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
+  // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
+  // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
+  // the clone advertises and the box polls the device at, 0 for the device's own; it needs IMPERFECT on
+  // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
+  // every call. Persisted in NVS. Read back with `queryEmitPace`.
+  setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
   }
 
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).
@@ -438,7 +579,7 @@ export class SerialLink {
   // append. Appends count on their own.
   //
   // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
-  // check `freeBytes` from `queryClip` before sending. The box also drops an append silently when
+  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply when
   // no mouse is cloned, and after FINALIZE on a retained clip.
   async clipAppend(entries: ClipEntry[]): Promise<void> {
     // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two
@@ -538,10 +679,14 @@ export class SerialLink {
     }
     this.writer = null;
     try {
-      await this.port.close();
+      this.reader?.releaseLock();
     } catch {
-      // ignore
+      // already released by the read loop
     }
+    this.reader = null;
+    // Not swallowed: a port that would not close is the one thing the next open() has to know about,
+    // and it is recoverable by adopting it rather than by giving up.
+    await this.port.close();
   }
 
   private query(what: number, timeoutMs = DEFAULT_QUERY_TIMEOUT_MS): Promise<Uint8Array> {
@@ -637,6 +782,32 @@ export class SerialLink {
       if (resp?.kind === 'version') this.events.onVersionHello?.(resp.version);
       return;
     }
+    if (f.ty === FrameType.UpdateResp) {
+      if (f.payload.length >= UPD_RESP_LEN) {
+        const op = f.payload[0];
+        const resp: UpdateResp = {
+          op,
+          target: f.payload[1],
+          status: f.payload[2],
+          arg:
+            (f.payload[3] |
+              (f.payload[4] << 8) |
+              (f.payload[5] << 16) |
+              (f.payload[6] << 24)) >>>
+            0,
+        };
+        const w = this.updateWaiters.get(op);
+        if (w) {
+          this.updateWaiters.delete(op);
+          w(resp);
+        } else {
+          this.updateBacklog.push(resp);
+          // Drop the oldest only once past the cap; the newest is the one that explains a failure.
+          if (this.updateBacklog.length > UPDATE_BACKLOG_MAX) this.updateBacklog.shift();
+        }
+      }
+      return;
+    }
     if (f.ty === FrameType.Log) {
       this.events.onLog?.(parseLog(f.payload));
       return;
@@ -657,11 +828,145 @@ export class SerialLink {
     }
   }
 
+  async queryFirmware(timeoutMs?: number): Promise<FirmwareInfo> {
+    const resp = parseResp(await this.query(Q_FIRMWARE, timeoutMs));
+    if (resp?.kind !== 'firmware') throw new NoReplyError('the firmware query');
+    return resp.firmware;
+  }
+
+  /** Block until neither chip is on probation; a chip that has not confirmed its image refuses an update. */
+  async waitFirmwareConfirmed(timeoutMs = CONFIRM_TIMEOUT_MS): Promise<FirmwareInfo> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const info = await this.queryFirmware();
+      if (!anyPending(info)) return info;
+      if (Date.now() >= deadline) throw new UpdateError(OTA_OP_BEGIN, 0x1b, 0);
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+
+  /**
+   * Write one image into a chip's spare slot. It stays inert until `activateFirmware`, so nothing
+   * boots it and a power cut brings the running image back.
+   */
+  async stageFirmware(
+    target: number,
+    image: Uint8Array,
+    onProgress?: (sent: number, total: number) => void,
+  ): Promise<void> {
+    if (image.length === 0) throw new Error('image is empty');
+    await this.waitFirmwareConfirmed();
+
+    this.updateBacklog.length = 0;   // nothing queued answers the session about to start
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', image as BufferSource));
+    const begin = new Uint8Array(4 + digest.length);
+    new DataView(begin.buffer).setUint32(0, image.length, true);
+    begin.set(digest, 4);
+    const ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    if (ready.status !== UPD_READY) throw new UpdateError(OTA_OP_BEGIN, ready.status, ready.arg);
+
+    const credit = ready.arg || OTA_CREDIT;
+    let seq = 0;
+    let sent = 0;
+    let unacked = 0;
+    while (sent < image.length) {
+      const end = Math.min(sent + OTA_CHUNK, image.length);
+      const frame = new Uint8Array(4 + (end - sent));
+      frame[0] = OTA_OP_DATA;
+      frame[1] = target;
+      frame[2] = seq & 0xff;
+      frame[3] = (seq >> 8) & 0xff;
+      frame.set(image.subarray(sent, end), 4);
+      await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+      seq = (seq + 1) & 0xffff;
+      sent = end;
+      unacked++;
+      if (unacked < credit && sent < image.length) continue;
+      // No pre-arm: an acknowledgement that beats this await lands in the backlog and is picked up
+      // from there, and arming early leaked a rejected promise on every error path below.
+      const ack = await this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
+      if (ack.status !== UPD_OK && ack.status !== UPD_ACK) {
+        throw new UpdateError(OTA_OP_DATA, ack.status, ack.arg);
+      }
+      // The box reports the chunk it expects next. A disagreement means the two sides no longer share
+      // an offset, and writing on would put bytes in the wrong place.
+      if (ack.arg !== seq) throw new UpdateError(OTA_OP_DATA, 0x13, ack.arg);
+      unacked = 0;
+      onProgress?.(sent, image.length);
+    }
+
+    const staged = await this.updateOp(OTA_OP_END, target, new Uint8Array(0), UPDATE_OP_TIMEOUT_MS);
+    if (staged.status !== UPD_STAGED) throw new UpdateError(OTA_OP_END, staged.status, staged.arg);
+  }
+
+  /** Drop whatever is staged or in flight for one target; the clone comes back without a reboot. */
+  async abortUpdate(target: number, timeoutMs = UPDATE_OP_TIMEOUT_MS): Promise<void> {
+    this.updateBacklog.length = 0;
+    const r = await this.updateOp(OTA_OP_ABORT, target, new Uint8Array(0), timeoutMs);
+    if (r.status !== UPD_OK) throw new UpdateError(OTA_OP_ABORT, r.status, r.arg);
+  }
+
+  /** Commit every staged image and reboot into it. The host chip goes first and has to come back. */
+  async activateFirmware(): Promise<void> {
+    const r = await this.updateOp(
+      OTA_OP_ACTIVATE,
+      OTA_TGT_DEVICE,
+      new Uint8Array(0),
+      ACTIVATE_TIMEOUT_MS,
+    );
+    if (r.status !== UPD_OK) throw new UpdateError(OTA_OP_ACTIVATE, r.status, r.arg);
+  }
+
+  private async updateOp(
+    op: number,
+    target: number,
+    body: Uint8Array,
+    timeoutMs: number,
+  ): Promise<UpdateResp> {
+    // Anything queued for THIS op answers an earlier command; served here it would read as a fresh
+    // success. The other two clients drop the same thing at the same point.
+    this.updateBacklog = this.updateBacklog.filter((r) => r.op !== op);
+    const frame = new Uint8Array(2 + body.length);
+    frame[0] = op;
+    frame[1] = target;
+    frame.set(body, 2);
+    const wait = this.awaitUpdate(op, timeoutMs);
+    await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+    return wait;
+  }
+
+  private awaitUpdate(op: number, timeoutMs: number): Promise<UpdateResp> {
+    const queued = this.updateBacklog.findIndex((r) => r.op === op);
+    if (queued >= 0) return Promise.resolve(this.updateBacklog.splice(queued, 1)[0]);
+    return new Promise<UpdateResp>((resolve, reject) => {
+      // Delete by identity, not by key: an orphaned waiter's timer firing later must not evict a
+      // live one that has since taken its place.
+      const self = (r: UpdateResp | null, cause?: Error) => {
+        clearTimeout(timer);
+        if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
+        if (r) resolve(r);
+        else reject(cause ?? new Error(`update op ${op} was superseded`));
+      };
+      const timer = setTimeout(() => {
+        if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
+        reject(new QueryTimeoutError());
+      }, timeoutMs);
+      const prev = this.updateWaiters.get(op);
+      if (prev) prev(null);   // displaced, not silently dropped
+      this.updateWaiters.set(op, self);
+    });
+  }
+
   private failAll(err: Error): void {
     for (const p of this.pending.values()) {
       clearTimeout(p.timer);
       p.reject(err);
     }
     this.pending.clear();
+    // Update waiters too: without this an in-flight op sits out its full 20 to 60 second timeout
+    // after the port is already gone.
+    for (const w of this.updateWaiters.values()) w(null, err);   // the real cause, not a supersession
+    this.updateWaiters.clear();
+    this.updateBacklog.length = 0;
   }
 }

@@ -141,7 +141,7 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.set_movement_riding(Some(Duration::from_millis(20)))?;
 device.move_rel(100, 0)?;      // waits for the user to move, dropped if they don't
-device.move_rel_now(100, 0)?;  // lands whether they move or not`}</code></pre>
+device.move_rel_now(100, 0)?;  // emits whether they move or not`}</code></pre>
         </Card>
       </div>
 
@@ -194,17 +194,18 @@ device.flush_motion()?;       // 40 counts, now`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">EFFECT</div>
           <table class="api-params">
-            <thead><tr><th>Accumulator</th><th>What discard does</th></tr></thead>
+            <thead><tr><th>State</th><th>What discard does</th></tr></thead>
             <tbody>
-              <tr><td>Riding</td><td>Zeroed. That motion never reaches the game PC.</td></tr>
-              <tr><td>Immediate</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> still lands.</td></tr>
+              <tr><td>Riding accumulator</td><td>Zeroed. That motion never reaches the game PC.</td></tr>
+              <tr><td>Immediate accumulator</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> still lands.</td></tr>
+              <tr><td><A href="/native/commands/lock#bearing">Bearing</A></td><td>Cleared with it: a discarded delta is never emitted, so every <code>With</code> / <code>Against</code> scale stops applying until the box injects again.</td></tr>
             </tbody>
           </table>
           <p>
             Unlike <A href="/library/admin#reset"><code>reset</code></A>, no held usage or lock is released.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.move_rel(400, 0)?;   // a flick the aim loop changed its mind about
+          <pre><code class="language-rust">{`device.move_rel(400, 0)?;   // queued, then superseded
 device.discard_motion()?;   // it never reaches the game PC`}</code></pre>
         </Card>
       </div>

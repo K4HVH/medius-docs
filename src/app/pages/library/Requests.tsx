@@ -8,10 +8,10 @@ const Requests: Component = () => {
     <>
       <div id="requests-overview" data-search-target>
         <Card>
-          <CardHeader title="Requests" subtitle="Asking the box a question and waiting for the answer" />
+          <CardHeader title="Requests" subtitle="One QUERY frame out, one RESP frame back" />
           <p>
             Unlike the <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls, the queries
-            block: a question frame out, one answer frame back. They are{' '}
+            block: one <code>QUERY</code> frame out, one <code>RESP</code> frame back. They are{' '}
             <A href="/library/requests#version"><code>query_version</code></A>,{' '}
             <A href="/library/requests#health"><code>query_health</code></A>,{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
@@ -43,8 +43,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.1.0
-println!("proto {}", v.proto_ver);     // proto 4
+println!("{v}");                       // fw 3.2.0
+println!("proto {}", v.proto_ver);     // proto 5
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -58,7 +58,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
 
       <div id="health" data-search-target>
         <Card>
-          <CardHeader title="query_health" subtitle="Is the mouse-to-box-to-PC chain live" />
+          <CardHeader title="query_health" subtitle="The status bits of the device-to-box-to-PC path" />
           <pre class="api-signature">fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
@@ -66,7 +66,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
             Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eight booleans from one
             status byte. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
             <code>clone_configured</code> must all be true before{' '}
-            <A href="/native/injection">injection</A> has anywhere to land.
+            <A href="/native/injection">injection</A> is emitted at all.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -126,8 +126,7 @@ if d.vid == 0 {
             <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
             change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
             <code>has_keyboard()</code> say which are bound. An{' '}
-            <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is a
-            silent no-op, so feature-detect here first.
+            <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is dropped with no error, so feature-detect here first.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -199,15 +198,17 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
 
       <div id="query-locks" data-search-target>
         <Card>
-          <CardHeader title="query_locks" subtitle="Read the active input locks" />
+          <CardHeader title="query_locks" subtitle="Read the active input scales" />
           <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, the list of inputs
-            currently blocked by <A href="/library/lock#lock"><code>lock</code></A>.{' '}
-            <code>entries()</code> walks them and <code>is_locked(target, direction)</code> answers
-            whether one particular lock is set.
+            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction
+            currently weighed by <A href="/library/lock#scale"><code>scale</code></A>.{' '}
+            <code>scale_of(target, direction)</code> reads the percentage in effect and{' '}
+            <code>is_locked(target, direction)</code> reports whether it is blocked outright. What a
+            blanket, a media usage, and a vector-mode relative direction report is on{' '}
+            <A href="/library/types/structs#locks">Locks</A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -217,7 +218,8 @@ let device = Device::find()?;
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Both) {
     println!("horizontal motion is frozen");
-}`}</code></pre>
+}
+println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
         </Card>
       </div>
 
@@ -237,49 +239,27 @@ if locks.is_locked(Axis::X, Direction::Both) {
           </p>
           <p>
             <A href="/library/catch#catch-events"><code>catch_events</code></A> is fire-and-forget:
-            the box never answers a subscription. Each entry returns the{' '}
+            the box sends no reply to a subscription. Each entry returns the{' '}
             <code>class / id / direction / capture</code> the box accepted, so checking the list
             against the <A href="/library/types/structs#catch-filter">filters</A> you sent is the only
-            way to see they all landed.
+            way to confirm every one was accepted.
           </p>
           <p>
             A filter that is missing was refused. <code>table_full</code> says which reason: the
             32-entry table was full, or the filter itself was malformed.
           </p>
 
-          <div class="api-response-label">TWO DROP COUNTS</div>
+          <div class="api-response-label">DROPS AND THE CLOCK</div>
           <p>
-            <code>CatchState::dropped</code> is box-wide;{' '}
+            <code>CatchState::dropped</code> is box-wide and{' '}
             <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
-            entry.
+            entry, with a lost event charged to every entry it resolved against. Drops on the entry you
+            care about mean the subscription is too broad for the link.
           </p>
           <p>
-            A lost event is charged to <em>every</em> entry it resolved against.
-          </p>
-          <p>
-            Vendor bulk starving beside a clean key entry means narrowing the bulk address or cutting
-            its <code>capture</code>. Drops on the entry you care about mean the subscription is too
-            broad for the link.
-          </p>
-
-          <div class="api-response-label">THE CLOCK ESTIMATE</div>
-          <pre class="diagram">{`  device chip                              host chip
-      t1  ------- request -------------------> t2
-                                               |
-      t4  <---------------- reply ------------ t3
-
-      offset_us = ((t2 - t1) + (t3 - t4)) / 2   ->  host clock minus device clock
-      delay_us  =  (t4 - t1) - (t3 - t2)        ->  the error bound is delay_us / 2`}</pre>
-          <p>
-            Events are stamped by whichever chip saw them, and the two chips' <code>ts_us</code> values
-            share no epoch. The <code>clock</code> field measures the gap, the only way to subtract
-            across domains.
-          </p>
-          <p>
-            <code>delay_us</code> bounds how far you can trust it, <code>rate_ppb</code> corrects for
-            crystal drift as it ages, and an <code>age</code> of <code>None</code> means no estimate
-            yet, not an offset of zero. Applying it is optional: each event's{' '}
-            <A href="/library/types/enums#clock-domain"><code>clock</code></A> stays authoritative.
+            The two chips stamp events on clocks that share no epoch. <code>clock</code> is the
+            measured gap between them, and what its fields mean is on{' '}
+            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -360,6 +340,44 @@ println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 
+      <div id="firmware-info" data-search-target>
+        <Card>
+          <CardHeader title="firmware_info" subtitle="Read both chips' versions, slots, and what is staged" />
+          <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Backs <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>. The
+            other firmware calls live on{' '}
+            <A href="/library/update">the update page</A>.
+          </p>
+          <div class="api-response-label">RETURNS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>device</code></td><td><code>ChipFirmware</code></td><td>version, slot, and image state</td></tr>
+              <tr><td><code>host</code></td><td><code>Option&lt;ChipFirmware&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link</td></tr>
+              <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
+              <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
+              <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
+            </tbody>
+          </table>
+          <p>
+            This is the only call that reports the host chip's version.{' '}
+            <A href="/library/requests#version"><code>query_version</code></A> reports the device
+            chip alone.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let fw = device.firmware_info()?;
+println!("device {}", fw.device);
+match fw.host {
+    Some(h) => println!("host {h}"),
+    None => println!("host chip not answering"),
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="async" data-search-target>
         <Card>
           <CardHeader title="Async queries" subtitle="The same queries on AsyncDevice" />
@@ -371,6 +389,13 @@ println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
           <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
           <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
           <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
+          <pre class="api-signature">async fn query_imperfect(&self) -&gt; Result&lt;ImperfectStatus&gt;</pre>
+          <pre class="api-signature">async fn query_movement_riding(&self) -&gt; Result&lt;Option&lt;Duration&gt;&gt;</pre>
+          <pre class="api-signature">async fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
+          <pre class="api-signature">async fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
+          <pre class="api-signature">async fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+          <pre class="api-signature">async fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+          <pre class="api-signature">async fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <pre><code class="language-bash">cargo add medius --features async</code></pre>

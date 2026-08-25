@@ -9,7 +9,7 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Four box settings, each set and read on its own. All persist in NVS and survive a reboot. See
+          Five box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command for the wire contract.
         </p>
@@ -18,6 +18,7 @@ const Options: Component = () => {
           <tbody>
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
+            <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
           </tbody>
@@ -63,12 +64,22 @@ device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capaci
             <code>None</code> (the default) is off.
           </p>
           <p>
-            The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms, and it
-            clamps to 65535 ms. Pure idle injection, moving the cursor while the user holds still, stops
-            working while riding is on, unless a move opts out with{' '}
-            <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>; button, key, and media
+            The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms,
+            and it clamps to 65535 ms.
+          </p>
+          <p>
+            Pure idle injection, moving the cursor while the user holds still, stops working while
+            riding is on, unless a move opts out with{' '}
+            <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>. Button, key and media
             injection are unaffected.
           </p>
+          <div class="callout callout--warning">
+            <p>
+              A change to this setting drops whatever motion was held for a ride, and clears the
+              standing <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
+              <code>With</code> / <code>Against</code> scale stops applying at that instant.
+            </p>
+          </div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
@@ -87,10 +98,58 @@ device.set_movement_riding(None)?;                             // back to gaples
         </Card>
       </div>
 
+      <div id="set-bearing" data-search-target>
+        <Card>
+          <CardHeader title="set_bearing" subtitle="What With and Against are measured against" />
+          <pre class="api-signature">fn set_bearing(&self, window: Option&lt;Duration&gt;, mode: BearingMode) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
+            injecting, which <code>Direction::With</code> and <code>Direction::Against</code> weigh
+            against in <A href="/library/lock#scale"><code>scale</code></A>. Each axis holds the
+            direction of its last injected delta for <code>window</code> past the last one still owed,
+            then has none and both relative directions stop applying.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Persisted in NVS, so a box that has been set boots at its own value.{' '}
+            <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory one.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              <code>Vector</code> weighs a report twice, and the second pass reads whatever the
+              projection left standing on each axis, not what the device reported. Block <code>Y</code>{' '}
+              negative while the injection runs diagonally and a purely horizontal flick can come out with its
+              vertical share removed.
+            </p>
+            <p>
+              A change to either field drops the standing bearing and the box's banked fractions, which
+              is a visible step while a relative scale is live.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use std::time::Duration;
+use medius::{Axis, BearingMode, Device, Direction};
+
+let device = Device::find()?;
+device.set_bearing(Some(Duration::from_millis(20)), BearingMode::PerAxis)?;
+device.scale(Axis::X, Direction::Against, 40)?;  // motion opposing the injection, at 40%
+device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
+        </Card>
+      </div>
+
       <div id="set-emit-pace" data-search-target>
         <Card>
-          <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion" />
-          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace) -&gt; Result&lt;()&gt;</pre>
+          <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
+          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Picks the emit-rate ceiling for injected motion.{' '}
@@ -104,20 +163,40 @@ device.set_movement_riding(None)?;                             // back to gaples
             pace raises the ceiling only: idle stays idle, and the box emits a frame solely when
             injection is pending.
           </p>
+          <p>
+            <code>force_hz</code> writes one <code>bInterval</code> onto every HID interrupt-IN endpoint
+            of the descriptor the clone serves, and polls the real device at that same interval, so a
+            mouse that declares 125 Hz while able to deliver 1 kHz is not held to what it declared. It
+            snaps to <code>1000/n</code> Hz and floors at 10 ms on a low-speed clone (100 Hz).
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              A forced rate applies only with{' '}
+              <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
+              on, because the descriptor stops matching the real device. Changing the resolved interval
+              re-clones the box, which drops the control port for a few seconds.
+            </p>
+          </div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
+          <p>
+            The two are independent, and both ride one command, so every call writes both.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 
 let device = Device::find()?;
-device.set_emit_pace(EmitPace::Fixed(1000))?;  // emit at a fixed 1 kHz
-device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace`}</code></pre>
+device.set_emit_pace(EmitPace::Fixed(1000), None)?;      // emit at a fixed 1 kHz
+device.allow_imperfect_clones(true)?;
+device.set_emit_pace(EmitPace::Learned, Some(1000))?;    // a 1 kHz clone, human-paced injection
+device.set_emit_pace(EmitPace::Learned, None)?;          // back to the defaults`}</code></pre>
         </Card>
       </div>
 
@@ -144,7 +223,7 @@ device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace
           <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
-device.set_name("Loki")?;              // the box now answers to "Loki"
+device.set_name("Loki")?;              // stored in NVS, reported on Version
 let name = device.query_version()?.name;  // read it back off Version`}</code></pre>
         </Card>
       </div>
@@ -209,17 +288,38 @@ match device.query_movement_riding()? {
         </Card>
       </div>
 
+      <div id="query-bearing" data-search-target>
+        <Card>
+          <CardHeader title="query_bearing" subtitle="Read the bearing window and geometry" />
+          <pre class="api-signature">fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Returns the configured{' '}
+            <A href="/library/types/structs#bearing"><code>Bearing</code></A>: the window and how the
+            box reads it.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let bearing = device.query_bearing()?;
+if bearing.is_live() {
+    println!("{:?} over {:?}", bearing.mode, bearing.window);
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="query-emit-pace" data-search-target>
         <Card>
-          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and rate" />
+          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and the rate the clone runs at" />
           <pre class="api-signature">fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns an{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>: the
-            selected <A href="/library/types/enums#emit-pace"><code>EmitPace</code></A> mode plus{' '}
-            <code>resolved_hz</code>, the ceiling actually in effect (0 when the pace is learnt/adaptive,
-            or no device is attached yet in <code>Interval</code> mode).
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>.{' '}
+            <code>advertised_hz</code> is what the clone advertises now: the device's own rate while
+            nothing is forced, the forced rate once something is. The reply carries no record of what the
+            device declared before a force was applied.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
@@ -228,7 +328,8 @@ let device = Device::find()?;
 let status = device.query_emit_pace()?;
 if let EmitPace::Fixed(hz) = status.mode {
     println!("fixed {hz} Hz, emitting at {} Hz", status.resolved_hz);
-}`}</code></pre>
+}
+println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
         </Card>
       </div>
 
@@ -238,8 +339,8 @@ if let EmitPace::Fixed(hz) = status.mode {
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
-            <code>query_movement_riding</code>, and <code>query_emit_pace</code> futures, like the
-            other queries.
+            <code>query_movement_riding</code>, <code>query_bearing</code>, and{' '}
+            <code>query_emit_pace</code> futures, like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;

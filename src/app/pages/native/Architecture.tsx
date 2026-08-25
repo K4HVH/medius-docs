@@ -82,7 +82,7 @@ const Architecture: Component = () => {
 
       <div id="transparency" data-search-target>
         <Card>
-          <CardHeader title="What the PC sees" subtitle="A real mouse, plus your input" />
+          <CardHeader title="What reaches the PC" subtitle="A real mouse, plus your input" />
           <p>
             To the PC the clone is the same model of mouse, with the same buttons and capabilities. Your
             input adds to the real mouse's input rather than replacing it (<A href="/native/injection">Injection

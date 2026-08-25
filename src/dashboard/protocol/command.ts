@@ -9,6 +9,7 @@ import {
   MOTION_CURSOR,
   MOTION_WHEEL,
   NAME_MAX,
+  OPT_BEARING,
   OPT_EMIT,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
@@ -17,9 +18,11 @@ import {
 import {
   type ClipEntry,
   type ClipTrigger,
+  BearingMode,
   CatchClass,
   Direction,
   LedMode,
+  LOCK_SCALE_MAX,
   LedTarget,
   LockClass,
   RebootTarget,
@@ -66,15 +69,24 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
   return new Uint8Array([target, mode, level & 0xff]);
 }
 
-// LOCK (§3.8): [class u8][id u16 LE][direction u8][state u8]. state 0 = unlock, 1 = lock. id is
-// class-specific (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
+// LOCK (§3.8): [class u8][id u16 LE][direction u8][scale u8]. scale is the percent of the physical
+// value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
+// amplifies to LOCK_SCALE_MAX (2.55x). Locking and unlocking are its two ends. id is class-specific
+// (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
+//
+// A delta picks up at most two scales, its absolute direction's and its bearing-relative one's, and
+// they multiply, so a block in either zeroes the delta. Direction.With / .Against need a live bearing (§3.12).
+// Direction.Both is the exception: it writes `scale` to the two fixed signs and a full PASS to the
+// relative pair, so a Both of 50 means 50% whether or not a bearing is live rather than squaring to
+// 25% when one is. It is still a total clear, since a Both of PASS returns all four slots to passing.
 export function lockPayload(
   cls: LockClass,
   id: number,
   direction: Direction,
-  state: number,
+  scale: number,
 ): Uint8Array {
-  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, state & 0xff]);
+  const s = Math.max(0, Math.min(LOCK_SCALE_MAX, Math.round(scale)));
+  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, s]);
 }
 
 // CATCH (§3.9): [class u8][id u16 LE][dir u8][state u8][capture u8]. One table entry, addressed the
@@ -104,12 +116,30 @@ export function moveRidePayload(timeoutMs: number): Uint8Array {
   return new Uint8Array([OPT_MOVE_RIDE, ms & 0xff, (ms >> 8) & 0xff]);
 }
 
-// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE] - emit-rate pacing. mode 0 learned (default), 1
-// follows the cloned poll rate, 2 paces at a fixed rate_hz. rate_hz only matters in fixed mode; the box
-// snaps it to 1000/n Hz and caps it at 1000. Raises the emit ceiling only. Persisted in NVS.
-export function emitPayload(mode: EmitMode, rateHz = 0): Uint8Array {
+// OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8] - what the With/Against lock directions
+// are measured against (§3.12). window is how long the last injected delta's direction stays the
+// bearing on that axis; 0 turns it off, leaving both directions inert whatever their scale. mode 0
+// reads each axis's own sign, mode 1 projects the delta onto the injected XY vector. Persisted in NVS.
+export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array {
+  const ms = Math.max(0, Math.min(0xffff, Math.round(windowMs)));
+  return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
+}
+
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode 0 learned (default), 1
+// follows the cloned poll rate, 2 paces at a fixed rate_hz, and raises the emit ceiling only. forceHz is
+// the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
+// IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
+export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
-  return new Uint8Array([OPT_EMIT, mode & 0xff, hz & 0xff, (hz >> 8) & 0xff]);
+  const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
+  return new Uint8Array([
+    OPT_EMIT,
+    mode & 0xff,
+    hz & 0xff,
+    (hz >> 8) & 0xff,
+    fhz & 0xff,
+    (fhz >> 8) & 0xff,
+  ]);
 }
 
 // OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the
