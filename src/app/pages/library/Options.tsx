@@ -148,8 +148,8 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
 
       <div id="set-emit-pace" data-search-target>
         <Card>
-          <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion" />
-          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace) -&gt; Result&lt;()&gt;</pre>
+          <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
+          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Picks the emit-rate ceiling for injected motion.{' '}
@@ -163,20 +163,40 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             pace raises the ceiling only: idle stays idle, and the box emits a frame solely when
             injection is pending.
           </p>
+          <p>
+            <code>force_hz</code> writes one <code>bInterval</code> onto every HID interrupt-IN endpoint
+            of the descriptor the clone serves, and polls the real device at that same interval, so a
+            mouse that declares 125 Hz while able to deliver 1 kHz is not held to what it declared. It
+            snaps to <code>1000/n</code> Hz and floors at 10 ms on a low-speed clone (100 Hz).
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              A forced rate applies only with{' '}
+              <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
+              on, because the descriptor stops matching the real device. Changing the resolved interval
+              re-clones the box, which drops the control port for a few seconds.
+            </p>
+          </div>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
+          <p>
+            The two are independent, and both ride one command, so every call writes both.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 
 let device = Device::find()?;
-device.set_emit_pace(EmitPace::Fixed(1000))?;  // emit at a fixed 1 kHz
-device.set_emit_pace(EmitPace::Learned)?;      // back to the learnt native pace`}</code></pre>
+device.set_emit_pace(EmitPace::Fixed(1000), None)?;      // emit at a fixed 1 kHz
+device.allow_imperfect_clones(true)?;
+device.set_emit_pace(EmitPace::Learned, Some(1000))?;    // a 1 kHz clone, human-paced injection
+device.set_emit_pace(EmitPace::Learned, None)?;          // back to the defaults`}</code></pre>
         </Card>
       </div>
 
@@ -291,15 +311,14 @@ if bearing.is_live() {
 
       <div id="query-emit-pace" data-search-target>
         <Card>
-          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and rate" />
+          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and the rate the clone runs at" />
           <pre class="api-signature">fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns an{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>: the
-            selected <A href="/library/types/enums#emit-pace"><code>EmitPace</code></A> mode plus{' '}
-            <code>resolved_hz</code>, the ceiling actually in effect (0 when the pace is learnt/adaptive,
-            or no device is attached yet in <code>Interval</code> mode).
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>.{' '}
+            <code>advertised_hz</code> reports the native rate when nothing is forced, so one query shows
+            both what the device declared and what the clone is running at.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
@@ -308,7 +327,8 @@ let device = Device::find()?;
 let status = device.query_emit_pace()?;
 if let EmitPace::Fixed(hz) = status.mode {
     println!("fixed {hz} Hz, emitting at {} Hz", status.resolved_hz);
-}`}</code></pre>
+}
+println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
         </Card>
       </div>
 

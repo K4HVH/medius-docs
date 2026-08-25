@@ -82,13 +82,18 @@ import {
   ImageState,
 } from './types';
 
-// Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, and the rate
-// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode). mode null is a
-// mode the box reported that this build doesn't know.
+// Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, the rate
+// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode), the requested
+// wire rate (forceHz 0 = off), what the clone's input endpoints advertise now (advertisedHz 0 = no
+// clone), and whether a forced interval is in the served descriptor. mode null is a mode the box
+// reported that this build doesn't know.
 export interface EmitPace {
   mode: EmitMode | null;
   fixedHz: number;
   resolvedHz: number;
+  forceHz: number;
+  advertisedHz: number;
+  forceActive: boolean;
 }
 
 export type Resp =
@@ -373,14 +378,17 @@ export function parseResp(payload: Uint8Array): Resp | null {
             bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
           };
         case OPT_EMIT:
-          // [what=9][id=2][mode u8][fixed_hz u16 LE][resolved_hz u16 LE]
-          if (payload.length < 7) return null;
+          // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8]
+          if (payload.length < 12) return null;
           return {
             kind: 'emitPace',
             emit: {
               mode: emitModeFromU8(payload[2]),
               fixedHz: u16le(payload, 3),
               resolvedHz: u16le(payload, 5),
+              forceHz: u16le(payload, 7),
+              advertisedHz: u16le(payload, 9),
+              forceActive: payload[11] !== 0,
             },
           };
         default:

@@ -125,12 +125,21 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
 }
 
-// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE] - emit-rate pacing. mode 0 learned (default), 1
-// follows the cloned poll rate, 2 paces at a fixed rate_hz. rate_hz only matters in fixed mode; the box
-// snaps it to 1000/n Hz and caps it at 1000. Raises the emit ceiling only. Persisted in NVS.
-export function emitPayload(mode: EmitMode, rateHz = 0): Uint8Array {
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode 0 learned (default), 1
+// follows the cloned poll rate, 2 paces at a fixed rate_hz, and raises the emit ceiling only. forceHz is
+// the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
+// IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
+export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
-  return new Uint8Array([OPT_EMIT, mode & 0xff, hz & 0xff, (hz >> 8) & 0xff]);
+  const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
+  return new Uint8Array([
+    OPT_EMIT,
+    mode & 0xff,
+    hz & 0xff,
+    (hz >> 8) & 0xff,
+    fhz & 0xff,
+    (fhz >> 8) & 0xff,
+  ]);
 }
 
 // OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the
