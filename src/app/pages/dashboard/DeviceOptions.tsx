@@ -109,9 +109,10 @@ const DeviceOptions = () => {
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
   const forceOn = () => forceOnEdit() ?? (emit()?.forceHz ?? 0) > 0;
-  // The box's own advertised rate is the sensible starting point: asking for the rate already in the
-  // descriptor changes no byte, so it costs nothing if the user applies without touching the field.
-  const forceHz = () => forceEdit() ?? emit()?.forceHz ?? emit()?.advertisedHz ?? 1000;
+  // The box's own advertised rate is the sensible starting point. || not ??, as the sibling above: an
+  // unforced box reports 0 here, which is below the field's own minimum and would be sent as an Apply
+  // that turns the force off while the radio says Forced.
+  const forceHz = () => forceEdit() ?? (emit()?.forceHz || emit()?.advertisedHz || 1000);
 
   // Each write clears its own edit only once the frame is away. A failure leaves the edit showing,
   // so the field still holds what the user asked for rather than snapping back as if it landed.

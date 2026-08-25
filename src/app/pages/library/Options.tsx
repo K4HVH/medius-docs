@@ -317,8 +317,9 @@ if bearing.is_live() {
           <p>
             Returns an{' '}
             <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>.{' '}
-            <code>advertised_hz</code> reports the native rate when nothing is forced, so one query shows
-            both what the device declared and what the clone is running at.
+            <code>advertised_hz</code> is what the clone advertises now: the device's own rate while
+            nothing is forced, the forced rate once something is. The reply carries no record of what the
+            device declared before a force was applied.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
