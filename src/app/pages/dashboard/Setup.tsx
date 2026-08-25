@@ -3,7 +3,6 @@ import { Match, Show, Switch, createResource, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
-import { Chip } from '../../../components/display/Chip';
 import { Progress } from '../../../components/feedback/Progress';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
@@ -106,10 +105,7 @@ const Setup = () => {
 
       <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
         <Card>
-          <CardHeader title="Install Medius" subtitle="The ports are numbered on the box" />
-          <div style={{ 'margin-bottom': 'var(--g-spacing)' }}>
-            <Chip variant="neutral">{counter()}</Chip>
-          </div>
+          <CardHeader title="Install Medius" subtitle={counter()} />
           <Show when={err()}>
             {(msg) => (
               <div class="callout callout--danger" role="alert">
