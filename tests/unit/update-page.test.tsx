@@ -135,7 +135,7 @@ const runUpdate = async (choice: RegExp) => {
 describe('Update', () => {
   it('no longer installs a new box; that lives in Setup', async () => {
     const { container } = mount();
-    await waitFor(() => expect(container.textContent).toMatch(/plug in like this/i));
+    await waitFor(() => expect(container.textContent).toMatch(/USB1/));
     expect(container.textContent).not.toMatch(/set up a new box/i);
   });
 

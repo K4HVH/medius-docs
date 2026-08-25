@@ -45,6 +45,7 @@ vi.mock('../../src/dashboard/firmware', () => ({
 }));
 
 vi.mock('../../src/dashboard/serial', () => ({
+  grantedMediusPorts: async () => [],
   requestRomPort: async () => ({}) as SerialPort,
 }));
 
@@ -83,8 +84,7 @@ const openUpload = async (r: ReturnType<typeof render>) => {
 
 // Walk past the unplug gate to the Flash button.
 const openGate = async (r: ReturnType<typeof render>) => {
-  await waitFor(() => r.getByRole('button', { name: /unplugged/i }));
-  r.getByRole('button', { name: /they're all unplugged/i }).click();
+  // With nothing plugged in there is no disconnect to wait for, so the gate starts at the confirm.
   await waitFor(() => r.getByRole('button', { name: /every cable is unplugged/i }));
   r.getByRole('button', { name: /every cable is unplugged/i }).click();
 };
@@ -228,8 +228,8 @@ describe('Advanced', () => {
     });
     const usb1 = tiles.find((t) => t.textContent?.startsWith('USB1'))?.textContent ?? '';
     const usb3 = tiles.find((t) => t.textContent?.startsWith('USB3'))?.textContent ?? '';
-    expect(usb1).toContain('must be empty');
-    expect(usb3).not.toContain('must be empty');
+    expect(usb1).toContain('unplug');
+    expect(usb3).not.toContain('unplug');
   });
 
   it('a disabled chip picker cannot be selected from, not merely styled', async () => {
@@ -255,7 +255,7 @@ describe('Advanced', () => {
   it('both chips pass the cable gate, not just the mouse-side one', async () => {
     const r = render(() => <Advanced />);
     // Default chip is the main one, which used to skip the gate outright.
-    await waitFor(() => expect(r.container.textContent).toMatch(/unplug every cable/i));
+    await waitFor(() => expect(r.getByRole('button', { name: /every cable is unplugged/i })).toBeTruthy());
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 
@@ -267,7 +267,7 @@ describe('Advanced', () => {
     await waitFor(() => expect(mock.flashes).toBe(1));
     await waitFor(() => r.getByRole('button', { name: /flash another/i }));
     r.getByRole('button', { name: /flash another/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/unplug every cable/i));
+    await waitFor(() => expect(r.getByRole('button', { name: /every cable is unplugged/i })).toBeTruthy());
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 
