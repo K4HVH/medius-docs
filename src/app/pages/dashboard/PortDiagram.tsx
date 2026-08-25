@@ -8,10 +8,12 @@ const ORDER: PortId[] = ['usb1', 'usb2', 'usb3'];
 export const holdButton = (id: PortId) =>
   `Hold the button next to ${LABEL[id]} down while you plug ${LABEL[id]} in`;
 
-type Tone = 'connect' | 'clear' | 'idle';
+type Tone = 'connect' | 'device' | 'clear' | 'idle';
 
 const COLOUR: Record<Tone, string> = {
   connect: 'var(--color-success)',
+  // The mouse or keyboard is not a computer, so it does not read as one of the other two.
+  device: 'var(--color-primary)',
   clear: 'var(--color-danger)',
   idle: 'var(--g-border-color-subtle)',
 };
@@ -137,7 +139,7 @@ export const WiringPorts = () => (
     cells={{
       usb1: { tone: 'connect', sub: 'Game PC', note: 'plug in' },
       usb2: { tone: 'connect', sub: 'This device', note: 'plug in' },
-      usb3: { tone: 'connect', sub: 'Mouse/keyboard', note: 'plug in' },
+      usb3: { tone: 'device', sub: 'Mouse/keyboard', note: 'plug in' },
     }}
   />
 );
