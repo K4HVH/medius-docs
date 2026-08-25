@@ -331,18 +331,19 @@ const DeviceOptions = () => {
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
+        <div class="api-response-label" style={section}>Wire rate</div>
         <RadioGroup
           name="wire-rate"
           value={forceOn() ? 'forced' : 'device'}
           onChange={(v) => setForceOnEdit(v === 'forced')}
           options={[
-            { value: 'device', label: "Device's own wire rate" },
-            { value: 'forced', label: 'Forced wire rate' },
+            { value: 'device', label: "Device's own" },
+            { value: 'forced', label: 'Forced' },
           ]}
         />
         <p style={muted}>
           {forceOn()
-            ? 'Runs the clone at a rate the mouse did not ask for; needs Allow imperfect, and the box reboots to apply.'
+            ? 'Runs the clone at a rate the mouse did not ask for; needs Allow imperfect.'
             : 'Runs the clone at the rate the mouse asked for.'}
         </p>
         <div style={controls}>
