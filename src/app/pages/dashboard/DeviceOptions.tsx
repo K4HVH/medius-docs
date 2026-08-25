@@ -21,7 +21,7 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Section } from './Section';
-import { controls, label, muted, section, status } from './ui';
+import { controls, muted, section, status } from './ui';
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
@@ -331,8 +331,22 @@ const DeviceOptions = () => {
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
-        <Show when={mode() === 'fixed'}>
-          <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
+        <RadioGroup
+          name="wire-rate"
+          value={forceOn() ? 'forced' : 'device'}
+          onChange={(v) => setForceOnEdit(v === 'forced')}
+          options={[
+            { value: 'device', label: "Device's own wire rate" },
+            { value: 'forced', label: 'Forced wire rate' },
+          ]}
+        />
+        <p style={muted}>
+          {forceOn()
+            ? 'Runs the clone at a rate the mouse did not ask for; needs Allow imperfect, and the box reboots to apply.'
+            : 'Runs the clone at the rate the mouse asked for.'}
+        </p>
+        <div style={controls}>
+          <Show when={mode() === 'fixed'}>
             <div style={{ 'max-width': '8rem' }}>
               <NumberInput
                 label="Emit rate (Hz)"
@@ -342,25 +356,7 @@ const DeviceOptions = () => {
                 onChange={(v) => setHzEdit(v ?? 1)}
               />
             </div>
-          </div>
-        </Show>
-        <div style={section}>
-        <div style={label}>Wire rate</div>
-        <RadioGroup
-          name="wire-rate"
-          value={forceOn() ? 'forced' : 'device'}
-          onChange={(v) => setForceOnEdit(v === 'forced')}
-          options={[
-            { value: 'device', label: "Device's own" },
-            { value: 'forced', label: 'Forced' },
-          ]}
-        />
-        <p style={muted}>
-          {forceOn()
-            ? 'Runs the clone at a rate the mouse did not ask for; needs Allow imperfect, and the box reboots to apply.'
-            : 'Runs the clone at the rate the mouse asked for.'}
-        </p>
-        <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
+          </Show>
           <Show when={forceOn()}>
             <div style={{ 'max-width': '8rem' }}>
               <NumberInput
@@ -380,7 +376,6 @@ const DeviceOptions = () => {
               Revert
             </Button>
           </Show>
-        </div>
         </div>
         <Show when={cmd.error()}>
           <div class="callout callout--danger" role="alert" style={section}>
