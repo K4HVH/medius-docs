@@ -79,6 +79,29 @@ describe('Advanced', () => {
     await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).toBeTruthy());
   });
 
+  it('the badge names the button beside the socket this chip actually uses', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    // Default chip is the main one: USB1.
+    expect(r.container.textContent).toMatch(/button next to USB1/i);
+    expect(r.container.textContent).not.toMatch(/button next to USB3/i);
+
+    // Switch to the mouse-side chip and the badge must follow the socket, not stay put.
+    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    fireEvent.click(chip);
+    fireEvent.keyDown(chip, { key: 'Enter' });
+    await new Promise((res) => setTimeout(res, 20));
+    const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
+      /mouse-side/i.test(o.textContent ?? ''),
+    );
+    if (!mouseSide) throw new Error('no mouse-side option');
+    fireEvent.click(mouseSide);
+    await openGate(r);
+    await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB3/i));
+    expect(r.container.textContent).not.toMatch(/button next to USB1/i);
+  });
+
   it('both chips pass the cable gate, not just the mouse-side one', async () => {
     const r = render(() => <Advanced />);
     // Default chip is the main one, which used to skip the gate outright.

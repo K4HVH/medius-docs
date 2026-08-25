@@ -112,8 +112,8 @@ const Setup = () => {
   };
 
   // Write a full factory image to whichever chip is currently in ROM download on this cable. The
-  // owner is never told which chip that is: both BOOT buttons are held, and only one chip's USB is
-  // plugged in, so only one can answer.
+  // owner is never told which chip that is: only one chip's USB is plugged in, and the button beside
+  // that socket is the one held, so only one chip can answer.
   const install = async (assetName: string, next: Step, socket: PortId) => {
     setErr(null);
     dash.clearFlashResult();

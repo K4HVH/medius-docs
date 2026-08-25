@@ -15,8 +15,8 @@ const PORTS: { id: PortId; label: string; sub: string }[] = [
 
 // A compact picture of the box: `plug` ports light green ("plug in here"), `other` ports light
 // amber (they belong on a different computer), `mouse` ports light blue, `out` ports light red
-// ("unplug"), the rest dimmed, plus an optional hold-both-buttons badge. `where` renames a port for
-// the machine it ends up on. The diagram carries the instruction; words don't.
+// ("unplug"), the rest dimmed, plus an optional badge naming the button beside a socket. `where`
+// renames a port for the machine it ends up on. The diagram carries the instruction; words don't.
 export const PortDiagram = (props: {
   plug?: PortId[];
   other?: PortId[];
