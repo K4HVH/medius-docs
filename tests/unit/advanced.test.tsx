@@ -8,6 +8,7 @@ const mock = vi.hoisted(() => ({
   releasesThrow: false,
   flashOk: true,
   flashes: 0,
+  holdFlash: false,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -21,6 +22,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     clearFlashResult: () => {},
     flashNative: async () => {
       mock.flashes += 1;
+      if (mock.holdFlash) await new Promise(() => {});
       return mock.flashOk;
     },
   }),
@@ -57,6 +59,7 @@ afterEach(() => {
   mock.releasesThrow = false;
   mock.flashOk = true;
   mock.flashes = 0;
+  mock.holdFlash = false;
   navigate.mockClear();
 });
 
@@ -139,7 +142,8 @@ describe('Advanced', () => {
     await openGate(r);
     await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB1/i));
+    const alert = await r.findByRole('alert');
+    expect(alert.textContent).toMatch(/button next to USB1/i);
     const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
@@ -150,6 +154,21 @@ describe('Advanced', () => {
     if (!mouseSide) throw new Error('no mouse-side option');
     fireEvent.click(mouseSide);
     await waitFor(() => expect(r.queryByRole('alert')).toBeNull());
+  });
+
+  it('the chip and image cannot be changed while a flash is in flight', async () => {
+    // They were live across `requestRomPort` and `downloadAsset`, so a switch mid-download changed
+    // which offset the bytes went to -- an app image at 0x0 takes the bootloader with it.
+    mock.holdFlash = true;
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    r.getByRole('button', { name: /^flash$/i }).click();
+    await waitFor(() => {
+      const boxes = [...r.container.querySelectorAll('.combobox--disabled')];
+      // Chip, image and source: all three were live across the two awaits.
+      expect(boxes).toHaveLength(3);
+    });
   });
 
   it('both chips pass the cable gate, not just the mouse-side one', async () => {

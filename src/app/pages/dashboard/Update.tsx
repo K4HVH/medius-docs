@@ -11,7 +11,7 @@ import { BAD_BROWSER, ConnectPanel } from './ConnectPanel';
 import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
-type Step = 'choose' | 'update' | 'done';
+type Step = 'choose' | 'update' | 'done' | 'sent';
 const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
   return m ? { major: +m[1], minor: +m[2], patch: +m[3] } : null;
@@ -104,8 +104,9 @@ const Update = () => {
       const images: { device?: Uint8Array; host?: Uint8Array } = {};
       if (wantDevice && da) images.device = await downloadAsset(da);
       if (wantHost && ha) images.host = await downloadAsset(ha);
-      const ok = await dash.updateOverControl(images);
-      if (ok) setStep('done');
+      const outcome = await dash.updateOverControl(images);
+      if (outcome === 'verified') setStep('done');
+      else if (outcome === 'sent') setStep('sent');
       else setErr(dash.error() ?? "That didn't finish. The box kept the firmware it was running.");
     } catch (e) {
       setErr((e as Error).message);
@@ -130,7 +131,7 @@ const Update = () => {
       <Show when={dash.status() !== 'flashing'}>
         <Card>
           <CardHeader title="Update" subtitle="Get the latest firmware" />
-          <Show when={err() ?? (dash.status() === 'error' ? dash.error() : null)}>
+          <Show when={err()}>
             {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
           </Show>
 
@@ -191,6 +192,16 @@ const Update = () => {
                   </Button>
                 </div>
               </Show>
+            </Match>
+
+            <Match when={step() === 'sent'}>
+              {/* The transfer and the activate went through, and then nothing answered. What is
+                  running now is exactly what this cannot say, so it does not try. */}
+              <div class="callout callout--warning">
+                The update was sent, but the box did not come back on its own. Unplug it, plug it
+                back in, then connect.
+              </div>
+              <ConnectPanel />
             </Match>
 
             <Match when={step() === 'done'}>

@@ -6,6 +6,8 @@ const mock = vi.hoisted(() => ({
   releasesThrow: false,
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
+  outcome: 'verified' as 'verified' | 'sent' | 'failed',
+  holdReleases: false,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -23,13 +25,14 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     readFirmwareInfo: async () => null,
     updateOverControl: async () => {
       mock.updates += 1;
-      return true;
+      return mock.outcome;
     },
   }),
 }));
 
 vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
+    if (mock.holdReleases) await new Promise(() => {});
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
     return [{ tag: 'v3.2.0', assets: mock.assets }];
   },
@@ -47,6 +50,8 @@ afterEach(() => {
   mock.releasesThrow = false;
   mock.updates = 0;
   mock.assets = [];
+  mock.outcome = 'verified';
+  mock.holdReleases = false;
   navigate.mockClear();
 });
 
@@ -110,6 +115,8 @@ describe('Update', () => {
     // Both images missing: naming the main chip here answers a question the user did not ask, and
     // points at a button that dead-ends the same way.
     mock.assets = [];
+  mock.outcome = 'verified';
+  mock.holdReleases = false;
     const r = await runUpdate(/mouse-side only/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
     expect(r.container.textContent).not.toMatch(/nothing for the main chip/i);
@@ -139,11 +146,34 @@ describe('Update', () => {
     expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy();
   });
 
-  it('a release with both images runs the update', async () => {
+  it('a release with both images runs the update and says it was verified', async () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(mock.updates).toBe(1));
-    void r;
+    await waitFor(() => expect(r.container.textContent).toMatch(/updated and verified/i));
+    expect(r.container.textContent).toMatch(/3\.2\.0/);
+  });
+
+  it('a box that never came back is NOT reported as verified on any version', async () => {
+    // tryReconnect IS the verification. When it fails, the box has reverted whatever would not boot,
+    // so naming a version here would assert something nothing checked.
+    mock.assets = [dev, host];
+    mock.outcome = 'sent';
+    const r = await runUpdate(/update both chips/i);
+    await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
+    expect(r.container.textContent).not.toMatch(/verified/i);
+    expect(r.container.textContent).toMatch(/unplug it, plug it back in/i);
+  });
+
+  it('the Update button waits for the release list instead of claiming there is none', async () => {
+    mock.assets = [dev, host];
+    mock.status = 'connected';
+    mock.holdReleases = true;
+    const r = render(() => <Update />);
+    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
+    r.getByRole('button', { name: /update both chips/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /^update$/i }));
+    expect(r.getByRole('button', { name: /^update$/i })).toBeDisabled();
   });
 
   it('a connected box gets the three update choices and nothing about cables', async () => {
