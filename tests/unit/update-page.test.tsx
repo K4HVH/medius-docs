@@ -116,6 +116,29 @@ describe('Update', () => {
     expect(mock.updates).toBe(0);
   });
 
+  it('a single-chip choice a half-published release DOES support just runs', async () => {
+    // The `want*` half of each guard: main-only against a main-only release must not be refused,
+    // and must not be answered about the chip the user did not ask for.
+    mock.assets = [dev];
+    const r = await runUpdate(/main only/i);
+    await waitFor(() => expect(mock.updates).toBe(1));
+    expect(r.container.textContent).not.toMatch(/nothing for the/i);
+  });
+
+  it('the mirror: mouse-side only against a mouse-side-only release runs', async () => {
+    mock.assets = [host];
+    const r = await runUpdate(/mouse-side only/i);
+    await waitFor(() => expect(mock.updates).toBe(1));
+    expect(r.container.textContent).not.toMatch(/nothing for the/i);
+  });
+
+  it('the Back button the refusal messages name is actually on that screen', async () => {
+    mock.assets = [host];
+    const r = await runUpdate(/update both chips/i);
+    await waitFor(() => expect(r.container.textContent).toMatch(/press back and choose/i));
+    expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy();
+  });
+
   it('a release with both images runs the update', async () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);

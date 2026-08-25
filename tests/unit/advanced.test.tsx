@@ -102,6 +102,56 @@ describe('Advanced', () => {
     expect(r.container.textContent).not.toMatch(/button next to USB1/i);
   });
 
+  it('a rejection from the file picker is not wiped by the empty selection it comes with', async () => {
+    // FileUpload calls onError and THEN onChange([]), which re-enters onFiles: clearing there
+    // unconditionally erased the reason in the same tick it was set.
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+    fireEvent.click(source);
+    fireEvent.keyDown(source, { key: 'Enter' });
+    await new Promise((res) => setTimeout(res, 20));
+    const upload = [...document.querySelectorAll('[role="option"]')].find((o) =>
+      /upload a file/i.test(o.textContent ?? ''),
+    );
+    if (!upload) throw new Error('no upload option');
+    fireEvent.click(upload);
+    const input = await waitFor(() => {
+      const el = r.container.querySelector('input[type="file"]');
+      if (!el) throw new Error('no file input');
+      return el as HTMLInputElement;
+    });
+    // Over the 4 MB cap, so FileUpload rejects it and hands back an empty selection.
+    const huge = new File([new Uint8Array(16)], 'huge.bin');
+    Object.defineProperty(huge, 'size', { value: 8 * 1024 * 1024 });
+    Object.defineProperty(input, 'files', { value: [huge], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    // On the alert, not the container: FileUpload always renders a "Max size: 4.2 MB" helper line,
+    // so a loose container match passed even when the message was being wiped.
+    const alert = await waitFor(() => r.getByRole('alert'));
+    expect(alert.textContent).toMatch(/exceeds the maximum size/i);
+  });
+
+  it('a failure from one chip does not stay on screen contradicting the other', async () => {
+    mock.flashOk = false;
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    r.getByRole('button', { name: /^flash$/i }).click();
+    await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB1/i));
+    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    fireEvent.click(chip);
+    fireEvent.keyDown(chip, { key: 'Enter' });
+    await new Promise((res) => setTimeout(res, 20));
+    const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
+      /mouse-side/i.test(o.textContent ?? ''),
+    );
+    if (!mouseSide) throw new Error('no mouse-side option');
+    fireEvent.click(mouseSide);
+    await waitFor(() => expect(r.queryByRole('alert')).toBeNull());
+  });
+
   it('both chips pass the cable gate, not just the mouse-side one', async () => {
     const r = render(() => <Advanced />);
     // Default chip is the main one, which used to skip the gate outright.

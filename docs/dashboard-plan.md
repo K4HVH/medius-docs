@@ -31,7 +31,7 @@ Hard constraints the design must respect:
 - No DTR/RTS auto-reset is wired on this board. esptool's normal "open the port and it
   resets into download mode" does nothing. Download mode is entered another way (below).
 - A blank/bricked chip cannot receive the reboot command, so it needs one physical step
-  (hold BOTH BOOT buttons, replug USB). The browser does the write after that.
+  (hold the button beside the socket you are plugging in, replug USB). The browser does the write after that.
 - USB3 carries a 5V back-feed hazard. Host-chip flashing uses USB3, which must never share
   a machine with USB1. The UI hard-warns this.
 - A box cannot be identified by VID/PID (the CH343 ID is generic; the clone mirrors the
@@ -53,7 +53,7 @@ Entering download mode:
   Target 0 = device chip to ROM download, target 1 = host chip to ROM download (relayed over
   the 5 Mbaud inter-chip UART), targets 2/3 = reboot to run. The chip force-boots into ROM
   via `RTC_CNTL_FORCE_DOWNLOAD_BOOT`. Then esptool writes with no-reset.
-- Blank/bricked: disconnect all USB, hold BOTH BOOT buttons, replug. Both chips enumerate as
+- Blank/bricked: disconnect all USB, hold the button beside the socket you are plugging in, replug. Both chips enumerate as
   native ESP32-S3 ROM devices (303A:0009). Then esptool writes.
 
 Two transports the dashboard handles:
@@ -138,7 +138,7 @@ web view and the native library share one definition:
 
 ### 6. Recovery flow (blank/bricked)
 
-- Guided: an illustrated "disconnect all USB, hold BOTH BOOT buttons, replug" step, then
+- Guided: an illustrated "disconnect all USB, hold the button beside the socket you are plugging in, replug" step, then
   `requestPort()` on the 303A:0009 ROM device, then a Full/Recovery write at `0x0`.
 - Surfaced when the handshake fails or the user picks "my box is blank/bricked".
 
