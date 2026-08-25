@@ -25,7 +25,7 @@ interface Cell {
 }
 
 const Ports = (props: { cells: Record<PortId, Cell>; badge?: string }) => (
-  <div style={{ margin: 'var(--g-spacing) 0' }}>
+  <div style={{ 'margin-bottom': 'var(--g-spacing)' }}>
     <div
       style={{
         border: '1px solid var(--g-border-color)',
