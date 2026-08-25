@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 
 // This page had no tests at all, which is how a rejected release fetch froze it and how "Flash
 // another" walked straight past the cable gate: both survived three review rounds.
@@ -109,13 +109,66 @@ describe('Advanced', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('never names one of the two buttons', async () => {
+  it('a failed flash says what to do, and names the button by its socket', async () => {
     mock.flashOk = false;
     const r = render(() => <Advanced />);
     await openGate(r);
     await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/BOTH/));
+    // Assert the failure text itself: /BOTH/ is already on screen from the boot badge, so matching
+    // it alone passed whether or not the click ever happened.
+    const alert = await r.findByRole('alert');
+    expect(alert.textContent).toMatch(/did not finish/i);
+    expect(alert.textContent).toMatch(/button next to USB1/i);
     expect(r.container.textContent).not.toMatch(/the BOOT button|left button|right button/i);
+  });
+
+  it('a second file whose read fails cannot leave the first file armed to flash', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+
+    // The option list renders through a portal, so it is read off the document, and it only exists
+    // once the combobox is open. SOURCE is the third one on the page.
+    const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+    fireEvent.click(source);
+    fireEvent.keyDown(source, { key: 'Enter' });
+    await new Promise((res) => setTimeout(res, 20));
+    const upload = [...document.querySelectorAll('[role="option"]')].find((o) =>
+      /upload a file/i.test(o.textContent ?? ''),
+    );
+    if (!upload) throw new Error('no upload option');
+    fireEvent.click(upload);
+    const input = await waitFor(() => {
+      const el = r.container.querySelector('input[type="file"]');
+      if (!el) throw new Error('no file input');
+      return el as HTMLInputElement;
+    });
+
+    // validateImage wants >= 1024 bytes starting 0xE9.
+    const bytes = new Uint8Array(2048);
+    bytes[0] = 0xe9;
+    const good = new File([bytes], 'good.bin');
+    const bad = new File([bytes], 'bad.bin');
+    // jsdom's File has no arrayBuffer(), which is the method the component reads through.
+    Object.defineProperty(good, 'arrayBuffer', {
+      value: () => Promise.resolve(bytes.buffer as ArrayBuffer),
+    });
+    // A read that rejects after selection is a real Chrome case: the file moved or changed on disk.
+    Object.defineProperty(bad, 'arrayBuffer', {
+      value: () => Promise.reject(new Error('NotReadableError')),
+    });
+
+    const drop = (f: File) => {
+      Object.defineProperty(input, 'files', { value: [f], configurable: true });
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    drop(good);
+    await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).not.toBeDisabled());
+    drop(bad);
+    await waitFor(() => expect(r.container.textContent).toMatch(/could not be read/i));
+    // The first file's bytes must not still be armed under the second file's name.
+    expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
   });
 });

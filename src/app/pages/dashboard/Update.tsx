@@ -86,8 +86,18 @@ const Update = () => {
     try {
       const da = deviceAsset();
       const ha = hostAsset();
-      if ((wantDevice && !da) || (wantHost && !ha)) {
+      if (!latest()) {
         setErr("There's no update available right now. Try again in a few minutes.");
+        return;
+      }
+      // A release that carries one image and not the other is a different thing from no release at
+      // all, and "try again in a few minutes" is false for it: point at the button that works.
+      if ((wantDevice && !da) || (wantHost && !ha)) {
+        setErr(
+          !da
+            ? 'This release has nothing for the main chip. Try Mouse-side only.'
+            : 'This release has nothing for the mouse-side chip. Try Main only.',
+        );
         return;
       }
       const images: { device?: Uint8Array; host?: Uint8Array } = {};

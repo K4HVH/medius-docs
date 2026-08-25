@@ -5,6 +5,8 @@ const mock = vi.hoisted(() => ({
   supported: true,
   status: 'disconnected' as string,
   flashOk: true,
+  error: null as string | null,
+  flashError: 'That port is still held by an earlier session.',
   chooserEmpty: false,
   releasesThrow: false,
   disconnects: 0,
@@ -22,16 +24,19 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     secure: true,
     status: () => mock.status,
     verdict: () => null,
-    error: () => null,
+    error: () => mock.error,
     version: () => ({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }),
     flashProgress: () => null,
     connect: async () => {},
     disconnect: async () => {
       mock.disconnects += 1;
+      // The real one nulls `error` before its first await, which is what ate the reason.
+      mock.error = null;
     },
     clearFlashResult: () => {},
     flashNative: async (_port: unknown, image: Uint8Array) => {
       mock.flashed.push(new TextDecoder().decode(image));
+      if (!mock.flashOk) mock.error = mock.flashError;
       return mock.flashOk;
     },
   }),
@@ -63,6 +68,7 @@ afterEach(() => {
   mock.supported = true;
   mock.status = 'disconnected';
   mock.flashOk = true;
+  mock.error = null;
   mock.chooserEmpty = false;
   mock.releasesThrow = false;
   mock.disconnects = 0;
@@ -98,10 +104,10 @@ describe('Setup', () => {
     await waitFor(() => expect(container.textContent).toMatch(/which computer is this/i));
   });
 
-  it('every install screen asks for both buttons, and names no chip', async () => {
+  it('names the button by its socket on each install screen, and never names a chip', async () => {
     const r = render(() => <Setup />);
     r.getByRole('button', { name: /just one computer/i }).click();
-    await waitFor(() => expect(r.container.textContent).toContain('BOTH'));
+    await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB1/i));
     expect(r.container.textContent).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
   });
 
@@ -111,9 +117,22 @@ describe('Setup', () => {
     r.getByRole('button', { name: /just one computer/i }).click();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     r.getByRole('button', { name: /^install$/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/hold both/i));
+    await waitFor(() => expect(r.container.textContent).toMatch(/nothing to install to/i));
+    expect(r.container.textContent).toMatch(/button next to USB1/i);
     expect(r.getByRole('button', { name: /^install$/i })).toBeTruthy();
     expect(mock.flashed).toEqual([]);
+  });
+
+  it('keeps the reason a failed flash gave instead of a message that cannot fix it', async () => {
+    // Dropping the link nulls `error` synchronously, so reading it afterwards lost every specific
+    // cause -- and those are exactly the ones pressing the button again does nothing about.
+    mock.flashOk = false;
+    const r = render(() => <Setup />);
+    r.getByRole('button', { name: /just one computer/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /^install$/i }));
+    r.getByRole('button', { name: /^install$/i }).click();
+    const alert = await r.findByRole('alert');
+    await waitFor(() => expect(alert.textContent).toContain('held by an earlier session'));
   });
 
   it('a flash that fails stays on the same step', async () => {
@@ -122,8 +141,9 @@ describe('Setup', () => {
     r.getByRole('button', { name: /just one computer/i }).click();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     r.getByRole('button', { name: /^install$/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/did not finish/i));
+    await r.findByRole('alert');
     expect(r.queryByRole('button', { name: /unplugged/i })).toBeNull();
+    expect(r.getByRole('button', { name: /^install$/i })).toBeTruthy();
   });
 
   it('a release with no factory image never reaches the chooser', async () => {

@@ -2,9 +2,10 @@ import { For, Show } from 'solid-js';
 
 export type PortId = 'usb1' | 'usb2' | 'usb3';
 
-// Every download-mode instruction in the dashboard says the same thing, because the owner cannot
-// tell the two buttons apart and holding both is the entry the board's bring-up notes call reliable.
-export const HOLD_BOTH = 'Hold BOTH buttons down while you plug it in';
+// Download mode needs the button on the same side as the cable going in. Said that way it needs no
+// left/right and no chip names: the diagram lights the socket, and the button is the one beside it.
+export const holdButton = (id: PortId) =>
+  `Hold the button next to ${id.toUpperCase()} down while you plug ${id.toUpperCase()} in`;
 
 const PORTS: { id: PortId; label: string; sub: string }[] = [
   { id: 'usb1', label: 'USB1', sub: 'Game PC' },
@@ -21,7 +22,7 @@ export const PortDiagram = (props: {
   other?: PortId[];
   out?: PortId[];
   mouse?: PortId[];
-  boot?: boolean;
+  boot?: PortId;
   where?: Partial<Record<PortId, string>>;
 }) => {
   const isPlug = (id: PortId) => props.plug?.includes(id) ?? false;
@@ -111,6 +112,7 @@ export const PortDiagram = (props: {
         </div>
       </div>
       <Show when={props.boot}>
+        {(id) => (
         <div
           style={{
             'margin-top': 'var(--g-spacing-sm)',
@@ -122,8 +124,9 @@ export const PortDiagram = (props: {
             'font-weight': '600',
           }}
         >
-          {HOLD_BOTH}, and keep holding while you push it in.
-        </div>
+            {holdButton(id())}.
+          </div>
+        )}
       </Show>
     </div>
   );

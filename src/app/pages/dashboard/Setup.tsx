@@ -10,7 +10,7 @@ import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashb
 import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
-import { HOLD_BOTH, PortDiagram, type PortId } from './PortDiagram';
+import { PortDiagram, type PortId, holdButton } from './PortDiagram';
 import '../../../styles/docs.css';
 
 // Where the box ends up. It changes the last screen and nothing else: the two installs are the same
@@ -24,6 +24,7 @@ const STEPS: Step[] = ['where', 'main', 'unplug', 'mouse', 'unplug3', 'cables'];
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const HAZARD = 'USB1 and USB3 plugged into the same computer at once can kill it.';
+const retry = (id: PortId) => `${holdButton(id)}, then press Install.`;
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 // The whole option is the click target, label above its own picture, so there is no working out
@@ -113,7 +114,7 @@ const Setup = () => {
   // Write a full factory image to whichever chip is currently in ROM download on this cable. The
   // owner is never told which chip that is: both BOOT buttons are held, and only one chip's USB is
   // plugged in, so only one can answer.
-  const install = async (assetName: string, next: Step) => {
+  const install = async (assetName: string, next: Step, socket: PortId) => {
     setErr(null);
     dash.clearFlashResult();
     setBusy(true);
@@ -140,14 +141,18 @@ const Setup = () => {
         void dash.disconnect().catch(() => undefined);
         setStep(next);
       } else {
+        // Read the reason BEFORE disconnecting: disconnect() nulls `error` synchronously, and the
+        // messages it was eating are the ones pressing the button again cannot fix -- a port held
+        // by another tab, a port that would not open.
+        const why = dash.error();
         // The chip was reset either way, so the link is just as dead on the failure path.
         void dash.disconnect().catch(() => undefined);
-        setErr(dash.error() ?? `That did not finish. ${HOLD_BOTH}, then press Install.`);
+        setErr(why ?? `That did not finish. ${retry(socket)}`);
       }
     } catch (e) {
       // A cancel and an empty chooser are the same DOMException, and the second is far more likely:
       // the chip is not in update mode. Say the thing that fixes both rather than nothing.
-      setErr(isUserCancel(e) ? `Nothing to install to. ${HOLD_BOTH}, then press Install.` : (e as Error).message);
+      setErr(isUserCancel(e) ? `Nothing to install to. ${retry(socket)}` : (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -214,13 +219,13 @@ const Setup = () => {
                 plug={['usb1']}
                 out={['usb2', 'usb3']}
                 where={{ usb1: 'This computer' }}
-                boot
+                boot="usb1"
               />
               <div style={row}>
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}
-                  onClick={() => void install('medius_device-factory.bin', 'unplug')}
+                  onClick={() => void install('medius_device-factory.bin', 'unplug', 'usb1')}
                 >
                   {busy() ? 'Installing...' : 'Install'}
                 </Button>
@@ -248,14 +253,14 @@ const Setup = () => {
                 plug={['usb3']}
                 out={['usb1', 'usb2']}
                 where={{ usb3: 'This computer' }}
-                boot
+                boot="usb3"
               />
               <div class="callout callout--danger">{HAZARD}</div>
               <div style={row}>
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}
-                  onClick={() => void install('medius_host-factory.bin', 'unplug3')}
+                  onClick={() => void install('medius_host-factory.bin', 'unplug3', 'usb3')}
                 >
                   {busy() ? 'Installing...' : 'Install'}
                 </Button>

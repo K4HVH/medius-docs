@@ -16,7 +16,7 @@ import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
 import { useDashboard } from './context';
 import { BAD_BROWSER } from './ConnectPanel';
-import { HOLD_BOTH, PortDiagram } from './PortDiagram';
+import { PortDiagram, holdButton } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
@@ -57,7 +57,6 @@ const Advanced = () => {
   };
   const assetName = () => `medius_${chip()}${kind() === 'factory' ? '-factory' : ''}.bin`;
   const asset = () => latest()?.assets.find((a) => a.name === assetName()) ?? null;
-  const file = () => files()[0] ?? null;
   const validationError = () => {
     const img = image();
     return img ? validateImage(img, kind()) : null;
@@ -73,12 +72,18 @@ const Advanced = () => {
 
   const onFiles = (fs: File[]) => {
     setFiles(fs);
+    // Clear first, and clear again if the read fails. Leaving the previous file's bytes armed under
+    // the new file's name is how the wrong image gets written to a chip.
+    setImage(null);
     const f = fs[0];
-    if (!f) return setImage(null);
+    if (!f) return;
     void f
       .arrayBuffer()
       .then((b) => setImage(new Uint8Array(b)))
-      .catch(() => setErr('That file could not be read.'));
+      .catch(() => {
+        setImage(null);
+        setErr('That file could not be read. Pick it again.');
+      });
   };
 
   const canFlash = () =>
@@ -90,16 +95,16 @@ const Advanced = () => {
     setBusy(true);
     try {
       // Both chips flash over their own native USB in ROM download: the device chip on USB1, the
-      // host chip on USB3, each with both buttons held so neither can boot its app instead.
+      // host chip on USB3, each entered by holding the button beside that socket while plugging in.
       const port = await requestRomPort();
       const a = asset();
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
       const ok = await dash.flashNative(port, img, kind());
       if (ok) setDone(true);
-      else setErr(dash.error() ?? `That did not finish. ${HOLD_BOTH}, then press Flash.`);
+      else setErr(dash.error() ?? `That did not finish. ${holdButton(chip() === 'host' ? 'usb3' : 'usb1')}, then press Flash.`);
     } catch (e) {
-      setErr(isUserCancel(e) ? `Nothing to flash. ${HOLD_BOTH}, then press Flash.` : (e as Error).message);
+      setErr(isUserCancel(e) ? `Nothing to flash. ${holdButton(chip() === 'host' ? 'usb3' : 'usb1')}, then press Flash.` : (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -243,7 +248,7 @@ const Advanced = () => {
                   plug={chip() === 'host' ? ['usb3'] : ['usb1']}
                   out={chip() === 'host' ? ['usb1', 'usb2'] : ['usb2', 'usb3']}
                   where={chip() === 'host' ? { usb3: 'This computer' } : { usb1: 'This computer' }}
-                  boot
+                  boot={chip() === 'host' ? 'usb3' : 'usb1'}
                 />
                 <div class="callout callout--danger">
                   USB1 and USB3 plugged into the same computer at once can kill it.

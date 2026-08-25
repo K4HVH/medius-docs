@@ -3,18 +3,13 @@ import { Progress } from '../../../components/feedback/Progress';
 import { Button } from '../../../components/inputs/Button';
 import { PortDiagram } from './PortDiagram';
 
-// Gate before a mouse-side (USB3) flash. The browser fires a serial `disconnect`
-// when the box's USB2 device is removed, but it CANNOT see USB1 (the HID clone).
-// So: watch for the disconnect, hold the waiting screen a beat, then make the user
-// confirm USB1 is out too (USB1 + USB3 together can cause damage). When autoWatch
-// is false (a fresh setup, where no port was ever granted so no disconnect fires),
-// start straight at the manual confirm.
+// The gate before any native flash. The browser fires a serial `disconnect` when the box's USB2
+// device is removed, but it CANNOT see USB1 (the HID clone) at all. So: watch for the disconnect,
+// hold the waiting screen a beat, then have the user confirm USB1 is out too.
 const DELAY_MS = 1500;
 
-export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolean }) => {
-  const [phase, setPhase] = createSignal<'waiting' | 'confirm'>(
-    props.autoWatch === false ? 'confirm' : 'waiting',
-  );
+export const UnplugWatch = (props: { onUnplugged: () => void }) => {
+  const [phase, setPhase] = createSignal<'waiting' | 'confirm'>('waiting');
   let scheduled = false;
 
   createEffect(() => {
@@ -45,6 +40,7 @@ export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolea
       </Match>
 
       <Match when={phase() === 'confirm'}>
+        <p><strong>Check USB1 as well. The browser cannot see that one.</strong></p>
         <PortDiagram out={['usb1', 'usb2', 'usb3']} />
         <div class="callout callout--danger">
           USB1 and USB3 plugged into the same computer at once can kill it.
