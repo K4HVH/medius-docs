@@ -60,9 +60,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=4][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto=5][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -70,7 +70,7 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 4,
+      protoVer: 5,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
@@ -88,14 +88,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(4);
+    expect(version.protoVer).toBe(5);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -154,16 +154,27 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('rejects with BadProtoVerError on a mismatched protocol version', async () => {
+  it('rejects a mismatched protocol version, and carries the firmware that answered', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0])));
+        // RESP(VERSION): [selector][proto][major][minor][patch][mac 6B]. A v3.1.0 box speaks 4.
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 3, 1, 0, 1, 2, 3, 4, 5, 6])));
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
-    await expect(link.handshake()).rejects.toBeInstanceOf(BadProtoVerError);
+    const err = await link.handshake().then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(BadProtoVerError);
+    expect((err as BadProtoVerError).version).toMatchObject({
+      protoVer: 4,
+      fwMajor: 3,
+      fwMinor: 1,
+      fwPatch: 0,
+    });
     await link.close();
   });
 
@@ -266,7 +277,13 @@ describe('SerialLink', () => {
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
         } else if (f.payload[1] === 2) {
           // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
-          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01])));
+          mock.push(
+            encode(
+              FrameType.Resp,
+              f.seq,
+              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01]),
+            ),
+          );
         }
       }
     };
@@ -282,6 +299,9 @@ describe('SerialLink', () => {
       mode: EmitMode.Fixed,
       fixedHz: 500,
       resolvedHz: 500,
+      forceHz: 125,
+      advertisedHz: 100,
+      forceActive: true,
     });
     expect(reqs).toEqual([
       [9, 0],

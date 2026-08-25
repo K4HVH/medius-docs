@@ -88,7 +88,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/options">Options &amp; LED</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/requests">Queries (version, health, caps…)</A></td><td>✓</td><td>✓</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
-              <tr><td><A href="/library/features/flash">Flash firmware</A></td><td>build flag</td><td>build flag</td></tr>
+              <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only. Build it on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>

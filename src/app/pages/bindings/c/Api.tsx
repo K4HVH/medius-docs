@@ -136,19 +136,21 @@ medius_device_free(dev);`}</code></pre>
 
       <div id="lock" data-search-target>
         <Card>
-          <CardHeader title="Locks" subtitle="Block the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage (button, key, or media) and a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> picks an edge. Read the returned entries with <A href="/bindings/c/api#inspectors"><code>medius_locks_is_locked</code></A>.</p>
+          <CardHeader title="Locks" subtitle="Weigh the user's own input" />
+          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage, <code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one; anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame goes out. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, MediusDirection dir)</code></td><td>Lock an axis or usage on an edge.</td></tr>
-              <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, MediusDirection dir)</code></td><td>Release a lock.</td></tr>
-              <tr><td><code>medius_device_lock_all(MediusDevice *dev, MediusBlanket what, MediusDirection dir)</code></td><td>Blanket lock a whole class (aim, wheel, buttons, keys, or media).</td></tr>
-              <tr><td><code>medius_device_unlock_all(MediusDevice *dev, MediusBlanket what, MediusDirection dir)</code></td><td>Release a blanket lock.</td></tr>
+              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, uint8_t dir, uint8_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0), <code>_PASS</code> (100), up to <code>_MAX</code> (255).</td></tr>
+              <tr><td><code>medius_device_scale_all(MediusDevice *dev, uint8_t what, uint8_t dir, uint8_t scale)</code></td><td>The same over a whole class (aim, wheel, buttons, keys, or media).</td></tr>
+              <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Block an axis or usage on a direction: scale 0.</td></tr>
+              <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Back to passing untouched: scale 100.</td></tr>
+              <tr><td><code>medius_device_lock_all(MediusDevice *dev, uint8_t what, uint8_t dir)</code></td><td>Blanket block a whole class.</td></tr>
+              <tr><td><code>medius_device_unlock_all(MediusDevice *dev, uint8_t what, uint8_t dir)</code></td><td>Release a blanket block.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A lock auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you (see <A href="/library/lock">Lock</A>).</p>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> need a live bearing, set with <code>medius_device_set_bearing</code>; the refusal rules for them are on <A href="/bindings/c/types#direction"><code>MediusDirection</code></A>.</p>
           </div>
         </Card>
       </div>
@@ -166,7 +168,8 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_reboot(MediusDevice *dev, MediusRebootTarget target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>medius_device_allow_imperfect_clones(MediusDevice *dev, bool allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_movement_riding(MediusDevice *dev, bool enabled, uint32_t window_ms)</code></td><td>Set movement riding; <code>enabled == false</code> clears the window (rounded to whole ms).</td></tr>
-              <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, MediusEmitMode mode, uint16_t hz)</code></td><td>Pick what paces injected motion; <code>hz</code> is the target rate for <code>FIXED</code>. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
+              <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, uint8_t mode, uint16_t hz, uint16_t force_hz)</code></td><td>Pick what paces injected motion (<code>hz</code> is the target rate for <code>FIXED</code>) and what rate the clone advertises (<code>force_hz</code>, 0 = the device's own). See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_name(MediusDevice *dev, const char *name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
             </tbody>
@@ -191,14 +194,35 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_caps(dev, MediusCaps *out)</code></td><td><A href="/bindings/c/types#caps"><code>MediusCaps</code></A>: mouse/keyboard capabilities.</td></tr>
               <tr><td><code>medius_device_query_rate(dev, MediusRate *out)</code></td><td><A href="/bindings/c/types#rate"><code>MediusRate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>medius_device_query_stats(dev, MediusStats *out)</code></td><td><A href="/bindings/c/types#stats"><code>MediusStats</code></A>: box-side telemetry.</td></tr>
-              <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A>: the active locks (entry list).</td></tr>
+              <tr><td><code>medius_device_query_locks(dev, MediusLocks *out)</code></td><td><A href="/bindings/c/types#locks"><code>MediusLocks</code></A>: every weighed direction (entry list).</td></tr>
+              <tr><td><code>medius_device_query_bearing(dev, MediusBearing *out)</code></td><td><A href="/bindings/c/types#bearing"><code>MediusBearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: the accepted subscription entries with their per-entry drops, the box-wide drop count, and the inter-chip clock estimate.</td></tr>
               <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
-              <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode + rate in effect.</td></tr>
+              <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
               <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+
+      <div id="update" data-search-target>
+        <Card>
+          <CardHeader title="Firmware update" subtitle="Write either chip over the open connection" />
+          <p>
+            See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer;
+            a refusal returns <code>MEDIUS_STATUS_ERR_UPDATE</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_device_firmware_info(dev, MediusFirmwareInfo *out)</code></td><td>Both chips' versions, the slot each runs, and what is staged.</td></tr>
+              <tr><td><code>medius_device_stage_firmware(dev, target, image, len, progress, user)</code></td><td>Write <code>len</code> bytes into <code>target</code>'s spare slot (0 = device chip, 1 = host chip). Inert until activated; <code>progress</code> may be <code>NULL</code>.</td></tr>
+              <tr><td><code>medius_device_activate_firmware(dev)</code></td><td>Commit every staged image and reboot into it. Blocks while the host chip reboots and comes back.</td></tr>
+              <tr><td><code>medius_device_abort_update(dev, target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
+            </tbody>
+          </table>
+          <pre class="api-signature">typedef void (*MediusUpdateProgress)(void *user, size_t sent, size_t total);</pre>
         </Card>
       </div>
 
@@ -276,7 +300,7 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns a copy of <code>f</code></th></tr></thead>
             <tbody>
-              <tr><td><code>medius_catch_filter_with_direction(f, MediusDirection direction)</code></td><td>Restricted to one direction, sign, or edge.</td></tr>
+              <tr><td><code>medius_catch_filter_with_direction(f, uint8_t direction)</code></td><td>Restricted to one direction, sign, or edge.</td></tr>
               <tr><td><code>medius_catch_filter_with_capture(f, uint8_t bytes)</code></td><td>Keeping only the first <code>bytes</code> of each packet; <code>0</code> keeps the whole one. Traffic classes only.</td></tr>
               <tr><td><code>medius_catch_filter_on_press(f)</code> / <code>_on_release(f)</code></td><td>Restricted to the press / release edge.</td></tr>
               <tr><td><code>medius_catch_filter_inbound(f)</code> / <code>_outbound(f)</code></td><td>Restricted to traffic from the device to the PC / from the PC to the device.</td></tr>
@@ -378,7 +402,8 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, MediusDirection dir)</code></td><td><code>bool</code>: is that target/edge locked (<code>Both</code> needs both edges). See <A href="/library/lock">Lock</A>.</td></tr>
+              <tr><td><code>medius_locks_scale_of(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>uint8_t</code>: percent of the physical value kept there, 100 when nothing weighs it. See <A href="/library/lock">Lock</A>.</td></tr>
+              <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>bool</code>: is that target/direction blocked outright (<code>Both</code> needs both fixed signs). A direction merely weighed is not locked.</td></tr>
               <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
               <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusUsage usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>
               <tr><td><code>medius_traffic_event_truncated(const MediusTrafficEvent *ev)</code></td><td><code>bool</code>: <code>ev-&gt;len &lt; ev-&gt;true_len</code>, so the box cut the packet at the matching entry's <code>capture</code>. Without the comparison a cut packet and a genuinely short one look identical. See <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A>.</td></tr>
@@ -408,9 +433,8 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_last_error_proto_ver()</code></td><td>The proto-version byte from the last <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>, or 0.</td></tr>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>4</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>5</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
-              <tr><td><code>medius_flash(const char *port, const char *bin_path, bool host)</code></td><td>Flash firmware via <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a>. <code>MEDIUS_FEATURE_FLASH</code> only; see <A href="/library/features/flash">Flash</A> and <A href="/bindings/c/build">Build &amp; features</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -427,12 +451,13 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_mock_new()</code></td><td>A fresh mock that records commands and auto-answers queries.</td></tr>
+              <tr><td><code>medius_mock_new()</code></td><td>A fresh mock that records commands and auto-replies to queries.</td></tr>
               <tr><td><code>medius_mock_clone</code> / <code>medius_mock_free(MediusMockBox *mock)</code></td><td>Share (same state) / free a mock handle.</td></tr>
               <tr><td><code>medius_device_with_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>without</em> a handshake.</td></tr>
               <tr><td><code>medius_device_open_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>and</em> run the handshake.</td></tr>
-              <tr><td><code>medius_mock_set_version / _health / _device_info / _caps / _mouse_caps / _kbd_caps / _rate / _stats / _locks / _catch_state / _imperfect_status</code></td><td>Set the value the mock answers to each query.</td></tr>
+              <tr><td><code>medius_mock_set_version / _health / _device_info / _caps / _mouse_caps / _kbd_caps / _rate / _stats / _locks / _catch_state / _imperfect_status</code></td><td>Set the value the mock returns for each query.</td></tr>
               <tr><td><code>medius_mock_set_movement_riding(mock, bool enabled, uint32_t window_ms)</code></td><td>Set the movement-riding window the mock reports.</td></tr>
+              <tr><td><code>medius_mock_set_bearing(mock, uint16_t window_ms, uint8_t mode)</code></td><td>Set the bearing the mock reports. A mode no constant names is ignored, as the box ignores it.</td></tr>
               <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries for timeout tests (still records).</td></tr>
               <tr><td><code>medius_mock_push_raw(mock, const uint8_t *bytes, uintptr_t len)</code></td><td>Inject raw inbound bytes, as if the box sent them.</td></tr>
               <tr><td><code>medius_mock_push_log(mock, MediusLogLevel level, const char *text)</code></td><td>Push a LOG line onto the device's log stream.</td></tr>

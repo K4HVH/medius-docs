@@ -22,6 +22,7 @@ import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
 import CmdOption from './pages/native/commands/Option';
 import CmdClip from './pages/native/commands/Clip';
+import CmdUpdate from './pages/native/commands/Update';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import AiAccess from './pages/AiAccess';
@@ -32,6 +33,7 @@ import LibInject from './pages/library/Inject';
 import LibMove from './pages/library/Move';
 import LibRequests from './pages/library/Requests';
 import LibAdmin from './pages/library/Admin';
+import LibUpdate from './pages/library/Update';
 import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
@@ -41,7 +43,6 @@ import LibLifecycle from './pages/library/Lifecycle';
 import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
 import FeatMock from './pages/library/features/Mock';
-import FeatFlash from './pages/library/features/Flash';
 import FeatTracing from './pages/library/features/Tracing';
 import GuideCalls from './pages/library/GuideCalls';
 import GuideConnection from './pages/library/GuideConnection';
@@ -67,6 +68,7 @@ import PyApi from './pages/bindings/python/Api';
 import PyTypes from './pages/bindings/python/Types';
 import PyBuild from './pages/bindings/python/Build';
 import DashboardDevice from './pages/dashboard/Device';
+import DashboardSetup from './pages/dashboard/Setup';
 import DashboardControl from './pages/dashboard/Control';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
@@ -99,6 +101,7 @@ const App: Component = () => {
           <Route path="/native/commands/move" component={CmdMove} />
           <Route path="/native/commands/requests" component={CmdRequests} />
           <Route path="/native/commands/admin" component={CmdAdmin} />
+          <Route path="/native/commands/update" component={CmdUpdate} />
           <Route path="/native/commands/led" component={CmdLed} />
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
@@ -115,6 +118,7 @@ const App: Component = () => {
           <Route path="/library/move" component={LibMove} />
           <Route path="/library/requests" component={LibRequests} />
           <Route path="/library/admin" component={LibAdmin} />
+          <Route path="/library/update" component={LibUpdate} />
           <Route path="/library/led" component={LibLed} />
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
@@ -124,7 +128,6 @@ const App: Component = () => {
           <Route path="/library/diagnostics" component={LibDiagnostics} />
           <Route path="/library/features/async" component={FeatAsync} />
           <Route path="/library/features/mock" component={FeatMock} />
-          <Route path="/library/features/flash" component={FeatFlash} />
           <Route path="/library/features/tracing" component={FeatTracing} />
           <Route path="/library/guides/calls" component={GuideCalls} />
           <Route path="/library/guides/connection" component={GuideConnection} />
@@ -150,6 +153,7 @@ const App: Component = () => {
           <Route path="/bindings/python/types" component={PyTypes} />
           <Route path="/bindings/python/build" component={PyBuild} />
           <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/dashboard/setup" component={DashboardSetup} />
           <Route path="/dashboard/control" component={DashboardControl} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />

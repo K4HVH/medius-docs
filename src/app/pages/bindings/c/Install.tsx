@@ -131,7 +131,7 @@ int main(void) {
           <CardHeader title="Connect" subtitle="Open a box, read its version" />
           <p>
             <A href="/bindings/c/api#connect"><code>medius_device_find</code></A> opens the first{' '}
-            <A href="/native/hardware">box</A> it sees and runs the{' '}
+            <A href="/native/hardware">box</A> it finds and runs the{' '}
             <A href="/native/connection#handshake">handshake</A>;{' '}
             <A href="/bindings/c/api#connect"><code>medius_device_free</code></A> closes it. Full
             walk-through on <A href="/bindings/c/quickstart">First program</A>.

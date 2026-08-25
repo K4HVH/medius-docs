@@ -96,6 +96,14 @@ export const Combobox: Component<ComboboxProps> = (props) => {
   };
 
   const handleSelect = (value: string) => {
+    // A list already open when the control is disabled could still be picked from: the disabled
+    // check lived only on opening and on keydown, so `disabled` styled the control without gating
+    // it. Callers rely on it to stop a selection changing mid-operation. Still close the list --
+    // refusing that leaves it stuck open with no way out.
+    if (local.disabled) {
+      setIsOpen(false);
+      return;
+    }
     if (!local.onChange) return;
 
     if (local.multiple) {
@@ -273,7 +281,9 @@ export const Combobox: Component<ComboboxProps> = (props) => {
       }
       open={isOpen()}
       onOpenChange={(open) => {
-        if (!local.disabled) {
+        // Closing is always allowed. Refusing it while disabled left a list that was already open
+        // with no way to shut it: Escape, an outside click and picking an option all route here.
+        if (!local.disabled || !open) {
           setIsOpen(open);
         }
       }}

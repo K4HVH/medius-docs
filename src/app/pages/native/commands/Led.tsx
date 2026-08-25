@@ -10,7 +10,7 @@ const Led: Component = () => {
         <CardHeader title="LED" subtitle="Drive a status LED" />
         <p>
           <A href="/native/commands/led#led"><code>LED</code></A> overrides one of the box's status
-          LEDs, or hands it back to the box's own status display. Each chip has a single green LED.
+          LEDs, or returns it to the box's own status display. Each chip has a single green LED.
           It's <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
       </Card>
@@ -50,7 +50,7 @@ const Led: Component = () => {
               <tr><th>Mode</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>auto</td><td><code>0</code></td><td>Hand the LED back to the box's status display (see below).</td></tr>
+              <tr><td>auto</td><td><code>0</code></td><td>Return the LED to the box's status display (see below).</td></tr>
               <tr><td>off</td><td><code>1</code></td><td>LED dark.</td></tr>
               <tr><td>solid</td><td><code>2</code></td><td>LED lit steadily at <code>level</code> brightness.</td></tr>
               <tr><td>blink</td><td><code>3</code></td><td>LED blinks at <code>level</code> brightness.</td></tr>

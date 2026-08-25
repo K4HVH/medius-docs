@@ -88,8 +88,8 @@ int main(void) {
     return 0;
 }`}</code></pre>
           <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 3.1.0 (abi 4)
-firmware 3.1.0 (proto 4)
+          <pre><code class="language-c">{`medius-capi 3.2.0 (abi 5)
+firmware 3.2.0 (proto 5)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
           <p>
             The subscription is an array of{' '}
@@ -137,8 +137,7 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
           <div class="callout callout--info">
             <p>
               Static linking (<code>libmedius_capi.a</code>), Windows, and the{' '}
-              <A href="/library/features/mock">mock</A> / <A href="/library/features/flash">flash</A>{' '}
-              feature macros are on <A href="/bindings/c/build">Build &amp; features</A>.
+              <A href="/library/features/mock">mock</A> feature macro are on <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
           </div>
         </Card>

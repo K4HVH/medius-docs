@@ -55,7 +55,7 @@ const Install: Component = () => {
             <A href="/bindings/python/quickstart">first program</A>.
           </p>
           <pre><code class="language-bash">{`python -c "import medius; print(medius.version_string(), 'abi', medius.abi_version())"
-# 3.1.0 abi 4`}</code></pre>
+# 3.2.0 abi 5`}</code></pre>
           <div class="callout callout--warning">
             <p>
               An <code><a href="https://docs.python.org/3/library/exceptions.html#OSError" target="_blank" rel="noreferrer">OSError</a></code> on import means the native library didn't load: you're on an
@@ -72,7 +72,7 @@ const Install: Component = () => {
           <p>
             Three lines that check the <A href="/native/hardware">box</A> is reachable.{' '}
             <A href="/bindings/python/api#connect"><code>Device.find()</code></A> opens the
-            first one it sees and runs the{' '}
+            first one it finds and runs the{' '}
             <A href="/native/connection#handshake">handshake</A>; the{' '}
             <code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code>{' '}
             block closes the link on exit.

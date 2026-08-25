@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+  ImageState,
+  anyPending,
+  UPD_NAMES,
+  OTA_CHUNK,
+  PROTO_VER,
+  BearingMode,
+  bearingModeFromU8,
   type DecodedFrame,
 
   BusEventKind,
@@ -32,14 +39,23 @@ import {
   INJ_MEDIA,
   LedMode,
   LedTarget,
+  bearingPayload,
+  isRelativeDirection,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_MAX,
+  LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
+  scaleOf,
   Direction,
   In,
   Out,
   Press,
   Release,
   LOCK_ID_ALL,
+  LOCKS_MAX,
+  directionFromU8,
+  lockClassFromU8,
   isComposite,
   isLocked,
   clearNamePayload,
@@ -48,6 +64,7 @@ import {
   ledPayload,
   lockAxis,
   lockButton,
+  lockKey,
   lockPayload,
   moveRidePayload,
   namePayload,
@@ -244,7 +261,7 @@ describe('FrameDecoder', () => {
   });
 
   it('silently drops a CRC-valid frame with an unknown opcode (no crc error)', () => {
-    const ty = 0x17; // next free opcode past TRAFFIC_EVENT (0x16)
+    const ty = 0x7f; // deliberately far past every allocated opcode, so adding one cannot claim it
     const crc = crc16Ccitt(new Uint8Array([ty, 0, 0, 0]));
     const frame = new Uint8Array([SOF, ty, 0, 0, 0, crc & 0xff, (crc >> 8) & 0xff]);
     const dec = new FrameDecoder();
@@ -320,7 +337,7 @@ describe('helpers', () => {
     expect(frameTypeFromU8(0x15)).toBe(FrameType.ClipTrigger);
     expect(frameTypeFromU8(0x16)).toBe(FrameType.TrafficEvent);
     expect(frameTypeFromU8(0x00)).toBeNull();
-    expect(frameTypeFromU8(0x17)).toBeNull();
+    expect(frameTypeFromU8(0x7f)).toBeNull();
   });
 
   it('healthFromFlags decodes individual bits', () => {
@@ -413,27 +430,41 @@ describe('LED command (§3.7)', () => {
 });
 
 describe('LOCK command (§3.8)', () => {
-  it('lockPayload packs [class][id u16 LE][direction][state]', () => {
-    // Lock the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
+  it('lockPayload packs [class][id u16 LE][direction][scale]', () => {
+    // Block the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
     expect(
-      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, Direction.Negative, 1)),
-    ).toEqual([3, 2, 0, 2, 1]);
-    // Unlock the X axis, both signs.
-    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, 0))).toEqual([
-      3, 0, 0, 0, 0,
-    ]);
+      Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, Direction.Negative, LOCK_SCALE_BLOCK)),
+    ).toEqual([3, 2, 0, 2, 0]);
+    // Unlock the X axis, every direction: a full pass, not a zero.
+    expect(
+      Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, LOCK_SCALE_PASS)),
+    ).toEqual([3, 0, 0, 0, 100]);
     // A button locks as class button (0), id = button id, with no +3 offset.
-    expect(Array.from(lockPayload(LockClass.Button, 4, Direction.Positive, 1))).toEqual([
-      0, 4, 0, 1, 1,
-    ]);
+    expect(
+      Array.from(lockPayload(LockClass.Button, 4, Direction.Positive, LOCK_SCALE_BLOCK)),
+    ).toEqual([0, 4, 0, 1, 0]);
     // A media-class lock keeps its 16-bit usage.
-    expect(Array.from(lockPayload(LockClass.Media, 0x00e9, Direction.Both, 1))).toEqual([
-      2, 0xe9, 0x00, 0, 1,
-    ]);
+    expect(
+      Array.from(lockPayload(LockClass.Media, 0x00e9, Direction.Both, LOCK_SCALE_BLOCK)),
+    ).toEqual([2, 0xe9, 0x00, 0, 0]);
     // The id sentinel 0xFFFF blanket-locks the whole class.
-    expect(Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, Direction.Both, 1))).toEqual([
-      1, 0xff, 0xff, 0, 1,
+    expect(
+      Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, Direction.Both, LOCK_SCALE_BLOCK)),
+    ).toEqual([1, 0xff, 0xff, 0, 0]);
+    // A partial scale and a gain both ride the same byte.
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Against, 40))).toEqual([
+      3, 0, 0, 4, 40,
     ]);
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.Y, Direction.With, 130))).toEqual([
+      3, 1, 0, 3, 130,
+    ]);
+  });
+
+  it('lockPayload clamps a scale to the byte the wire carries', () => {
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, 999))[4]).toBe(
+      LOCK_SCALE_MAX,
+    );
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, -5))[4]).toBe(0);
   });
 
   it('LockClass wire values match ctrl_proto.h', () => {
@@ -441,22 +472,70 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('Direction wire values match ctrl_proto.h, and the aliases name both readings', () => {
-    expect([Direction.Both, Direction.Positive, Direction.Negative]).toEqual([0, 1, 2]);
+    expect([
+      Direction.Both,
+      Direction.Positive,
+      Direction.Negative,
+      Direction.With,
+      Direction.Against,
+    ]).toEqual([0, 1, 2, 3, 4]);
     // The edge reading (momentary usages) and the transfer reading (traffic classes) are the same
     // byte, so an alias that drifted off its member would silently mis-address a subscription.
     expect([Press, Release]).toEqual([Direction.Positive, Direction.Negative]);
     expect([In, Out]).toEqual([Direction.Positive, Direction.Negative]);
   });
 
-  it('parses a RESP(LOCKS) entry list', () => {
-    // what = 6, n = 2: axis wheel negative (dirbits 0x02), then button Left both (dirbits 0x03).
-    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 0x02, 0, 0, 0, 0x03]));
+  it('only the bearing-relative directions report as relative', () => {
+    expect([Direction.With, Direction.Against].map(isRelativeDirection)).toEqual([true, true]);
+    expect(
+      [Direction.Both, Direction.Positive, Direction.Negative].map(isRelativeDirection),
+    ).toEqual([false, false, false]);
+  });
+
+  it('LOCK scale constants match ctrl_proto.h', () => {
+    expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX]).toEqual([0, 100, 255]);
+  });
+
+  it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
+    // The scale byte and the two bearing-relative directions arrived together with CTRL_PROTO_VER 5.
+    // Left at 4 the handshake would accept a box whose LOCK reads the last byte as an on/off flag,
+    // so every unlock this file encodes would reach it as a lock.
+    expect(PROTO_VER).toBe(5);
+  });
+
+  it('parses the readback shapes a blanket and a media lock produce', () => {
+    // A blanket key lock is one entry per blocked edge under id 0xFFFF, never a single Both entry,
+    // and a media usage has no edges at all so it always reports Both. Decoding either as the other
+    // would make the dashboard render a lock the box is not holding.
+    const resp = parseResp(
+      new Uint8Array([
+        6, 3,
+        1, 0xff, 0xff, Direction.Positive, 0,
+        1, 0xff, 0xff, Direction.Negative, 0,
+        2, 0xe9, 0x00, Direction.Both, 0,
+      ]),
+    );
     expect(resp).toEqual({
       kind: 'locks',
       locks: {
         entries: [
-          { cls: LockClass.Axis, id: LockAxis.Wheel, positive: false, negative: true },
-          { cls: LockClass.Button, id: 0, positive: true, negative: true },
+          { cls: LockClass.Key, id: LOCK_ID_ALL, direction: Direction.Positive, scale: 0 },
+          { cls: LockClass.Key, id: LOCK_ID_ALL, direction: Direction.Negative, scale: 0 },
+          { cls: LockClass.Media, id: 0x00e9, direction: Direction.Both, scale: 0 },
+        ],
+      },
+    });
+  });
+
+  it('parses a RESP(LOCKS) entry list', () => {
+    // what = 6, n = 2: axis wheel blocked negative, then axis X weighed 40% against the bearing.
+    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 2, 0, 3, 0, 0, 4, 40]));
+    expect(resp).toEqual({
+      kind: 'locks',
+      locks: {
+        entries: [
+          { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
+          { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 40 },
         ],
       },
     });
@@ -466,25 +545,139 @@ describe('LOCK command (§3.8)', () => {
     expect(parseResp(new Uint8Array([6, 0]))).toEqual({ kind: 'locks', locks: { entries: [] } });
   });
 
-  it('isLocked reads a per-direction lock out of the entry list', () => {
+  it('drops a RESP(LOCKS) entry whose class or direction this build cannot name', () => {
+    // Kept, these decode into a LockEntry holding raw bytes while typed as the enums, and scaleOf
+    // then reports a pass over a direction the box is holding. The crate drops such an entry.
+    const resp = parseResp(
+      new Uint8Array([
+        6, 4,
+        3, 2, 0, Direction.Negative, 0,
+        127, 0, 0, Direction.Both, 0,
+        3, 0, 0, 99, 40,
+        1, 0x04, 0x00, Direction.Positive, 0,
+      ]),
+    );
+    expect(resp).toEqual({
+      kind: 'locks',
+      locks: {
+        entries: [
+          { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
+          { cls: LockClass.Key, id: 0x04, direction: Direction.Positive, scale: 0 },
+        ],
+      },
+    });
+  });
+
+  it('refuses a RESP(LOCKS) count past the wire cap', () => {
+    // The 512-byte payload ceiling admits 102 entries, but the box fills 96 and stops, so a larger
+    // count is a malformed reply rather than a longer table.
+    const over = [6, LOCKS_MAX + 1];
+    for (let i = 0; i <= LOCKS_MAX; i++) over.push(3, 0, 0, Direction.Positive, 40);
+    expect(parseResp(new Uint8Array(over))).toBeNull();
+    // and the cap itself still decodes
+    const at = [6, LOCKS_MAX];
+    for (let i = 0; i < LOCKS_MAX; i++) at.push(3, 0, 0, Direction.Positive, 40);
+    const resp = parseResp(new Uint8Array(at));
+    expect(resp?.kind).toBe('locks');
+    expect(resp?.kind === 'locks' && resp.locks.entries.length).toBe(LOCKS_MAX);
+  });
+
+  it('names every lock class and direction byte the wire defines, and no other', () => {
+    expect([0, 1, 2, 3].map(lockClassFromU8)).toEqual([
+      LockClass.Button, LockClass.Key, LockClass.Media, LockClass.Axis,
+    ]);
+    expect(lockClassFromU8(4)).toBeNull();
+    expect(lockClassFromU8(127)).toBeNull();
+    expect([0, 1, 2, 3, 4].map(directionFromU8)).toEqual([
+      Direction.Both, Direction.Positive, Direction.Negative, Direction.With, Direction.Against,
+    ]);
+    expect(directionFromU8(5)).toBeNull();
+    expect(directionFromU8(99)).toBeNull();
+  });
+
+  it('isLocked reads a per-direction block out of the entry list', () => {
     const locks = {
       entries: [
-        { cls: LockClass.Axis, id: LockAxis.Wheel, positive: false, negative: true },
-        { cls: LockClass.Axis, id: LockAxis.X, positive: true, negative: true },
+        { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Positive, scale: 0 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Negative, scale: 0 },
       ],
     };
     expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Negative)).toBe(true);
     expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Positive)).toBe(false);
     expect(isLocked(locks, lockAxis(LockAxis.Wheel), Direction.Both)).toBe(false);
-    // X: both directions set means Both is true.
+    // X: both fixed signs blocked means Both is true.
     expect(isLocked(locks, lockAxis(LockAxis.X), Direction.Both)).toBe(true);
     // A button not in the list reads unlocked.
     expect(isLocked(locks, lockButton(0), Direction.Positive)).toBe(false);
   });
 
+  it('a weighed direction is not a locked one', () => {
+    const locks = {
+      entries: [{ cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 40 }],
+    };
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Against)).toBe(40);
+    expect(isLocked(locks, lockAxis(LockAxis.X), Direction.Against)).toBe(false);
+    // A direction nothing covers passes untouched, and so does an unweighed target.
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.With)).toBe(LOCK_SCALE_PASS);
+    expect(scaleOf(locks, lockAxis(LockAxis.Y), Direction.Against)).toBe(LOCK_SCALE_PASS);
+    // A relative block leaves both fixed signs passing, so Both must not read it as a lock.
+    const rel = {
+      entries: [{ cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 0 }],
+    };
+    expect(isLocked(rel, lockAxis(LockAxis.X), Direction.Both)).toBe(false);
+    expect(isLocked(rel, lockAxis(LockAxis.X), Direction.Against)).toBe(true);
+  });
+
+  it('a whole-class blanket covers a usage it never names', () => {
+    // A blanket set by another client used to read back as nothing at all here, because matching was
+    // on the exact id and a blanket carries LOCK_ID_ALL.
+    const locks = {
+      entries: [
+        { cls: LockClass.Key, id: LOCK_ID_ALL, direction: Direction.Positive, scale: 0 },
+      ],
+    };
+    expect(scaleOf(locks, lockKey(0x04), Direction.Positive)).toBe(LOCK_SCALE_BLOCK);
+    expect(isLocked(locks, lockKey(0x04), Direction.Positive)).toBe(true);
+    // and it does not leak across classes
+    expect(scaleOf(locks, lockButton(0), Direction.Positive)).toBe(LOCK_SCALE_PASS);
+  });
+
+  it('scaleOf takes the lowest of the entries covering a direction', () => {
+    const locks = {
+      entries: [
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Both, scale: 60 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Negative, scale: 25 },
+      ],
+    };
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Negative)).toBe(25);
+    expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Positive)).toBe(60);
+  });
+
   it('returns null for a truncated RESP(LOCKS) payload', () => {
     expect(parseResp(new Uint8Array([6]))).toBeNull(); // needs the n byte
-    expect(parseResp(new Uint8Array([6, 1, 3, 2, 0]))).toBeNull(); // n=1 but only 3 entry bytes
+    expect(parseResp(new Uint8Array([6, 1, 3, 2, 0, 2]))).toBeNull(); // n=1 but only 4 entry bytes
+  });
+});
+
+describe('OPTION(BEARING) (§3.10, §3.12)', () => {
+  it('bearingPayload packs [id=4][window u16 LE][mode]', () => {
+    expect(Array.from(bearingPayload(20, BearingMode.PerAxis))).toEqual([4, 20, 0, 0]);
+    expect(Array.from(bearingPayload(500, BearingMode.Vector))).toEqual([4, 0xf4, 0x01, 1]);
+    // A zero window is off, not a zero-length one.
+    expect(Array.from(bearingPayload(0, BearingMode.PerAxis))).toEqual([4, 0, 0, 0]);
+  });
+
+  it('parses a RESP(OPTIONS, BEARING) value', () => {
+    expect(parseResp(new Uint8Array([9, 4, 20, 0, 0]))).toEqual({
+      kind: 'bearing',
+      bearing: { windowMs: 20, mode: BearingMode.PerAxis },
+    });
+    expect(parseResp(new Uint8Array([9, 4, 0, 0, 1]))).toEqual({
+      kind: 'bearing',
+      bearing: { windowMs: 0, mode: BearingMode.Vector },
+    });
+    expect(parseResp(new Uint8Array([9, 4, 20, 0]))).toBeNull();
   });
 });
 
@@ -888,10 +1081,13 @@ describe('OPTION command (§3.10)', () => {
     expect(parseResp(new Uint8Array([9, 1, 0, 0]))).toEqual({ kind: 'movementRiding', windowMs: 0 });
   });
 
-  it('emitPayload packs [id=2][mode u8][rate_hz u16 LE]', () => {
-    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01]);
+  it('emitPayload packs [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]', () => {
+    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
+    // The forced wire rate is independent of the pacing mode.
+    expect(Array.from(emitPayload(EmitMode.Learned, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
   });
 
   it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
@@ -903,33 +1099,76 @@ describe('OPTION command (§3.10)', () => {
     expect(namePayload('x'.repeat(40)).length).toBe(1 + 32);
   });
 
-  it('parses RESP(OPTIONS, EMIT) into mode / fixed_hz / resolved_hz', () => {
-    // Learned, nothing resolved yet: [9][2][mode=0][fixed=0][resolved=0].
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0]))).toEqual({
+  it('parses RESP(OPTIONS, EMIT) into the pacing mode and the rate the clone runs at', () => {
+    // Learned, no clone yet: every field zero.
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
       kind: 'emitPace',
-      emit: { mode: EmitMode.Learned, fixedHz: 0, resolvedHz: 0 },
+      emit: {
+        mode: EmitMode.Learned,
+        fixedHz: 0,
+        resolvedHz: 0,
+        forceHz: 0,
+        advertisedHz: 0,
+        forceActive: false,
+      },
     });
-    // Interval resolved to the 1000 Hz poll rate: [9][2][1][0,0][0xe8,0x03].
-    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03]))).toEqual({
+    // Interval resolved to the 1000 Hz poll rate, nothing forced, the clone advertising its own 1 kHz.
+    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
-      emit: { mode: EmitMode.Interval, fixedHz: 0, resolvedHz: 1000 },
+      emit: {
+        mode: EmitMode.Interval,
+        fixedHz: 0,
+        resolvedHz: 1000,
+        forceHz: 0,
+        advertisedHz: 1000,
+        forceActive: false,
+      },
     });
-    // Fixed 500 Hz, resolved to 500: [9][2][2][0xf4,0x01][0xf4,0x01].
-    expect(parseResp(new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01]))).toEqual({
+    // Five distinct numbers, so swapping any two fields fails: fixed 1000, resolved 250, forced 125,
+    // advertising 100, and the force in the served descriptor.
+    expect(
+      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1])),
+    ).toEqual({
       kind: 'emitPace',
-      emit: { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 },
+      emit: {
+        mode: EmitMode.Fixed,
+        fixedHz: 1000,
+        resolvedHz: 250,
+        forceHz: 125,
+        advertisedHz: 100,
+        forceActive: true,
+      },
+    });
+    // A force set while IMPERFECT is off: requested, not in the descriptor.
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0]))).toEqual({
+      kind: 'emitPace',
+      emit: {
+        mode: EmitMode.Learned,
+        fixedHz: 0,
+        resolvedHz: 0,
+        forceHz: 1000,
+        advertisedHz: 125,
+        forceActive: false,
+      },
     });
     // A mode this build doesn't know -> mode null, the rates still decode.
-    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
-      emit: { mode: null, fixedHz: 0, resolvedHz: 1000 },
+      emit: {
+        mode: null,
+        fixedHz: 0,
+        resolvedHz: 1000,
+        forceHz: 0,
+        advertisedHz: 1000,
+        forceActive: false,
+      },
     });
   });
 
   it('returns null for a truncated or unknown OPTIONS payload', () => {
     expect(parseResp(new Uint8Array([9, 0, 1, 1]))).toBeNull(); // imperfect needs 5 bytes
     expect(parseResp(new Uint8Array([9, 1, 0]))).toBeNull(); // move_ride needs 4 bytes
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0]))).toBeNull(); // emit needs 7 bytes
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // emit needs 12 bytes
     expect(parseResp(new Uint8Array([9, 0xff, 0, 0]))).toBeNull(); // unknown option id
   });
 });
@@ -1154,5 +1393,95 @@ describe('keyboard + media (v2.0.0)', () => {
         { cls: 1, id: 0x07 },
       ],
     });
+  });
+});
+
+describe('bearing mode decode', () => {
+  it('names only the two the box defines', () => {
+    expect(bearingModeFromU8(0)).toBe(BearingMode.PerAxis);
+    expect(bearingModeFromU8(1)).toBe(BearingMode.Vector);
+  });
+
+  it('refuses a byte no constant names rather than carrying it as a geometry', () => {
+    // The box rejects the whole write for such a mode, so a reply carrying one is not a geometry.
+    for (const v of [2, 9, 200, 255]) expect(bearingModeFromU8(v)).toBeNull();
+  });
+});
+
+// RESP(FIRMWARE) (§4.16). Byte vectors are read off the firmware's ota_proto.h and the protocol doc,
+// not written to match this decoder: a decoder checked against its own author's expectations is a
+// false green.
+describe('RESP(FIRMWARE)', () => {
+  const payload = (hostPresent: number, staged: number) =>
+    new Uint8Array([
+      11, // what
+      3, 2, 0, // device version
+      0, // device slot ota_0
+      2, // device state valid
+      hostPresent,
+      3, 2, 0, // host version
+      1, // host slot ota_1
+      1, // host state pending-verify
+      0x00, 0x00, 0x0f, 0x00, // slot size 0x000F0000 little-endian
+      staged,
+    ]);
+
+  it('decodes both chips', () => {
+    const r = parseResp(payload(1, 0x03));
+    expect(r?.kind).toBe('firmware');
+    if (r?.kind !== 'firmware') return;
+    expect(r.firmware.device).toEqual({
+      major: 3,
+      minor: 2,
+      patch: 0,
+      slot: 0,
+      state: ImageState.Valid,
+    });
+    expect(r.firmware.host).toEqual({
+      major: 3,
+      minor: 2,
+      patch: 0,
+      slot: 1,
+      state: ImageState.PendingVerify,
+    });
+    expect(r.firmware.slotSize).toBe(0x000f0000);
+    expect(r.firmware.deviceStaged).toBe(true);
+    expect(r.firmware.hostStaged).toBe(true);
+    expect(anyPending(r.firmware)).toBe(true);
+  });
+
+  it('reports an absent host chip as null rather than zeros', () => {
+    const r = parseResp(payload(0, 0));
+    if (r?.kind !== 'firmware') throw new Error('expected firmware');
+    expect(r.firmware.host).toBeNull();
+    expect(anyPending(r.firmware)).toBe(false);
+  });
+
+  it('reads the two staged bits independently', () => {
+    const dev = parseResp(payload(1, 0x01));
+    if (dev?.kind !== 'firmware') throw new Error('expected firmware');
+    expect([dev.firmware.deviceStaged, dev.firmware.hostStaged]).toEqual([true, false]);
+    const host = parseResp(payload(1, 0x02));
+    if (host?.kind !== 'firmware') throw new Error('expected firmware');
+    expect([host.firmware.deviceStaged, host.firmware.hostStaged]).toEqual([false, true]);
+  });
+
+  it('rejects a short payload', () => {
+    expect(parseResp(payload(1, 0).subarray(0, 16))).toBeNull();
+  });
+
+  it('names every status the box can answer', () => {
+    for (const v of [
+      0x00, 0x01, 0x02, 0x03, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a,
+      0x1b,
+    ]) {
+      expect(UPD_NAMES[v], `status 0x${v.toString(16)} has no name`).toBeDefined();
+    }
+  });
+
+  it('a chunk plus its header fits one frame, aligned', () => {
+    expect(OTA_CHUNK + 4).toBe(508);
+    expect(OTA_CHUNK % 4).toBe(0);
+    expect(OTA_CHUNK * 0xffff).toBeGreaterThanOrEqual(0xf0000);
   });
 });

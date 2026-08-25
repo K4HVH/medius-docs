@@ -13,41 +13,49 @@ const Option: Component = () => {
           picks the option, the rest is its value. All persist in NVS, restore at boot, and are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>. An unknown id is ignored.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Option</th><th><code>id</code></th><th>Value</th><th>Does</th><th>Default</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
-              <td><code>0</code></td>
-              <td><code>[allow u8]</code></td>
-              <td>Clone an over-capacity device anyway</td>
-              <td>off</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
-              <td><code>1</code></td>
-              <td><code>[timeout u16 LE]</code></td>
-              <td>Inject motion only on a real move</td>
-              <td>off</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
-              <td><code>2</code></td>
-              <td><code>[mode u8][rate_hz u16 LE]</code></td>
-              <td>Pick what paces injected motion</td>
-              <td>learnt</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
-              <td><code>3</code></td>
-              <td><code>[name ascii 0..32]</code></td>
-              <td>Give the box a human-readable name</td>
-              <td>Medius-XXXX</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Option</th><th><code>id</code></th><th>Does</th><th>Factory default</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
+                <td><code>0</code></td>
+                <td>Clone an over-capacity device anyway</td>
+                <td>off</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
+                <td><code>1</code></td>
+                <td>Inject motion only on a real move</td>
+                <td>off</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
+                <td><code>2</code></td>
+                <td>Pick what paces injected motion</td>
+                <td>learnt</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
+                <td><code>3</code></td>
+                <td>Give the box a human-readable name</td>
+                <td>Medius-XXXX</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#bearing"><code>BEARING</code></A></td>
+                <td><code>4</code></td>
+                <td>What with and against are measured against</td>
+                <td>20 ms, per axis</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Each card carries its own value layout on its signature line. A box that has been set boots
+          at its own stored value, not the factory one.
+        </p>
       </Card>
 
       <div id="option" data-search-target>
@@ -92,7 +100,7 @@ const Option: Component = () => {
           <div class="callout callout--info">
             <p>
               Some devices need more interrupt-IN endpoints than the box serves (the Wooting Two HE's
-              analog stream wants a sixth, past the{' '}
+              analog stream needs a sixth, past the{' '}
               <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
               five). Changing this for an{' '}
               <em>attached</em> over-capacity device reboots the box to re-clone; a normal device is
@@ -134,10 +142,15 @@ const Option: Component = () => {
           </p>
           <div class="callout callout--warning">
             <p>
-              While on, pure idle injection (moving the cursor while the hand is still) stops working:
+              While on, pure idle injection (moving the cursor while the real device is still) stops working:
               motion waits for a native move and is dropped if none comes. Button, key, and media
               injection are unaffected, and a move can opt out per command with the{' '}
               <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
+            </p>
+            <p>
+              Changing the value drops whatever motion was held for a ride, and clears the standing{' '}
+              <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
+              <code>with</code> / <code>against</code> scale stops applying at that instant.
             </p>
           </div>
           <p>
@@ -155,10 +168,55 @@ const Option: Component = () => {
         </Card>
       </div>
 
+      <div id="bearing" data-search-target>
+        <Card>
+          <CardHeader title="BEARING" subtitle="What with and against are measured against" />
+          <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
+          <div class="api-response-label">WINDOW</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> are inert whatever their scale</td></tr>
+              <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MODE</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th><A href="/native/commands/lock#geometry">Geometry</A></th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
+              <tr><td><code>1</code></td><td>Vector</td></tr>
+              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply to say so</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              A write that changes either field drops the standing{' '}
+              <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
+              <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
+              <code>with</code> / <code>against</code> scale live that is a visible step in what
+              reaches the game PC, so set the geometry before the scales, not between reports.
+            </p>
+          </div>
+          <p>
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 11     | 00     | 04 00  | 04     | 14 00  | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | window | mode   | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
       <div id="emit" data-search-target>
         <Card>
-          <CardHeader title="EMIT" subtitle="Pick what paces injected motion" />
-          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE]</pre>
+          <CardHeader title="EMIT" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
+          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
             <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
@@ -178,19 +236,48 @@ const Option: Component = () => {
               pending, so idle stays idle.
             </p>
           </div>
+          <div class="api-response-label">FORCE_HZ</div>
+          <table class="api-params">
+            <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
+              <tr><td>target Hz</td><td>Writes the <code>bInterval</code> nearest that rate onto every HID interrupt-IN endpoint of the served descriptor, and polls the device at that same interval</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              A forced rate applies only with{' '}
+              <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> on, because the
+              descriptor stops matching the real device. Changing the resolved interval re-clones the
+              box, which drops this port for a few seconds.
+            </p>
+            <p>
+              Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
+              low-speed clone cannot express an interval below 10 ms, so a request above 100 Hz there
+              resolves to 100.
+            </p>
+          </div>
+          <p>
+            <code>force_hz</code> is independent of <code>mode</code>: a clone can advertise 1 kHz while
+            injection still paces to the learnt native rate. Both ride one command, so every{' '}
+            <code>OPTION(EMIT)</code> writes both.
+          </p>
           <p>
             Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (mode plus the
-            rate in effect) · Library{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (mode, the
+            rate in effect, and what the clone advertises) · Library{' '}
             <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Fixed 1 kHz (<code>mode = 2</code>, <code>rate_hz = 0x03E8</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 04 00  | 02     | 02     | E8 03  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>
+            Fixed 1 kHz with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
+            <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
+| A5     | 11     | 00     | 06 00  | 02     | 02     | E8 03   | E8 03    | lo hi  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>
         </Card>
       </div>
 

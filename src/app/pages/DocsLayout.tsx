@@ -9,11 +9,11 @@ import { Button } from '../../components/inputs/Button';
 import { CommandPalette } from '../../components/navigation/CommandPalette';
 import {
   BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
-  BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear,
+  BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsDownload,
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
-  BsBoxes, BsFiletypePy,
+  BsBoxes, BsFiletypePy, BsUsbPlug,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -53,6 +53,7 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
   { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
+  { value: '/native/commands/update', label: 'Update', icon: BsDownload },
   { value: '/native/commands/usage', label: 'Usage IDs', icon: BsHash },
 ];
 
@@ -84,6 +85,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
   { value: '/library/led', label: 'LED', icon: BsLightbulb },
   { value: '/library/admin', label: 'Admin', icon: BsGear },
+  { value: '/library/update', label: 'Update', icon: BsDownload },
   { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
@@ -91,7 +93,6 @@ const libraryApiTabs: TabOption[] = [
 const libraryFeatureTabs: TabOption[] = [
   { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
-  { value: '/library/features/flash', label: 'Flash', icon: BsBoxArrowInDown },
   { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
 ];
 
@@ -150,6 +151,7 @@ const allBindingsTabs: TabOption[] = [
 ];
 
 const dashboardTabs: TabOption[] = [
+  { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },

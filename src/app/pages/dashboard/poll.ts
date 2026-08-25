@@ -8,6 +8,7 @@
 
 import { type Accessor, createSignal, onCleanup } from 'solid-js';
 import type {
+  Bearing,
   Caps,
   CatchState,
   ClipStatus,
@@ -33,6 +34,7 @@ export interface PollValues {
   catch: CatchState;
   imperfect: ImperfectStatus;
   moveRide: number;
+  bearing: Bearing;
   emit: EmitPace;
   clip: ClipStatus;
 }
@@ -50,6 +52,7 @@ const RUN: { [K in PollKey]: (l: SerialLink) => Promise<PollValues[K]> } = {
   catch: (l) => l.queryCatch(),
   imperfect: (l) => l.queryImperfect(),
   moveRide: (l) => l.queryMovementRiding(),
+  bearing: (l) => l.queryBearing(),
   emit: (l) => l.queryEmitPace(),
   clip: (l) => l.queryClip(),
 };
@@ -76,6 +79,7 @@ const DEFAULT_MS: Record<PollKey, number> = {
   catch: 2000,
   imperfect: 4000,
   moveRide: 4000,
+  bearing: 4000,
   emit: 4000,
   clip: 1000,
 };

@@ -28,7 +28,7 @@ const Hardware: Component = () => {
                 <td>Game PC</td>
                 <td>
                   The clone (<A href="/native/architecture">device chip</A>), a copy of the
-                  mouse's USB identity, so the PC sees the same device it would if the mouse were
+                  mouse's USB identity, so the PC enumerates the same device it would if the mouse were
                   plugged in directly.
                 </td>
               </tr>
@@ -82,7 +82,7 @@ const Hardware: Component = () => {
               </tr>
               <tr>
                 <td><code>USB1</code> (clone)</td>
-                <td>The game PC sees an ordinary mouse unplug; the box drops its injection state.</td>
+                <td>The game PC gets an ordinary device detach; the box drops its injection state.</td>
               </tr>
               <tr>
                 <td><code>USB3</code> (mouse)</td>

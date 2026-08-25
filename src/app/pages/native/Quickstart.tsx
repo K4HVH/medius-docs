@@ -32,7 +32,7 @@ const Quickstart: Component = () => {
             <li><code>USB3</code> (mouse) → real mouse</li>
           </ul>
           <p>
-            The clone copies the real mouse's USB identity, so the game PC sees the same device it
+            The clone copies the real mouse's USB identity, so the game PC enumerates the same device it
             would if the mouse were plugged in directly.
           </p>
           <div class="callout callout--danger">
@@ -73,8 +73,8 @@ const Quickstart: Component = () => {
               protocol version the firmware speaks.
             </li>
             <li>
-              Check <code>proto_ver == 4</code> before trusting the commands here. This documents
-              version <code>4</code>.
+              Check <code>proto_ver == 5</code> before trusting the commands here. This documents
+              version <code>5</code>.
             </li>
           </ol>
           <p>

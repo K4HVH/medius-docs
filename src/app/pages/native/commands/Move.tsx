@@ -11,7 +11,7 @@ const Move: Component = () => {
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis: the
           cursor pair (X and Y together) or the wheel, picked by a <code>motion</code>{' '}
-          byte. It injects on top of the real mouse, so the PC sees the combined result, and it's{' '}
+          byte. It injects on top of the real mouse, so the emitted report carries both, and it's{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
         <p>
@@ -125,7 +125,7 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Applied discard, then flush, then the delta; setting both refuses the frame. Injected motion
+            Applied discard, then flush, then the delta; <code>FLUSH</code> and <code>DISCARD</code> together refuse the frame. Injected motion
             lands in one of two <A href="/native/injection#state">accumulators</A>, so a bypassing delta
             never carries the held one out with it. Library bindings:{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}

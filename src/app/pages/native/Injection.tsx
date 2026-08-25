@@ -30,7 +30,7 @@ const Injection: Component = () => {
   injected input  (your program) --+`}</pre>
         <table class="api-params">
           <thead>
-            <tr><th>You send</th><th>The PC sees</th></tr>
+            <tr><th>You send</th><th>The clone emits</th></tr>
           </thead>
           <tbody>
             <tr><td>a <code>MOVE</code> while the real mouse moves</td><td>The sum of both.</td></tr>
@@ -84,6 +84,10 @@ const Injection: Component = () => {
       <div id="state" data-search-target>
         <Card>
           <CardHeader title="What the box tracks" subtitle="Pending motion and held usages" />
+          <p>
+            Injected state is a small set of pending values the box carries between reports, separate
+            from anything the real device is doing.
+          </p>
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>What it holds</th></tr>
@@ -105,7 +109,7 @@ const Injection: Component = () => {
                   The same total for motion that never waits: a <code>MOVE</code> carrying{' '}
                   <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and{' '}
                   <A href="/native/commands/clip">clip</A> playback. Both accumulators always exist;
-                  riding decides whether the first one is held, not which one a move lands in.
+                  riding gates whether the first one drains, not which one a move lands in.
                 </td>
               </tr>
               <tr>
@@ -114,7 +118,7 @@ const Injection: Component = () => {
                   Per usage (button, key, or media), whether the box forces it active, forces it
                   inactive, or leaves it to the real device. Set by the{' '}
                   <A href="/native/commands/inject#inject"><code>INJECT</code></A> actions: press
-                  forces active, force-release forces inactive, soft-release hands it back.
+                  forces active, force-release forces inactive, soft-release clears both.
                 </td>
               </tr>
             </tbody>
@@ -130,6 +134,10 @@ const Injection: Component = () => {
       <div id="emission" data-search-target>
         <Card>
           <CardHeader title="When the box sends a report" subtitle="At the mouse's own report rate, only on activity" />
+          <p>
+            The box adds no report cadence of its own. Every row below fires on the cloned
+            mouse's own tick.
+          </p>
           <table class="api-params">
             <thead>
               <tr><th>When…</th><th>The box sends</th></tr>
@@ -160,7 +168,7 @@ const Injection: Component = () => {
         <Card>
           <CardHeader title="Safety" subtitle="Injected state can't trap the real device" />
           <p>
-            A <A href="/native/commands/inject#inject">force-release</A> always wins: it clears an
+            A <A href="/native/commands/inject#inject">force-release</A> always writes 0: it clears an
             injected hold and masks a physical press.
           </p>
           <p>

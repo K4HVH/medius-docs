@@ -41,6 +41,7 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="clip" subtitle="Open a clip handle" />
           <pre class="api-signature">fn clip(&self) -&gt; ClipHandle</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Returns a <A href="/library/clip#handle"><code>ClipHandle</code></A> bound to this box. Keep one
             handle per clip session and top it up through it: the handle owns the append-sequence counter
@@ -62,6 +63,7 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="ClipBuilder" subtitle="Build the entry stream" />
           <pre class="api-signature">fn new() -&gt; ClipBuilder</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Each method appends one per-frame entry, so a builder is a timeline read top to bottom. Motion is
             a relative delta; an edge is an{' '}
@@ -110,7 +112,7 @@ let mut clip = ClipBuilder::new();
 // move (+10, -4) AND press Left on the same frame
 clip.frame(10, -4, 0, &[(Button::Left.into(), Action::Press)]);
 
-// "aim and hold fire": press once, keep moving while held, then release
+// press once, keep moving while held, then release
 clip.frame(8, -2, 0, &[(Button::Left.into(), Action::Press)]);
 for _ in 0..60 { clip.move_by(8, -2); }   // Left stays down (edges are sticky)
 clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pre>
@@ -170,8 +172,7 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
             <p>
               A dropped append (or an overflow) leaves the clip{' '}
               <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A> and stops it.
-              Recover with <code>clear</code> and rebuild, not by appending more; a faulted stream has a hole
-              in it.
+              Recover with <code>clear</code> and rebuild, not by appending more; a faulted stream is missing entries.
             </p>
           </div>
         </Card>
@@ -221,7 +222,7 @@ use medius::{Blanket, ClipState};
 use std::time::Duration;
 
 let handle = device.clip();       // device: an open Device
-handle.set_autolock(&[Blanket::Aim])?;   // lock only the aim axes while playing
+handle.set_autolock(&[Blanket::Aim])?;   // lock only X and Y while playing
 handle.append(&clip)?;                    // preload (clip, next_chunk: ClipBuilders you built)
 handle.start()?;
 
@@ -259,7 +260,7 @@ handle.stop()?;`}</code></pre>
           <p>
             Bindings are a managed set keyed by <code>(usage, edge)</code>, like a{' '}
             <A href="/library/lock">lock</A>. A physical edge runs the one most-specific match, so a binding
-            on <code>Key::F1</code> beats an any-key binding.
+            on <code>Key::F1</code> resolves before an any-key one.
           </p>
           <div class="api-response-label">RECIPES</div>
           <table class="api-params">

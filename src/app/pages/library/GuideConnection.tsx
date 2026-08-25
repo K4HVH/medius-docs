@@ -134,10 +134,10 @@ device.reset()?;`}</code></pre>
             </tbody>
           </table>
           <p>
-            For immediate hand-off call <A href="/library/admin#reset"><code>reset</code></A> before drop.
+            To return the box to passthrough at once, call <A href="/library/admin#reset"><code>reset</code></A> before drop.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`// hand the mouse back right now, not a second from now:
+          <pre><code class="language-rust">{`// back to passthrough now, not after the silence window:
 device.reset()?;   // box returns to passthrough immediately
 drop(device);      // tears down threads and closes the port`}</code></pre>
         </Card>

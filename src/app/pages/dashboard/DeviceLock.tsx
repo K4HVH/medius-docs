@@ -1,14 +1,19 @@
-// Block the real device from driving an input while the control link still can.
+// Weigh what the real device drives while the control link still drives it too.
 //
 // The picker covers the whole lock address space. It used to offer eight fixed mouse targets, which
 // left keys, media usages, and the whole-class blanket unreachable from here even though the active
 // list below could already render them when another client set them.
+//
+// Blocking and passing are the two ends of one scale. The buttons are shortcuts to those two named
+// constants, which the slider's own range reaches as well. The two bearing-relative directions mean
+// nothing without a bearing, so they are offered on axes alone.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
+import { Slider } from '../../../components/inputs/Slider';
 import {
   type LockEntry,
   type NamedUsage,
@@ -16,11 +21,13 @@ import {
   Direction,
   KEYS,
   LOCK_ID_ALL,
+  LOCK_SCALE_BLOCK,
+  LOCK_SCALE_MAX,
+  LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
   MEDIA,
-  Press,
-  Release,
+  isRelativeDirection,
   usageName,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
@@ -48,10 +55,17 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign; a momentary usage locks by edge. One direction byte, two vocabularies.
+// An axis locks by sign; a button or key locks by edge. One direction byte, two vocabularies, plus
+// the two that name a sign relative to the bearing rather than a fixed one. Media is the one class
+// with no edges at all: the box suppresses the usage whole and reports it as Both, so naming a
+// direction here would read as a distinction the box does not make.
 const dirName = (cls: number, d: Direction): string => {
-  if (cls === LockClass.Axis) return d === Press ? 'positive' : 'negative';
-  return d === Press ? 'press' : 'release';
+  if (cls === LockClass.Media) return '';
+  if (d === Direction.With) return 'with injection';
+  if (d === Direction.Against) return 'against injection';
+  if (d === Direction.Both) return 'both';
+  if (cls === LockClass.Axis) return d === Direction.Positive ? 'positive' : 'negative';
+  return d === Direction.Positive ? 'press' : 'release';
 };
 
 const targetName = (cls: number, id: number): string => {
@@ -64,16 +78,16 @@ const DeviceLock = () => {
   const dash = useDashboard();
   const [target, setTarget] = createSignal<UsageValue>({ cls: LockClass.Axis, id: LockAxis.X });
   const [direction, setDirection] = createSignal(String(Direction.Both));
+  const [scale, setScale] = createSignal(LOCK_SCALE_PASS);
   const locks = dash.poll('locks');
   const cmd = createCommand(() => dash.refreshPoll('locks'));
 
   const dir = (): Direction => Number(direction()) as Direction;
 
-  // An every-axis lock goes out as one frame per axis rather than the class wildcard. Firmware up
-  // to and including the current release only accepts axis ids 0 to 2, so the wildcard is carried
-  // over the wire and then dropped, and the box has no blanket representation anyway: it expands
-  // one into per-axis bits and reads it back as three entries. Sending the three is identical on a
-  // box that implements it and the only thing that works on one that does not.
+  // An every-axis lock goes out as one frame per axis rather than the class wildcard. The box has no
+  // blanket representation for the mouse classes: it expands one into per-target scales and reads it
+  // back as three entries either way. Firmware that predates the axis blanket drops the wildcard on
+  // arrival, so the three frames are both equivalent and the only form that works everywhere.
   const targets = (): { cls: LockClass; id: number }[] => {
     const t = target();
     if (t.cls === LockClass.Axis && t.id === LOCK_ID_ALL) {
@@ -82,57 +96,79 @@ const DeviceLock = () => {
     return [{ cls: t.cls as LockClass, id: t.id }];
   };
 
-  const apply = (on: boolean) =>
+  const applyScale = (scale: number) =>
     cmd.run(async () => {
       const link = dash.link()!;
       for (const t of targets()) {
-        await (on ? link.lock(t, dir()) : link.unlock(t, dir()));
+        await link.scale(t, dir(), scale);
       }
     });
 
-  // Every locked (target, direction) pair the box reports, whoever set it.
-  const active = createMemo(() => {
-    const out: { key: string; text: string }[] = [];
-    for (const e of locks()?.entries ?? ([] as LockEntry[])) {
-      if (e.positive) {
-        out.push({ key: `${e.cls}:${e.id}:1`, text: `${targetName(e.cls, e.id)} ${dirName(e.cls, Press)}` });
-      }
-      if (e.negative) {
-        out.push({ key: `${e.cls}:${e.id}:2`, text: `${targetName(e.cls, e.id)} ${dirName(e.cls, Release)}` });
-      }
+  // Every weighed (target, direction) the box reports, whoever set it. One entry per direction, so a
+  // target weighed several ways shows up several times. A blanket key lock arrives as one entry per
+  // blocked edge, which reads out here as "all keys press" rather than one both-edge chip.
+  const active = createMemo(() =>
+    (locks()?.entries ?? ([] as LockEntry[])).map((e) => {
+      const dn = dirName(e.cls, e.direction);
+      const head = dn ? `${targetName(e.cls, e.id)} ${dn}` : targetName(e.cls, e.id);
+      return {
+        key: `${e.cls}:${e.id}:${e.direction}`,
+        text: e.scale === LOCK_SCALE_BLOCK ? head : `${head} at ${e.scale}%`,
+        blocked: e.scale === LOCK_SCALE_BLOCK,
+      };
+    }),
+  );
+
+  const isAxis = () => target().cls === LockClass.Axis;
+  const isMedia = () => target().cls === LockClass.Media;
+
+  // Picking a class can strand the selected direction on an option the new class does not offer, and
+  // a radio with no matching option keeps sending the old byte. Fall back to Both, which every class
+  // takes.
+  const chooseTarget = (v: UsageValue) => {
+    setTarget(v);
+    if (v.cls === LockClass.Media || (v.cls !== LockClass.Axis && isRelativeDirection(dir()))) {
+      setDirection(String(Direction.Both));
     }
-    return out;
-  });
+  };
 
   const dirLabel = () =>
-    target().cls === LockClass.Axis
+    isAxis()
       ? [
           { value: String(Direction.Both), label: 'Both' },
           { value: String(Direction.Positive), label: 'Positive' },
           { value: String(Direction.Negative), label: 'Negative' },
+          { value: String(Direction.With), label: 'With injection' },
+          { value: String(Direction.Against), label: 'Against injection' },
         ]
-      : [
-          { value: String(Direction.Both), label: 'Both' },
-          { value: String(Direction.Positive), label: 'Press' },
-          { value: String(Direction.Negative), label: 'Release' },
-        ];
+      : isMedia()
+        ? [{ value: String(Direction.Both), label: 'The whole usage' }]
+        : [
+            { value: String(Direction.Both), label: 'Both' },
+            { value: String(Direction.Positive), label: 'Press' },
+            { value: String(Direction.Negative), label: 'Release' },
+          ];
 
   return (
     <Show when={dash.status() === 'connected'}>
       <Card>
-        <CardHeader title="Input locks" subtitle="Block the real device from one input" />
-        <p>
-          A locked input is suppressed from the real device. Injection still drives it. Locks clear on
-          their own if the dashboard disconnects.
-        </p>
+        <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
 
         <UsagePicker
           name="lock-target"
           classes={CLASSES}
           value={target()}
-          onChange={setTarget}
+          onChange={chooseTarget}
           usageLabel="Which input"
         />
+
+        <Show when={!isAxis()}>
+          <p>A button, key, or media usage carries one bit, so Lock and Unlock are all it has.</p>
+        </Show>
+
+        <Show when={isMedia()}>
+          <p>A media usage has no press and release edges, so the box suppresses it whole.</p>
+        </Show>
 
         <div style={section}>
           <div style={label}>Direction</div>
@@ -144,11 +180,49 @@ const DeviceLock = () => {
           />
         </div>
 
+        <Show when={isAxis()}>
+          <div style={section}>
+            <div style={label}>Keep {scale()}% of the real movement</div>
+            <Slider
+              value={scale()}
+              min={LOCK_SCALE_BLOCK}
+              max={LOCK_SCALE_MAX}
+              step={5}
+              onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
+            />
+          </div>
+        </Show>
+
+        <Show when={isAxis() && dir() === Direction.Both}>
+          <div class="callout callout--info" style={section}>
+            Both writes the percentage to the two fixed signs and a full pass to with and against, so
+            it means the same whether or not the box is injecting. A Both at 100% still clears all
+            four.
+          </div>
+        </Show>
+
+        <Show when={isAxis() && isRelativeDirection(dir())}>
+          <div class="callout callout--info" style={section}>
+            With and against are measured against the bearing: the sign the box is currently
+            injecting on that axis. Neither applies once the bearing window elapses with nothing
+            injected, leaving only the fixed-sign scale.
+          </div>
+        </Show>
+
         <div style={{ ...section, ...row }}>
-          <Button variant="primary" disabled={cmd.busy()} onClick={() => apply(true)}>
+          <Show when={isAxis()}>
+            <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
+              Apply {scale()}%
+            </Button>
+          </Show>
+          <Button
+            variant={isAxis() ? 'secondary' : 'primary'}
+            disabled={cmd.busy()}
+            onClick={() => applyScale(LOCK_SCALE_BLOCK)}
+          >
             Lock
           </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => apply(false)}>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => applyScale(LOCK_SCALE_PASS)}>
             Unlock
           </Button>
         </div>
@@ -159,10 +233,12 @@ const DeviceLock = () => {
         </Show>
 
         <div style={section}>
-          <div style={label}>Active locks</div>
-          <Show when={active().length > 0} fallback={<p>Nothing locked.</p>}>
+          <div style={label}>Active</div>
+          <Show when={active().length > 0} fallback={<p>Everything passing untouched.</p>}>
             <div style={chips}>
-              <For each={active()}>{(item) => <Chip variant="warning">{item.text}</Chip>}</For>
+              <For each={active()}>
+                {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
+              </For>
             </div>
           </Show>
         </div>

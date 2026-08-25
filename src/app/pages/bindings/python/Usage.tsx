@@ -31,7 +31,7 @@ const Usage: Component = () => {
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Queues a <A href="/native/frame">frame</A> and returns at once. No reply is read.</td>
-                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
+                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
               </tr>
               <tr>
                 <td><span class="api-badge api-badge--responded">Blocks</span></td>
@@ -82,7 +82,7 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
               <tr><td><code>ERR_QUERY_TIMEOUT</code></td><td><code>QueryTimeoutError</code></td><td>a <code>query_*</code> outran its wait</td></tr>
               <tr><td><code>ERR_DISCONNECTED</code></td><td><code>DisconnectedError</code></td><td>the link dropped (see below)</td></tr>
               <tr><td><code>ERR_FRAME_TOO_LONG</code></td><td><code>FrameTooLongError</code></td><td>payload over the frame limit</td></tr>
-              <tr><td><code>ERR_FLASH_TOOL</code></td><td><code>FlashToolError</code></td><td><a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer">esptool</a> flash failed</td></tr>
+              <tr><td><code>ERR_UPDATE</code></td><td><code>UpdateError</code></td><td>the box refused a <A href="/library/update">firmware update</A> op</td></tr>
               <tr><td><code>ERR_INVALID_ARG</code></td><td><code>InvalidArgError</code></td><td>a bad argument value</td></tr>
               <tr><td><code>ERR_PANIC</code></td><td><code>PanicError</code></td><td>the native core panicked</td></tr>
               <tr><td><code>ERR_UNKNOWN</code></td><td><code>MediusError</code></td><td>anything unmapped</td></tr>
@@ -93,6 +93,7 @@ str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
               <tr><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code></td></tr>
               <tr><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge</td></tr>
               <tr><td><code>ERR_RESERVED_ID</code></td><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel</td></tr>
+              <tr><td><code>ERR_RELATIVE_DIRECTION</code></td><td><code>RelativeDirectionError</code></td><td><code>WITH</code> or <code>AGAINST</code> where only a fixed sign or edge fits</td></tr>
             </tbody>
           </table>
           <p>
@@ -166,7 +167,7 @@ dev.close()`}</code></pre>
             <p>
               <code>EventStream</code>, <code>InputStream</code>, <code>LogStream</code>,{' '}
               <code>Timeline</code>, and <code>MockBox</code> follow the same pattern: a{' '}
-              <code>with</code> block, <code>.close()</code>, or GC. Streams hold the device alive
+              <code>with</code> block, <code>.close()</code>, or GC. Streams keep the device open
               while open; see <A href="/bindings/python/streams">Streams</A>.
             </p>
           </div>

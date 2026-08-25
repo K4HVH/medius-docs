@@ -64,7 +64,7 @@ const Types: Component = () => {
 
       <div id="lock-enums" data-search-target>
         <Card>
-          <CardHeader title="Lock & blanket enums" subtitle="Direction · LockTargetKind · Blanket" />
+          <CardHeader title="Lock & blanket enums" subtitle="Direction · BearingMode · LockTargetKind · Blanket" />
           <p>
             See <A href="/native/commands/lock">Lock</A> for what a direction and a blanket class
             mean, and <A href="/library/catch">Catch</A> for the third reading a direction has on a
@@ -79,16 +79,46 @@ const Types: Component = () => {
               the byte-oriented <A href="/bindings/python/types#catchclass">catch classes</A>.
             </p>
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a usage</th><th>On a traffic-class filter</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a button or key</th><th>On a traffic-class filter</th></tr></thead>
               <tbody>
-                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>either sign</td><td>press and release</td><td>both directions</td></tr>
+                <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>both directions</td></tr>
                 <tr><td><code>POSITIVE</code></td><td><code>1</code></td><td><code>PRESS</code> · <code>IN</code></td><td>+x / +y / wheel-up only</td><td>the press edge</td><td>IN, device to PC</td></tr>
                 <tr><td><code>NEGATIVE</code></td><td><code>2</code></td><td><code>RELEASE</code> · <code>OUT</code></td><td>-x / -y / wheel-down only</td><td>the release edge</td><td>OUT, PC to device</td></tr>
+                <tr><td><code>WITH</code></td><td><code>3</code></td><td>-</td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
+                <tr><td><code>AGAINST</code></td><td><code>4</code></td><td>-</td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
               </tbody>
             </table>
             <p>
               The aliases are the same values under names that read at the call site:{' '}
-              <code>Direction.PRESS is Direction.POSITIVE</code>.
+              <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
+              <code>AGAINST</code> are measured against the bearing rather than a fixed sign;{' '}
+              <code>.is_relative</code> tells them apart.
+            </p>
+            <p>
+              Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
+              anywhere else raises{' '}
+              <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. A media
+              usage has no edges: an edge named on one goes out as <code>BOTH</code>, which is what{' '}
+              <A href="/bindings/python/types#locks"><code>Locks</code></A> reports it as.
+            </p>
+          </div>
+
+          <div id="bearing-mode" data-search-target>
+            <div class="api-response-label">BearingMode</div>
+            <p>
+              How the box reads the direction it is injecting, which is what <code>WITH</code> and{' '}
+              <code>AGAINST</code> resolve by. Set with <code>dev.set_bearing(window_ms, mode)</code>.
+            </p>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its own sign against its own bearing, independently; the default</td></tr>
+                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs the whole aim, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
+              </tbody>
+            </table>
+            <p>
+              What <A href="/bindings/python/types#locks"><code>Locks</code></A> reports back under{' '}
+              <code>VECTOR</code> is there.
             </p>
           </div>
 
@@ -109,13 +139,13 @@ const Types: Component = () => {
           <div id="blanket" data-search-target>
             <div class="api-response-label">Blanket</div>
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th><th>Class</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Class</th><th>What direction picks</th></tr></thead>
               <tbody>
-                <tr><td><code>AIM</code></td><td><code>0</code></td><td>the X and Y cursor axes</td></tr>
-                <tr><td><code>WHEEL</code></td><td><code>1</code></td><td>the wheel</td></tr>
-                <tr><td><code>BUTTONS</code></td><td><code>2</code></td><td>every mouse button</td></tr>
-                <tr><td><code>KEYS</code></td><td><code>3</code></td><td>every keyboard key and modifier</td></tr>
-                <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td></tr>
+                <tr><td><code>AIM</code></td><td><code>0</code></td><td>the X and Y cursor axes</td><td>a sign, on each axis</td></tr>
+                <tr><td><code>WHEEL</code></td><td><code>1</code></td><td>the wheel</td><td>a sign</td></tr>
+                <tr><td><code>BUTTONS</code></td><td><code>2</code></td><td>every mouse button</td><td>an edge, on each button</td></tr>
+                <tr><td><code>KEYS</code></td><td><code>3</code></td><td>every keyboard key and modifier</td><td>an edge: <code>POSITIVE</code> blocks presses, <code>NEGATIVE</code> releases, <code>BOTH</code> both</td></tr>
+                <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td><td>nothing; media has no edges</td></tr>
               </tbody>
             </table>
             <p>These are ABI-local ordinals (matching the crate's Blanket order), not the clip auto-lock scope bits.</p>
@@ -263,6 +293,30 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
+          <div id="updatetarget" data-search-target>
+            <div class="api-response-label">UpdateTarget</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>DEVICE</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
+                <tr><td><code>HOST</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="imagestate" data-search-target>
+            <div class="api-response-label">ImageState</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>NEW</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
+                <tr><td><code>PENDING_VERIFY</code></td><td><code>1</code></td><td>Booted and on probation; the window <A href="/native/commands/update#rollback">rollback</A> lives in.</td></tr>
+                <tr><td><code>VALID</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
+                <tr><td><code>INVALID</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
+                <tr><td><code>ABORTED</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
+                <tr><td><code>UNKNOWN</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+              </tbody>
+            </table>
+          </div>
           <div id="edge" data-search-target>
             <div class="api-response-label">Edge</div>
             <table class="api-params">
@@ -299,7 +353,7 @@ const Types: Component = () => {
                 <tr><td><code>on</code></td><td><A href="/bindings/python/types#input"><code>Usage</code></A></td><td>the trigger usage (button, key, or media)</td></tr>
                 <tr><td><code>edge</code></td><td><A href="/bindings/python/types#edge"><code>Edge</code></A></td><td>which edge fires the action</td></tr>
                 <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs</td></tr>
-                <tr><td><code>consume</code></td><td><code>bool</code></td><td>swallow the physical edge so it doesn't pass through (default <code>False</code>)</td></tr>
+                <tr><td><code>consume</code></td><td><code>bool</code></td><td>suppress the physical edge so it does not reach the PC (default <code>False</code>)</td></tr>
               </tbody>
             </table>
             <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
@@ -445,13 +499,19 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               </tbody>
             </table>
             <p>
-              Matching is most-specific-first: an exact <code>(class, id)</code> beats a class
-              blanket, which beats <code>everything()</code>, and a named direction beats{' '}
+              Matching is most-specific-first: an exact <code>(class, id)</code> is matched before a class blanket, that before <code>everything()</code>, and a named direction before{' '}
               <code>BOTH</code>. The winning entry supplies the <code>capture</code>.
             </p>
             <p>
               <code>same_address</code> is true across two filters that differ only in{' '}
               <code>capture</code>, and false once one is narrowed to a direction.
+            </p>
+            <p>
+              The arguments are checked here, before they reach ctypes.{' '}
+              <code>with_direction</code>, <code>watch_axis</code>, <code>watch_class</code>,{' '}
+              <code>traffic</code>, and <code>traffic_class</code> want a member of their enum, and{' '}
+              <code>with_capture</code> a byte; anything else is a <code>ValueError</code> naming the
+              argument.
             </p>
             <div class="callout callout--warning">
               <p>
@@ -830,6 +890,32 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <CardHeader title="State & telemetry types" subtitle="Rate · Stats · Locks · CatchState · CatchEntry · ClockEstimate · ImperfectStatus · Counters · PortInfo" />
           <p>More query results, plus <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> from <A href="/bindings/python/api#connect"><code>find_ports()</code></A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
+          <div id="chipfirmware" data-search-target>
+            <div class="api-response-label">ChipFirmware</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>major</code>, <code>minor</code>, <code>patch</code></td><td><code>int</code></td><td>the version this chip is running</td></tr>
+                <tr><td><code>slot</code></td><td><code>int</code></td><td>which app slot it booted, <code>0</code> or <code>1</code></td></tr>
+                <tr><td><code>state</code></td><td><A href="/bindings/python/types#imagestate"><code>ImageState</code></A></td><td>confirmed, on probation, or rolled back</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="firmwareinfo" data-search-target>
+            <div class="api-response-label">FirmwareInfo (firmware_info())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>device</code></td><td><A href="/bindings/python/types#chipfirmware"><code>ChipFirmware</code></A></td><td>the PC-facing chip</td></tr>
+                <tr><td><code>host</code></td><td><code>ChipFirmware | None</code></td><td><code>None</code> when the host chip has not answered over the link</td></tr>
+                <tr><td><code>slot_size</code></td><td><code>int</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
+                <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
+                <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <div id="rate" data-search-target>
             <div class="api-response-label">Rate (query_rate())</div>
             <table class="api-params">
@@ -866,8 +952,30 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per active lock</td></tr>
-                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>test one <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A> + <A href="/bindings/python/types#direction"><code>Direction</code></A>; also true when a whole-class blanket covers it</td></tr>
+                <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per weighed direction</td></tr>
+                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction, which is not the figure a delta meets (it picks up one from each pair, multiplied)</td></tr>
+                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it. <code>BOTH</code> asks about the two fixed signs only, so name <code>WITH</code> or <code>AGAINST</code> to ask about one of those</td></tr>
+              </tbody>
+            </table>
+            <table class="api-params">
+              <thead><tr><th>Readback case</th><th>What <code>entries</code> holds</th></tr></thead>
+              <tbody>
+                <tr><td>a blanket key lock</td><td>one entry per blocked edge, never <code>BOTH</code></td></tr>
+                <tr><td>a media lock, blanket or specific</td><td><code>BOTH</code>, always</td></tr>
+                <tr><td>a relative direction under <A href="/bindings/python/types#bearing-mode"><code>BearingMode.VECTOR</code></A></td><td>the effective scale, the lower of X's and Y's, on both axes</td></tr>
+                <tr><td>96 entries reached</td><td>the rest is absent, with nothing marking it; see the native <A href="/native/commands/requests#locks">LOCKS</A> budget</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="scale-constants" data-search-target>
+            <div class="api-response-label">SCALE CONSTANTS</div>
+            <table class="api-params">
+              <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>keep none of the physical value</td></tr>
+                <tr><td><code>LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>keep all of it, untouched</td></tr>
+                <tr><td><code>LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling</td></tr>
               </tbody>
             </table>
           </div>
@@ -877,12 +985,33 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is locked (an axis or a usage)</td></tr>
-                <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class lock, where <code>target</code> names only the class</td></tr>
-                <tr><td><code>positive</code></td><td><code>bool</code></td><td>the +x / +y / wheel-up / press edge is locked</td></tr>
-                <tr><td><code>negative</code></td><td><code>bool</code></td><td>the -x / -y / wheel-down / release edge is locked</td></tr>
+                <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is weighed (an axis or a usage)</td></tr>
+                <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class entry, where <code>target</code> names only the class</td></tr>
+                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>which direction of the target this entry weighs</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept; a usage carries one bit, so the box stores the block or pass it renders and this never reads between them</td></tr>
+                <tr><td><code>is_block</code></td><td><code>bool</code></td><td><code>scale == 0</code>: blocked outright rather than weighed</td></tr>
               </tbody>
             </table>
+          </div>
+
+          <div id="bearing" data-search-target>
+            <div class="api-response-label">Bearing (query_bearing())</div>
+            <p>
+              What <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against;
+              see the native <A href="/native/commands/lock#bearing">bearing</A>.
+            </p>
+            <table class="api-params">
+              <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>window_ms</code></td><td><code>Optional[int]</code></td><td>how long an axis holds the direction of its last injected delta; <code>None</code> is off, leaving both relative directions inert</td></tr>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A></td><td>how the bearing is read</td></tr>
+                <tr><td><code>is_live</code></td><td><code>bool</code></td><td>whether a bearing is held at all</td></tr>
+              </tbody>
+            </table>
+            <p>
+              Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window. A box
+              that has been set boots at its own value.
+            </p>
           </div>
 
           <div id="catchstate" data-search-target>
@@ -964,6 +1093,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <tbody>
                 <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the selected mode</td></tr>
                 <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet</td></tr>
+                <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves the device's own</td></tr>
+                <tr><td><code>advertised_hz</code></td><td><code>int</code></td><td>what the clone's input endpoints advertise now, forced or native; 0 = no clone</td></tr>
+                <tr><td><code>force_active</code></td><td><code>bool</code></td><td>whether a forced interval is written into the descriptor being served</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
@@ -1112,7 +1244,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <p>
               A <code>CONTROL</code> event is one <em>completed transaction</em>, not one stage:{' '}
               <code>bytes</code> is <code>[setup 8][data…]</code> and <code>direction</code> says which
-              way the data stage went. Requests the box answers from its own descriptor cache still
+              way the data stage went. Requests the box serves from its own descriptor cache still
               produce an event.
             </p>
           </div>
@@ -1245,7 +1377,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>QueryTimeoutError</code></td><td><code>ERR_QUERY_TIMEOUT</code></td></tr>
                 <tr><td><code>DisconnectedError</code></td><td><code>ERR_DISCONNECTED</code></td></tr>
                 <tr><td><code>FrameTooLongError</code></td><td><code>ERR_FRAME_TOO_LONG</code></td></tr>
-                <tr><td><code>FlashToolError</code></td><td><code>ERR_FLASH_TOOL</code></td></tr>
+                <tr><td><code>UpdateError</code></td><td><code>ERR_UPDATE</code></td></tr>
                 <tr><td><code>InvalidArgError</code></td><td><code>ERR_INVALID_ARG</code></td></tr>
                 <tr><td><code>PanicError</code></td><td><code>ERR_PANIC</code></td></tr>
                 <tr><td><code>CatchTableFullError</code></td><td><code>ERR_CATCH_TABLE_FULL</code></td></tr>
@@ -1255,10 +1387,11 @@ except MediusError as e:     # any other failure
                 <tr><td><code>WildcardNotInputError</code></td><td><code>ERR_WILDCARD_NOT_INPUT</code></td></tr>
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td></tr>
                 <tr><td><code>ReservedIdError</code></td><td><code>ERR_RESERVED_ID</code></td></tr>
+                <tr><td><code>RelativeDirectionError</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td></tr>
               </tbody>
             </table>
             <p>
-              The last six are subscription refusals, raised before a frame reaches the box.
+              The last eight are argument refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
@@ -1269,6 +1402,8 @@ except MediusError as e:     # any other failure
                 <tr><td><code>NotAnInputFilterError</code></td><td>a traffic class passed to <code>input_events</code>, which cannot decode one</td></tr>
                 <tr><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code>; it covers traffic too</td></tr>
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge, which cannot be decoded into press and release</td></tr>
+                <tr><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel, which would address the whole class instead</td></tr>
+                <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
               </tbody>
             </table>
             <div class="callout callout--info">
@@ -1288,14 +1423,14 @@ except MediusError as e:     # any other failure
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0</code></td><td><code>ERR_DISCONNECTED</code></td><td><code>6</code></td></tr>
                 <tr><td><code>ERR_IO</code></td><td><code>1</code></td><td><code>ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td></tr>
-                <tr><td><code>ERR_NOT_FOUND</code></td><td><code>2</code></td><td><code>ERR_FLASH_TOOL</code></td><td><code>8</code></td></tr>
+                <tr><td><code>ERR_NOT_FOUND</code></td><td><code>2</code></td><td><code>ERR_UPDATE</code></td><td><code>8</code></td></tr>
                 <tr><td><code>ERR_NO_REPLY</code></td><td><code>3</code></td><td><code>ERR_INVALID_ARG</code></td><td><code>9</code></td></tr>
                 <tr><td><code>ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td><code>ERR_PANIC</code></td><td><code>10</code></td></tr>
                 <tr><td><code>ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td><code>ERR_UNKNOWN</code></td><td><code>11</code></td></tr>
-                <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>12</code></td><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td></tr>
-                <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>13</code></td><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>16</code></td></tr>
-                <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>14</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td></tr>
-                <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td><td><code>ERR_RESERVED_ID</code></td><td><code>18</code></td></tr>
+                <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>12</code></td><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>16</code></td></tr>
+                <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>13</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td></tr>
+                <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>14</code></td><td><code>ERR_RESERVED_ID</code></td><td><code>18</code></td></tr>
+                <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td></tr>
               </tbody>
             </table>
           </div>

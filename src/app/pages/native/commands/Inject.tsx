@@ -27,7 +27,7 @@ const Inject: Component = () => {
           <CardHeader title="INJECT" subtitle="Momentary-usage override" />
           <p>
             <code>INJECT</code> sets a per-usage <A href="/native/injection#state">override</A>, the
-            box's own held decision layered over the physical input.{' '}
+            box's own held level layered over the physical input.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x03</code>.
           </p>
           <pre class="api-signature">INJECT  0x03  ·  payload 4 bytes</pre>
@@ -64,7 +64,7 @@ const Inject: Component = () => {
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">RESULT THE PC SEES</div>
+          <div class="api-response-label">WHAT THE CLONE EMITS</div>
           <p>The two releases differ only when the user is physically holding the same input:</p>
           <table class="api-params">
             <thead>
@@ -72,7 +72,7 @@ const Inject: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>press</code></td><td>active</td><td>active</td></tr>
-              <tr><td><code>soft-release</code></td><td>inactive</td><td>active (physical wins)</td></tr>
+              <tr><td><code>soft-release</code></td><td>inactive</td><td>active (the physical bit passes)</td></tr>
               <tr><td><code>force-release</code></td><td>inactive</td><td>inactive (masks physical)</td></tr>
             </tbody>
           </table>
@@ -84,7 +84,7 @@ no click   no firmware click or chord; send a press, then your
 RESET      releases every override at once`}</pre>
           <div class="callout callout--warning">
             <p>
-              A usage the cloned device can't report is a silent no-op. Check{' '}
+              A usage the cloned device can't report reaches no report field. Check{' '}
               <A href="/native/commands/requests#caps"><code>CAPS</code></A> before you rely on it.
             </p>
           </div>
@@ -99,7 +99,7 @@ RESET      releases every override at once`}</pre>
             With <code>class = 0</code>, <code>id</code> is a semantic{' '}
             <A href="/native/commands/usage#buttons">button id</A> (0=Left, 1=Right, 2=Middle,
             3=Side1, 4=Side2), bound at clone time to the real mouse's buttons. The override sets that
-            button's bit in the report the PC sees.
+            button's bit in the emitted report.
           </p>
           <p>
             Library bindings:{' '}
@@ -122,7 +122,7 @@ RESET      releases every override at once`}</pre>
             With <code>class = 1</code>, <code>id</code> is a{' '}
             <A href="/native/commands/usage#keycodes">HID keyboard usage</A>. A usage of{' '}
             <code>0xE0</code>-<code>0xE7</code> folds into the modifier byte; anything else fills a
-            keycode slot (or sets its NKRO bit) in the report the PC sees.
+            keycode slot (or sets its NKRO bit) in the emitted report.
           </p>
           <p>
             Physical keys keep their slots, so injection never evicts the user's typing; past the

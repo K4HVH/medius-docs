@@ -308,3 +308,14 @@ pre code[class*="language-"] {
   margin: var(--g-spacing-xs) 0;
   background: var(--g-border-color-subtle);
 }
+
+/* Opt-in horizontal scroll for the few tables that outgrow a 390px card. Cards are
+   overflow: hidden, so without a wrapper the overflowing columns are unreachable. */
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: var(--g-spacing);
+}
+
+.table-scroll > table {
+  margin-bottom: 0;
+}

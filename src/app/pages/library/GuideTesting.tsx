@@ -71,7 +71,7 @@ fn logs_reach_the_stream() {
             There's no <code>AsyncDevice::with_mock</code>: build a mocked <code>Device</code>, then call{' '}
             <A href="/library/features/async"><code>into_async</code></A>. Drive the futures with{' '}
             <A href="/library/guides/calls#block-on"><code>block_on</code></A>, so the test needs no async
-            runtime. A <A href="/library/features/mock"><code>silent</code></A> box never answers, resolving
+            runtime. A <A href="/library/features/mock"><code>silent</code></A> box sends no reply, resolving
             the query to{' '}
             <A href="/library/types/errors"><code>Err(Error::QueryTimeout)</code></A>.
           </p>
@@ -80,7 +80,7 @@ fn logs_reach_the_stream() {
 use medius::{Device, Error, MockBox, Version};
 
 let mock = MockBox::new().with_version(Version {
-    proto_ver: 4, fw_major: 1, fw_minor: 2, fw_patch: 3, mac: [0; 6], name: "Loki".into(),
+    proto_ver: 5, fw_major: 1, fw_minor: 2, fw_patch: 3, mac: [0; 6], name: "Loki".into(),
 });
 let device = Device::with_mock(mock).into_async();
 let v = block_on(device.query_version())?;
