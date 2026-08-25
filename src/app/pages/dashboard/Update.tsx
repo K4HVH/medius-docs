@@ -44,7 +44,15 @@ const Update = () => {
     if (dash.status() === 'connected') void dash.readFirmwareInfo();
   });
 
-  const latest = () => releases()?.[0] ?? null;
+  // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
+  // during render, and there is no ErrorBoundary anywhere: one unguarded read freezes the page.
+  const latest = () => {
+    try {
+      return releases()?.[0] ?? null;
+    } catch {
+      return null;
+    }
+  };
   const lv = () => parseTag(latest()?.tag);
   const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
   const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
@@ -74,12 +82,14 @@ const Update = () => {
     dash.clearFlashResult();
     const wantDevice = which() !== 'mouse';
     const wantHost = which() !== 'main';
-    const da = deviceAsset();
-    const ha = hostAsset();
-    if (wantDevice && !da) return setErr('No main-chip update in this release.');
-    if (wantHost && !ha) return setErr('No mouse-side update in this release.');
     setBusy(true);
     try {
+      const da = deviceAsset();
+      const ha = hostAsset();
+      if ((wantDevice && !da) || (wantHost && !ha)) {
+        setErr("There's no update available right now. Try again in a few minutes.");
+        return;
+      }
       const images: { device?: Uint8Array; host?: Uint8Array } = {};
       if (wantDevice && da) images.device = await downloadAsset(da);
       if (wantHost && ha) images.host = await downloadAsset(ha);

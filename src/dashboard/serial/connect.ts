@@ -41,18 +41,20 @@ const TELLS_US: Record<ConnectVerdict['kind'], number> = {
   insecure: 0,
 };
 
-const nameOf = (e: unknown): string => {
-  try {
-    return typeof e === 'object' && e !== null && 'name' in e
-      ? String((e as { name: unknown }).name)
-      : '';
-  } catch {
-    // A getter on the thrown value is not a reason to lose the attempt.
-    return '';
-  }
-};
+const nameOf = (e: unknown): string =>
+  typeof e === 'object' && e !== null && 'name' in e ? String((e as { name: unknown }).name) : '';
 
 export function classifyConnectError(e: unknown): ConnectVerdict {
+  try {
+    return classify(e);
+  } catch {
+    // A thrown value can be hostile all the way down: a null prototype, a getter that throws, a
+    // Proxy that refuses instanceof. None of that may cost the page its only way forward.
+    return { kind: 'other', message: 'the browser gave no reason' };
+  }
+}
+
+function classify(e: unknown): ConnectVerdict {
   if (e instanceof BadProtoVerError) return { kind: 'old-firmware', version: e.version };
   if (e instanceof NoReplyError) return { kind: 'silent' };
   // Keyed on `name`, not on `instanceof DOMException`: a DOMException inherits from Error in a
