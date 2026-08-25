@@ -154,16 +154,27 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('rejects with BadProtoVerError on a mismatched protocol version', async () => {
+  it('rejects a mismatched protocol version, and carries the firmware that answered', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0])));
+        // RESP(VERSION): [selector][proto][major][minor][patch][mac 6B]. A v3.1.0 box speaks 4.
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 4, 3, 1, 0, 1, 2, 3, 4, 5, 6])));
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
-    await expect(link.handshake()).rejects.toBeInstanceOf(BadProtoVerError);
+    const err = await link.handshake().then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(BadProtoVerError);
+    expect((err as BadProtoVerError).version).toMatchObject({
+      protoVer: 4,
+      fwMajor: 3,
+      fwMinor: 1,
+      fwPatch: 0,
+    });
     await link.close();
   });
 
