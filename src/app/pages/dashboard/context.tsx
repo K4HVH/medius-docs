@@ -227,7 +227,10 @@ export const DashboardProvider: ParentComponent = (props) => {
       outcome = { ok: false, verdict: classifyConnectError(e) };
     }
 
-    if (disposed) {
+    // Something else may have moved on while the chooser and handshake ran -- a disconnect, or the
+    // setup wizard starting an install. Whoever changed the status owns it now; this link is not
+    // wanted and must not be installed over the top.
+    if (disposed || status() !== 'connecting') {
       if (outcome.ok) await outcome.link.close().catch(() => undefined);
       return;
     }
@@ -256,7 +259,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     setVerdict(null);
     poller.reset();
     setFlashProgress(null);
-    if (l) await l.close();
+    if (l) await l.close().catch(() => undefined);
   };
 
   const clearFlashResult = () => setFlashProgress(null);

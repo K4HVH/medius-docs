@@ -46,7 +46,15 @@ const Advanced = () => {
     setUnplugged(false);
   });
 
-  const latest = () => releases()?.[0] ?? null;
+  // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
+  // during render, and there is no ErrorBoundary anywhere: one unguarded read freezes the page.
+  const latest = () => {
+    try {
+      return releases()?.[0] ?? null;
+    } catch {
+      return null;
+    }
+  };
   const assetName = () => `medius_${chip()}${kind() === 'factory' ? '-factory' : ''}.bin`;
   const asset = () => latest()?.assets.find((a) => a.name === assetName()) ?? null;
   const file = () => files()[0] ?? null;
@@ -67,7 +75,10 @@ const Advanced = () => {
     setFiles(fs);
     const f = fs[0];
     if (!f) return setImage(null);
-    void f.arrayBuffer().then((b) => setImage(new Uint8Array(b)));
+    void f
+      .arrayBuffer()
+      .then((b) => setImage(new Uint8Array(b)))
+      .catch(() => setErr('That file could not be read.'));
   };
 
   const canFlash = () =>
@@ -127,7 +138,16 @@ const Advanced = () => {
                 <Button variant="primary" onClick={() => navigate('/dashboard')}>
                   Go to my box
                 </Button>
-                <Button variant="subtle" size="compact" onClick={() => setDone(false)}>
+                <Button
+                  variant="subtle"
+                  size="compact"
+                  onClick={() => {
+                    // Re-arm the gate: the screen above has just said to plug the other cable back
+                    // in, and the effect that resets this only fires on a chip CHANGE.
+                    setUnplugged(false);
+                    setDone(false);
+                  }}
+                >
                   Flash another
                 </Button>
               </div>

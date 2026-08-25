@@ -83,7 +83,15 @@ const Setup = () => {
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
 
-  const latest = () => releases()?.[0] ?? null;
+  // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
+  // during render, and there is no ErrorBoundary anywhere: one unguarded read freezes the page.
+  const latest = () => {
+    try {
+      return releases()?.[0] ?? null;
+    } catch {
+      return null;
+    }
+  };
   const counter = () => `Step ${STEPS.indexOf(step()) + 1} of ${STEPS.length}`;
   const pct = () => {
     const p = dash.flashProgress();
@@ -127,11 +135,15 @@ const Setup = () => {
       const image = await downloadAsset(asset);
       if (await dash.flashNative(port, image, 'factory')) {
         // The chip has just been rewritten, so anything still holding a link is holding a stale one.
-        // This also catches a connect that was in flight when the wizard started.
-        await dash.disconnect().catch(() => undefined);
+        // Not awaited: every state write in disconnect() is synchronous, and the port teardown it
+        // ends with has no timeout -- awaiting it can strand a finished install on "Installing...".
+        void dash.disconnect().catch(() => undefined);
         setStep(next);
+      } else {
+        // The chip was reset either way, so the link is just as dead on the failure path.
+        void dash.disconnect().catch(() => undefined);
+        setErr(dash.error() ?? `That did not finish. ${HOLD_BOTH}, then press Install.`);
       }
-      else setErr(dash.error() ?? `That did not finish. ${HOLD_BOTH}, then press Install.`);
     } catch (e) {
       // A cancel and an empty chooser are the same DOMException, and the second is far more likely:
       // the chip is not in update mode. Say the thing that fixes both rather than nothing.

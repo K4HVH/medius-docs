@@ -31,6 +31,7 @@ export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolea
   return (
     <Switch>
       <Match when={phase() === 'waiting'}>
+        <p><strong>Unplug every cable from the box.</strong></p>
         <PortDiagram out={['usb1', 'usb2', 'usb3']} />
         <div style={{ display: 'flex', 'align-items': 'center', gap: 'var(--g-spacing-sm)' }}>
           <Progress type="circular" size="sm" />
