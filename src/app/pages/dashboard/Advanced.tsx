@@ -53,6 +53,11 @@ const Advanced = () => {
   const [unplugged, setUnplugged] = createSignal(false);
 
   // Re-arm the unplug gate whenever the chosen chip changes.
+  // Leaving the release path abandons whatever the upload path complained about.
+  createEffect(() => {
+    if (source() !== 'upload') setFileErr(null);
+  });
+
   createEffect(() => {
     chip();
     setUnplugged(false);
@@ -71,7 +76,8 @@ const Advanced = () => {
       return null;
     }
   };
-  const assetName = () => `medius_${chip()}${kind() === 'factory' ? '-factory' : ''}.bin`;
+  const nameFor = (c: FlashChip, k: FlashKind) => `medius_${c}${k === 'factory' ? '-factory' : ''}.bin`;
+  const assetName = () => nameFor(chip(), kind());
   const asset = () => latest()?.assets.find((a) => a.name === assetName()) ?? null;
   const validationError = () => {
     const img = image();
@@ -116,6 +122,7 @@ const Advanced = () => {
 
   const flash = async () => {
     setErr(null);
+    setFileErr(null);
     dash.clearFlashResult();
     const target = { chip: chip(), kind: kind() };
     setFlashed(target);
@@ -124,14 +131,14 @@ const Advanced = () => {
       // Both chips flash over their own native USB in ROM download: the device chip on USB1, the
       // host chip on USB3, each entered by holding the button beside that socket while plugging in.
       const port = await requestRomPort();
-      const a = asset();
+      const a = latest()?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
       const ok = await dash.flashNative(port, img, target.kind);
       if (ok) setDone(true);
-      else setErr(dash.error() ?? `That did not finish. ${holdButton(chip() === 'host' ? 'usb3' : 'usb1')}, then press Flash.`);
+      else setErr(dash.error() ?? `That did not finish. ${holdButton(target.chip === 'host' ? 'usb3' : 'usb1')}, then press Flash.`);
     } catch (e) {
-      setErr(isUserCancel(e) ? `Nothing to flash. ${holdButton(chip() === 'host' ? 'usb3' : 'usb1')}, then press Flash.` : (e as Error).message);
+      setErr(isUserCancel(e) ? `Nothing to flash. ${holdButton(target.chip === 'host' ? 'usb3' : 'usb1')}, then press Flash.` : (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -252,6 +259,7 @@ const Advanced = () => {
                   accept=".bin"
                   maxSize={FLASH_SIZE_BYTES}
                   value={files()}
+                  disabled={busy()}
                   onChange={onFiles}
                   onError={(m: string) => {
                     rejectedThisPick = true;

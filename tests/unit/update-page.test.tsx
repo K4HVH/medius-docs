@@ -8,6 +8,8 @@ const mock = vi.hoisted(() => ({
   assets: [] as { name: string; size: number; url: string }[],
   outcome: 'verified' as 'verified' | 'sent' | 'failed',
   holdReleases: false,
+  error: null as string | null,
+  version: { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' },
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -16,8 +18,8 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     secure: true,
     status: () => mock.status,
     verdict: () => null,
-    error: () => null,
-    version: () => ({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }),
+    error: () => mock.error,
+    version: () => mock.version,
     flashProgress: () => null,
     connect: async () => {},
     disconnect: async () => {},
@@ -25,6 +27,13 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     readFirmwareInfo: async () => null,
     updateOverControl: async () => {
       mock.updates += 1;
+      // Mirrors the real one: the never-came-back path puts the instruction in the SHARED error, so
+      // it survives the user wandering to another tab.
+      if (mock.outcome === 'sent') {
+        mock.error =
+          'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.';
+        mock.status = 'disconnected';
+      }
       return mock.outcome;
     },
   }),
@@ -52,6 +61,8 @@ afterEach(() => {
   mock.assets = [];
   mock.outcome = 'verified';
   mock.holdReleases = false;
+  mock.error = null;
+  mock.version = { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' };
   navigate.mockClear();
 });
 
@@ -115,8 +126,6 @@ describe('Update', () => {
     // Both images missing: naming the main chip here answers a question the user did not ask, and
     // points at a button that dead-ends the same way.
     mock.assets = [];
-  mock.outcome = 'verified';
-  mock.holdReleases = false;
     const r = await runUpdate(/mouse-side only/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
     expect(r.container.textContent).not.toMatch(/nothing for the main chip/i);
@@ -163,6 +172,23 @@ describe('Update', () => {
     await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
     expect(r.container.textContent).not.toMatch(/verified/i);
     expect(r.container.textContent).toMatch(/unplug it, plug it back in/i);
+  });
+
+  it('a box that comes back on the OLD version is not called updated', async () => {
+    // The box reverts an image that will not boot, comes back, and handshakes perfectly well. The
+    // handshake is not evidence that anything changed.
+    mock.assets = [dev, host];
+    mock.version = { protoVer: 5, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [], name: '' };
+    const r = await runUpdate(/update both chips/i);
+    await waitFor(() => expect(r.container.textContent).toMatch(/not the version that was sent/i));
+    expect(r.container.textContent).not.toMatch(/updated and verified/i);
+  });
+
+  it('a failed update keeps a way back to the chip choice', async () => {
+    mock.assets = [dev, host];
+    mock.outcome = 'failed';
+    const r = await runUpdate(/update both chips/i);
+    await waitFor(() => expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy());
   });
 
   it('the Update button waits for the release list instead of claiming there is none', async () => {
