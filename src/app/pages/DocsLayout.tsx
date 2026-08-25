@@ -13,7 +13,7 @@ import {
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
-  BsBoxes, BsFiletypePy,
+  BsBoxes, BsFiletypePy, BsUsbPlug,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -151,6 +151,7 @@ const allBindingsTabs: TabOption[] = [
 ];
 
 const dashboardTabs: TabOption[] = [
+  { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },

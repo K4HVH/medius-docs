@@ -1,6 +1,7 @@
 import { Match, Switch, createEffect, createSignal, onCleanup } from 'solid-js';
 import { Progress } from '../../../components/feedback/Progress';
 import { Button } from '../../../components/inputs/Button';
+import { PortDiagram } from './PortDiagram';
 
 // Gate before a mouse-side (USB3) flash. The browser fires a serial `disconnect`
 // when the box's USB2 device is removed, but it CANNOT see USB1 (the HID clone).
@@ -14,7 +15,6 @@ export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolea
   const [phase, setPhase] = createSignal<'waiting' | 'confirm'>(
     props.autoWatch === false ? 'confirm' : 'waiting',
   );
-  const [ack, setAck] = createSignal(false);
   let scheduled = false;
 
   createEffect(() => {
@@ -44,19 +44,13 @@ export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolea
       </Match>
 
       <Match when={phase() === 'confirm'}>
+        <PortDiagram out={['usb1', 'usb2', 'usb3']} />
         <div class="callout callout--danger">
-          <p><strong>Make sure every cable is out, including USB1.</strong></p>
-          <p>The browser can't reach the USB1 (game PC) port, so check it yourself. USB1 and USB3 plugged into the same PC can cause damage.</p>
+          USB1 and USB3 in the same computer can damage it.
         </div>
-        <label style={{ display: 'flex', 'align-items': 'center', gap: 'var(--g-spacing-sm)' }}>
-          <input type="checkbox" checked={ack()} onChange={(e) => setAck(e.currentTarget.checked)} />
-          Every cable is unplugged, including USB1.
-        </label>
-        <div style={{ 'margin-top': 'var(--g-spacing-sm)' }}>
-          <Button variant="primary" disabled={!ack()} onClick={() => props.onUnplugged()}>
-            Continue
-          </Button>
-        </div>
+        <Button variant="primary" onClick={() => props.onUnplugged()}>
+          Every cable is unplugged
+        </Button>
       </Match>
     </Switch>
   );

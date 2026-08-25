@@ -1,25 +1,22 @@
-/// <reference types="w3c-web-serial" />
 import { Match, Show, Switch, createEffect, createResource, createSignal, onCleanup } from 'solid-js';
-import { A, useNavigate } from '@solidjs/router';
+import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Progress } from '../../../components/feedback/Progress';
 import { Chip } from '../../../components/display/Chip';
 import { versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
-import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
+import { ConnectPanel } from './ConnectPanel';
 import { PortDiagram } from './PortDiagram';
-import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
-type Step = 'choose' | 'update' | 'setupMain' | 'setupMouse' | 'done';
-const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
+type Step = 'choose' | 'update' | 'done';
 const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
   return m ? { major: +m[1], minor: +m[2], patch: +m[3] } : null;
 };
-const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
+const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Update = () => {
   const dash = useDashboard();
@@ -29,14 +26,6 @@ const Update = () => {
   const [which, setWhich] = createSignal<'both' | 'main' | 'mouse'>('both');
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
-  const [unplugged, setUnplugged] = createSignal(false);
-
-  // Re-arm the unplug gate on each step that needs a fresh BOOT-button plug-in. Only the first-install
-  // path has one now: updating an existing box never touches a cable.
-  createEffect(() => {
-    const s = step();
-    if (s === 'setupMain' || s === 'setupMouse') setUnplugged(false);
-  });
 
   // An update writes flash on both chips, so a refresh mid-transfer leaves a half-written spare slot.
   // Nothing is bricked (the running slot is untouched and the box times the session out), but the
@@ -59,10 +48,6 @@ const Update = () => {
   const lv = () => parseTag(latest()?.tag);
   const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
   const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
-  const deviceFactoryAsset = () =>
-    latest()?.assets.find((a) => a.name === 'medius_device-factory.bin') ?? null;
-  const hostFactoryAsset = () =>
-    latest()?.assets.find((a) => a.name === 'medius_host-factory.bin') ?? null;
   const upToDate = () => {
     const c = dash.version();
     const l = lv();
@@ -108,34 +93,6 @@ const Update = () => {
     }
   };
 
-  // First-time / repair install: write the full factory image to a chip over its
-  // own USB (BOOT-button download). Works from a stock, blank, or bricked box,
-  // where the control link and reboot-over-cable are unavailable.
-  const setupChip = async (
-    asset: ReturnType<typeof deviceFactoryAsset>,
-    missing: string,
-    next: Step,
-  ) => {
-    setErr(null);
-    dash.clearFlashResult();
-    if (!asset) return setErr(missing);
-    setBusy(true);
-    try {
-      const port = await requestRomPort();
-      const ok = await dash.flashNative(port, await downloadAsset(asset), 'factory');
-      if (ok) setStep(next);
-      else setErr(dash.error() ?? "That didn't finish. Hold the BOOT button and try again.");
-    } catch (e) {
-      if (!isUserCancel(e)) setErr((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  const setupMain = () =>
-    setupChip(deviceFactoryAsset(), 'No main-chip factory image in this release.', 'setupMouse');
-  const setupMouse = () =>
-    setupChip(hostFactoryAsset(), 'No mouse-side factory image in this release.', 'done');
-
   return (
     <>
       <Show when={!dash.supported}>
@@ -144,7 +101,7 @@ const Update = () => {
 
       <Show when={dash.status() === 'flashing'}>
         <Card>
-          <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
+          <CardHeader title="Updating" subtitle="Don't unplug or leave this page" />
           <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
         </Card>
       </Show>
@@ -160,29 +117,7 @@ const Update = () => {
             <Match when={step() === 'choose'}>
               <Switch>
                 <Match when={dash.status() !== 'connected'}>
-                  <p>Already running Medius? Plug in like this and connect.</p>
-                  <PortDiagram plug={['usb1', 'usb2']} />
-                  <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                    <Button
-                      variant="primary"
-                      loading={dash.status() === 'connecting'}
-                      disabled={!dash.supported || busy() || dash.status() === 'connecting'}
-                      onClick={() => void dash.connect()}
-                    >
-                      {dash.status() === 'connecting'
-                        ? 'Connecting...'
-                        : dash.status() === 'error'
-                          ? 'Try again'
-                          : 'Connect'}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      disabled={busy()}
-                      onClick={() => { void dash.disconnect(); setErr(null); setStep('setupMain'); }}
-                    >
-                      Set up a new box
-                    </Button>
-                  </div>
+                  <ConnectPanel />
                 </Match>
                 <Match when={dash.status() === 'connected'}>
                   <p>
@@ -195,7 +130,7 @@ const Update = () => {
                       {upToDate() ? ', up to date.' : '.'}
                     </Show>
                   </p>
-                  <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <div style={row}>
                     <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
                       Update both chips
                     </Button>
@@ -215,19 +150,15 @@ const Update = () => {
                 Everything happens over the cable you are already connected on. The mouse stops working
                 for a few seconds, then comes back.
               </p>
-              <PortDiagram plug={['usb1', 'usb2']} />
-              <Show
-                when={dash.status() === 'connected'}
-                fallback={
-                  <p style={muted}>Not connected. <A href="/dashboard">Connect first</A>.</p>
-                }
-              >
-                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+              <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
+              <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
+                <div style={row}>
                   <Button variant="primary" disabled={busy()} onClick={() => void runUpdate()}>
                     {busy() ? 'Updating...' : 'Update'}
                   </Button>
                   <Button
-                    variant="secondary"
+                    variant="subtle"
+                    size="compact"
                     disabled={busy()}
                     onClick={() => { setErr(null); setStep('choose'); }}
                   >
@@ -237,79 +168,21 @@ const Update = () => {
               </Show>
             </Match>
 
-            <Match when={step() === 'setupMain'}>
-              <p><strong>Step 1 of 2: main chip.</strong></p>
-              <Show
-                when={unplugged()}
-                fallback={<UnplugWatch autoWatch={false} onUnplugged={() => setUnplugged(true)} />}
-              >
-                <PortDiagram plug={['usb1']} boot="main" />
-                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Button variant="primary" disabled={busy()} onClick={() => void setupMain()}>
-                    Install
-                  </Button>
-                  <Button variant="secondary" disabled={busy()} onClick={() => { setErr(null); setStep('choose'); }}>
-                    Back
-                  </Button>
-                </div>
-              </Show>
-            </Match>
-
-            <Match when={step() === 'setupMouse'}>
-              <p><strong>Step 2 of 2: mouse-side chip.</strong></p>
-              <Show
-                when={unplugged()}
-                fallback={<UnplugWatch autoWatch={false} onUnplugged={() => setUnplugged(true)} />}
-              >
-                <PortDiagram plug={['usb3']} boot="mouse" />
-                <div class="callout callout--danger">Never plug USB1 and USB3 into the same PC.</div>
-                <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Button variant="primary" disabled={busy()} onClick={() => void setupMouse()}>
-                    Install
-                  </Button>
-                  <Button variant="secondary" disabled={busy()} onClick={() => { setErr(null); setStep('choose'); }}>
-                    Back
-                  </Button>
-                </div>
-              </Show>
-            </Match>
-
             <Match when={step() === 'done'}>
-              <Show
-                when={dash.status() === 'connected'}
-                fallback={
-                  <>
-                    <div class="callout callout--info">Firmware installed. Plug in like this.</div>
-                    <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
-                  </>
-                }
-              >
+              <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                 <div class="callout callout--info">
                   Updated and verified.{' '}
                   <Show when={dash.version()}>
                     {(v) => <>Now on <strong>v{versionString(v())}</strong>.</>}
                   </Show>
                 </div>
-              </Show>
-              <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap', 'margin-top': 'var(--g-spacing-sm)' }}>
-                <Show when={dash.status() !== 'connected'}>
-                  <Button
-                    variant="primary"
-                    loading={dash.status() === 'connecting'}
-                    disabled={!dash.supported || dash.status() === 'connecting'}
-                    onClick={() => void dash.connect()}
-                  >
-                    {dash.status() === 'connecting'
-                      ? 'Connecting...'
-                      : dash.status() === 'error'
-                        ? 'Try again'
-                        : 'Connect'}
-                  </Button>
-                </Show>
-                <Button variant="secondary" onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}>
+                <Button
+                  variant="primary"
+                  onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}
+                >
                   Finish
                 </Button>
-              </div>
+              </Show>
             </Match>
           </Switch>
         </Card>

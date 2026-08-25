@@ -1,5 +1,5 @@
 import { For, Match, Show, Switch, createEffect } from 'solid-js';
-import { A, useNavigate } from '@solidjs/router';
+import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -7,7 +7,7 @@ import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
 import DeviceOptions from './DeviceOptions';
-import { PortDiagram } from './PortDiagram';
+import { ConnectPanel } from './ConnectPanel';
 import '../../../styles/docs.css';
 
 const healthItems = (h: Health) => [
@@ -29,11 +29,8 @@ const col = {
   gap: 'var(--g-spacing)',
 } as const;
 
-const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
-
 const Device = () => {
   const dash = useDashboard();
-  const navigate = useNavigate();
 
   let logEl: HTMLPreElement | undefined;
   let follow = true;
@@ -88,27 +85,8 @@ const Device = () => {
                   <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
                 </Match>
 
-                <Match when={dash.status() === 'error'}>
-                  <div class="callout callout--danger" role="alert">{dash.error()}</div>
-                  <div style={row}>
-                    <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                      Try again
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => { void dash.disconnect(); navigate('/dashboard/update'); }}
-                    >
-                      Install Medius
-                    </Button>
-                  </div>
-                </Match>
-
-                <Match when={dash.status() === 'disconnected'}>
-                  <p>Plug in like this, then connect.</p>
-                  <PortDiagram plug={['usb1', 'usb2']} />
-                  <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                    Connect
-                  </Button>
+                <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
+                  <ConnectPanel />
                 </Match>
               </Switch>
             </div>
