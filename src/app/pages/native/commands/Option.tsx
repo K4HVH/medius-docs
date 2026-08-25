@@ -241,7 +241,7 @@ const Option: Component = () => {
             <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>
             <tbody>
               <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
-              <tr><td>target Hz</td><td>Writes <code>1000/n</code> onto every HID interrupt-IN endpoint of the served descriptor and polls the device at that same interval</td></tr>
+              <tr><td>target Hz</td><td>Writes the <code>bInterval</code> nearest that rate onto every HID interrupt-IN endpoint of the served descriptor, and polls the device at that same interval</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
