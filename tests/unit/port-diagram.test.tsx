@@ -7,7 +7,7 @@ afterEach(cleanup);
 describe('PortDiagram', () => {
   it('marks the cable that has to come out', () => {
     const { getByText, container } = render(() => <PortDiagram plug={['usb3']} out={['usb1']} />);
-    expect(getByText('unplug')).toBeTruthy();
+    expect(getByText('must be empty')).toBeTruthy();
     expect(container.textContent).toContain('USB1');
   });
 
@@ -27,6 +27,6 @@ describe('PortDiagram', () => {
 
   it('a port in no list at all is dimmed and left out', () => {
     const { getAllByText } = render(() => <PortDiagram plug={['usb1']} />);
-    expect(getAllByText('leave out')).toHaveLength(2);
+    expect(getAllByText('nothing here')).toHaveLength(2);
   });
 });

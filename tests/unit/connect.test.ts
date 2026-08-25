@@ -52,7 +52,21 @@ describe('classifyConnectError', () => {
   it('a port that will not open is busy, however Web Serial words it', () => {
     expect(classifyConnectError(new Error('Failed to open serial port.'))).toEqual({ kind: 'busy' });
     expect(classifyConnectError(new Error('The port is already open.'))).toEqual({ kind: 'busy' });
+    // Keyed on the name, because a browser's DOMException extends Error and its message is the
+    // bare text: reading the message alone only worked under the test environment's split realms.
     expect(classifyConnectError(new DOMException('x', 'NetworkError'))).toEqual({ kind: 'busy' });
+    expect(classifyConnectError(new DOMException('y', 'InvalidStateError'))).toEqual({ kind: 'busy' });
+    expect(classifyConnectError({ name: 'NotFoundError', message: 'nope' })).toEqual({
+      kind: 'no-port',
+    });
+  });
+
+  it('a browser that wants another click says so instead of leaking its own sentence', () => {
+    const v = classifyConnectError(
+      new DOMException('Must be handling a user gesture to show a permission request.', 'SecurityError'),
+    );
+    expect(v.kind).toBe('other');
+    expect(v.kind === 'other' && v.message).toMatch(/another click/i);
   });
 
   it('anything else keeps its own message', () => {
@@ -153,6 +167,83 @@ describe('attemptConnect', () => {
       }),
     );
     expect(r).toEqual({ ok: false, verdict: { kind: 'old-firmware', version: version(4) } });
+  });
+
+  it('keeps looking past a granted port that is the wrong box', async () => {
+    const wrong = port('wrong');
+    const right = port('right');
+    const choose = vi.fn();
+    const r = await attemptConnect(
+      deps({
+        granted: async () => [wrong, right],
+        choose,
+        attach: async (p) => {
+          if (p === wrong) throw new NoReplyError();
+          return { link: 'L', version: version(5) };
+        },
+      }),
+    );
+    expect(r).toEqual({ ok: true, port: right, link: 'L', version: version(5) });
+    expect(choose).not.toHaveBeenCalled();
+  });
+
+  it('skipGranted ignores what the browser remembers and asks, which is how a retry escapes', async () => {
+    const remembered = port('remembered');
+    const picked = port('picked');
+    const granted = vi.fn(async () => [remembered]);
+    const r = await attemptConnect(
+      deps({
+        granted,
+        choose: async () => picked,
+        attach: async (p) => {
+          if (p === remembered) throw new NoReplyError();
+          return { link: 'L', version: version(5) };
+        },
+      }),
+      { skipGranted: true },
+    );
+    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(5) });
+    expect(granted).not.toHaveBeenCalled();
+  });
+
+  it('a cancelled chooser keeps the better answer a granted port already gave', async () => {
+    const r = await attemptConnect(
+      deps({
+        granted: async () => [port('held')],
+        attach: async () => {
+          throw new Error('Failed to open serial port.');
+        },
+      }),
+    );
+    expect(r).toEqual({ ok: false, verdict: { kind: 'busy' } });
+  });
+
+  it('a listing that rejects falls through to the chooser instead of escaping', async () => {
+    const r = await attemptConnect(
+      deps({
+        granted: async () => {
+          throw new Error('the document is not fully active');
+        },
+        choose: async () => port('p'),
+        attach: async () => ({ link: 'L', version: version(5) }),
+      }),
+    );
+    expect(r).toEqual({ ok: true, port: port('p'), link: 'L', version: version(5) });
+  });
+
+  it('a detach that throws does not escape the attempt', async () => {
+    const r = await attemptConnect(
+      deps({
+        granted: async () => [port('a')],
+        detach: async () => {
+          throw new Error('port would not close');
+        },
+        attach: async () => {
+          throw new Error('Failed to open serial port.');
+        },
+      }),
+    );
+    expect(r).toEqual({ ok: false, verdict: { kind: 'busy' } });
   });
 
   it('closes the port it could not use', async () => {
