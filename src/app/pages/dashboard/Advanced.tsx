@@ -36,8 +36,20 @@ const Advanced = () => {
   const [files, setFiles] = createSignal<File[]>([]);
   const [image, setImage] = createSignal<Uint8Array | null>(null);
   const [done, setDone] = createSignal(false);
+  // What was actually written, captured when the flash starts. Reading the live combobox afterwards
+  // let a mid-flash switch write an app image at offset 0 and name the wrong cable on the way out.
+  const [flashed, setFlashed] = createSignal<{ chip: FlashChip; kind: FlashKind }>({
+    chip: 'device',
+    kind: 'factory',
+  });
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
+  // Kept apart from `err` so switching chip clears the flash failure that named the other socket
+  // without also wiping why the chosen file was refused.
+  const [fileErr, setFileErr] = createSignal<string | null>(null);
+  // FileUpload calls onError and THEN onChange for the same selection, so onFiles has to know a
+  // rejection has just landed. Covers a mixed drop too, where one file is kept and one refused.
+  let rejectedThisPick = false;
   const [unplugged, setUnplugged] = createSignal(false);
 
   // Re-arm the unplug gate whenever the chosen chip changes.
@@ -45,7 +57,8 @@ const Advanced = () => {
     chip();
     setUnplugged(false);
     // The old failure named the other chip's socket; leaving it up puts two contradictory
-    // hold-this-button instructions on screen at once.
+    // hold-this-button instructions on screen at once. `fileErr` is untouched: it is about the file,
+    // which the chip has nothing to do with.
     setErr(null);
   });
 
@@ -81,11 +94,10 @@ const Advanced = () => {
     const mine = ++pick;
     setFiles(fs);
     setImage(null);
+    if (!rejectedThisPick) setFileErr(null);
+    rejectedThisPick = false;
     const f = fs[0];
-    // No file means FileUpload rejected everything and has just called onError. Clearing here would
-    // wipe that message in the same tick it was set, which is worse than the silence it replaced.
     if (!f) return;
-    setErr(null);
     void f
       .arrayBuffer()
       .then((b) => {
@@ -95,7 +107,7 @@ const Advanced = () => {
       .catch(() => {
         if (mine !== pick) return;
         setImage(null);
-        setErr('That file could not be read. Pick it again.');
+        setFileErr('That file could not be read. Pick it again.');
       });
   };
 
@@ -105,6 +117,8 @@ const Advanced = () => {
   const flash = async () => {
     setErr(null);
     dash.clearFlashResult();
+    const target = { chip: chip(), kind: kind() };
+    setFlashed(target);
     setBusy(true);
     try {
       // Both chips flash over their own native USB in ROM download: the device chip on USB1, the
@@ -113,7 +127,7 @@ const Advanced = () => {
       const a = asset();
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
-      const ok = await dash.flashNative(port, img, kind());
+      const ok = await dash.flashNative(port, img, target.kind);
       if (ok) setDone(true);
       else setErr(dash.error() ?? `That did not finish. ${holdButton(chip() === 'host' ? 'usb3' : 'usb1')}, then press Flash.`);
     } catch (e) {
@@ -142,8 +156,8 @@ const Advanced = () => {
       <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
         <Card>
           <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
-          <Show when={err()}>
-            <div class="callout callout--danger" role="alert">{err()}</div>
+          <Show when={err() ?? fileErr()}>
+            {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
           </Show>
 
           <Switch>
@@ -152,7 +166,7 @@ const Advanced = () => {
                 Take the cable you just used out of this computer first. USB1 and USB3 plugged into
                 the same computer at once can kill it.
               </div>
-              <PortDiagram out={chip() === 'host' ? ['usb3'] : ['usb1']} />
+              <PortDiagram out={flashed().chip === 'host' ? ['usb3'] : ['usb1']} />
               <div class="callout callout--info">Then plug in like this.</div>
               <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
               <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
@@ -182,6 +196,7 @@ const Advanced = () => {
                   { value: 'host', label: 'Mouse-side chip (USB3)' },
                 ]}
                 value={chip()}
+                disabled={busy()}
                 onChange={(v) => setChip(v as FlashChip)}
               />
 
@@ -192,6 +207,7 @@ const Advanced = () => {
                   { value: 'app', label: 'Application - app only at 0x10000' },
                 ]}
                 value={kind()}
+                disabled={busy()}
                 onChange={(v) => setKind(v as FlashKind)}
               />
 
@@ -202,6 +218,7 @@ const Advanced = () => {
                   { value: 'upload', label: 'Upload a file' },
                 ]}
                 value={source()}
+                disabled={busy()}
                 onChange={(v) => setSource(v as 'release' | 'upload')}
               />
 
@@ -236,7 +253,10 @@ const Advanced = () => {
                   maxSize={FLASH_SIZE_BYTES}
                   value={files()}
                   onChange={onFiles}
-                  onError={(m: string) => setErr(m)}
+                  onError={(m: string) => {
+                    rejectedThisPick = true;
+                    setFileErr(m);
+                  }}
                   label="Firmware .bin"
                 />
                 <Show when={kind() === 'app'}>

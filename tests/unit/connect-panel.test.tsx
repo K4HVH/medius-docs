@@ -109,6 +109,15 @@ describe('ConnectPanel', () => {
     expect(primaries).toHaveLength(1);
   });
 
+  it('an update failure is shown while merely disconnected, not only in an error state', () => {
+    // An update whose box never came back leaves status 'disconnected', so gating the callout on
+    // 'error' hid the one message that says what to do.
+    mock.status = 'disconnected';
+    mock.error = 'the box did not come back on its own';
+    const { getByRole } = render(() => <ConnectPanel />);
+    expect(getByRole('alert').textContent).toContain('the box did not come back on its own');
+  });
+
   it('a flash failure is shown even when an older connect verdict is still set', () => {
     // The verdict used to win and the flash reason was dropped: connect with no box, then fail an
     // update on another tab, then come back here.

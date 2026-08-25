@@ -72,7 +72,13 @@ export interface DashboardContextValue {
   flashLog: Accessor<string[]>;
   firmwareInfo: Accessor<FirmwareInfo | null>;
   readFirmwareInfo: () => Promise<FirmwareInfo | null>;
-  updateOverControl: (images: { device?: Uint8Array; host?: Uint8Array }) => Promise<boolean>;
+  // 'verified' only when the box came back and answered. 'sent' means the transfer and the activate
+  // succeeded but nothing has confirmed what is running now -- the box reverts an image that will
+  // not boot, so claiming a version here would be a claim nothing checked.
+  updateOverControl: (images: {
+    device?: Uint8Array;
+    host?: Uint8Array;
+  }) => Promise<'verified' | 'sent' | 'failed'>;
   flashNative: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<boolean>;
   clearFlashResult: () => void;
   deviceLog: Accessor<string[]>;
@@ -285,13 +291,13 @@ export const DashboardProvider: ParentComponent = (props) => {
   const updateOverControl = async (images: {
     device?: Uint8Array;
     host?: Uint8Array;
-  }): Promise<boolean> => {
+  }): Promise<'verified' | 'sent' | 'failed'> => {
     const l = link();
     if (!l) {
       setError('Connect to the box before updating.');
-      return false;
+      return 'failed';
     }
-    if (!images.device && !images.host) return false;
+    if (!images.device && !images.host) return 'failed';
     setError(null);
     setFlashLog([]);
     setStatus('flashing');
@@ -321,14 +327,11 @@ export const DashboardProvider: ParentComponent = (props) => {
       const reconnected = await tryReconnect(ctrlPort);
       setFlashProgress({ phase: 'done' });
       if (!reconnected) {
-        setError(
-          'The new firmware is installed, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
-        );
         setStatus('disconnected');
-      } else {
-        await readFirmwareInfo();
+        return 'sent';
       }
-      return true;
+      await readFirmwareInfo();
+      return 'verified';
     } catch (e) {
       // A refused activate stops at the host chip, and whatever is staged stays armed: the next
       // activate would commit it alone and leave the two chips on different versions. Disarm it,
@@ -349,7 +352,7 @@ export const DashboardProvider: ParentComponent = (props) => {
       }
       setError(flashErrorText(e));
       setStatus('error');
-      return false;
+      return 'failed';
     }
   };
 

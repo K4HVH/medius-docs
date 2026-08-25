@@ -53,7 +53,7 @@ Entering download mode:
   Target 0 = device chip to ROM download, target 1 = host chip to ROM download (relayed over
   the 5 Mbaud inter-chip UART), targets 2/3 = reboot to run. The chip force-boots into ROM
   via `RTC_CNTL_FORCE_DOWNLOAD_BOOT`. Then esptool writes with no-reset.
-- Blank/bricked: disconnect all USB, hold the button beside the socket you are plugging in, replug. Both chips enumerate as
+- Blank/bricked: disconnect all USB, hold the button beside the socket you are plugging in, replug. That chip enumerates as
   native ESP32-S3 ROM devices (303A:0009). Then esptool writes.
 
 Two transports the dashboard handles:
