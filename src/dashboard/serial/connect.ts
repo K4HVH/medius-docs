@@ -27,34 +27,83 @@ export type ConnectOutcome<L> =
   | { ok: true; port: SerialPort; link: L; version: Version }
   | { ok: false; verdict: ConnectVerdict };
 
-const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
+// How much a failure tells us about the box itself. A port that opened and then answered wrongly,
+// or not at all, is talking about this device. One that would not open says nothing about it.
+const TELLS_US: Record<ConnectVerdict['kind'], number> = {
+  'old-firmware': 4,
+  silent: 3,
+  busy: 2,
+  other: 1,
+  'no-port': 0,
+  unsupported: 0,
+  insecure: 0,
+};
+
+const nameOf = (e: unknown): string =>
+  typeof e === 'object' && e !== null && 'name' in e ? String((e as { name: unknown }).name) : '';
 
 export function classifyConnectError(e: unknown): ConnectVerdict {
   if (e instanceof BadProtoVerError) return { kind: 'old-firmware', version: e.version };
   if (e instanceof NoReplyError) return { kind: 'silent' };
-  if (isUserCancel(e)) return { kind: 'no-port' };
+  // Keyed on `name`, not on `instanceof DOMException`: a DOMException inherits from Error in a
+  // browser, so its message is the bare text and the name is the only thing that survives.
+  const name = nameOf(e);
   const message = e instanceof Error ? e.message : String(e);
-  if (/already open|failed to open|access denied|networkerror/i.test(message)) {
-    return { kind: 'busy' };
+  if (name === 'NotFoundError') return { kind: 'no-port' };
+  if (name === 'NetworkError' || name === 'InvalidStateError') return { kind: 'busy' };
+  if (/already open|failed to open|access denied/i.test(message)) return { kind: 'busy' };
+  if (name === 'SecurityError') {
+    return { kind: 'other', message: 'The browser wants another click before it will ask.' };
   }
   return { kind: 'other', message };
 }
 
-export async function attemptConnect<L>(deps: ConnectDeps<L>): Promise<ConnectOutcome<L>> {
+const better = (a: ConnectVerdict | null, b: ConnectVerdict): ConnectVerdict =>
+  a && TELLS_US[a.kind] >= TELLS_US[b.kind] ? a : b;
+
+/**
+ * Try to reach a box. `skipGranted` goes straight to the chooser, which is how a retry escapes a
+ * granted port that is the wrong device: without it a single silent CH343 the browser remembers
+ * would answer every future attempt and the real box could never be picked.
+ */
+export async function attemptConnect<L>(
+  deps: ConnectDeps<L>,
+  opts: { skipGranted?: boolean } = {},
+): Promise<ConnectOutcome<L>> {
   if (!deps.supported()) return { ok: false, verdict: { kind: 'unsupported' } };
   if (!deps.secure()) return { ok: false, verdict: { kind: 'insecure' } };
 
-  for (const p of await deps.granted()) {
+  const drop = async (port: SerialPort) => {
     try {
-      const { link, version } = await deps.attach(p);
-      return { ok: true, port: p, link, version };
-    } catch (e) {
-      await deps.detach(p);
-      const verdict = classifyConnectError(e);
-      // A grant that will not open is either a box that is not on this machine or one another page
-      // holds, and Web Serial words both the same way, so fall through and let the chooser settle
-      // it. A port that DID open has answered about this box, and that answer stands.
-      if (verdict.kind !== 'busy' && verdict.kind !== 'other') return { ok: false, verdict };
+      await deps.detach(port);
+    } catch {
+      // A port that will not let go is not a reason to abandon the attempt.
+    }
+  };
+
+  let best: ConnectVerdict | null = null;
+
+  if (!opts.skipGranted) {
+    let ports: SerialPort[] = [];
+    try {
+      ports = await deps.granted();
+    } catch {
+      // Listing can reject on a page the browser has parked. Fall through to the chooser.
+      ports = [];
+    }
+    for (const p of ports) {
+      try {
+        const { link, version } = await deps.attach(p);
+        return { ok: true, port: p, link, version };
+      } catch (e) {
+        await drop(p);
+        best = better(best, classifyConnectError(e));
+      }
+    }
+    // A port that opened has answered about this box. Report that rather than making someone who
+    // has one box pick it out of a dialog again.
+    if (best && (best.kind === 'old-firmware' || best.kind === 'silent')) {
+      return { ok: false, verdict: best };
     }
   }
 
@@ -62,13 +111,17 @@ export async function attemptConnect<L>(deps: ConnectDeps<L>): Promise<ConnectOu
   try {
     picked = await deps.choose();
   } catch (e) {
-    return { ok: false, verdict: classifyConnectError(e) };
+    const verdict = classifyConnectError(e);
+    // An empty chooser and a cancelled one are the same error, and both say less than a grant that
+    // failed to open. Keep the better answer.
+    if (verdict.kind === 'no-port' && best) return { ok: false, verdict: best };
+    return { ok: false, verdict };
   }
   try {
     const { link, version } = await deps.attach(picked);
     return { ok: true, port: picked, link, version };
   } catch (e) {
-    await deps.detach(picked);
+    await drop(picked);
     return { ok: false, verdict: classifyConnectError(e) };
   }
 }

@@ -3,15 +3,19 @@ import { render, cleanup } from '@solidjs/testing-library';
 import type { ConnectVerdict } from '../../src/dashboard/serial';
 
 const mock = vi.hoisted(() => ({
+  supported: true,
+  secure: true,
+  error: null as string | null,
   status: 'disconnected' as string,
   verdict: null as ConnectVerdict | null,
-  connect: vi.fn(async () => {}),
+  connect: vi.fn(async (_force?: boolean) => {}),
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   useDashboard: () => ({
-    supported: true,
-    secure: true,
+    supported: mock.supported,
+    secure: mock.secure,
+    error: () => mock.error,
     status: () => mock.status,
     verdict: () => mock.verdict,
     connect: mock.connect,
@@ -27,6 +31,9 @@ afterEach(() => {
   cleanup();
   mock.verdict = null;
   mock.status = 'disconnected';
+  mock.supported = true;
+  mock.secure = true;
+  mock.error = null;
   mock.connect.mockClear();
   navigate.mockClear();
 });
@@ -67,21 +74,21 @@ describe('ConnectPanel', () => {
   it('a held port says to close what is holding it', () => {
     mock.verdict = { kind: 'busy' };
     const { container, getAllByRole } = render(() => <ConnectPanel />);
-    expect(container.textContent).toMatch(/using the box/i);
+    expect(container.textContent).toMatch(/other tabs/i);
     expect(getAllByRole('button')).toHaveLength(1);
   });
 
   it('an unsupported browser is a dead end with nothing to press', () => {
-    mock.verdict = { kind: 'unsupported' };
+    mock.supported = false;
     const { queryByRole, container } = render(() => <ConnectPanel />);
     expect(container.textContent).toMatch(/Chrome/);
     expect(queryByRole('button')).toBeNull();
   });
 
   it('an insecure page says what to open instead, with nothing to press', () => {
-    mock.verdict = { kind: 'insecure' };
+    mock.secure = false;
     const { queryByRole, container } = render(() => <ConnectPanel />);
-    expect(container.textContent).toMatch(/https/);
+    expect(container.textContent).toMatch(/isn't secure/i);
     expect(queryByRole('button')).toBeNull();
   });
 
@@ -97,6 +104,20 @@ describe('ConnectPanel', () => {
     const { container } = render(() => <ConnectPanel />);
     const primaries = container.querySelectorAll('.button--primary');
     expect(primaries).toHaveLength(1);
+  });
+
+  it('a flash failure left on the page is still shown, verdict or no verdict', () => {
+    mock.status = 'error';
+    mock.error = 'the image is too big for this box';
+    const { container } = render(() => <ConnectPanel />);
+    expect(container.textContent).toContain('the image is too big for this box');
+  });
+
+  it('the retry on a silent box asks which device, so a remembered wrong one is escapable', () => {
+    mock.verdict = { kind: 'silent' };
+    const { getByRole } = render(() => <ConnectPanel />);
+    getByRole('button', { name: /try again/i }).click();
+    expect(mock.connect).toHaveBeenCalledWith(true);
   });
 
   it('a setup handler given by the page wins over the route', () => {

@@ -14,7 +14,8 @@ import {
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
-import { PortDiagram } from './PortDiagram';
+import { BAD_BROWSER } from './ConnectPanel';
+import { HOLD_BOTH, PortDiagram } from './PortDiagram';
 import { UnplugWatch } from './UnplugWatch';
 import '../../../styles/docs.css';
 
@@ -22,8 +23,8 @@ const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'No
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
-// One manual flasher with full control: any chip, app or factory, release or
-// upload, written over the BOOT-button path (works even on a dead box).
+// One manual flasher with full control: any chip, app or factory, release or upload, written
+// over the both-buttons download path (works even on a dead box).
 const Advanced = () => {
   const dash = useDashboard();
   const [releases] = createResource(fetchReleases);
@@ -75,17 +76,17 @@ const Advanced = () => {
     dash.clearFlashResult();
     setBusy(true);
     try {
-      // Both chips flash over their own native USB in ROM download (device on
-      // USB1 via the LEFT BOOT button, host on USB3 via the RIGHT BOOT button).
+      // Both chips flash over their own native USB in ROM download: the device chip on USB1, the
+      // host chip on USB3, each with both buttons held so neither can boot its app instead.
       const port = await requestRomPort();
       const a = asset();
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
       const ok = await dash.flashNative(port, img, kind());
       if (ok) setDone(true);
-      else setErr(dash.error() ?? "That didn't finish. Hold the BOOT button and try again.");
+      else setErr(dash.error() ?? `That did not finish. ${HOLD_BOTH}, then press Flash.`);
     } catch (e) {
-      if (!isUserCancel(e)) setErr((e as Error).message);
+      setErr(isUserCancel(e) ? `Nothing to flash. ${HOLD_BOTH}, then press Flash.` : (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -94,7 +95,7 @@ const Advanced = () => {
   return (
     <>
       <Show when={!dash.supported}>
-        <div class="callout callout--warning">Open the dashboard in Chrome, Edge, or Opera.</div>
+        <div class="callout callout--warning">{BAD_BROWSER}</div>
       </Show>
 
       <Show when={dash.status() === 'flashing'}>
@@ -196,19 +197,18 @@ const Advanced = () => {
 
               <p style={{ 'margin-top': 'var(--g-spacing)' }}>Get the chip into update mode:</p>
               <Show
-                when={chip() === 'device' || unplugged()}
+                when={unplugged()}
                 fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
               >
                 <PortDiagram
                   plug={chip() === 'host' ? ['usb3'] : ['usb1']}
                   out={chip() === 'host' ? ['usb1', 'usb2'] : ['usb2', 'usb3']}
+                  where={chip() === 'host' ? { usb3: 'This computer' } : { usb1: 'This computer' }}
                   boot
                 />
-                <Show when={chip() === 'host'}>
-                  <div class="callout callout--danger">
-                    USB1 and USB3 in the same computer can damage it.
-                  </div>
-                </Show>
+                <div class="callout callout--danger">
+                  USB1 and USB3 plugged into the same computer at once can kill it.
+                </div>
                 <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
                   Flash
                 </Button>

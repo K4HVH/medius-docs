@@ -2,18 +2,23 @@ import { For, Show } from 'solid-js';
 
 export type PortId = 'usb1' | 'usb2' | 'usb3';
 
+// Every download-mode instruction in the dashboard says the same thing, because the owner cannot
+// tell the two buttons apart and holding both is the entry the board's bring-up notes call reliable.
+export const HOLD_BOTH = 'Hold BOTH buttons down while you plug it in';
+
 const PORTS: { id: PortId; label: string; sub: string }[] = [
   { id: 'usb1', label: 'USB1', sub: 'Game PC' },
   { id: 'usb2', label: 'USB2', sub: 'Control PC' },
   { id: 'usb3', label: 'USB3', sub: 'Mouse' },
 ];
 
-// A compact picture of the box: `plug` ports light green ("plug into PC"), `mouse` ports light blue
-// ("plug your mouse"), `out` ports light red ("unplug"), the rest dimmed, plus an optional
-// hold-both-buttons badge. `where` renames a port for the machine it ends up on. The diagram
-// carries the instruction; words don't.
+// A compact picture of the box: `plug` ports light green ("plug in here"), `other` ports light
+// amber (they belong on a different computer), `mouse` ports light blue, `out` ports light red
+// ("unplug"), the rest dimmed, plus an optional hold-both-buttons badge. `where` renames a port for
+// the machine it ends up on. The diagram carries the instruction; words don't.
 export const PortDiagram = (props: {
   plug?: PortId[];
+  other?: PortId[];
   out?: PortId[];
   mouse?: PortId[];
   boot?: boolean;
@@ -22,21 +27,28 @@ export const PortDiagram = (props: {
   const isPlug = (id: PortId) => props.plug?.includes(id) ?? false;
   const isMouse = (id: PortId) => props.mouse?.includes(id) ?? false;
   const isOut = (id: PortId) => props.out?.includes(id) ?? false;
-  const lit = (id: PortId) => isPlug(id) || isMouse(id) || isOut(id);
+  const isOther = (id: PortId) => props.other?.includes(id) ?? false;
+  const lit = (id: PortId) => isPlug(id) || isMouse(id) || isOut(id) || isOther(id);
   const accent = (id: PortId) =>
     isOut(id)
       ? 'var(--color-danger)'
-      : isMouse(id)
-        ? 'var(--color-primary)'
-        : 'var(--color-success)';
+      : isOther(id)
+        ? 'var(--color-warning)'
+        : isMouse(id)
+          ? 'var(--color-primary)'
+          : 'var(--color-success)';
+  // "here" means this socket on the box, not this computer, and readers take it the other way.
+  // The notes say what the socket needs; `where` says which machine the cable runs to.
   const note = (id: PortId) =>
     isOut(id)
-      ? 'unplug'
-      : isPlug(id)
-        ? 'plug into PC'
-        : isMouse(id)
-          ? 'plug your mouse'
-          : 'leave out';
+      ? 'must be empty'
+      : isOther(id)
+        ? 'not this computer'
+        : isPlug(id)
+          ? 'plug in'
+          : isMouse(id)
+            ? 'your mouse'
+            : 'nothing here';
   return (
     <div style={{ margin: 'var(--g-spacing) 0' }}>
       <div
@@ -48,14 +60,13 @@ export const PortDiagram = (props: {
       >
         <div
           style={{
-            'font-size': '0.7em',
-            color: 'var(--g-text-muted)',
+            'font-size': '0.95em',
+            'font-weight': '700',
+            color: 'var(--g-text-secondary)',
             'margin-bottom': 'var(--g-spacing-sm)',
-            'text-transform': 'uppercase',
-            'letter-spacing': '0.06em',
           }}
         >
-          Your box
+          The three sockets on your box
         </div>
         <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)' }}>
           <For each={PORTS}>
@@ -111,7 +122,7 @@ export const PortDiagram = (props: {
             'font-weight': '600',
           }}
         >
-          Hold BOTH buttons on the box down while you plug it in
+          Hold BOTH buttons down. Keep holding while you push the cable in.
         </div>
       </Show>
     </div>

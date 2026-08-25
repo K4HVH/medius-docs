@@ -68,6 +68,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     version: () => VALUES.version,
     health: () => health,
     error: () => null,
+    verdict: () => null,
     link: () => ({
       lock: async () => {},
       unlock: async () => {},
@@ -88,8 +89,6 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     disconnect: async () => {},
     flashProgress: () => null,
     flashLog: () => [],
-    rebootDeviceToDownload: async () => ({}),
-    flashDeviceNative: async () => true,
     flashNative: async () => true,
     clearFlashResult: () => {},
     deviceLog: () => [],
@@ -116,20 +115,28 @@ afterEach(cleanup);
 
 describe('Control page', () => {
   // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
-  // the Connect button again and said nothing. The Device page has always shown the error.
-  it('shows the connect error instead of the Connect button', async () => {
+  // the Connect button again and said nothing. It says why now, through the shared panel.
+  it('says why a connect failed rather than offering a bare Connect button', async () => {
     const { findByRole, queryByText } = mount(
-      stub({ status: () => 'error', error: () => 'No port selected.' }),
+      stub({ status: () => 'disconnected', verdict: () => ({ kind: 'no-port' }) }),
     );
     const alert = await findByRole('alert');
-    expect(alert.textContent).toBe('No port selected.');
+    expect(alert.textContent).toMatch(/USB2/);
     expect(queryByText('Connect')).toBeNull();
     expect(queryByText('Try again')).toBeTruthy();
   });
 
+  it('still surfaces an update failure that left the page in an error state', async () => {
+    const { findByRole } = mount(
+      stub({ status: () => 'error', error: () => 'the mouse-side chip did not come back' }),
+    );
+    const alert = await findByRole('alert');
+    expect(alert.textContent).toContain('the mouse-side chip did not come back');
+  });
+
   it('says why the Connect button is disabled on an unsupported browser', async () => {
     const { findByText } = mount(stub({ status: () => 'disconnected', supported: false }));
-    await findByText(/This browser can't reach USB devices/);
+    await findByText(/This browser can't talk to your box/);
   });
 
   it('shows a connecting state while the handshake runs', async () => {

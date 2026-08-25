@@ -22,6 +22,7 @@ import {
   type ConnectVerdict,
   SerialLink,
   attemptConnect,
+  classifyConnectError,
   grantedMediusPorts,
   isSecureContextOk,
   isWebSerialSupported,
@@ -57,7 +58,9 @@ export interface DashboardContextValue {
   // anything has been tried.
   verdict: Accessor<ConnectVerdict | null>;
   link: Accessor<SerialLink | null>;
-  connect: () => Promise<void>;
+  // `force` skips the ports the browser already remembers and asks which device to use. It is what
+  // a retry does, so a remembered port that is the wrong box cannot answer for every later attempt.
+  connect: (force?: boolean) => Promise<void>;
   disconnect: () => Promise<void>;
   // Subscribe a card to one box readback for as long as it is mounted. The poller owns the timer
   // and shares one query across every card that wants the same value.
@@ -127,12 +130,17 @@ export const DashboardProvider: ParentComponent = (props) => {
       onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
       onEvent: (ev, seq) => setInputEvents((prev) => [...prev, { seq, ev }].slice(-200)),
       onClose: () => {
+        // Only the stored link: another link may already own this port, and closing it would take
+        // that one's port down with it.
         if (link() !== nl) return;
         setStatus('disconnected');
         setVersion(null);
         setError(null);
         setLink(null);
         poller.reset();
+        // The read loop is finished but the port is still open and its writer still locked. Without
+        // this the next connect adopts the port and cannot get a writer, which nothing recovers.
+        void nl.close().catch(() => undefined);
       },
     });
     return nl;
@@ -167,8 +175,8 @@ export const DashboardProvider: ParentComponent = (props) => {
 
   let disposed = false;
 
-  const connect = async () => {
-    if (status() === 'connecting' || status() === 'connected') return;
+  const connect = async (force = false) => {
+    if (status() === 'connecting' || status() === 'connected' || status() === 'flashing') return;
     setError(null);
     setVerdict(null);
     setFlashProgress(null);
@@ -177,27 +185,47 @@ export const DashboardProvider: ParentComponent = (props) => {
     setStatus('connecting');
     // Every link built here is tracked, so a port that opened but did not answer is closed on the
     // way out rather than left holding the device against the next attempt.
+    // A link left behind by a failed update still holds the port's writer lock. Opening a second
+    // link over it throws where nothing can recover, so let go of it first.
+    const stale = link();
+    if (stale) {
+      setLink(null);
+      setVersion(null);
+      poller.reset();
+      await stale.close().catch(() => undefined);
+    }
+
     const built = new Map<SerialPort, SerialLink>();
-    const outcome = await attemptConnect<SerialLink>({
-      supported: () => supported,
-      secure: () => secure,
-      granted: grantedMediusPorts,
-      choose: requestMediusPort,
-      attach: async (port) => {
-        const l = makeLink(port);
-        built.set(port, l);
-        await l.open();
-        return { link: l, version: await l.handshake() };
-      },
-      detach: async (port) => {
-        try {
-          await built.get(port)?.close();
-        } catch {
-          // A port that will not close is not a reason to stop trying the next one.
-        }
-        built.delete(port);
-      },
-    });
+    let outcome: Awaited<ReturnType<typeof attemptConnect<SerialLink>>>;
+    try {
+      outcome = await attemptConnect<SerialLink>(
+        {
+          supported: () => supported,
+          secure: () => secure,
+          granted: grantedMediusPorts,
+          choose: requestMediusPort,
+          attach: async (port) => {
+            const l = makeLink(port);
+            built.set(port, l);
+            await l.open();
+            return { link: l, version: await l.handshake() };
+          },
+          detach: async (port) => {
+            try {
+              await built.get(port)?.close();
+            } catch {
+              // A port that will not close is not a reason to stop trying the next one.
+            }
+            built.delete(port);
+          },
+        },
+        { skipGranted: force },
+      );
+    } catch (e) {
+      // Nothing may escape: an unhandled rejection here leaves the whole page on "Connecting..."
+      // with no button to press and no way back but a reload.
+      outcome = { ok: false, verdict: classifyConnectError(e) };
+    }
 
     if (disposed) {
       if (outcome.ok) await outcome.link.close().catch(() => undefined);

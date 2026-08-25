@@ -8,8 +8,15 @@ import { PortDiagram, type PortId } from './PortDiagram';
 // Connect, and after a failure the one thing to do about it. Every page that offers Connect renders
 // this, so the answer to "why won't it connect" is written once. `where` renames the ports for a
 // caller that knows which machine is which, which the end of the setup wizard does.
+// One wording for the two conditions that end the page before it starts, shared with every page
+// that gates on them, so the same problem is never described three ways.
+export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
+export const BAD_CONTEXT = "This page isn't secure. Open it again from the link you were given.";
+
 export const ConnectPanel = (props: {
   onSetup?: () => void;
+  plug?: PortId[];
+  other?: PortId[];
   where?: Partial<Record<PortId, string>>;
 }) => {
   const dash = useDashboard();
@@ -18,12 +25,14 @@ export const ConnectPanel = (props: {
   const verdict = () => dash.verdict();
   const busy = () => dash.status() === 'connecting';
 
-  const Connect = (p: { label?: string }) => (
+  // `force` asks which device to use instead of reusing one the browser remembers. The silent
+  // verdict is the one that can be about the wrong device, so its retry is the escape from it.
+  const Connect = (p: { label?: string; force?: boolean }) => (
     <Button
       variant="primary"
       loading={busy()}
       disabled={!dash.supported || busy()}
-      onClick={() => void dash.connect()}
+      onClick={() => void dash.connect(p.force)}
     >
       {busy() ? 'Connecting...' : (p.label ?? 'Connect')}
     </Button>
@@ -31,36 +40,54 @@ export const ConnectPanel = (props: {
 
   const NeverInstalled = () => (
     <Button variant="subtle" size="compact" onClick={setup}>
-      Never installed it?
+      Set up a new box
     </Button>
   );
+
+  if (!dash.supported) return <div class="callout callout--warning">{BAD_BROWSER}</div>;
+  if (!dash.secure) return <div class="callout callout--warning">{BAD_CONTEXT}</div>;
 
   return (
     <div aria-live="polite">
       <Switch>
         <Match when={!verdict()}>
+          {/* A flash or update failure has no verdict of its own, and this is the only thing the
+              Device tab renders when one leaves the page in an error state. */}
+          <Show when={dash.status() === 'error' && dash.error()}>
+            {(msg) => (
+              <div class="callout callout--danger" role="alert">
+                {msg()}
+              </div>
+            )}
+          </Show>
           <p>Plug in like this.</p>
-          <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} where={props.where} />
+          <PortDiagram
+            plug={props.plug ?? ['usb1', 'usb2']}
+            other={props.other}
+            mouse={['usb3']}
+            where={props.where}
+          />
           <Connect />
         </Match>
 
         <Match when={verdict()?.kind === 'unsupported'}>
-          <div class="callout callout--warning" role="alert">
-            This browser can't reach USB devices. Open this page in Chrome, Edge or Opera.
-          </div>
+          <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>
         </Match>
 
         <Match when={verdict()?.kind === 'insecure'}>
-          <div class="callout callout--warning" role="alert">
-            Open this page over https, or on localhost.
-          </div>
+          <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>
         </Match>
 
         <Match when={verdict()?.kind === 'no-port'}>
           <div class="callout callout--danger" role="alert">
-            USB2 is not plugged into this computer.
+            This computer can't see your box. Plug USB2 into it, then press Try again.
           </div>
-          <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} where={props.where} />
+          <PortDiagram
+            plug={props.plug ?? ['usb1', 'usb2']}
+            other={props.other}
+            mouse={['usb3']}
+            where={props.where}
+          />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
             <Connect label="Try again" />
             <NeverInstalled />
@@ -69,18 +96,23 @@ export const ConnectPanel = (props: {
 
         <Match when={verdict()?.kind === 'busy'}>
           <div class="callout callout--danger" role="alert">
-            Something else on this computer is using the box. Close it, then try again.
+            Another tab has your box open. Close your other tabs, then press Try again.
           </div>
           <Connect label="Try again" />
         </Match>
 
         <Match when={verdict()?.kind === 'silent'}>
           <div class="callout callout--danger" role="alert">
-            The box is not answering. Plug USB1 in as well.
+            The box is not answering. Check USB1 is plugged in too, then press Try again.
           </div>
-          <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} where={props.where} />
+          <PortDiagram
+            plug={props.plug ?? ['usb1', 'usb2']}
+            other={props.other}
+            mouse={['usb3']}
+            where={props.where}
+          />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-            <Connect label="Try again" />
+            <Connect label="Try again" force />
             <NeverInstalled />
           </div>
         </Match>
@@ -110,7 +142,10 @@ export const ConnectPanel = (props: {
             const v = verdict();
             return (
               <div class="callout callout--danger" role="alert">
-                {v?.kind === 'other' ? v.message : ''}
+                That didn't work. Unplug everything, plug it back in, then press Try again.
+                <div style={{ 'margin-top': '6px', 'font-size': '0.85em', opacity: '0.75' }}>
+                  {v?.kind === 'other' ? v.message : ''}
+                </div>
               </div>
             );
           })()}

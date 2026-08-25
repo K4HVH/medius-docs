@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
+import { ConnectPanel } from './ConnectPanel';
 import { createCommand } from './action';
 import DeviceInject from './DeviceInject';
 import DeviceLock from './DeviceLock';
@@ -49,32 +50,14 @@ const Control = () => {
                 <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
               </Match>
 
-              <Match when={dash.status() === 'error'}>
-                <div class="callout callout--danger" role="alert">{dash.error()}</div>
-                <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                  Try again
-                </Button>
-              </Match>
-
-              <Match when={dash.status() === 'disconnected'}>
-                <Show when={!dash.supported}>
-                  <div class="callout callout--warning">
-                    This browser can't reach USB devices. Open the dashboard in Chrome, Edge, or Opera.
-                  </div>
-                </Show>
-                <Show when={dash.supported && !dash.secure}>
-                  <div class="callout callout--warning">
-                    Web Serial needs a secure context. Open this page over HTTPS, or on localhost.
-                  </div>
-                </Show>
+              <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
                 <p>
                   Connect to your box on the <A href="/dashboard">Device</A> page, then come back
                   here to drive it.
                 </p>
-                <Button variant="primary" disabled={!dash.supported} onClick={() => void dash.connect()}>
-                  Connect
-                </Button>
+                <ConnectPanel />
               </Match>
+
             </Switch>
           </div>
         </Card>
