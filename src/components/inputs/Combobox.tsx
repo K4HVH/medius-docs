@@ -96,7 +96,10 @@ export const Combobox: Component<ComboboxProps> = (props) => {
   };
 
   const handleSelect = (value: string) => {
-    if (!local.onChange) return;
+    // A list already open when the control is disabled could still be picked from: the disabled
+    // check lived only on opening and on keydown, so `disabled` styled the control without gating
+    // it. Callers rely on it to stop a selection changing mid-operation.
+    if (local.disabled || !local.onChange) return;
 
     if (local.multiple) {
       const currentValues = selectedValues();

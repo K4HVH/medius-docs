@@ -63,6 +63,24 @@ afterEach(() => {
   navigate.mockClear();
 });
 
+// Switch SOURCE to the upload path and return the real file input.
+const openUpload = async (r: ReturnType<typeof render>) => {
+  const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+  fireEvent.click(source);
+  fireEvent.keyDown(source, { key: 'Enter' });
+  await new Promise((res) => setTimeout(res, 20));
+  const upload = [...document.querySelectorAll('[role="option"]')].find((o) =>
+    /upload a file/i.test(o.textContent ?? ''),
+  );
+  if (!upload) throw new Error('no upload option');
+  fireEvent.click(upload);
+  return waitFor(() => {
+    const el = r.container.querySelector('input[type="file"]');
+    if (!el) throw new Error('no file input');
+    return el as HTMLInputElement;
+  });
+};
+
 // Walk past the unplug gate to the Flash button.
 const openGate = async (r: ReturnType<typeof render>) => {
   await waitFor(() => r.getByRole('button', { name: /unplugged/i }));
@@ -169,6 +187,69 @@ describe('Advanced', () => {
       // Chip, image and source: all three were live across the two awaits.
       expect(boxes).toHaveLength(3);
     });
+  });
+
+  it('a good file after a rejected one clears the rejection', async () => {
+    // The reset of the just-rejected flag had no coverage: without it every later good pick kept
+    // the old rejection on screen for good.
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    const input = await openUpload(r);
+    const huge = new File([new Uint8Array(16)], 'huge.bin');
+    Object.defineProperty(huge, 'size', { value: 8 * 1024 * 1024 });
+    const drop = (f: File) => {
+      Object.defineProperty(input, 'files', { value: [f], configurable: true });
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    drop(huge);
+    await waitFor(() => expect(r.getByRole('alert').textContent).toMatch(/exceeds/i));
+
+    const bytes = new Uint8Array(2048);
+    bytes[0] = 0xe9;
+    const good = new File([bytes], 'good.bin');
+    Object.defineProperty(good, 'arrayBuffer', {
+      value: () => Promise.resolve(bytes.buffer as ArrayBuffer),
+    });
+    drop(good);
+    await waitFor(() => expect(r.queryByRole('alert')).toBeNull());
+  });
+
+  it('the success screen marks the socket of the chip that was actually flashed', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    r.getByRole('button', { name: /^flash$/i }).click();
+    await waitFor(() => expect(r.container.textContent).toMatch(/take the cable you just used out/i));
+    // Default chip is the main one: USB1 is what is in this computer and has to come out.
+    const tiles = [...r.container.querySelectorAll('div')].filter((d) => {
+      const first = d.querySelector(':scope > div');
+      return first?.textContent === 'USB1' || first?.textContent === 'USB3';
+    });
+    const usb1 = tiles.find((t) => t.textContent?.startsWith('USB1'))?.textContent ?? '';
+    const usb3 = tiles.find((t) => t.textContent?.startsWith('USB3'))?.textContent ?? '';
+    expect(usb1).toContain('must be empty');
+    expect(usb3).not.toContain('must be empty');
+  });
+
+  it('a disabled chip picker cannot be selected from, not merely styled', async () => {
+    // The class was the only thing `disabled` did; a list already open could still be picked from.
+    mock.holdFlash = true;
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
+    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    fireEvent.click(chip);
+    fireEvent.keyDown(chip, { key: 'Enter' });
+    await new Promise((res) => setTimeout(res, 20));
+    r.getByRole('button', { name: /^flash$/i }).click();
+    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(3));
+    const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
+      /mouse-side/i.test(o.textContent ?? ''),
+    );
+    if (mouseSide) fireEvent.click(mouseSide);
+    // Still the main chip: the selection did not take.
+    expect(r.container.textContent).toMatch(/Main chip/i);
   });
 
   it('both chips pass the cable gate, not just the mouse-side one', async () => {

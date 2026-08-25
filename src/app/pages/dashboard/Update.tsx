@@ -7,7 +7,7 @@ import { Chip } from '../../../components/display/Chip';
 import { versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { useDashboard } from './context';
-import { BAD_BROWSER, ConnectPanel } from './ConnectPanel';
+import { ConnectPanel } from './ConnectPanel';
 import { PortDiagram } from './PortDiagram';
 import '../../../styles/docs.css';
 
@@ -107,7 +107,7 @@ const Update = () => {
       const outcome = await dash.updateOverControl(images);
       if (outcome === 'verified') setStep('done');
       else if (outcome === 'sent') setStep('sent');
-      else setErr(dash.error() ?? "That didn't finish. The box kept the firmware it was running.");
+      else if (!dash.error()) setErr("That didn't finish. The box kept the firmware it was running.");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -117,10 +117,6 @@ const Update = () => {
 
   return (
     <>
-      <Show when={!dash.supported}>
-        <div class="callout callout--warning">{BAD_BROWSER}</div>
-      </Show>
-
       <Show when={dash.status() === 'flashing'}>
         <Card>
           <CardHeader title="Updating" subtitle="Don't unplug or leave this page" />
@@ -174,44 +170,69 @@ const Update = () => {
               </p>
               <PortDiagram plug={['usb1', 'usb2']} mouse={['usb3']} />
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-                <div style={row}>
-                  <Button
-                    variant="primary"
-                    disabled={busy() || releases.loading}
-                    onClick={() => void runUpdate()}
-                  >
-                    {busy() ? 'Updating...' : 'Update'}
-                  </Button>
-                  <Button
-                    variant="subtle"
-                    size="compact"
-                    disabled={busy()}
-                    onClick={() => { setErr(null); setStep('choose'); }}
-                  >
-                    Back
-                  </Button>
-                </div>
+                <Button
+                  variant="primary"
+                  disabled={busy() || releases.loading}
+                  onClick={() => void runUpdate()}
+                >
+                  {busy() ? 'Updating...' : 'Update'}
+                </Button>
               </Show>
+              <div style={{ 'margin-top': 'var(--g-spacing-sm)' }}>
+                <Button
+                  variant="subtle"
+                  size="compact"
+                  disabled={busy()}
+                  onClick={() => { setErr(null); setStep('choose'); }}
+                >
+                  Back
+                </Button>
+              </div>
             </Match>
 
             <Match when={step() === 'sent'}>
-              {/* The transfer and the activate went through, and then nothing answered. What is
-                  running now is exactly what this cannot say, so it does not try. */}
-              <div class="callout callout--warning">
-                The update was sent, but the box did not come back on its own. Unplug it, plug it
-                back in, then connect.
-              </div>
-              <ConnectPanel />
+              {/* The transfer and the activate went through and then nothing answered, so what is
+                  running now is exactly what this cannot say. The instruction itself lives in the
+                  shared error, which ConnectPanel renders on whatever page the user wanders to. */}
+              <Show
+                when={dash.status() === 'connected'}
+                fallback={<ConnectPanel />}
+              >
+                <div class="callout callout--info">
+                  Your box is back
+                  <Show when={dash.version()}>
+                    {(v) => <> on <strong>v{versionString(v())}</strong></>}
+                  </Show>
+                  .
+                </div>
+                <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                  Finish
+                </Button>
+              </Show>
             </Match>
 
             <Match when={step() === 'done'}>
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-                <div class="callout callout--info">
-                  Updated and verified.{' '}
-                  <Show when={dash.version()}>
-                    {(v) => <>Now on <strong>v{versionString(v())}</strong>.</>}
-                  </Show>
-                </div>
+                <Show
+                  when={which() === 'mouse' || upToDate()}
+                  fallback={
+                    <div class="callout callout--warning">
+                      The box came back on{' '}
+                      <Show when={dash.version()}>
+                        {(v) => <strong>v{versionString(v())}</strong>}
+                      </Show>
+                      , not the version that was sent. It reverts anything that will not run, so it
+                      is still working — try the update again.
+                    </div>
+                  }
+                >
+                  <div class="callout callout--info">
+                    Updated and verified.{' '}
+                    <Show when={dash.version()}>
+                      {(v) => <>Now on <strong>v{versionString(v())}</strong>.</>}
+                    </Show>
+                  </div>
+                </Show>
                 <Button
                   variant="primary"
                   onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}

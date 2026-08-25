@@ -327,6 +327,12 @@ export const DashboardProvider: ParentComponent = (props) => {
       const reconnected = await tryReconnect(ctrlPort);
       setFlashProgress({ phase: 'done' });
       if (!reconnected) {
+        // Shared, not page-local: this is the one instruction that fixes it, and navigating to
+        // another tab used to destroy it. The claim is only what the code can support -- what is
+        // running now is exactly what nothing has checked.
+        setError(
+          'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
+        );
         setStatus('disconnected');
         return 'sent';
       }
