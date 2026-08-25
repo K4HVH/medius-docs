@@ -9,7 +9,7 @@ import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashb
 import { requestRomPort } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
-import { ClearPort, InstallPorts, type PortId, holdButton } from './PortDiagram';
+import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
 import '../../../styles/docs.css';
 
 type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
@@ -44,11 +44,10 @@ const Setup = () => {
       ? Math.round(((p.written ?? 0) / p.total) * 100)
       : undefined;
   };
-  const retry = (id: PortId) => `${holdButton(id)}, then press Install.`;
 
   // Write a full factory image to whichever chip is in download mode on this cable. Only one chip's
   // USB is plugged in and only its own button is held, so only one chip can answer.
-  const install = async (assetName: string, next: Step, socket: PortId) => {
+  const install = async (assetName: string, next: Step) => {
     setErr(null);
     dash.clearFlashResult();
     setBusy(true);
@@ -74,11 +73,11 @@ const Setup = () => {
         // messages it was eating are the ones pressing the button again cannot fix.
         const why = dash.error();
         void dash.disconnect().catch(() => undefined);
-        setErr(why ?? `That did not finish. ${retry(socket)}`);
+        setErr(why ?? 'That did not finish.');
       }
     } catch (e) {
       // A cancel and an empty chooser are the same DOMException, and the second is far more likely.
-      setErr(isUserCancel(e) ? `Nothing to install to. ${retry(socket)}` : (e as Error).message);
+      setErr(isUserCancel(e) ? 'Nothing to install to.' : (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -108,7 +107,9 @@ const Setup = () => {
       <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
         <Card>
           <CardHeader title="Install Medius" subtitle="The ports are numbered on the box" />
-          <Chip variant="neutral">{counter()}</Chip>
+          <div style={{ 'margin-bottom': 'var(--g-spacing)' }}>
+            <Chip variant="neutral">{counter()}</Chip>
+          </div>
           <Show when={err()}>
             {(msg) => (
               <div class="callout callout--danger" role="alert">
@@ -123,7 +124,7 @@ const Setup = () => {
               <Button
                 variant="primary"
                 disabled={busy() || releases.loading}
-                onClick={() => void install('medius_device-factory.bin', 'unplug', 'usb1')}
+                onClick={() => void install('medius_device-factory.bin', 'unplug')}
               >
                 {busy() ? 'Installing...' : 'Install'}
               </Button>
@@ -149,7 +150,7 @@ const Setup = () => {
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}
-                  onClick={() => void install('medius_host-factory.bin', 'unplug3', 'usb3')}
+                  onClick={() => void install('medius_host-factory.bin', 'unplug3')}
                 >
                   {busy() ? 'Installing...' : 'Install'}
                 </Button>
