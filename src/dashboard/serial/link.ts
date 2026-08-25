@@ -186,8 +186,8 @@ const CONFIRM_TIMEOUT_MS = 45_000;
 const UPDATE_BACKLOG_MAX = 64;
 
 export class BadProtoVerError extends Error {
-  constructor(readonly got: number) {
-    super(`unsupported protocol version ${got} (expected ${PROTO_VER})`);
+  constructor(readonly version: Version) {
+    super(`unsupported protocol version ${version.protoVer} (expected ${PROTO_VER})`);
     this.name = 'BadProtoVerError';
   }
 }
@@ -215,6 +215,17 @@ export async function requestMediusPort(): Promise<SerialPort> {
   }
   return navigator.serial.requestPort({
     filters: [{ usbVendorId: WCH_VID, usbProductId: CH343_PID }],
+  });
+}
+
+// Ports this origin has already been granted that are a CH343. Opening one of these needs no
+// chooser, so a box that has been connected once before never asks for permission again.
+export async function grantedMediusPorts(): Promise<SerialPort[]> {
+  if (!isWebSerialSupported()) return [];
+  const ports = await navigator.serial.getPorts();
+  return ports.filter((p) => {
+    const info = p.getInfo();
+    return info.usbVendorId === WCH_VID && info.usbProductId === CH343_PID;
   });
 }
 
@@ -279,7 +290,7 @@ export class SerialLink {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
         if (version.protoVer !== PROTO_VER) {
-          throw new BadProtoVerError(version.protoVer);
+          throw new BadProtoVerError(version);
         }
         return version;
       } catch (e) {
