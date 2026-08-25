@@ -21,7 +21,7 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Section } from './Section';
-import { controls, muted, section, status } from './ui';
+import { controls, label, muted, section, status } from './ui';
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
@@ -331,20 +331,21 @@ const DeviceOptions = () => {
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
-        <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
-          <Show when={mode() === 'fixed'}>
+        <Show when={mode() === 'fixed'}>
+          <div style={{ ...controls, 'margin-top': 'var(--g-spacing-sm)' }}>
             <div style={{ 'max-width': '8rem' }}>
               <NumberInput
-                label="Rate (Hz)"
+                label="Emit rate (Hz)"
                 value={hz()}
                 min={1}
                 max={1000}
                 onChange={(v) => setHzEdit(v ?? 1)}
               />
             </div>
-          </Show>
-        </div>
-        <p style={{ ...muted, 'margin-top': 'var(--g-spacing-md)' }}>Wire rate</p>
+          </div>
+        </Show>
+        <div style={section}>
+        <div style={label}>Wire rate</div>
         <RadioGroup
           name="wire-rate"
           value={forceOn() ? 'forced' : 'device'}
@@ -363,7 +364,7 @@ const DeviceOptions = () => {
           <Show when={forceOn()}>
             <div style={{ 'max-width': '8rem' }}>
               <NumberInput
-                label="Rate (Hz)"
+                label="Wire rate (Hz)"
                 value={forceHz()}
                 min={4}
                 max={1000}
@@ -379,6 +380,7 @@ const DeviceOptions = () => {
               Revert
             </Button>
           </Show>
+        </div>
         </div>
         <Show when={cmd.error()}>
           <div class="callout callout--danger" role="alert" style={section}>
