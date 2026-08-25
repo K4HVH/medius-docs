@@ -98,7 +98,7 @@ const Setup = () => {
     // Drop any link and any earlier failure before touching the chips. A link left open would keep
     // reporting the version of firmware that is about to be erased, and the last screen would greet
     // a finished install with a connect failure from before the wizard started.
-    void dash.disconnect();
+    void dash.disconnect().catch(() => undefined);
     setStep('main');
   };
 
@@ -125,7 +125,12 @@ const Setup = () => {
       }
       const port = await requestRomPort();
       const image = await downloadAsset(asset);
-      if (await dash.flashNative(port, image, 'factory')) setStep(next);
+      if (await dash.flashNative(port, image, 'factory')) {
+        // The chip has just been rewritten, so anything still holding a link is holding a stale one.
+        // This also catches a connect that was in flight when the wizard started.
+        await dash.disconnect().catch(() => undefined);
+        setStep(next);
+      }
       else setErr(dash.error() ?? `That did not finish. ${HOLD_BOTH}, then press Install.`);
     } catch (e) {
       // A cancel and an empty chooser are the same DOMException, and the second is far more likely:
@@ -202,7 +207,7 @@ const Setup = () => {
               <div style={row}>
                 <Button
                   variant="primary"
-                  disabled={busy()}
+                  disabled={busy() || releases.loading}
                   onClick={() => void install('medius_device-factory.bin', 'unplug')}
                 >
                   {busy() ? 'Installing...' : 'Install'}
@@ -216,9 +221,14 @@ const Setup = () => {
             <Match when={step() === 'unplug'}>
               <PortDiagram out={['usb1']} />
               <div class="callout callout--danger">Take USB1 out of this computer. {HAZARD}</div>
-              <Button variant="primary" onClick={go('mouse')}>
-                It's unplugged
-              </Button>
+              <div style={row}>
+                <Button variant="primary" onClick={go('mouse')}>
+                  It's unplugged
+                </Button>
+                <Button variant="subtle" size="compact" onClick={go('main')}>
+                  Back
+                </Button>
+              </div>
             </Match>
 
             <Match when={step() === 'mouse'}>
@@ -232,7 +242,7 @@ const Setup = () => {
               <div style={row}>
                 <Button
                   variant="primary"
-                  disabled={busy()}
+                  disabled={busy() || releases.loading}
                   onClick={() => void install('medius_host-factory.bin', 'unplug3')}
                 >
                   {busy() ? 'Installing...' : 'Install'}

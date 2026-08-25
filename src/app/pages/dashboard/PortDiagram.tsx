@@ -122,7 +122,7 @@ export const PortDiagram = (props: {
             'font-weight': '600',
           }}
         >
-          Hold BOTH buttons down. Keep holding while you push the cable in.
+          {HOLD_BOTH}. Keep holding while you push the cable in.
         </div>
       </Show>
     </div>

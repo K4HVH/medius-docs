@@ -51,10 +51,6 @@ const Control = () => {
               </Match>
 
               <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
-                <p>
-                  Connect to your box on the <A href="/dashboard">Device</A> page, then come back
-                  here to drive it.
-                </p>
                 <ConnectPanel />
               </Match>
 

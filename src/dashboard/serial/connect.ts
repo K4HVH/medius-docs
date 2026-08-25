@@ -11,6 +11,7 @@ export type ConnectVerdict =
   | { kind: 'no-port' }
   | { kind: 'busy' }
   | { kind: 'silent' }
+  | { kind: 'needs-click' }
   | { kind: 'old-firmware'; version: Version }
   | { kind: 'other'; message: string };
 
@@ -32,6 +33,7 @@ export type ConnectOutcome<L> =
 const TELLS_US: Record<ConnectVerdict['kind'], number> = {
   'old-firmware': 4,
   silent: 3,
+  'needs-click': 2,
   busy: 2,
   other: 1,
   'no-port': 0,
@@ -39,8 +41,16 @@ const TELLS_US: Record<ConnectVerdict['kind'], number> = {
   insecure: 0,
 };
 
-const nameOf = (e: unknown): string =>
-  typeof e === 'object' && e !== null && 'name' in e ? String((e as { name: unknown }).name) : '';
+const nameOf = (e: unknown): string => {
+  try {
+    return typeof e === 'object' && e !== null && 'name' in e
+      ? String((e as { name: unknown }).name)
+      : '';
+  } catch {
+    // A getter on the thrown value is not a reason to lose the attempt.
+    return '';
+  }
+};
 
 export function classifyConnectError(e: unknown): ConnectVerdict {
   if (e instanceof BadProtoVerError) return { kind: 'old-firmware', version: e.version };
@@ -52,10 +62,10 @@ export function classifyConnectError(e: unknown): ConnectVerdict {
   if (name === 'NotFoundError') return { kind: 'no-port' };
   if (name === 'NetworkError' || name === 'InvalidStateError') return { kind: 'busy' };
   if (/already open|failed to open|access denied/i.test(message)) return { kind: 'busy' };
-  if (name === 'SecurityError') {
-    return { kind: 'other', message: 'The browser wants another click before it will ask.' };
-  }
-  return { kind: 'other', message };
+  // Two different SecurityErrors: transient activation expiring, which one more click fixes, and a
+  // permissions policy that blocks the feature outright, which it does not.
+  if (name === 'SecurityError' && !/policy|disallow/i.test(message)) return { kind: 'needs-click' };
+  return { kind: 'other', message: message || 'the browser gave no reason' };
 }
 
 const better = (a: ConnectVerdict | null, b: ConnectVerdict): ConnectVerdict =>

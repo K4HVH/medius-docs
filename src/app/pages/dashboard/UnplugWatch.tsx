@@ -46,7 +46,7 @@ export const UnplugWatch = (props: { onUnplugged: () => void; autoWatch?: boolea
       <Match when={phase() === 'confirm'}>
         <PortDiagram out={['usb1', 'usb2', 'usb3']} />
         <div class="callout callout--danger">
-          USB1 and USB3 in the same computer can damage it.
+          USB1 and USB3 plugged into the same computer at once can kill it.
         </div>
         <Button variant="primary" onClick={() => props.onUnplugged()}>
           Every cable is unplugged
