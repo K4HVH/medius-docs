@@ -111,7 +111,9 @@ const Advanced = () => {
         setImage(new Uint8Array(b));
       })
       .catch(() => {
-        if (mine !== pick) return;
+        // `pick` does not move when SOURCE does, so a slow read can land after the user has left
+        // the upload path -- and "pick it again" has no picker to point at there.
+        if (mine !== pick || source() !== 'upload') return;
         setImage(null);
         setFileErr('That file could not be read. Pick it again.');
       });

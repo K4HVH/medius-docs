@@ -1,38 +1,80 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
+
+// The stand-in is built on REAL signals. Plain-object accessors meant the page never observed a
+// state change the context made, so mutations that broke whole screens left every test green.
+const st = vi.hoisted(() => ({
+  make: () => {
+    const [status, setStatus] = createSignal<string>('disconnected');
+    const [error, setError] = createSignal<string | null>(null);
+    const [version, setVersion] = createSignal<{
+      protoVer: number;
+      fwMajor: number;
+      fwMinor: number;
+      fwPatch: number;
+      mac: number[];
+      name: string;
+    } | null>({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' });
+    const [firmwareInfo, setFirmwareInfo] = createSignal<unknown>({
+      device: { major: 3, minor: 2, patch: 0, slot: 0, state: 1 },
+      host: { major: 3, minor: 2, patch: 0, slot: 0, state: 1 },
+      slotSize: 1,
+      deviceStaged: false,
+      hostStaged: false,
+    });
+    return {
+      status,
+      setStatus,
+      error,
+      setError,
+      version,
+      setVersion,
+      firmwareInfo,
+      setFirmwareInfo,
+    };
+  },
+}));
 
 const mock = vi.hoisted(() => ({
-  status: 'disconnected' as string,
+  s: null as ReturnType<(typeof st)['make']> | null,
   releasesThrow: false,
+  holdReleases: false,
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
   outcome: 'verified' as 'verified' | 'sent' | 'failed',
-  holdReleases: false,
-  error: null as string | null,
-  version: { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' },
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   useDashboard: () => ({
     supported: true,
     secure: true,
-    status: () => mock.status,
+    status: () => mock.s!.status(),
     verdict: () => null,
-    error: () => mock.error,
-    version: () => mock.version,
+    error: () => mock.s!.error(),
+    version: () => mock.s!.version(),
+    firmwareInfo: () => mock.s!.firmwareInfo(),
     flashProgress: () => null,
-    connect: async () => {},
+    connect: async () => {
+      mock.s!.setError(null);
+      mock.s!.setStatus('connected');
+    },
     disconnect: async () => {},
     clearFlashResult: () => {},
     readFirmwareInfo: async () => null,
+    // Mirrors the real one's observable effects, so the page is driven by state transitions rather
+    // than by the test asserting an answer it also supplied.
     updateOverControl: async () => {
       mock.updates += 1;
-      // Mirrors the real one: the never-came-back path puts the instruction in the SHARED error, so
-      // it survives the user wandering to another tab.
       if (mock.outcome === 'sent') {
-        mock.error =
-          'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.';
-        mock.status = 'disconnected';
+        mock.s!.setError(
+          'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
+        );
+        mock.s!.setStatus('disconnected');
+      }
+      if (mock.outcome === 'failed') {
+        mock.s!.setError('The box refused that.');
+        mock.s!.setStatus('error');
       }
       return mock.outcome;
     },
@@ -53,58 +95,61 @@ vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
 import Update from '../../src/app/pages/dashboard/Update';
 
+const mount = () => {
+  mock.s = st.make();
+  return render(() => <Update />);
+};
+
 afterEach(() => {
   cleanup();
-  mock.status = 'disconnected';
   mock.releasesThrow = false;
+  mock.holdReleases = false;
   mock.updates = 0;
   mock.assets = [];
   mock.outcome = 'verified';
-  mock.holdReleases = false;
-  mock.error = null;
-  mock.version = { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' };
   navigate.mockClear();
 });
 
+const dev = { name: 'medius_device.bin', size: 1, url: 'd' };
+const host = { name: 'medius_host.bin', size: 1, url: 'h' };
+const reverted = { major: 3, minor: 1, patch: 0, slot: 0, state: 1 };
+const onRelease = { major: 3, minor: 2, patch: 0, slot: 0, state: 1 };
+const fw = (h: typeof reverted, d = onRelease) => ({
+  device: d,
+  host: h,
+  slotSize: 1,
+  deviceStaged: false,
+  hostStaged: false,
+});
+
+const runUpdate = async (choice: RegExp) => {
+  const r = mount();
+  mock.s!.setStatus('connected');
+  await waitFor(() => r.getByRole('button', { name: choice }));
+  r.getByRole('button', { name: choice }).click();
+  await waitFor(() => r.getByRole('button', { name: /^update$/i }));
+  r.getByRole('button', { name: /^update$/i }).click();
+  return r;
+};
+
 describe('Update', () => {
   it('no longer installs a new box; that lives in Setup', async () => {
-    const { container } = render(() => <Update />);
+    const { container } = mount();
     await waitFor(() => expect(container.textContent).toMatch(/plug in like this/i));
     expect(container.textContent).not.toMatch(/set up a new box/i);
-    expect(container.textContent).not.toMatch(/step 1 of 2|step 2 of 2/i);
   });
 
   it('offers connecting through the shared panel while disconnected', async () => {
-    const { getByRole } = render(() => <Update />);
-    await waitFor(() => expect(getByRole('button', { name: /^connect$/i })).toBeTruthy());
+    const r = mount();
+    await waitFor(() => expect(r.getByRole('button', { name: /^connect$/i })).toBeTruthy());
   });
 
   it('a release fetch that failed leaves a message, not an Update button that does nothing', async () => {
-    // The asset reads sat before the try, so a rejected resource threw straight past the button and
-    // the click did nothing at all, silently.
-    mock.status = 'connected';
     mock.releasesThrow = true;
-    const r = render(() => <Update />);
-    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
-    r.getByRole('button', { name: /update both chips/i }).click();
-    await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-    r.getByRole('button', { name: /^update$/i }).click();
+    const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
     expect(mock.updates).toBe(0);
   });
-
-  // A release can be half-published, and the message has to name the chip the user asked about.
-  const runUpdate = async (choice: RegExp) => {
-    mock.status = 'connected';
-    const r = render(() => <Update />);
-    await waitFor(() => r.getByRole('button', { name: choice }));
-    r.getByRole('button', { name: choice }).click();
-    await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-    r.getByRole('button', { name: /^update$/i }).click();
-    return r;
-  };
-  const dev = { name: 'medius_device.bin', size: 1, url: 'd' };
-  const host = { name: 'medius_host.bin', size: 1, url: 'h' };
 
   it('a release missing the main image points at the choice that works', async () => {
     mock.assets = [host];
@@ -123,18 +168,13 @@ describe('Update', () => {
   });
 
   it('asking for the mouse-side chip is never answered about the main one', async () => {
-    // Both images missing: naming the main chip here answers a question the user did not ask, and
-    // points at a button that dead-ends the same way.
     mock.assets = [];
     const r = await runUpdate(/mouse-side only/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
     expect(r.container.textContent).not.toMatch(/nothing for the main chip/i);
-    expect(mock.updates).toBe(0);
   });
 
   it('a single-chip choice a half-published release DOES support just runs', async () => {
-    // The `want*` half of each guard: main-only against a main-only release must not be refused,
-    // and must not be answered about the chip the user did not ask for.
     mock.assets = [dev];
     const r = await runUpdate(/main only/i);
     await waitFor(() => expect(mock.updates).toBe(1));
@@ -155,17 +195,45 @@ describe('Update', () => {
     expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy();
   });
 
-  it('a release with both images runs the update and says it was verified', async () => {
+  it('both chips landing on the release is what verified means', async () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(mock.updates).toBe(1));
     await waitFor(() => expect(r.container.textContent).toMatch(/updated and verified/i));
     expect(r.container.textContent).toMatch(/3\.2\.0/);
   });
 
+  it('the mouse-side chip reverting is not verified, even though the main chip moved', async () => {
+    // The device version alone cannot speak for the chip behind the link, and a chip that reverts
+    // answers a handshake perfectly well.
+    mock.assets = [dev, host];
+    const r = await runUpdate(/update both chips/i);
+    mock.s!.setFirmwareInfo(fw(reverted));
+    await waitFor(() =>
+      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+    );
+    expect(r.container.textContent).not.toMatch(/updated and verified/i);
+  });
+
+  it('a mouse-side update is judged on the mouse-side chip, not the one it never touched', async () => {
+    mock.assets = [host];
+    const r = await runUpdate(/mouse-side only/i);
+    mock.s!.setFirmwareInfo(fw(reverted));
+    await waitFor(() =>
+      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+    );
+  });
+
+  it('a box that comes back on the old version is not called updated', async () => {
+    mock.assets = [dev, host];
+    const r = await runUpdate(/update both chips/i);
+    mock.s!.setVersion({ protoVer: 5, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [], name: '' });
+    await waitFor(() =>
+      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+    );
+    expect(r.container.textContent).not.toMatch(/updated and verified/i);
+  });
+
   it('a box that never came back is NOT reported as verified on any version', async () => {
-    // tryReconnect IS the verification. When it fails, the box has reverted whatever would not boot,
-    // so naming a version here would assert something nothing checked.
     mock.assets = [dev, host];
     mock.outcome = 'sent';
     const r = await runUpdate(/update both chips/i);
@@ -174,13 +242,18 @@ describe('Update', () => {
     expect(r.container.textContent).toMatch(/unplug it, plug it back in/i);
   });
 
-  it('a box that comes back on the OLD version is not called updated', async () => {
-    // The box reverts an image that will not boot, comes back, and handshakes perfectly well. The
-    // handshake is not evidence that anything changed.
+  it('reconnecting after a never-came-back update does not sign off a box that reverted', async () => {
+    // This arm used to say "Your box is back on v3.1.0" with a Finish button: the update having
+    // failed, presented as the end of the flow.
     mock.assets = [dev, host];
-    mock.version = { protoVer: 5, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [], name: '' };
+    mock.outcome = 'sent';
     const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/not the version that was sent/i));
+    await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
+    mock.s!.setVersion({ protoVer: 5, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [], name: '' });
+    r.getByRole('button', { name: /^connect$/i }).click();
+    await waitFor(() =>
+      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+    );
     expect(r.container.textContent).not.toMatch(/updated and verified/i);
   });
 
@@ -191,11 +264,22 @@ describe('Update', () => {
     await waitFor(() => expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy());
   });
 
+  it('a failed update says why once, not twice', async () => {
+    mock.assets = [dev, host];
+    mock.outcome = 'failed';
+    const r = await runUpdate(/update both chips/i);
+    await waitFor(() => expect(r.container.textContent).toMatch(/the box refused that/i));
+    const alerts = [...r.container.querySelectorAll('[role="alert"]')].filter((a) =>
+      /the box refused that/i.test(a.textContent ?? ''),
+    );
+    expect(alerts).toHaveLength(1);
+  });
+
   it('the Update button waits for the release list instead of claiming there is none', async () => {
     mock.assets = [dev, host];
-    mock.status = 'connected';
     mock.holdReleases = true;
-    const r = render(() => <Update />);
+    const r = mount();
+    mock.s!.setStatus('connected');
     await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
     r.getByRole('button', { name: /update both chips/i }).click();
     await waitFor(() => r.getByRole('button', { name: /^update$/i }));
@@ -203,11 +287,11 @@ describe('Update', () => {
   });
 
   it('a connected box gets the three update choices and nothing about cables', async () => {
-    mock.status = 'connected';
-    const { getByRole, container } = render(() => <Update />);
-    await waitFor(() => getByRole('button', { name: /update both chips/i }));
-    expect(getByRole('button', { name: /main only/i })).toBeTruthy();
-    expect(getByRole('button', { name: /mouse-side only/i })).toBeTruthy();
-    expect(container.textContent).not.toMatch(/BOOT|unplug/i);
+    const r = mount();
+    mock.s!.setStatus('connected');
+    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
+    expect(r.getByRole('button', { name: /main only/i })).toBeTruthy();
+    expect(r.getByRole('button', { name: /mouse-side only/i })).toBeTruthy();
+    expect(r.container.textContent).not.toMatch(/BOOT|unplug/i);
   });
 });

@@ -8,8 +8,10 @@ const mock = vi.hoisted(() => ({
   // Whether the box answers a handshake after the activate. False = it never came back.
   comesBack: true,
   activateThrows: null as Error | null,
-  staged: [] as number[],
-  aborted: [] as number[],
+  // Full arguments, not just the target: recording the target alone made "the mouse-side image
+  // goes first" prove only the order of two numbers, and a wrong-image bug passed.
+  staged: [] as { target: number; tag: number }[],
+  aborted: [] as { target: number; timeout?: number }[],
 }));
 
 const version = { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' };
@@ -27,14 +29,14 @@ vi.mock('../../src/dashboard/serial', async () => {
       if (!mock.comesBack) throw new Error('no reply');
       return version;
     }
-    async stageFirmware(target: number) {
-      mock.staged.push(target);
+    async stageFirmware(target: number, image: Uint8Array) {
+      mock.staged.push({ target, tag: image[1] });
     }
     async activateFirmware() {
       if (mock.activateThrows) throw mock.activateThrows;
     }
-    async abortUpdate(target: number) {
-      mock.aborted.push(target);
+    async abortUpdate(target: number, timeout?: number) {
+      mock.aborted.push({ target, timeout });
     }
     async queryFirmware() {
       return null;
@@ -76,14 +78,17 @@ afterEach(() => {
   mock.aborted = [];
 });
 
-const img = () => new Uint8Array([0xe9, 1, 2, 3]);
+// The second byte tags which image this is, so the fake can prove WHICH bytes went where.
+const DEVICE_TAG = 0xd0;
+const HOST_TAG = 0xa0;
+const img = (tag: number) => new Uint8Array([0xe9, tag, 2, 3]);
 
 describe('updateOverControl', () => {
   it('reports verified only when the box actually came back and answered', async () => {
     mountProvider();
     await api.connect();
     await waitFor(() => expect(api.status()).toBe('connected'));
-    const outcome = await api.updateOverControl({ device: img() });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('verified');
     expect(api.error()).toBeNull();
   });
@@ -95,7 +100,7 @@ describe('updateOverControl', () => {
     await api.connect();
     await waitFor(() => expect(api.status()).toBe('connected'));
     mock.comesBack = false;
-    const outcome = await api.updateOverControl({ device: img() });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('sent');
     expect(api.error()).toMatch(/did not come back on its own/i);
     expect(api.error()).toMatch(/unplug it, plug it back in/i);
@@ -104,14 +109,26 @@ describe('updateOverControl', () => {
     expect(api.status()).toBe('disconnected');
   }, 20000);
 
+  it('only what was actually staged is disarmed', async () => {
+    mountProvider();
+    await api.connect();
+    await waitFor(() => expect(api.status()).toBe('connected'));
+    mock.activateThrows = new Error('the box refused');
+    await api.updateOverControl({ device: img(DEVICE_TAG) });
+    expect(mock.aborted.map((a) => a.target)).toEqual([0]);
+  });
+
   it('a refused activate is "failed", and disarms what was staged so the chips cannot diverge', async () => {
     mountProvider();
     await api.connect();
     await waitFor(() => expect(api.status()).toBe('connected'));
     mock.activateThrows = new Error('the box refused');
-    const outcome = await api.updateOverControl({ device: img(), host: img() });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
     expect(outcome).toBe('failed');
-    expect(mock.aborted.length).toBe(2);
+    // Host first, the order it was staged in, and each on the short timeout: the usual reason for
+    // being here is a box that has stopped answering, and two full op timeouts is a frozen minute.
+    expect(mock.aborted.map((a) => a.target)).toEqual([1, 0]);
+    expect(mock.aborted.every((a) => a.timeout === 3000)).toBe(true);
     expect(api.error()).toBeTruthy();
   });
 
@@ -119,14 +136,17 @@ describe('updateOverControl', () => {
     mountProvider();
     await api.connect();
     await waitFor(() => expect(api.status()).toBe('connected'));
-    await api.updateOverControl({ device: img(), host: img() });
-    // OTA_TGT_HOST is 1, OTA_TGT_DEVICE is 0.
-    expect(mock.staged).toEqual([1, 0]);
+    await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    // OTA_TGT_HOST is 1, OTA_TGT_DEVICE is 0 -- and each target must get ITS OWN image.
+    expect(mock.staged).toEqual([
+      { target: 1, tag: HOST_TAG },
+      { target: 0, tag: DEVICE_TAG },
+    ]);
   });
 
   it('refuses with no link rather than pretending', async () => {
     mountProvider();
-    const outcome = await api.updateOverControl({ device: img() });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('failed');
     expect(api.error()).toMatch(/connect to the box/i);
   });

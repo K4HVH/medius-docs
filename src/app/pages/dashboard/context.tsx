@@ -263,6 +263,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     setVersion(null);
     setError(null);
     setVerdict(null);
+    setFirmwareInfo(null);
     poller.reset();
     setFlashProgress(null);
     if (l) await l.close().catch(() => undefined);
@@ -328,8 +329,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       setFlashProgress({ phase: 'done' });
       if (!reconnected) {
         // Shared, not page-local: this is the one instruction that fixes it, and navigating to
-        // another tab used to destroy it. The claim is only what the code can support -- what is
-        // running now is exactly what nothing has checked.
+        // another tab used to destroy it. Device, Control and Update all surface it. The claim is
+        // only what the code can support -- what is running now is what nothing has checked.
         setError(
           'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
         );
