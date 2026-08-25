@@ -82,11 +82,9 @@ const openUpload = async (r: ReturnType<typeof render>) => {
   });
 };
 
-// Walk past the unplug gate to the Flash button.
+// Flash is on screen straight away now; there is no gate to walk past.
 const openGate = async (r: ReturnType<typeof render>) => {
-  // With nothing plugged in there is no disconnect to wait for, so the gate starts at the confirm.
-  await waitFor(() => r.getByRole('button', { name: /every cable is unplugged/i }));
-  r.getByRole('button', { name: /every cable is unplugged/i }).click();
+  await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
 };
 
 describe('Advanced', () => {
@@ -103,7 +101,6 @@ describe('Advanced', () => {
   it('the badge names the button beside the socket this chip actually uses', async () => {
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     // Default chip is the main one: USB1.
     expect(r.container.textContent).toMatch(/button next to USB1/i);
     expect(r.container.textContent).not.toMatch(/button next to USB3/i);
@@ -128,7 +125,6 @@ describe('Advanced', () => {
     // unconditionally erased the reason in the same tick it was set.
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
     fireEvent.click(source);
     fireEvent.keyDown(source, { key: 'Enter' });
@@ -158,7 +154,6 @@ describe('Advanced', () => {
     mock.flashOk = false;
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
     const alert = await r.findByRole('alert');
     expect(alert.textContent).toMatch(/did not finish/i);
@@ -180,7 +175,6 @@ describe('Advanced', () => {
     mock.holdFlash = true;
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
     await waitFor(() => {
       const boxes = [...r.container.querySelectorAll('.combobox--disabled')];
@@ -194,7 +188,6 @@ describe('Advanced', () => {
     // the old rejection on screen for good.
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     const input = await openUpload(r);
     const huge = new File([new Uint8Array(16)], 'huge.bin');
     Object.defineProperty(huge, 'size', { value: 8 * 1024 * 1024 });
@@ -215,29 +208,12 @@ describe('Advanced', () => {
     await waitFor(() => expect(r.queryByRole('alert')).toBeNull());
   });
 
-  it('the success screen marks the socket of the chip that was actually flashed', async () => {
-    const r = render(() => <Advanced />);
-    await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
-    r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/take the cable you just used out/i));
-    // Default chip is the main one: USB1 is what is in this computer and has to come out.
-    const tiles = [...r.container.querySelectorAll('div')].filter((d) => {
-      const first = d.querySelector(':scope > div');
-      return first?.textContent === 'USB1' || first?.textContent === 'USB3';
-    });
-    const usb1 = tiles.find((t) => t.textContent?.startsWith('USB1'))?.textContent ?? '';
-    const usb3 = tiles.find((t) => t.textContent?.startsWith('USB3'))?.textContent ?? '';
-    expect(usb1).toContain('unplug');
-    expect(usb3).not.toContain('unplug');
-  });
 
   it('a disabled chip picker cannot be selected from, not merely styled', async () => {
     // The class was the only thing `disabled` did; a list already open could still be picked from.
     mock.holdFlash = true;
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
@@ -252,32 +228,13 @@ describe('Advanced', () => {
     expect(r.container.textContent).toMatch(/Main chip/i);
   });
 
-  it('both chips pass the cable gate, not just the mouse-side one', async () => {
-    const r = render(() => <Advanced />);
-    // Default chip is the main one, which used to skip the gate outright.
-    await waitFor(() => expect(r.getByRole('button', { name: /every cable is unplugged/i })).toBeTruthy());
-    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
-  });
 
-  it('Flash another re-arms the gate instead of going straight back to Flash', async () => {
+
+  it('the success screen offers a way onward, not just another flash', async () => {
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(mock.flashes).toBe(1));
-    await waitFor(() => r.getByRole('button', { name: /flash another/i }));
-    r.getByRole('button', { name: /flash another/i }).click();
-    await waitFor(() => expect(r.getByRole('button', { name: /every cable is unplugged/i })).toBeTruthy());
-    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
-  });
-
-  it('the success screen says to take the cable just used out before plugging anything back', async () => {
-    const r = render(() => <Advanced />);
-    await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
-    r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.textContent).toMatch(/take the cable you just used out/i));
-    expect(r.container.textContent).toMatch(/can kill it/i);
+    await waitFor(() => r.getByRole('button', { name: /go to my box/i }));
     r.getByRole('button', { name: /go to my box/i }).click();
     expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
@@ -286,7 +243,6 @@ describe('Advanced', () => {
     mock.flashOk = false;
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
     r.getByRole('button', { name: /^flash$/i }).click();
     // Assert the failure text itself: /BOTH/ is already on screen from the boot badge, so matching
     // it alone passed whether or not the click ever happened.
@@ -301,7 +257,6 @@ describe('Advanced', () => {
   it('a second file whose read fails cannot leave the first file armed to flash', async () => {
     const r = render(() => <Advanced />);
     await openGate(r);
-    await waitFor(() => r.getByRole('button', { name: /^flash$/i }));
 
     // The option list renders through a portal, so it is read off the document, and it only exists
     // once the combobox is open. SOURCE is the third one on the page.

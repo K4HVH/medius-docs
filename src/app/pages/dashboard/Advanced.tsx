@@ -16,8 +16,7 @@ import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
 import { useDashboard } from './context';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
-import { ClearPort, InstallPorts, WiringPorts } from './PortDiagram';
-import { UnplugWatch } from './UnplugWatch';
+import { InstallPorts, WiringPorts } from './PortDiagram';
 import '../../../styles/docs.css';
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
@@ -36,12 +35,6 @@ const Advanced = () => {
   const [files, setFiles] = createSignal<File[]>([]);
   const [image, setImage] = createSignal<Uint8Array | null>(null);
   const [done, setDone] = createSignal(false);
-  // What was actually written, captured when the flash starts. Reading the live combobox afterwards
-  // let a mid-flash switch write an app image at offset 0 and name the wrong cable on the way out.
-  const [flashed, setFlashed] = createSignal<{ chip: FlashChip; kind: FlashKind }>({
-    chip: 'device',
-    kind: 'factory',
-  });
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
   // Kept apart from `err` so switching chip clears the flash failure that named the other socket
@@ -50,7 +43,6 @@ const Advanced = () => {
   // FileUpload calls onError and THEN onChange for the same selection, so onFiles has to know a
   // rejection has just landed. Covers a mixed drop too, where one file is kept and one refused.
   let rejectedThisPick = false;
-  const [unplugged, setUnplugged] = createSignal(false);
 
   // Re-arm the unplug gate whenever the chosen chip changes.
   // Leaving the release path abandons whatever the upload path complained about.
@@ -58,12 +50,9 @@ const Advanced = () => {
     if (source() !== 'upload') setFileErr(null);
   });
 
+  // A failure from the previous chip named the other socket; leaving it up contradicts the diagram.
   createEffect(() => {
     chip();
-    setUnplugged(false);
-    // The old failure named the other chip's socket; leaving it up puts two contradictory
-    // hold-this-button instructions on screen at once. `fileErr` is untouched: it is about the file,
-    // which the chip has nothing to do with.
     setErr(null);
   });
 
@@ -126,8 +115,9 @@ const Advanced = () => {
     setErr(null);
     setFileErr(null);
     dash.clearFlashResult();
+    // Captured before the awaits: the comboboxes are disabled during a flash, and this makes the
+    // image and the offset come from the same reading either way.
     const target = { chip: chip(), kind: kind() };
-    setFlashed(target);
     setBusy(true);
     try {
       // Both chips flash over their own native USB in ROM download: the device chip on USB1, the
@@ -171,24 +161,15 @@ const Advanced = () => {
 
           <Switch>
             <Match when={done()}>
-              <div class="callout callout--danger">
-                Take the cable you just used out of this computer first. USB1 and USB3 plugged into
-                the same computer at once can kill it.
-              </div>
-              <ClearPort socket={flashed().chip === 'host' ? 'usb3' : 'usb1'} />
-              <div class="callout callout--info">Then plug in like this.</div>
+              <div class="callout callout--info">Done.</div>
               <WiringPorts />
               <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                 <Button variant="primary" onClick={() => navigate('/dashboard')}>
                   Go to my box
                 </Button>
                 <Button
-                  variant="subtle"
-                  size="compact"
+                  variant="secondary"
                   onClick={() => {
-                    // Re-arm the gate: the screen above has just said to plug the other cable back
-                    // in, and the effect that resets this only fires on a chip CHANGE.
-                    setUnplugged(false);
                     setDone(false);
                   }}
                 >
@@ -286,19 +267,15 @@ const Advanced = () => {
                 </Show>
               </Show>
 
-              <p style={{ 'margin-top': 'var(--g-spacing)' }}>Get the chip into update mode:</p>
-              <Show
-                when={unplugged()}
-                fallback={<UnplugWatch onUnplugged={() => setUnplugged(true)} />}
-              >
-                <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
+              <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
+              <Show when={chip() === 'host'}>
                 <div class="callout callout--danger">
-                  USB1 and USB3 plugged into the same computer at once can kill it.
+                  Never plug USB1 and USB3 into the same computer.
                 </div>
-                <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
-                  Flash
-                </Button>
               </Show>
+              <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
+                Flash
+              </Button>
             </Match>
           </Switch>
         </Card>

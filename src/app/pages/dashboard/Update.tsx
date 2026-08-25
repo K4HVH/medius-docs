@@ -203,18 +203,19 @@ const Update = () => {
               </p>
               <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                 <WiringPorts />
-                <Button
-                  variant="primary"
-                  disabled={busy() || releases.loading}
-                  onClick={() => void runUpdate()}
-                >
-                  {busy() ? 'Updating...' : 'Update'}
-                </Button>
               </Show>
-              <div style={{ 'margin-top': 'var(--g-spacing-sm)' }}>
+              <div style={row}>
+                <Show when={dash.status() === 'connected'}>
+                  <Button
+                    variant="primary"
+                    disabled={busy() || releases.loading}
+                    onClick={() => void runUpdate()}
+                  >
+                    {busy() ? 'Updating...' : 'Update'}
+                  </Button>
+                </Show>
                 <Button
-                  variant="subtle"
-                  size="compact"
+                  variant="secondary"
                   disabled={busy()}
                   onClick={() => { setErr(null); setStep('choose'); }}
                 >
