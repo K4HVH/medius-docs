@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
-import { BearingMode, EmitMode } from '../../src/dashboard/protocol';
+import { BearingMode, EmitMode, RenderState } from '../../src/dashboard/protocol';
 
 const settle = () => new Promise((r) => setTimeout(r, 20));
 
 const mock = vi.hoisted(() => ({
   bearing: { windowMs: 20, mode: 0 } as { windowMs: number; mode: number },
-  emit: { mode: 0, fixedHz: 0, resolvedHz: 0 } as { mode: number; fixedHz: number; resolvedHz: number },
+  // Literals, not enum members: vi.hoisted runs before the imports it would need.
+  emit: { mode: 0, fixedHz: 0, resolvedHz: 0, renderState: 0 } as {
+    mode: number;
+    fixedHz: number;
+    resolvedHz: number;
+    renderState: number;
+  },
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -38,7 +44,7 @@ const button = (root: HTMLElement, text: string) =>
 afterEach(() => {
   cleanup();
   mock.bearing = { windowMs: 20, mode: 0 };
-  mock.emit = { mode: 0, fixedHz: 0, resolvedHz: 0 };
+  mock.emit = { mode: 0, fixedHz: 0, resolvedHz: 0, renderState: RenderState.Off };
 });
 
 describe('DeviceOptions', () => {
@@ -56,11 +62,48 @@ describe('DeviceOptions', () => {
   });
 
   it('describes only the selected emit mode', async () => {
-    mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 };
+    mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500, renderState: RenderState.Off };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('Pins the rate to the number you pick.');
     expect(queryByText("Matches the mouse's own report rate.")).toBeNull();
     expect(queryByText("Follows the mouse's USB poll rate.")).toBeNull();
+  });
+
+  // Warming and Unavailable are not "rendering", and a card that showed the same chip for all three
+  // would hide the one thing the state byte exists to tell a user.
+  it('says which of the three rendered states the box is actually in', async () => {
+    mock.emit = { mode: EmitMode.Rendered, fixedHz: 0, resolvedHz: 0, renderState: RenderState.Live };
+    const live = render(() => <DeviceOptions />);
+    await live.findByText('Rendering');
+    live.unmount();
+
+    mock.emit = {
+      mode: EmitMode.Rendered,
+      fixedHz: 0,
+      resolvedHz: 0,
+      renderState: RenderState.Warming,
+    };
+    const warm = render(() => <DeviceOptions />);
+    await warm.findByText('Profiling the mouse');
+    expect(warm.queryByText('Rendering')).toBeNull();
+    warm.unmount();
+
+    mock.emit = {
+      mode: EmitMode.Rendered,
+      fixedHz: 0,
+      resolvedHz: 0,
+      renderState: RenderState.Unavailable,
+    };
+    const un = render(() => <DeviceOptions />);
+    await un.findByText('Needs a 1 kHz clone');
+    expect(un.queryByText('Rendering')).toBeNull();
+  });
+
+  it('describes the rendered mode when it is selected', async () => {
+    mock.emit = { mode: EmitMode.Rendered, fixedHz: 0, resolvedHz: 0, renderState: RenderState.Live };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('A model decides each report, gaps and all.');
+    expect(queryByText("Matches the mouse's own report rate.")).toBeNull();
   });
 
   // Emit rate was the only control that offered Revert, so a pending bearing or riding edit looked
