@@ -133,6 +133,30 @@ export enum EmitMode {
   Learned = 0, // pace to the mouse's learnt native report rate (default)
   Interval = 1, // follow the cloned mouse's bInterval poll rate
   Fixed = 2, // pace at a fixed rate_hz
+  Rendered = 3, // a model decides emission and counts each millisecond
+}
+
+// Whether Rendered pacing is actually rendering (RESP(OPTIONS, EMIT) trailing byte).
+export enum RenderState {
+  Off = 0,
+  Warming = 1,
+  Live = 2,
+  Unavailable = 3,
+}
+
+export function renderStateFromU8(value: number): RenderState | null {
+  switch (value) {
+    case 0:
+      return RenderState.Off;
+    case 1:
+      return RenderState.Warming;
+    case 2:
+      return RenderState.Live;
+    case 3:
+      return RenderState.Unavailable;
+    default:
+      return null;
+  }
 }
 
 export function emitModeFromU8(value: number): EmitMode | null {
@@ -143,6 +167,8 @@ export function emitModeFromU8(value: number): EmitMode | null {
       return EmitMode.Interval;
     case 2:
       return EmitMode.Fixed;
+    case 3:
+      return EmitMode.Rendered;
     default:
       return null;
   }

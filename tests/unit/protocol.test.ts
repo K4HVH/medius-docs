@@ -23,6 +23,7 @@ import {
   sameFilter,
   DeviceKind,
   EmitMode,
+  RenderState,
   FrameDecoder,
   FrameType,
   LogLevel,
@@ -1101,7 +1102,7 @@ describe('OPTION command (§3.10)', () => {
 
   it('parses RESP(OPTIONS, EMIT) into the pacing mode and the rate the clone runs at', () => {
     // Learned, no clone yet: every field zero.
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1110,10 +1111,11 @@ describe('OPTION command (§3.10)', () => {
         forceHz: 0,
         advertisedHz: 0,
         forceActive: false,
+        renderState: RenderState.Off,
       },
     });
     // Interval resolved to the 1000 Hz poll rate, nothing forced, the clone advertising its own 1 kHz.
-    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Interval,
@@ -1122,12 +1124,13 @@ describe('OPTION command (§3.10)', () => {
         forceHz: 0,
         advertisedHz: 1000,
         forceActive: false,
+        renderState: RenderState.Off,
       },
     });
-    // Five distinct numbers, so swapping any two fields fails: fixed 1000, resolved 250, forced 125,
-    // advertising 100, and the force in the served descriptor.
+    // Six distinct numbers, so swapping any two fields fails: fixed 1000, resolved 250, forced 125,
+    // advertising 100, the force in the served descriptor, and a render state that is not Off.
     expect(
-      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1])),
+      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1, 0])),
     ).toEqual({
       kind: 'emitPace',
       emit: {
@@ -1137,10 +1140,11 @@ describe('OPTION command (§3.10)', () => {
         forceHz: 125,
         advertisedHz: 100,
         forceActive: true,
+        renderState: RenderState.Off,
       },
     });
     // A force set while IMPERFECT is off: requested, not in the descriptor.
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1149,10 +1153,32 @@ describe('OPTION command (§3.10)', () => {
         forceHz: 1000,
         advertisedHz: 125,
         forceActive: false,
+        renderState: RenderState.Off,
       },
     });
+    // Rendered, live: no rate ceiling of its own, and a state the box computed rather than echoed.
+    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0, 0, 0, 0, 0xe8, 0x03, 0, 2]))).toEqual({
+      kind: 'emitPace',
+      emit: {
+        mode: EmitMode.Rendered,
+        fixedHz: 0,
+        resolvedHz: 0,
+        forceHz: 0,
+        advertisedHz: 1000,
+        forceActive: false,
+        renderState: RenderState.Live,
+      },
+    });
+    // Warming and Unavailable are distinct: a fallback must not read as rendering.
+    expect(
+      parseResp(new Uint8Array([9, 2, 3, 0, 0, 0, 0, 0, 0, 0xe8, 0x03, 0, 1]))?.kind === 'emitPace'
+        ? (parseResp(new Uint8Array([9, 2, 3, 0, 0, 0, 0, 0, 0, 0xe8, 0x03, 0, 1])) as {
+            emit: { renderState: RenderState | null };
+          }).emit.renderState
+        : null,
+    ).toBe(RenderState.Warming);
     // A mode this build doesn't know -> mode null, the rates still decode.
-    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 9, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: null,
@@ -1161,8 +1187,11 @@ describe('OPTION command (§3.10)', () => {
         forceHz: 0,
         advertisedHz: 1000,
         forceActive: false,
+        renderState: RenderState.Off,
       },
     });
+    // A 12-byte reply is 3.2.x firmware. Decoding it short would invent a render state.
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0xe8, 0x03, 0]))).toBeNull();
   });
 
   it('returns null for a truncated or unknown OPTIONS payload', () => {

@@ -161,9 +161,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.2.1</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.3.0</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 05     | 03     | 02     | 01     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 05     | 03     | 03     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -736,12 +736,13 @@ const Requests: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>2</td><td><code>mode</code></td><td><code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
+              <tr><td>2</td><td><code>mode</code></td><td><code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed, <code>3</code> rendered</td></tr>
               <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
               <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet</td></tr>
               <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
               <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
               <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
+              <tr><td>12</td><td><code>render_state</code></td><td><code>0</code> off, <code>1</code> warming, <code>2</code> live, <code>3</code> unavailable (<A href="/native/commands/option#emit">EMIT</A>)</td></tr>
             </tbody>
           </table>
           <p>
@@ -911,7 +912,7 @@ const Requests: Component = () => {
             <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Both chips on 3.2.1, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
+          <p>Both chips on 3.3.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+-------------+--------+
 | A5     | 06     | 01     | 11 00  | 0B     | 03 02 01 01 | ...    |
 +--------+--------+--------+--------+--------+-------------+--------+

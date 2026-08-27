@@ -356,12 +356,12 @@ device.press(from_button)?;                         // press takes any impl Into
       <div id="emit-pace" data-search-target>
         <Card>
           <CardHeader title="EmitPace" subtitle="What paces injected motion" />
-          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
+          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16), Rendered {'}'}</pre>
           <p>
             What sets the emit-rate ceiling for injected motion, passed to{' '}
             <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It raises
-            the ceiling only, so idle stays idle.
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. The
+            first three raise the ceiling only, so idle stays idle; <code>Rendered</code> replaces it.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
@@ -369,6 +369,27 @@ device.press(from_button)?;                         // press takes any impl Into
               <tr><td><code>Learned</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
               <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
               <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
+              <tr><td><code>Rendered</code></td><td>A model decides each millisecond whether injected cursor motion emits and what counts it carries. See <A href="/library/types/enums#render-state"><code>RenderState</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="render-state" data-search-target>
+        <Card>
+          <CardHeader title="RenderState" subtitle="Whether Rendered pacing is actually rendering" />
+          <pre class="api-signature">enum RenderState {'{'} Off, Warming, Live, Unavailable {'}'}</pre>
+          <p>
+            Carried by{' '}
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>, so a host
+            can tell rendering from a silent fallback to the ordinary drain.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Off</code></td><td>The selected mode is not <code>EmitPace::Rendered</code>.</td></tr>
+              <tr><td><code>Warming</code></td><td>Still collecting the attached mouse's profile; pacing as <code>Learned</code> does meanwhile.</td></tr>
+              <tr><td><code>Live</code></td><td>Rendering.</td></tr>
+              <tr><td><code>Unavailable</code></td><td>No usable model, or the game PC does not poll the clone every millisecond.</td></tr>
             </tbody>
           </table>
         </Card>

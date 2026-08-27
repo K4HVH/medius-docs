@@ -16,6 +16,7 @@ import {
   BEARING_WINDOW_DEFAULT_MS,
   BearingMode,
   EmitMode,
+  RenderState,
   NAME_MAX,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
@@ -27,18 +28,34 @@ const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
   interval: EmitMode.Interval,
   fixed: EmitMode.Fixed,
+  rendered: EmitMode.Rendered,
 };
 
 const MODE_BLURB: Record<string, string> = {
   learned: "Matches the mouse's own report rate.",
   interval: "Follows the mouse's USB poll rate.",
   fixed: 'Pins the rate to the number you pick.',
+  rendered: 'A model decides each report, gaps and all.',
 };
 
 const MODE_NAMES: Record<number, string> = {
   [EmitMode.Learned]: 'learned',
   [EmitMode.Interval]: 'interval',
   [EmitMode.Fixed]: 'fixed',
+  [EmitMode.Rendered]: 'rendered',
+};
+
+const renderStateLabel = (r: RenderState | null): string => {
+  switch (r) {
+    case RenderState.Warming:
+      return 'Profiling the mouse';
+    case RenderState.Live:
+      return 'Rendering';
+    case RenderState.Unavailable:
+      return 'Needs a 1 kHz clone';
+    default:
+      return 'Not rendering';
+  }
 };
 
 const emitLabel = (e: EmitPace): string => {
@@ -49,6 +66,8 @@ const emitLabel = (e: EmitPace): string => {
       return e.resolvedHz > 0 ? `Interval · ${e.resolvedHz} Hz` : 'Interval';
     case EmitMode.Fixed:
       return `Fixed · ${e.resolvedHz || e.fixedHz} Hz`;
+    case EmitMode.Rendered:
+      return 'Rendered';
     default:
       return 'Unknown';
   }
@@ -328,6 +347,7 @@ const DeviceOptions = () => {
             { value: 'learned', label: 'Learned' },
             { value: 'interval', label: 'Interval' },
             { value: 'fixed', label: 'Fixed' },
+            { value: 'rendered', label: 'Rendered' },
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
@@ -394,6 +414,19 @@ const DeviceOptions = () => {
                   {s().forceActive
                     ? `Forced \u00b7 ${s().advertisedHz} Hz`
                     : `Device's own \u00b7 ${s().advertisedHz} Hz`}
+                </Chip>
+              </Show>
+              <Show when={s().mode === EmitMode.Rendered}>
+                <Chip
+                  variant={
+                    s().renderState === RenderState.Live
+                      ? 'success'
+                      : s().renderState === RenderState.Unavailable
+                        ? 'warning'
+                        : 'neutral'
+                  }
+                >
+                  {renderStateLabel(s().renderState)}
                 </Chip>
               </Show>
               <Show when={s().forceHz > 0 && !s().forceActive}>

@@ -156,7 +156,8 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             <A href="/library/types/enums#emit-pace"><code>EmitPace::Learned</code></A> (the default)
             paces injection to the rate the real mouse reports at.{' '}
             <code>EmitPace::Interval</code> paces to the cloned mouse's declared poll rate (its
-            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.
+            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.{' '}
+            <code>EmitPace::Rendered</code> hands the decision to a model instead of a rate.
           </p>
           <p>
             The 1 ms frame clock snaps a fixed rate to <code>1000/n</code> Hz and caps it at 1 kHz. The
@@ -182,7 +183,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
+              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, <code>Fixed(hz)</code>, or <code>Rendered</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
@@ -196,6 +197,7 @@ let device = Device::find()?;
 device.set_emit_pace(EmitPace::Fixed(1000), None)?;      // emit at a fixed 1 kHz
 device.allow_imperfect_clones(true)?;
 device.set_emit_pace(EmitPace::Learned, Some(1000))?;    // a 1 kHz clone, human-paced injection
+device.set_emit_pace(EmitPace::Rendered, None)?;         // a model paces it, gaps and all
 device.set_emit_pace(EmitPace::Learned, None)?;          // back to the defaults`}</code></pre>
         </Card>
       </div>

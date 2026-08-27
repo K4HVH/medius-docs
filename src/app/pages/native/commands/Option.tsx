@@ -224,6 +224,7 @@ const Option: Component = () => {
               <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
+              <tr><td><code>3</code></td><td>Rendered</td><td>ignored</td><td>Nothing. A model decides each millisecond</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -232,8 +233,52 @@ const Option: Component = () => {
               500, 333, 250… are exact and 750 lands on 1000 (<code>0</code> means 1000).
             </p>
             <p>
-              Every mode raises the ceiling only: the box still emits a frame solely when injection is
-              pending, so idle stays idle.
+              Modes <code>0</code> to <code>2</code> raise the ceiling only: the box still emits a frame
+              solely when injection is pending, so idle stays idle. Mode <code>3</code> replaces the
+              ceiling instead of raising it.
+            </p>
+          </div>
+          <div class="api-response-label">RENDERED</div>
+          <p>
+            Mode <code>3</code> hands the emit decision to a model trained on human mouse streams. It
+            holds the counts owed and chooses, each millisecond, whether a report goes out at all.
+          </p>
+          <pre class="diagram">{`  hand still, motion pending, 16 ms
+
+  mode 0   |# # # # # # # # # # # # # # # # |  16 reports, no gap
+  mode 3   |# #     #   # # #       #     # |  8 reports, the model's gaps
+           +--------------------------------+
+            0                          16 ms`}</pre>
+          <table class="api-params">
+            <thead><tr><th>Property</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Axes</td><td>Cursor X and Y. The wheel keeps the ordinary drain</td></tr>
+              <tr><td>Profile</td><td>256 milliseconds of the attached mouse's own reports, taken after it binds</td></tr>
+              <tr><td>Ceiling</td><td>127 counts per report, the model's trained output range</td></tr>
+              <tr><td>Requires</td><td>A clone the game PC polls every millisecond</td></tr>
+              <tr><td>Ignores</td><td><code>rate_hz</code>. Buttons, keys, media and clip cadence are unchanged</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">STATE</div>
+          <p>
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> reports
+            whether the mode is actually rendering.
+          </p>
+          <table class="api-params">
+            <thead><tr><th><code>render_state</code></th><th>Name</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Off</td><td>The selected mode is not Rendered</td></tr>
+              <tr><td><code>1</code></td><td>Warming</td><td>Still profiling the mouse; pacing as Learnt meanwhile</td></tr>
+              <tr><td><code>2</code></td><td>Live</td><td>Rendering</td></tr>
+              <tr><td><code>3</code></td><td>Unavailable</td><td>No usable model, or the clone is polled slower than 1 ms</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              Rendered and{' '}
+              <A href="/native/commands/option#move_ride"><code>MOVE_RIDE</code></A> answer the same
+              problem from opposite ends. With riding on, motion never drives a frame of its own, so the
+              model's gaps are never used and it degrades to plain riding.
             </p>
           </div>
           <div class="api-response-label">FORCE_HZ</div>

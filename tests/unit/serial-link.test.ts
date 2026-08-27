@@ -7,6 +7,7 @@ import {
 import {
   CatchClass,
   EmitMode,
+  RenderState,
   FrameDecoder,
   FrameType,
   Direction,
@@ -281,7 +282,7 @@ describe('SerialLink', () => {
             encode(
               FrameType.Resp,
               f.seq,
-              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01]),
+              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01, 0x00]),
             ),
           );
         }
@@ -302,6 +303,7 @@ describe('SerialLink', () => {
       forceHz: 125,
       advertisedHz: 100,
       forceActive: true,
+      renderState: RenderState.Off,
     });
     expect(reqs).toEqual([
       [9, 0],
