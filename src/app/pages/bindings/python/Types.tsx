@@ -939,7 +939,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>dropped TX frames</td></tr>
                 <tr><td><code>tx_merges</code></td><td><code>int</code></td><td>coalesced TX frames</td></tr>
                 <tr><td><code>tx_maxdepth</code></td><td><code>int</code></td><td>peak TX queue depth</td></tr>
-                <tr><td><code>tx_wedges</code></td><td><code>int</code></td><td>TX stalls</td></tr>
+                <tr><td><code>tx_wedges</code></td><td><code>int</code></td><td>TX stalls on endpoints the PC has read from</td></tr>
                 <tr><td><code>wakeups</code></td><td><code>int</code></td><td>scheduler wakeups</td></tr>
                 <tr><td><code>reset_count</code></td><td><code>int</code></td><td>resets seen</td></tr>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>

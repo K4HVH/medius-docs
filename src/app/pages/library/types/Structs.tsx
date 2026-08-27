@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 5, fw_major: 3, fw_minor: 2, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.2.0"); // Display omits proto_ver
+let v = Version { proto_ver: 5, fw_major: 3, fw_minor: 2, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.2.1"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -201,7 +201,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports dropped on TX-queue overflow (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
-              <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
+              <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries, on endpoints the PC has read from.</td></tr>
               <tr><td><code>wakeups</code></td><td><code>u16</code></td><td>Remote-wakeups issued.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>

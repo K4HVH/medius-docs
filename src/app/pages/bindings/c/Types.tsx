@@ -1006,7 +1006,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports dropped on TX-queue overflow (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
-              <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
+              <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries, on endpoints the PC has read from.</td></tr>
               <tr><td><code>wakeups</code></td><td><code>uint16_t</code></td><td>Remote-wakeups issued.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>uint16_t</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>uint16_t</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>

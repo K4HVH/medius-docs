@@ -161,9 +161,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.2.0</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.2.1</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 05     | 03     | 02     | 00     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 05     | 03     | 02     | 01     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -438,7 +438,7 @@ const Requests: Component = () => {
               <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports dropped on TX-queue overflow; should stay 0</td></tr>
               <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
               <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>deepest the TX queue has reached</td></tr>
-              <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
+              <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries, on endpoints the PC has read from</td></tr>
               <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
               <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
@@ -911,9 +911,9 @@ const Requests: Component = () => {
             <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Both chips on 3.2.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
+          <p>Both chips on 3.2.1, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03 02 00 01 | ...    |
+| A5     | 06     | 01     | 11 00  | 0B     | 03 02 01 01 | ...    |
 +--------+--------+--------+--------+--------+-------------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | device      | host   |
 +--------+--------+--------+--------+--------+-------------+--------+
