@@ -172,38 +172,27 @@ const Option: Component = () => {
         <Card>
           <CardHeader title="EMIT" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
           <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
-          <p>
-            <code>mode</code> holds a pace in its low bits and the{' '}
-            <A href="/native/commands/option#rendered">rendered</A> flag in bit <code>0x80</code>. The
-            pace is the rate ceiling; rendered is the texture. They are separate, so <code>0x82</code>{' '}
-            is fixed plus rendered.
-          </p>
-          <div class="api-response-label">PACE (low bits of mode)</div>
+          <div class="api-response-label">MODE</div>
           <table class="api-params">
-            <thead><tr><th><code>mode</code></th><th>Pace</th><th><code>rate_hz</code></th><th>Ceiling</th></tr></thead>
+            <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
+              <tr><td><code>| 0x80</code></td><td><A href="/native/commands/option#rendered">Rendered</A></td><td>n/a</td><td>OR onto any pace above; that pace caps the rendered rate</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
               Fixed snaps to <code>1000/n</code> Hz on the 1 ms frame clock and caps at 1 kHz, so 1000,
-              500, 333, 250… are exact and 750 lands on 1000 (<code>0</code> means 1000).
+              500, 333, 250… are exact (<code>0</code> means 1000).
             </p>
             <p>
-              The pace raises the ceiling only: the box still emits a frame solely when injection is
-              pending, so idle stays idle.
+              The pace raises the ceiling only: the box emits a frame solely when injection is pending,
+              so idle stays idle.
             </p>
           </div>
-          <div id="rendered" data-search-target class="api-response-label">RENDERED (bit 0x80 of mode)</div>
-          <p>
-            The pace sets how fast a pending accumulator drains. Rendered shapes that drain to the
-            device's own report cadence and packet texture, from a model fit live to the attached mouse.
-            It is a flag on top of the pace: <code>learnt + rendered</code> lets the model self-pace,
-            <code>fixed + rendered</code> caps the rendered stream at <code>rate_hz</code>.
-          </p>
+          <div id="rendered" data-search-target class="api-response-label">RENDERED</div>
           <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
   pace only    | | | | | | | | | | | |      even fill at the paced rate
@@ -211,21 +200,12 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Aspect</th><th>Pace only</th><th>Rendered</th></tr></thead>
             <tbody>
-              <tr><td>Report cadence</td><td>Even, up to the ceiling</td><td>The device's own active/idle pattern, under the ceiling</td></tr>
+              <tr><td>Report cadence</td><td>Even, up to the ceiling</td><td>The device's own active/idle pattern</td></tr>
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
-              <tr><td>Model</td><td>None</td><td>Fit live to the attached mouse, refit per device</td></tr>
-              <tr><td>Before the device is seen</td><td>Emits at once</td><td>Holds injection until it has a profile (no default)</td></tr>
+              <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
+              <tr><td>Before the device is seen</td><td>Emits at once</td><td>Holds injection until it has a profile</td></tr>
             </tbody>
           </table>
-          <p>
-            Composes with <A href="/native/commands/option#move-ride">movement riding</A> too: the model
-            emits only alongside real motion.
-          </p>
-          <p style={{ 'font-size': '0.85em', opacity: 0.75 }}>
-            The model is{' '}
-            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
-            (MIT), fit live to the attached device.
-          </p>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
             <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>

@@ -341,11 +341,8 @@ const DeviceOptions = () => {
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
         <div style={{ 'margin-top': 'var(--g-spacing)' }}>
-          <Checkbox
-            label="Rendered (shape the texture to the live mouse; composes with the pace)"
-            checked={rendered()}
-            onChange={setRenderEdit}
-          />
+          <Checkbox label="Rendered" checked={rendered()} onChange={setRenderEdit} />
+          <p style={muted}>Shapes the texture to the live mouse.</p>
         </div>
         <div class="api-response-label" style={section}>Wire rate</div>
         <RadioGroup
