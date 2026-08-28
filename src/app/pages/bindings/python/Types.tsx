@@ -1091,7 +1091,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the selected mode</td></tr>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the pace</td></tr>
+                <tr><td><code>rendered</code></td><td><code>bool</code></td><td>whether the rendered texture is on</td></tr>
                 <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet</td></tr>
                 <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves the device's own</td></tr>
                 <tr><td><code>advertised_hz</code></td><td><code>int</code></td><td>what the clone's input endpoints advertise now, forced or native; 0 = no clone</td></tr>
