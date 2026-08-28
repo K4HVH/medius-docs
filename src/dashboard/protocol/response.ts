@@ -89,6 +89,7 @@ import {
 // reported that this build doesn't know.
 export interface EmitPace {
   mode: EmitMode | null;
+  rendered: boolean;
   fixedHz: number;
   resolvedHz: number;
   forceHz: number;
@@ -383,7 +384,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
           return {
             kind: 'emitPace',
             emit: {
-              mode: emitModeFromU8(payload[2]),
+              mode: emitModeFromU8(payload[2] & 0x7f),
+              rendered: (payload[2] & 0x80) !== 0,
               fixedHz: u16le(payload, 3),
               resolvedHz: u16le(payload, 5),
               forceHz: u16le(payload, 7),

@@ -786,7 +786,8 @@ for ev in input.by_ref().take(20) {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The selected mode; <code>Fixed</code> carries the requested rate.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The pace; <code>Fixed</code> carries the requested rate.</td></tr>
+              <tr><td><code>rendered</code></td><td><code>bool</code></td><td>Whether the rendered texture layer is on.</td></tr>
               <tr><td><code>resolved_hz</code></td><td><code>u16</code></td><td>The ceiling in effect (Hz); 0 = learnt/adaptive, or no device yet in <code>Interval</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The forced wire rate requested; <code>None</code> leaves the device's own.</td></tr>
               <tr><td><code>advertised_hz</code></td><td><code>u16</code></td><td>What the clone's input endpoints advertise now, forced or native; 0 = no clone.</td></tr>

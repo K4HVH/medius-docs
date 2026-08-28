@@ -736,7 +736,7 @@ const Requests: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>2</td><td><code>mode</code></td><td><code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
+              <tr><td>2</td><td><code>mode</code></td><td>low bits <code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed; bit <code>0x80</code> = rendered</td></tr>
               <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
               <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet</td></tr>
               <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>

@@ -1084,11 +1084,13 @@ describe('OPTION command (§3.10)', () => {
   it('emitPayload packs [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]', () => {
     expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Rendered))).toEqual([2, 3, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, false, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
+    // Rendered is bit 0x80, composing with the pace.
+    expect(Array.from(emitPayload(EmitMode.Learned, true))).toEqual([2, 0x80, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, true, 500))).toEqual([2, 0x82, 0xf4, 0x01, 0, 0]);
     // The forced wire rate is independent of the pacing mode.
-    expect(Array.from(emitPayload(EmitMode.Learned, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
+    expect(Array.from(emitPayload(EmitMode.Learned, false, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, false, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
   });
 
   it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
@@ -1106,6 +1108,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
+        rendered: false,
         fixedHz: 0,
         resolvedHz: 0,
         forceHz: 0,
@@ -1118,6 +1121,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Interval,
+        rendered: false,
         fixedHz: 0,
         resolvedHz: 1000,
         forceHz: 0,
@@ -1133,6 +1137,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Fixed,
+        rendered: false,
         fixedHz: 1000,
         resolvedHz: 250,
         forceHz: 125,
@@ -1145,6 +1150,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
+        rendered: false,
         fixedHz: 0,
         resolvedHz: 0,
         forceHz: 1000,
@@ -1152,11 +1158,12 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // Rendered: no rate of its own, the renderer resolves to 1 kHz.
-    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    // Rendered flag (0x80) on the learnt pace: mode decodes to Learned, rendered true.
+    expect(parseResp(new Uint8Array([9, 2, 0x80, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
-        mode: EmitMode.Rendered,
+        mode: EmitMode.Learned,
+        rendered: true,
         fixedHz: 0,
         resolvedHz: 1000,
         forceHz: 0,
@@ -1169,6 +1176,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: null,
+        rendered: false,
         fixedHz: 0,
         resolvedHz: 1000,
         forceHz: 0,
