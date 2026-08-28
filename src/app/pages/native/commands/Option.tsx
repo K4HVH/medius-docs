@@ -239,41 +239,27 @@ const Option: Component = () => {
           </div>
           <div class="api-response-label">RENDERED</div>
           <p>
-            Modes <code>0</code>–<code>2</code> set how <em>fast</em> a pending accumulator drains; each
-            still fills the gap with a steady run of frames. Mode <code>3</code> sets the <em>shape</em>
-            of that run. The box carries a small motion model that it fits, continuously, to the real
-            mouse — the deltas it produces and the millisecond-by-millisecond pattern of when it reports
-            and when it stays quiet. Injected motion is then played out through that model, so a drained
-            correction leaves the clone with the same report density and the same texture the live device
-            was already showing, instead of the frame clock's even fill.
+            Modes <code>0</code> to <code>2</code> pace how fast a pending accumulator drains. Mode{' '}
+            <code>3</code> shapes the drain to the device's own report cadence and packet texture, from
+            a model fit live to the attached mouse.
           </p>
           <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
   learnt / fixed    | | | | | | | | | | | |      even fill at the paced rate
   rendered          | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
           <table class="api-params">
-            <thead><tr><th>Aspect</th><th>Learnt / Interval / Fixed</th><th>Rendered</th></tr></thead>
+            <thead><tr><th>Aspect</th><th>Modes 0 to 2</th><th>Rendered</th></tr></thead>
             <tbody>
               <tr><td>Report cadence</td><td>Even, at the paced rate</td><td>The device's own active/idle pattern</td></tr>
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
-              <tr><td>Model source</td><td>None</td><td>Fitted live to the attached mouse, rebuilt per device</td></tr>
-              <tr><td>Before the device is seen</td><td>Emits immediately</td><td>Holds until it has observed the real mouse (no default profile)</td></tr>
+              <tr><td>Model</td><td>None</td><td>Fit live to the attached mouse, refit per device</td></tr>
+              <tr><td>Before the device is seen</td><td>Emits at once</td><td>Holds injection until it has a profile (no default)</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              There is no built-in or synthesized profile: mode <code>3</code> renders only once it has
-              watched the attached device long enough to fit the model, and it refits whenever the device
-              changes. A mouse that has produced no reports yet holds its injected motion until it does.
-            </p>
-            <p>
-              Rendered composes with{' '}
-              <A href="/native/commands/option#move-ride">movement riding</A>: the model still only emits
-              alongside real motion, so the riding gate and the device texture both hold. It obeys the
-              same suppression as every mode — a rendered frame that would carry no net change is dropped,
-              so idle stays idle.
-            </p>
-          </div>
+          <p>
+            Composes with <A href="/native/commands/option#move-ride">movement riding</A>: the model
+            emits only alongside real motion.
+          </p>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
             <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>
