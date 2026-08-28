@@ -161,6 +161,16 @@ const Injection: Component = () => {
             Otherwise the box sends nothing. A held usage is a single report (the edge), then
             silence until it changes.
           </p>
+          <p>
+            The middle row — motion drained while the real mouse is still — is the one row the box
+            times itself, and{' '}
+            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> chooses how. By default
+            it paces to the mouse's learnt report rate. In{' '}
+            <A href="/native/commands/option#emit">rendered</A> mode it goes further: the drained motion
+            is played out through a model the box fits to the live device, so those self-timed frames
+            carry the real mouse's own report density and on/off texture rather than an even fill. The
+            first two rows always ride the real mouse's tick, so only this row's shape ever changes.
+          </p>
         </Card>
       </div>
 

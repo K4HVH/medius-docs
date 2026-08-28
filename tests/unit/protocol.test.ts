@@ -1085,6 +1085,7 @@ describe('OPTION command (§3.10)', () => {
     expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Fixed, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Rendered))).toEqual([2, 3, 0, 0, 0, 0]);
     // The forced wire rate is independent of the pacing mode.
     expect(Array.from(emitPayload(EmitMode.Learned, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
     expect(Array.from(emitPayload(EmitMode.Fixed, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
@@ -1151,8 +1152,20 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // A mode this build doesn't know -> mode null, the rates still decode.
+    // Rendered: no rate of its own, the renderer resolves to 1 kHz.
     expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+      kind: 'emitPace',
+      emit: {
+        mode: EmitMode.Rendered,
+        fixedHz: 0,
+        resolvedHz: 1000,
+        forceHz: 0,
+        advertisedHz: 1000,
+        forceActive: false,
+      },
+    });
+    // A mode this build doesn't know -> mode null, the rates still decode.
+    expect(parseResp(new Uint8Array([9, 2, 4, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: null,

@@ -403,6 +403,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_EMIT_MODE_LEARNED</code></td><td><code>0</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
               <tr><td><code>MEDIUS_EMIT_MODE_INTERVAL</code></td><td><code>1</code></td><td>Pace to the cloned mouse's declared poll rate (its bInterval).</td></tr>
               <tr><td><code>MEDIUS_EMIT_MODE_FIXED</code></td><td><code>2</code></td><td>Pace to a fixed rate in Hz (snapped to 1000/n, capped 1 kHz).</td></tr>
+              <tr><td><code>MEDIUS_EMIT_MODE_RENDERED</code></td><td><code>3</code></td><td>Play injection through a model fitted live to the mouse, reproducing its report texture.</td></tr>
             </tbody>
           </table>
         </Card>

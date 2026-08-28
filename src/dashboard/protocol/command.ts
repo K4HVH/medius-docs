@@ -126,7 +126,8 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
 }
 
 // OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode 0 learned (default), 1
-// follows the cloned poll rate, 2 paces at a fixed rate_hz, and raises the emit ceiling only. forceHz is
+// follows the cloned poll rate, 2 paces at a fixed rate_hz, 3 renders injection through a model fitted live
+// to the mouse, and every mode raises the emit ceiling only. forceHz is
 // the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
 // IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
 export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {

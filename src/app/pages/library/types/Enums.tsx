@@ -356,7 +356,7 @@ device.press(from_button)?;                         // press takes any impl Into
       <div id="emit-pace" data-search-target>
         <Card>
           <CardHeader title="EmitPace" subtitle="What paces injected motion" />
-          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
+          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16), Rendered {'}'}</pre>
           <p>
             What sets the emit-rate ceiling for injected motion, passed to{' '}
             <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
@@ -369,6 +369,7 @@ device.press(from_button)?;                         // press takes any impl Into
               <tr><td><code>Learned</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
               <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
               <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
+              <tr><td><code>Rendered</code></td><td>Play injection through a model fitted live to the mouse, reproducing its report texture; renders only after observing the device.</td></tr>
             </tbody>
           </table>
         </Card>

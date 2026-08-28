@@ -27,18 +27,21 @@ const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
   interval: EmitMode.Interval,
   fixed: EmitMode.Fixed,
+  rendered: EmitMode.Rendered,
 };
 
 const MODE_BLURB: Record<string, string> = {
   learned: "Matches the mouse's own report rate.",
   interval: "Follows the mouse's USB poll rate.",
   fixed: 'Pins the rate to the number you pick.',
+  rendered: "Reproduces the live mouse's own report texture.",
 };
 
 const MODE_NAMES: Record<number, string> = {
   [EmitMode.Learned]: 'learned',
   [EmitMode.Interval]: 'interval',
   [EmitMode.Fixed]: 'fixed',
+  [EmitMode.Rendered]: 'rendered',
 };
 
 const emitLabel = (e: EmitPace): string => {
@@ -49,6 +52,8 @@ const emitLabel = (e: EmitPace): string => {
       return e.resolvedHz > 0 ? `Interval · ${e.resolvedHz} Hz` : 'Interval';
     case EmitMode.Fixed:
       return `Fixed · ${e.resolvedHz || e.fixedHz} Hz`;
+    case EmitMode.Rendered:
+      return 'Rendered';
     default:
       return 'Unknown';
   }
@@ -328,6 +333,7 @@ const DeviceOptions = () => {
             { value: 'learned', label: 'Learned' },
             { value: 'interval', label: 'Interval' },
             { value: 'fixed', label: 'Fixed' },
+            { value: 'rendered', label: 'Rendered' },
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
