@@ -85,6 +85,9 @@ export interface DashboardContextValue {
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
   clearInputEvents: () => void;
+  // Register a raw tap on the catch stream (the input-events store is capped and shared); returns an
+  // unsubscribe. Lets a high-rate consumer keep its own buffer.
+  subscribeEvents: (fn: (ev: CatchEvent, seq: number) => void) => () => void;
 }
 
 function formatLogLine(line: LogLine): string {
@@ -122,6 +125,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [flashLog, setFlashLog] = createSignal<string[]>([]);
   const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
   const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
+  const eventTaps = new Set<(ev: CatchEvent, seq: number) => void>();
 
   // Every card's readback runs through one poller. It is fed a derived link rather than `link`
   // itself so a flash silences it in one place: during a flash esptool owns a port and the control
@@ -134,7 +138,10 @@ export const DashboardProvider: ParentComponent = (props) => {
   const makeLink = (port: SerialPort): SerialLink => {
     const nl: SerialLink = new SerialLink(port, {
       onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
-      onEvent: (ev, seq) => setInputEvents((prev) => [...prev, { seq, ev }].slice(-200)),
+      onEvent: (ev, seq) => {
+        setInputEvents((prev) => [...prev, { seq, ev }].slice(-200));
+        eventTaps.forEach((fn) => fn(ev, seq));
+      },
       onClose: () => {
         // Only the stored link: another link may already own this port, and closing it would take
         // that one's port down with it.
@@ -272,6 +279,10 @@ export const DashboardProvider: ParentComponent = (props) => {
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
   const clearInputEvents = () => setInputEvents([]);
+  const subscribeEvents = (fn: (ev: CatchEvent, seq: number) => void) => {
+    eventTaps.add(fn);
+    return () => eventTaps.delete(fn);
+  };
 
   const readFirmwareInfo = async (): Promise<FirmwareInfo | null> => {
     const l = link();
@@ -436,6 +447,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     clearDeviceLog,
     inputEvents,
     clearInputEvents,
+    subscribeEvents,
   };
 
   return <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>;
