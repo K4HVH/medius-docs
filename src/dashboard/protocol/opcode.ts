@@ -133,6 +133,7 @@ export enum EmitMode {
   Learned = 0, // pace to the mouse's learnt native report rate (default)
   Interval = 1, // follow the cloned mouse's bInterval poll rate
   Fixed = 2, // pace at a fixed rate_hz
+  Rendered = 3, // play injection through a model fitted live to the mouse (1 kHz resolved)
 }
 
 export function emitModeFromU8(value: number): EmitMode | null {
@@ -143,6 +144,8 @@ export function emitModeFromU8(value: number): EmitMode | null {
       return EmitMode.Interval;
     case 2:
       return EmitMode.Fixed;
+    case 3:
+      return EmitMode.Rendered;
     default:
       return null;
   }

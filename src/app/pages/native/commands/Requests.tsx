@@ -161,7 +161,7 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.2.0</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.3.1</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 0F 00  | 00     | 05     | 03     | 02     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -911,7 +911,7 @@ const Requests: Component = () => {
             <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Both chips on 3.2.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
+          <p>Both chips on 3.3.1, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+-------------+--------+
 | A5     | 06     | 01     | 11 00  | 0B     | 03 02 00 01 | ...    |
 +--------+--------+--------+--------+--------+-------------+--------+
