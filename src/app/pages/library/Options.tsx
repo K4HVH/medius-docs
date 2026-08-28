@@ -157,10 +157,9 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             paces injection to the rate the real mouse reports at.{' '}
             <code>EmitPace::Interval</code> paces to the cloned mouse's declared poll rate (its
             <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.{' '}
-            <code>EmitPace::Rendered</code> plays injected motion through a model the box fits live to
-            the attached mouse, so the drained motion carries the real device's own report density and
-            texture instead of an even fill. It renders only after it has observed the device — there is
-            no default profile — and refits per device.
+            <code>EmitPace::Rendered</code> drains injected motion through a model fit live to the
+            attached mouse, so it carries the device's own report density and texture. It renders only
+            after observing the device (no default profile) and refits per device.
           </p>
           <p>
             The 1 ms frame clock snaps a fixed rate to <code>1000/n</code> Hz and caps it at 1 kHz. The
