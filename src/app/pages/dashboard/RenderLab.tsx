@@ -111,7 +111,6 @@ const RenderLab: Component = () => {
   function stopAll() {
     teardown();
     setRunning(false);
-    setStatus('');
   }
   // Stop cleanly if the box drops out mid-run.
   createEffect(() => { if (!connected() && running()) stopAll(); });
@@ -133,6 +132,11 @@ const RenderLab: Component = () => {
     setSlots([paced, rendered]);
     await captureInto(rendered, WINDOW_MS, false, gen);
     if (gen !== generation) return;
+    setStatus(
+      rendered.emits.length === 0 && paced.emits.length > 0
+        ? 'Rendered emitted nothing: the box builds its model from the device\'s own motion, so move the mouse (or run Mirror) to profile it, then retry.'
+        : '',
+    );
     stopAll();
   };
 
