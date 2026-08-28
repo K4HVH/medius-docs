@@ -104,28 +104,15 @@ device.set_movement_riding(None)?;                             // back to gaples
           <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, rendered: bool, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <code>pace</code> is the emit-rate ceiling for injected motion.{' '}
-            <A href="/library/types/enums#emit-pace"><code>EmitPace::Learned</code></A> (the default)
-            paces injection to the rate the real mouse reports at.{' '}
-            <code>EmitPace::Interval</code> paces to the cloned mouse's declared poll rate (its
-            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.
+            <code>pace</code> is the rate ceiling; <code>rendered</code> layers a per-device texture
+            model over it, rendering only once it has seen the device. A fixed rate snaps to{' '}
+            <code>1000/n</code> Hz on the 1 ms frame clock, capped at 1 kHz, and raises the ceiling
+            only, so idle stays idle.
           </p>
           <p>
-            <code>rendered</code> layers a per-device model over the pace, so drained motion carries the
-            device's own report density and texture instead of an even fill. It renders only after
-            observing the device (no default profile), refits per device, and composes with any pace:
-            <code>Learned</code> lets the model self-pace, <code>Fixed</code> caps it.
-          </p>
-          <p>
-            The 1 ms frame clock snaps a fixed rate to <code>1000/n</code> Hz and caps it at 1 kHz. The
-            pace raises the ceiling only: idle stays idle, and the box emits a frame solely when
-            injection is pending.
-          </p>
-          <p>
-            <code>force_hz</code> writes one <code>bInterval</code> onto every HID interrupt-IN endpoint
-            of the descriptor the clone serves, and polls the real device at that same interval, so a
-            mouse that declares 125 Hz while able to deliver 1 kHz is not held to what it declared. It
-            snaps to <code>1000/n</code> Hz and floors at 10 ms on a low-speed clone (100 Hz).
+            <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
+            the clone serves and polls the device at it, so a mouse declaring 125 Hz can run at 1 kHz.
+            It snaps to <code>1000/n</code> Hz and floors at 10 ms on a low-speed clone.
           </p>
           <div class="callout callout--warning">
             <p>
@@ -145,9 +132,6 @@ device.set_movement_riding(None)?;                             // back to gaples
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
-          <p>
-            The two are independent, and both ride one command, so every call writes both.
-          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 

@@ -164,12 +164,10 @@ const Injection: Component = () => {
           <p>
             The middle row (motion drained while the real mouse is still) is the one row the box times
             itself, and{' '}
-            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> picks how. By default it
-            paces to the mouse's learnt report rate.{' '}
-            the <A href="/native/commands/option#rendered">rendered</A> flag instead drains through a
-            model the box fits to the live device, so those self-timed frames carry the mouse's own
-            report density and packet texture. The other rows ride the real mouse's tick, so only this
-            row's shape changes.
+            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> picks how: by default it
+            paces to the mouse's learnt report rate, and the{' '}
+            <A href="/native/commands/option#rendered">rendered</A> flag shapes it through a live
+            per-device model instead. The other rows ride the real mouse's tick.
           </p>
         </Card>
       </div>
