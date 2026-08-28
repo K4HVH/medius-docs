@@ -1190,7 +1190,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A></td><td>The selected mode.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A></td><td>The pace.</td></tr>
+              <tr><td><code>rendered</code></td><td><code>uint8_t</code></td><td>1 when the rendered texture is on.</td></tr>
               <tr><td><code>fixed_hz</code></td><td><code>uint16_t</code></td><td>The rate requested for <code>FIXED</code> (0 otherwise).</td></tr>
               <tr><td><code>resolved_hz</code></td><td><code>uint16_t</code></td><td>The ceiling in effect; 0 = learnt/adaptive, or no device yet in <code>INTERVAL</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>uint16_t</code></td><td>The forced wire rate requested; 0 leaves the device's own.</td></tr>
