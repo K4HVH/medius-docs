@@ -57,7 +57,7 @@ const emitLabel = (e: EmitPace): string => {
     default:
       base = 'Unknown';
   }
-  return e.rendered ? `${base} · rendered` : base;
+  return e.rendered ? `${base} · Rendered` : base;
 };
 
 const DeviceOptions = () => {
@@ -342,7 +342,11 @@ const DeviceOptions = () => {
         <p style={muted}>{MODE_BLURB[mode()]}</p>
         <div style={{ 'margin-top': 'var(--g-spacing)' }}>
           <Checkbox label="Rendered" checked={rendered()} onChange={setRenderEdit} />
-          <p style={muted}>Shapes the texture to the live mouse.</p>
+          <p style={muted}>
+            {rendered()
+              ? 'Shapes the texture to the live mouse.'
+              : 'Even fill at the paced rate.'}
+          </p>
         </div>
         <div class="api-response-label" style={section}>Wire rate</div>
         <RadioGroup
