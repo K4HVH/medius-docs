@@ -154,6 +154,7 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
+  { value: '/dashboard/render-lab', label: 'Render Lab', icon: BsActivity },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
