@@ -101,17 +101,20 @@ device.set_movement_riding(None)?;                             // back to gaples
       <div id="set-emit-pace" data-search-target>
         <Card>
           <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
-          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, rendered: bool, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Picks the emit-rate ceiling for injected motion.{' '}
+            <code>pace</code> is the emit-rate ceiling for injected motion.{' '}
             <A href="/library/types/enums#emit-pace"><code>EmitPace::Learned</code></A> (the default)
             paces injection to the rate the real mouse reports at.{' '}
             <code>EmitPace::Interval</code> paces to the cloned mouse's declared poll rate (its
-            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.{' '}
-            <code>EmitPace::Rendered</code> drains injected motion through a model fit live to the
-            attached mouse, so it carries the device's own report density and texture. It renders only
-            after observing the device (no default profile) and refits per device.
+            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.
+          </p>
+          <p>
+            <code>rendered</code> layers a per-device model over the pace, so drained motion carries the
+            device's own report density and texture instead of an even fill. It renders only after
+            observing the device (no default profile), refits per device, and composes with any pace:
+            <code>Learned</code> lets the model self-pace, <code>Fixed</code> caps it.
           </p>
           <p>
             The 1 ms frame clock snaps a fixed rate to <code>1000/n</code> Hz and caps it at 1 kHz. The
@@ -137,7 +140,8 @@ device.set_movement_riding(None)?;                             // back to gaples
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, <code>Fixed(hz)</code>, or <code>Rendered</code>.</td></tr>
+              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
+              <tr><td><code>rendered</code></td><td><code>bool</code></td><td>Layer the per-device texture model over the pace.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
@@ -148,10 +152,9 @@ device.set_movement_riding(None)?;                             // back to gaples
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 
 let device = Device::find()?;
-device.set_emit_pace(EmitPace::Fixed(1000), None)?;      // emit at a fixed 1 kHz
-device.allow_imperfect_clones(true)?;
-device.set_emit_pace(EmitPace::Learned, Some(1000))?;    // a 1 kHz clone, human-paced injection
-device.set_emit_pace(EmitPace::Learned, None)?;          // back to the defaults`}</code></pre>
+device.set_emit_pace(EmitPace::Fixed(1000), false, None)?;   // a fixed 1 kHz ceiling
+device.set_emit_pace(EmitPace::Learned, true, None)?;        // rendered texture, self-paced
+device.set_emit_pace(EmitPace::Learned, false, None)?;       // back to the defaults`}</code></pre>
         </Card>
       </div>
 

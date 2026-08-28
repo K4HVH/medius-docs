@@ -172,14 +172,19 @@ const Option: Component = () => {
         <Card>
           <CardHeader title="EMIT" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
           <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
-          <div class="api-response-label">MODE</div>
+          <p>
+            <code>mode</code> holds a pace in its low bits and the{' '}
+            <A href="/native/commands/option#rendered">rendered</A> flag in bit <code>0x80</code>. The
+            pace is the rate ceiling; rendered is the texture. They are separate, so <code>0x82</code>{' '}
+            is fixed plus rendered.
+          </p>
+          <div class="api-response-label">PACE (low bits of mode)</div>
           <table class="api-params">
-            <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
+            <thead><tr><th><code>mode</code></th><th>Pace</th><th><code>rate_hz</code></th><th>Ceiling</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
-              <tr><td><code>3</code></td><td>Rendered</td><td>n/a</td><td>The device's own report texture, from a model built live off the real mouse</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -188,32 +193,38 @@ const Option: Component = () => {
               500, 333, 250… are exact and 750 lands on 1000 (<code>0</code> means 1000).
             </p>
             <p>
-              Every mode raises the ceiling only: the box still emits a frame solely when injection is
+              The pace raises the ceiling only: the box still emits a frame solely when injection is
               pending, so idle stays idle.
             </p>
           </div>
-          <div class="api-response-label">RENDERED</div>
+          <div id="rendered" data-search-target class="api-response-label">RENDERED (bit 0x80 of mode)</div>
           <p>
-            Modes <code>0</code> to <code>2</code> pace how fast a pending accumulator drains. Mode{' '}
-            <code>3</code> shapes the drain to the device's own report cadence and packet texture, from
-            a model fit live to the attached mouse.
+            The pace sets how fast a pending accumulator drains. Rendered shapes that drain to the
+            device's own report cadence and packet texture, from a model fit live to the attached mouse.
+            It is a flag on top of the pace: <code>learnt + rendered</code> lets the model self-pace,
+            <code>fixed + rendered</code> caps the rendered stream at <code>rate_hz</code>.
           </p>
           <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
-  learnt / fixed    | | | | | | | | | | | |      even fill at the paced rate
-  rendered          | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
+  pace only    | | | | | | | | | | | |      even fill at the paced rate
+  rendered     | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
           <table class="api-params">
-            <thead><tr><th>Aspect</th><th>Modes 0 to 2</th><th>Rendered</th></tr></thead>
+            <thead><tr><th>Aspect</th><th>Pace only</th><th>Rendered</th></tr></thead>
             <tbody>
-              <tr><td>Report cadence</td><td>Even, at the paced rate</td><td>The device's own active/idle pattern</td></tr>
+              <tr><td>Report cadence</td><td>Even, up to the ceiling</td><td>The device's own active/idle pattern, under the ceiling</td></tr>
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
               <tr><td>Model</td><td>None</td><td>Fit live to the attached mouse, refit per device</td></tr>
               <tr><td>Before the device is seen</td><td>Emits at once</td><td>Holds injection until it has a profile (no default)</td></tr>
             </tbody>
           </table>
           <p>
-            Composes with <A href="/native/commands/option#move-ride">movement riding</A>: the model
+            Composes with <A href="/native/commands/option#move-ride">movement riding</A> too: the model
             emits only alongside real motion.
+          </p>
+          <p style={{ 'font-size': '0.85em', opacity: 0.75 }}>
+            The model is{' '}
+            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
+            (MIT), fit live to the attached device.
           </p>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
@@ -249,11 +260,11 @@ const Option: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Fixed 1 kHz with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
-            <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
+            Rendered on a fixed 1 kHz ceiling, wire forced to 1 kHz (<code>mode = 0x82</code>, fixed
+            plus rendered, <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
-| A5     | 11     | 00     | 06 00  | 02     | 02     | E8 03   | E8 03    | lo hi  |
+| A5     | 11     | 00     | 06 00  | 02     | 82     | E8 03   | E8 03    | lo hi  |
 +--------+--------+--------+--------+--------+--------+---------+----------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
 +--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>

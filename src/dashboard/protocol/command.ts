@@ -5,6 +5,7 @@ import {
   CLIP_TRIG_F_PRESENT,
   ClipOp,
   EmitMode,
+  EMIT_RENDERED,
   MAX_PAYLOAD,
   MOTION_CURSOR,
   MOTION_WHEEL,
@@ -125,17 +126,16 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
 }
 
-// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode 0 learned (default), 1
-// follows the cloned poll rate, 2 paces at a fixed rate_hz, 3 renders injection through a model fitted live
-// to the mouse, and every mode raises the emit ceiling only. forceHz is
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode low bits = pace (0
+// learned, 1 follows the cloned poll rate, 2 fixed rate_hz), bit 0x80 = rendered texture (composes). forceHz is
 // the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
 // IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
-export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {
+export function emitPayload(mode: EmitMode, rendered = false, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
   const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
   return new Uint8Array([
     OPT_EMIT,
-    mode & 0xff,
+    (mode | (rendered ? EMIT_RENDERED : 0)) & 0xff,
     hz & 0xff,
     (hz >> 8) & 0xff,
     fhz & 0xff,

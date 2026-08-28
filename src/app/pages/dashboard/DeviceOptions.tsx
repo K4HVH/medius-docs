@@ -10,6 +10,7 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
+import { Checkbox } from '../../../components/inputs/Checkbox';
 import { TextField } from '../../../components/inputs/TextField';
 import {
   type EmitPace,
@@ -27,36 +28,36 @@ const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
   interval: EmitMode.Interval,
   fixed: EmitMode.Fixed,
-  rendered: EmitMode.Rendered,
 };
 
 const MODE_BLURB: Record<string, string> = {
   learned: "Matches the mouse's own report rate.",
   interval: "Follows the mouse's USB poll rate.",
   fixed: 'Pins the rate to the number you pick.',
-  rendered: "Reproduces the live mouse's own report texture.",
 };
 
 const MODE_NAMES: Record<number, string> = {
   [EmitMode.Learned]: 'learned',
   [EmitMode.Interval]: 'interval',
   [EmitMode.Fixed]: 'fixed',
-  [EmitMode.Rendered]: 'rendered',
 };
 
 const emitLabel = (e: EmitPace): string => {
+  let base: string;
   switch (e.mode) {
     case EmitMode.Learned:
-      return 'Learned';
+      base = 'Learned';
+      break;
     case EmitMode.Interval:
-      return e.resolvedHz > 0 ? `Interval · ${e.resolvedHz} Hz` : 'Interval';
+      base = e.resolvedHz > 0 ? `Interval · ${e.resolvedHz} Hz` : 'Interval';
+      break;
     case EmitMode.Fixed:
-      return `Fixed · ${e.resolvedHz || e.fixedHz} Hz`;
-    case EmitMode.Rendered:
-      return 'Rendered';
+      base = `Fixed · ${e.resolvedHz || e.fixedHz} Hz`;
+      break;
     default:
-      return 'Unknown';
+      base = 'Unknown';
   }
+  return e.rendered ? `${base} · rendered` : base;
 };
 
 const DeviceOptions = () => {
@@ -75,6 +76,7 @@ const DeviceOptions = () => {
   const [bearEdit, setBearEdit] = createSignal<number | null>(null);
   const [bearMode, setBearMode] = createSignal<string | null>(null);
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
+  const [renderEdit, setRenderEdit] = createSignal<boolean | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
   const [forceEdit, setForceEdit] = createSignal<number | null>(null);
   const [forceOnEdit, setForceOnEdit] = createSignal<boolean | null>(null);
@@ -85,11 +87,11 @@ const DeviceOptions = () => {
   const rideDirty = () => rideEdit() !== null;
   const bearDirty = () => bearEdit() !== null || bearMode() !== null;
   const emitDirty = () =>
-    modeEdit() !== null || hzEdit() !== null || forceEdit() !== null || forceOnEdit() !== null;
+    modeEdit() !== null || renderEdit() !== null || hzEdit() !== null || forceEdit() !== null || forceOnEdit() !== null;
   const revertRide = () => setRideEdit(null);
   const revertBear = () => { setBearEdit(null); setBearMode(null); };
   const revertEmit = () => {
-    setModeEdit(null); setHzEdit(null); setForceEdit(null); setForceOnEdit(null);
+    setModeEdit(null); setRenderEdit(null); setHzEdit(null); setForceEdit(null); setForceOnEdit(null);
   };
 
   const name = () => nameEdit() ?? version()?.name ?? '';
@@ -110,6 +112,7 @@ const DeviceOptions = () => {
       dash.refreshPoll('bearing');
     });
   const mode = () => modeEdit() ?? MODE_NAMES[emit()?.mode ?? EmitMode.Learned] ?? 'learned';
+  const rendered = () => renderEdit() ?? (emit()?.rendered ?? false);
   // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
@@ -154,8 +157,9 @@ const DeviceOptions = () => {
   const applyEmit = () =>
     cmd.run(async () => {
       const m = EMIT_MODES[mode()];
-      await dash.link()!.setEmitPace(m, m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
+      await dash.link()!.setEmitPace(m, rendered(), m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
       setModeEdit(null);
+      setRenderEdit(null);
       setHzEdit(null);
       setForceEdit(null);
       setForceOnEdit(null);
@@ -333,10 +337,16 @@ const DeviceOptions = () => {
             { value: 'learned', label: 'Learned' },
             { value: 'interval', label: 'Interval' },
             { value: 'fixed', label: 'Fixed' },
-            { value: 'rendered', label: 'Rendered' },
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
+        <div style={{ 'margin-top': 'var(--g-spacing)' }}>
+          <Checkbox
+            label="Rendered (shape the texture to the live mouse; composes with the pace)"
+            checked={rendered()}
+            onChange={setRenderEdit}
+          />
+        </div>
         <div class="api-response-label" style={section}>Wire rate</div>
         <RadioGroup
           name="wire-rate"

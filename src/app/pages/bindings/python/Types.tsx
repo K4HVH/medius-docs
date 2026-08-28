@@ -263,7 +263,6 @@ const Types: Component = () => {
                 <tr><td><code>LEARNED</code></td><td><code>0</code></td></tr>
                 <tr><td><code>INTERVAL</code></td><td><code>1</code></td></tr>
                 <tr><td><code>FIXED</code></td><td><code>2</code></td></tr>
-                <tr><td><code>RENDERED</code></td><td><code>3</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -271,9 +270,8 @@ const Types: Component = () => {
             <div class="api-response-label">EmitPace</div>
             <p>
               A frozen dataclass carrying <code>mode</code> and <code>hz</code>. Build it with{' '}
-              <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>,{' '}
-              <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz), or{' '}
-              <code>EmitPace.rendered()</code> (injection played through a model fitted live to the mouse).
+              <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
+              <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
             </p>
           </div>
         </Card>

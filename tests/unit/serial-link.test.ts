@@ -297,6 +297,7 @@ describe('SerialLink', () => {
     expect(await link.queryMovementRiding()).toBe(5);
     expect(await link.queryEmitPace()).toEqual({
       mode: EmitMode.Fixed,
+      rendered: false,
       fixedHz: 500,
       resolvedHz: 500,
       forceHz: 125,
