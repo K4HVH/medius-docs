@@ -168,51 +168,6 @@ const Option: Component = () => {
         </Card>
       </div>
 
-      <div id="bearing" data-search-target>
-        <Card>
-          <CardHeader title="BEARING" subtitle="What with and against are measured against" />
-          <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
-          <div class="api-response-label">WINDOW</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> are inert whatever their scale</td></tr>
-              <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">MODE</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th><A href="/native/commands/lock#geometry">Geometry</A></th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Vector</td></tr>
-              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply to say so</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--warning">
-            <p>
-              A write that changes either field drops the standing{' '}
-              <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
-              <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
-              <code>with</code> / <code>against</code> scale live that is a visible step in what
-              reaches the game PC, so set the geometry before the scales, not between reports.
-            </p>
-          </div>
-          <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}
-            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 04 00  | 04     | 14 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | window | mode   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
       <div id="emit" data-search-target>
         <Card>
           <CardHeader title="EMIT" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
@@ -340,6 +295,51 @@ const Option: Component = () => {
 +--------+--------+--------+--------+--------+--------------+--------+`}</pre>
         </Card>
       </div>
+      <div id="bearing" data-search-target>
+        <Card>
+          <CardHeader title="BEARING" subtitle="What with and against are measured against" />
+          <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
+          <div class="api-response-label">WINDOW</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> are inert whatever their scale</td></tr>
+              <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MODE</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th><A href="/native/commands/lock#geometry">Geometry</A></th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
+              <tr><td><code>1</code></td><td>Vector</td></tr>
+              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply to say so</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              A write that changes either field drops the standing{' '}
+              <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
+              <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
+              <code>with</code> / <code>against</code> scale live that is a visible step in what
+              reaches the game PC, so set the geometry before the scales, not between reports.
+            </p>
+          </div>
+          <p>
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 11     | 00     | 04 00  | 04     | 14 00  | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | window | mode   | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
     </>
   );
 };

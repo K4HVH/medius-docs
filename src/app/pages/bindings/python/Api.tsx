@@ -122,7 +122,6 @@ const Api: Component = () => {
             </tbody>
           </table>
           <div class="callout callout--warning">
-            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the bearing and need a live one; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
           </div>
         </Card>
       </div>
@@ -143,6 +142,7 @@ const Api: Component = () => {
               <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace, force_hz=None)</code></td><td>Pick what paces injected motion (<code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code> / <code>.rendered()</code>) and what rate the clone advertises (<code>force_hz</code>, None = the device's own). See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
+            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the bearing and need a live one; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
             </tbody>
           </table>
@@ -167,11 +167,11 @@ const Api: Component = () => {
               <tr><td><code>dev.query_rate()</code></td><td><A href="/bindings/python/types#rate"><code>Rate</code></A>: native report rate and poll period.</td></tr>
               <tr><td><code>dev.query_stats()</code></td><td><A href="/bindings/python/types#stats"><code>Stats</code></A>: box-side telemetry.</td></tr>
               <tr><td><code>dev.query_locks()</code></td><td><A href="/bindings/python/types#locks"><code>Locks</code></A>: every weighed direction (<code>.entries</code>, <code>.scale_of(...)</code>, <code>.is_locked(...)</code>).</td></tr>
-              <tr><td><code>dev.query_bearing()</code></td><td><A href="/bindings/python/types#bearing"><code>Bearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: the live filter table (<code>.entries</code>, <code>.table_full</code>), drop counts, and the two chips' <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A>.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
               <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
+              <tr><td><code>dev.query_bearing()</code></td><td><A href="/bindings/python/types#bearing"><code>Bearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>dev.firmware_info()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A>: both chips' versions, slots, and what is staged.</td></tr>
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
             </tbody>
