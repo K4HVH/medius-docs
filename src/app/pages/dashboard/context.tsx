@@ -26,6 +26,7 @@ import {
   grantedMediusPorts,
   isSecureContextOk,
   isWebSerialSupported,
+  speaksCurrentWire,
   requestMediusPort,
 } from '../../../dashboard/serial';
 import type { FlashKind, FlashProgress } from '../../../dashboard/flash';
@@ -52,6 +53,9 @@ export interface DashboardContextValue {
   secure: boolean;
   status: Accessor<ConnectionStatus>;
   version: Accessor<Version | null>;
+  // A box a protocol version behind connects for one thing: being updated. Everything else on this
+  // page speaks the current wire, so it is not offered while this is true.
+  updateOnly: Accessor<boolean>;
   health: Accessor<Health | null>;
   error: Accessor<string | null>;
   // Why the last connect attempt did not produce a link. Null once one succeeds, and null before
@@ -423,11 +427,17 @@ export const DashboardProvider: ParentComponent = (props) => {
     if (status() !== 'flashing') void link()?.close().catch(() => undefined);
   });
 
+  const updateOnly = () => {
+    const v = version();
+    return status() === 'connected' && v !== null && !speaksCurrentWire(v);
+  };
+
   const value: DashboardContextValue = {
     supported,
     secure,
     status,
     version,
+    updateOnly,
     health,
     error,
     verdict,

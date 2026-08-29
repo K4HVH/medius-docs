@@ -29,6 +29,7 @@ import {
   FrameDecoder,
   FrameType,
   MAX_PAYLOAD,
+  MIN_PROTO_VER,
   PROTO_VER,
   Q_CLIP,
   OPT_BEARING,
@@ -188,9 +189,17 @@ const UPDATE_BACKLOG_MAX = 64;
 
 export class BadProtoVerError extends Error {
   constructor(readonly version: Version) {
-    super(`unsupported protocol version ${version.protoVer} (expected ${PROTO_VER})`);
+    super(
+      `unsupported protocol version ${version.protoVer} ` +
+        `(this page speaks ${MIN_PROTO_VER}..${PROTO_VER})`,
+    );
     this.name = 'BadProtoVerError';
   }
+}
+
+/** Whether a box speaks the current wire, or only enough of it to be updated. */
+export function speaksCurrentWire(version: Version): boolean {
+  return version.protoVer === PROTO_VER;
 }
 
 export interface SerialLinkEvents {
@@ -290,7 +299,9 @@ export class SerialLink {
     for (let i = 0; i < HANDSHAKE_ATTEMPTS; i++) {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
-        if (version.protoVer !== PROTO_VER) {
+        // Below MIN_PROTO_VER there is no UPDATE opcode to reach, and above PROTO_VER the box speaks
+        // a wire this page cannot know. Between them it connects, for updating.
+        if (version.protoVer < MIN_PROTO_VER || version.protoVer > PROTO_VER) {
           throw new BadProtoVerError(version);
         }
         return version;

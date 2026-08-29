@@ -65,6 +65,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     supported: true,
     secure: true,
     status: () => 'connected',
+      updateOnly: () => false,
     version: () => VALUES.version,
     health: () => health,
     error: () => null,

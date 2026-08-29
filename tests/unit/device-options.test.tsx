@@ -18,6 +18,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
   return {
     useDashboard: () => ({
       status: () => 'connected',
+      updateOnly: () => false,
       link: () => ({
         setBearing: async () => {},
         setMovementRiding: async () => {},

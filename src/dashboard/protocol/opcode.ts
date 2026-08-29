@@ -4,6 +4,13 @@ export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
 export const PROTO_VER = 6; // OPTION(EMIT) carries a render byte of its own, and RESP(OPTIONS, EMIT) reports it
 
+// The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
+// and everything it uses -- QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG -- has been
+// unchanged since; only OPTION(EMIT) grew at 6. Refusing a proto-5 box outright would lock it out of
+// the one mechanism that brings it up to date. A box between this and PROTO_VER connects for updating
+// only: the rest of the dashboard speaks the current wire and is not offered.
+export const MIN_PROTO_VER = 5;
+
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
 export const INJ_KEY = 1;

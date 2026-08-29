@@ -112,9 +112,10 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
               <>
                 <div class="callout callout--danger" role="alert">
                   <Show when={ver} fallback="This box is too old for one-click updates.">
-                    {(x) => <>This box runs v{versionString(x())}, which is too old for one-click updates.</>}
+                    {(x) => <>This box runs v{versionString(x())}, which predates one-click updates.</>}
                   </Show>{' '}
-                  Set it up once over USB and it will update in one click from then on.
+                  They arrived in v3.2.0. Set it up once over USB and it will update in one click from
+                  then on.
                 </div>
                 <Button variant="primary" onClick={setup}>
                   Set up
