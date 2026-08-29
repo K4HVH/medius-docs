@@ -59,130 +59,134 @@ const DeviceInfo = () => {
 
   return (
     <>
-      <Card>
-        <CardHeader title="Capabilities" subtitle="What the box detected and clones to the game" />
-        <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
-          {(c) => (
-            <>
-              <Show when={device()?.product}>
-                <Row label="Product">{device()!.product}</Row>
-              </Show>
-              <Show when={device() && device()!.kind !== DeviceKind.Unknown}>
-                <Row label="Kind">
-                  <Chip variant="neutral">{deviceKindLabel(device()!.kind)}</Chip>
-                </Row>
-              </Show>
-              <Show when={device()?.vid}>
-                <Row label="USB ID">
-                  <code>{vidPid(device()!)}</code>
-                  <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
-                </Row>
-              </Show>
-              <Show when={dash.version?.()?.mac?.length}>
-                <Row label="Box ID">
-                  <code>{macHex(dash.version()!)}</code>
-                </Row>
-              </Show>
-              <Show when={dash.version?.()?.name}>
-                <Row label="Box name">
-                  <code>{dash.version()!.name}</code>
-                </Row>
-              </Show>
+      <div id="capabilities" data-search-target>
+        <Card>
+          <CardHeader title="Capabilities" subtitle="What the box detected and clones to the game" />
+          <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
+            {(c) => (
+              <>
+                <Show when={device()?.product}>
+                  <Row label="Product">{device()!.product}</Row>
+                </Show>
+                <Show when={device() && device()!.kind !== DeviceKind.Unknown}>
+                  <Row label="Kind">
+                    <Chip variant="neutral">{deviceKindLabel(device()!.kind)}</Chip>
+                  </Row>
+                </Show>
+                <Show when={device()?.vid}>
+                  <Row label="USB ID">
+                    <code>{vidPid(device()!)}</code>
+                    <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
+                  </Row>
+                </Show>
+                <Show when={dash.version?.()?.mac?.length}>
+                  <Row label="Box ID">
+                    <code>{macHex(dash.version()!)}</code>
+                  </Row>
+                </Show>
+                <Show when={dash.version?.()?.name}>
+                  <Row label="Box name">
+                    <code>{dash.version()!.name}</code>
+                  </Row>
+                </Show>
 
-              <Show when={hasMouse(c())}>
-                <Section title="Mouse">
-                <Row label="Buttons">{c().mouse.nButtons}</Row>
-                <Row label="Interfaces">
-                  {c().mouse.nHid}
-                  {isComposite(c().mouse) ? ' · composite' : ''}
-                </Row>
-                <div style={chipRow}>
-                  <CapChip on={c().mouse.hasX}>X axis</CapChip>
-                  <CapChip on={c().mouse.hasY}>Y axis</CapChip>
-                  <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
-                  <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
-                </div>
-                </Section>
-              </Show>
+                <Show when={hasMouse(c())}>
+                  <Section title="Mouse">
+                  <Row label="Buttons">{c().mouse.nButtons}</Row>
+                  <Row label="Interfaces">
+                    {c().mouse.nHid}
+                    {isComposite(c().mouse) ? ' · composite' : ''}
+                  </Row>
+                  <div style={chipRow}>
+                    <CapChip on={c().mouse.hasX}>X axis</CapChip>
+                    <CapChip on={c().mouse.hasY}>Y axis</CapChip>
+                    <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
+                    <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
+                  </div>
+                  </Section>
+                </Show>
 
-              <Show when={hasKeyboard(c())}>
-                <Section title="Keyboard">
-                <Row label="Rollover">
-                  {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
-                </Row>
-                <div style={chipRow}>
-                  <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
-                  <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
-                  <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
-                </div>
-                </Section>
-              </Show>
+                <Show when={hasKeyboard(c())}>
+                  <Section title="Keyboard">
+                  <Row label="Rollover">
+                    {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
+                  </Row>
+                  <div style={chipRow}>
+                    <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
+                    <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
+                    <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
+                  </div>
+                  </Section>
+                </Show>
 
-              <Show when={imperfect()}>
-                {(imp) => (
-                  <>
-                    <Section title="Clone">
-                    <Row label="Full clone">
-                      <Show
-                        when={imp().overCapacity}
-                        fallback={<Chip variant="success">Yes</Chip>}
-                      >
-                        <Chip variant="warning">No · 1 input can't be copied</Chip>
-                      </Show>
-                    </Row>
-                    <Row label="Serial number">
-                      <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
-                        {device()?.hasSerial ? 'Cloned' : 'None'}
-                      </Chip>
-                    </Row>
-                    </Section>
-                  </>
-                )}
-              </Show>
-            </>
-          )}
-        </Show>
-      </Card>
+                <Show when={imperfect()}>
+                  {(imp) => (
+                    <>
+                      <Section title="Clone">
+                      <Row label="Full clone">
+                        <Show
+                          when={imp().overCapacity}
+                          fallback={<Chip variant="success">Yes</Chip>}
+                        >
+                          <Chip variant="warning">No · 1 input can't be copied</Chip>
+                        </Show>
+                      </Row>
+                      <Row label="Serial number">
+                        <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
+                          {device()?.hasSerial ? 'Cloned' : 'None'}
+                        </Chip>
+                      </Row>
+                      </Section>
+                    </>
+                  )}
+                </Show>
+              </>
+            )}
+          </Show>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader title="Performance" subtitle="Report rate and delivery" />
-        <Show when={rate()} fallback={<Row label="Report rate">not measured yet</Row>}>
-          {(r) => (
-            <Row label="Report rate">
-              <Show
-                when={!r().changeDriven}
-                fallback={
-                  <span style={muted}>
-                    on key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
-                  </span>
-                }
-              >
-                <Show when={mouseAttached()} fallback={<span style={muted}>no mouse</span>}>
-                  <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting...</span>}>
-                    {nativeHz(r())} Hz
+      <div id="performance" data-search-target>
+        <Card>
+          <CardHeader title="Performance" subtitle="Report rate and delivery" />
+          <Show when={rate()} fallback={<Row label="Report rate">not measured yet</Row>}>
+            {(r) => (
+              <Row label="Report rate">
+                <Show
+                  when={!r().changeDriven}
+                  fallback={
+                    <span style={muted}>
+                      on key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
+                    </span>
+                  }
+                >
+                  <Show when={mouseAttached()} fallback={<span style={muted}>no mouse</span>}>
+                    <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting...</span>}>
+                      {nativeHz(r())} Hz
+                    </Show>
                   </Show>
                 </Show>
-              </Show>
-            </Row>
-          )}
-        </Show>
-        <Show when={stats()}>
-          {(s) => (
-            <Row label="Delivery">
-              <Show
-                when={s().txDrops === 0 && s().txWedges === 0}
-                fallback={
-                  <Chip variant="warning">
-                    {s().txDrops} dropped, {s().txWedges} recovered
-                  </Chip>
-                }
-              >
-                <Chip variant="success">Healthy</Chip>
-              </Show>
-            </Row>
-          )}
-        </Show>
-      </Card>
+              </Row>
+            )}
+          </Show>
+          <Show when={stats()}>
+            {(s) => (
+              <Row label="Delivery">
+                <Show
+                  when={s().txDrops === 0 && s().txWedges === 0}
+                  fallback={
+                    <Chip variant="warning">
+                      {s().txDrops} dropped, {s().txWedges} recovered
+                    </Chip>
+                  }
+                >
+                  <Chip variant="success">Healthy</Chip>
+                </Show>
+              </Row>
+            )}
+          </Show>
+        </Card>
+      </div>
     </>
   );
 };

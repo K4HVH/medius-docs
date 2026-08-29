@@ -1093,9 +1093,10 @@ describe('OPTION command (§3.10)', () => {
   });
 
   it('emitPayload packs [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]', () => {
-    // An omitted render argument is the box's own boot value, De-spiked (2), not off.
-    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0, 2]);
-    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0, 2]);
+    // render has no default: every caller names it, because the box persists all four fields and
+    // an omitted one would rewrite a setting the caller did not mean to touch.
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Despiked))).toEqual([2, 0, 0, 0, 0, 0, 2]);
+    expect(Array.from(emitPayload(EmitMode.Interval, RenderMode.Despiked))).toEqual([2, 1, 0, 0, 0, 0, 2]);
     expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Off))).toEqual([2, 0, 0, 0, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0, 0]);
     // The render mode is the value's own trailing byte, so it never touches the pace byte.

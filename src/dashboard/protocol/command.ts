@@ -130,7 +130,7 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
 // (0 learned, 1 follows the cloned poll rate, 2 fixed rate_hz); render is its own trailing byte. forceHz is
 // the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
 // IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
-export function emitPayload(mode: EmitMode, render = RenderMode.Despiked, rateHz = 0, forceHz = 0): Uint8Array {
+export function emitPayload(mode: EmitMode, render: RenderMode, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
   const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
   return new Uint8Array([

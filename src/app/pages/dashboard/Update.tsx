@@ -151,109 +151,113 @@ const Update = () => {
   return (
     <>
       <Show when={dash.status() === 'flashing'}>
-        <Card>
-          <CardHeader title="Updating" subtitle="Don't unplug or leave this page" />
-          <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
-        </Card>
+        <div id="updating" data-search-target>
+          <Card>
+            <CardHeader title="Updating" subtitle="Don't unplug or leave this page" />
+            <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
+          </Card>
+        </div>
       </Show>
 
       <Show when={dash.status() !== 'flashing'}>
-        <Card>
-          <CardHeader title="Update" subtitle="Get the latest firmware" />
-          <Show when={err()}>
-            {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
-          </Show>
+        <div id="update" data-search-target>
+          <Card>
+            <CardHeader title="Update" subtitle="Get the latest firmware" />
+            <Show when={err()}>
+              {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
+            </Show>
 
-          <Switch>
-            <Match when={step() === 'choose'}>
-              <Switch>
-                <Match when={dash.status() !== 'connected'}>
-                  <ConnectPanel />
-                </Match>
-                <Match when={dash.status() === 'connected'}>
-                  <p>
-                    On{' '}
-                    <Show when={dash.version()}>
-                      {(v) => <Chip variant="neutral">v{versionString(v())}</Chip>}
-                    </Show>
-                  </p>
-                  <Show when={latest()}>
+            <Switch>
+              <Match when={step() === 'choose'}>
+                <Switch>
+                  <Match when={dash.status() !== 'connected'}>
+                    <ConnectPanel />
+                  </Match>
+                  <Match when={dash.status() === 'connected'}>
                     <p>
-                      Latest is <strong>{latest()?.tag}</strong>
-                      {upToDate() ? ', up to date.' : '.'}
+                      On{' '}
+                      <Show when={dash.version()}>
+                        {(v) => <Chip variant="neutral">v{versionString(v())}</Chip>}
+                      </Show>
                     </p>
-                  </Show>
-                  <div style={row}>
-                    <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
-                      Update both chips
-                    </Button>
-                    <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
-                      Main only
-                    </Button>
-                    <Button variant="secondary" disabled={busy()} onClick={() => choose('mouse')}>
-                      Mouse-side only
-                    </Button>
-                  </div>
-                </Match>
-              </Switch>
-            </Match>
+                    <Show when={latest()}>
+                      <p>
+                        Latest is <strong>{latest()?.tag}</strong>
+                        {upToDate() ? ', up to date.' : '.'}
+                      </p>
+                    </Show>
+                    <div style={row}>
+                      <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
+                        Update both chips
+                      </Button>
+                      <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
+                        Main only
+                      </Button>
+                      <Button variant="secondary" disabled={busy()} onClick={() => choose('mouse')}>
+                        Mouse-side only
+                      </Button>
+                    </div>
+                  </Match>
+                </Switch>
+              </Match>
 
-            <Match when={step() === 'update'}>
-              <p>
-                Everything happens over the cable you are already connected on. The mouse stops working
-                for a few seconds, then comes back.
-              </p>
-              <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-                <WiringPorts />
-              </Show>
-              <div style={row}>
-                <Show when={dash.status() === 'connected'}>
+              <Match when={step() === 'update'}>
+                <p>
+                  Everything happens over the cable you are already connected on. The mouse stops working
+                  for a few seconds, then comes back.
+                </p>
+                <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
+                  <WiringPorts />
+                </Show>
+                <div style={row}>
+                  <Show when={dash.status() === 'connected'}>
+                    <Button
+                      variant="primary"
+                      disabled={busy() || releases.loading}
+                      onClick={() => void runUpdate()}
+                    >
+                      {busy() ? 'Updating...' : 'Update'}
+                    </Button>
+                  </Show>
                   <Button
-                    variant="primary"
-                    disabled={busy() || releases.loading}
-                    onClick={() => void runUpdate()}
+                    variant="secondary"
+                    disabled={busy()}
+                    onClick={() => { setErr(null); setStep('choose'); }}
                   >
-                    {busy() ? 'Updating...' : 'Update'}
+                    Back
+                  </Button>
+                </div>
+              </Match>
+
+              <Match when={step() === 'sent'}>
+                {/* The transfer and the activate went through and then nothing answered, so what is
+                    running now is exactly what this cannot say. The instruction itself lives in the
+                    shared error, which ConnectPanel renders on every page that offers Connect. */}
+                <Show
+                  when={dash.status() === 'connected'}
+                  fallback={<ConnectPanel />}
+                >
+                  <Landed />
+                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                    Finish
                   </Button>
                 </Show>
-                <Button
-                  variant="secondary"
-                  disabled={busy()}
-                  onClick={() => { setErr(null); setStep('choose'); }}
-                >
-                  Back
-                </Button>
-              </div>
-            </Match>
+              </Match>
 
-            <Match when={step() === 'sent'}>
-              {/* The transfer and the activate went through and then nothing answered, so what is
-                  running now is exactly what this cannot say. The instruction itself lives in the
-                  shared error, which ConnectPanel renders on every page that offers Connect. */}
-              <Show
-                when={dash.status() === 'connected'}
-                fallback={<ConnectPanel />}
-              >
-                <Landed />
-                <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                  Finish
-                </Button>
-              </Show>
-            </Match>
-
-            <Match when={step() === 'done'}>
-              <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-                <Landed />
-                <Button
-                  variant="primary"
-                  onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}
-                >
-                  Finish
-                </Button>
-              </Show>
-            </Match>
-          </Switch>
-        </Card>
+              <Match when={step() === 'done'}>
+                <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
+                  <Landed />
+                  <Button
+                    variant="primary"
+                    onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}
+                  >
+                    Finish
+                  </Button>
+                </Show>
+              </Match>
+            </Switch>
+          </Card>
+        </div>
       </Show>
     </>
   );

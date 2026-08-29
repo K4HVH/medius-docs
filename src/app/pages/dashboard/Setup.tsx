@@ -91,96 +91,110 @@ const Setup = () => {
   return (
     <>
       <Show when={!dash.supported}>
-        <div class="callout callout--warning">{BAD_BROWSER}</div>
+        <div id="unsupported" data-search-target>
+          <Card>
+            <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
+            <p>{BAD_BROWSER}</p>
+          </Card>
+        </div>
       </Show>
       <Show when={dash.supported && !dash.secure}>
-        <div class="callout callout--warning">{BAD_CONTEXT}</div>
+        <div id="insecure" data-search-target>
+          <Card>
+            <CardHeader title="Page not secure" subtitle="No box access from this page" />
+            <p>{BAD_CONTEXT}</p>
+          </Card>
+        </div>
       </Show>
 
       <Show when={dash.status() === 'flashing'}>
-        <Card>
-          <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
-          <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
-        </Card>
+        <div id="installing" data-search-target>
+          <Card>
+            <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
+            <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
+          </Card>
+        </div>
       </Show>
 
       <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
-        <Card>
-          <CardHeader title="Install Medius" subtitle="The ports are numbered on the box" />
-          <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
-            <Chip variant="neutral">{counter()}</Chip>
-          </div>
-          <Show when={err()}>
-            {(msg) => (
-              <div class="callout callout--danger" role="alert">
-                {msg()}
-              </div>
-            )}
-          </Show>
+        <div id="install" data-search-target>
+          <Card>
+            <CardHeader title="Install Medius" subtitle="The ports are numbered on the box" />
+            <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
+              <Chip variant="neutral">{counter()}</Chip>
+            </div>
+            <Show when={err()}>
+              {(msg) => (
+                <div class="callout callout--danger" role="alert">
+                  {msg()}
+                </div>
+              )}
+            </Show>
 
-          <Switch>
-            <Match when={step() === 'main'}>
-              <InstallPorts socket="usb1" />
-              <Button
-                variant="primary"
-                disabled={busy() || releases.loading}
-                onClick={() => void install('medius_device-factory.bin', 'unplug')}
-              >
-                {busy() ? 'Installing...' : 'Install'}
-              </Button>
-            </Match>
-
-            <Match when={step() === 'unplug'}>
-              <ClearPort socket="usb1" />
-              <div class="callout callout--danger">{HAZARD}</div>
-              <div style={row}>
-                <Button variant="primary" onClick={go('mouse')}>
-                  Done
-                </Button>
-                <Button variant="secondary" onClick={go('main')}>
-                  Back
-                </Button>
-              </div>
-            </Match>
-
-            <Match when={step() === 'mouse'}>
-              <InstallPorts socket="usb3" />
-              <div class="callout callout--danger">{HAZARD}</div>
-              <div style={row}>
+            <Switch>
+              <Match when={step() === 'main'}>
+                <InstallPorts socket="usb1" />
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}
-                  onClick={() => void install('medius_host-factory.bin', 'unplug3')}
+                  onClick={() => void install('medius_device-factory.bin', 'unplug')}
                 >
                   {busy() ? 'Installing...' : 'Install'}
                 </Button>
-                <Button variant="secondary" disabled={busy()} onClick={go('unplug')}>
-                  Back
-                </Button>
-              </div>
-            </Match>
+              </Match>
 
-            <Match when={step() === 'unplug3'}>
-              <ClearPort socket="usb3" />
-              <div class="callout callout--danger">{HAZARD}</div>
-              <Button variant="primary" onClick={go('cables')}>
-                Done
-              </Button>
-            </Match>
+              <Match when={step() === 'unplug'}>
+                <ClearPort socket="usb1" />
+                <div class="callout callout--danger">{HAZARD}</div>
+                <div style={row}>
+                  <Button variant="primary" onClick={go('mouse')}>
+                    Done
+                  </Button>
+                  <Button variant="secondary" onClick={go('main')}>
+                    Back
+                  </Button>
+                </div>
+              </Match>
 
-            <Match when={step() === 'cables'}>
-              <Show
-                when={dash.status() === 'connected'}
-                fallback={<ConnectPanel onSetup={go('main')} />}
-              >
-                <div class="callout callout--info">Installed.</div>
-                <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                  Finish
+              <Match when={step() === 'mouse'}>
+                <InstallPorts socket="usb3" />
+                <div class="callout callout--danger">{HAZARD}</div>
+                <div style={row}>
+                  <Button
+                    variant="primary"
+                    disabled={busy() || releases.loading}
+                    onClick={() => void install('medius_host-factory.bin', 'unplug3')}
+                  >
+                    {busy() ? 'Installing...' : 'Install'}
+                  </Button>
+                  <Button variant="secondary" disabled={busy()} onClick={go('unplug')}>
+                    Back
+                  </Button>
+                </div>
+              </Match>
+
+              <Match when={step() === 'unplug3'}>
+                <ClearPort socket="usb3" />
+                <div class="callout callout--danger">{HAZARD}</div>
+                <Button variant="primary" onClick={go('cables')}>
+                  Done
                 </Button>
-              </Show>
-            </Match>
-          </Switch>
-        </Card>
+              </Match>
+
+              <Match when={step() === 'cables'}>
+                <Show
+                  when={dash.status() === 'connected'}
+                  fallback={<ConnectPanel onSetup={go('main')} />}
+                >
+                  <div class="callout callout--info">Installed.</div>
+                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                    Finish
+                  </Button>
+                </Show>
+              </Match>
+            </Switch>
+          </Card>
+        </div>
       </Show>
     </>
   );
