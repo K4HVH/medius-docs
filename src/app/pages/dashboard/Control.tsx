@@ -1,7 +1,8 @@
 import { Match, Show, Switch, createSignal } from 'solid-js';
-import { A } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
+import { PROTO_VER } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { createCommand } from './action';
@@ -18,6 +19,7 @@ import '../../../styles/docs.css';
 // reboot is not sitting in the same column as a test control that does not.
 const Control = () => {
   const dash = useDashboard();
+  const navigate = useNavigate();
   const [cleared, setCleared] = createSignal(false);
   const cmd = createCommand(() => {
     dash.refreshPoll('locks');
@@ -52,9 +54,12 @@ const Control = () => {
 
               <Match when={dash.updateOnly()}>
                 <p>
-                  This box runs the previous control protocol, which these controls do not speak.{' '}
-                  <A href="/dashboard/update">Update it in one click</A> and they come back.
+                  These controls need protocol v{PROTO_VER}. This box speaks
+                  <Show when={dash.version()}>{(v) => <> protocol v{v().protoVer}</>}</Show>.
                 </p>
+                <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                  Update
+                </Button>
               </Match>
 
               <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
