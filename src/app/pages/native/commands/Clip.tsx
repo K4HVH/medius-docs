@@ -409,7 +409,7 @@ link loss   the inter-chip link drops`}</pre>
           </table>
           <div class="api-response-label">CLASS</div>
           <table class="api-params">
-            <thead><tr><th><code>class</code></th><th>Value</th><th><code>id</code> is</th></tr></thead>
+            <thead><tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr></thead>
             <tbody>
               <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A></td></tr>
               <tr><td>key</td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keycode</A></td></tr>
