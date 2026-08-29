@@ -373,6 +373,28 @@ device.press(from_button)?;                         // press takes any impl Into
           </table>
         </Card>
       </div>
+      <div id="render-mode" data-search-target>
+        <Card>
+          <CardHeader title="RenderMode" subtitle="How injected motion is emitted" />
+          <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
+          <p>
+            How injected motion is emitted, passed to{' '}
+            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It composes
+            with the <A href="/library/types/enums#emit-pace"><code>EmitPace</code></A>: <code>Off</code> is
+            the paced fill, the rest render the device's texture and differ only in the onboard smoother.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model (the default).</td></tr>
+              <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped.</td></tr>
+              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model draws the raw injection.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="led-target" data-search-target>
         <Card>
           <CardHeader title="LedTarget" subtitle="Which chip's status LED to drive" />

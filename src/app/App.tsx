@@ -72,7 +72,6 @@ import DashboardSetup from './pages/dashboard/Setup';
 import DashboardControl from './pages/dashboard/Control';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
-import DashboardRenderLab from './pages/dashboard/RenderLab';
 import DashboardChangelog from './pages/dashboard/Changelog';
 import { DashboardProvider } from './pages/dashboard/context';
 
@@ -158,7 +157,6 @@ const App: Component = () => {
           <Route path="/dashboard/control" component={DashboardControl} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
-          <Route path="/dashboard/render-lab" component={DashboardRenderLab} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />

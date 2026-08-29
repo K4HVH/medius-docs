@@ -23,6 +23,7 @@ import {
   sameFilter,
   DeviceKind,
   EmitMode,
+  RenderMode,
   FrameDecoder,
   FrameType,
   LogLevel,
@@ -1084,13 +1085,15 @@ describe('OPTION command (§3.10)', () => {
   it('emitPayload packs [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]', () => {
     expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0]);
     expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, false, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
-    // Rendered is bit 0x80, composing with the pace.
-    expect(Array.from(emitPayload(EmitMode.Learned, true))).toEqual([2, 0x80, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, true, 500))).toEqual([2, 0x82, 0xf4, 0x01, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
+    // The render mode ORs onto the pace: Stock is bit 0x80, its smoother field is bits 2-3.
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Stock))).toEqual([2, 0x80, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Stock, 500))).toEqual([2, 0x82, 0xf4, 0x01, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Despiked))).toEqual([2, 0x84, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Unsmoothed, 500))).toEqual([2, 0x8a, 0xf4, 0x01, 0, 0]);
     // The forced wire rate is independent of the pacing mode.
-    expect(Array.from(emitPayload(EmitMode.Learned, false, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, false, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Off, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
   });
 
   it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
@@ -1108,7 +1111,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
-        rendered: false,
+        render: RenderMode.Off,
         fixedHz: 0,
         resolvedHz: 0,
         forceHz: 0,
@@ -1121,7 +1124,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Interval,
-        rendered: false,
+        render: RenderMode.Off,
         fixedHz: 0,
         resolvedHz: 1000,
         forceHz: 0,
@@ -1137,7 +1140,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Fixed,
-        rendered: false,
+        render: RenderMode.Off,
         fixedHz: 1000,
         resolvedHz: 250,
         forceHz: 125,
@@ -1150,7 +1153,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
-        rendered: false,
+        render: RenderMode.Off,
         fixedHz: 0,
         resolvedHz: 0,
         forceHz: 1000,
@@ -1163,7 +1166,7 @@ describe('OPTION command (§3.10)', () => {
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
-        rendered: true,
+        render: RenderMode.Stock,
         fixedHz: 0,
         resolvedHz: 1000,
         forceHz: 0,
@@ -1171,12 +1174,20 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // A mode this build doesn't know -> mode null, the rates still decode.
-    expect(parseResp(new Uint8Array([9, 2, 4, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    // The smoother field (bits 2-3) picks the render mode: 0x84 de-spiked, 0x88 unsmoothed, 0x8c unknown.
+    const decodeRender = (byte: number) => {
+      const r = parseResp(new Uint8Array([9, 2, byte, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+      return r?.kind === 'emitPace' ? r.emit.render : undefined;
+    };
+    expect(decodeRender(0x84)).toBe(RenderMode.Despiked);
+    expect(decodeRender(0x88)).toBe(RenderMode.Unsmoothed);
+    expect(decodeRender(0x8c)).toBeNull();
+    // A pace this build doesn't know (low bits 3) -> mode null, the rates still decode.
+    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: null,
-        rendered: false,
+        render: RenderMode.Off,
         fixedHz: 0,
         resolvedHz: 1000,
         forceHz: 0,

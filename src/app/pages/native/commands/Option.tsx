@@ -179,7 +179,7 @@ const Option: Component = () => {
               <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
-              <tr><td><code>| 0x80</code></td><td><A href="/native/commands/option#rendered">Rendered</A></td><td>n/a</td><td>OR onto any pace above; that pace caps the rendered rate</td></tr>
+              <tr><td><code>| 0x80</code></td><td><A href="/native/commands/option#rendered">Rendered</A></td><td>n/a</td><td>OR onto any pace above; that pace caps the rendered rate. Bits 2-3 pick the <A href="/native/commands/option#rendered">smoother</A></td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -204,6 +204,18 @@ const Option: Component = () => {
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
               <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
               <tr><td>Before the device is seen</td><td>Emits at once</td><td>Holds injection until it has a profile</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Bits 2-3 pick the path smoother, read only when Rendered is set. The model expects a smoothed
+            path; a step onset is not one, so stock's first report sits above the rest.
+          </p>
+          <table class="api-params">
+            <thead><tr><th><code>mode</code></th><th>Name</th><th>Smoother</th></tr></thead>
+            <tbody>
+              <tr><td><code>| 0x80</code></td><td>Stock <em>(default)</em></td><td>ABCurves' triangular smoother, bit for bit</td></tr>
+              <tr><td><code>| 0x84</code></td><td>De-spiked</td><td>The same, onset ramped rather than stepped</td></tr>
+              <tr><td><code>| 0x88</code></td><td>Smoother off</td><td>None; the model renders the raw injection</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FORCE_HZ</div>

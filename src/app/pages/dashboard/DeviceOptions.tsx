@@ -10,13 +10,13 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { Checkbox } from '../../../components/inputs/Checkbox';
 import { TextField } from '../../../components/inputs/TextField';
 import {
   type EmitPace,
   BEARING_WINDOW_DEFAULT_MS,
   BearingMode,
   EmitMode,
+  RenderMode,
   NAME_MAX,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
@@ -42,6 +42,34 @@ const MODE_NAMES: Record<number, string> = {
   [EmitMode.Fixed]: 'fixed',
 };
 
+const RENDER_MODES: Record<string, RenderMode> = {
+  off: RenderMode.Off,
+  stock: RenderMode.Stock,
+  despiked: RenderMode.Despiked,
+  unsmoothed: RenderMode.Unsmoothed,
+};
+
+const RENDER_BLURB: Record<string, string> = {
+  off: 'Even fill at the paced rate.',
+  stock: "Renders the mouse's own texture.",
+  despiked: 'Renders it with a softer onset.',
+  unsmoothed: 'Renders raw motion, no smoothing.',
+};
+
+const RENDER_NAMES: Record<number, string> = {
+  [RenderMode.Off]: 'off',
+  [RenderMode.Stock]: 'stock',
+  [RenderMode.Despiked]: 'despiked',
+  [RenderMode.Unsmoothed]: 'unsmoothed',
+};
+
+const RENDER_LABEL: Record<number, string> = {
+  [RenderMode.Off]: '',
+  [RenderMode.Stock]: 'Rendered',
+  [RenderMode.Despiked]: 'De-spiked',
+  [RenderMode.Unsmoothed]: 'Unsmoothed',
+};
+
 const emitLabel = (e: EmitPace): string => {
   let base: string;
   switch (e.mode) {
@@ -57,7 +85,8 @@ const emitLabel = (e: EmitPace): string => {
     default:
       base = 'Unknown';
   }
-  return e.rendered ? `${base} · Rendered` : base;
+  const name = e.render != null ? RENDER_LABEL[e.render] : '';
+  return name ? `${base} · ${name}` : base;
 };
 
 const DeviceOptions = () => {
@@ -76,7 +105,7 @@ const DeviceOptions = () => {
   const [bearEdit, setBearEdit] = createSignal<number | null>(null);
   const [bearMode, setBearMode] = createSignal<string | null>(null);
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
-  const [renderEdit, setRenderEdit] = createSignal<boolean | null>(null);
+  const [renderEdit, setRenderEdit] = createSignal<string | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
   const [forceEdit, setForceEdit] = createSignal<number | null>(null);
   const [forceOnEdit, setForceOnEdit] = createSignal<boolean | null>(null);
@@ -112,7 +141,7 @@ const DeviceOptions = () => {
       dash.refreshPoll('bearing');
     });
   const mode = () => modeEdit() ?? MODE_NAMES[emit()?.mode ?? EmitMode.Learned] ?? 'learned';
-  const rendered = () => renderEdit() ?? (emit()?.rendered ?? false);
+  const renderKey = () => renderEdit() ?? RENDER_NAMES[emit()?.render ?? RenderMode.Off] ?? 'off';
   // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
@@ -157,7 +186,7 @@ const DeviceOptions = () => {
   const applyEmit = () =>
     cmd.run(async () => {
       const m = EMIT_MODES[mode()];
-      await dash.link()!.setEmitPace(m, rendered(), m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
+      await dash.link()!.setEmitPace(m, RENDER_MODES[renderKey()], m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
       setModeEdit(null);
       setRenderEdit(null);
       setHzEdit(null);
@@ -340,14 +369,19 @@ const DeviceOptions = () => {
           ]}
         />
         <p style={muted}>{MODE_BLURB[mode()]}</p>
-        <div style={{ 'margin-top': 'var(--g-spacing)' }}>
-          <Checkbox label="Rendered" checked={rendered()} onChange={setRenderEdit} />
-          <p style={muted}>
-            {rendered()
-              ? 'Shapes the texture to the live mouse.'
-              : 'Even fill at the paced rate.'}
-          </p>
-        </div>
+        <div class="api-response-label" style={section}>Render</div>
+        <RadioGroup
+          name="emit-render"
+          value={renderKey()}
+          onChange={setRenderEdit}
+          options={[
+            { value: 'off', label: 'Off' },
+            { value: 'stock', label: 'Stock' },
+            { value: 'despiked', label: 'De-spiked' },
+            { value: 'unsmoothed', label: 'Smoother off' },
+          ]}
+        />
+        <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
         <div class="api-response-label" style={section}>Wire rate</div>
         <RadioGroup
           name="wire-rate"
