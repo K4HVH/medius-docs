@@ -163,7 +163,7 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
-              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 us at 4 Mbaud.</td></tr>
+              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 µs at 4 Mbaud.</td></tr>
               <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
               <tr><td>Inter-chip link ring</td><td>4096 bytes, which is what caps the relayed window.</td></tr>
             </tbody>

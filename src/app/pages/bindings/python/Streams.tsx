@@ -208,7 +208,7 @@ with Device.find() as dev:
                     print("left held")
             if events.dropped:
                 print("fell behind:", events.dropped, "dropped")`}</code></pre>
-          <div class="api-response-label">TRACE A VENDOR ENDPOINT AND THE BUS</div>
+          <div class="api-response-label">TRAFFIC EVENTS</div>
           <pre><code class="language-python">{`from medius import Device, CatchFilter, CatchEventKind, TrafficClass
 
 VI = TrafficClass.VENDOR_INTERRUPT
@@ -240,7 +240,7 @@ while running:
     if ev is None:
         continue
     handle(ev)`}</code></pre>
-          <div class="api-response-label">CONFIRM THE BOX TOOK THEM</div>
+          <div class="api-response-label">READBACK</div>
           <pre><code class="language-python">{`st = dev.query_catch()
 if st.table_full:
     print("a filter was refused: the box's 32-entry table is full")

@@ -29,7 +29,7 @@ const Catch: Component = () => {
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>; the box streams until you
           unsubscribe.
         </p>
-        <div class="api-response-label">WHERE THE TAPS SIT</div>
+        <div class="api-response-label">TAP POINTS</div>
         <pre class="diagram">{`  real device --USB3--> HOST chip ----link----> DEVICE chip --USB1--> game PC
                         |                       |
                         | clk = 0, host chip    | clk = 1, device chip
@@ -111,7 +111,7 @@ const Catch: Component = () => {
             length in{' '}
             <A href="/native/commands/catch#traffic-event"><code>true_len</code></A>.
           </p>
-          <div class="api-response-label">PHYSICAL ONLY, AND BEFORE THE SCALE</div>
+          <div class="api-response-label">CAPTURE POINT</div>
           <p>
             The input classes are captured at the emission merge point <em>before</em> any{' '}
             <A href="/native/commands/lock#scale"><code>LOCK</code> scale</A> or{' '}
@@ -243,14 +243,14 @@ const Catch: Component = () => {
           <pre class="diagram">{`  clk = 0   HID_IN  ts_us = 1286497017   (host chip)
   clk = 0   HID_IN  ts_us = 1286544017   (host chip)
                             ----------
-                    delta =      47000 us / 1000 us poll = 47 polls
+                    delta =      47000 µs / 1000 µs poll = 47 polls
                                             -> 46 polls where the device said nothing
 
   clk = 1   EMIT    ts_us =  902114550   (device chip)
                     ^ smaller than the stamps above, and NOT earlier:
                       a different chip, a different epoch. Subtracting across
                       domains without the measured offset is meaningless.`}</pre>
-          <div class="api-response-label">PUTTING BOTH DOMAINS ON ONE TIMELINE</div>
+          <div class="api-response-label">CORRELATION</div>
           <p>
             <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A> carries a measured
             offset between the two clocks, its drift rate, and the round trip that bounds its error.
@@ -344,7 +344,7 @@ const Catch: Component = () => {
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">ONE CLASS PER EVENT</div>
+          <div class="api-response-label">SNAPSHOT</div>
           <p>
             Each entry is 3 bytes and the snapshot is <code>n</code> of them, all one class, since
             one physical report is one class.
@@ -424,7 +424,7 @@ const Catch: Component = () => {
               <tr><td>every other class</td><td><code>0</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CONTROL: ONE EVENT PER TRANSACTION</div>
+          <div class="api-response-label">CONTROL EVENTS</div>
           <p>
             <code>CONTROL</code> carries one event per <em>completed transaction</em>, not one per
             stage: <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> says which

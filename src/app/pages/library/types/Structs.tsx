@@ -30,7 +30,7 @@ const Structs: Component = () => {
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
               <tr><td><code>mac</code></td><td><code>[u8; 6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
-              <tr><td><code>name</code></td><td><code>String</code></td><td>The box's human-readable name (a synthesized default when unset), set via <A href="/library/options#set-name"><code>set_name</code></A>.</td></tr>
+              <tr><td><code>name</code></td><td><code>String</code></td><td>The box's human-readable name (a synthesised default when unset), set via <A href="/library/options#set-name"><code>set_name</code></A>.</td></tr>
             </tbody>
           </table>
           <table class="api-params">

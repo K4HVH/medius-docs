@@ -163,7 +163,7 @@ const Lock: Component = () => {
 
 
           <div id="clearing" data-search-target>
-            <div class="api-response-label">A SCALE CLEARS ON</div>
+            <div class="api-response-label">CLEARS ON</div>
             <pre class="diagram">{`unlock      the matching unlock (scale = 100); direction 0 clears
             all four slots of that target
 silence     ~1 s with no control-PC frame

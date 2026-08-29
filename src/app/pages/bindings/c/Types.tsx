@@ -852,7 +852,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>fw_minor</code></td><td><code>uint8_t</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>uint8_t</code></td><td>Firmware patch version.</td></tr>
               <tr><td><code>mac</code></td><td><code>uint8_t[6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
-              <tr><td><code>name</code></td><td><code>char[MEDIUS_MAX_NAME]</code></td><td>The box's human-readable name (NUL-terminated; a synthesized default when unset).</td></tr>
+              <tr><td><code>name</code></td><td><code>char[MEDIUS_MAX_NAME]</code></td><td>The box's human-readable name (NUL-terminated; a synthesised default when unset).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1392,7 +1392,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td>every other class</td><td><code>0</code>.</td><td>-</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CONTROL: ONE EVENT PER TRANSACTION</div>
+          <div class="api-response-label">CONTROL EVENTS</div>
           <p>
             A <code>CONTROL</code> event covers a whole completed transaction, not one stage of one:{' '}
             <code>bytes</code> is the 8-byte SETUP packet followed by the data stage, and{' '}
@@ -1462,7 +1462,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>data.traffic</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A></td><td>Read when <code>kind == TRAFFIC</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">HOW BIG ONE EVENT IS</div>
+          <div class="api-response-label">EVENT SIZE</div>
           <table class="api-params">
             <thead><tr><th>Part</th><th>Bytes</th><th>Made of</th></tr></thead>
             <tbody>

@@ -31,7 +31,7 @@ export interface Version {
   fwMinor: number;
   fwPatch: number;
   mac: number[]; // the device chip's base MAC (6 bytes), a stable per-box id
-  name: string; // the box's human-readable name; a synthesized "Medius-XXXX" default when unset
+  name: string; // the box's human-readable name; a synthesised "Medius-XXXX" default when unset
 }
 
 export function versionString(v: Version): string {

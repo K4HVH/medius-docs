@@ -118,7 +118,7 @@ except MediusError as e:
 dev.clone() ────┘
 
   each handle is freed on its own; the link closes with the last one`}</pre>
-          <div class="api-response-label">THREE WAYS TO RELEASE</div>
+          <div class="api-response-label">RELEASE ROUTES</div>
           <table class="api-params">
             <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
             <tbody>

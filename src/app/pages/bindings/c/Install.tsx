@@ -65,7 +65,8 @@ const Install: Component = () => {
           </ol>
           <p>Build and run as normal. To skip the DLL, add <code>medius_capi.lib</code> in step 3 instead (static, nothing to copy).</p>
 
-          <div class="api-response-label">WINDOWS · COMMAND LINE (x64 Native Tools Command Prompt)</div>
+          <div class="api-response-label">WINDOWS · COMMAND LINE</div>
+          <p>From the <strong>x64 Native Tools Command Prompt</strong>:</p>
           <pre><code class="language-bash">{`cl app.c /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: C++:  cl /std:c++17 app.cpp /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: then copy medius_capi.dll next to app.exe, and run:

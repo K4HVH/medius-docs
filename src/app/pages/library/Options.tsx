@@ -172,11 +172,11 @@ let name = device.query_version()?.name;  // read it back off Version`}</code></
 
       <div id="clear-name" data-search-target>
         <Card>
-          <CardHeader title="clear_name" subtitle="Back to the synthesized default" />
+          <CardHeader title="clear_name" subtitle="Back to the synthesised default" />
           <pre class="api-signature">fn clear_name(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Clears the custom name, reverting the box to a firmware-synthesized{' '}
+            Clears the custom name, reverting the box to a firmware-synthesised{' '}
             <code>Medius-XXXX</code> default derived from its MAC.
           </p>
           <div class="api-response-label">EXAMPLE</div>

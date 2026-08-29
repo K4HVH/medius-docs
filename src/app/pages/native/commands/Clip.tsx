@@ -148,7 +148,7 @@ const Clip: Component = () => {
             An edge is a level: it sticks until a later tick changes it, and the box NAKs while it is held
             still. Motion (<code>dx</code>/<code>dy</code>/<code>wheel</code>) is a per-frame delta.
           </p>
-          <div class="api-response-label">MOTION AND EDGES ON ONE TICK</div>
+          <div class="api-response-label">COMBINED TICK</div>
           <p>
             Set several flag bits and the fields stack in a single tick, so a move and a press land on the
             same frame and the clone emits one report.

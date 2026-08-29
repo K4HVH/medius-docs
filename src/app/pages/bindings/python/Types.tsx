@@ -811,7 +811,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>fw_patch</code></td><td><code>int</code></td><td>firmware patch</td></tr>
                 <tr><td><code>mac</code></td><td><code>bytes</code></td><td>the device chip's base MAC (6 bytes), a stable per-box id</td></tr>
                 <tr><td><code>mac_hex</code></td><td><code>str</code></td><td>the MAC as 12 lowercase hex digits</td></tr>
-                <tr><td><code>name</code></td><td><code>str</code></td><td>the box's human-readable name (a synthesized default when unset), set with <A href="/bindings/python/api#led-admin-options"><code>set_name</code></A></td></tr>
+                <tr><td><code>name</code></td><td><code>str</code></td><td>the box's human-readable name (a synthesised default when unset), set with <A href="/bindings/python/api#led-admin-options"><code>set_name</code></A></td></tr>
               </tbody>
             </table>
           </div>
