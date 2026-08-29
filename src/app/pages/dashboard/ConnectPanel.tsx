@@ -1,5 +1,6 @@
 import { Match, Show, Switch } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
@@ -39,8 +40,12 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
     </Button>
   );
 
-  if (!dash.supported) return <div class="callout callout--warning">{BAD_BROWSER}</div>;
-  if (!dash.secure) return <div class="callout callout--warning">{BAD_CONTEXT}</div>;
+  // Every caller mounts this inside its own Card, so these two states are the card's body, not a
+  // second card. The page-level copies in Device, Advanced and Setup are the ones with card chrome.
+  if (!dash.supported)
+    return <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>;
+  if (!dash.secure)
+    return <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>;
 
   return (
     <div aria-live="polite">
@@ -62,10 +67,12 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
 
         <Match when={verdict()?.kind === 'unsupported'}>
           <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>
+          <Connect label="Try again" />
         </Match>
 
         <Match when={verdict()?.kind === 'insecure'}>
           <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>
+          <Connect label="Try again" />
         </Match>
 
         <Match when={verdict()?.kind === 'no-port'}>

@@ -197,270 +197,284 @@ const DeviceOptions = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Card>
-        <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
+      <div id="options" data-search-target>
+        <Card>
+          <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
 
-        <Section title="Box name" first>
-        <p>
-          Up to {NAME_MAX} letters, numbers and symbols; left unset, the box derives one from its
-          id.
-        </p>
-        <div style={controls}>
-          <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
-            <TextField
-              label="Name"
-              value={name()}
-              maxLength={NAME_MAX}
-              placeholder="Medius-1A2B"
-              onChange={setNameEdit}
-            />
+          <Section title="Box name" first>
+          <p>
+            Up to {NAME_MAX} letters, numbers and symbols; left unset, the box derives one from its
+            id.
+          </p>
+          <div style={controls}>
+            <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
+              <TextField
+                label="Name"
+                value={name()}
+                maxLength={NAME_MAX}
+                placeholder="Medius-1A2B"
+                onChange={setNameEdit}
+              />
+            </div>
+            <Button variant="primary" disabled={cmd.busy()} onClick={applyName}>
+              Set
+            </Button>
+            <Button variant="secondary" disabled={cmd.busy()} onClick={clearName}>
+              Clear
+            </Button>
           </div>
-          <Button variant="primary" disabled={cmd.busy()} onClick={applyName}>
-            Set
-          </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={clearName}>
-            Clear
-          </Button>
-        </div>
-        <Show when={version()} fallback={<p style={status}>Reading status...</p>}>
-          <div style={status}>
-            <Chip variant="neutral">{version()!.name}</Chip>
+          <Show when={version()} fallback={<p style={status}>Reading status...</p>}>
+            <div style={status}>
+              <Chip variant="neutral">{version()!.name}</Chip>
+            </div>
+          </Show>
+
+          </Section>
+
+          <div id="imperfect-clone" data-search-target>
+            <Section title="Imperfect clone">
+            <p>
+              Clone a device that needs more inputs than the box can copy, dropping one of them; the box
+              reboots to apply.
+            </p>
+            <div style={controls}>
+              <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
+                Allow imperfect
+              </Button>
+              <Button variant="secondary" disabled={cmd.busy()} onClick={() => allowImperfect(false)}>
+                Faithful only
+              </Button>
+            </div>
+            <Show when={imperfect()} fallback={<p style={status}>Reading status...</p>}>
+              {(s) => (
+                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Chip variant={s().allowed ? 'success' : 'neutral'}>
+                    {s().allowed ? 'Allowed' : 'Faithful only'}
+                  </Chip>
+                  <Show when={s().overCapacity}>
+                    <Chip variant="warning">Attached device needs an input the box can't copy</Chip>
+                  </Show>
+                </div>
+              )}
+            </Show>
+
+            </Section>
           </div>
-        </Show>
 
-        </Section>
-
-        <Section title="Imperfect clone">
-        <p>
-          Clone a device that needs more inputs than the box can copy, dropping one of them; the box
-          reboots to apply.
-        </p>
-        <div style={controls}>
-          <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
-            Allow imperfect
-          </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => allowImperfect(false)}>
-            Faithful only
-          </Button>
-        </div>
-        <Show when={imperfect()} fallback={<p style={status}>Reading status...</p>}>
-          {(s) => (
-            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-              <Chip variant={s().allowed ? 'success' : 'neutral'}>
-                {s().allowed ? 'Allowed' : 'Faithful only'}
-              </Chip>
-              <Show when={s().overCapacity}>
-                <Chip variant="warning">Attached device needs an input the box can't copy</Chip>
+          <div id="movement-riding" data-search-target>
+            <Section title="Movement riding">
+            <p>
+              Injected motion waits for a real mouse move within the window and is dropped if none
+              arrives, so it keeps the real device's report timing.
+            </p>
+            <div style={controls}>
+              <div style={{ 'max-width': '8rem' }}>
+                <NumberInput
+                  label="Window (ms)"
+                  value={rideWindow()}
+                  min={1}
+                  max={65535}
+                  onChange={(v) => setRideEdit(v ?? 1)}
+                />
+              </div>
+              <Button variant="primary" disabled={cmd.busy()} onClick={() => setRiding(rideWindow())}>
+                Turn on
+              </Button>
+              <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
+                Turn off
+              </Button>
+              <Show when={rideDirty()}>
+                <Button variant="subtle" onClick={revertRide}>
+                  Revert
+                </Button>
               </Show>
             </div>
-          )}
-        </Show>
-
-        </Section>
-
-        <Section title="Movement riding">
-        <p>
-          Injected motion waits for a real mouse move within the window and is dropped if none
-          arrives, so it keeps the real device's report timing.
-        </p>
-        <div style={controls}>
-          <div style={{ 'max-width': '8rem' }}>
-            <NumberInput
-              label="Window (ms)"
-              value={rideWindow()}
-              min={1}
-              max={65535}
-              onChange={(v) => setRideEdit(v ?? 1)}
-            />
-          </div>
-          <Button variant="primary" disabled={cmd.busy()} onClick={() => setRiding(rideWindow())}>
-            Turn on
-          </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
-            Turn off
-          </Button>
-          <Show when={rideDirty()}>
-            <Button variant="subtle" onClick={revertRide}>
-              Revert
-            </Button>
-          </Show>
-        </div>
-        <Show when={ride() !== null} fallback={<p style={status}>Reading status...</p>}>
-          <div style={status}>
-            <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
-              {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
-            </Chip>
-            <Show when={rideDirty()}>
-              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
-            </Show>
-          </div>
-        </Show>
-
-        </Section>
-
-        <Section title="Bearing">
-        <p>
-          What the with and against lock directions are measured against: the direction the box is
-          injecting on that axis, held for the window.
-        </p>
-        <RadioGroup
-          name="bearing-mode"
-          value={String(bearGeometry())}
-          onChange={setBearMode}
-          options={[
-            { value: String(BearingMode.PerAxis), label: 'Per axis' },
-            { value: String(BearingMode.Vector), label: 'Vector' },
-          ]}
-        />
-        <p style={muted}>
-          {bearGeometry() === BearingMode.Vector
-            ? 'The physical delta is projected onto the injected XY vector, and only the part along it is weighed.'
-            : 'Each axis is weighed against its own bearing.'}
-        </p>
-        <div style={controls}>
-          <div style={{ 'max-width': '8rem' }}>
-            <NumberInput
-              label="Window (ms)"
-              value={bearWindow()}
-              min={1}
-              max={65535}
-              onChange={(v) => setBearEdit(v ?? 1)}
-            />
-          </div>
-          <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
-            Apply
-          </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
-            Turn off
-          </Button>
-          <Show when={bearDirty()}>
-            <Button variant="subtle" onClick={revertBear}>
-              Revert
-            </Button>
-          </Show>
-        </div>
-        <Show when={bearing() !== null} fallback={<p style={status}>Reading status...</p>}>
-          <div style={status}>
-            <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
-              {bearing()!.windowMs > 0
-                ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
-                : 'Off'}
-            </Chip>
-            <Show when={bearDirty()}>
-              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
-            </Show>
-          </div>
-        </Show>
-        </Section>
-
-        <Section title="Emit rate">
-        <p>
-          Paces injected motion as a ceiling, chooses how it is rendered, and sets the rate the clone
-          itself runs at. Apply writes all three together.
-        </p>
-        <RadioGroup
-          name="emit-mode"
-          value={mode()}
-          onChange={setModeEdit}
-          options={[
-            { value: 'learned', label: 'Learned' },
-            { value: 'interval', label: 'Interval' },
-            { value: 'fixed', label: 'Fixed' },
-          ]}
-        />
-        <p style={muted}>{MODE_BLURB[mode()]}</p>
-        <div class="api-response-label" style={section}>Render</div>
-        <RadioGroup
-          name="emit-render"
-          value={renderKey()}
-          onChange={setRenderEdit}
-          options={[
-            { value: 'off', label: 'Off' },
-            { value: 'stock', label: 'Stock' },
-            { value: 'despiked', label: 'De-spiked' },
-            { value: 'unsmoothed', label: 'Unsmoothed' },
-          ]}
-        />
-        <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
-        <div class="api-response-label" style={section}>Wire rate</div>
-        <RadioGroup
-          name="wire-rate"
-          value={forceOn() ? 'forced' : 'device'}
-          onChange={(v) => setForceOnEdit(v === 'forced')}
-          options={[
-            { value: 'device', label: "Device's own" },
-            { value: 'forced', label: 'Forced' },
-          ]}
-        />
-        <p style={muted}>
-          {forceOn()
-            ? 'Runs the clone at a rate the mouse did not ask for.'
-            : 'Runs the clone at the rate the mouse asked for.'}
-        </p>
-        <div style={controls}>
-          <Show when={mode() === 'fixed'}>
-            <div style={{ 'max-width': '8rem' }}>
-              <NumberInput
-                label="Emit rate (Hz)"
-                value={hz()}
-                min={1}
-                max={1000}
-                onChange={(v) => setHzEdit(v ?? 1)}
-              />
-            </div>
-          </Show>
-          <Show when={forceOn()}>
-            <div style={{ 'max-width': '8rem' }}>
-              <NumberInput
-                label="Wire rate (Hz)"
-                value={forceHz()}
-                min={4}
-                max={1000}
-                onChange={(v) => setForceEdit(v ?? 4)}
-              />
-            </div>
-          </Show>
-          <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
-            Apply
-          </Button>
-          <Show when={emitDirty()}>
-            <Button variant="subtle" onClick={revertEmit}>
-              Revert
-            </Button>
-          </Show>
-        </div>
-        <Show when={cmd.error()}>
-          <div class="callout callout--danger" role="alert" style={section}>
-            {cmd.error()}
-          </div>
-        </Show>
-        <Show when={emit()} fallback={<p style={status}>Reading status...</p>}>
-          {(s) => (
-            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-              <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
-                {emitLabel(s())}
-              </Chip>
-              <Show when={s().advertisedHz > 0}>
-                <Chip variant={s().forceActive ? 'success' : 'neutral'}>
-                  {s().forceActive
-                    ? `Forced \u00b7 ${s().advertisedHz} Hz`
-                    : `Device's own \u00b7 ${s().advertisedHz} Hz`}
+            <Show when={ride() !== null} fallback={<p style={status}>Reading status...</p>}>
+              <div style={status}>
+                <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
+                  {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
                 </Chip>
-              </Show>
-              <Show when={s().forceHz > 0 && !s().forceActive}>
-                <Chip variant="warning">Set, but needs Allow imperfect</Chip>
-              </Show>
-              <Show when={emitDirty()}>
-                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                  not applied yet
-                </span>
+                <Show when={rideDirty()}>
+                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+                </Show>
+              </div>
+            </Show>
+
+            </Section>
+          </div>
+
+          <div id="bearing" data-search-target>
+            <Section title="Bearing">
+            <p>
+              What the with and against lock directions are measured against: the direction the box is
+              injecting on that axis, held for the window.
+            </p>
+            <RadioGroup
+              name="bearing-mode"
+              value={String(bearGeometry())}
+              onChange={setBearMode}
+              options={[
+                { value: String(BearingMode.PerAxis), label: 'Per axis' },
+                { value: String(BearingMode.Vector), label: 'Vector' },
+              ]}
+            />
+            <p style={muted}>
+              {bearGeometry() === BearingMode.Vector
+                ? 'The physical delta is projected onto the injected XY vector, and only the part along it is weighed.'
+                : 'Each axis is weighed against its own bearing.'}
+            </p>
+            <div style={controls}>
+              <div style={{ 'max-width': '8rem' }}>
+                <NumberInput
+                  label="Window (ms)"
+                  value={bearWindow()}
+                  min={1}
+                  max={65535}
+                  onChange={(v) => setBearEdit(v ?? 1)}
+                />
+              </div>
+              <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
+                Apply
+              </Button>
+              <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
+                Turn off
+              </Button>
+              <Show when={bearDirty()}>
+                <Button variant="subtle" onClick={revertBear}>
+                  Revert
+                </Button>
               </Show>
             </div>
-          )}
-        </Show>
-        </Section>
+            <Show when={bearing() !== null} fallback={<p style={status}>Reading status...</p>}>
+              <div style={status}>
+                <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
+                  {bearing()!.windowMs > 0
+                    ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
+                    : 'Off'}
+                </Chip>
+                <Show when={bearDirty()}>
+                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+                </Show>
+              </div>
+            </Show>
+            </Section>
+          </div>
 
-      </Card>
+          <div id="emit-rate" data-search-target>
+            <Section title="Emit rate">
+            <p>
+              Paces injected motion as a ceiling, chooses how it is rendered, and sets the rate the clone
+              itself runs at. Apply writes all three together.
+            </p>
+            <RadioGroup
+              name="emit-mode"
+              value={mode()}
+              onChange={setModeEdit}
+              options={[
+                { value: 'learned', label: 'Learned' },
+                { value: 'interval', label: 'Interval' },
+                { value: 'fixed', label: 'Fixed' },
+              ]}
+            />
+            <p style={muted}>{MODE_BLURB[mode()]}</p>
+            <div id="render" data-search-target>
+              <div class="api-response-label" style={section}>Render</div>
+              <RadioGroup
+                name="emit-render"
+                value={renderKey()}
+                onChange={setRenderEdit}
+                options={[
+                  { value: 'off', label: 'Off' },
+                  { value: 'stock', label: 'Stock' },
+                  { value: 'despiked', label: 'De-spiked' },
+                  { value: 'unsmoothed', label: 'Unsmoothed' },
+                ]}
+              />
+              <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
+            </div>
+            <div id="wire-rate" data-search-target>
+              <div class="api-response-label" style={section}>Wire rate</div>
+              <RadioGroup
+                name="wire-rate"
+                value={forceOn() ? 'forced' : 'device'}
+                onChange={(v) => setForceOnEdit(v === 'forced')}
+                options={[
+                  { value: 'device', label: "Device's own" },
+                  { value: 'forced', label: 'Forced' },
+                ]}
+              />
+              <p style={muted}>
+                {forceOn()
+                  ? 'Runs the clone at a rate the mouse did not ask for.'
+                  : 'Runs the clone at the rate the mouse asked for.'}
+              </p>
+            </div>
+            <div style={controls}>
+              <Show when={mode() === 'fixed'}>
+                <div style={{ 'max-width': '8rem' }}>
+                  <NumberInput
+                    label="Emit rate (Hz)"
+                    value={hz()}
+                    min={1}
+                    max={1000}
+                    onChange={(v) => setHzEdit(v ?? 1)}
+                  />
+                </div>
+              </Show>
+              <Show when={forceOn()}>
+                <div style={{ 'max-width': '8rem' }}>
+                  <NumberInput
+                    label="Wire rate (Hz)"
+                    value={forceHz()}
+                    min={4}
+                    max={1000}
+                    onChange={(v) => setForceEdit(v ?? 4)}
+                  />
+                </div>
+              </Show>
+              <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
+                Apply
+              </Button>
+              <Show when={emitDirty()}>
+                <Button variant="subtle" onClick={revertEmit}>
+                  Revert
+                </Button>
+              </Show>
+            </div>
+            <Show when={cmd.error()}>
+              <div class="callout callout--danger" role="alert" style={section}>
+                {cmd.error()}
+              </div>
+            </Show>
+            <Show when={emit()} fallback={<p style={status}>Reading status...</p>}>
+              {(s) => (
+                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
+                    {emitLabel(s())}
+                  </Chip>
+                  <Show when={s().advertisedHz > 0}>
+                    <Chip variant={s().forceActive ? 'success' : 'neutral'}>
+                      {s().forceActive
+                        ? `Forced \u00b7 ${s().advertisedHz} Hz`
+                        : `Device's own \u00b7 ${s().advertisedHz} Hz`}
+                    </Chip>
+                  </Show>
+                  <Show when={s().forceHz > 0 && !s().forceActive}>
+                    <Chip variant="warning">Set, but needs Allow imperfect</Chip>
+                  </Show>
+                  <Show when={emitDirty()}>
+                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                      not applied yet
+                    </span>
+                  </Show>
+                </div>
+              )}
+            </Show>
+            </Section>
+          </div>
+
+        </Card>
+      </div>
     </Show>
   );
 };

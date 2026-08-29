@@ -19,15 +19,20 @@ describe('dashboard search index', () => {
   it('points every card at the tab it actually lives on', () => {
     const onControl = ['Injection', 'Input locks', 'Input catch', 'Clip playback', 'Status light', 'Safety clear'];
     const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Bearing', 'Emit rate', 'Render', 'Capabilities', 'Performance', 'Device log'];
+    // The tab is the path before the anchor. A card entry without one lands on the tab and scrolls
+    // nowhere, which is what left every Dashboard result pointing at the same two pages.
+    const route = (e: Entry) => e.path.split('#')[0];
     for (const label of onControl) {
       const e = dash.find((x) => x.label === label);
       expect(e, label).toBeDefined();
-      expect(e!.path, label).toBe('/dashboard/control');
+      expect(route(e!), label).toBe('/dashboard/control');
+      expect(e!.path, label).toContain('#');
     }
     for (const label of onDevice) {
       const e = dash.find((x) => x.label === label);
       expect(e, label).toBeDefined();
-      expect(e!.path, label).toBe('/dashboard');
+      expect(route(e!), label).toBe('/dashboard');
+      expect(e!.path, label).toContain('#');
     }
   });
 
@@ -44,7 +49,10 @@ describe('dashboard search index', () => {
       for (const m of src.matchAll(/CardHeader\s+title="([^"]+)"/g)) titles.add(m[1]);
     }
     // Cards that are pure connection or progress state, not a feature to search for.
-    const notFeatures = new Set(['Controls', 'Your box', 'Status', 'Installing', 'Flashing']);
+    const notFeatures = new Set([
+      'Controls', 'Your box', 'Status', 'Installing', 'Flashing',
+      'Browser not supported', 'Page not secure',
+    ]);
     const missing = [...titles].filter((t) => !notFeatures.has(t) && find(t).length === 0);
     expect(missing).toEqual([]);
   });

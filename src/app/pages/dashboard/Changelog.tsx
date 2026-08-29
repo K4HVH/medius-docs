@@ -76,25 +76,27 @@ const Release = (props: { release: FirmwareRelease }) => (
 const Changelog = () => {
   const [releases] = createResource(fetchReleases);
   return (
-    <Card>
-      <CardHeader title="Changelog" subtitle="Firmware release history" />
-      <Switch>
-        <Match when={releases.loading}>
-          <p>Loading...</p>
-        </Match>
-        <Match when={releases.error}>
-          <div class="callout callout--warning">Could not load the changelog.</div>
-        </Match>
-        <Match when={releases()?.length === 0}>
-          <p>No releases yet.</p>
-        </Match>
-        <Match when={releases()}>
-          <div style={{ display: 'flex', 'flex-direction': 'column', gap: 'var(--g-spacing)' }}>
-            <For each={releases()}>{(r) => <Release release={r} />}</For>
-          </div>
-        </Match>
-      </Switch>
-    </Card>
+    <div id="changelog" data-search-target>
+      <Card>
+        <CardHeader title="Changelog" subtitle="Firmware release history" />
+        <Switch>
+          <Match when={releases.loading}>
+            <p>Loading...</p>
+          </Match>
+          <Match when={releases.error}>
+            <div class="callout callout--warning">Could not load the changelog.</div>
+          </Match>
+          <Match when={releases()?.length === 0}>
+            <p>No releases yet.</p>
+          </Match>
+          <Match when={releases()}>
+            <div style={{ display: 'flex', 'flex-direction': 'column', gap: 'var(--g-spacing)' }}>
+              <For each={releases()}>{(r) => <Release release={r} />}</For>
+            </div>
+          </Match>
+        </Switch>
+      </Card>
+    </div>
   );
 };
 
