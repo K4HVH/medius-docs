@@ -31,7 +31,7 @@ Type:  TXT
 Value: v=MCPv1; k=ed25519; p=<PUBLIC_KEY from above>
 ```
 
-Proving `k4tech.net` also authorizes `net.k4tech.*`. Keep `mcp-registry-key.pem`
+Proving `k4tech.net` also authorises `net.k4tech.*`. Keep `mcp-registry-key.pem`
 private (it is gitignored). Wait for DNS to propagate.
 
 ## 3. Log in and publish

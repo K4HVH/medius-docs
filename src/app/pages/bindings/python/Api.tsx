@@ -146,7 +146,7 @@ const Api: Component = () => {
               <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace, render, force_hz=None)</code></td><td>Pick the pace (<code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>), the render mode (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>), and the advertised rate (<code>force_hz</code>, None = the device's own). All three ride one frame, so <code>render</code> is required rather than defaulted. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
-              <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
+              <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -249,7 +249,7 @@ const Api: Component = () => {
               <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Usage</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MOVE AND CLICK ON ONE FRAME</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Usage
 
 b = ClipBuilder()

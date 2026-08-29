@@ -45,7 +45,7 @@ const Build: Component = () => {
               Gate on the flag first: <code>if medius.HAS_MOCK:</code>.
             </p>
           </div>
-          <div class="api-response-label">CHECK WHAT'S BUILT IN</div>
+          <div class="api-response-label">FEATURE CHECK</div>
           <pre><code class="language-bash">{`python -c "import medius; print('mock', medius.HAS_MOCK)"
 # mock False   <- the published wheel`}</code></pre>
           <div class="api-response-label">ENABLE A FEATURE</div>
@@ -81,7 +81,7 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
    ├─ 3. on the system loader path?         ──▶  CDLL(<libname>)         (LD_LIBRARY_PATH / PATH)
    ├─ 4. ctypes.util.find_library(...)?     ──▶  CDLL(found)             (ldconfig / system paths)
    └─ none                                  ──▶  OSError                 (cannot locate the library)`}</pre>
-          <div class="api-response-label">POINT AT ANY BUILD WITH MEDIUS_LIB</div>
+          <div class="api-response-label">MEDIUS_LIB</div>
           <pre><code class="language-bash">{`MEDIUS_LIB=/path/to/target/release/libmedius_capi.so python myscript.py`}</code></pre>
           <div class="callout callout--warning">
             <p>

@@ -660,7 +660,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), namePayload(name)));
   }
 
-  // Clear the box name (§3.10): reverts to the firmware-synthesized "Medius-XXXX" default. Persisted
+  // Clear the box name (§3.10): reverts to the firmware-synthesised "Medius-XXXX" default. Persisted
   // in NVS. Fire-and-forget.
   clearName(): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
@@ -728,7 +728,7 @@ export class SerialLink {
     });
   }
 
-  // Serialize writes through one cached writer so concurrent callers cannot race
+  // Serialise writes through one cached writer so concurrent callers cannot race
   // on getWriter() or interleave frames on the wire.
   private send(frame: Uint8Array): Promise<void> {
     const run = this.writeChain.then(() => {

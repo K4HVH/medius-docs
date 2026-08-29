@@ -166,7 +166,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, uint8_t mode, uint16_t hz, uint8_t render, uint16_t force_hz)</code></td><td>Pick the pace (<code>hz</code> is the target for <code>FIXED</code>), the render mode (<A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A>), and the advertised rate (<code>force_hz</code>, 0 = the device's own). All three ride one frame. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_name(MediusDevice *dev, const char *name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
-              <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
+              <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -342,7 +342,7 @@ MediusCatchFilter ep0 = medius_catch_filter_with_capture(
               <tr><td><code>medius_clip_builder_frame(b, dx, dy, wheel, inputs, actions, n)</code></td><td>A motion delta plus up to 8 edges on one frame: parallel <A href="/bindings/c/types#input"><code>MediusUsage</code></A> / <A href="/bindings/c/types#action"><code>MediusAction</code></A> arrays. Build the inputs with <code>medius_usage_button</code>/<code>_key</code>/<code>_media</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MOVE AND CLICK ON ONE FRAME</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-c">{`MediusClipBuilder *b = medius_clip_builder_new();
 
 /* move (+10, -4) AND press Left on the same frame */

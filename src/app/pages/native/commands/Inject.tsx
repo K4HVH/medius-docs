@@ -64,7 +64,7 @@ const Inject: Component = () => {
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHAT THE CLONE EMITS</div>
+          <div class="api-response-label">EMITTED STATE</div>
           <p>The two releases differ only when the user is physically holding the same input:</p>
           <table class="api-params">
             <thead>

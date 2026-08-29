@@ -145,7 +145,7 @@ export function emitPayload(mode: EmitMode, render: RenderMode, rateHz = 0, forc
 }
 
 // OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the
-// id alone (0 value bytes) clears it, reverting to the firmware-synthesized "Medius-XXXX" default. The
+// id alone (0 value bytes) clears it, reverting to the firmware-synthesised "Medius-XXXX" default. The
 // name is read back on RESP(VERSION), not Q_OPTIONS. Persisted in NVS. Non-ASCII/out-of-range bytes are
 // dropped so only a valid name is ever sent.
 export function namePayload(name: string): Uint8Array {
@@ -158,7 +158,7 @@ export function namePayload(name: string): Uint8Array {
   return new Uint8Array([OPT_NAME, ...bytes]);
 }
 
-// OPTION(NAME) clear (§3.10): the id alone, no value bytes, reverting to the synthesized default.
+// OPTION(NAME) clear (§3.10): the id alone, no value bytes, reverting to the synthesised default.
 export function clearNamePayload(): Uint8Array {
   return new Uint8Array([OPT_NAME]);
 }
