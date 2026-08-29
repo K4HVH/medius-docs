@@ -65,7 +65,7 @@ const RENDER_NAMES: Record<number, string> = {
 
 const RENDER_LABEL: Record<number, string> = {
   [RenderMode.Off]: '',
-  [RenderMode.Stock]: 'Rendered',
+  [RenderMode.Stock]: 'Stock',
   [RenderMode.Despiked]: 'De-spiked',
   [RenderMode.Unsmoothed]: 'Unsmoothed',
 };
@@ -355,8 +355,8 @@ const DeviceOptions = () => {
 
         <Section title="Emit rate">
         <p>
-          Paces injected motion as a ceiling, and sets the rate the clone itself runs at. The box saves
-          both together, so Apply writes both.
+          Paces injected motion as a ceiling, chooses how it is rendered, and sets the rate the clone
+          itself runs at. Apply writes all three together.
         </p>
         <RadioGroup
           name="emit-mode"
@@ -378,7 +378,7 @@ const DeviceOptions = () => {
             { value: 'off', label: 'Off' },
             { value: 'stock', label: 'Stock' },
             { value: 'despiked', label: 'De-spiked' },
-            { value: 'unsmoothed', label: 'Smoother off' },
+            { value: 'unsmoothed', label: 'Unsmoothed' },
           ]}
         />
         <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
@@ -394,7 +394,7 @@ const DeviceOptions = () => {
         />
         <p style={muted}>
           {forceOn()
-            ? 'Runs the clone at a rate the mouse did not ask for; needs Allow imperfect.'
+            ? 'Runs the clone at a rate the mouse did not ask for.'
             : 'Runs the clone at the rate the mouse asked for.'}
         </p>
         <div style={controls}>

@@ -12,7 +12,7 @@ const Frame: Component = () => {
           <p>
             Every message, both directions, is a frame with one fixed shape.
           </p>
-          <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD ≤512][CRC16 u16 LE]</pre>
+          <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD 0..512][CRC16 u16 LE]</pre>
           <table class="byte-table">
             <thead>
               <tr><th>Field</th><th>Bytes</th><th>Notes</th></tr>
@@ -56,7 +56,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x16</code>. An unrecognised opcode is
+            The opcodes run from <code>0x01</code> to <code>0x18</code>. An unrecognised opcode is
             ignored harmlessly.
           </p>
           <table class="api-params">
@@ -86,6 +86,8 @@ const Frame: Component = () => {
               <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
               <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
               <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2 to 508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
+              <tr><td><code>0x18</code></td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
             </tbody>
           </table>
           <p>

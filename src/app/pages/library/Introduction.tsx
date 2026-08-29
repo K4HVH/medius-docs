@@ -190,7 +190,7 @@ const Introduction: Component = () => {
 
       <div id="guides" data-search-target>
         <Card>
-          <CardHeader title="Guides" subtitle="Behavior and how-to, outside the reference" />
+          <CardHeader title="Guides" subtitle="Behaviour and how-to, outside the reference" />
           <div class="docs-grid">
             <A href="/library/guides/calls" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">

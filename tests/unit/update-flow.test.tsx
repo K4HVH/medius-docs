@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
 
-// `updateOverControl` has produced two of this branch's worst defects — claiming a verification that
-// never ran, and losing the one instruction that fixes a box that did not come back — and every page
+// `updateOverControl` has produced two of this branch's worst defects (claiming a verification that
+// never ran, and losing the one instruction that fixes a box that did not come back) and every page
 // test stubs it. This drives the real one, with only the serial layer faked.
 const mock = vi.hoisted(() => ({
   // Whether the box answers a handshake after the activate. False = it never came back.
@@ -137,7 +137,7 @@ describe('updateOverControl', () => {
     await api.connect();
     await waitFor(() => expect(api.status()).toBe('connected'));
     await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
-    // OTA_TGT_HOST is 1, OTA_TGT_DEVICE is 0 -- and each target must get ITS OWN image.
+    // OTA_TGT_HOST is 1, OTA_TGT_DEVICE is 0, and each target must get ITS OWN image.
     expect(mock.staged).toEqual([
       { target: 1, tag: HOST_TAG },
       { target: 0, tag: DEVICE_TAG },

@@ -76,7 +76,7 @@ const Catch: Component = () => {
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Class</th><th>Value</th><th><code>id</code> means</th><th>With <code>id = 0xFFFF</code></th></tr>
+              <tr><th>Name</th><th>Value</th><th><code>id</code> means</th><th>With <code>id = 0xFFFF</code></th></tr>
             </thead>
             <tbody>
               <tr><td><code>BTN</code></td><td><code>0</code></td><td>button id</td><td>every button</td></tr>
@@ -217,7 +217,7 @@ const Catch: Component = () => {
 
       <div id="clocks" data-search-target>
         <Card>
-          <CardHeader title="The clk byte" subtitle="Two chips, two clocks, one byte saying which" />
+          <CardHeader title="The clk byte" subtitle="Which chip's clock stamped an event" />
           <p>
             All three event frames lead with <code>ts_us</code> and then <code>clk</code>. The two
             ESP32-S3s boot independently, so nothing relates their timers: a stamp is only meaningful
@@ -254,7 +254,6 @@ const Catch: Component = () => {
           <p>
             <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A> carries a measured
             offset between the two clocks, its drift rate, and the round trip that bounds its error.
-            Applying it is optional; the <code>clk</code> byte stays authoritative.
           </p>
           <p>
             Divide a gap by{' '}
@@ -428,7 +427,7 @@ const Catch: Component = () => {
           <div class="api-response-label">CONTROL: ONE EVENT PER TRANSACTION</div>
           <p>
             <code>CONTROL</code> carries one event per <em>completed transaction</em>, not one per
-            stage: <code>bytes</code> is <code>[setup 8][data…]</code> and <code>dir</code> says which
+            stage: <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> says which
             way the data stage went.
           </p>
           <p>
@@ -478,9 +477,9 @@ const Catch: Component = () => {
 +--------+--------+--------+--------+-------------+--------+--------+--------+--------+
 
 +--------+--------+---------------------------------------+--------+
-| 00     | 40 00  | 04 01 12 00 ...        (16 bytes)      | lo hi  |
+| 00     | 40 00  | 04 01 12 00 ...        (16 bytes)     | lo hi  |
 +--------+--------+---------------------------------------+--------+
-| flags  |true_len| bytes: 16 of 64, so the rest was cut   | CRC16  |
+| flags  |true_len| bytes: 16 of 64, so the rest was cut  | CRC16  |
 +--------+--------+---------------------------------------+--------+`}</pre>
           <p>
             A <code>SET_INTERFACE</code> bus event on interface 1, alternate setting 2 (

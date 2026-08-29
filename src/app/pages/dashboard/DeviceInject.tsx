@@ -56,7 +56,7 @@ const DeviceInject = () => {
   const health = () => dash.health();
   // Both flags, because they mean different things: the clone can be configured by the game PC
   // while carrying no mouse collection at all, and every motion and button command is then dropped
-  // by the box in silence.
+  // by the box with no reply.
   const mouseReady = () => health()?.cloneConfigured === true && health()?.mouseAttached === true;
   const kbdReady = () => health()?.kbdAttached === true;
 
@@ -288,7 +288,7 @@ const DeviceInject = () => {
             </Button>
           </div>
           <p style={muted}>
-            Bypass applies to the cursor and the wheel; the buttons send or drop motion already waiting.
+            Bypass applies to the cursor and the wheel. The buttons send or drop motion already waiting.
           </p>
 
           </Show>
@@ -358,8 +358,7 @@ const DeviceInject = () => {
             </Button>
           </div>
           <p style={muted}>
-            Mask forces the input up, overriding a physical hold; Release clears either
-            override.
+            Mask forces the input up even while it is physically held. Release clears either override.
           </p>
         </Show>
         </Section>

@@ -14,20 +14,19 @@ const GuideCalls: Component = () => {
             tagged with a badge on the <A href="/library">API pages</A>.
           </p>
 
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <p>Writes one frame, returns once the bytes are out, no reply.</p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.move_rel(100, -50)?; // one frame out, no reply`}</code></pre>
+          <table class="api-params">
+            <thead><tr><th>Badge</th><th>What the call does</th></tr></thead>
+            <tbody>
+              <tr><td><span class="api-badge api-badge--executed">Fire-and-forget</span></td><td>Writes one frame, returns once the bytes are out, no reply.</td></tr>
+              <tr><td><span class="api-badge api-badge--responded">Blocks</span></td><td>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</td></tr>
+              <tr><td><span class="api-badge api-badge--executed">No round-trip</span></td><td>Reads state the library already holds; can't fail on the link.</td></tr>
+            </tbody>
+          </table>
 
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let v = device.query_version()?; // waits for the box to reply`}</code></pre>
-
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <p>Reads state the library already holds; can't fail on the link.</p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let c = device.counters(); // local snapshot, no network`}</code></pre>
+          <pre><code class="language-rust">{`device.move_rel(100, -50)?;      // fire-and-forget: one frame out, no reply
+let v = device.query_version()?; // blocks: waits for the box to reply
+let c = device.counters();       // no round-trip: local snapshot, nothing on the wire`}</code></pre>
         </Card>
       </div>
 
@@ -38,52 +37,10 @@ const GuideCalls: Component = () => {
             With the <A href="/library/features/async"><code>async</code></A> feature, the{' '}
             <A href="/native/commands/requests#requests"><code>QUERY</code></A> methods are the{' '}
             <code>async fn</code>s, because a query blocks for its correlated{' '}
-            <A href="/native/commands/requests#resp"><code>RESP</code></A>. Every other method is{' '}
+            <A href="/native/commands/requests#resp"><code>RESP</code></A>;{' '}
+            <A href="/library/requests#async">Requests</A> lists every one. Every other method is{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so it stays synchronous.
           </p>
-
-          <div class="api-response-label">METHOD SPLIT</div>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Async (you <code>.await</code> it)</th>
-                <th>Stays sync (no <code>.await</code>)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <A href="/library/requests#version"><code>query_version</code></A>,{' '}
-                  <A href="/library/requests#health"><code>query_health</code></A>,{' '}
-                  <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
-                  <A href="/library/requests#caps"><code>caps</code></A>,{' '}
-                  <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-                  <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-                  <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-                  <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
-                  the option <code>query_*</code> methods, and the clip{' '}
-                  <A href="/library/requests#clip-status"><code>status</code></A> query
-                </td>
-                <td>
-                  <A href="/library/move#move-rel"><code>move_rel</code></A>,{' '}
-                  <A href="/library/move#wheel"><code>wheel</code></A>,{' '}
-                  <A href="/library/inject#inject"><code>inject</code></A>,{' '}
-                  <A href="/library/inject#inject"><code>press</code></A>,{' '}
-                  <A href="/library/inject#inject"><code>release</code></A>,{' '}
-                  <A href="/library/inject#inject"><code>force_release</code></A>,{' '}
-                  <A href="/library/admin#reset"><code>reset</code></A>,{' '}
-                  <A href="/library/admin#reboot"><code>reboot</code></A>,{' '}
-                  <A href="/library/led#led"><code>led</code></A>,{' '}
-                  <A href="/library/lock#lock"><code>lock</code></A>,{' '}
-                  <A href="/library/lock#unlock"><code>unlock</code></A>,{' '}
-                  <A href="/library/catch#catch-events"><code>catch_events</code></A>,{' '}
-                  and the clip <A href="/library/clip#handle"><code>append</code></A> /{' '}
-                  <A href="/library/clip#handle"><code>start</code></A> /{' '}
-                  <A href="/library/clip#handle"><code>stop</code></A>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 

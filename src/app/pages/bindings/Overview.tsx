@@ -7,12 +7,12 @@ const Overview: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Bindings" subtitle="Drive the box from C, C++, or Python" />
+        <CardHeader title="Bindings" subtitle="The C, C++ and Python clients" />
         <p>
           A <A href="/native/hardware">medius box</A> sits inline between a mouse and a PC: the real
           device passes through untouched, and your program{' '}
           <A href="/native/injection">injects input</A> of its own over a{' '}
-          <A href="/native/frame">USB-serial link</A>.
+          <A href="/native/transport">USB-serial link</A>.
         </p>
         <p>
           These bindings write that program in <A href="/bindings/c">C / C++</A> or{' '}
@@ -79,22 +79,22 @@ const Overview: Component = () => {
               <tr><th>Capability</th><th>C / C++</th><th>Python</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/library/connection">Connect, find, clone the link</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/move">Move &amp; wheel</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/lock">Lock physical input</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/options">Options &amp; LED</A></td><td>✓</td><td>✓</td></tr>
-              <tr><td><A href="/library/requests">Queries (version, health, caps…)</A></td><td>✓</td><td>✓</td></tr>
+              <tr><td><A href="/library/connection">Connect, find, clone the link</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/move">Move &amp; wheel</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/lock">Lock physical input</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/options">Options &amp; LED</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/requests">Queries (version, health, caps)</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
               <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only. Build it on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>
           <p>
-            Mock and flash are off by default; each binding's <strong>Build &amp; features</strong>{' '}
-            page shows how to turn them on.
+            Mock is off by default; each binding's <strong>Build &amp; features</strong>{' '}
+            page shows how to turn it on.
           </p>
         </Card>
       </div>

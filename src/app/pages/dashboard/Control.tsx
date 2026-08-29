@@ -39,32 +39,38 @@ const Control = () => {
     <Show
       when={dash.status() === 'connected' && !dash.updateOnly()}
       fallback={
-        <Card>
-          <CardHeader title="Controls" subtitle="Drive the box to test it" />
-          <div aria-live="polite">
-            <Switch>
-              <Match when={dash.status() === 'connecting'}>
-                <Button loading disabled>Connecting...</Button>
-              </Match>
+        <Show
+          when={!dash.updateOnly()}
+          fallback={
+            <Card>
+              <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
+              <p>Update it to use these controls.</p>
+              <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                Update
+              </Button>
+            </Card>
+          }
+        >
+          <Card>
+            <CardHeader title="Controls" subtitle="Drive the box to test it" />
+            <div aria-live="polite">
+              <Switch>
+                <Match when={dash.status() === 'connecting'}>
+                  <Button loading disabled>Connecting...</Button>
+                </Match>
 
-              <Match when={dash.status() === 'flashing'}>
-                <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
-              </Match>
+                <Match when={dash.status() === 'flashing'}>
+                  <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
+                </Match>
 
-              <Match when={dash.updateOnly()}>
-                <p>This box speaks an older protocol. Update it to use these controls.</p>
-                <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                  Update
-                </Button>
-              </Match>
+                <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
+                  <ConnectPanel />
+                </Match>
 
-              <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
-                <ConnectPanel />
-              </Match>
-
-            </Switch>
-          </div>
-        </Card>
+              </Switch>
+            </div>
+          </Card>
+        </Show>
       }
     >
       <>

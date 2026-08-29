@@ -45,7 +45,7 @@ const Lock: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> measured against the bearing. Only an axis has a bearing, so a relative direction anywhere else is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. A media usage has no edges, so an edge on one goes out as <code>Both</code>.</td></tr>
               <tr><td><code>scale</code></td><td><code>u8</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies.</td></tr>
             </tbody>
@@ -88,8 +88,8 @@ device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, alwa
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Both</code> (every direction), <code>Positive</code> (axis +, usage press), <code>Negative</code> (axis -, usage release), or <code>With</code> / <code>Against</code> the bearing, which only an axis has.</td></tr>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, or wheel) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which sign or edge to block. An axis also takes the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -161,8 +161,7 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Weigh an entire input group at once with a{' '}
-            <A href="/library/types/enums#blanket"><code>Blanket</code></A> (<code>Aim</code>,{' '}
-            <code>Wheel</code>, <code>Buttons</code>, <code>Keys</code>, or <code>Media</code>).{' '}
+            <A href="/library/types/enums#blanket"><code>Blanket</code></A>.{' '}
             <code>direction</code> reaches every member the same way it reaches one, so{' '}
             <code>Keys</code> takes an edge and <code>Media</code>, having none, sends <code>Both</code>.
           </p>

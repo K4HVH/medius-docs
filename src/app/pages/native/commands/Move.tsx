@@ -125,7 +125,7 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Applied discard, then flush, then the delta; <code>FLUSH</code> and <code>DISCARD</code> together refuse the frame. Injected motion
+            The box applies discard, then flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together refuse the frame. Injected motion
             lands in one of two <A href="/native/injection#state">accumulators</A>, so a bypassing delta
             never carries the held one out with it. Library bindings:{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}

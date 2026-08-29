@@ -44,10 +44,8 @@ medius_device_free(dev);`}</code></pre>
             <code>MediusMockBox</code>) are yours to free, each with its own <code>*_free</code>.
           </p>
           <p>
-            Catch events and log lines are fixed-size structs, so there's nothing to free per event. A{' '}
-            <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds its
-            payload in an inline <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> array, not a pointer, so
-            a copied event stays valid and owns nothing.
+            Events and log lines are fixed-size structs with nothing to free per event; see{' '}
+            <A href="/bindings/c/usage#lifecycle">Lifecycle</A>.
           </p>
         </div>
       </Card>
@@ -72,10 +70,7 @@ medius_device_free(dev);`}</code></pre>
       <div id="discovery" data-search-target>
         <Card>
           <CardHeader title="Discovery" subtitle="Enumerate boxes and open one by identity" />
-          <p>
-            Pick a box out of several by a stable identity (device MAC or CH343 serial), or by the kind
-            of device it clones. See <A href="/library/discovery">Discovery</A>.
-          </p>
+          <p>See <A href="/library/discovery">Discovery</A>.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -120,9 +115,9 @@ medius_device_free(dev);`}</code></pre>
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius_device_inject(MediusDevice *dev, MediusUsage input, MediusAction action)</code></td><td>Apply a <A href="/bindings/c/types#action"><code>MediusAction</code></A> to a usage.</td></tr>
-              <tr><td><code>medius_device_press(MediusDevice *dev, MediusUsage input)</code></td><td>Hold the usage down (<code>MEDIUS_ACTION_PRESS</code>).</td></tr>
-              <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusUsage input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
-              <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusUsage input)</code></td><td>Release even against a physical hold.</td></tr>
+              <tr><td><code>medius_device_press(MediusDevice *dev, MediusUsage input)</code></td><td>Sends <code>MEDIUS_ACTION_PRESS</code>.</td></tr>
+              <tr><td><code>medius_device_soft_release(MediusDevice *dev, MediusUsage input)</code></td><td>Sends <code>MEDIUS_ACTION_SOFT_RELEASE</code>.</td></tr>
+              <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusUsage input)</code></td><td>Sends <code>MEDIUS_ACTION_FORCE_RELEASE</code>.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -168,7 +163,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_reboot(MediusDevice *dev, MediusRebootTarget target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>medius_device_allow_imperfect_clones(MediusDevice *dev, bool allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_movement_riding(MediusDevice *dev, bool enabled, uint32_t window_ms)</code></td><td>Set movement riding; <code>enabled == false</code> clears the window (rounded to whole ms).</td></tr>
-              <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, uint8_t mode, uint16_t hz, MediusRenderMode render, uint16_t force_hz)</code></td><td>Pick the pace (<code>hz</code> is the target for <code>FIXED</code>), whether to render the texture, and the advertised rate (<code>force_hz</code>, 0 = the device's own). See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, uint8_t mode, uint16_t hz, MediusRenderMode render, uint16_t force_hz)</code></td><td>Pick the pace (<code>hz</code> is the target for <code>FIXED</code>), the render mode (<A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A>), and the advertised rate (<code>force_hz</code>, 0 = the device's own). All three ride one frame. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_name(MediusDevice *dev, const char *name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
               <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
@@ -198,7 +193,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_query_catch(dev, MediusCatchState *out)</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: the accepted subscription entries with their per-entry drops, the box-wide drop count, and the inter-chip clock estimate.</td></tr>
               <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
-              <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
+              <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode, render mode, rate in effect, and the rate the clone advertises.</td></tr>
               <tr><td><code>medius_device_query_bearing(dev, MediusBearing *out)</code></td><td><A href="/bindings/c/types#bearing"><code>MediusBearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
@@ -311,7 +306,8 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
               <code>medius_catch_filter_everything</code> includes{' '}
               <code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code>, which can saturate the control link on its
               own. Pair it with <code>medius_catch_filter_with_capture</code> unless you mean to trace
-              bulk in full.
+              bulk in full. The queue ranking is on{' '}
+              <A href="/native/commands/catch#delivery">Delivery</A>.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -361,7 +357,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>medius_clip_set_autolock(clip, const MediusBlanket *scope, uintptr_t scope_len)</code></td><td>The auto-lock scope: the <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> groups <code>scope</code> points at (<code>NULL</code> / 0 = no lock). Set before the first append.</td></tr>
               <tr><td><code>medius_clip_set_loop(clip, uint8_t on) / _set_retain(clip, uint8_t on)</code></td><td>Loop at the clip end (retained only) / retain the loaded clip so it can rewind and replay (0 = streaming, the default).</td></tr>
-              <tr><td><code>medius_clip_set_ride(clip, uint8_t on)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (0 = the box's own clock, the default).</td></tr>
+              <tr><td><code>medius_clip_set_ride(clip, uint8_t on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (0 = the box's own clock, the default).</td></tr>
               <tr><td><code>medius_clip_finalize(clip)</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>medius_clip_bind(clip, MediusClipTrigger trigger)</code></td><td>Add or overwrite a <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A>: a <A href="/bindings/c/types#edge"><code>MediusEdge</code></A> of <code>on</code> drives a <A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A>; <code>consume</code> hides the input from the game.</td></tr>
               <tr><td><code>medius_clip_unbind(clip, MediusUsage usage, MediusEdge edge) / _clear_triggers(clip)</code></td><td>Remove the binding on that usage + edge; drop every binding.</td></tr>
@@ -425,7 +421,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
 
       <div id="module" data-search-target>
         <Card>
-          <CardHeader title="Global functions" subtitle="Library-level helpers and errors" />
+          <CardHeader title="Library functions" subtitle="Library-level helpers and errors" />
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -433,7 +429,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_last_error_proto_ver()</code></td><td>The proto-version byte from the last <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>, or 0.</td></tr>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>5</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>6</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
             </tbody>
           </table>

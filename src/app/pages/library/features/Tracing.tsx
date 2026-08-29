@@ -12,7 +12,7 @@ const Tracing: Component = () => {
           The <code>tracing</code> feature wires the crate into{' '}
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
           it emits a span and events as it works the link, but adds no medius functions and changes no
-          behavior. You read them by installing a{' '}
+          behaviour. You read them by installing a{' '}
           <A href="/library/features/tracing#subscriber">subscriber</A>.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>

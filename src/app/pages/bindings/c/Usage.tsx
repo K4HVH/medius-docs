@@ -22,47 +22,58 @@ const Usage: Component = () => {
         </p>
       </Card>
 
+      <div id="calls" data-search-target>
+        <Card>
+          <CardHeader title="Fire-and-forget vs blocking" subtitle="The two call-kind badges" />
+          <p>
+            Two return shapes, both yielding a <code>MediusStatus</code>. The badge on each row of the{' '}
+            <A href="/bindings/c/api">API index</A> says which is which.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Badge</th><th>Behaviour</th><th>Fails with</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
+                <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
+              </tr>
+              <tr>
+                <td><span class="api-badge api-badge--responded">Blocks</span></td>
+                <td>Sends a QUERY and waits for the box's RESP, up to the query timeout. The <A href="/bindings/c/api#queries"><code>medius_device_query_*</code></A> reads and the open/handshake calls. See <A href="/native/commands/requests#requests">Requests</A>.</td>
+                <td><code>MEDIUS_STATUS_ERR_NO_REPLY</code> / <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning{' '}
+              <code>MEDIUS_STATUS_OK</code> means the frame was handed to the writer, not that the box
+              acted on it; there's no acknowledgement. The default reply wait is{' '}
+              <A href="/bindings/c/api#module"><code>medius_default_query_timeout_ms()</code></A>; the held-override keepalive cadence is{' '}
+              <A href="/bindings/c/api#module"><code>medius_default_keepalive_cadence_ms()</code></A> (see{' '}
+              <A href="/library/guides/connection#keepalive">keepalive</A>).
+            </p>
+          </div>
+        </Card>
+      </div>
+
       <div id="errors" data-search-target>
         <Card>
           <CardHeader title="Errors" subtitle="MediusStatus + a thread-local last error" />
           <p>
             Every fallible call returns a <code>MediusStatus</code> and writes its real result through
             an out-param. <code>MEDIUS_STATUS_OK</code> is <code>0</code>; anything else is a failure
-            and the out-param is untouched. Fetch the human-readable detail separately. What each code
-            means lives on <A href="/library/types/errors">Errors</A>.
+            and the out-param is untouched. Fetch the human-readable detail separately. Every
+            enumerator and its value is on <A href="/bindings/c/types#errors">Types &amp; errors</A>;
+            the canonical mapping is <A href="/library/types/errors">Errors</A>.
           </p>
           <pre class="diagram">{`  call ──▶ MediusStatus
              │
              ├─ == OK ──▶ the out-param is valid, carry on
              └─ != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
                           medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
-          <table class="api-params">
-            <thead>
-              <tr><th>MediusStatus</th><th>Value</th><th>Means</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>MEDIUS_STATUS_OK</code></td><td>0</td><td>Success; the out-param is written.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td>1</td><td>Serial I/O failed on the link.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td>2</td><td>No box found (<A href="/bindings/c/api#connect"><code>open</code></A> / <A href="/bindings/c/api#connect"><code>find</code></A>).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td>3</td><td>A query got no <A href="/native/commands/requests#resp">RESP</A> frame.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td>4</td><td>Protocol mismatch at the <A href="/native/connection#handshake">handshake</A>; read <code>medius_last_error_proto_ver()</code>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td>5</td><td>The RESP wait elapsed.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td>6</td><td>Link dropped or a stream closed (see below).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td>7</td><td>Payload exceeded the wire limit.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_UPDATE</code></td><td>8</td><td>The box refused a <A href="/library/update">firmware update</A> op.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>9</td><td>A bad argument (e.g. a null handle).</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_PANIC</code></td><td>10</td><td>An internal panic was caught at the boundary.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_UNKNOWN</code></td><td>11</td><td>Unspecified, or a platform-gated call on an unsupported OS.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_CATCH_TABLE_FULL</code></td><td>12</td><td>The subscription needs more entries than the box's table holds.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_EMPTY_SUBSCRIPTION</code></td><td>13</td><td>A catch subscription with no filters, which would never yield an event.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_CAPTURE_NOT_APPLICABLE</code></td><td>14</td><td>A non-zero <code>capture</code> on an input class, which carries no packet.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NOT_AN_INPUT_FILTER</code></td><td>15</td><td>A traffic class passed to <A href="/bindings/c/streams#input"><code>medius_device_input_events</code></A>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td>16</td><td>The everything filter passed to <code>medius_device_input_events</code>; it covers traffic too.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>17</td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td>18</td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td>19</td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed.</td></tr>
-            </tbody>
-          </table>
           <div class="api-response-label">READING THE DETAIL</div>
           <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
 uint8_t   medius_last_error_proto_ver(void);`}</pre>
@@ -275,50 +286,10 @@ MediusEventStream *events = NULL;
 medius_device_catch_events(dev, filters, 2, &events);   /* the array is not retained */`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              Locking and catching are separate subscriptions over the same address vocabulary, so the
-              same usage can be in both. Catch is sampled before lock suppression, so a locked input
-              still reports.
-            </p>
-            <p>
-              The classes above the four input ones have no lock equivalent. See{' '}
-              <A href="/bindings/c/streams">Streams</A> for what comes back.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="calls" data-search-target>
-        <Card>
-          <CardHeader title="Fire-and-forget vs blocking" subtitle="The two call-kind badges" />
-          <p>
-            Two return shapes, both yielding a <code>MediusStatus</code>. The badge on each row of the{' '}
-            <A href="/bindings/c/api">API index</A> says which is which.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Badge</th><th>Behaviour</th><th>Fails with</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
-                <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
-              </tr>
-              <tr>
-                <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Sends a QUERY and waits for the box's RESP, up to the query timeout. The <A href="/bindings/c/api#queries"><code>medius_device_query_*</code></A> reads and the open/handshake calls. See <A href="/native/commands/requests#requests">Requests</A>.</td>
-                <td><code>MEDIUS_STATUS_ERR_NO_REPLY</code> / <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code>.</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="callout callout--info">
-            <p>
-              A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning{' '}
-              <code>MEDIUS_STATUS_OK</code> means the frame was handed to the writer, not that the box
-              acted on it; there's no acknowledgement. The default reply wait is{' '}
-              <A href="/bindings/c/api#module"><code>medius_default_query_timeout_ms()</code></A>; the held-override keepalive cadence is{' '}
-              <A href="/bindings/c/api#module"><code>medius_default_keepalive_cadence_ms()</code></A> (see{' '}
-              <A href="/library/guides/connection#keepalive">keepalive</A>).
+              The same usage addresses a lock and a catch entry, so it can be in both. Where each
+              class is tapped, and which ones a lock can reach, is on{' '}
+              <A href="/native/commands/catch#catch">Catch</A>; what comes back is on{' '}
+              <A href="/bindings/c/streams">Streams</A>.
             </p>
           </div>
         </Card>

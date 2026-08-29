@@ -54,9 +54,9 @@ const Connection: Component = () => {
               The check is mandatory, not advisory. Firmware 3.1.x and earlier report <code>4</code>,
               where <A href="/native/commands/lock#lock"><code>LOCK</code></A>'s last byte was a state
               (<code>1</code> = lock, <code>0</code> = unlock) rather than a{' '}
-              <A href="/native/commands/lock#scale">scale</A>. The two readings are an exact inversion.
+              <A href="/native/commands/lock#scale">scale</A>.
             </p>
-            <pre class="diagram">{`a proto-5 host talking to a proto-4 box
+            <pre class="diagram">{`a proto-6 host talking to a proto-4 box
 
   scale = 100  (unlock)  ->  state = 100, non-zero  ->  LOCKS it
   scale =   0  (block)   ->  state = 0              ->  UNLOCKS it`}</pre>

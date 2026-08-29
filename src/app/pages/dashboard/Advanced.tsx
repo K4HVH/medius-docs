@@ -101,7 +101,7 @@ const Advanced = () => {
       })
       .catch(() => {
         // `pick` does not move when SOURCE does, so a slow read can land after the user has left
-        // the upload path -- and "pick it again" has no picker to point at there.
+        // the upload path, and "pick it again" has no picker to point at there.
         if (mine !== pick || source() !== 'upload') return;
         setImage(null);
         setFileErr('That file could not be read. Pick it again.');
@@ -193,8 +193,8 @@ const Advanced = () => {
               <div class="api-response-label">IMAGE</div>
               <Combobox
                 options={[
-                  { value: 'factory', label: 'Factory - full image at 0x0' },
-                  { value: 'app', label: 'Application - app only at 0x10000' },
+                  { value: 'factory', label: 'Factory (full image at 0x0)' },
+                  { value: 'app', label: 'Application (app only at 0x10000)' },
                 ]}
                 value={kind()}
                 disabled={busy()}

@@ -11,7 +11,7 @@ const Inject: Component = () => {
         <p>
           One field-generic verb drives every momentary input.{' '}
           <A href="/library/inject#inject"><code>inject</code></A> takes any{' '}
-          <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media usage);{' '}
+          <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media usage);{' '}
           <A href="/library/inject#press"><code>press</code></A>,{' '}
           <A href="/library/inject#press"><code>release</code></A>, and{' '}
           <A href="/library/inject#press"><code>force_release</code></A> are convenience wrappers. Each
@@ -26,7 +26,7 @@ const Inject: Component = () => {
           <pre class="api-signature">fn inject(&self, usage: impl Into&lt;Usage&gt;, action: Action) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <code>usage</code> is any <A href="/library/types/enums#usage"><code>Usage</code></A>: a{' '}
+            <code>usage</code> is any <A href="/library/types/structs#usage"><code>Usage</code></A>: a{' '}
             <A href="/library/types/enums#button"><code>Button</code></A>, a{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and a{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one.{' '}
@@ -57,7 +57,7 @@ device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             The convenience wrappers over <A href="/library/inject#inject"><code>inject</code></A>,
-            generic over any <A href="/library/types/enums#usage"><code>Usage</code></A>.{' '}
+            generic over any <A href="/library/types/structs#usage"><code>Usage</code></A>.{' '}
             <code>press</code> holds it down, <code>release</code> clears the box's press or force while a
             physical hold stays down, and <code>force_release</code> forces it up over a physical press.
           </p>

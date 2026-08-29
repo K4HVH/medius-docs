@@ -9,6 +9,7 @@
 // nothing without a bearing, so they are offered on axes alone.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
+import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -195,17 +196,15 @@ const DeviceLock = () => {
 
         <Show when={isAxis() && dir() === Direction.Both}>
           <div class="callout callout--info" style={section}>
-            Both writes the percentage to the two fixed signs and a full pass to with and against, so
-            it means the same whether or not the box is injecting. A Both at 100% still clears all
-            four.
+            Both means the same whether or not the box is injecting, and a Both at 100% clears every
+            direction.
           </div>
         </Show>
 
         <Show when={isAxis() && isRelativeDirection(dir())}>
           <div class="callout callout--info" style={section}>
-            With and against are measured against the bearing: the sign the box is currently
-            injecting on that axis. Neither applies once the bearing window elapses with nothing
-            injected, leaving only the fixed-sign scale.
+            With and against follow the direction the box is injecting on that axis. See{' '}
+            <A href="/native/commands/lock#bearing">the bearing</A>.
           </div>
         </Show>
 

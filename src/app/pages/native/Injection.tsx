@@ -135,12 +135,11 @@ const Injection: Component = () => {
         <Card>
           <CardHeader title="When the box sends a report" subtitle="At the mouse's own report rate, only on activity" />
           <p>
-            The box adds no report cadence of its own. Every row below fires on the cloned
-            mouse's own tick.
+            Two of the three rows below fire on the cloned mouse's own tick.
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>When…</th><th>The box sends</th></tr>
+              <tr><th>When</th><th>The box sends</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -162,12 +161,10 @@ const Injection: Component = () => {
             silence until it changes.
           </p>
           <p>
-            The middle row (motion drained while the real mouse is still) is the one row the box times
-            itself, and{' '}
-            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> picks how. It paces to the
-            mouse's learnt report rate, and its{' '}
-            <A href="/native/commands/option#render">render</A> mode, on by default, shapes that motion
-            through a live per-device model. The other rows ride the real mouse's tick.
+            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times that middle row:
+            it paces to the mouse's learnt report rate, and its{' '}
+            <A href="/native/commands/option#render">render</A> mode, on by default, shapes the motion
+            through a live per-device model.
           </p>
         </Card>
       </div>
