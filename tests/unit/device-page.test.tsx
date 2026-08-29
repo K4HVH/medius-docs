@@ -80,8 +80,8 @@ describe('Device', () => {
     const { container } = render(() => <Device />);
     await waitFor(() => {
       const text = container.textContent ?? '';
-      expect(text).toMatch(/previous control protocol/i);
-      expect(text).toMatch(/one-click update still works/i);
+      expect(text).toMatch(/Update needed/i);
+      expect(text).toMatch(/One-click update works/i);
       // the live-health panel belongs to the current wire and must not be offered
       expect(text).not.toMatch(/Live device health/i);
     });
@@ -93,7 +93,7 @@ describe('Device', () => {
     const { container } = render(() => <Device />);
     await waitFor(() => {
       const text = container.textContent ?? '';
-      expect(text).not.toMatch(/previous control protocol/i);
+      expect(text).not.toMatch(/Update needed/i);
       expect(text).toMatch(/Live device health/i);
     });
   });

@@ -1,9 +1,9 @@
 import { For, Match, Show, Switch, createEffect } from 'solid-js';
-import { A } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { type Health, versionString } from '../../../dashboard/protocol';
+import { type Health, PROTO_VER, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
 import DeviceOptions from './DeviceOptions';
@@ -31,6 +31,7 @@ const col = {
 
 const Device = () => {
   const dash = useDashboard();
+  const navigate = useNavigate();
 
   let logEl: HTMLPreElement | undefined;
   let follow = true;
@@ -89,13 +90,13 @@ const Device = () => {
           </Card>
 
           <Show when={dash.updateOnly()}>
-            <div class="callout callout--warning" role="status">
-              This box runs{' '}
-              <Show when={dash.version()}>{(v) => <>v{versionString(v())} </>}</Show>on the previous
-              control protocol. One-click update still works — everything else on this page speaks the
-              current one, so it is hidden until the box is up to date.{' '}
-              <A href="/dashboard/update">Update it now</A>.
-            </div>
+            <Card>
+              <CardHeader title="Update needed" subtitle="This box speaks an older control protocol" />
+              <p>One-click update works. The rest of the dashboard needs protocol v{PROTO_VER}.</p>
+              <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                Update
+              </Button>
+            </Card>
           </Show>
 
           <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
