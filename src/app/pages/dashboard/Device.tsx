@@ -88,7 +88,17 @@ const Device = () => {
             </div>
           </Card>
 
-          <Show when={dash.status() === 'connected'}>
+          <Show when={dash.updateOnly()}>
+            <div class="callout callout--warning" role="status">
+              This box runs{' '}
+              <Show when={dash.version()}>{(v) => <>v{versionString(v())} </>}</Show>on the previous
+              control protocol. One-click update still works — everything else on this page speaks the
+              current one, so it is hidden until the box is up to date.{' '}
+              <A href="/dashboard/update">Update it now</A>.
+            </div>
+          </Show>
+
+          <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
             <Card>
               <CardHeader title="Status" subtitle="Live device health" />
               <Show when={dash.health()} fallback={<p>Reading status...</p>}>
@@ -129,7 +139,7 @@ const Device = () => {
             </Show>
           </Card>
 
-          <Show when={dash.status() === 'connected'}>
+          <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
             <DeviceOptions />
           </Show>
         </div>

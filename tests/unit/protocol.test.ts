@@ -4,6 +4,7 @@ import {
   anyPending,
   UPD_NAMES,
   OTA_CHUNK,
+  MIN_PROTO_VER,
   PROTO_VER,
   BearingMode,
   bearingModeFromU8,
@@ -495,6 +496,15 @@ describe('LOCK command (§3.8)', () => {
 
   it('LOCK scale constants match ctrl_proto.h', () => {
     expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX]).toEqual([0, 100, 255]);
+  });
+
+  it('still opens the wire one-click update arrived on', () => {
+    // UPDATE/UPDATE_RESP and QUERY(FIRMWARE) shipped in firmware 3.2.0 at protocol 5 and have not
+    // changed since. Raising this floor past 5 strands every 3.2.x box on USB setup, because the
+    // handshake would refuse the connection that carries the update. Raise it only when the update
+    // path itself stops working against that wire.
+    expect(MIN_PROTO_VER).toBe(5);
+    expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {

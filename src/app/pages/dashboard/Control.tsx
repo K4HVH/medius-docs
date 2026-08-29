@@ -36,7 +36,7 @@ const Control = () => {
 
   return (
     <Show
-      when={dash.status() === 'connected'}
+      when={dash.status() === 'connected' && !dash.updateOnly()}
       fallback={
         <Card>
           <CardHeader title="Controls" subtitle="Drive the box to test it" />
@@ -48,6 +48,13 @@ const Control = () => {
 
               <Match when={dash.status() === 'flashing'}>
                 <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
+              </Match>
+
+              <Match when={dash.updateOnly()}>
+                <p>
+                  This box runs the previous control protocol, which these controls do not speak.{' '}
+                  <A href="/dashboard/update">Update it in one click</A> and they come back.
+                </p>
               </Match>
 
               <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>

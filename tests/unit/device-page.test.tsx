@@ -8,6 +8,7 @@ const mock = vi.hoisted(() => ({
   supported: true,
   secure: true,
   status: 'disconnected' as string,
+  updateOnly: false,
   verdict: null as ConnectVerdict | null,
   error: null as string | null,
 }));
@@ -17,6 +18,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     supported: mock.supported,
     secure: mock.secure,
     status: () => mock.status,
+    updateOnly: () => mock.updateOnly,
     verdict: () => mock.verdict,
     error: () => mock.error,
     version: () => ({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }),
@@ -42,6 +44,7 @@ afterEach(() => {
   mock.supported = true;
   mock.secure = true;
   mock.status = 'disconnected';
+  mock.updateOnly = false;
   mock.verdict = null;
   mock.error = null;
 });
@@ -66,5 +69,32 @@ describe('Device', () => {
     mock.verdict = { kind: 'no-port' };
     const { getByRole } = render(() => <Device />);
     await waitFor(() => expect(getByRole('alert').textContent).toContain('USB2'));
+  });
+
+  it('a box on the older wire is told to update, not shown controls it cannot drive', async () => {
+    // The box connects so that one-click update can reach it; the rest of the page speaks the
+    // current wire. Showing those panels anyway would put controls in front of the user that
+    // silently do nothing, so the page has to say why they are gone.
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    const { container } = render(() => <Device />);
+    await waitFor(() => {
+      const text = container.textContent ?? '';
+      expect(text).toMatch(/previous control protocol/i);
+      expect(text).toMatch(/one-click update still works/i);
+      // the live-health panel belongs to the current wire and must not be offered
+      expect(text).not.toMatch(/Live device health/i);
+    });
+  });
+
+  it('a box on the current wire keeps the whole page', async () => {
+    mock.status = 'connected';
+    mock.updateOnly = false;
+    const { container } = render(() => <Device />);
+    await waitFor(() => {
+      const text = container.textContent ?? '';
+      expect(text).not.toMatch(/previous control protocol/i);
+      expect(text).toMatch(/Live device health/i);
+    });
   });
 });

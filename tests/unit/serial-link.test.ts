@@ -179,6 +179,42 @@ describe('SerialLink', () => {
     await link.close();
   });
 
+  it('handshakes a box one protocol version behind, so it can still be updated', async () => {
+    // One-click update arrived with proto 5 (firmware 3.2.0) and nothing it uses has changed since:
+    // QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP and LOG are all identical at 5 and 6. Only
+    // OPTION(EMIT) grew. Refusing the handshake outright would lock a 3.2.x box out of the very
+    // mechanism that brings it up to date, and leave USB setup as the only way forward.
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 0) {
+        // a v3.2.1 box: proto 5
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 3, 2, 1, 1, 2, 3, 4, 5, 6])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const version = await link.handshake();
+    expect(version).toMatchObject({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 1 });
+    await link.close();
+  });
+
+  it('refuses a box newer than the page, which speaks a wire it cannot know', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 0) {
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 7, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const err = await link.handshake().then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(BadProtoVerError);
+    await link.close();
+  });
+
   it('delivers the unsolicited VERSION boot hello (SEQ 0)', async () => {
     const mock = new MockSerialPort();
     let hello = null as null | { fwMajor: number };
