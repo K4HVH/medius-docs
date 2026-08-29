@@ -145,7 +145,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 5</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 6</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -729,19 +729,21 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EMIT VALUE</div>
           <p>
-            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2).
+            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace, render mode
+            and wire rate (id 2).
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>2</td><td><code>mode</code></td><td>low bits <code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed; bit <code>0x80</code> = rendered</td></tr>
+              <tr><td>2</td><td><code>mode</code></td><td>the pace: <code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
               <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
               <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet</td></tr>
               <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
               <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
               <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
+              <tr><td>12</td><td><code>render</code></td><td><A href="/native/commands/option#render">the render mode</A> as stored: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
             </tbody>
           </table>
           <p>

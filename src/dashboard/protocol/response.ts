@@ -381,13 +381,13 @@ export function parseResp(payload: Uint8Array): Resp | null {
             bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
           };
         case OPT_EMIT:
-          // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8]
-          if (payload.length < 12) return null;
+          // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8][render u8]
+          if (payload.length < 13) return null;
           return {
             kind: 'emitPace',
             emit: {
-              mode: emitModeFromU8(payload[2] & 0x03),
-              render: renderModeFromU8(payload[2]),
+              mode: emitModeFromU8(payload[2]),
+              render: renderModeFromU8(payload[12]),
               fixedHz: u16le(payload, 3),
               resolvedHz: u16le(payload, 5),
               forceHz: u16le(payload, 7),

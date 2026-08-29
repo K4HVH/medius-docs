@@ -498,10 +498,10 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // The scale byte and the two bearing-relative directions arrived together with CTRL_PROTO_VER 5.
-    // Left at 4 the handshake would accept a box whose LOCK reads the last byte as an on/off flag,
-    // so every unlock this file encodes would reach it as a lock.
-    expect(PROTO_VER).toBe(5);
+    // OPTION(EMIT)'s render byte and its readback arrived together with CTRL_PROTO_VER 6. Left at 5
+    // the handshake would accept a box whose EMIT value is a byte shorter, and every OPTION(EMIT) this
+    // file encodes would be discarded by it for being too long, silently and with no reply.
+    expect(PROTO_VER).toBe(6);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
@@ -1082,18 +1082,20 @@ describe('OPTION command (§3.10)', () => {
     expect(parseResp(new Uint8Array([9, 1, 0, 0]))).toEqual({ kind: 'movementRiding', windowMs: 0 });
   });
 
-  it('emitPayload packs [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]', () => {
-    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0]);
-    // The render mode ORs onto the pace: Stock is bit 0x80, its smoother field is bits 2-3.
-    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Stock))).toEqual([2, 0x80, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Stock, 500))).toEqual([2, 0x82, 0xf4, 0x01, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Despiked))).toEqual([2, 0x84, 0, 0, 0, 0]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Unsmoothed, 500))).toEqual([2, 0x8a, 0xf4, 0x01, 0, 0]);
+  it('emitPayload packs [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]', () => {
+    // An omitted render argument is the box's own boot value, De-spiked (2), not off.
+    expect(Array.from(emitPayload(EmitMode.Learned))).toEqual([2, 0, 0, 0, 0, 0, 2]);
+    expect(Array.from(emitPayload(EmitMode.Interval))).toEqual([2, 1, 0, 0, 0, 0, 2]);
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Off))).toEqual([2, 0, 0, 0, 0, 0, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0, 0]);
+    // The render mode is the value's own trailing byte, so it never touches the pace byte.
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Stock))).toEqual([2, 0, 0, 0, 0, 0, 1]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Stock, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0, 1]);
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Despiked))).toEqual([2, 0, 0, 0, 0, 0, 2]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Unsmoothed, 500))).toEqual([2, 2, 0xf4, 0x01, 0, 0, 3]);
     // The forced wire rate is independent of the pacing mode.
-    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Off, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03]);
-    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
+    expect(Array.from(emitPayload(EmitMode.Learned, RenderMode.Off, 0, 1000))).toEqual([2, 0, 0, 0, 0xe8, 0x03, 0]);
+    expect(Array.from(emitPayload(EmitMode.Fixed, RenderMode.Off, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0, 0]);
   });
 
   it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
@@ -1107,7 +1109,7 @@ describe('OPTION command (§3.10)', () => {
 
   it('parses RESP(OPTIONS, EMIT) into the pacing mode and the rate the clone runs at', () => {
     // Learned, no clone yet: every field zero.
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1120,7 +1122,7 @@ describe('OPTION command (§3.10)', () => {
       },
     });
     // Interval resolved to the 1000 Hz poll rate, nothing forced, the clone advertising its own 1 kHz.
-    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Interval,
@@ -1135,7 +1137,7 @@ describe('OPTION command (§3.10)', () => {
     // Five distinct numbers, so swapping any two fields fails: fixed 1000, resolved 250, forced 125,
     // advertising 100, and the force in the served descriptor.
     expect(
-      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1])),
+      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1, 0])),
     ).toEqual({
       kind: 'emitPace',
       emit: {
@@ -1149,7 +1151,7 @@ describe('OPTION command (§3.10)', () => {
       },
     });
     // A force set while IMPERFECT is off: requested, not in the descriptor.
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1161,8 +1163,8 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // Rendered flag (0x80) on the learnt pace: mode decodes to Learned, rendered true.
-    expect(parseResp(new Uint8Array([9, 2, 0x80, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    // The render byte beside the learnt pace: mode still decodes to Learned, render to Stock.
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0, 1]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1174,16 +1176,23 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // The smoother field (bits 2-3) picks the render mode: 0x84 de-spiked, 0x88 unsmoothed, 0x8c unknown.
+    // The trailing byte alone picks the render mode: 2 de-spiked, 3 unsmoothed, 4 unknown.
     const decodeRender = (byte: number) => {
-      const r = parseResp(new Uint8Array([9, 2, byte, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+      const r = parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte]));
       return r?.kind === 'emitPace' ? r.emit.render : undefined;
     };
-    expect(decodeRender(0x84)).toBe(RenderMode.Despiked);
-    expect(decodeRender(0x88)).toBe(RenderMode.Unsmoothed);
-    expect(decodeRender(0x8c)).toBeNull();
-    // A pace this build doesn't know (low bits 3) -> mode null, the rates still decode.
-    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    expect(decodeRender(2)).toBe(RenderMode.Despiked);
+    expect(decodeRender(3)).toBe(RenderMode.Unsmoothed);
+    expect(decodeRender(4)).toBeNull();
+    // The old encoding's mode bytes are just unknown paces now, and never a render mode.
+    const decodePace = (byte: number) => {
+      const r = parseResp(new Uint8Array([9, 2, byte, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+      return r?.kind === 'emitPace' ? [r.emit.mode, r.emit.render] : undefined;
+    };
+    expect(decodePace(0x80)).toEqual([null, RenderMode.Off]);
+    expect(decodePace(0x82)).toEqual([null, RenderMode.Off]);
+    // A pace this build doesn't know -> mode null, the rates still decode.
+    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: null,

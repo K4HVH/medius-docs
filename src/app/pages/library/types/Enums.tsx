@@ -383,13 +383,14 @@ device.press(from_button)?;                         // press takes any impl Into
             <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It composes
             with the <A href="/library/types/enums#emit-pace"><code>EmitPace</code></A>: <code>Off</code> is
             the paced fill, the rest render the device's texture and differ only in the onboard smoother.
+            The box boots at <code>Despiked</code>, which is also this enum's <code>Default</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model (the default).</td></tr>
+              <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
               <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
-              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped.</td></tr>
+              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
               <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model draws the raw injection.</td></tr>
             </tbody>
           </table>

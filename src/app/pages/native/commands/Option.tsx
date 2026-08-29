@@ -34,8 +34,8 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
                 <td><code>2</code></td>
-                <td>Pick what paces injected motion</td>
-                <td>learnt</td>
+                <td>Pace, render and wire-rate injected motion</td>
+                <td>learnt, de-spiked</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
@@ -170,8 +170,15 @@ const Option: Component = () => {
 
       <div id="emit" data-search-target>
         <Card>
-          <CardHeader title="EMIT" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
-          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
+          <CardHeader title="EMIT" subtitle="Pick what paces injected motion, how it is rendered, and what rate the clone runs at" />
+          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]</pre>
+          <p>
+            Three settings ride one command, each in its own field: <code>mode</code> (with{' '}
+            <code>rate_hz</code>) is the pace, <code>render</code> is what injected motion is emitted{' '}
+            <em>as</em>, and <code>force_hz</code> is the rate the clone runs at. They are independent —
+            setting one never re-encodes another — but every <code>OPTION(EMIT)</code> writes all three,
+            so send the values you want to keep alongside the one you are changing.
+          </p>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
             <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
@@ -179,7 +186,6 @@ const Option: Component = () => {
               <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
-              <tr><td><code>| 0x80</code></td><td><A href="/native/commands/option#rendered">Rendered</A></td><td>n/a</td><td>OR onto any pace above; that pace caps the rendered rate. Bits 2-3 pick the <A href="/native/commands/option#rendered">smoother</A></td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -192,32 +198,44 @@ const Option: Component = () => {
               so idle stays idle.
             </p>
           </div>
-          <div id="rendered" data-search-target class="api-response-label">RENDERED</div>
+          <div id="render" data-search-target class="api-response-label">RENDER</div>
+          <table class="api-params">
+            <thead><tr><th><code>render</code></th><th>Name</th><th>Injected motion reaches the wire as</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Off</td><td>An even fill at whatever the pace allows</td></tr>
+              <tr><td><code>1</code></td><td>Stock</td><td>The mouse's own texture, the model's triangular smoother bit for bit</td></tr>
+              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same, with the smoother's onset ramped rather than stepped</td></tr>
+              <tr><td><code>3</code></td><td>Unsmoothed</td><td>The same, no smoother; the model renders the raw injection</td></tr>
+            </tbody>
+          </table>
           <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
-  pace only    | | | | | | | | | | | |      even fill at the paced rate
-  rendered     | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
+  render = 0   | | | | | | | | | | | |      even fill at the paced rate
+  render > 0   | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
           <table class="api-params">
-            <thead><tr><th>Aspect</th><th>Pace only</th><th>Rendered</th></tr></thead>
+            <thead><tr><th>Aspect</th><th><code>render = 0</code></th><th><code>render &gt; 0</code></th></tr></thead>
             <tbody>
               <tr><td>Report cadence</td><td>Even, up to the ceiling</td><td>The device's own active/idle pattern</td></tr>
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
               <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
-              <tr><td>Before the device is seen</td><td>Emits at once</td><td>Holds injection until it has a profile</td></tr>
+              <tr><td>Before a profile arms</td><td>Emits at once</td><td>Holds injection until it has one</td></tr>
             </tbody>
           </table>
-          <p>
-            Bits 2-3 pick the path smoother, read only when Rendered is set. The model expects a smoothed
-            path; a step onset is not one, so stock's first report sits above the rest.
-          </p>
-          <table class="api-params">
-            <thead><tr><th><code>mode</code></th><th>Name</th><th>Smoother</th></tr></thead>
-            <tbody>
-              <tr><td><code>| 0x80</code></td><td>Stock <em>(default)</em></td><td>ABCurves' triangular smoother, bit for bit</td></tr>
-              <tr><td><code>| 0x84</code></td><td>De-spiked</td><td>The same, onset ramped rather than stepped</td></tr>
-              <tr><td><code>| 0x88</code></td><td>Smoother off</td><td>None; the model renders the raw injection</td></tr>
-            </tbody>
-          </table>
+          <div class="callout callout--info">
+            <p>
+              The pace caps the rendered rate, which is the one place the two fields meet: rendered on
+              the learnt pace self-paces every millisecond, while rendered under a fixed 250 Hz never
+              exceeds 250 Hz and the model's debt carries the motion the cap coalesces.
+            </p>
+            <p>
+              The three rendered values differ only in the path smoother the model is fed. It expects a
+              smoothed path and a stepped onset is not one, so stock's first report sits above the rest.
+            </p>
+            <p>
+              The model's per-device profile is built from the live mouse and never persisted, so every
+              boot starts without one and injection is held until one arms.
+            </p>
+          </div>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
             <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>
@@ -240,26 +258,27 @@ const Option: Component = () => {
             </p>
           </div>
           <p>
-            <code>force_hz</code> is independent of <code>mode</code>: a clone can advertise 1 kHz while
-            injection still paces to the learnt native rate. Both ride one command, so every{' '}
-            <code>OPTION(EMIT)</code> writes both.
+            A <code>mode</code> or <code>render</code> value the box does not know discards the{' '}
+            <strong>whole</strong> command, <code>force_hz</code> included, and there is no reply to say
+            so.
           </p>
           <p>
             Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (mode, the
-            rate in effect, and what the clone advertises) · Library{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (all three
+            fields, the rate in effect, and what the clone advertises) · Library{' '}
             <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Rendered on a fixed 1 kHz ceiling, wire forced to 1 kHz (<code>mode = 0x82</code>, fixed
-            plus rendered, <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
+            Rendered with the stock smoother on a fixed 1 kHz ceiling, wire forced to 1 kHz
+            (<code>mode = 2</code>, <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>,{' '}
+            <code>render = 1</code>):
           </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
-| A5     | 11     | 00     | 06 00  | 02     | 82     | E8 03   | E8 03    | lo hi  |
-+--------+--------+--------+--------+--------+--------+---------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
-+--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+--------+
+| A5     | 11     | 00     | 07 00  | 02     | 02     | E8 03   | E8 03    | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | render | CRC16  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+--------+`}</pre>
         </Card>
       </div>
 

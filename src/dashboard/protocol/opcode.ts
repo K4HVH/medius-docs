@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 5; // LOCK's trailing byte is a pass-through percentage rather than an on/off flag, its direction byte reaches two bearing-relative slots, and RESP(LOCKS) carries one entry per weighed direction
+export const PROTO_VER = 6; // OPTION(EMIT) carries a render byte of its own, and RESP(OPTIONS, EMIT) reports it
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
@@ -135,11 +135,8 @@ export enum EmitMode {
   Fixed = 2, // pace at a fixed rate_hz
 }
 
-// Mode-byte flag: render injected motion with a model fitted live to the mouse; composes with the pace.
-export const EMIT_RENDERED = 0x80;
-
-// OPTION(EMIT) render mode: Off is the paced fill; the rest render the mouse's texture and differ only
-// in the onboard path smoother. Encoded as the RENDERED bit plus a smoother field in bits 2-3.
+// OPTION(EMIT)'s render field, a byte of its own beside the pace: Off is the paced fill; the rest render
+// the mouse's texture and differ only in the onboard path smoother. The box boots at Despiked.
 export enum RenderMode {
   Off = 0,
   Stock = 1,
@@ -147,27 +144,15 @@ export enum RenderMode {
   Unsmoothed = 3,
 }
 
-export function renderModeBits(m: RenderMode): number {
-  switch (m) {
-    case RenderMode.Stock:
-      return EMIT_RENDERED;
-    case RenderMode.Despiked:
-      return EMIT_RENDERED | (1 << 2);
-    case RenderMode.Unsmoothed:
-      return EMIT_RENDERED | (2 << 2);
-    default:
-      return 0;
-  }
-}
-
-export function renderModeFromU8(mode: number): RenderMode | null {
-  if ((mode & EMIT_RENDERED) === 0) return RenderMode.Off;
-  switch ((mode >> 2) & 3) {
+export function renderModeFromU8(render: number): RenderMode | null {
+  switch (render) {
     case 0:
-      return RenderMode.Stock;
+      return RenderMode.Off;
     case 1:
-      return RenderMode.Despiked;
+      return RenderMode.Stock;
     case 2:
+      return RenderMode.Despiked;
+    case 3:
       return RenderMode.Unsmoothed;
     default:
       return null;
