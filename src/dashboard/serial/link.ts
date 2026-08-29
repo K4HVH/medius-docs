@@ -25,6 +25,7 @@ import {
   type Version,
   ClipOp,
   EmitMode,
+  RenderMode,
   FrameDecoder,
   FrameType,
   MAX_PAYLOAD,
@@ -558,8 +559,8 @@ export class SerialLink {
   // the clone advertises and the box polls the device at, 0 for the device's own; it needs IMPERFECT on
   // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
   // every call. Persisted in NVS. Read back with `queryEmitPace`.
-  setEmitPace(mode: EmitMode, rendered = false, rateHz = 0, forceHz = 0): Promise<void> {
-    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rendered, rateHz, forceHz)));
+  setEmitPace(mode: EmitMode, render = RenderMode.Off, rateHz = 0, forceHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, render, rateHz, forceHz)));
   }
 
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).

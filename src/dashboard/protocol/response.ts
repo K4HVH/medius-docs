@@ -10,6 +10,8 @@ import {
   DI_HAS_BOS,
   DI_HAS_SERIAL,
   EmitMode,
+  RenderMode,
+  renderModeFromU8,
   emitModeFromU8,
   OPT_BEARING,
   OPT_EMIT,
@@ -89,7 +91,7 @@ import {
 // reported that this build doesn't know.
 export interface EmitPace {
   mode: EmitMode | null;
-  rendered: boolean;
+  render: RenderMode | null;
   fixedHz: number;
   resolvedHz: number;
   forceHz: number;
@@ -384,8 +386,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
           return {
             kind: 'emitPace',
             emit: {
-              mode: emitModeFromU8(payload[2] & 0x7f),
-              rendered: (payload[2] & 0x80) !== 0,
+              mode: emitModeFromU8(payload[2] & 0x03),
+              render: renderModeFromU8(payload[2]),
               fixedHz: u16le(payload, 3),
               resolvedHz: u16le(payload, 5),
               forceHz: u16le(payload, 7),

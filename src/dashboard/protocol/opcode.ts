@@ -138,6 +138,42 @@ export enum EmitMode {
 // Mode-byte flag: render injected motion with a model fitted live to the mouse; composes with the pace.
 export const EMIT_RENDERED = 0x80;
 
+// OPTION(EMIT) render mode: Off is the paced fill; the rest render the mouse's texture and differ only
+// in the onboard path smoother. Encoded as the RENDERED bit plus a smoother field in bits 2-3.
+export enum RenderMode {
+  Off = 0,
+  Stock = 1,
+  Despiked = 2,
+  Unsmoothed = 3,
+}
+
+export function renderModeBits(m: RenderMode): number {
+  switch (m) {
+    case RenderMode.Stock:
+      return EMIT_RENDERED;
+    case RenderMode.Despiked:
+      return EMIT_RENDERED | (1 << 2);
+    case RenderMode.Unsmoothed:
+      return EMIT_RENDERED | (2 << 2);
+    default:
+      return 0;
+  }
+}
+
+export function renderModeFromU8(mode: number): RenderMode | null {
+  if ((mode & EMIT_RENDERED) === 0) return RenderMode.Off;
+  switch ((mode >> 2) & 3) {
+    case 0:
+      return RenderMode.Stock;
+    case 1:
+      return RenderMode.Despiked;
+    case 2:
+      return RenderMode.Unsmoothed;
+    default:
+      return null;
+  }
+}
+
 export function emitModeFromU8(value: number): EmitMode | null {
   switch (value) {
     case 0:

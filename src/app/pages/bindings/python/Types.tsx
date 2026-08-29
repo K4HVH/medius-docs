@@ -250,7 +250,7 @@ const Types: Component = () => {
 
       <div id="emit-pace" data-search-target>
         <Card>
-          <CardHeader title="Emit pace" subtitle="EmitMode · EmitPace" />
+          <CardHeader title="Emit pace" subtitle="EmitMode · EmitPace · RenderMode" />
           <p>
             Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_emit_pace()</code></A>.
             See <A href="/library/options">Options</A>.
@@ -273,6 +273,18 @@ const Types: Component = () => {
               <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
               <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
             </p>
+          </div>
+          <div id="rendermode" data-search-target>
+            <div class="api-response-label">RenderMode</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>OFF</code></td><td><code>0</code></td></tr>
+                <tr><td><code>STOCK</code></td><td><code>1</code></td></tr>
+                <tr><td><code>DESPIKED</code></td><td><code>2</code></td></tr>
+                <tr><td><code>UNSMOOTHED</code></td><td><code>3</code></td></tr>
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>
@@ -1092,7 +1104,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the pace</td></tr>
-                <tr><td><code>rendered</code></td><td><code>bool</code></td><td>whether the rendered texture is on</td></tr>
+                <tr><td><code>render</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>how rendered injection is emitted; OFF is the paced fill</td></tr>
                 <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet</td></tr>
                 <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves the device's own</td></tr>
                 <tr><td><code>advertised_hz</code></td><td><code>int</code></td><td>what the clone's input endpoints advertise now, forced or native; 0 = no clone</td></tr>

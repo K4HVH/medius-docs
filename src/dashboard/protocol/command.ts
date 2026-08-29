@@ -5,7 +5,8 @@ import {
   CLIP_TRIG_F_PRESENT,
   ClipOp,
   EmitMode,
-  EMIT_RENDERED,
+  RenderMode,
+  renderModeBits,
   MAX_PAYLOAD,
   MOTION_CURSOR,
   MOTION_WHEEL,
@@ -127,15 +128,15 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
 }
 
 // OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode low bits = pace (0
-// learned, 1 follows the cloned poll rate, 2 fixed rate_hz), bit 0x80 = rendered texture (composes). forceHz is
+// learned, 1 follows the cloned poll rate, 2 fixed rate_hz), the render mode ORs onto the top of the byte. forceHz is
 // the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
 // IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
-export function emitPayload(mode: EmitMode, rendered = false, rateHz = 0, forceHz = 0): Uint8Array {
+export function emitPayload(mode: EmitMode, render = RenderMode.Off, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
   const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
   return new Uint8Array([
     OPT_EMIT,
-    (mode | (rendered ? EMIT_RENDERED : 0)) & 0xff,
+    (mode | renderModeBits(render)) & 0xff,
     hz & 0xff,
     (hz >> 8) & 0xff,
     fhz & 0xff,
