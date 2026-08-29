@@ -81,7 +81,7 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).toMatch(/Update needed/i);
-      expect(text).toMatch(/One-click update works/i);
+      expect(text).toMatch(/use the rest of the dashboard/i);
       // the live-health panel belongs to the current wire and must not be offered
       expect(text).not.toMatch(/Live device health/i);
     });
