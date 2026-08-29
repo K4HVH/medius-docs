@@ -105,8 +105,10 @@ device.set_movement_riding(None)?;                             // back to gaples
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             <code>pace</code> is the rate ceiling; <code>render</code> is the render mode: <code>Off</code>
-            is the paced fill, the others layer a per-device texture model over it and render only once it
-            has seen the device. A fixed rate snaps to{' '}
+            is the paced fill, the others layer a per-device texture model over it. That model's profile is
+            built from the live mouse and never persisted, so every boot starts without one and injection is
+            held until one arms. The box boots at <code>Despiked</code>, so passing <code>Off</code>{' '}
+            turns the renderer off rather than leaving it alone. A fixed rate snaps to{' '}
             <code>1000/n</code> Hz on the 1 ms frame clock, capped at 1 kHz, and raises the ceiling
             only, so idle stays idle.
           </p>
@@ -129,7 +131,7 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
-              <tr><td><code>render</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td><code>Off</code> is the paced fill; <code>Stock</code>, <code>Despiked</code>, and <code>Unsmoothed</code> render the device's texture.</td></tr>
+              <tr><td><code>render</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td><code>Off</code> is the paced fill; <code>Stock</code>, <code>Despiked</code> (the box's default), and <code>Unsmoothed</code> render the device's texture.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
@@ -137,9 +139,9 @@ device.set_movement_riding(None)?;                             // back to gaples
           <pre><code class="language-rust">{`use medius::{Device, EmitPace, RenderMode};
 
 let device = Device::find()?;
-device.set_emit_pace(EmitPace::Fixed(1000), RenderMode::Off, None)?;    // a fixed 1 kHz ceiling
-device.set_emit_pace(EmitPace::Learned, RenderMode::Stock, None)?;      // rendered texture, self-paced
-device.set_emit_pace(EmitPace::Learned, RenderMode::Off, None)?;        // back to the defaults`}</code></pre>
+device.set_emit_pace(EmitPace::Fixed(1000), RenderMode::Off, None)?;    // a fixed 1 kHz ceiling, unrendered
+device.set_emit_pace(EmitPace::Learned, RenderMode::Stock, None)?;      // the stock smoother, self-paced
+device.set_emit_pace(EmitPace::Learned, RenderMode::Despiked, None)?;   // back to the box's own defaults`}</code></pre>
         </Card>
       </div>
 

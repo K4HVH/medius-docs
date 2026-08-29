@@ -61,9 +61,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=5][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto=6][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -71,7 +71,7 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 5,
+      protoVer: 6,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
@@ -89,14 +89,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(5);
+    expect(version.protoVer).toBe(6);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -277,12 +277,12 @@ describe('SerialLink', () => {
           // RESP(OPTIONS, MOVE_RIDE): [9][1][timeout u16 LE] = 5 ms
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
         } else if (f.payload[1] === 2) {
-          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
+          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz, render off
           mock.push(
             encode(
               FrameType.Resp,
               f.seq,
-              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01]),
+              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01, 0x00]),
             ),
           );
         }

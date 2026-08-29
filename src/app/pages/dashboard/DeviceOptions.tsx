@@ -141,7 +141,7 @@ const DeviceOptions = () => {
       dash.refreshPoll('bearing');
     });
   const mode = () => modeEdit() ?? MODE_NAMES[emit()?.mode ?? EmitMode.Learned] ?? 'learned';
-  const renderKey = () => renderEdit() ?? RENDER_NAMES[emit()?.render ?? RenderMode.Off] ?? 'off';
+  const renderKey = () => renderEdit() ?? RENDER_NAMES[emit()?.render ?? RenderMode.Despiked] ?? 'despiked';
   // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
