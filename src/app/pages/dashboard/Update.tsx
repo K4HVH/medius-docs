@@ -65,8 +65,8 @@ const Update = () => {
     return matches(c ? { major: c.fwMajor, minor: c.fwMinor, patch: c.fwPatch } : null);
   };
   const hostOnRelease = () => matches(dash.firmwareInfo()?.host);
-  // What each chip that was ASKED to change reports now. A chip that reverted answers a handshake
-  // perfectly well, so the handshake is not the evidence -- the version it reports is.
+  // What each chip that was ASKED to change reports now. A chip that reverted completes a
+  // handshake, so the handshake is not the evidence: the version it reports is.
   const landed = () => {
     if (which() === 'main') return deviceOnRelease();
     if (which() === 'mouse') return hostOnRelease();
@@ -176,11 +176,13 @@ const Update = () => {
                     <Show when={dash.version()}>
                       {(v) => <Chip variant="neutral">v{versionString(v())}</Chip>}
                     </Show>
-                    <Show when={latest()}>
-                      {'. '}Latest is <strong>{latest()?.tag}</strong>
-                      {upToDate() ? ', up to date.' : '.'}
-                    </Show>
                   </p>
+                  <Show when={latest()}>
+                    <p>
+                      Latest is <strong>{latest()?.tag}</strong>
+                      {upToDate() ? ', up to date.' : '.'}
+                    </p>
+                  </Show>
                   <div style={row}>
                     <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
                       Update both chips
@@ -227,7 +229,7 @@ const Update = () => {
             <Match when={step() === 'sent'}>
               {/* The transfer and the activate went through and then nothing answered, so what is
                   running now is exactly what this cannot say. The instruction itself lives in the
-                  shared error, which ConnectPanel renders on whatever page the user wanders to. */}
+                  shared error, which ConnectPanel renders on every page that offers Connect. */}
               <Show
                 when={dash.status() === 'connected'}
                 fallback={<ConnectPanel />}

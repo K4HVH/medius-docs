@@ -66,8 +66,7 @@ const Device = () => {
                   <Show when={dash.version()}>
                     {(v) => (
                       <p>
-                        Connected. Firmware <Chip variant="success">v{versionString(v())}</Chip>{' '}
-                        (protocol v{v().protoVer}).
+                        Connected. Firmware <Chip variant="success">v{versionString(v())}</Chip>
                       </p>
                     )}
                   </Show>

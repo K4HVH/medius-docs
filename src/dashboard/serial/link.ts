@@ -279,7 +279,7 @@ export class SerialLink {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;
     // Adopt a port that is already open rather than opening it again. A close that could not finish
-    // -- the usual cause is the box re-enumerating underneath it as it reboots into a new image --
+    // (the usual cause is the box re-enumerating underneath it as it reboots into a new image)
     // leaves the port open, and Web Serial answers the next open() with "the port is already open",
     // which strands the page with no way back except a replug.
     if (!this.port.readable || !this.port.writable) {
@@ -422,7 +422,7 @@ export class SerialLink {
   // A blanket (id LOCK_ID_ALL) carries the direction to every member, so an every-key lock can block
   // press edges alone. A media usage has no edges and ignores the byte either way.
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
-    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent -- the
+    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent: the
     // box does a different thing per class with it, and every other client refuses it too. A media usage
     // has no edges at all, so an edge named on one goes out as Both, which is what the box reports back.
     if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
@@ -587,7 +587,7 @@ export class SerialLink {
   // CLIP_APPEND carries its own sequence: the box expects each append's SEQ to be exactly one past
   // the last one it saw, and faults the engine on any gap so a dropped append cannot be played as
   // if it were whole. That counter therefore cannot be the link's shared SEQ, which every query and
-  // command also advances -- a single health poll between two appends would look like a lost
+  // command also advances, and a single health poll between two appends would look like a lost
   // append. Appends count on their own.
   //
   // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so

@@ -104,14 +104,10 @@ device.set_movement_riding(None)?;                             // back to gaples
           <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, render: RenderMode, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <code>pace</code> is the rate ceiling; <code>render</code> is the render mode: <code>Off</code>
-            is the paced fill, the others layer a per-device texture model over it. That model's profile is
-            built from the live mouse and arms only once it has moved, so a box emits the paced fill until
-            then and the rendered stream after. The box boots at <code>Despiked</code>, so passing{' '}
-            <code>Off</code>{' '}
-            turns the renderer off rather than leaving it alone. A fixed rate snaps to{' '}
-            <code>1000/n</code> Hz on the 1 ms frame clock, capped at 1 kHz, and raises the ceiling
-            only, so idle stays idle.
+            The renderer's profile is built from the live mouse and arms only once it has moved, so a
+            box emits the paced fill until then and the rendered stream after. The box boots at{' '}
+            <code>Despiked</code>, so <code>Off</code> turns the renderer off rather than leaving it
+            alone.
           </p>
           <p>
             <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
@@ -131,8 +127,8 @@ device.set_movement_riding(None)?;                             // back to gaples
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
-              <tr><td><code>render</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td><code>Off</code> is the paced fill; <code>Stock</code>, <code>Despiked</code> (the box's default), and <code>Unsmoothed</code> render the device's texture.</td></tr>
+              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The rate ceiling for injected motion.</td></tr>
+              <tr><td><code>render</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Whether and how the injection is rendered; the box boots at <code>Despiked</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
@@ -213,15 +209,14 @@ device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
             </tbody>
           </table>
           <p>
-            Persisted in NVS, so a box that has been set boots at its own value.{' '}
-            <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory one.
+            <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory
+            setting.
           </p>
           <div class="callout callout--warning">
             <p>
-              <code>Vector</code> weighs a report twice, and the second pass reads whatever the
-              projection left standing on each axis, not what the device reported. Block <code>Y</code>{' '}
-              negative while the injection runs diagonally and a purely horizontal flick can come out with its
-              vertical share removed.
+              <A href="/library/types/enums#bearing-mode"><code>Vector</code></A> weighs a report
+              twice: block <code>Y</code> negative while the injection runs diagonally and a purely
+              horizontal flick can come out with its vertical share removed.
             </p>
             <p>
               A change to either field drops the standing bearing and the box's banked fractions, which
@@ -289,10 +284,11 @@ match device.query_movement_riding()? {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns an{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>.{' '}
-            <code>advertised_hz</code> is what the clone advertises now: the device's own rate while
-            nothing is forced, the forced rate once something is. The reply carries no record of what the
-            device declared before a force was applied.
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
+            carrying the pace, the <A href="/library/types/enums#render-mode"><code>render</code></A>{' '}
+            mode and the rates. <code>advertised_hz</code> is what the clone advertises now: the
+            device's own rate while nothing is forced, the forced rate once something is, with no
+            record of what the device declared before a force was applied.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
@@ -302,6 +298,7 @@ let status = device.query_emit_pace()?;
 if let EmitPace::Fixed(hz) = status.mode {
     println!("fixed {hz} Hz, emitting at {} Hz", status.resolved_hz);
 }
+println!("render {:?}", status.render);
 println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
         </Card>
       </div>

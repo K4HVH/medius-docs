@@ -35,7 +35,7 @@ const Connection: Component = () => {
           <table class="api-params">
             <thead>
               <tr>
-                <th>Function</th>
+                <th>Name</th>
                 <th>Description</th>
               </tr>
             </thead>
@@ -91,7 +91,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
               </tr>
               <tr>
                 <td><code>PROTO_VER</code></td>
-                <td><code>5</code></td>
+                <td><code>6</code></td>
               </tr>
             </tbody>
           </table>

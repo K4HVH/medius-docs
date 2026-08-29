@@ -6,11 +6,13 @@ Built with [SolidJS](https://solidjs.com) and MidnightUI.
 
 ## Sections
 
-- **Native API** -- The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x15`).
-- **Rust Library** -- API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `flash` / `tracing` features.
-- **Bindings** -- The C ABI and Python bindings over the same crate.
-- **Dashboard** -- The in-browser box dashboard: connect, view device info, update firmware, recover, and a console.
-- **AI Access** -- Using the docs with an AI assistant: per-page Markdown twins, `llms.txt`, and the MCP server.
+| Section | What |
+|---|---|
+| Native API | The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x18`). |
+| Rust Library | API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `tracing` features. |
+| Bindings | The C ABI and Python bindings over the same crate. |
+| Dashboard | The in-browser box dashboard: connect, view device info, update firmware, recover, and read the device log. |
+| AI Access | Using the docs with an AI assistant: per-page Markdown twins, `llms.txt`, and the MCP server. |
 
 ## Development
 
@@ -42,12 +44,14 @@ Output goes to `dist/`.
 
 ## Tech Stack
 
-- [SolidJS](https://solidjs.com) -- Reactive UI framework
-- [@solidjs/router](https://docs.solidjs.com/solid-router) -- Client-side routing
-- [Vite](https://vitejs.dev) -- Build tool
-- [Bun](https://bun.sh) -- Runtime and package manager
-- MidnightUI -- Component library
-- [solid-icons](https://github.com/x64Bits/solid-icons) -- Icons
+| Tool | Role |
+|---|---|
+| [SolidJS](https://solidjs.com) | Reactive UI framework |
+| [@solidjs/router](https://docs.solidjs.com/solid-router) | Client-side routing |
+| [Vite](https://vitejs.dev) | Build tool |
+| [Bun](https://bun.sh) | Runtime and package manager |
+| MidnightUI | Component library |
+| [solid-icons](https://github.com/x64Bits/solid-icons) | Icons |
 
 ## Deployment
 

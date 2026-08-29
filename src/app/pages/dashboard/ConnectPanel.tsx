@@ -46,7 +46,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
     <div aria-live="polite">
       {/* Above the switch, not inside one arm: a flash or update failure has no verdict of its own,
           and a verdict left over from an earlier connect used to hide it entirely. Not gated on
-          status either -- an update whose box never came back leaves 'disconnected'. */}
+          status either: an update whose box never came back leaves 'disconnected'. */}
       <Show when={dash.error()}>
         {(msg) => (
           <div class="callout callout--danger" role="alert">
@@ -111,11 +111,10 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
             return (
               <>
                 <div class="callout callout--danger" role="alert">
-                  <Show when={ver} fallback="This box is too old for one-click updates.">
-                    {(x) => <>This box runs v{versionString(x())}, which predates one-click updates.</>}
+                  <Show when={ver} fallback="This box is too old to update from here.">
+                    {(x) => <>This box runs v{versionString(x())}, which is too old to update from here.</>}
                   </Show>{' '}
-                  They arrived in v3.2.0. Set it up once over USB and it will update in one click from
-                  then on.
+                  Set it up once over USB and it will update in one click from then on.
                 </div>
                 <Button variant="primary" onClick={setup}>
                   Set up

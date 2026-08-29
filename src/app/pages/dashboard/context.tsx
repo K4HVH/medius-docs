@@ -77,7 +77,7 @@ export interface DashboardContextValue {
   firmwareInfo: Accessor<FirmwareInfo | null>;
   readFirmwareInfo: () => Promise<FirmwareInfo | null>;
   // 'verified' only when the box came back and answered. 'sent' means the transfer and the activate
-  // succeeded but nothing has confirmed what is running now -- the box reverts an image that will
+  // succeeded but nothing has confirmed what is running now: the box reverts an image that will
   // not boot, so claiming a version here would be a claim nothing checked.
   updateOverControl: (images: {
     device?: Uint8Array;
@@ -244,8 +244,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       outcome = { ok: false, verdict: classifyConnectError(e) };
     }
 
-    // Something else may have moved on while the chooser and handshake ran -- a disconnect, or the
-    // setup wizard starting an install. Whoever changed the status owns it now; this link is not
+    // Something else may have moved on while the chooser and handshake ran (a disconnect, or the
+    // setup wizard starting an install). Whoever changed the status owns it now; this link is not
     // wanted and must not be installed over the top.
     if (disposed || status() !== 'connecting') {
       if (outcome.ok) await outcome.link.close().catch(() => undefined);
@@ -345,7 +345,7 @@ export const DashboardProvider: ParentComponent = (props) => {
       if (!reconnected) {
         // Shared, not page-local: this is the one instruction that fixes it, and navigating to
         // another tab used to destroy it. Device, Control and Update all surface it. The claim is
-        // only what the code can support -- what is running now is what nothing has checked.
+        // only what the code can support: what is running now is what nothing has checked.
         setError(
           'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
         );
@@ -360,8 +360,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       // host first, the same order it was staged in. Each target gets its own try, so a box that
       // has already gone away on the first one does not skip the second.
       // Short, because the usual reason for being here is a box that has stopped answering, and the
-      // full op timeout twice over would leave the user watching a frozen progress bar for the best
-      // part of a minute before the real error appears. A box that IS answering replies at once.
+      // full op timeout twice over would hold the progress bar for tens of seconds before the real
+      // error appears. A box that IS answering replies at once.
       const staged: number[] = [];
       if (images.host) staged.push(OTA_TGT_HOST);
       if (images.device) staged.push(OTA_TGT_DEVICE);

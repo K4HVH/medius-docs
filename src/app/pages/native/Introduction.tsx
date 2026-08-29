@@ -37,7 +37,7 @@ const NativeIntroduction: Component = () => {
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>5</code></td>
+              <td><code>6</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -51,7 +51,7 @@ const NativeIntroduction: Component = () => {
               <td>Delivery</td>
               <td>
                 Fire-and-forget;{' '}
-                <A href="/native/commands/requests#requests"><code>QUERY</code></A> &rarr;{' '}
+                <A href="/native/commands/requests#requests"><code>QUERY</code></A> →{' '}
                 <A href="/native/commands/requests#resp"><code>RESP</code></A> is the only round-trip
               </td>
             </tr>
@@ -69,7 +69,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>5</code>. Confirm it during the{' '}
+                These pages describe version <code>6</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -182,7 +182,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all ten selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all eleven selectors" />
               </Card>
             </A>
             <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
@@ -198,6 +198,11 @@ const NativeIntroduction: Component = () => {
             <A href="/native/commands/option" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Option" subtitle="Name, imperfect clones, movement riding, bearing, emit rate" />
+              </Card>
+            </A>
+            <A href="/native/commands/update" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Update" subtitle="Replace either chip's firmware" />
               </Card>
             </A>
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>

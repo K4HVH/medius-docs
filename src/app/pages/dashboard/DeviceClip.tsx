@@ -312,7 +312,7 @@ const DeviceClip = () => {
   });
 
   // Removing the fully-wild binding is byte-identical to the clear-all sentinel, so the box wipes
-  // every binding rather than that one. Say so instead of letting it surprise someone.
+  // every binding rather than that one. The note below states it.
   const isWildcard = (t: ClipTrigger) =>
     t.cls === CLIP_COND_ANY_CLASS && t.id === CLIP_COND_ANY_ID && t.edge === Direction.Both;
 
@@ -321,7 +321,7 @@ const DeviceClip = () => {
       <Card>
         <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
 
-        <Show when={ready()} fallback={<p style={muted}>The box refuses every clip command without a cloned mouse, because a clip is clocked by the mouse's report rate.</p>}>
+        <Show when={ready()} fallback={<p style={muted}>Clips need a cloned mouse. Plug one into USB3.</p>}>
           <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
             <div class="callout callout--warning">
               Movement riding is on and this clip is set to ride it, so clip motion is only emitted
@@ -347,7 +347,7 @@ const DeviceClip = () => {
             <Chip variant="neutral">{clip()?.totalBytes ?? 0} B loaded</Chip>
             <Chip variant="neutral">{clip()?.freeBytes ?? 0} B free</Chip>
             <Show when={finalized()}>
-              <Chip variant="neutral">Finalized</Chip>
+              <Chip variant="neutral">Complete</Chip>
             </Show>
             <Show when={clip()?.retain}>
               <Chip variant="neutral">
@@ -431,7 +431,7 @@ const DeviceClip = () => {
           </div>
           <div style={checkColumn}>
             <Checkbox
-              label="Motion rides a real report (only matters with movement riding on)"
+              label="Motion rides a real report"
               checked={rideOn()}
               disabled={busy()}
               onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
@@ -518,8 +518,8 @@ const DeviceClip = () => {
             </Show>
             <Show when={finalized()}>
               <div class="callout callout--warning">
-                This clip is finalized, so the box drops anything more that is sent to it. Clear it
-                to load a different one.
+                This clip is marked complete, so the box drops anything more sent to it. Clear it to
+                load a different one.
               </div>
             </Show>
             <Show when={wontFit()}>

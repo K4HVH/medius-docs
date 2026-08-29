@@ -35,7 +35,7 @@ const Option: Component = () => {
                 <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
                 <td><code>2</code></td>
                 <td>Pace, render and wire-rate injected motion</td>
-                <td>learnt, de-spiked</td>
+                <td>learnt, de-spiked, no forced rate</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
@@ -53,8 +53,7 @@ const Option: Component = () => {
           </table>
         </div>
         <p>
-          Each card carries its own value layout on its signature line. A box that has been set boots
-          at its own stored value, not the factory one.
+          A box that has been set boots at its own stored value, not the factory one.
         </p>
       </Card>
 
@@ -136,16 +135,16 @@ const Option: Component = () => {
             </tbody>
           </table>
           <p>
-            This keeps injected motion's report density identical to the real mouse's, erasing the
-            density tell (a human aims at ~270-360 Hz, idle 60-70% of the time; gap-filling injection
-            runs gapless near 990 Hz).
+            This keeps injected motion's report density identical to the real mouse's.
           </p>
           <div class="callout callout--warning">
             <p>
-              While on, pure idle injection (moving the cursor while the real device is still) stops working:
-              motion waits for a native move and is dropped if none comes. Button, key, and media
-              injection are unaffected, and a move can opt out per command with the{' '}
-              <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
+              While on, pure idle injection (moving the cursor while the real device is still) stops
+              working: motion waits for a native move and is dropped if none comes.
+            </p>
+            <p>
+              Button, key, and media injection are unaffected, and a move can opt out per command
+              with the <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
             </p>
             <p>
               Changing the value drops whatever motion was held for a ride, and clears the standing{' '}
@@ -187,7 +186,7 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333, 250… are exact
+              Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333 and 250 are exact
               (<code>0</code> means 1000).
             </p>
             <p>The pace is a ceiling. The box emits only while injection is pending, so idle stays idle.</p>
@@ -197,7 +196,7 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
-              <tr><td><code>1</code></td><td>Stock</td><td>The model's triangular smoother, bit for bit. Its first report sits above the rest.</td></tr>
+              <tr><td><code>1</code></td><td>Stock</td><td>The model's triangular smoother, bit for bit. Its first report carries a larger delta than the ones after it.</td></tr>
               <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
               <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model renders the raw injection.</td></tr>
             </tbody>
@@ -209,7 +208,6 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Aspect</th><th><code>render = 0</code></th><th><code>render &gt; 0</code></th></tr></thead>
             <tbody>
-              <tr><td>Report cadence</td><td>Even, up to the ceiling</td><td>The device's own active/idle pattern</td></tr>
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
               <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
               <tr><td>Before a profile arms</td><td>Emits at once</td><td>Emits the paced fill, then switches over</td></tr>
@@ -223,7 +221,7 @@ const Option: Component = () => {
             </p>
             <p>
               The profile is built from the live mouse and never persisted. Every boot starts without
-              one, it arms off a window the mouse moved in, and it stays armed until the device changes.
+              one: it arms off a window the mouse moved in and stays armed until the device changes.
             </p>
           </div>
           <div class="api-response-label">FORCE_HZ</div>
@@ -281,7 +279,7 @@ const Option: Component = () => {
             <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>1..32</code> printable ASCII</td><td>Sets the box's name to those bytes.</td></tr>
-              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the synthesized <code>Medius-XXXX</code> default derived from the MAC.</td></tr>
+              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the synthesised <code>Medius-XXXX</code> default derived from the MAC.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">

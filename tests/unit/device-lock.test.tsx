@@ -24,6 +24,10 @@ const mock = vi.hoisted(() => ({
   entries: [] as { cls: number; id: number; direction: number; scale: number }[],
 }));
 
+vi.mock('@solidjs/router', () => ({
+  A: (p: { children: unknown }) => p.children,
+}));
+
 // The page drives one verb now: lock and unlock are the two ends of the scale, so the mock records the
 // scale rather than which button was pressed, which is what actually reaches the wire.
 vi.mock('../../src/app/pages/dashboard/context', () => {

@@ -10,15 +10,13 @@ const Build: Component = () => {
         <CardHeader title="Build & features" subtitle="Turning on mock, and building from source" />
         <p>
           The <A href="/library/features/mock">mock</A> feature is compiled into the native library,
-          not switched on from Python, so turning it on means building that library. Everything else is a{' '}
-          <a href="https://docs.python.org/3/library/ctypes.html" target="_blank" rel="noreferrer">ctypes</a>{' '}
-          layer with no Python build step.
+          not switched on from Python, so turning it on means building that library.
         </p>
       </Card>
 
       <div id="features" data-search-target>
         <Card>
-          <CardHeader title="Feature flags" subtitle="mock and flash, and how to tell what's built in" />
+          <CardHeader title="Feature flags" subtitle="mock, and how to tell what's built in" />
           <p>
             Both are <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">Cargo features</a>{' '}
             on the <a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer"><code>medius-capi</code></a>{' '}
@@ -27,7 +25,7 @@ const Build: Component = () => {
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Feature</th><th>Cargo flag</th><th>Python surface</th><th><code>medius.HAS_*</code></th><th>Adds</th></tr>
+              <tr><th>Feature</th><th>Cargo flag</th><th>Python surface</th><th><code>medius.HAS_MOCK</code></th><th>Adds</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -52,19 +50,19 @@ const Build: Component = () => {
 # mock False   <- the published wheel`}</code></pre>
           <div class="api-response-label">ENABLE A FEATURE</div>
           <p>
-            Build the library with the features you want, then point Python at it with{' '}
+            Build the library with the feature, then point Python at it with{' '}
             <code>MEDIUS_LIB</code> (<A href="/bindings/python/build#loading">below</A>). No reinstall.
           </p>
           <pre><code class="language-bash">{`# from the repo root
-cargo build --release -p medius-capi --features mock,flash
+cargo build --release -p medius-capi --features mock
 
 export MEDIUS_LIB=$PWD/target/release/libmedius_capi.so
 python -c "import medius; print(medius.HAS_MOCK)"
-# True True`}</code></pre>
+# True`}</code></pre>
           <p>
-            To bake features into an installed wheel, build the library first and let pip reuse it:
+            To bake the feature into an installed wheel, build the library first and let pip reuse it:
           </p>
-          <pre><code class="language-bash">{`cargo build --release -p medius-capi --features mock,flash
+          <pre><code class="language-bash">{`cargo build --release -p medius-capi --features mock
 MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
         </Card>
       </div>
@@ -97,7 +95,7 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
 
       <div id="packaging" data-search-target>
         <Card>
-          <CardHeader title="Build from source" subtitle="musl Linux, 32-bit Windows, and contributors" />
+          <CardHeader title="Packaging" subtitle="Prebuilt wheels, and building from source" />
           <p>
             Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a>), macOS, and 64-bit Windows get a prebuilt wheel from{' '}
             <code>pip install medius</code>. On <a href="https://musl.libc.org" target="_blank" rel="noreferrer">musl</a> Linux (<a href="https://alpinelinux.org" target="_blank" rel="noreferrer">Alpine</a>) or 32-bit Windows there's no wheel,

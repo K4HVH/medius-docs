@@ -40,7 +40,7 @@ const Types: Component = () => {
           </p>
           <p>
             Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>5</code>, the
+            it, never a pointer you own. The shapes on this page are ABI version <code>6</code>, the
             number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
           </p>
         </div>
@@ -408,6 +408,28 @@ const Types: Component = () => {
         </Card>
       </div>
 
+      <div id="render-mode" data-search-target>
+        <Card>
+          <CardHeader title="MediusRenderMode" subtitle="How injected motion is emitted" />
+          <pre class="api-signature">{`enum MediusRenderMode : uint8_t`}</pre>
+          <p>
+            Composed onto the <A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A>{' '}
+            beside it, and returned in{' '}
+            <A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>. See{' '}
+            <A href="/library/options">Options</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_RENDER_MODE_OFF</code></td><td><code>0</code></td><td>Even fill at the paced rate, no model.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_STOCK</code></td><td><code>1</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_DESPIKED</code></td><td><code>2</code></td><td>Render with the smoother's onset ramped rather than stepped. The box boots at this one.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_UNSMOOTHED</code></td><td><code>3</code></td><td>Render with no smoother; the model draws the raw injection.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="catch-event-kind" data-search-target>
         <Card>
           <CardHeader title="MediusCatchEventKind" subtitle="Which arm of a MediusCatchEvent is set" />
@@ -440,8 +462,9 @@ const Types: Component = () => {
             beside <code>ts_us</code>. Which domain an event carries is fixed by where it is tapped.
           </p>
           <p>
-            The <A href="/native/hardware">box</A> is two ESP32-S3s that boot independently, so a stamp
-            is only meaningful against other stamps from the <em>same</em> domain.
+            The <A href="/native/hardware">box</A> is two ESP32-S3s, a{' '}
+            <A href="/native/architecture">device chip and a host chip</A>, that boot independently,
+            so a stamp is only meaningful against other stamps from the <em>same</em> domain.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Stamped</th><th>Carries</th></tr></thead>
@@ -544,14 +567,9 @@ const Types: Component = () => {
             <A href="/bindings/c/api#inspectors"><code>medius_catch_class_is_traffic</code></A> (the
             seven byte-oriented ones).
           </p>
-          <div class="api-response-label">WHERE EACH CLASS IS TAPPED</div>
           <p>
-            The four input classes are captured at the emission merge point <strong>before</strong>{' '}
-            lock suppression and before injection, so a locked input still reports.
-          </p>
-          <p>
-            <code>MEDIUS_CATCH_CLASS_EMIT</code> is the mirror image: what the clone put on the wire{' '}
-            <em>after</em> injection, locks, and the suppression gate.
+            Where each class is tapped, and why a locked input still reports, is on{' '}
+            <A href="/native/commands/catch#catch">Catch</A>.
           </p>
         </Card>
       </div>
@@ -602,9 +620,10 @@ const Types: Component = () => {
             bytes. So it lives on the entry that matched, not box-wide.
           </p>
           <p>
-            Matching is most-specific-first, and the winning entry is the one whose{' '}
-            <code>capture</code> applies. That is what makes "everything at 16 bytes, except endpoint{' '}
-            <code>0x83</code> in full" two entries rather than an impossibility.
+            The winning entry is the one whose <code>capture</code> applies, which is what makes
+            "everything at 16 bytes, except endpoint <code>0x83</code> in full" two entries rather
+            than an impossibility. The ranking is on{' '}
+            <A href="/native/commands/catch#matching">The table</A>.
           </p>
           <pre class="diagram">{`  a report arrives on VENDOR_INTERRUPT endpoint 0x83
           │
@@ -1119,8 +1138,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             (32), the box's own table size, so the reply always carries the whole table.
           </p>
           <p>
-            The order is the order the box accepted them in, not the order it matches in: matching is
-            worked out per event, most-specific-first, with ties going to the earlier entry.
+            The order is the order the box accepted them in, not the order it matches in; matching is
+            worked out per event, by the <A href="/native/commands/catch#matching">ranking</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1141,9 +1160,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             </tbody>
           </table>
           <p>
-            Delivery is four strict-priority queues: input and bus first, then the byte-oriented
-            traffic classes, then control, then vendor bulk. Under a busy mouse, bulk can starve
-            completely.
+            Delivery is ranked, and under a busy mouse bulk can go completely undrained; the queue
+            order is on <A href="/native/commands/catch#delivery">Delivery</A>.
           </p>
           <p>
             So the count is kept twice. The header's <code>dropped</code> says you are losing events;
@@ -1191,7 +1209,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A></td><td>The pace.</td></tr>
-              <tr><td><code>render</code></td><td><code>MediusRenderMode</code></td><td>The render mode stored on the box: <code>OFF</code>, <code>STOCK</code>, <code>DESPIKED</code> (the default) or <code>UNSMOOTHED</code>.</td></tr>
+              <tr><td><code>render</code></td><td><A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A></td><td>The render mode stored on the box.</td></tr>
               <tr><td><code>fixed_hz</code></td><td><code>uint16_t</code></td><td>The rate requested for <code>FIXED</code> (0 otherwise).</td></tr>
               <tr><td><code>resolved_hz</code></td><td><code>uint16_t</code></td><td>The ceiling in effect; 0 = learnt/adaptive, or no device yet in <code>INTERVAL</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>uint16_t</code></td><td>The forced wire rate requested; 0 leaves the device's own.</td></tr>
@@ -1243,7 +1261,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusBoxInfo" subtitle="One discovered box: port, version, and cloned device" />
           <p>
             Filled by <A href="/bindings/c/api#discovery"><code>medius_list</code></A>: one entry per
-            connected box, each opened and handshaked in turn. See <A href="/library/discovery#box-info"><code>BoxInfo</code></A>.
+            connected box, each opened and handshaked in turn. See <A href="/library/types/structs#box-info"><code>BoxInfo</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1643,14 +1661,6 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>medius_last_error_proto_ver(void)</code></td><td><code>uint8_t</code></td><td>The version byte from a <code>BAD_PROTO_VER</code> error, or 0.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-c">{`MediusDevice *dev = NULL;
-if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
-    char buf[256];
-    medius_last_error_message(buf, sizeof buf);
-    fprintf(stderr, "open failed: %s\\n", buf);
-    return 1;
-}`}</code></pre>
         </Card>
       </div>
 

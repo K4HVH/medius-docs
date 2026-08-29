@@ -4,7 +4,7 @@ import { useLocation } from '@solidjs/router';
 const SITE = 'https://medius.k4tech.net';
 const DEFAULT_TITLE = 'Medius Documentation';
 const DEFAULT_DESC =
-  'Documentation for Medius: the binary control protocol of the mouse-passthrough firmware, the device behavior, and the medius Rust library.';
+  'Documentation for Medius: the binary control protocol of the mouse-passthrough firmware, the device behaviour, and the medius Rust library.';
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string): void {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);

@@ -70,7 +70,7 @@ const Setup = () => {
         setStep(next);
       } else {
         // Read the reason BEFORE disconnecting: disconnect() nulls `error` synchronously, and the
-        // messages it was eating are the ones pressing the button again cannot fix.
+        // messages it was discarding are the ones pressing the button again cannot fix.
         const why = dash.error();
         void dash.disconnect().catch(() => undefined);
         setErr(why ?? 'That did not finish.');

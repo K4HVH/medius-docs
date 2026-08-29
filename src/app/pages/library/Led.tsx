@@ -21,16 +21,13 @@ const Led: Component = () => {
           <CardHeader title="led" subtitle="Override or restore a status LED" />
           <pre class="api-signature">fn led(&self, target: LedTarget, mode: LedMode, level: u8) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <p>
-            Both enums and their bytes are on <A href="/library/types/enums">Types</A>.
-          </p>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>target</code></td><td><A href="/library/types/enums#led-target"><code>LedTarget</code></A></td><td>Which chip's LED: <code>Device</code>, <code>Host</code>, or <code>Both</code>.</td></tr>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#led-mode"><code>LedMode</code></A></td><td><code>Auto</code> restores the status display; <code>Off</code>, <code>Solid</code>, and <code>Blink</code> override it.</td></tr>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#led-target"><code>LedTarget</code></A></td><td>Which chip's LED.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#led-mode"><code>LedMode</code></A></td><td>Restore the chip's status display, or override it.</td></tr>
               <tr><td><code>level</code></td><td><code>u8</code></td><td>Brightness 0-255 for <code>Solid</code> and <code>Blink</code>; ignored otherwise.</td></tr>
             </tbody>
           </table>

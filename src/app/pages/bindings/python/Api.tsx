@@ -42,10 +42,7 @@ const Api: Component = () => {
       <div id="discovery" data-search-target>
         <Card>
           <CardHeader title="Discovery" subtitle="Enumerate boxes and open one by identity" />
-          <p>
-            Pick a box out of several by a stable identity (device MAC or CH343 serial), or by the kind
-            of device it clones. See <A href="/library/discovery">Discovery</A>.
-          </p>
+          <p>See <A href="/library/discovery">Discovery</A>.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -79,7 +76,7 @@ const Api: Component = () => {
 
       <div id="inject" data-search-target>
         <Card>
-          <CardHeader title="Inject" subtitle="Press and release any usage: button, key, or media" />
+          <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
             <A href="/native/injection">injection model</A> (press / soft-release / force-release). One
@@ -91,15 +88,15 @@ const Api: Component = () => {
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>dev.inject(input, action)</code></td><td>Apply an <A href="/bindings/python/types#action"><code>Action</code></A> to a built <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media usage).</td></tr>
-              <tr><td><code>dev.press(input)</code></td><td>Hold a usage down (<code>Action.PRESS</code>).</td></tr>
-              <tr><td><code>dev.soft_release(input)</code></td><td>Release, unless the user is physically holding it.</td></tr>
-              <tr><td><code>dev.force_release(input)</code></td><td>Release even against a physical hold.</td></tr>
+              <tr><td><code>dev.press(input)</code></td><td>Sends <code>Action.PRESS</code>.</td></tr>
+              <tr><td><code>dev.soft_release(input)</code></td><td>Sends <code>Action.SOFT_RELEASE</code>.</td></tr>
+              <tr><td><code>dev.force_release(input)</code></td><td>Sends <code>Action.FORCE_RELEASE</code>.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              Every verb takes a <code>Usage</code>, so a button, key, and media usage inject the
-              same way: <code>dev.press(Usage.button(Button.LEFT))</code>,{' '}
+              The same call for all three:{' '}
+              <code>dev.press(Usage.button(Button.LEFT))</code>,{' '}
               <code>dev.press(Usage.key(Key.W))</code>,{' '}
               <code>dev.press(Usage.media(MediaKey.MUTE))</code>.
             </p>
@@ -110,7 +107,7 @@ const Api: Component = () => {
       <div id="lock" data-search-target>
         <Card>
           <CardHeader title="Locks" subtitle="Weigh the user's own input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> is the percent of the physical value kept (<code>LOCK_SCALE_BLOCK</code> 0, <code>LOCK_SCALE_PASS</code> 100, <code>LOCK_SCALE_MAX</code> 255).</p>
+          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> takes one of the <A href="/bindings/python/types#scale-constants">scale constants</A>.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -122,6 +119,13 @@ const Api: Component = () => {
             </tbody>
           </table>
           <div class="callout callout--warning">
+            <p>
+              A scale auto-clears; it isn't permanent. The{' '}
+              <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you.{' '}
+              <code>Direction.WITH</code> and <code>Direction.AGAINST</code> need a live bearing, set
+              with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules for them are on{' '}
+              <A href="/bindings/python/types#direction"><code>Direction</code></A>.
+            </p>
           </div>
         </Card>
       </div>
@@ -140,9 +144,8 @@ const Api: Component = () => {
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
               <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
-              <tr><td><code>dev.set_emit_pace(pace, render, force_hz=None)</code></td><td>Pick the pace (<code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>), the render mode (<code>RenderMode.OFF</code> / <code>.STOCK</code> / <code>.DESPIKED</code> / <code>.UNSMOOTHED</code>), and the advertised rate (<code>force_hz</code>, None = the device's own). All three persist, so <code>render</code> is required rather than defaulted. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_emit_pace(pace, render, force_hz=None)</code></td><td>Pick the pace (<code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>), the render mode (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>), and the advertised rate (<code>force_hz</code>, None = the device's own). All three ride one frame, so <code>render</code> is required rather than defaulted. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
-            <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. See <A href="/library/lock">Lock</A>. <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against the bearing and need a live one; set one with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules are on <A href="/bindings/python/types#direction"><code>Direction</code></A>.</p>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesized default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
             </tbody>
           </table>
@@ -151,7 +154,7 @@ const Api: Component = () => {
 
       <div id="queries" data-search-target>
         <Card>
-          <CardHeader title="Queries" subtitle="Read box state, each blocks for one reply" />
+          <CardHeader title="Queries" subtitle="Read box state; each blocks for one reply" />
           <p>
             See <A href="/library/requests">Requests</A>. Each blocks for the box's reply and returns
             a <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>{' '}
@@ -170,7 +173,7 @@ const Api: Component = () => {
               <tr><td><code>dev.query_catch()</code></td><td><A href="/bindings/python/types#catchstate"><code>CatchState</code></A>: the live filter table (<code>.entries</code>, <code>.table_full</code>), drop counts, and the two chips' <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A>.</td></tr>
               <tr><td><code>dev.query_imperfect()</code></td><td><A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>dev.query_movement_riding()</code></td><td><code>int</code> ms, or <code>None</code> when off.</td></tr>
-              <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
+              <tr><td><code>dev.query_emit_pace()</code></td><td><A href="/bindings/python/types#emitpacestatus"><code>EmitPaceStatus</code></A>: pacing mode, render mode, rate in effect, and the rate the clone advertises.</td></tr>
               <tr><td><code>dev.query_bearing()</code></td><td><A href="/bindings/python/types#bearing"><code>Bearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>dev.firmware_info()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A>: both chips' versions, slots, and what is staged.</td></tr>
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
@@ -261,7 +264,7 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
               <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
-              <tr><td><code>clip.set_ride(on)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default).</td></tr>
+              <tr><td><code>clip.set_ride(on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default).</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>
@@ -278,7 +281,7 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
 
       <div id="module" data-search-target>
         <Card>
-          <CardHeader title="Module functions" subtitle="Top-level helpers on medius" />
+          <CardHeader title="Library functions" subtitle="Top-level helpers on medius" />
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>

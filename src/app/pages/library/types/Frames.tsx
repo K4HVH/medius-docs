@@ -15,7 +15,6 @@ const Frames: Component = () => {
             parsed frame.
           </p>
 
-          <div class="api-response-label">VARIANTS</div>
           <table class="api-params">
             <thead>
               <tr>
@@ -103,7 +102,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipSet</code></td>
                 <td><code>0x14</code></td>
-                <td>Set one clip setting: auto-lock, loop, or retain (PC to box).</td>
+                <td>Set one clip setting: auto-lock, loop, retain, or ride (PC to box).</td>
               </tr>
               <tr>
                 <td><code>ClipTrigger</code></td>
@@ -115,10 +114,19 @@ const Frames: Component = () => {
                 <td><code>0x16</code></td>
                 <td>An unsolicited byte-oriented catch event: HID, vendor, control, emit, or bus (box to PC).</td>
               </tr>
+              <tr>
+                <td><code>Update</code></td>
+                <td><code>0x17</code></td>
+                <td>Stage or activate firmware on either chip (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>UpdateResp</code></td>
+                <td><code>0x18</code></td>
+                <td>The answer to one update op (box to PC).</td>
+              </tr>
             </tbody>
           </table>
 
-          <div class="api-response-label">DECODEDFRAME</div>
           <table class="api-params">
             <thead>
               <tr>

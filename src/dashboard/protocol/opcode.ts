@@ -5,7 +5,7 @@ export const MAX_PAYLOAD = 512;
 export const PROTO_VER = 6; // OPTION(EMIT) carries a render byte of its own, and RESP(OPTIONS, EMIT) reports it
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
-// and everything it uses -- QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG -- has been
+// and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
 // unchanged since; only OPTION(EMIT) grew at 6. Refusing a proto-5 box outright would lock it out of
 // the one mechanism that brings it up to date. A box between this and PROTO_VER connects for updating
 // only: the rest of the dashboard speaks the current wire and is not offered.
@@ -128,7 +128,7 @@ export function clipStateFromU8(v: number): ClipState {
 // OPTION ids (§3.10): persistent box options set via OPTION, read via Q_OPTIONS. The value is id-specific.
 export const OPT_IMPERFECT = 0; // value [allow u8]
 export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
-export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
+export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]; mode 0 learned / 1 interval / 2 fixed
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
 export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
 

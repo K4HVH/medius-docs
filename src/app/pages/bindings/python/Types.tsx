@@ -170,11 +170,11 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Members</th><th>Values</th></tr></thead>
               <tbody>
-                <tr><td><code>A</code> … <code>Z</code></td><td><code>4</code> to <code>29</code></td></tr>
-                <tr><td><code>N1</code> … <code>N9</code>, <code>N0</code></td><td><code>30</code> to <code>39</code></td></tr>
+                <tr><td><code>A</code> .. <code>Z</code></td><td><code>4</code> to <code>29</code></td></tr>
+                <tr><td><code>N1</code> .. <code>N9</code>, <code>N0</code></td><td><code>30</code> to <code>39</code></td></tr>
                 <tr><td><code>ENTER</code> <code>ESCAPE</code> <code>BACKSPACE</code> <code>TAB</code> <code>SPACE</code></td><td><code>40</code> to <code>44</code></td></tr>
                 <tr><td><code>CAPS_LOCK</code></td><td><code>57</code></td></tr>
-                <tr><td><code>F1</code> … <code>F12</code></td><td><code>58</code> to <code>69</code></td></tr>
+                <tr><td><code>F1</code> .. <code>F12</code></td><td><code>58</code> to <code>69</code></td></tr>
                 <tr><td><code>INSERT</code> <code>HOME</code> <code>PAGE_UP</code> <code>DELETE</code> <code>END</code> <code>PAGE_DOWN</code></td><td><code>73</code> to <code>78</code></td></tr>
                 <tr><td><code>RIGHT</code> <code>LEFT</code> <code>DOWN</code> <code>UP</code> (arrows)</td><td><code>79</code> to <code>82</code></td></tr>
                 <tr><td><code>LEFT_CTRL</code> <code>LEFT_SHIFT</code> <code>LEFT_ALT</code> <code>LEFT_GUI</code></td><td><code>224</code> to <code>227</code></td></tr>
@@ -437,9 +437,8 @@ const Types: Component = () => {
               true for <code>0</code> to <code>3</code>, <code>cls.is_traffic()</code> for the rest.
             </p>
             <p>
-              The input classes are tapped before lock suppression and injection, so an input you have
-              locked still reports here. <code>EMIT</code> is the opposite end, what the clone put on
-              the wire afterwards.
+              Where each class is tapped, and why a locked input still reports, is on{' '}
+              <A href="/native/commands/catch#catch">Catch</A>.
             </p>
           </div>
 
@@ -511,8 +510,8 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               </tbody>
             </table>
             <p>
-              Matching is most-specific-first: an exact <code>(class, id)</code> is matched before a class blanket, that before <code>everything()</code>, and a named direction before{' '}
-              <code>BOTH</code>. The winning entry supplies the <code>capture</code>.
+              The winning entry supplies the <code>capture</code>; the ranking that picks it is on{' '}
+              <A href="/native/commands/catch#matching">The table</A>.
             </p>
             <p>
               <code>same_address</code> is true across two filters that differ only in{' '}
@@ -569,7 +568,8 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           <div id="clockdomain" data-search-target>
             <div class="api-response-label">ClockDomain</div>
             <p>
-              Which of the box's two chips stamped an event's <code>ts_us</code>. The two{' '}
+              Which of the box's two <A href="/native/architecture">chips</A> stamped an event's{' '}
+              <code>ts_us</code>. The two{' '}
               <A href="/native/hardware">ESP32-S3s</A> boot independently, so nothing relates their
               timers.
             </p>
@@ -1153,7 +1153,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>
               </tbody>
             </table>
-            <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/discovery#box-info">BoxInfo</A>.</p>
+            <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/types/structs#box-info">BoxInfo</A>.</p>
           </div>
         </Card>
       </div>

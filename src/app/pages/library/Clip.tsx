@@ -28,10 +28,10 @@ const Clip: Component = () => {
 
   2. drive playback through a ClipHandle
        handle = device.clip();
-       handle.append(&clip)     ──▶  copy the entries into the box's ring
-       handle.start()           ──▶  box plays one entry per native frame
-       handle.query_status()    ◀──  ring depth + progress + playback state
-       handle.stop()            ──▶  stop (retained: rewind; streaming: flush)
+       handle.append(&clip)     -->  copy the entries into the box's ring
+       handle.start()           -->  box plays one entry per native frame
+       handle.query_status()    <--  ring depth + progress + playback state
+       handle.stop()            -->  stop (retained: rewind; streaming: flush)
 
   or let the box play it on a physical key, no host round-trip:
        handle.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start))`}</pre>
@@ -78,9 +78,9 @@ const Clip: Component = () => {
               <tr><td><code>gap(frames)</code></td><td>N idle frames (0 is a no-op).</td></tr>
               <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
               <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
-              <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/enums#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
-              <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/enums#usage"><code>Usage</code></A> with an explicit <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/enums#usage"><code>Usage</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
+              <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
+              <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/structs#usage"><code>Usage</code></A> with an explicit <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/structs#usage"><code>Usage</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
             </tbody>
           </table>
           <p>
@@ -100,11 +100,11 @@ clip.press(Button::Left)                   // a click, held for 20 frames
 clip.press(Key::A)                         // then type 'a'
     .gap(3)
     .release(Key::A);`}</code></pre>
-          <div class="api-response-label">MOTION AND AN EDGE ON ONE FRAME</div>
           <p>
             <code>frame</code> fills more than one field, so a move and an edge share one entry and one
             wire report.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Action, Button, ClipBuilder};
 
 let mut clip = ClipBuilder::new();
@@ -129,7 +129,7 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
             playback state; <A href="/library/requests#clip-config"><code>query_config</code></A> reads
             the config back.
           </p>
-          <div class="api-response-label">LOAD &amp; SETTINGS</div>
+          <div class="api-response-label">LOAD AND SETTINGS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Does</th></tr>
@@ -143,7 +143,7 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
               <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TRIGGERS (a managed set)</div>
+          <div class="api-response-label">TRIGGERS</div>
           <table class="api-params">
             <thead>
               <tr><th>Method</th><th>Does</th></tr>
@@ -200,15 +200,14 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
               <tr><td>Best for</td><td>open-ended or generated input</td><td>a fixed macro you replay on a trigger</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">HOW THE RING MOVES</div>
           <pre class="diagram">{`streaming (drain-and-discard)
-    append ──▶ [ e4 e3 e2 ] ──▶ play ──▶ freed     (unbounded, top up forever)
+    append --> [ e4 e3 e2 ] --> play --> freed     (unbounded, top up forever)
                    box reclaims each entry once played; no replay
 
 retained (keep-and-replay, up to 64 KiB)
-    append ──▶ [ e0 e1 e2 e3 e4 ] ──▶ finalize ──▶ sealed
-               base │──▶ play cursor ──▶ end
-                    └──── start / loop rewinds to base ◀────┘`}</pre>
+    append --> [ e0 e1 e2 e3 e4 ] --> finalize --> sealed
+               base |--> play cursor --> end
+                    +---- start / loop rewinds to base <----+`}</pre>
           <div class="callout callout--info">
             <p>
               <code>set_retain</code> only takes effect before the first <code>append</code>, and an{' '}
@@ -246,7 +245,6 @@ handle.stop()?;`}</code></pre>
             <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> on the box when a physical{' '}
             <A href="/library/types/enums#edge"><code>Edge</code></A> fires, with no host round-trip.
           </p>
-          <div class="api-response-label">ANATOMY</div>
           <table class="api-params">
             <thead>
               <tr><th>Part</th><th>Is</th><th>Example</th></tr>
@@ -262,16 +260,15 @@ handle.stop()?;`}</code></pre>
             <A href="/library/lock">lock</A>. A physical edge runs the one most-specific match, so a binding
             on <code>Key::F1</code> resolves before an any-key one.
           </p>
-          <div class="api-response-label">RECIPES</div>
           <table class="api-params">
             <thead>
               <tr><th>To get</th><th>Bind</th></tr>
             </thead>
             <tbody>
-              <tr><td>Hold to play</td><td><code>F1 Press → Start</code> and <code>F1 Release → Stop</code></td></tr>
-              <tr><td>Toggle play/stop on one key</td><td><code>Side1 Press → Toggle</code></td></tr>
-              <tr><td>Separate play and stop keys</td><td><code>F1 Press → Start</code> and <code>F2 Press → Stop</code></td></tr>
-              <tr><td>Pause, then resume</td><td><code>F3 Press → Pause</code> and <code>F4 Press → Resume</code></td></tr>
+              <tr><td>Hold to play</td><td><code>F1 Press -&gt; Start</code> and <code>F1 Release -&gt; Stop</code></td></tr>
+              <tr><td>Toggle play/stop on one key</td><td><code>Side1 Press -&gt; Toggle</code></td></tr>
+              <tr><td>Separate play and stop keys</td><td><code>F1 Press -&gt; Start</code> and <code>F2 Press -&gt; Stop</code></td></tr>
+              <tr><td>Pause, then resume</td><td><code>F3 Press -&gt; Pause</code> and <code>F4 Press -&gt; Resume</code></td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">

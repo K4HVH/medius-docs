@@ -18,7 +18,7 @@ const find = (term: string): Entry[] => dash.filter((e) => haystack(e).includes(
 describe('dashboard search index', () => {
   it('points every card at the tab it actually lives on', () => {
     const onControl = ['Injection', 'Input locks', 'Input catch', 'Clip playback', 'Status light', 'Safety clear'];
-    const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Aim bearing', 'Emit-rate pacing', 'Capabilities', 'Performance', 'Device log'];
+    const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Bearing', 'Emit rate', 'Render', 'Capabilities', 'Performance', 'Device log'];
     for (const label of onControl) {
       const e = dash.find((x) => x.label === label);
       expect(e, label).toBeDefined();

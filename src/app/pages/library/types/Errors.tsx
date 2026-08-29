@@ -51,7 +51,7 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td><code>BadProtoVer &#123; got &#125;</code></td>
+                <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
                   The box replied, but its <code>proto_ver</code> wasn't <code>6</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
@@ -133,7 +133,7 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td><code>Update &#123; op, status, arg &#125;</code></td>
+                <td><code>Update {'{'} op, status, arg {'}'}</code></td>
                 <td>
                   The box refused a{' '}
                   <A href="/library/update">firmware update</A> op. Carries the op, the{' '}
@@ -142,9 +142,6 @@ const Errors: Component = () => {
               </tr>
             </tbody>
           </table>
-
-
-
         </Card>
       </div>
     </>
