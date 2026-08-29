@@ -2,7 +2,6 @@ import { Match, Show, Switch, createSignal } from 'solid-js';
 import { A, useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
-import { PROTO_VER } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { createCommand } from './action';
@@ -53,10 +52,7 @@ const Control = () => {
               </Match>
 
               <Match when={dash.updateOnly()}>
-                <p>
-                  These controls need protocol v{PROTO_VER}. This box speaks
-                  <Show when={dash.version()}>{(v) => <> protocol v{v().protoVer}</>}</Show>.
-                </p>
+                <p>This box speaks an older protocol. Update it to use these controls.</p>
                 <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
                   Update
                 </Button>
