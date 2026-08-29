@@ -170,18 +170,15 @@ const Option: Component = () => {
 
       <div id="emit" data-search-target>
         <Card>
-          <CardHeader title="EMIT" subtitle="Pick what paces injected motion, how it is rendered, and what rate the clone runs at" />
+          <CardHeader title="EMIT" subtitle="Pace, render and wire-rate injected motion" />
           <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]</pre>
           <p>
-            Three settings ride one command, each in its own field: <code>mode</code> (with{' '}
-            <code>rate_hz</code>) is the pace, <code>render</code> is what injected motion is emitted{' '}
-            <em>as</em>, and <code>force_hz</code> is the rate the clone runs at. They are independent —
-            setting one never re-encodes another — but every <code>OPTION(EMIT)</code> writes all three,
-            so send the values you want to keep alongside the one you are changing.
+            Every <code>OPTION(EMIT)</code> writes all four fields, so send the values you want to keep
+            along with the one you are changing.
           </p>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
-            <thead><tr><th><code>mode</code></th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
+            <thead><tr><th>Value</th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
@@ -190,22 +187,19 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              Fixed snaps to <code>1000/n</code> Hz on the 1 ms frame clock and caps at 1 kHz, so 1000,
-              500, 333, 250… are exact (<code>0</code> means 1000).
+              Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333, 250… are exact
+              (<code>0</code> means 1000).
             </p>
-            <p>
-              The pace raises the ceiling only: the box emits a frame solely when injection is pending,
-              so idle stays idle.
-            </p>
+            <p>The pace is a ceiling. The box emits only while injection is pending, so idle stays idle.</p>
           </div>
           <div id="render" data-search-target class="api-response-label">RENDER</div>
           <table class="api-params">
-            <thead><tr><th><code>render</code></th><th>Name</th><th>Injected motion reaches the wire as</th></tr></thead>
+            <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Off</td><td>An even fill at whatever the pace allows</td></tr>
-              <tr><td><code>1</code></td><td>Stock</td><td>The mouse's own texture, the model's triangular smoother bit for bit</td></tr>
-              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same, with the smoother's onset ramped rather than stepped</td></tr>
-              <tr><td><code>3</code></td><td>Unsmoothed</td><td>The same, no smoother; the model renders the raw injection</td></tr>
+              <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
+              <tr><td><code>1</code></td><td>Stock</td><td>The model's triangular smoother, bit for bit. Its first report sits above the rest.</td></tr>
+              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
+              <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model renders the raw injection.</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
@@ -223,25 +217,18 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              The pace caps the rendered rate, which is the one place the two fields meet: rendered on
-              the learnt pace self-paces every millisecond, while rendered under a fixed 250 Hz never
-              exceeds 250 Hz and the model's debt carries the motion the cap coalesces.
+              The pace caps the rendered rate. On the learnt pace the renderer self-paces every
+              millisecond; a fixed 250 Hz holds it to 250, and the model's debt carries what the cap
+              coalesces.
             </p>
             <p>
-              The three rendered values differ only in the path smoother the model is fed. It expects a
-              smoothed path and a stepped onset is not one, so stock's first report sits above the rest.
-            </p>
-            <p>
-              The model's profile is built from the live mouse and never persisted, so every boot starts
-              without one. It arms off a window the mouse actually moved in, and until then injection runs
-              on the paced fill rather than waiting on a profile a still mouse would never produce. Once
-              armed it stays armed until the device changes, so injecting while the hand is still — the
-              case rendering exists for — keeps rendering.
+              The profile is built from the live mouse and never persisted. Every boot starts without
+              one, it arms off a window the mouse moved in, and it stays armed until the device changes.
             </p>
           </div>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
-            <thead><tr><th><code>force_hz</code></th><th>What the box does</th></tr></thead>
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
               <tr><td>target Hz</td><td>Writes the <code>bInterval</code> nearest that rate onto every HID interrupt-IN endpoint of the served descriptor, and polls the device at that same interval</td></tr>
@@ -267,7 +254,7 @@ const Option: Component = () => {
           </p>
           <p>
             Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (all three
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (the stored
             fields, the rate in effect, and what the clone advertises) · Library{' '}
             <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
           </p>
