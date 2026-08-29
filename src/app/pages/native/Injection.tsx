@@ -166,7 +166,7 @@ const Injection: Component = () => {
             itself, and{' '}
             <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> picks how: by default it
             paces to the mouse's learnt report rate, and the{' '}
-            <A href="/native/commands/option#render">render</A> mode shapes it through a live
+            <A href="/native/commands/option#render">render</A> mode — on by default — shapes it through a live
             per-device model instead. The other rows ride the real mouse's tick.
           </p>
         </Card>

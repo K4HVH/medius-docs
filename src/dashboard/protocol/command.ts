@@ -126,8 +126,8 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
 }
 
-// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode low bits = pace (0
-// learned, 1 follows the cloned poll rate, 2 fixed rate_hz), the render mode ORs onto the top of the byte. forceHz is
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]. mode is the pace
+// (0 learned, 1 follows the cloned poll rate, 2 fixed rate_hz); render is its own trailing byte. forceHz is
 // the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
 // IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
 export function emitPayload(mode: EmitMode, render = RenderMode.Despiked, rateHz = 0, forceHz = 0): Uint8Array {

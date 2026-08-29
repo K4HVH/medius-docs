@@ -106,8 +106,9 @@ device.set_movement_riding(None)?;                             // back to gaples
           <p>
             <code>pace</code> is the rate ceiling; <code>render</code> is the render mode: <code>Off</code>
             is the paced fill, the others layer a per-device texture model over it. That model's profile is
-            built from the live mouse and never persisted, so every boot starts without one and injection is
-            held until one arms. The box boots at <code>Despiked</code>, so passing <code>Off</code>{' '}
+            built from the live mouse and arms only once it has moved, so a box emits the paced fill until
+            then and the rendered stream after. The box boots at <code>Despiked</code>, so passing{' '}
+            <code>Off</code>{' '}
             turns the renderer off rather than leaving it alone. A fixed rate snaps to{' '}
             <code>1000/n</code> Hz on the 1 ms frame clock, capped at 1 kHz, and raises the ceiling
             only, so idle stays idle.

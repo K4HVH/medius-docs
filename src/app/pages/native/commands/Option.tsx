@@ -218,7 +218,7 @@ const Option: Component = () => {
               <tr><td>Report cadence</td><td>Even, up to the ceiling</td><td>The device's own active/idle pattern</td></tr>
               <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
               <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
-              <tr><td>Before a profile arms</td><td>Emits at once</td><td>Holds injection until it has one</td></tr>
+              <tr><td>Before a profile arms</td><td>Emits at once</td><td>Emits the paced fill, then switches over</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -232,8 +232,11 @@ const Option: Component = () => {
               smoothed path and a stepped onset is not one, so stock's first report sits above the rest.
             </p>
             <p>
-              The model's per-device profile is built from the live mouse and never persisted, so every
-              boot starts without one and injection is held until one arms.
+              The model's profile is built from the live mouse and never persisted, so every boot starts
+              without one. It arms off a window the mouse actually moved in, and until then injection runs
+              on the paced fill rather than waiting on a profile a still mouse would never produce. Once
+              armed it stays armed until the device changes, so injecting while the hand is still — the
+              case rendering exists for — keeps rendering.
             </p>
           </div>
           <div class="api-response-label">FORCE_HZ</div>
