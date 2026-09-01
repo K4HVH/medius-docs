@@ -155,10 +155,8 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own d
           </p>
           <div class="callout callout--warning">
             <p>
-              <code>full</code> adds the smoother's group delay and one frame to physical movement:
-              about 3 ms on <code>Despiked</code>, 5 on <code>Stock</code>, 1 on{' '}
-              <code>Unsmoothed</code>. The model emits at most 127 counts per axis per report and
-              carries the rest as debt.
+              Rendering adds a small amount of latency, which reaches the mouse's own motion when{' '}
+              <code>full</code> is on.
             </p>
             <p>
               The renderer stays out of the path until a profile arms, and while <code>mode</code> is{' '}
