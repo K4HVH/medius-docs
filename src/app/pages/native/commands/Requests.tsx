@@ -146,7 +146,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 6</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 7</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -733,8 +733,8 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EMIT VALUE</div>
           <p>
-            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace, render mode
-            and wire rate (id 2).
+            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace and wire rate
+            (id 2).
           </p>
           <table class="api-params">
             <thead>
@@ -747,7 +747,6 @@ const Requests: Component = () => {
               <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
               <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
               <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
-              <tr><td>12</td><td><code>render</code></td><td><A href="/native/commands/option#render">the render mode</A> as stored: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
             </tbody>
           </table>
           <p>
@@ -758,6 +757,30 @@ const Requests: Component = () => {
           <p>
             Library binding:{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
+          </p>
+          <div class="api-response-label">RENDER VALUE</div>
+          <p>
+            The current <A href="/native/commands/option#render"><code>RENDER</code></A> setting (id 5),
+            and whether the box has learned a profile to draw with.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>mode</code></td><td>the texture: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
+              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when the device's own motion is drawn by the model rather than relayed</td></tr>
+              <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Nothing is drawn while <code>ready</code> reads <code>0</code>: motion is relayed and
+            injection takes the paced fill whatever <code>mode</code> says. The profile lives in RAM, so
+            every box reads <code>0</code> after a power cut and arms once the mouse moves.
+          </p>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-render"><code>query_render</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>

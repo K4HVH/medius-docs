@@ -161,10 +161,11 @@ const Injection: Component = () => {
             silence until it changes.
           </p>
           <p>
-            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times that middle row:
-            it paces to the mouse's learnt report rate, and its{' '}
-            <A href="/native/commands/option#render">render</A> mode, on by default, shapes the motion
-            through a live per-device model.
+            <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times that middle row,
+            pacing to the mouse's learnt report rate.{' '}
+            <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,
+            shapes the motion through a live per-device model, and can draw the mouse's own motion the
+            same way.
           </p>
         </Card>
       </div>

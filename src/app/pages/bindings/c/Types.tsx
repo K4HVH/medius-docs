@@ -410,21 +410,21 @@ const Types: Component = () => {
 
       <div id="render-mode" data-search-target>
         <Card>
-          <CardHeader title="MediusRenderMode" subtitle="How injected motion is emitted" />
+          <CardHeader title="MediusRenderMode" subtitle="The texture the box draws motion with" />
           <pre class="api-signature">{`enum MediusRenderMode : uint8_t`}</pre>
           <p>
-            Composed onto the <A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A>{' '}
-            beside it, and returned in{' '}
-            <A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>. See{' '}
+            Passed to <A href="/bindings/c/api#led-admin-options"><code>medius_device_set_render</code></A>{' '}
+            and returned in{' '}
+            <A href="/bindings/c/types#render-status"><code>MediusRenderStatus</code></A>. See{' '}
             <A href="/library/options">Options</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_RENDER_MODE_OFF</code></td><td><code>0</code></td><td>Even fill at the paced rate, no model.</td></tr>
-              <tr><td><code>MEDIUS_RENDER_MODE_STOCK</code></td><td><code>1</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
-              <tr><td><code>MEDIUS_RENDER_MODE_DESPIKED</code></td><td><code>2</code></td><td>Render with the smoother's onset ramped rather than stepped. The box boots at this one.</td></tr>
-              <tr><td><code>MEDIUS_RENDER_MODE_UNSMOOTHED</code></td><td><code>3</code></td><td>Render with no smoother; the model draws the raw injection.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_STOCK</code></td><td><code>1</code></td><td>Draw with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_DESPIKED</code></td><td><code>2</code></td><td>Draw with the smoother's onset ramped rather than stepped. The box boots at this one.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_UNSMOOTHED</code></td><td><code>3</code></td><td>Draw with no smoother; the model receives the raw injection.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1209,12 +1209,26 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/bindings/c/types#emit-mode"><code>MediusEmitMode</code></A></td><td>The pace.</td></tr>
-              <tr><td><code>render</code></td><td><A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A></td><td>The render mode stored on the box.</td></tr>
               <tr><td><code>fixed_hz</code></td><td><code>uint16_t</code></td><td>The rate requested for <code>FIXED</code> (0 otherwise).</td></tr>
               <tr><td><code>resolved_hz</code></td><td><code>uint16_t</code></td><td>The ceiling in effect; 0 = learnt/adaptive, or no device yet in <code>INTERVAL</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>uint16_t</code></td><td>The forced wire rate requested; 0 leaves the device's own.</td></tr>
               <tr><td><code>advertised_hz</code></td><td><code>uint16_t</code></td><td>What the clone's input endpoints advertise now, forced or native; 0 = no clone.</td></tr>
               <tr><td><code>force_active</code></td><td><code>uint8_t</code></td><td>1 when a forced interval is written into the descriptor being served.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="render-status" data-search-target>
+        <Card>
+          <CardHeader title="MediusRenderStatus" subtitle="The texture motion is drawn with" />
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_render</code></A>. See <A href="/library/options">Options</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A></td><td>The texture stored on the box.</td></tr>
+              <tr><td><code>full</code></td><td><code>uint8_t</code></td><td>1 when the device's own motion is drawn by the model rather than relayed.</td></tr>
+              <tr><td><code>ready</code></td><td><code>uint8_t</code></td><td>1 once a profile has armed for the attached device. Nothing is drawn until it has.</td></tr>
             </tbody>
           </table>
         </Card>

@@ -19,6 +19,7 @@ const Options: Component = () => {
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
+            <tr><td>motion texture</td><td><A href="/library/options#set-render"><code>set_render</code></A></td><td><A href="/library/options#query-render"><code>query_render</code></A></td></tr>
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
             <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
           </tbody>
@@ -101,14 +102,8 @@ device.set_movement_riding(None)?;                             // back to gaples
       <div id="set-emit-pace" data-search-target>
         <Card>
           <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
-          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, render: RenderMode, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <p>
-            The renderer's profile is built from the live mouse and arms only once it has moved, so a
-            box emits the paced fill until then and the rendered stream after. The box boots at{' '}
-            <code>Despiked</code>, so <code>Off</code> turns the renderer off rather than leaving it
-            alone.
-          </p>
           <p>
             <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
             the clone serves and polls the device at it, so a mouse declaring 125 Hz can run at 1 kHz.
@@ -128,17 +123,57 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The rate ceiling for injected motion.</td></tr>
-              <tr><td><code>render</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Whether and how the injection is rendered; the box boots at <code>Despiked</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, EmitPace, RenderMode};
+          <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 
 let device = Device::find()?;
-device.set_emit_pace(EmitPace::Fixed(1000), RenderMode::Off, None)?;    // a fixed 1 kHz ceiling, unrendered
-device.set_emit_pace(EmitPace::Learned, RenderMode::Stock, None)?;      // the stock smoother, self-paced
-device.set_emit_pace(EmitPace::Learned, RenderMode::Despiked, None)?;   // back to the box's own defaults`}</code></pre>
+device.set_emit_pace(EmitPace::Fixed(1000), None)?;   // a fixed 1 kHz ceiling
+device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own default`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="set-render" data-search-target>
+        <Card>
+          <CardHeader title="set_render" subtitle="Pick the texture the box draws motion with" />
+          <pre class="api-signature">fn set_render(&self, mode: RenderMode, full: bool) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            The profile is built from the live mouse and arms only once it has moved, so a box relays
+            motion and emits the paced fill until then, and draws after. The box boots at{' '}
+            <code>Despiked</code> with <code>full</code> off, so <code>Off</code> turns the renderer off
+            rather than leaving it alone.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              <code>full</code> puts the smoother's group delay and one frame between the mouse and the
+              wire, roughly 3 ms. That is a feel change on physical movement, which is why it is off by
+              default.
+            </p>
+            <p>
+              The model emits at most 127 counts per axis per report and carries the rest as debt, so a
+              flick past that rate finishes a few milliseconds later than the mouse made it. Total
+              displacement is unchanged.
+            </p>
+          </div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is drawn with; the box boots at <code>Despiked</code>.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the device's own motion is drawn by the model rather than relayed.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Device, RenderMode};
+
+let device = Device::find()?;
+device.set_render(RenderMode::Despiked, false)?;   // draw injection only, the box's own default
+device.set_render(RenderMode::Despiked, true)?;    // draw the mouse's own motion too
+device.set_render(RenderMode::Off, false)?;        // renderer off, the paced fill`}</code></pre>
         </Card>
       </div>
 
@@ -285,8 +320,7 @@ match device.query_movement_riding()? {
           <p>
             Returns an{' '}
             <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
-            carrying the pace, the <A href="/library/types/enums#render-mode"><code>render</code></A>{' '}
-            mode and the rates. <code>advertised_hz</code> is what the clone advertises now: the
+            carrying the pace and the rates. <code>advertised_hz</code> is what the clone advertises now: the
             device's own rate while nothing is forced, the forced rate once something is, with no
             record of what the device declared before a force was applied.
           </p>
@@ -298,8 +332,31 @@ let status = device.query_emit_pace()?;
 if let EmitPace::Fixed(hz) = status.mode {
     println!("fixed {hz} Hz, emitting at {} Hz", status.resolved_hz);
 }
-println!("render {:?}", status.render);
 println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="query-render" data-search-target>
+        <Card>
+          <CardHeader title="query_render" subtitle="Read the texture, its scope, and whether a profile has armed" />
+          <pre class="api-signature">fn query_render(&self) -&gt; Result&lt;RenderStatus&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
+            <code>ready</code> is what separates a box set to a mode from a box drawing with it: while
+            it is false, motion is relayed and injection takes the paced fill whatever{' '}
+            <code>mode</code> says. The profile lives in RAM, so every box reads false after a power cut
+            and arms once the mouse moves.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let status = device.query_render()?;
+println!("{:?}, own motion drawn: {}", status.mode, status.full);
+if !status.ready {
+    println!("move the mouse: nothing is drawn until a profile arms");
+}`}</code></pre>
         </Card>
       </div>
 

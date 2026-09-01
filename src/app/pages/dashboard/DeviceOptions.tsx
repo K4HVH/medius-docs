@@ -51,9 +51,9 @@ const RENDER_MODES: Record<string, RenderMode> = {
 
 const RENDER_BLURB: Record<string, string> = {
   off: 'Even fill at the paced rate.',
-  stock: "Renders the mouse's own texture.",
-  despiked: 'Renders it with a softer onset.',
-  unsmoothed: 'Renders raw motion, no smoothing.',
+  stock: "Draws the mouse's own texture.",
+  despiked: 'Draws it with a softer onset.',
+  unsmoothed: 'Draws raw motion, no smoothing.',
 };
 
 const RENDER_NAMES: Record<number, string> = {
@@ -85,8 +85,7 @@ const emitLabel = (e: EmitPace): string => {
     default:
       base = 'Unknown';
   }
-  const name = e.render != null ? RENDER_LABEL[e.render] : '';
-  return name ? `${base} · ${name}` : base;
+  return base;
 };
 
 const DeviceOptions = () => {
@@ -95,6 +94,7 @@ const DeviceOptions = () => {
   const ride = dash.poll('moveRide');
   const bearing = dash.poll('bearing');
   const emit = dash.poll('emit');
+  const render = dash.poll('render');
   const version = dash.poll('version');
   const cmd = createCommand();
 
@@ -106,6 +106,7 @@ const DeviceOptions = () => {
   const [bearMode, setBearMode] = createSignal<string | null>(null);
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
   const [renderEdit, setRenderEdit] = createSignal<string | null>(null);
+  const [fullEdit, setFullEdit] = createSignal<boolean | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
   const [forceEdit, setForceEdit] = createSignal<number | null>(null);
   const [forceOnEdit, setForceOnEdit] = createSignal<boolean | null>(null);
@@ -116,12 +117,14 @@ const DeviceOptions = () => {
   const rideDirty = () => rideEdit() !== null;
   const bearDirty = () => bearEdit() !== null || bearMode() !== null;
   const emitDirty = () =>
-    modeEdit() !== null || renderEdit() !== null || hzEdit() !== null || forceEdit() !== null || forceOnEdit() !== null;
+    modeEdit() !== null || hzEdit() !== null || forceEdit() !== null || forceOnEdit() !== null;
   const revertRide = () => setRideEdit(null);
   const revertBear = () => { setBearEdit(null); setBearMode(null); };
   const revertEmit = () => {
-    setModeEdit(null); setRenderEdit(null); setHzEdit(null); setForceEdit(null); setForceOnEdit(null);
+    setModeEdit(null); setHzEdit(null); setForceEdit(null); setForceOnEdit(null);
   };
+  const renderDirty = () => renderEdit() !== null || fullEdit() !== null;
+  const revertRender = () => { setRenderEdit(null); setFullEdit(null); };
 
   const name = () => nameEdit() ?? version()?.name ?? '';
   const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
@@ -141,7 +144,9 @@ const DeviceOptions = () => {
       dash.refreshPoll('bearing');
     });
   const mode = () => modeEdit() ?? MODE_NAMES[emit()?.mode ?? EmitMode.Learned] ?? 'learned';
-  const renderKey = () => renderEdit() ?? RENDER_NAMES[emit()?.render ?? RenderMode.Despiked] ?? 'despiked';
+  const renderKey = () =>
+    renderEdit() ?? RENDER_NAMES[render()?.mode ?? RenderMode.Despiked] ?? 'despiked';
+  const fullOn = () => fullEdit() ?? (render()?.full ?? false);
   // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
   // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
@@ -186,12 +191,20 @@ const DeviceOptions = () => {
   const applyEmit = () =>
     cmd.run(async () => {
       const m = EMIT_MODES[mode()];
-      await dash.link()!.setEmitPace(m, RENDER_MODES[renderKey()], m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
+      await dash.link()!.setEmitPace(m, m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
       setModeEdit(null);
-      setRenderEdit(null);
       setHzEdit(null);
       setForceEdit(null);
       setForceOnEdit(null);
+      dash.refreshPoll('emit');
+    });
+
+  const applyRender = () =>
+    cmd.run(async () => {
+      await dash.link()!.setRender(RENDER_MODES[renderKey()], fullOn());
+      setRenderEdit(null);
+      setFullEdit(null);
+      dash.refreshPoll('render');
       dash.refreshPoll('emit');
     });
 
@@ -360,11 +373,79 @@ const DeviceOptions = () => {
             </Section>
           </div>
 
+          <div id="texture" data-search-target>
+            <Section title="Texture">
+            <p>
+              Chooses what the mouse's motion looks like on the wire, and whether your own movement is
+              drawn the same way as anything the box adds.
+            </p>
+            <RadioGroup
+              name="render-mode"
+              value={renderKey()}
+              onChange={setRenderEdit}
+              options={[
+                { value: 'off', label: 'Off' },
+                { value: 'stock', label: 'Stock' },
+                { value: 'despiked', label: 'De-spiked' },
+                { value: 'unsmoothed', label: 'Unsmoothed' },
+              ]}
+            />
+            <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
+            <div id="render-full" data-search-target>
+              <div class="api-response-label" style={section}>Your own movement</div>
+              <RadioGroup
+                name="render-full"
+                value={fullOn() ? 'drawn' : 'relayed'}
+                onChange={(v) => setFullEdit(v === 'drawn')}
+                options={[
+                  { value: 'relayed', label: 'Passed through' },
+                  { value: 'drawn', label: 'Drawn too' },
+                ]}
+              />
+              <p style={muted}>
+                {fullOn()
+                  ? 'Adds about 3 ms of delay to the mouse.'
+                  : 'Reaches the game exactly as the mouse sent it.'}
+              </p>
+            </div>
+            <div style={controls}>
+              <Button variant="primary" disabled={cmd.busy()} onClick={applyRender}>
+                Apply
+              </Button>
+              <Show when={renderDirty()}>
+                <Button variant="subtle" onClick={revertRender}>
+                  Revert
+                </Button>
+              </Show>
+            </div>
+            <Show when={render()} fallback={<p style={status}>Reading status...</p>}>
+              {(r) => (
+                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Chip variant={r().mode === RenderMode.Off || r().mode === null ? 'neutral' : 'success'}>
+                    {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
+                  </Chip>
+                  <Show when={r().full}>
+                    <Chip variant="success">Your movement drawn too</Chip>
+                  </Show>
+                  <Show when={r().mode !== RenderMode.Off && !r().ready}>
+                    <Chip variant="warning">Move the mouse to start</Chip>
+                  </Show>
+                  <Show when={renderDirty()}>
+                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                      not applied yet
+                    </span>
+                  </Show>
+                </div>
+              )}
+            </Show>
+            </Section>
+          </div>
+
           <div id="emit-rate" data-search-target>
             <Section title="Emit rate">
             <p>
-              Paces injected motion as a ceiling, chooses how it is rendered, and sets the rate the clone
-              itself runs at. Apply writes all three together.
+              Paces injected motion as a ceiling and sets the rate the clone itself runs at. Apply
+              writes both together.
             </p>
             <RadioGroup
               name="emit-mode"
@@ -377,21 +458,6 @@ const DeviceOptions = () => {
               ]}
             />
             <p style={muted}>{MODE_BLURB[mode()]}</p>
-            <div id="render" data-search-target>
-              <div class="api-response-label" style={section}>Render</div>
-              <RadioGroup
-                name="emit-render"
-                value={renderKey()}
-                onChange={setRenderEdit}
-                options={[
-                  { value: 'off', label: 'Off' },
-                  { value: 'stock', label: 'Stock' },
-                  { value: 'despiked', label: 'De-spiked' },
-                  { value: 'unsmoothed', label: 'Unsmoothed' },
-                ]}
-              />
-              <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
-            </div>
             <div id="wire-rate" data-search-target>
               <div class="api-response-label" style={section}>Wire rate</div>
               <RadioGroup

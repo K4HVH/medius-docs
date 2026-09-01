@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
-import { BearingMode, EmitMode } from '../../src/dashboard/protocol';
+import { BearingMode, EmitMode, RenderMode } from '../../src/dashboard/protocol';
 
 const settle = () => new Promise((r) => setTimeout(r, 20));
 
 const mock = vi.hoisted(() => ({
   bearing: { windowMs: 20, mode: 0 } as { windowMs: number; mode: number },
   emit: { mode: 0, fixedHz: 0, resolvedHz: 0 } as { mode: number; fixedHz: number; resolvedHz: number },
+  render: { mode: 2, full: false, ready: false } as { mode: number; full: boolean; ready: boolean },
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -23,9 +24,13 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
         setBearing: async () => {},
         setMovementRiding: async () => {},
         setEmitPace: async () => {},
+        setRender: async () => {},
       }),
       poll: (key: string) => () =>
-        key === 'bearing' ? mock.bearing : key === 'emit' ? mock.emit : (values[key] ?? null),
+        key === 'bearing' ? mock.bearing
+          : key === 'emit' ? mock.emit
+          : key === 'render' ? mock.render
+          : (values[key] ?? null),
       refreshPoll: () => {},
     }),
   };
@@ -40,6 +45,7 @@ afterEach(() => {
   cleanup();
   mock.bearing = { windowMs: 20, mode: 0 };
   mock.emit = { mode: 0, fixedHz: 0, resolvedHz: 0 };
+  mock.render = { mode: 2, full: false, ready: false };
 });
 
 describe('DeviceOptions', () => {
@@ -78,6 +84,37 @@ describe('DeviceOptions', () => {
     fireEvent.click(button(container, 'Revert')!);
     await settle();
     expect(button(container, 'Revert')).toBeUndefined();
+  });
+
+  it('describes only the selected texture, and only the scope in force', async () => {
+    mock.render = { mode: RenderMode.Off, full: true, ready: true };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('Even fill at the paced rate.');
+    expect(queryByText('Draws it with a softer onset.')).toBeNull();
+    await findByText('Adds about 3 ms of delay to the mouse.');
+    expect(queryByText('Reaches the game exactly as the mouse sent it.')).toBeNull();
+  });
+
+  // Nothing is drawn until the box has learned a profile, so a box set to a mode and a box drawing
+  // with it are different states and the card has to say which one it is looking at.
+  it('says the mouse has to move while no profile has armed', async () => {
+    mock.render = { mode: RenderMode.Despiked, full: false, ready: false };
+    const unarmed = render(() => <DeviceOptions />);
+    await unarmed.findByText('Move the mouse to start');
+    cleanup();
+
+    mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
+    const armed = render(() => <DeviceOptions />);
+    await armed.findByText('Draws it with a softer onset.');
+    expect(armed.queryByText('Move the mouse to start')).toBeNull();
+  });
+
+  // Off means the renderer is not in the path at all, so there is nothing waiting on a profile.
+  it('does not ask for a profile while the renderer is off', async () => {
+    mock.render = { mode: RenderMode.Off, full: false, ready: false };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('Even fill at the paced rate.');
+    expect(queryByText('Move the mouse to start')).toBeNull();
   });
 
   // window = 0 makes with/against inert without clearing them, so the readback still reports scales

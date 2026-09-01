@@ -15,6 +15,7 @@ import {
   type DecodedFrame,
   type DeviceInfo,
   type EmitPace,
+  type Render,
   type Health,
   type ImperfectStatus,
   type Locks,
@@ -34,6 +35,7 @@ import {
   Q_CLIP,
   OPT_BEARING,
   OPT_EMIT,
+  OPT_RENDER,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -60,6 +62,7 @@ import {
   clipSetPayload,
   clipTriggerPayload,
   emitPayload,
+  renderPayload,
   encode,
   encodeClipEntry,
   filterEverything,
@@ -570,8 +573,24 @@ export class SerialLink {
   // the clone advertises and the box polls the device at, 0 for the device's own; it needs IMPERFECT on
   // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
   // every call. Persisted in NVS. Read back with `queryEmitPace`.
-  setEmitPace(mode: EmitMode, render: RenderMode, rateHz = 0, forceHz = 0): Promise<void> {
-    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, render, rateHz, forceHz)));
+  setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
+  }
+
+  // The texture motion is drawn with (§3.14). `full` puts the device's own motion through the same
+  // model rather than relaying it, which costs roughly 3 ms of latency on physical movement and is off
+  // by default. Both ride one command, so both are written every call. Persisted in NVS. Read back
+  // with `queryRender`.
+  setRender(mode: RenderMode, full: boolean): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), renderPayload(mode, full)));
+  }
+
+  // What motion is drawn with, and whether the box has learned a profile for the attached device
+  // (§4.14). Nothing is drawn until it has.
+  async queryRender(timeoutMs?: number): Promise<Render> {
+    const resp = parseResp(await this.queryOption(OPT_RENDER, timeoutMs));
+    if (resp?.kind !== 'render') throw new Error('unexpected reply to OPTIONS(RENDER) query');
+    return resp.render;
   }
 
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).

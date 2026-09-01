@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>6</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>7</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -812,11 +812,27 @@ for ev in input.by_ref().take(20) {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The pace; <code>Fixed</code> carries the requested rate.</td></tr>
-              <tr><td><code>render</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>How rendered injection is emitted; <code>Off</code> is the paced fill.</td></tr>
               <tr><td><code>resolved_hz</code></td><td><code>u16</code></td><td>The ceiling in effect (Hz); 0 = learnt/adaptive, or no device yet in <code>Interval</code>.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The forced wire rate requested; <code>None</code> leaves the device's own.</td></tr>
               <tr><td><code>advertised_hz</code></td><td><code>u16</code></td><td>What the clone's input endpoints advertise now, forced or native; 0 = no clone.</td></tr>
               <tr><td><code>force_active</code></td><td><code>bool</code></td><td>Whether a forced interval is written into the descriptor being served.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="render-status" data-search-target>
+        <Card>
+          <CardHeader title="RenderStatus" subtitle="The texture motion is drawn with, and whether a profile has armed" />
+          <p>
+            The render state from{' '}
+            <A href="/library/options#query-render"><code>query_render()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is drawn with; <code>Off</code> is the paced fill.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the device's own motion is drawn by the model rather than relayed.</td></tr>
+              <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is drawn until it has.</td></tr>
             </tbody>
           </table>
         </Card>

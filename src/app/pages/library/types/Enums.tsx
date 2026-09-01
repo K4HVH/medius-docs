@@ -343,23 +343,20 @@ let trace = device.catch_events([
       </div>
       <div id="render-mode" data-search-target>
         <Card>
-          <CardHeader title="RenderMode" subtitle="How injected motion is emitted" />
+          <CardHeader title="RenderMode" subtitle="The texture the box draws motion with" />
           <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
           <p>
-            How injected motion is emitted, passed to{' '}
-            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>; it
-            composes with the <A href="/library/types/enums#emit-pace"><code>EmitPace</code></A>{' '}
-            beside it. The box boots at <code>Despiked</code>, which is also this enum's{' '}
-            <code>Default</code>.
+            Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
+            <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>. The box boots
+            at <code>Despiked</code>, which is also this enum's <code>Default</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
-              <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
-              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
-              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model draws the raw injection.</td></tr>
+              <tr><td><code>Stock</code></td><td>Draw with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>Despiked</code></td><td>Draw with the smoother's onset ramped rather than stepped (the default).</td></tr>
+              <tr><td><code>Unsmoothed</code></td><td>Draw with no smoother; the model receives the raw injection.</td></tr>
             </tbody>
           </table>
         </Card>
