@@ -63,7 +63,7 @@ describe('SerialLink', () => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
         // [what=0][proto=6][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 7, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -71,7 +71,7 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 6,
+      protoVer: 7,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
@@ -89,14 +89,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 7, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(6);
+    expect(version.protoVer).toBe(7);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -202,7 +202,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 7, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 8, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -313,14 +313,17 @@ describe('SerialLink', () => {
           // RESP(OPTIONS, MOVE_RIDE): [9][1][timeout u16 LE] = 5 ms
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
         } else if (f.payload[1] === 2) {
-          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz, render off
+          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
           mock.push(
             encode(
               FrameType.Resp,
               f.seq,
-              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01, 0x00]),
+              new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01]),
             ),
           );
+        } else if (f.payload[1] === 5) {
+          // RESP(OPTIONS, RENDER): [9][5][mode=de-spiked][full][ready]
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 5, 2, 1, 1])));
         }
       }
     };
@@ -334,17 +337,22 @@ describe('SerialLink', () => {
     expect(await link.queryMovementRiding()).toBe(5);
     expect(await link.queryEmitPace()).toEqual({
       mode: EmitMode.Fixed,
-      render: RenderMode.Off,
       fixedHz: 500,
       resolvedHz: 500,
       forceHz: 125,
       advertisedHz: 100,
       forceActive: true,
     });
+    expect(await link.queryRender()).toEqual({
+      mode: RenderMode.Despiked,
+      full: true,
+      ready: true,
+    });
     expect(reqs).toEqual([
       [9, 0],
       [9, 1],
       [9, 2],
+      [9, 5],
     ]); // each option query carries its id byte, correlated on the Q_OPTIONS selector
     await link.close();
   });

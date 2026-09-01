@@ -15,6 +15,7 @@ import {
   emitModeFromU8,
   OPT_BEARING,
   OPT_EMIT,
+  OPT_RENDER,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -91,7 +92,6 @@ import {
 // reported that this build doesn't know.
 export interface EmitPace {
   mode: EmitMode | null;
-  render: RenderMode | null;
   fixedHz: number;
   resolvedHz: number;
   forceHz: number;
@@ -99,7 +99,16 @@ export interface EmitPace {
   forceActive: boolean;
 }
 
+// What the box draws motion with, whether the device's own motion goes through it, and whether a
+// profile has been learned for the attached device. Nothing is drawn until one has.
+export interface Render {
+  mode: RenderMode | null;
+  full: boolean;
+  ready: boolean;
+}
+
 export type Resp =
+  | { kind: 'render'; render: Render }
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
   | { kind: 'deviceInfo'; deviceInfo: DeviceInfo }
@@ -381,18 +390,28 @@ export function parseResp(payload: Uint8Array): Resp | null {
             bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
           };
         case OPT_EMIT:
-          // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8][render u8]
-          if (payload.length < 13) return null;
+          // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8]
+          if (payload.length < 12) return null;
           return {
             kind: 'emitPace',
             emit: {
               mode: emitModeFromU8(payload[2]),
-              render: renderModeFromU8(payload[12]),
               fixedHz: u16le(payload, 3),
               resolvedHz: u16le(payload, 5),
               forceHz: u16le(payload, 7),
               advertisedHz: u16le(payload, 9),
               forceActive: payload[11] !== 0,
+            },
+          };
+        case OPT_RENDER:
+          // [what=9][id=5][mode u8][full u8][ready u8]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'render',
+            render: {
+              mode: renderModeFromU8(payload[2]),
+              full: payload[3] !== 0,
+              ready: payload[4] !== 0,
             },
           };
         default:

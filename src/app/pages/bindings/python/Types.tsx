@@ -250,7 +250,7 @@ const Types: Component = () => {
 
       <div id="emit-pace" data-search-target>
         <Card>
-          <CardHeader title="Emit pace" subtitle="EmitMode · EmitPace · RenderMode" />
+          <CardHeader title="Emit pace" subtitle="EmitMode · EmitPace" />
           <p>
             Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_emit_pace()</code></A>.
             See <A href="/library/options">Options</A>.
@@ -274,6 +274,16 @@ const Types: Component = () => {
               <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
             </p>
           </div>
+        </Card>
+      </div>
+
+      <div id="render" data-search-target>
+        <Card>
+          <CardHeader title="Render" subtitle="RenderMode" />
+          <p>
+            Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_render()</code></A>.
+            See <A href="/library/options">Options</A>.
+          </p>
           <div id="rendermode" data-search-target>
             <div class="api-response-label">RenderMode</div>
             <table class="api-params">
@@ -1104,11 +1114,23 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the pace</td></tr>
-                <tr><td><code>render</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>how rendered injection is emitted; OFF is the paced fill</td></tr>
                 <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet</td></tr>
                 <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves the device's own</td></tr>
                 <tr><td><code>advertised_hz</code></td><td><code>int</code></td><td>what the clone's input endpoints advertise now, forced or native; 0 = no clone</td></tr>
                 <tr><td><code>force_active</code></td><td><code>bool</code></td><td>whether a forced interval is written into the descriptor being served</td></tr>
+              </tbody>
+            </table>
+            <p>See <A href="/library/options">Options</A>.</p>
+          </div>
+
+          <div id="renderstatus" data-search-target>
+            <div class="api-response-label">RenderStatus (query_render())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>the texture motion is drawn with; OFF is the paced fill</td></tr>
+                <tr><td><code>full</code></td><td><code>bool</code></td><td>whether the device's own motion is drawn by the model rather than relayed</td></tr>
+                <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the attached device; nothing is drawn until it has</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>

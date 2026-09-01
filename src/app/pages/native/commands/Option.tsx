@@ -34,8 +34,8 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
                 <td><code>2</code></td>
-                <td>Pace, render and wire-rate injected motion</td>
-                <td>learnt, de-spiked, no forced rate</td>
+                <td>Pace and wire-rate injected motion</td>
+                <td>learnt, no forced rate</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
@@ -48,6 +48,12 @@ const Option: Component = () => {
                 <td><code>4</code></td>
                 <td>What with and against are measured against</td>
                 <td>20 ms, per axis</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/option#render"><code>RENDER</code></A></td>
+                <td><code>5</code></td>
+                <td>The texture the box draws motion with</td>
+                <td>de-spiked, injected only</td>
               </tr>
             </tbody>
           </table>
@@ -169,10 +175,10 @@ const Option: Component = () => {
 
       <div id="emit" data-search-target>
         <Card>
-          <CardHeader title="EMIT" subtitle="Pace, render and wire-rate injected motion" />
-          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE][render u8]</pre>
+          <CardHeader title="EMIT" subtitle="Pace and wire-rate injected motion" />
+          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
           <p>
-            Every <code>OPTION(EMIT)</code> writes all four fields, so send the values you want to keep
+            Every <code>OPTION(EMIT)</code> writes all three fields, so send the values you want to keep
             along with the one you are changing.
           </p>
           <div class="api-response-label">MODE</div>
@@ -190,39 +196,6 @@ const Option: Component = () => {
               (<code>0</code> means 1000).
             </p>
             <p>The pace is a ceiling. The box emits only while injection is pending, so idle stays idle.</p>
-          </div>
-          <div id="render" data-search-target class="api-response-label">RENDER</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
-              <tr><td><code>1</code></td><td>Stock</td><td>The model's triangular smoother, bit for bit. Its first report carries a larger delta than the ones after it.</td></tr>
-              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
-              <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model renders the raw injection.</td></tr>
-            </tbody>
-          </table>
-          <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
-
-  render = 0   | | | | | | | | | | | |      even fill at the paced rate
-  render > 0   | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
-          <table class="api-params">
-            <thead><tr><th>Aspect</th><th><code>render = 0</code></th><th><code>render &gt; 0</code></th></tr></thead>
-            <tbody>
-              <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
-              <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
-              <tr><td>Before a profile arms</td><td>Emits at once</td><td>Emits the paced fill, then switches over</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--info">
-            <p>
-              The pace caps the rendered rate. On the learnt pace the renderer self-paces every
-              millisecond; a fixed 250 Hz holds it to 250, and the model's debt carries what the cap
-              coalesces.
-            </p>
-            <p>
-              The profile is built from the live mouse and never persisted. Every boot starts without
-              one: it arms off a window the mouse moved in and stays armed until the device changes.
-            </p>
           </div>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
@@ -246,9 +219,8 @@ const Option: Component = () => {
             </p>
           </div>
           <p>
-            A <code>mode</code> or <code>render</code> value the box does not know discards the{' '}
-            <strong>whole</strong> command, <code>force_hz</code> included, and there is no reply to say
-            so.
+            A <code>mode</code> the box does not know discards the <strong>whole</strong> command,{' '}
+            <code>force_hz</code> included, and there is no reply to say so.
           </p>
           <p>
             Read{' '}
@@ -258,15 +230,108 @@ const Option: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Rendered with the stock smoother on a fixed 1 kHz ceiling, wire forced to 1 kHz
-            (<code>mode = 2</code>, <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>,{' '}
-            <code>render = 1</code>):
+            A fixed 1 kHz ceiling with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
+            <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
           </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+--------+
-| A5     | 11     | 00     | 07 00  | 02     | 02     | E8 03   | E8 03    | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+---------+----------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | render | CRC16  |
-+--------+--------+--------+--------+--------+--------+---------+----------+--------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
+| A5     | 11     | 00     | 06 00  | 02     | 02     | E8 03   | E8 03    | lo hi  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
++--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="render" data-search-target>
+        <Card>
+          <CardHeader title="RENDER" subtitle="The texture the box draws motion with" />
+          <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
+          <p>
+            Both fields are written on every <code>OPTION(RENDER)</code>, so send the value you want to
+            keep along with the one you are changing.
+          </p>
+          <div class="api-response-label">MODE</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
+              <tr><td><code>1</code></td><td>Stock</td><td>The model's triangular smoother, bit for bit. Its first report carries a larger delta than the ones after it.</td></tr>
+              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
+              <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model receives the raw injection.</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
+
+  mode = 0     | | | | | | | | | | | |      even fill at the paced rate
+  mode > 0     | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
+          <table class="api-params">
+            <thead><tr><th>Aspect</th><th><code>mode = 0</code></th><th><code>mode &gt; 0</code></th></tr></thead>
+            <tbody>
+              <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
+              <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
+              <tr><td>Before a profile arms</td><td>Emits at once</td><td>Emits the paced fill, then switches over</td></tr>
+            </tbody>
+          </table>
+          <div id="full" data-search-target class="api-response-label">FULL</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code> <em>(default)</em></td><td>Draws injected motion only. The device's own cursor delta is relayed byte for byte.</td></tr>
+              <tr><td><code>1</code></td><td>Draws both. The device's cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`the wire, with the mouse moving and the box injecting
+
+  full = 0     the device's own reports, and a rendered injected stream beside them
+  full = 1     one stream, drawn by the model, with no relayed motion to compare it to`}</pre>
+          <div class="callout callout--warning">
+            <p>
+              <code>full</code> puts the smoother's group delay and one frame between the mouse and the
+              wire, roughly 3 ms. That is a feel change on physical movement, which is why it is off by
+              default.
+            </p>
+            <p>
+              The model emits at most 127 counts per axis per report and carries the rest as debt, so a
+              flick past that rate finishes a few milliseconds later than the mouse made it. Total
+              displacement is unchanged. At 800 DPI the ceiling is about 4 m/s; at 3200 it is about 1.
+            </p>
+          </div>
+          <div class="callout callout--info">
+            <p>
+              The pace caps the rendered rate. On the learnt pace the renderer self-paces every
+              millisecond; a fixed 250 Hz holds it to 250, and the model's debt carries what the cap
+              coalesces.
+            </p>
+            <p>
+              The profile is built from the live mouse and never persisted. Every boot starts without
+              one: it arms off a window the mouse moved in and stays armed until the device changes.
+              Until it arms, motion is relayed and injection takes the paced fill whatever this option
+              says.
+            </p>
+            <p>
+              Buttons, the wheel and every other field are relayed at the device's own timing in both
+              modes. The model draws cursor motion only.
+            </p>
+          </div>
+          <p>
+            A <code>mode</code> above 3 or a <code>full</code> above 1 discards the{' '}
+            <strong>whole</strong> command, and there is no reply to say so.
+          </p>
+          <p>
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 5)</code></A> (both stored
+            fields, and whether a profile has armed) · Library{' '}
+            <A href="/library/options#set-render"><code>set_render</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>
+            De-spiked, drawing the device's own motion too (<code>mode = 2</code>,{' '}
+            <code>full = 1</code>):
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 11     | 00     | 03 00  | 05     | 02     | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | full   | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
