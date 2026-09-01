@@ -131,7 +131,7 @@ export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
 export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
 export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
-export const OPT_RENDER = 5; // value [mode u8][full u8]; the texture motion is drawn with (§3.14)
+export const OPT_RENDER = 5; // value [mode u8][full u8]; the texture motion is drawn with (§3.10)
 
 // The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
 export const NAME_MAX = 32;
