@@ -578,9 +578,8 @@ export class SerialLink {
   }
 
   // The texture motion is rendered with (§3.10). `full` puts the device's own motion through the same
-  // model rather than relaying it, which costs the smoother's group delay plus one frame on physical
-  // movement (about 3 ms on de-spiked, 5 on stock, 1 on unsmoothed) and is off by default. Both ride one command, so both are written every call. Persisted in NVS. Read back
-  // with `queryRender`.
+  // model rather than relaying it, so the latency rendering adds reaches it too; off by default. Both
+  // ride one command, so both are written every call. Persisted in NVS. Read back with `queryRender`.
   setRender(mode: RenderMode, full: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), renderPayload(mode, full)));
   }

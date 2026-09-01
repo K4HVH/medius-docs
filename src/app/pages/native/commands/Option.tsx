@@ -281,8 +281,8 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--warning">
             <p>
-              <code>full</code> puts the smoother's group delay and one frame between the mouse and the
-              wire: about 3 ms on de-spiked, 5 on stock, 1 on unsmoothed.
+              Rendering adds a small amount of latency, which reaches the device's own motion when{' '}
+              <code>full</code> is <code>1</code>.
             </p>
             <p>
               The model emits at most 127 counts per axis per report and carries the rest as debt, so a
