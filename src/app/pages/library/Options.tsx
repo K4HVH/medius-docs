@@ -143,8 +143,10 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own d
           <p>
             <code>Off</code> is the paced fill: one frame per{' '}
             <A href="/library/options#set-emit-pace">emit-rate</A> tick while injection is pending. The
-            other three push motion through a model fitted live from the mouse's own reports, and differ
-            only in the smoother the model is fed.
+            other three push motion through an{' '}
+            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
+            model (MIT) fitted live from the mouse's own reports, and differ only in the smoother the
+            model is fed.
           </p>
           <p>
             <code>full</code> is whose motion the model renders: injected motion alone, or the mouse's

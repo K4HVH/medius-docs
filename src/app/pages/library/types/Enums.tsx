@@ -348,7 +348,9 @@ let trace = device.catch_events([
           <p>
             Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
             <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>. The box boots
-            at <code>Despiked</code>, which is also this enum's <code>Default</code>.
+            at <code>Despiked</code>, which is also this enum's <code>Default</code>. The model is{' '}
+            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
+            (MIT).
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
