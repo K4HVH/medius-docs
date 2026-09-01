@@ -558,15 +558,6 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
   }
 
-  // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
-  // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
-  // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
-  // (PerAxis) or projects the delta onto the injected XY vector (Vector). Persisted in NVS. Read back
-  // with `queryBearing`.
-  setBearing(windowMs: number, mode: BearingMode = BearingMode.PerAxis): Promise<void> {
-    return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
-  }
-
   // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
   // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
   // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
@@ -575,6 +566,15 @@ export class SerialLink {
   // every call. Persisted in NVS. Read back with `queryEmitPace`.
   setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
+  }
+
+  // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
+  // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
+  // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
+  // (PerAxis) or projects the delta onto the injected XY vector (Vector). Persisted in NVS. Read back
+  // with `queryBearing`.
+  setBearing(windowMs: number, mode: BearingMode = BearingMode.PerAxis): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
   // The texture motion is rendered with (§3.10). `full` puts the device's own motion through the same
