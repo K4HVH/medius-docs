@@ -86,7 +86,8 @@ import {
 } from './types';
 
 // Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, the rate
-// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode), the requested
+// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode; 1000 once the
+// renderer has a profile), the requested
 // wire rate (forceHz 0 = off), what the clone's input endpoints advertise now (advertisedHz 0 = no
 // clone), and whether a forced interval is in the served descriptor. mode null is a mode the box
 // reported that this build doesn't know.

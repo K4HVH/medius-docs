@@ -147,7 +147,7 @@ const Api: Component = () => {
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
               <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
-              <tr><td><code>dev.set_render(mode, full)</code></td><td>Pick the texture (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>) and whether the device's own motion is rendered by the model rather than relayed. Both ride one frame, so <code>full</code> is required rather than defaulted. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_render(mode, full)</code></td><td>Pick the texture (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>) and whether the device's own motion is rendered by the model rather than relayed. Both ride one frame, so <code>full</code> is required rather than defaulted; a <code>mode</code> outside <code>RenderMode</code> raises <code>ValueError</code> and nothing is sent. <code>full</code> is off on a box that has not been set. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
         </Card>

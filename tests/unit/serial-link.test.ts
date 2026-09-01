@@ -181,9 +181,10 @@ describe('SerialLink', () => {
 
   it('handshakes a box one protocol version behind, so it can still be updated', async () => {
     // One-click update arrived with proto 5 (firmware 3.2.0) and nothing it uses has changed since:
-    // QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP and LOG are all identical at 5 and 6. Only
-    // OPTION(EMIT) grew. Refusing the handshake outright would lock a 3.2.x box out of the very
-    // mechanism that brings it up to date, and leave USB setup as the only way forward.
+    // QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP and LOG are all identical at 5 and 6. The
+    // whole v5 to v6 delta is one new option id and its readback; OPTION(EMIT) is unchanged at 12
+    // bytes. Refusing the handshake outright would lock a 3.2.x box out of the very mechanism that
+    // brings it up to date, and leave USB setup as the only way forward.
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
@@ -313,7 +314,8 @@ describe('SerialLink', () => {
           // RESP(OPTIONS, MOVE_RIDE): [9][1][timeout u16 LE] = 5 ms
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
         } else if (f.payload[1] === 2) {
-          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
+          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16][resolved u16][force u16]
+          //                      [advertised u16][force_active] = fixed 500 Hz, nothing forced
           mock.push(
             encode(
               FrameType.Resp,

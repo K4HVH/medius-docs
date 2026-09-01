@@ -105,6 +105,16 @@ describe('DeviceOptions', () => {
     expect(queryByText("Mouse's own motion rendered")).toBeNull();
   });
 
+  // The option can read back set while the box is still relaying, so the chip has to follow `ready`
+  // and not the stored bytes.
+  it('does not claim the mouse own motion is rendered before a profile arms', async () => {
+    mock.render = { mode: RenderMode.Despiked, full: true, ready: false };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText("Mouse's own motion relayed");
+    await findByText('Move the mouse to start');
+    expect(queryByText("Mouse's own motion rendered")).toBeNull();
+  });
+
   // Nothing is rendered until the box has learned a profile, so a box set to a mode and a box rendering
   // with it are different states and the card has to say which one it is looking at.
   it('says the mouse has to move while no profile has armed', async () => {

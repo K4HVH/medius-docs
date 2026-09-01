@@ -214,8 +214,9 @@ const Option: Component = () => {
             </p>
             <p>
               Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
-              low-speed clone cannot express an interval below 10 ms, so a request above 100 Hz there
-              resolves to 100.
+              low-speed clone cannot express an interval below 10 ms and only powers of two are
+              offered, so its floor is <code>bInterval</code> 16 and any request above 62 Hz there
+              resolves to 62.
             </p>
           </div>
           <p>
@@ -373,6 +374,16 @@ const Option: Component = () => {
               The <A href="/native/commands/option#emit">pace</A> caps the rendered rate, and the
               model's debt carries what the cap coalesces. Buttons, the wheel and every other field are
               relayed at the device's own timing in both modes: the model renders cursor motion only.
+            </p>
+            <p>
+              A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
+              paced path instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each ask
+              for exact timing, which is what the renderer decides. With <code>full</code> on the
+              rendered stream also ignores{' '}
+              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot drops a
+              hoard that goes unridden, and under <code>full</code> that hoard holds the device's own
+              motion. <A href="/native/commands/clip">Clip</A> motion never enters the model either, so
+              a clip playing under <code>full</code> puts a second texture on the wire.
             </p>
             <p>
               The profile is built from the live mouse and never persisted, so every boot starts without
