@@ -382,13 +382,6 @@ export function parseResp(payload: Uint8Array): Resp | null {
           // [what=9][id=1][timeout u16 LE ms]
           if (payload.length < 4) return null;
           return { kind: 'movementRiding', windowMs: u16le(payload, 2) };
-        case OPT_BEARING:
-          // [what=9][id=4][window u16 LE ms][mode u8]
-          if (payload.length < 5) return null;
-          return {
-            kind: 'bearing',
-            bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
-          };
         case OPT_EMIT:
           // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8]
           if (payload.length < 12) return null;
@@ -402,6 +395,13 @@ export function parseResp(payload: Uint8Array): Resp | null {
               advertisedHz: u16le(payload, 9),
               forceActive: payload[11] !== 0,
             },
+          };
+        case OPT_BEARING:
+          // [what=9][id=4][window u16 LE ms][mode u8]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'bearing',
+            bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
           };
         case OPT_RENDER:
           // [what=9][id=5][mode u8][full u8][ready u8]
