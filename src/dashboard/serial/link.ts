@@ -577,16 +577,16 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
   }
 
-  // The texture motion is drawn with (§3.10). `full` puts the device's own motion through the same
-  // model rather than relaying it, which costs roughly 3 ms of latency on physical movement and is off
-  // by default. Both ride one command, so both are written every call. Persisted in NVS. Read back
+  // The texture motion is rendered with (§3.10). `full` puts the device's own motion through the same
+  // model rather than relaying it, which costs the smoother's group delay plus one frame on physical
+  // movement (about 3 ms on de-spiked, 5 on stock, 1 on unsmoothed) and is off by default. Both ride one command, so both are written every call. Persisted in NVS. Read back
   // with `queryRender`.
   setRender(mode: RenderMode, full: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), renderPayload(mode, full)));
   }
 
-  // What motion is drawn with, and whether the box has learned a profile for the attached device
-  // (§4.14). Nothing is drawn until it has.
+  // What motion is rendered with, and whether the box has learned a profile for the attached device
+  // (§4.14). Nothing is rendered until it has.
   async queryRender(timeoutMs?: number): Promise<Render> {
     const resp = parseResp(await this.queryOption(OPT_RENDER, timeoutMs));
     if (resp?.kind !== 'render') throw new Error('unexpected reply to OPTIONS(RENDER) query');

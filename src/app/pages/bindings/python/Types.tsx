@@ -1128,9 +1128,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>the texture motion is drawn with; OFF is the paced fill</td></tr>
-                <tr><td><code>full</code></td><td><code>bool</code></td><td>whether the device's own motion is drawn by the model rather than relayed</td></tr>
-                <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the attached device; nothing is drawn until it has</td></tr>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>the texture motion is rendered with; OFF is the paced fill</td></tr>
+                <tr><td><code>full</code></td><td><code>bool</code></td><td>whether the device's own motion is rendered by the model rather than relayed</td></tr>
+                <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the attached device; nothing is rendered until it has</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>

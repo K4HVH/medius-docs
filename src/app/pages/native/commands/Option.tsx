@@ -52,7 +52,7 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#render"><code>RENDER</code></A></td>
                 <td><code>5</code></td>
-                <td>The texture the box draws motion with</td>
+                <td>The texture the box renders motion with</td>
                 <td>de-spiked, injected only</td>
               </tr>
             </tbody>
@@ -243,7 +243,7 @@ const Option: Component = () => {
 
       <div id="render" data-search-target>
         <Card>
-          <CardHeader title="RENDER" subtitle="The texture the box draws motion with" />
+          <CardHeader title="RENDER" subtitle="The texture the box renders motion with" />
           <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
           <p>
             Both fields are written on every <code>OPTION(RENDER)</code>, so send the value you want to
@@ -275,8 +275,8 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code> <em>(default)</em></td><td>Draws injected motion only. The device's own cursor delta is relayed byte for byte.</td></tr>
-              <tr><td><code>1</code></td><td>Draws both. The device's cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
+              <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. The device's own cursor delta is relayed byte for byte.</td></tr>
+              <tr><td><code>1</code></td><td>Renders both. The device's cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
@@ -303,12 +303,12 @@ const Option: Component = () => {
             <p>
               The profile is built from the live mouse and never persisted. Every boot starts without
               one: it arms off a window the mouse moved in and stays armed until the device changes.
-              <code>full</code> also draws nothing while <code>mode</code> is <code>0</code>, since
-              there is no model in the path to draw with.
+              <code>full</code> also renders nothing while <code>mode</code> is <code>0</code>, since
+              there is no model in the path to render with.
             </p>
             <p>
               Buttons, the wheel and every other field are relayed at the device's own timing in both
-              modes. The model draws cursor motion only.
+              modes. The model renders cursor motion only.
             </p>
           </div>
           <p>
@@ -323,7 +323,7 @@ const Option: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            De-spiked, drawing the device's own motion too (<code>mode = 2</code>,{' '}
+            De-spiked, rendering the device's own motion too (<code>mode = 2</code>,{' '}
             <code>full = 1</code>):
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+

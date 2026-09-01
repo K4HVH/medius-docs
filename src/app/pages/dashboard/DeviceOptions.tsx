@@ -49,9 +49,9 @@ const RENDER_MODES: Record<string, RenderMode> = {
   unsmoothed: RenderMode.Unsmoothed,
 };
 
-// What drawing the operator's own movement costs, which follows the smoother in the path.
+// What rendering the mouse's own motion costs, which follows the smoother in the path.
 const FULL_COST: Record<string, string> = {
-  off: 'Nothing is drawn while the texture is off.',
+  off: 'Renders nothing while the mode is off.',
   stock: 'Adds about 5 ms of delay to the mouse.',
   despiked: 'Adds about 3 ms of delay to the mouse.',
   unsmoothed: 'Adds about 1 ms of delay to the mouse.',
@@ -59,9 +59,9 @@ const FULL_COST: Record<string, string> = {
 
 const RENDER_BLURB: Record<string, string> = {
   off: 'Even fill at the paced rate.',
-  stock: "Draws the mouse's own texture.",
-  despiked: 'Draws it with a softer onset.',
-  unsmoothed: 'Draws raw motion, no smoothing.',
+  stock: "Renders the mouse's own texture.",
+  despiked: 'Renders it with a softer onset.',
+  unsmoothed: 'Renders raw motion, no smoothing.',
 };
 
 const RENDER_NAMES: Record<number, string> = {
@@ -381,11 +381,11 @@ const DeviceOptions = () => {
             </Section>
           </div>
 
-          <div id="texture" data-search-target>
-            <Section title="Texture">
+          <div id="render" data-search-target>
+            <Section title="Render">
             <p>
-              Chooses what the mouse's motion looks like on the wire, and whether your own movement is
-              drawn the same way as anything the box adds.
+              Emits injected motion with the mouse's own report texture instead of an even fill, and
+              sets whether the mouse's own motion goes through it too. Apply writes both together.
             </p>
             <RadioGroup
               name="render-mode"
@@ -400,21 +400,21 @@ const DeviceOptions = () => {
             />
             <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
             <div id="render-full" data-search-target>
-              <div class="api-response-label" style={section}>Your own movement</div>
+              <div class="api-response-label" style={section}>Mouse's own motion</div>
               <RadioGroup
                 name="render-full"
-                value={fullOn() ? 'drawn' : 'relayed'}
-                onChange={(v) => setFullEdit(v === 'drawn')}
+                value={fullOn() ? 'rendered' : 'relayed'}
+                onChange={(v) => setFullEdit(v === 'rendered')}
                 options={[
-                  { value: 'relayed', label: 'Passed through' },
-                  { value: 'drawn', label: 'Drawn too' },
+                  { value: 'relayed', label: 'Relayed' },
+                  { value: 'rendered', label: 'Rendered' },
                 ]}
               />
               <p style={muted}>
                 {!fullOn()
-                  ? 'Reaches the game exactly as the mouse sent it.'
+                  ? "Passes the mouse's own motion through untouched."
                   : renderKey() === 'off'
-                    ? 'Nothing is drawn while the texture is off.'
+                    ? 'Renders nothing while the mode is off.'
                     : FULL_COST[renderKey()]}
               </p>
             </div>
@@ -436,7 +436,7 @@ const DeviceOptions = () => {
                   </Chip>
                   <Show when={r().full}>
                     <Chip variant={r().mode === RenderMode.Off ? 'neutral' : 'success'}>
-                      {r().mode === RenderMode.Off ? 'Your movement passes through' : 'Your movement drawn too'}
+                      {r().mode === RenderMode.Off ? "Mouse's own motion relayed" : "Mouse's own motion rendered"}
                     </Chip>
                   </Show>
                   <Show when={r().mode !== RenderMode.Off && !r().ready}>

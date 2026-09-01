@@ -822,7 +822,7 @@ for ev in input.by_ref().take(20) {
       </div>
       <div id="render-status" data-search-target>
         <Card>
-          <CardHeader title="RenderStatus" subtitle="The texture motion is drawn with, and whether a profile has armed" />
+          <CardHeader title="RenderStatus" subtitle="The texture motion is rendered with, and whether a profile has armed" />
           <p>
             The render state from{' '}
             <A href="/library/options#query-render"><code>query_render()</code></A>.
@@ -830,9 +830,9 @@ for ev in input.by_ref().take(20) {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is drawn with; <code>Off</code> is the paced fill.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the device's own motion is drawn by the model rather than relayed.</td></tr>
-              <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is drawn until it has.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; <code>Off</code> is the paced fill.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the device's own motion is rendered by the model rather than relayed.</td></tr>
+              <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
             </tbody>
           </table>
         </Card>

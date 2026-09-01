@@ -761,7 +761,7 @@ const Requests: Component = () => {
           <div class="api-response-label">RENDER VALUE</div>
           <p>
             The current <A href="/native/commands/option#render"><code>RENDER</code></A> setting (id 5),
-            and whether the box has learned a profile to draw with.
+            and whether the box has learned a profile to render with.
           </p>
           <table class="api-params">
             <thead>
@@ -769,12 +769,12 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>mode</code></td><td>the texture: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
-              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when the device's own motion is drawn by the model rather than relayed</td></tr>
+              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when the device's own motion is rendered by the model rather than relayed</td></tr>
               <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
             </tbody>
           </table>
           <p>
-            Nothing is drawn while <code>ready</code> reads <code>0</code>: motion is relayed and
+            Nothing is rendered while <code>ready</code> reads <code>0</code>: motion is relayed and
             injection takes the paced fill whatever <code>mode</code> says. The profile lives in RAM, so
             every box reads <code>0</code> after a power cut and arms once the mouse moves.
           </p>
