@@ -47,6 +47,15 @@ describe('dashboard search index', () => {
     for (const f of files) {
       const src = readFileSync(`src/app/pages/dashboard/${f}`, 'utf8');
       for (const m of src.matchAll(/CardHeader\s+title="([^"]+)"/g)) titles.add(m[1]);
+      // Options nests its controls as <Section title="...">, not as their own CardHeader. Only the
+      // anchored ones are addressable, and those are exactly the ones an index entry can point at:
+      // without this the oracle could not see Render, Emit rate, Bearing, Movement riding,
+      // Imperfect clone or Box name, and the comment above would be false for six of them.
+      for (const m of src.matchAll(
+        /<div id="[^"]+" data-search-target>\s*<Section\s+title="([^"]+)"/g,
+      )) {
+        titles.add(m[1]);
+      }
     }
     // Cards that are pure connection or progress state, not a feature to search for.
     const notFeatures = new Set([

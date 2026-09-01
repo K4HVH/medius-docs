@@ -107,7 +107,7 @@ device.set_movement_riding(None)?;                             // back to gaples
           <p>
             <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
             the clone serves and polls the device at it, so a mouse declaring 125 Hz can run at 1 kHz.
-            It snaps to <code>1000/n</code> Hz and floors at 10 ms on a low-speed clone.
+            It snaps to <code>1000/n</code> Hz, and a low-speed clone floors at <code>bInterval</code> 16 (62 Hz).
           </p>
           <div class="callout callout--warning">
             <p>
@@ -248,7 +248,12 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
           <div class="callout callout--warning">
             <p>
               Rendering adds a small amount of latency, which reaches the mouse's own motion when{' '}
-              <code>full</code> is on.
+              <code>full</code> is on. Motion asking for exact timing skips the model:{' '}
+              <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
+              <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A> take the paced
+              path, and with <code>full</code> on the rendered stream ignores{' '}
+              <A href="/library/options#set-movement-riding">movement riding</A>.
             </p>
             <p>
               The renderer stays out of the path until a profile arms, and while <code>mode</code> is{' '}

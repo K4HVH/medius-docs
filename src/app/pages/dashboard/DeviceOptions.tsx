@@ -430,8 +430,12 @@ const DeviceOptions = () => {
                     {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
                   </Chip>
                   <Show when={r().full}>
-                    <Chip variant={r().mode === RenderMode.Off ? 'neutral' : 'success'}>
-                      {r().mode === RenderMode.Off ? "Mouse's own motion relayed" : "Mouse's own motion rendered"}
+                    {/* Nothing goes through the model until a profile arms, so an unarmed box is
+                        still relaying however the option is set. */}
+                    <Chip variant={r().mode === RenderMode.Off || !r().ready ? 'neutral' : 'success'}>
+                      {r().mode === RenderMode.Off || !r().ready
+                        ? "Mouse's own motion relayed"
+                        : "Mouse's own motion rendered"}
                     </Chip>
                   </Show>
                   <Show when={r().mode !== RenderMode.Off && !r().ready}>

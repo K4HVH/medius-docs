@@ -1121,7 +1121,7 @@ describe('OPTION command (§3.10)', () => {
 
   it('parses RESP(OPTIONS, EMIT) into the pacing mode and the rate the clone runs at', () => {
     // Learned, no clone yet: every field zero.
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1133,7 +1133,7 @@ describe('OPTION command (§3.10)', () => {
       },
     });
     // Interval resolved to the 1000 Hz poll rate, nothing forced, the clone advertising its own 1 kHz.
-    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Interval,
@@ -1147,7 +1147,7 @@ describe('OPTION command (§3.10)', () => {
     // Five distinct numbers, so swapping any two fields fails: fixed 1000, resolved 250, forced 125,
     // advertising 100, and the force in the served descriptor.
     expect(
-      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1, 0])),
+      parseResp(new Uint8Array([9, 2, 2, 0xe8, 0x03, 0xfa, 0, 0x7d, 0, 0x64, 0, 1])),
     ).toEqual({
       kind: 'emitPace',
       emit: {
@@ -1160,7 +1160,7 @@ describe('OPTION command (§3.10)', () => {
       },
     });
     // A force set while IMPERFECT is off: requested, not in the descriptor.
-    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0xe8, 0x03, 0x7d, 0, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: EmitMode.Learned,
@@ -1207,7 +1207,8 @@ describe('OPTION command (§3.10)', () => {
       kind: 'render',
       render: { mode: null, full: false, ready: false },
     });
-    // Any non-zero reads as set, the way the firmware writes a bool byte.
+    // Decoder tolerance: any non-zero reads as set. The box itself never sends one, since it
+    // discards a `full` above 1 whole and packs the stored 0 or 1.
     expect(parseResp(new Uint8Array([9, 5, 0, 7, 9]))).toEqual({
       kind: 'render',
       render: { mode: RenderMode.Off, full: true, ready: true },
