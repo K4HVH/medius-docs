@@ -37,6 +37,7 @@ import LibUpdate from './pages/library/Update';
 import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
+import LibRender from './pages/library/Render';
 import LibOptions from './pages/library/Options';
 import LibClip from './pages/library/Clip';
 import LibLifecycle from './pages/library/Lifecycle';
@@ -122,6 +123,7 @@ const App: Component = () => {
           <Route path="/library/led" component={LibLed} />
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
+          <Route path="/library/render" component={LibRender} />
           <Route path="/library/options" component={LibOptions} />
           <Route path="/library/clip" component={LibClip} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
