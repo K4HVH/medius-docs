@@ -831,7 +831,7 @@ for ev in input.by_ref().take(20) {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; <code>Off</code> is the paced fill.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the device's own motion is rendered by the model rather than relayed.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the mouse's own motion is rendered by the model rather than relayed.</td></tr>
               <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
             </tbody>
           </table>

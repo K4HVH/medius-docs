@@ -49,19 +49,11 @@ const RENDER_MODES: Record<string, RenderMode> = {
   unsmoothed: RenderMode.Unsmoothed,
 };
 
-// What rendering the mouse's own motion costs, which follows the smoother in the path.
-const FULL_COST: Record<string, string> = {
-  off: 'Renders nothing while the mode is off.',
-  stock: 'Adds about 5 ms of delay to the mouse.',
-  despiked: 'Adds about 3 ms of delay to the mouse.',
-  unsmoothed: 'Adds about 1 ms of delay to the mouse.',
-};
-
 const RENDER_BLURB: Record<string, string> = {
   off: 'Even fill at the paced rate.',
   stock: "Renders the mouse's own texture.",
-  despiked: 'Renders it with a softer onset.',
-  unsmoothed: 'Renders raw motion, no smoothing.',
+  despiked: "Renders the mouse's texture with a ramped onset.",
+  unsmoothed: "Renders the mouse's texture with no smoother.",
 };
 
 const RENDER_NAMES: Record<number, string> = {
@@ -221,6 +213,9 @@ const DeviceOptions = () => {
       <div id="options" data-search-target>
         <Card>
           <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
+          <Show when={cmd.error()}>
+            <div class="callout callout--danger" role="alert">{cmd.error()}</div>
+          </Show>
 
           <Section title="Box name" first>
           <p>
@@ -384,8 +379,8 @@ const DeviceOptions = () => {
           <div id="render" data-search-target>
             <Section title="Render">
             <p>
-              Emits injected motion with the mouse's own report texture instead of an even fill, and
-              sets whether the mouse's own motion goes through it too. Apply writes both together.
+              Emits injected motion with the mouse's own report texture, and sets whether the mouse's
+              own motion goes through it too. The box saves both together, so Apply writes both.
             </p>
             <RadioGroup
               name="render-mode"
@@ -415,7 +410,7 @@ const DeviceOptions = () => {
                   ? "Passes the mouse's own motion through untouched."
                   : renderKey() === 'off'
                     ? 'Renders nothing while the mode is off.'
-                    : FULL_COST[renderKey()]}
+                    : "Renders the mouse's own motion through the same model."}
               </p>
             </div>
             <div style={controls}>
@@ -456,8 +451,8 @@ const DeviceOptions = () => {
           <div id="emit-rate" data-search-target>
             <Section title="Emit rate">
             <p>
-              Paces injected motion as a ceiling and sets the rate the clone itself runs at. Apply
-              writes both together.
+              Paces injected motion as a ceiling, and sets the rate the clone itself runs at. The box
+              saves both together, so Apply writes both.
             </p>
             <RadioGroup
               name="emit-mode"
@@ -519,11 +514,6 @@ const DeviceOptions = () => {
                 </Button>
               </Show>
             </div>
-            <Show when={cmd.error()}>
-              <div class="callout callout--danger" role="alert" style={section}>
-                {cmd.error()}
-              </div>
-            </Show>
             <Show when={emit()} fallback={<p style={status}>Reading status...</p>}>
               {(s) => (
                 <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>

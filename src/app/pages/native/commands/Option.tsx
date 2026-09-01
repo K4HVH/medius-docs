@@ -254,7 +254,7 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
-              <tr><td><code>1</code></td><td>Stock</td><td>The model's triangular smoother, bit for bit. Its first report carries a larger delta than the ones after it.</td></tr>
+              <tr><td><code>1</code></td><td>Stock</td><td>The model's bit-exact triangular smoother. Its first report carries a larger delta than the ones after it.</td></tr>
               <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
               <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model receives the raw injection.</td></tr>
             </tbody>
@@ -282,33 +282,23 @@ const Option: Component = () => {
           <div class="callout callout--warning">
             <p>
               <code>full</code> puts the smoother's group delay and one frame between the mouse and the
-              wire, so what it costs follows the mode: about 3 ms on de-spiked, about 5 on stock, and
-              about 1 on unsmoothed, which has no smoother to wait for. That is a feel change on
-              physical movement, which is why it is off by default.
+              wire: about 3 ms on de-spiked, 5 on stock, 1 on unsmoothed.
             </p>
             <p>
               The model emits at most 127 counts per axis per report and carries the rest as debt, so a
-              flick past that rate finishes a few milliseconds later than the mouse made it, and the
-              total is unchanged unless the debt outlives the 40 ms idle stop. On the learnt pace the
-              ceiling is about 4 m/s at 800 DPI and about 1 at 3200; a slower fixed pace lowers it in
-              proportion.
+              flick past that rate finishes a few milliseconds later than the mouse made it.
             </p>
           </div>
           <div class="callout callout--info">
             <p>
-              The pace caps the rendered rate. On the learnt pace the renderer self-paces every
-              millisecond; a fixed 250 Hz holds it to 250, and the model's debt carries what the cap
-              coalesces.
+              The <A href="/native/commands/option#emit">pace</A> caps the rendered rate, and the
+              model's debt carries what the cap coalesces. Buttons, the wheel and every other field are
+              relayed at the device's own timing in both modes: the model renders cursor motion only.
             </p>
             <p>
-              The profile is built from the live mouse and never persisted. Every boot starts without
-              one: it arms off a window the mouse moved in and stays armed until the device changes.
-              <code>full</code> also renders nothing while <code>mode</code> is <code>0</code>, since
-              there is no model in the path to render with.
-            </p>
-            <p>
-              Buttons, the wheel and every other field are relayed at the device's own timing in both
-              modes. The model renders cursor motion only.
+              The profile is built from the live mouse and never persisted, so every boot starts without
+              one and arms off a window the mouse moved in. <code>full</code> renders nothing while{' '}
+              <code>mode</code> is <code>0</code>, since there is no model in the path.
             </p>
           </div>
           <p>

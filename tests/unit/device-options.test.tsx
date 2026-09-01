@@ -86,26 +86,13 @@ describe('DeviceOptions', () => {
     expect(button(container, 'Revert')).toBeUndefined();
   });
 
-  it('describes only the selected texture, and only the scope in force', async () => {
+  it('describes only the selected texture, and only the setting in force', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Renders it with a softer onset.');
+    await findByText("Renders the mouse's texture with a ramped onset.");
     expect(queryByText('Even fill at the paced rate.')).toBeNull();
-    await findByText('Adds about 3 ms of delay to the mouse.');
-    expect(queryByText('Reaches the game exactly as the mouse sent it.')).toBeNull();
-  });
-
-  // What rendering the operator's own movement costs follows the smoother in the path, so one flat
-  // number would be wrong for two of the four modes.
-  it('names the delay the selected texture actually costs', async () => {
-    mock.render = { mode: RenderMode.Stock, full: true, ready: true };
-    const stock = render(() => <DeviceOptions />);
-    await stock.findByText('Adds about 5 ms of delay to the mouse.');
-    cleanup();
-
-    mock.render = { mode: RenderMode.Unsmoothed, full: true, ready: true };
-    const uns = render(() => <DeviceOptions />);
-    await uns.findByText('Adds about 1 ms of delay to the mouse.');
+    await findByText("Renders the mouse's own motion through the same model.");
+    expect(queryByText("Passes the mouse's own motion through untouched.")).toBeNull();
   });
 
   // `full` stores and reads back with the texture off, but nothing is rendered in that state: there is
@@ -128,7 +115,7 @@ describe('DeviceOptions', () => {
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
     const armed = render(() => <DeviceOptions />);
-    await armed.findByText('Renders it with a softer onset.');
+    await armed.findByText("Renders the mouse's texture with a ramped onset.");
     expect(armed.queryByText('Move the mouse to start')).toBeNull();
   });
 

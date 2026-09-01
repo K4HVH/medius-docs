@@ -1192,7 +1192,7 @@ describe('OPTION command (§3.10)', () => {
     });
   });
 
-  it('RESP(OPTIONS, RENDER) decodes the texture, its scope, and whether a profile has armed', () => {
+  it('RESP(OPTIONS, RENDER) decodes the texture, the full flag and whether a profile has armed', () => {
     // Three distinct values, so swapping any two fields fails.
     expect(parseResp(new Uint8Array([9, 5, 1, 1, 0]))).toEqual({
       kind: 'render',

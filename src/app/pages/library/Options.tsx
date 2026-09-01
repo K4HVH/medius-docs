@@ -9,7 +9,7 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Five box settings, each set and read on its own. All persist in NVS and survive a reboot. See
+          Six box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command for the wire contract.
         </p>
@@ -141,29 +141,27 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own d
           <pre class="api-signature">fn set_render(&self, mode: RenderMode, full: bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <code>Off</code> is the paced fill: one frame per gate tick while injection is pending. The
-            other three push motion through a model fitted live from the mouse's own reports, so the
-            emitted stream carries that mouse's report texture for the same total displacement, and
-            differ only in the path smoother the model is fed. <code>full</code> extends the model to
-            the mouse's own motion, taking its cursor delta out of the relayed report so one texture
-            reaches the wire instead of two. Buttons, the wheel and every other field stay relayed at
-            the mouse's own timing either way.
+            <code>Off</code> is the paced fill: one frame per{' '}
+            <A href="/library/options#set-emit-pace">emit-rate</A> tick while injection is pending. The
+            other three push motion through a model fitted live from the mouse's own reports, and differ
+            only in the smoother the model is fed.
+          </p>
+          <p>
+            <code>full</code> is whose motion the model renders: injected motion alone, or the mouse's
+            own cursor delta taken out of the relayed report and joined to it as one stream. Buttons,
+            the wheel and every other field stay relayed either way.
           </p>
           <div class="callout callout--warning">
             <p>
-              <code>full</code> puts the smoother's group delay and one frame on physical mouse
-              movement: about 3 ms on <code>Despiked</code>, 5 on <code>Stock</code>, 1 on{' '}
-              <code>Unsmoothed</code>. That is a feel change on a gaming mouse, which is why it is off
-              by default. The model also emits at most 127 counts per axis per report and carries the
-              rest as debt, so a flick faster than that finishes a few milliseconds after the hand made
-              it.
+              <code>full</code> adds the smoother's group delay and one frame to physical movement:
+              about 3 ms on <code>Despiked</code>, 5 on <code>Stock</code>, 1 on{' '}
+              <code>Unsmoothed</code>. The model emits at most 127 counts per axis per report and
+              carries the rest as debt.
             </p>
             <p>
-              Nothing is rendered until the box has learned a profile for the attached device, and
-              nothing is rendered while <code>mode</code> is <code>Off</code> whatever{' '}
-              <code>full</code> says. The profile is RAM-only, so every box starts without one and arms
-              the first time the mouse moves:{' '}
-              <A href="/library/options#query-render"><code>query_render</code></A> reports that state.
+              The renderer stays out of the path until a profile arms, and while <code>mode</code> is{' '}
+              <code>Off</code>:{' '}
+              <A href="/library/options#query-render"><code>query_render</code></A> reports both.
             </p>
           </div>
           <table class="api-params">
@@ -346,14 +344,13 @@ println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
 
       <div id="query-render" data-search-target>
         <Card>
-          <CardHeader title="query_render" subtitle="Read the texture, its scope, and whether a profile has armed" />
+          <CardHeader title="query_render" subtitle="Read the texture and whether a profile has armed" />
           <pre class="api-signature">fn query_render(&self) -&gt; Result&lt;RenderStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
-            <code>ready</code> is what separates a box set to a mode from a box rendering with it:
-            while it is false, motion is relayed and injection takes the paced fill whatever{' '}
-            <code>mode</code> says.
+            <code>ready</code> is false until a profile arms; until then motion is relayed and injection
+            takes the paced fill whatever <code>mode</code> says.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
