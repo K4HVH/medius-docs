@@ -713,24 +713,6 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
-          <div class="api-response-label">BEARING VALUE</div>
-          <p>
-            The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
-            (id 4): the window and how the box reads it.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>2</td><td><code>window</code></td><td><code>u16</code>, little-endian; the bearing window in ms, <code>0</code> = off</td></tr>
-              <tr><td>4</td><td><code>mode</code></td><td><code>0</code> per axis, <code>1</code> vector</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Library binding:{' '}
-            <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
-          </p>
           <div class="api-response-label">EMIT VALUE</div>
           <p>
             The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace and wire rate
@@ -757,6 +739,24 @@ const Requests: Component = () => {
           <p>
             Library binding:{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
+          </p>
+          <div class="api-response-label">BEARING VALUE</div>
+          <p>
+            The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
+            (id 4): the window and how the box reads it.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>window</code></td><td><code>u16</code>, little-endian; the bearing window in ms, <code>0</code> = off</td></tr>
+              <tr><td>4</td><td><code>mode</code></td><td><code>0</code> per axis, <code>1</code> vector</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
           </p>
           <div class="api-response-label">RENDER VALUE</div>
           <p>
