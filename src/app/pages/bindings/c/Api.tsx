@@ -164,10 +164,10 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_allow_imperfect_clones(MediusDevice *dev, bool allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_movement_riding(MediusDevice *dev, bool enabled, uint32_t window_ms)</code></td><td>Set movement riding; <code>enabled == false</code> clears the window (rounded to whole ms).</td></tr>
               <tr><td><code>medius_device_set_emit_pace(MediusDevice *dev, uint8_t mode, uint16_t hz, uint16_t force_hz)</code></td><td>Pick the pace (<code>hz</code> is the target for <code>FIXED</code>) and the advertised rate (<code>force_hz</code>, 0 = the device's own). Both ride one frame. See <A href="/library/options">Options</A>.</td></tr>
-              <tr><td><code>medius_device_set_render(MediusDevice *dev, uint8_t mode, bool full)</code></td><td>Pick the texture (<A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A>) and whether the device's own motion is rendered by the model rather than relayed. Both ride one frame. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_name(MediusDevice *dev, const char *name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
-              <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
               <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
+              <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
+              <tr><td><code>medius_device_set_render(MediusDevice *dev, uint8_t mode, bool full)</code></td><td>Pick the texture (<A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A>) and whether the device's own motion is rendered by the model rather than relayed. Both ride one frame. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -195,8 +195,8 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_query_imperfect(dev, MediusImperfectStatus *out)</code></td><td><A href="/bindings/c/types#imperfect-status"><code>MediusImperfectStatus</code></A>: imperfect-clone state.</td></tr>
               <tr><td><code>medius_device_query_movement_riding(dev, bool *out_enabled, uint32_t *out_window_ms)</code></td><td>Whether riding is on, and the window in ms (0 when off).</td></tr>
               <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
-              <tr><td><code>medius_device_query_render(dev, MediusRenderStatus *out)</code></td><td><A href="/bindings/c/types#render-status"><code>MediusRenderStatus</code></A>: the texture, whether the device's own motion goes through it, and whether a profile has armed.</td></tr>
               <tr><td><code>medius_device_query_bearing(dev, MediusBearing *out)</code></td><td><A href="/bindings/c/types#bearing"><code>MediusBearing</code></A>: the bearing window and geometry.</td></tr>
+              <tr><td><code>medius_device_query_render(dev, MediusRenderStatus *out)</code></td><td><A href="/bindings/c/types#render-status"><code>MediusRenderStatus</code></A>: the texture, whether the device's own motion goes through it, and whether a profile has armed.</td></tr>
               <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
           </table>
