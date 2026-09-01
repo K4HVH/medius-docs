@@ -19,7 +19,7 @@ const Options: Component = () => {
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
-            <tr><td>motion texture</td><td><A href="/library/options#set-render"><code>set_render</code></A></td><td><A href="/library/options#query-render"><code>query_render</code></A></td></tr>
+            <tr><td>motion texture</td><td colspan="2">on its own page: <A href="/library/render">Render</A></td></tr>
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
             <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
           </tbody>
@@ -132,50 +132,6 @@ device.set_movement_riding(None)?;                             // back to gaples
 let device = Device::find()?;
 device.set_emit_pace(EmitPace::Fixed(1000), None)?;   // a fixed 1 kHz ceiling
 device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own default`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="set-render" data-search-target>
-        <Card>
-          <CardHeader title="set_render" subtitle="Pick the texture the box draws motion with" />
-          <pre class="api-signature">fn set_render(&self, mode: RenderMode, full: bool) -&gt; Result&lt;()&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <p>
-            The profile is built from the live mouse and arms only once it has moved, so a box relays
-            motion and emits the paced fill until then, and draws after. The box boots at{' '}
-            <code>Despiked</code> with <code>full</code> off, so <code>Off</code> turns the renderer off
-            rather than leaving it alone. <code>full</code> stores and reads back either way, but it
-            draws nothing while the mode is <code>Off</code>: there is no model in the path to draw with.
-          </p>
-          <div class="callout callout--warning">
-            <p>
-              <code>full</code> puts the smoother's group delay and one frame between the mouse and the
-              wire, so what it costs follows the mode: about 3 ms on <code>Despiked</code>, about 5 on{' '}
-              <code>Stock</code>, and about 1 on <code>Unsmoothed</code>, which has no smoother to wait
-              for. That is a feel change on physical movement, which is why it is off by default.
-            </p>
-            <p>
-              The model emits at most 127 counts per axis per report and carries the rest as debt, so a
-              flick past that rate finishes a few milliseconds later than the mouse made it. Total
-              displacement is unchanged.
-            </p>
-          </div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is drawn with; the box boots at <code>Despiked</code>.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the device's own motion is drawn by the model rather than relayed.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, RenderMode};
-
-let device = Device::find()?;
-device.set_render(RenderMode::Despiked, false)?;   // draw injection only, the box's own default
-device.set_render(RenderMode::Despiked, true)?;    // draw the mouse's own motion too
-device.set_render(RenderMode::Off, false)?;        // renderer off, the paced fill`}</code></pre>
         </Card>
       </div>
 
@@ -338,30 +294,6 @@ println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
         </Card>
       </div>
 
-      <div id="query-render" data-search-target>
-        <Card>
-          <CardHeader title="query_render" subtitle="Read the texture, its scope, and whether a profile has armed" />
-          <pre class="api-signature">fn query_render(&self) -&gt; Result&lt;RenderStatus&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
-            <code>ready</code> is what separates a box set to a mode from a box drawing with it: while
-            it is false, motion is relayed and injection takes the paced fill whatever{' '}
-            <code>mode</code> says. The profile lives in RAM, so every box reads false after a power cut
-            and arms once the mouse moves.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
-
-let device = Device::find()?;
-let status = device.query_render()?;
-println!("{:?}, own motion drawn: {}", status.mode, status.full);
-if !status.ready {
-    println!("move the mouse: nothing is drawn until a profile arms");
-}`}</code></pre>
-        </Card>
-      </div>
-
       <div id="query-bearing" data-search-target>
         <Card>
           <CardHeader title="query_bearing" subtitle="Read the bearing window and geometry" />
@@ -389,9 +321,8 @@ if bearing.is_live() {
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
-            <code>query_movement_riding</code>, <code>query_bearing</code>,{' '}
-            <code>query_emit_pace</code>, and <code>query_render</code> futures, like the other
-            queries.
+            <code>query_movement_riding</code>, <code>query_bearing</code>, and{' '}
+            <code>query_emit_pace</code> futures, like the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;

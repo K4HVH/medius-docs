@@ -80,6 +80,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/move', label: 'Move', icon: BsArrowsMove },
   { value: '/library/lock', label: 'Lock', icon: BsLock },
   { value: '/library/catch', label: 'Catch', icon: BsActivity },
+  { value: '/library/render', label: 'Render', icon: BsBroadcast },
   { value: '/library/options', label: 'Options', icon: BsPuzzle },
   { value: '/library/clip', label: 'Clip', icon: BsStack },
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
