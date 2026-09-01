@@ -2,11 +2,11 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 7; // the render settings are OPTION(RENDER), and OPTION(EMIT) is back to pace alone
+export const PROTO_VER = 6; // the render settings are OPTION(RENDER), and OPTION(EMIT) is the pace alone
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
 // and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
-// unchanged since; the options moved around it at 6 and 7. Refusing an older box outright would lock it out of
+// unchanged since; only the options moved, at 6. Refusing a proto-5 box outright would lock it out of
 // the one mechanism that brings it up to date. A box between this and PROTO_VER connects for updating
 // only: the rest of the dashboard speaks the current wire and is not offered.
 export const MIN_PROTO_VER = 5;

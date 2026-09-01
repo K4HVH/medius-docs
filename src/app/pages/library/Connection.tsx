@@ -106,7 +106,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
-println!("speaks protocol:   {}", PROTO_VER);                   // 7`}</code></pre>
+println!("speaks protocol:   {}", PROTO_VER);                   // 6`}</code></pre>
         </Card>
       </div>
 

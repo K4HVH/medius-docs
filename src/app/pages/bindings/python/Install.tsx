@@ -53,7 +53,7 @@ const Install: Component = () => {
             <A href="/bindings/python/quickstart">first program</A>.
           </p>
           <pre><code class="language-bash">{`python -c "import medius; print(medius.version_string(), 'abi', medius.abi_version())"
-# 3.3.1 abi 7`}</code></pre>
+# 3.3.1 abi 6`}</code></pre>
           <div class="callout callout--warning">
             <p>
               An <code><a href="https://docs.python.org/3/library/exceptions.html#OSError" target="_blank" rel="noreferrer">OSError</a></code> on import means the native library didn't load: you're on an

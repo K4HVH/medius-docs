@@ -509,10 +509,10 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // The texture settings moved to OPTION(RENDER) at CTRL_PROTO_VER 7, which shortened OPTION(EMIT)
-    // and its readback again. Left behind, the handshake would accept a box whose EMIT value is a byte
-    // longer and whose RENDER id means nothing, and both commands would go silently unanswered.
-    expect(PROTO_VER).toBe(7);
+    // v6 is the texture as OPTION(RENDER). OPTION(EMIT) is back on its released v5 shape, so the whole
+    // delta from v5 is one new id and one new readback. Left at 5 the handshake would accept a box
+    // that answers neither, and a host depending on the texture would find out by silence.
+    expect(PROTO_VER).toBe(6);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
