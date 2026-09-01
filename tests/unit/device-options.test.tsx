@@ -87,12 +87,35 @@ describe('DeviceOptions', () => {
   });
 
   it('describes only the selected texture, and only the scope in force', async () => {
-    mock.render = { mode: RenderMode.Off, full: true, ready: true };
+    mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Even fill at the paced rate.');
-    expect(queryByText('Draws it with a softer onset.')).toBeNull();
+    await findByText('Draws it with a softer onset.');
+    expect(queryByText('Even fill at the paced rate.')).toBeNull();
     await findByText('Adds about 3 ms of delay to the mouse.');
     expect(queryByText('Reaches the game exactly as the mouse sent it.')).toBeNull();
+  });
+
+  // What drawing the operator's own movement costs follows the smoother in the path, so one flat
+  // number would be wrong for two of the four modes.
+  it('names the delay the selected texture actually costs', async () => {
+    mock.render = { mode: RenderMode.Stock, full: true, ready: true };
+    const stock = render(() => <DeviceOptions />);
+    await stock.findByText('Adds about 5 ms of delay to the mouse.');
+    cleanup();
+
+    mock.render = { mode: RenderMode.Unsmoothed, full: true, ready: true };
+    const uns = render(() => <DeviceOptions />);
+    await uns.findByText('Adds about 1 ms of delay to the mouse.');
+  });
+
+  // `full` stores and reads back with the texture off, but nothing is drawn in that state: there is
+  // no model in the path. Saying "drawn too" there reads as active when it is not.
+  it('does not claim the operator movement is drawn while the texture is off', async () => {
+    mock.render = { mode: RenderMode.Off, full: true, ready: true };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('Nothing is drawn while the texture is off.');
+    await findByText('Your movement passes through');
+    expect(queryByText('Your movement drawn too')).toBeNull();
   });
 
   // Nothing is drawn until the box has learned a profile, so a box set to a mode and a box drawing

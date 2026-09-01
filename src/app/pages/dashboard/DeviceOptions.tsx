@@ -49,6 +49,14 @@ const RENDER_MODES: Record<string, RenderMode> = {
   unsmoothed: RenderMode.Unsmoothed,
 };
 
+// What drawing the operator's own movement costs, which follows the smoother in the path.
+const FULL_COST: Record<string, string> = {
+  off: 'Nothing is drawn while the texture is off.',
+  stock: 'Adds about 5 ms of delay to the mouse.',
+  despiked: 'Adds about 3 ms of delay to the mouse.',
+  unsmoothed: 'Adds about 1 ms of delay to the mouse.',
+};
+
 const RENDER_BLURB: Record<string, string> = {
   off: 'Even fill at the paced rate.',
   stock: "Draws the mouse's own texture.",
@@ -403,9 +411,11 @@ const DeviceOptions = () => {
                 ]}
               />
               <p style={muted}>
-                {fullOn()
-                  ? 'Adds about 3 ms of delay to the mouse.'
-                  : 'Reaches the game exactly as the mouse sent it.'}
+                {!fullOn()
+                  ? 'Reaches the game exactly as the mouse sent it.'
+                  : renderKey() === 'off'
+                    ? 'Nothing is drawn while the texture is off.'
+                    : FULL_COST[renderKey()]}
               </p>
             </div>
             <div style={controls}>
@@ -425,7 +435,9 @@ const DeviceOptions = () => {
                     {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
                   </Chip>
                   <Show when={r().full}>
-                    <Chip variant="success">Your movement drawn too</Chip>
+                    <Chip variant={r().mode === RenderMode.Off ? 'neutral' : 'success'}>
+                      {r().mode === RenderMode.Off ? 'Your movement passes through' : 'Your movement drawn too'}
+                    </Chip>
                   </Show>
                   <Show when={r().mode !== RenderMode.Off && !r().ready}>
                     <Chip variant="warning">Move the mouse to start</Chip>

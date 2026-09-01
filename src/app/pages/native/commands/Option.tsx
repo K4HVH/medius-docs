@@ -279,20 +279,19 @@ const Option: Component = () => {
               <tr><td><code>1</code></td><td>Draws both. The device's cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`the wire, with the mouse moving and the box injecting
-
-  full = 0     the device's own reports, and a rendered injected stream beside them
-  full = 1     one stream, drawn by the model, with no relayed motion to compare it to`}</pre>
           <div class="callout callout--warning">
             <p>
               <code>full</code> puts the smoother's group delay and one frame between the mouse and the
-              wire, roughly 3 ms. That is a feel change on physical movement, which is why it is off by
-              default.
+              wire, so what it costs follows the mode: about 3 ms on de-spiked, about 5 on stock, and
+              about 1 on unsmoothed, which has no smoother to wait for. That is a feel change on
+              physical movement, which is why it is off by default.
             </p>
             <p>
               The model emits at most 127 counts per axis per report and carries the rest as debt, so a
-              flick past that rate finishes a few milliseconds later than the mouse made it. Total
-              displacement is unchanged. At 800 DPI the ceiling is about 4 m/s; at 3200 it is about 1.
+              flick past that rate finishes a few milliseconds later than the mouse made it, and the
+              total is unchanged unless the debt outlives the 40 ms idle stop. On the learnt pace the
+              ceiling is about 4 m/s at 800 DPI and about 1 at 3200; a slower fixed pace lowers it in
+              proportion.
             </p>
           </div>
           <div class="callout callout--info">
@@ -304,8 +303,8 @@ const Option: Component = () => {
             <p>
               The profile is built from the live mouse and never persisted. Every boot starts without
               one: it arms off a window the mouse moved in and stays armed until the device changes.
-              Until it arms, motion is relayed and injection takes the paced fill whatever this option
-              says.
+              <code>full</code> also draws nothing while <code>mode</code> is <code>0</code>, since
+              there is no model in the path to draw with.
             </p>
             <p>
               Buttons, the wheel and every other field are relayed at the device's own timing in both

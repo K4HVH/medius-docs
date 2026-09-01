@@ -577,7 +577,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
   }
 
-  // The texture motion is drawn with (§3.14). `full` puts the device's own motion through the same
+  // The texture motion is drawn with (§3.10). `full` puts the device's own motion through the same
   // model rather than relaying it, which costs roughly 3 ms of latency on physical movement and is off
   // by default. Both ride one command, so both are written every call. Persisted in NVS. Read back
   // with `queryRender`.

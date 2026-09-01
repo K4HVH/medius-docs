@@ -144,13 +144,15 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own d
             The profile is built from the live mouse and arms only once it has moved, so a box relays
             motion and emits the paced fill until then, and draws after. The box boots at{' '}
             <code>Despiked</code> with <code>full</code> off, so <code>Off</code> turns the renderer off
-            rather than leaving it alone.
+            rather than leaving it alone. <code>full</code> stores and reads back either way, but it
+            draws nothing while the mode is <code>Off</code>: there is no model in the path to draw with.
           </p>
           <div class="callout callout--warning">
             <p>
               <code>full</code> puts the smoother's group delay and one frame between the mouse and the
-              wire, roughly 3 ms. That is a feel change on physical movement, which is why it is off by
-              default.
+              wire, so what it costs follows the mode: about 3 ms on <code>Despiked</code>, about 5 on{' '}
+              <code>Stock</code>, and about 1 on <code>Unsmoothed</code>, which has no smoother to wait
+              for. That is a feel change on physical movement, which is why it is off by default.
             </p>
             <p>
               The model emits at most 127 counts per axis per report and carries the rest as debt, so a
@@ -387,8 +389,9 @@ if bearing.is_live() {
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
-            <code>query_movement_riding</code>, <code>query_bearing</code>, and{' '}
-            <code>query_emit_pace</code> futures, like the other queries.
+            <code>query_movement_riding</code>, <code>query_bearing</code>,{' '}
+            <code>query_emit_pace</code>, and <code>query_render</code> futures, like the other
+            queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;

@@ -144,7 +144,7 @@ export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array
   ]);
 }
 
-// OPTION(RENDER) (§3.14): [id=5][mode u8][full u8]. mode is the texture motion is drawn with; full puts
+// OPTION(RENDER) (§3.10): [id=5][mode u8][full u8]. mode is the texture motion is drawn with; full puts
 // the device's own motion through the same model rather than relaying it. Both are written every call.
 export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
   return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
