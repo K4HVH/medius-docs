@@ -343,7 +343,7 @@ let trace = device.catch_events([
       </div>
       <div id="render-mode" data-search-target>
         <Card>
-          <CardHeader title="RenderMode" subtitle="The texture the box draws motion with" />
+          <CardHeader title="RenderMode" subtitle="The texture the box renders motion with" />
           <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
           <p>
             Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
@@ -354,9 +354,9 @@ let trace = device.catch_events([
             <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
-              <tr><td><code>Stock</code></td><td>Draw with the bit-exact triangular smoother.</td></tr>
-              <tr><td><code>Despiked</code></td><td>Draw with the smoother's onset ramped rather than stepped (the default).</td></tr>
-              <tr><td><code>Unsmoothed</code></td><td>Draw with no smoother; the model receives the raw injection.</td></tr>
+              <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
+              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
             </tbody>
           </table>
         </Card>

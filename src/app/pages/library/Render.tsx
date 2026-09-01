@@ -7,7 +7,7 @@ const Render: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Render" subtitle="Draw motion with the mouse's own texture" />
+        <CardHeader title="Render" subtitle="Render motion with the mouse's own texture" />
         <p>
           A real mouse does not report evenly. It reports when the hand moves, in bursts, with gaps,
           and with a distribution of magnitudes particular to that sensor in that hand. The box's own
@@ -18,17 +18,17 @@ const Render: Component = () => {
         </p>
         <pre class="diagram">{`one correction, drained over ~12 ms     | = a report,  . = an idle ms
 
-  Off        | | | | | | | | | | | |     even fill at the paced rate
-  drawn      | | . | . . | | . | . |     the live mouse's own on/off texture`}</pre>
+  Off         | | | | | | | | | | | |    even fill at the paced rate
+  Rendered    | | . | . . | | . | . |    the live mouse's own on/off texture`}</pre>
         <p>
-          <A href="/library/render#full"><code>full</code></A> decides whose motion the model draws.
-          Off, it draws what the host injects and relays the mouse's own byte for byte, so two streams
+          <A href="/library/render#full"><code>full</code></A> decides whose motion the model renders.
+          Off, it renders what the host injects and relays the mouse's own byte for byte, so two streams
           reach the wire with two textures. On, the mouse's cursor delta leaves the relayed report and
           joins injection in the model, so one stream reaches the wire and there is no relayed motion
           left beside it to compare against.
         </p>
         <pre class="diagram">{`the wire, mouse moving and box injecting     M = the mouse's own report
-                                             I = a report the box drew
+                                             I = a report the box rendered
   full off   M M I M M I I M M I M M I       two sources, two textures
   full on    I I I I I I I I I I I I         one source, one texture`}</pre>
         <div class="table-scroll">
@@ -37,28 +37,28 @@ const Render: Component = () => {
             <tbody>
               <tr><td>pick the texture, and whose motion goes through it</td><td><A href="/library/render#set-render"><code>set_render</code></A></td></tr>
               <tr><td>read it back, and whether the box has learned a profile</td><td><A href="/library/render#query-render"><code>query_render</code></A></td></tr>
-              <tr><td>cap how fast the drawn stream may emit</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td></tr>
+              <tr><td>cap how fast the rendered stream may emit</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td></tr>
             </tbody>
           </table>
         </div>
         <p>
           <code>set_render</code> is <A href="/native/injection#fire-and-forget">fire-and-forget</A>:
-          one frame, no reply, persisted in NVS. The box boots drawing injected motion with{' '}
+          one frame, no reply, persisted in NVS. The box boots rendering injected motion with{' '}
           <code>Despiked</code>, and with <code>full</code> off.
         </p>
       </Card>
 
       <div id="profile" data-search-target>
         <Card>
-          <CardHeader title="The profile" subtitle="Nothing is drawn until the mouse has moved" />
+          <CardHeader title="The profile" subtitle="Nothing is rendered until the mouse has moved" />
           <p>
-            The model needs a profile of the attached device before it can draw in that device's
+            The model needs a profile of the attached device before it can render in that device's
             style. The box builds one from the mouse's own reports on a 1 ms grid and keeps it in RAM
             only, so it is never carried across a power cut.
           </p>
           <pre class="diagram">{`  attach ──▶ observing ──▶ armed ──────────────▶ device changes ──▶ observing
              │              │                                        (profile dropped)
-             │              └─ motion drawn, injection drawn
+             │              └─ motion rendered, injection rendered
              └─ motion relayed, injection on the paced fill`}</pre>
           <div class="table-scroll">
             <table class="api-params">
@@ -72,14 +72,14 @@ const Render: Component = () => {
           <div class="callout callout--info">
             <p>
               A profile only arms off a window the mouse actually moved in: one built from stillness
-              models no motion and would draw none. Once armed it stays armed until the device
-              changes, which is what lets the box keep drawing while the hand is still.
+              models no motion and would render none. Once armed it stays armed until the device
+              changes, which is what lets the box keep rendering while the hand is still.
             </p>
             <p>
               So every box passes through <code>ready</code> false after a power cut, and leaves it the
               first time the mouse moves. Read it with{' '}
               <A href="/library/render#query-render"><code>query_render</code></A> rather than assuming
-              a set mode is a drawing box.
+              a set mode is a rendering box.
             </p>
           </div>
         </Card>
@@ -90,7 +90,7 @@ const Render: Component = () => {
           <CardHeader title="The four textures" subtitle="What the model is fed, and what it costs" />
           <p>
             <A href="/library/types/enums#render-mode"><code>RenderMode</code></A> picks what the model
-            receives. The three drawing modes differ only in the path smoother in front of it, which is
+            receives. The three rendering modes differ only in the path smoother in front of it, which is
             also what decides the delay.
           </p>
           <div class="table-scroll">
@@ -115,24 +115,24 @@ const Render: Component = () => {
 
       <div id="full" data-search-target>
         <Card>
-          <CardHeader title="Drawing your own motion" subtitle="full: one texture on the wire instead of two" />
+          <CardHeader title="The mouse's own motion" subtitle="full: one texture on the wire instead of two" />
           <p>
             With <code>full</code> off, an observer watching the wire sees the mouse's own reports and
-            a drawn injected stream beside them. Those are two different textures, and the difference
+            a rendered injected stream beside them. Those are two different textures, and the difference
             between them is itself a signature. <code>full</code> removes the comparison by taking the
-            mouse's cursor delta out of the relayed report and drawing it from the same model.
+            mouse's cursor delta out of the relayed report and rendering it from the same model.
           </p>
           <pre class="diagram">{`  full off      mouse ──────────────────────────▶ wire   (relayed, byte for byte)
-                host  ──▶ smoother ──▶ model ───▶ wire   (drawn)
+                host  ──▶ smoother ──▶ model ───▶ wire   (rendered)
 
   full on       mouse ─┐
-                       ├──▶ smoother ──▶ model ──▶ wire   (one stream)
+                       ├─▶ smoother ──▶ model ──▶ wire   (one stream)
                 host  ─┘`}</pre>
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Still relayed at the mouse's own timing</th></tr></thead>
               <tbody>
-                <tr><td>cursor X and Y</td><td>no, the model draws them</td></tr>
+                <tr><td>cursor X and Y</td><td>no, the model renders them</td></tr>
                 <tr><td>buttons</td><td>yes</td></tr>
                 <tr><td>wheel</td><td>yes</td></tr>
                 <tr><td>vendor and mirror bytes</td><td>yes, and the mirror follows what the model emitted</td></tr>
@@ -156,11 +156,11 @@ const Render: Component = () => {
             <table class="api-params">
               <thead><tr><th>Composes with</th><th>How</th></tr></thead>
               <tbody>
-                <tr><td><A href="/library/lock"><code>lock</code></A> and <code>scale</code></td><td>The model receives the weighed value, so a scaled axis is drawn at its scaled size.</td></tr>
-                <tr><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td>The pace caps the drawn rate. On the learnt pace the model self-paces every millisecond.</td></tr>
-                <tr><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td>Inert on the drawn stream: that stream carries your own motion, and a hoard left unridden is dropped.</td></tr>
+                <tr><td><A href="/library/lock"><code>lock</code></A> and <code>scale</code></td><td>The model receives the weighed value, so a scaled axis is rendered at its scaled size.</td></tr>
+                <tr><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td>The pace caps the rendered rate. On the learnt pace the model self-paces every millisecond.</td></tr>
+                <tr><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td>Inert on the rendered stream: that stream carries the mouse's own motion, and a hoard left unridden is dropped.</td></tr>
                 <tr><td><A href="/library/clip"><code>clip</code></A></td><td>Clip motion bypasses the model, so a clip playing under <code>full</code> puts a second texture on the wire.</td></tr>
-                <tr><td>a second mouse collection</td><td>Only the bound primary is drawn. A secondary collection is relayed.</td></tr>
+                <tr><td>a second mouse collection</td><td>Only the bound primary is rendered. A secondary collection is relayed.</td></tr>
               </tbody>
             </table>
           </div>
@@ -176,23 +176,23 @@ const Render: Component = () => {
             <table class="api-params">
               <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is drawn with; the box boots at <code>Despiked</code>.</td></tr>
-                <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the mouse's own motion is drawn by the model rather than relayed.</td></tr>
+                <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; the box boots at <code>Despiked</code>.</td></tr>
+                <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the mouse's own motion is rendered by the model rather than relayed.</td></tr>
               </tbody>
             </table>
           </div>
           <p>
             Both fields ride one frame and the box persists them together, so <code>full</code> is
-            required: a default here would rewrite a setting you did not name. Nothing is drawn while{' '}
+            required: a default here would rewrite a setting you did not name. Nothing is rendered while{' '}
             <code>mode</code> is <code>Off</code>, whatever <code>full</code> says, and nothing is
-            drawn before a <A href="/library/render#profile">profile arms</A>.
+            rendered before a <A href="/library/render#profile">profile arms</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, RenderMode};
 
 let device = Device::find()?;
-device.set_render(RenderMode::Despiked, false)?;   // the box's own default: draw injection only
-device.set_render(RenderMode::Despiked, true)?;    // draw your own motion the same way
+device.set_render(RenderMode::Despiked, false)?;   // the box's own default: render injection only
+device.set_render(RenderMode::Despiked, true)?;    // render the mouse's own motion too
 device.set_render(RenderMode::Off, false)?;        // renderer out of the path, the paced fill`}</code></pre>
         </Card>
       </div>
@@ -204,16 +204,16 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
-            <code>ready</code> is what separates a box set to a mode from a box drawing with it.
+            <code>ready</code> is what separates a box set to a mode from a box rendering with it.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let status = device.query_render()?;
-println!("{:?}, own motion drawn: {}", status.mode, status.full);
+println!("{:?}, own motion rendered: {}", status.mode, status.full);
 if !status.ready {
-    println!("move the mouse: nothing is drawn until a profile arms");
+    println!("move the mouse: nothing is rendered until a profile arms");
 }`}</code></pre>
         </Card>
       </div>

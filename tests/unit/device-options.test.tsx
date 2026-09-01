@@ -89,13 +89,13 @@ describe('DeviceOptions', () => {
   it('describes only the selected texture, and only the scope in force', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Draws it with a softer onset.');
+    await findByText('Renders it with a softer onset.');
     expect(queryByText('Even fill at the paced rate.')).toBeNull();
     await findByText('Adds about 3 ms of delay to the mouse.');
     expect(queryByText('Reaches the game exactly as the mouse sent it.')).toBeNull();
   });
 
-  // What drawing the operator's own movement costs follows the smoother in the path, so one flat
+  // What rendering the operator's own movement costs follows the smoother in the path, so one flat
   // number would be wrong for two of the four modes.
   it('names the delay the selected texture actually costs', async () => {
     mock.render = { mode: RenderMode.Stock, full: true, ready: true };
@@ -108,17 +108,17 @@ describe('DeviceOptions', () => {
     await uns.findByText('Adds about 1 ms of delay to the mouse.');
   });
 
-  // `full` stores and reads back with the texture off, but nothing is drawn in that state: there is
-  // no model in the path. Saying "drawn too" there reads as active when it is not.
-  it('does not claim the operator movement is drawn while the texture is off', async () => {
+  // `full` stores and reads back with the texture off, but nothing is rendered in that state: there is
+  // no model in the path. Saying "rendered too" there reads as active when it is not.
+  it('does not claim the mouse own motion is rendered while the mode is off', async () => {
     mock.render = { mode: RenderMode.Off, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Nothing is drawn while the texture is off.');
-    await findByText('Your movement passes through');
-    expect(queryByText('Your movement drawn too')).toBeNull();
+    await findByText('Renders nothing while the mode is off.');
+    await findByText("Mouse's own motion relayed");
+    expect(queryByText("Mouse's own motion rendered")).toBeNull();
   });
 
-  // Nothing is drawn until the box has learned a profile, so a box set to a mode and a box drawing
+  // Nothing is rendered until the box has learned a profile, so a box set to a mode and a box rendering
   // with it are different states and the card has to say which one it is looking at.
   it('says the mouse has to move while no profile has armed', async () => {
     mock.render = { mode: RenderMode.Despiked, full: false, ready: false };
@@ -128,7 +128,7 @@ describe('DeviceOptions', () => {
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
     const armed = render(() => <DeviceOptions />);
-    await armed.findByText('Draws it with a softer onset.');
+    await armed.findByText('Renders it with a softer onset.');
     expect(armed.queryByText('Move the mouse to start')).toBeNull();
   });
 

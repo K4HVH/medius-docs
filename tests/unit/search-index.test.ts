@@ -18,7 +18,7 @@ const find = (term: string): Entry[] => dash.filter((e) => haystack(e).includes(
 describe('dashboard search index', () => {
   it('points every card at the tab it actually lives on', () => {
     const onControl = ['Injection', 'Input locks', 'Input catch', 'Clip playback', 'Status light', 'Safety clear'];
-    const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Bearing', 'Emit rate', 'Texture', 'Capabilities', 'Performance', 'Device log'];
+    const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Bearing', 'Emit rate', 'Render', 'Capabilities', 'Performance', 'Device log'];
     // The tab is the path before the anchor. A card entry without one lands on the tab and scrolls
     // nowhere, which is what left every Dashboard result pointing at the same two pages.
     const route = (e: Entry) => e.path.split('#')[0];

@@ -43,7 +43,7 @@ export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring a
 export const Q_FIRMWARE = 11; // both chips' versions + which app slot each booted (§4.16)
 
 // CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
-// byte draws from, so a trigger runs the same verb the control PC would.
+// byte renders from, so a trigger runs the same verb the control PC would.
 export enum ClipOp {
   Start = 0,
   Stop = 1,
@@ -131,7 +131,7 @@ export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
 export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
 export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
-export const OPT_RENDER = 5; // value [mode u8][full u8]; the texture motion is drawn with (§3.10)
+export const OPT_RENDER = 5; // value [mode u8][full u8]; the texture motion is rendered with (§3.10)
 
 // The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
 export const NAME_MAX = 32;
@@ -143,7 +143,7 @@ export enum EmitMode {
   Fixed = 2, // pace at a fixed rate_hz
 }
 
-// OPTION(RENDER)'s mode: Off is the paced fill; the rest draw the mouse's learned texture and differ only
+// OPTION(RENDER)'s mode: Off is the paced fill; the rest render the mouse's learned texture and differ only
 // in the onboard path smoother. The box boots at Despiked.
 export enum RenderMode {
   Off = 0,

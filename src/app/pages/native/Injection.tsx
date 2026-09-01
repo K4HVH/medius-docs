@@ -164,7 +164,7 @@ const Injection: Component = () => {
             <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times that middle row,
             pacing to the mouse's learnt report rate.{' '}
             <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,
-            shapes the motion through a live per-device model, and can draw the mouse's own motion the
+            shapes the motion through a live per-device model, and can render the mouse's own motion the
             same way.
           </p>
         </Card>
