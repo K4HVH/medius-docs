@@ -775,8 +775,7 @@ const Requests: Component = () => {
           </table>
           <p>
             Nothing is rendered while <code>ready</code> reads <code>0</code>: motion is relayed and
-            injection takes the paced fill whatever <code>mode</code> says. The profile lives in RAM, so
-            every box reads <code>0</code> after a power cut and arms once the mouse moves.
+            injection takes the paced fill whatever <code>mode</code> says.
           </p>
           <p>
             Library binding:{' '}
