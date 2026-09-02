@@ -70,6 +70,19 @@ const RENDER_LABEL: Record<number, string> = {
   [RenderMode.Unsmoothed]: 'Unsmoothed',
 };
 
+const SPREAD_PERCENTS: Record<string, number> = { off: 0, half: 50, full: 100 };
+
+const SPREAD_BLURB: Record<string, string> = {
+  off: 'The whole delta on the next report.',
+  half: 'Half the interval, half the delay.',
+  full: "The interval, at the mouse's own density.",
+};
+
+// A percent this control cannot express, set by another client or an older session, keeps its own
+// entry rather than reading as one of the three.
+const spreadKeyFor = (percent: number): string =>
+  percent === 0 ? 'off' : percent === 50 ? 'half' : percent === 100 ? 'full' : 'custom';
+
 const emitLabel = (e: EmitPace): string => {
   let base: string;
   switch (e.mode) {
@@ -95,6 +108,7 @@ const DeviceOptions = () => {
   const bearing = dash.poll('bearing');
   const emit = dash.poll('emit');
   const render = dash.poll('render');
+  const spread = dash.poll('spread');
   const version = dash.poll('version');
   const cmd = createCommand();
 
@@ -107,6 +121,7 @@ const DeviceOptions = () => {
   const [modeEdit, setModeEdit] = createSignal<string | null>(null);
   const [renderEdit, setRenderEdit] = createSignal<string | null>(null);
   const [fullEdit, setFullEdit] = createSignal<boolean | null>(null);
+  const [spreadEdit, setSpreadEdit] = createSignal<string | null>(null);
   const [hzEdit, setHzEdit] = createSignal<number | null>(null);
   const [forceEdit, setForceEdit] = createSignal<number | null>(null);
   const [forceOnEdit, setForceOnEdit] = createSignal<boolean | null>(null);
@@ -125,6 +140,8 @@ const DeviceOptions = () => {
   };
   const renderDirty = () => renderEdit() !== null || fullEdit() !== null;
   const revertRender = () => { setRenderEdit(null); setFullEdit(null); };
+  const spreadDirty = () => spreadEdit() !== null;
+  const revertSpread = () => setSpreadEdit(null);
 
   const name = () => nameEdit() ?? version()?.name ?? '';
   const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
@@ -197,6 +214,15 @@ const DeviceOptions = () => {
       setForceEdit(null);
       setForceOnEdit(null);
       dash.refreshPoll('emit');
+    });
+
+  const spreadKey = () => spreadEdit() ?? spreadKeyFor(spread()?.percent ?? 100);
+
+  const applySpread = () =>
+    cmd.run(async () => {
+      await dash.link()!.setSpread(SPREAD_PERCENTS[spreadKey()] ?? spread()?.percent ?? 100);
+      setSpreadEdit(null);
+      dash.refreshPoll('spread');
     });
 
   const applyRender = () =>
@@ -442,6 +468,59 @@ const DeviceOptions = () => {
                     <Chip variant="warning">Move the mouse to start</Chip>
                   </Show>
                   <Show when={renderDirty()}>
+                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                      not applied yet
+                    </span>
+                  </Show>
+                </div>
+              )}
+            </Show>
+            </Section>
+          </div>
+
+          <div id="spread" data-search-target>
+            <Section title="Spread">
+            <p>
+              How much of the gap between an aim loop's commands an injected delta is released across.
+              The box learns the gap from the commands it receives.
+            </p>
+            <RadioGroup
+              name="spread-percent"
+              value={spreadKey()}
+              onChange={setSpreadEdit}
+              options={[
+                { value: 'off', label: 'Off' },
+                { value: 'half', label: 'Half' },
+                { value: 'full', label: 'Full' },
+              ]}
+            />
+            <p style={muted}>{SPREAD_BLURB[spreadKey()] ?? `${spread()?.percent ?? 0}% of the interval.`}</p>
+            <div style={controls}>
+              <Button variant="primary" disabled={cmd.busy()} onClick={applySpread}>
+                Apply
+              </Button>
+              <Show when={spreadDirty()}>
+                <Button variant="subtle" onClick={revertSpread}>
+                  Revert
+                </Button>
+              </Show>
+            </div>
+            <Show when={spread()} fallback={<p style={status}>Reading status...</p>}>
+              {(sp) => (
+                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>
+                    {sp().percent === 0 ? 'Off' : `${sp().percent}%`}
+                  </Chip>
+                  {/* The interval is 0 until the box has learned the loop, and a delta goes out whole
+                      until it has, however the percent is set. */}
+                  <Show when={sp().percent > 0}>
+                    <Chip variant={sp().spanUs > 0 ? 'success' : 'warning'}>
+                      {sp().spanUs > 0
+                        ? `Over ${(sp().spanUs / 1000).toFixed(1)} ms`
+                        : 'Waiting for an aim loop'}
+                    </Chip>
+                  </Show>
+                  <Show when={spreadDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
                       not applied yet
                     </span>

@@ -1136,6 +1136,18 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <p>See <A href="/library/options">Options</A>.</p>
           </div>
 
+          <div id="spreadstatus" data-search-target>
+            <div class="api-response-label">SpreadStatus (query_spread())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>percent</code></td><td><code>int</code></td><td>share of the command interval a delta is released across; 0 is the whole delta on the next report</td></tr>
+                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 until the box has learned the host's command period</td></tr>
+              </tbody>
+            </table>
+            <p>See <A href="/library/options">Options</A>.</p>
+          </div>
+
           <div id="counters" data-search-target>
             <div class="api-response-label">Counters (counters())</div>
             <table class="api-params">

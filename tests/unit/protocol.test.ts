@@ -63,6 +63,7 @@ import {
   clearNamePayload,
   emitPayload,
   renderPayload,
+  spreadPayload,
   imperfectPayload,
   ledPayload,
   lockAxis,
@@ -1110,6 +1111,14 @@ describe('OPTION command (§3.10)', () => {
     expect(Array.from(renderPayload(RenderMode.Unsmoothed, false))).toEqual([5, 3, 0]);
   });
 
+  it('spreadPayload packs [id=6][percent u16 LE]', () => {
+    expect(Array.from(spreadPayload(0))).toEqual([6, 0, 0]);
+    expect(Array.from(spreadPayload(100))).toEqual([6, 100, 0]);
+    // Above a byte, so a percent packed as one would truncate here.
+    expect(Array.from(spreadPayload(250))).toEqual([6, 250, 0]);
+    expect(Array.from(spreadPayload(1000))).toEqual([6, 0xe8, 0x03]);
+  });
+
   it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
     expect(Array.from(namePayload('AB'))).toEqual([3, 0x41, 0x42]);
     expect(Array.from(clearNamePayload())).toEqual([3]); // clear = OPTION(NAME) with no value
@@ -1190,6 +1199,26 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
+  });
+
+  it('RESP(OPTIONS, SPREAD) decodes the percent and the interval in effect', () => {
+    // 250 percent over 8125 us (0x1FBD): two distinct multi-byte values, so a swapped pair fails.
+    expect(parseResp(new Uint8Array([9, 6, 250, 0, 0xbd, 0x1f, 0, 0]))).toEqual({
+      kind: 'spread',
+      spread: { percent: 250, spanUs: 8125 },
+    });
+    // Off, with nothing learned.
+    expect(parseResp(new Uint8Array([9, 6, 0, 0, 0, 0, 0, 0]))).toEqual({
+      kind: 'spread',
+      spread: { percent: 0, spanUs: 0 },
+    });
+    // The interval is unsigned microseconds, so the top bit is not a sign.
+    expect(parseResp(new Uint8Array([9, 6, 1, 0, 0xff, 0xff, 0xff, 0xff]))).toEqual({
+      kind: 'spread',
+      spread: { percent: 1, spanUs: 0xffffffff },
+    });
+    // A short value is not padded out to a reading.
+    expect(parseResp(new Uint8Array([9, 6, 100, 0, 0, 0, 0]))).toBeNull();
   });
 
   it('RESP(OPTIONS, RENDER) decodes the texture, the full flag and whether a profile has armed', () => {

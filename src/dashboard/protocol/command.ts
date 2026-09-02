@@ -13,6 +13,7 @@ import {
   OPT_BEARING,
   OPT_EMIT,
   OPT_RENDER,
+  OPT_SPREAD,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   OPT_NAME,
@@ -148,6 +149,13 @@ export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array
 // native motion through the same model rather than relaying it. Both are written every call.
 export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
   return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
+}
+
+// OPTION(SPREAD) (§3.13): [id=6][percent u16 LE]. The share of the interval between commands an
+// injected delta is released across; 0 puts the whole delta on the next report the box emits.
+export function spreadPayload(percent: number): Uint8Array {
+  const p = percent & 0xffff;
+  return new Uint8Array([OPT_SPREAD, p & 0xff, p >> 8]);
 }
 
 // OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the

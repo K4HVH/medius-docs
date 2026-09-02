@@ -326,6 +326,9 @@ describe('SerialLink', () => {
         } else if (f.payload[1] === 5) {
           // RESP(OPTIONS, RENDER): [9][5][mode=de-spiked][full][ready]
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 5, 2, 1, 1])));
+        } else if (f.payload[1] === 6) {
+          // RESP(OPTIONS, SPREAD): [9][6][percent=100 u16 LE][span=8002 us u32 LE]
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 6, 100, 0, 0x42, 0x1f, 0, 0])));
         }
       }
     };
@@ -350,11 +353,13 @@ describe('SerialLink', () => {
       full: true,
       ready: true,
     });
+    expect(await link.querySpread()).toEqual({ percent: 100, spanUs: 8002 });
     expect(reqs).toEqual([
       [9, 0],
       [9, 1],
       [9, 2],
       [9, 5],
+      [9, 6],
     ]); // each option query carries its id byte, correlated on the Q_OPTIONS selector
     await link.close();
   });

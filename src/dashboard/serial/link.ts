@@ -16,6 +16,7 @@ import {
   type DeviceInfo,
   type EmitPace,
   type Render,
+  type Spread,
   type Health,
   type ImperfectStatus,
   type Locks,
@@ -36,6 +37,7 @@ import {
   OPT_BEARING,
   OPT_EMIT,
   OPT_RENDER,
+  OPT_SPREAD,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -63,6 +65,7 @@ import {
   clipTriggerPayload,
   emitPayload,
   renderPayload,
+  spreadPayload,
   encode,
   encodeClipEntry,
   filterEverything,
@@ -590,6 +593,20 @@ export class SerialLink {
     const resp = parseResp(await this.queryOption(OPT_RENDER, timeoutMs));
     if (resp?.kind !== 'render') throw new Error('unexpected reply to OPTIONS(RENDER) query');
     return resp.render;
+  }
+
+  // The share of the interval between commands an injected delta is released across (§3.13). 0 puts
+  // the whole delta on the next report the box emits; above 100 overlaps. Persisted in NVS.
+  setSpread(percent: number): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), spreadPayload(percent)));
+  }
+
+  // The percent set, and the interval the box is releasing across (§4.14). The interval is 0 until
+  // the box has learned the host's command period from MOVE arrivals.
+  async querySpread(timeoutMs?: number): Promise<Spread> {
+    const resp = parseResp(await this.queryOption(OPT_SPREAD, timeoutMs));
+    if (resp?.kind !== 'spread') throw new Error('unexpected reply to OPTIONS(SPREAD) query');
+    return resp.spread;
   }
 
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).

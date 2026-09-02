@@ -1234,6 +1234,20 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </Card>
       </div>
 
+      <div id="spread-status" data-search-target>
+        <Card>
+          <CardHeader title="MediusSpreadStatus" subtitle="How far an injected delta is spread in time" />
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_spread</code></A>. See <A href="/library/options">Options</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>percent</code></td><td><code>uint16_t</code></td><td>Share of the command interval a delta is released across; 0 is the whole delta on the next report.</td></tr>
+              <tr><td><code>span_us</code></td><td><code>uint32_t</code></td><td>The interval in effect, in microseconds. 0 until the box has learned the host's command period.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="counters" data-search-target>
         <Card>
           <CardHeader title="MediusCountersSnapshot" subtitle="Host-side always-on link counters" />

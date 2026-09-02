@@ -22,6 +22,7 @@ const Options: Component = () => {
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
             <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
             <tr><td>motion texture</td><td><A href="/library/options#set-render"><code>set_render</code></A></td><td><A href="/library/options#query-render"><code>query_render</code></A></td></tr>
+            <tr><td>injection spreading</td><td><A href="/library/options#set-spread"><code>set_spread</code></A></td><td><A href="/library/options#query-spread"><code>query_spread</code></A></td></tr>
           </tbody>
         </table>
       </Card>
@@ -280,6 +281,49 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
         </Card>
       </div>
 
+      <div id="set-spread" data-search-target>
+        <Card>
+          <CardHeader title="set_spread" subtitle="Set how far an injected delta is spread in time" />
+          <pre class="api-signature">fn set_spread(&self, percent: u16) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            An aim loop slower than the mouse's report rate hands the box more motion than one report
+            carries. <code>percent</code> is how much of the interval between commands the box releases
+            it across: <code>0</code> puts the whole delta on the next report, <code>100</code> spreads
+            it evenly over one interval, and above <code>100</code> overlaps with the command after it.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval, in percent; the box boots at <code>100</code>.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              Spreading costs half the interval in latency on average, about 3.5 ms on a 125 Hz loop.
+              The delivered total never changes, and a loop matched to the mouse's report rate emits
+              exactly what it did before.
+            </p>
+            <p>
+              Motion asking for exact timing goes out on the next report:{' '}
+              <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
+              <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Wheel motion is
+              never spread.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+device.set_spread(100)?;   // the box's own default: one whole command interval
+device.set_spread(50)?;    // half of it, for half the added latency
+device.set_spread(0)?;     // off: the whole delta on the next report`}</code></pre>
+        </Card>
+      </div>
+
       <div id="query-imperfect" data-search-target>
         <Card>
           <CardHeader title="query_imperfect" subtitle="Read the imperfect-clone state" />
@@ -386,6 +430,29 @@ let status = device.query_render()?;
 println!("{:?}, own motion rendered: {}", status.mode, status.full);
 if !status.ready {
     println!("move the mouse: nothing is rendered until a profile arms");
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="query-spread" data-search-target>
+        <Card>
+          <CardHeader title="query_spread" subtitle="Read the percent and the interval in effect" />
+          <pre class="api-signature">fn query_spread(&self) -&gt; Result&lt;SpreadStatus&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
+            <code>span_us</code> is <code>0</code> until the box has learned the host's command period,
+            and while <code>percent</code> is <code>0</code>; until then the whole delta goes out on the
+            next report.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let status = device.query_spread()?;
+println!("{}% over {} us", status.percent, status.span_us);
+if status.span_us == 0 {
+    println!("send a few moves: the command period is not learned yet");
 }`}</code></pre>
         </Card>
       </div>
