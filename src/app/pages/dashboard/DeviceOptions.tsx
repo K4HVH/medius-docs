@@ -476,7 +476,7 @@ const DeviceOptions = () => {
                 value={forceOn() ? 'forced' : 'device'}
                 onChange={(v) => setForceOnEdit(v === 'forced')}
                 options={[
-                  { value: 'device', label: "Device's own" },
+                  { value: 'device', label: 'Native' },
                   { value: 'forced', label: 'Forced' },
                 ]}
               />
@@ -528,7 +528,7 @@ const DeviceOptions = () => {
                     <Chip variant={s().forceActive ? 'success' : 'neutral'}>
                       {s().forceActive
                         ? `Forced \u00b7 ${s().advertisedHz} Hz`
-                        : `Device's own \u00b7 ${s().advertisedHz} Hz`}
+                        : `Native \u00b7 ${s().advertisedHz} Hz`}
                     </Chip>
                   </Show>
                   <Show when={s().forceHz > 0 && !s().forceActive}>
