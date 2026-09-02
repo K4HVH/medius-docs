@@ -55,6 +55,12 @@ const Option: Component = () => {
                 <td>The texture the box renders motion with</td>
                 <td>de-spiked, injected only</td>
               </tr>
+              <tr>
+                <td><A href="/native/commands/option#spread"><code>SPREAD</code></A></td>
+                <td><code>6</code></td>
+                <td>How far an injected delta is spread in time</td>
+                <td>one command interval</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -410,6 +416,76 @@ const Option: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | mode   | full   | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+      <div id="spread" data-search-target>
+        <Card>
+          <CardHeader title="SPREAD" subtitle="How far an injected delta is spread in time" />
+          <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
+          <p>
+            A host loop slower than the mouse's report rate hands the box more motion than one report
+            carries. The percent says how much of the interval between commands the box releases it
+            across.
+          </p>
+          <div class="api-response-label">PERCENT</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>The whole delta goes out on the next report the box emits.</td></tr>
+              <tr><td><code>1..99</code></td><td>Released across that share of the interval, then whatever is left goes out at the end of it.</td></tr>
+              <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
+              <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so a command lands while the one before it is still going out.</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`a 250 Hz host on a 1000 Hz mouse, one MOVE of 8 per 4 ms  (| = a report)
+
+  percent = 0     |8. . .|8. . .|8. . .     one report per command, four times the delta
+  percent = 100   |2|2|2|2|2|2|2|2|2|2|     the mouse's own report density and magnitude`}</pre>
+          <p>
+            The box learns the interval from <A href="/native/commands/move"><code>MOVE</code></A>{' '}
+            arrivals. Until it has one, and for a loop slower than about 31 Hz, the whole delta goes
+            out on the next report whatever the percent says.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Aspect</th><th><code>percent = 0</code></th><th><code>percent = 100</code></th></tr></thead>
+            <tbody>
+              <tr><td>Reports per command</td><td>One</td><td>One for every report the box emits during the interval</td></tr>
+              <tr><td>Per-report delta</td><td>The whole command</td><td>A share of it, summing to the same total</td></tr>
+              <tr><td>Delivered total</td><td>Exact</td><td>Exact</td></tr>
+              <tr><td>Added latency</td><td>None</td><td>Half the interval on average, about 3.5 ms at 125 Hz</td></tr>
+              <tr><td>Wheel motion</td><td>Not spread</td><td>Not spread: a detent is one unit</td></tr>
+            </tbody>
+          </table>
+          <p>
+            A loop matched to the mouse's report rate learns an interval of one report period, so the
+            emitted stream is what it was whatever the percent says.
+          </p>
+          <div class="callout callout--info">
+            <p>
+              A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag goes out on the
+              next report instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each
+              ask for exact timing. <code>FLUSH</code> and <code>DISCARD</code> also act on the part of
+              an earlier delta still waiting, so they mean the same thing whatever the percent is.
+            </p>
+            <p>
+              This and <A href="/native/commands/option#render"><code>RENDER</code></A> are independent
+              and compose. Under <code>full</code> rendering only injected motion is spread; the
+              mouse's own already arrives at its report rate.
+            </p>
+          </div>
+          <p>
+            Read{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 6)</code></A> (the percent,
+            and the interval in effect) · Library{' '}
+            <A href="/library/options#set-spread"><code>set_spread</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>One whole command interval (<code>percent = 0x0064</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 11     | 00     | 03 00  | 06     | 64 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | id     | percent| CRC16  |
++--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

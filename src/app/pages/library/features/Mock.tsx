@@ -110,6 +110,8 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_render_ready(self, ready: bool) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_spread_learned(self, period_us: u32) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_version(&self, version: Version)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_health(&self, health: Health)</pre>

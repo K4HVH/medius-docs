@@ -8,6 +8,7 @@ const mock = vi.hoisted(() => ({
   bearing: { windowMs: 20, mode: 0 } as { windowMs: number; mode: number },
   emit: { mode: 0, fixedHz: 0, resolvedHz: 0 } as { mode: number; fixedHz: number; resolvedHz: number },
   render: { mode: 2, full: false, ready: false } as { mode: number; full: boolean; ready: boolean },
+  spread: { percent: 100, spanUs: 8000 } as { percent: number; spanUs: number },
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -25,11 +26,13 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
         setMovementRiding: async () => {},
         setEmitPace: async () => {},
         setRender: async () => {},
+        setSpread: async () => {},
       }),
       poll: (key: string) => () =>
         key === 'bearing' ? mock.bearing
           : key === 'emit' ? mock.emit
           : key === 'render' ? mock.render
+          : key === 'spread' ? mock.spread
           : (values[key] ?? null),
       refreshPoll: () => {},
     }),
@@ -46,6 +49,7 @@ afterEach(() => {
   mock.bearing = { windowMs: 20, mode: 0 };
   mock.emit = { mode: 0, fixedHz: 0, resolvedHz: 0 };
   mock.render = { mode: 2, full: false, ready: false };
+  mock.spread = { percent: 100, spanUs: 8000 };
 });
 
 describe('DeviceOptions', () => {
@@ -113,6 +117,39 @@ describe('DeviceOptions', () => {
     await findByText('Native motion relayed');
     await findByText('Move the mouse to start');
     expect(queryByText('Native motion rendered')).toBeNull();
+  });
+
+  it('describes only the selected spread, and shows the interval in force', async () => {
+    mock.spread = { percent: 50, spanUs: 4000 };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('Half the interval, half the delay.');
+    expect(queryByText('The whole delta on the next report.')).toBeNull();
+    await findByText('50%');
+    await findByText('Over 4.0 ms');
+  });
+
+  // The percent reads back set while the box is still releasing a delta whole: it releases nothing
+  // across an interval until it has learned the host's command period. Showing an interval there
+  // would read as spreading when nothing is.
+  it('says it is waiting while no command period has been learned', async () => {
+    mock.spread = { percent: 100, spanUs: 0 };
+    const waiting = render(() => <DeviceOptions />);
+    await waiting.findByText('Waiting for an aim loop');
+    cleanup();
+
+    mock.spread = { percent: 100, spanUs: 8002 };
+    const learned = render(() => <DeviceOptions />);
+    await learned.findByText('Over 8.0 ms');
+    expect(learned.queryByText('Waiting for an aim loop')).toBeNull();
+  });
+
+  // Off is not "waiting": there is no interval to wait for, and a warning chip there reads as a fault.
+  it('shows no interval chip at all with spreading off', async () => {
+    mock.spread = { percent: 0, spanUs: 0 };
+    const { queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('The whole delta on the next report.');
+    expect(queryByText('Waiting for an aim loop')).toBeNull();
+    expect(queryByText(/Over .* ms/)).toBeNull();
   });
 
   // Nothing is rendered until the box has learned a profile, so a box set to a mode and a box rendering

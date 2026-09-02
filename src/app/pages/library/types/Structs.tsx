@@ -837,6 +837,22 @@ for ev in input.by_ref().take(20) {
           </table>
         </Card>
       </div>
+      <div id="spread-status" data-search-target>
+        <Card>
+          <CardHeader title="SpreadStatus" subtitle="How far an injected delta is spread, and the interval in effect" />
+          <p>
+            The spread state from{' '}
+            <A href="/library/options#query-spread"><code>query_spread()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval a delta is released across; <code>0</code> is the whole delta on the next report.</td></tr>
+              <tr><td><code>span_us</code></td><td><code>u32</code></td><td>The interval in effect, in microseconds. <code>0</code> until the box has learned the host's command period.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="log-line" data-search-target>
         <Card>
           <CardHeader title="LogLine" subtitle="One line from the LOG stream" />

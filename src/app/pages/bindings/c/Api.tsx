@@ -167,6 +167,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_set_name(MediusDevice *dev, const char *name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>medius_device_clear_name(MediusDevice *dev)</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/c/types#version"><code>MediusVersion.name</code></A>.</td></tr>
               <tr><td><code>medius_device_set_bearing(MediusDevice *dev, uint16_t window_ms, uint8_t mode)</code></td><td>Set what <code>MEDIUS_DIRECTION_WITH</code> / <code>_AGAINST</code> are measured against; <code>window_ms == 0</code> turns it off.</td></tr>
+              <tr><td><code>medius_device_set_spread(MediusDevice *dev, uint16_t percent)</code></td><td>How much of the interval between commands an injected delta is released across, in percent. 0 puts the whole delta on the next report, 100 spreads it over one interval, and above 100 overlaps. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>medius_device_set_render(MediusDevice *dev, uint8_t mode, bool full)</code></td><td>Pick the texture (<A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A>) and whether native motion is rendered by the model rather than relayed. Both ride one frame. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
@@ -197,6 +198,7 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_query_emit_pace(dev, MediusEmitPaceStatus *out)</code></td><td><A href="/bindings/c/types#emit-pace-status"><code>MediusEmitPaceStatus</code></A>: pacing mode, rate in effect, and the rate the clone advertises.</td></tr>
               <tr><td><code>medius_device_query_bearing(dev, MediusBearing *out)</code></td><td><A href="/bindings/c/types#bearing"><code>MediusBearing</code></A>: the bearing window and geometry.</td></tr>
               <tr><td><code>medius_device_query_render(dev, MediusRenderStatus *out)</code></td><td><A href="/bindings/c/types#render-status"><code>MediusRenderStatus</code></A>: the texture, whether native motion goes through it, and whether a profile has armed.</td></tr>
+              <tr><td><code>medius_device_query_spread(dev, MediusSpreadStatus *out)</code></td><td><A href="/bindings/c/types#spread-status"><code>MediusSpreadStatus</code></A>: how far an injected delta is spread, and the interval in effect.</td></tr>
               <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
           </table>
@@ -457,6 +459,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_mock_set_movement_riding(mock, bool enabled, uint32_t window_ms)</code></td><td>Set the movement-riding window the mock reports.</td></tr>
               <tr><td><code>medius_mock_set_bearing(mock, uint16_t window_ms, uint8_t mode)</code></td><td>Set the bearing the mock reports. A mode no constant names is ignored, as the box ignores it.</td></tr>
               <tr><td><code>medius_mock_set_render(mock, uint8_t mode, bool full, bool ready)</code></td><td>Set the texture the mock reports, whether native motion goes through it, and whether a profile has armed. A mode no constant names leaves the texture alone.</td></tr>
+              <tr><td><code>medius_mock_set_spread_learned(mock, uint32_t period_us)</code></td><td>Set the command period the mock has learned, in microseconds. A mock left at 0 reports no interval whatever the percent is, which is where a real box starts.</td></tr>
               <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries for timeout tests (still records).</td></tr>
               <tr><td><code>medius_mock_push_raw(mock, const uint8_t *bytes, uintptr_t len)</code></td><td>Inject raw inbound bytes, as if the box sent them.</td></tr>
               <tr><td><code>medius_mock_push_log(mock, MediusLogLevel level, const char *text)</code></td><td>Push a LOG line onto the device's log stream.</td></tr>

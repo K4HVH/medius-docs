@@ -16,6 +16,7 @@ import {
   OPT_BEARING,
   OPT_EMIT,
   OPT_RENDER,
+  OPT_SPREAD,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -108,8 +109,16 @@ export interface Render {
   ready: boolean;
 }
 
+// How far an injected delta is spread across the host's command interval, and the interval the box is
+// releasing across. `spanUs` is 0 until the box has learned the host's command period.
+export interface Spread {
+  percent: number;
+  spanUs: number;
+}
+
 export type Resp =
   | { kind: 'render'; render: Render }
+  | { kind: 'spread'; spread: Spread }
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
   | { kind: 'deviceInfo'; deviceInfo: DeviceInfo }
@@ -414,6 +423,13 @@ export function parseResp(payload: Uint8Array): Resp | null {
               full: payload[3] !== 0,
               ready: payload[4] !== 0,
             },
+          };
+        case OPT_SPREAD:
+          // [what=9][id=6][percent u16 LE][span_us u32 LE]
+          if (payload.length < 8) return null;
+          return {
+            kind: 'spread',
+            spread: { percent: u16le(payload, 2), spanUs: u32le(payload, 4) },
           };
         default:
           return null;

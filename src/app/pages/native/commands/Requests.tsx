@@ -781,6 +781,28 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-render"><code>query_render</code></A>.
           </p>
+          <div class="api-response-label">SPREAD VALUE</div>
+          <p>
+            The current <A href="/native/commands/option#spread"><code>SPREAD</code></A> setting (id 6),
+            and the interval the box is releasing an injected delta across.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>percent</code></td><td><code>u16</code>, little-endian; share of the command interval, <code>100</code> = one whole interval <em>(default)</em></td></tr>
+              <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = no command period learned yet</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The whole delta goes out on the next report while <code>span_us</code> reads <code>0</code>,
+            whatever <code>percent</code> says.
+          </p>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-spread"><code>query_spread</code></A>.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
