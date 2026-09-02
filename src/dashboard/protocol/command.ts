@@ -151,7 +151,7 @@ export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
   return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
 }
 
-// OPTION(SPREAD) (§3.13): [id=6][percent u16 LE]. The share of the interval between commands an
+// OPTION(SPREAD) (§3.10): [id=6][percent u16 LE]. The share of the interval between commands an
 // injected delta is released across; 0 puts the whole delta on the next report the box emits.
 export function spreadPayload(percent: number): Uint8Array {
   const p = percent & 0xffff;

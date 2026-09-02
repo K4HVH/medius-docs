@@ -792,12 +792,14 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>percent</code></td><td><code>u16</code>, little-endian; share of the command interval, <code>100</code> = one whole interval <em>(default)</em></td></tr>
-              <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = no command period learned yet</td></tr>
+              <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = nothing is being spread</td></tr>
             </tbody>
           </table>
           <p>
-            The whole delta goes out on the next report while <code>span_us</code> reads <code>0</code>,
-            whatever <code>percent</code> says.
+            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
+            while no command period has been learned, and while{' '}
+            <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> has a window set. In
+            all three the whole delta goes out on the next report the box emits.
           </p>
           <p>
             Library binding:{' '}

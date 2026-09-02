@@ -9,7 +9,7 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Six box settings, each set and read on its own. All persist in NVS and survive a reboot. See
+          Seven box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command for the wire contract.
         </p>
@@ -287,10 +287,10 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           <pre class="api-signature">fn set_spread(&self, percent: u16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            An aim loop slower than the mouse's report rate hands the box more motion than one report
-            carries. <code>percent</code> is how much of the interval between commands the box releases
+            An aim loop slower than the native report rate hands the box a delta worth several native
+            reports. <code>percent</code> is how much of the interval between commands the box releases
             it across: <code>0</code> puts the whole delta on the next report, <code>100</code> spreads
-            it evenly over one interval, and above <code>100</code> overlaps with the command after it.
+            it evenly over one interval, and above <code>100</code> carries a standing backlog.
           </p>
           <table class="api-params">
             <thead>
@@ -302,16 +302,17 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           </table>
           <div class="callout callout--warning">
             <p>
-              Spreading costs half the interval in latency on average, about 3.5 ms on a 125 Hz loop.
-              The delivered total never changes, and a loop matched to the mouse's report rate emits
+              Spreading costs half the interval in latency on average, about 4 ms on a 125 Hz loop.
+              The delivered total never changes, and a loop matched to the native report rate emits
               exactly what it did before.
             </p>
             <p>
-              Motion asking for exact timing goes out on the next report:{' '}
+              Motion asking for exact timing is not spread:{' '}
               <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
               <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
-              <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Wheel motion is
-              never spread.
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Neither is wheel
+              motion, nor anything at all while{' '}
+              <A href="/library/options#set-movement-riding">movement riding</A> has a window set.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -441,9 +442,9 @@ if !status.ready {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
-            <code>span_us</code> is <code>0</code> until the box has learned the host's command period,
-            and while <code>percent</code> is <code>0</code>; until then the whole delta goes out on the
-            next report.
+            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
+            the box has learned the host's command period, and while movement riding has a window set.
+            In all three the whole delta goes out on the next report.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;

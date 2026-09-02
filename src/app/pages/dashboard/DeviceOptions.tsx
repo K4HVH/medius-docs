@@ -73,9 +73,9 @@ const RENDER_LABEL: Record<number, string> = {
 const SPREAD_PERCENTS: Record<string, number> = { off: 0, half: 50, full: 100 };
 
 const SPREAD_BLURB: Record<string, string> = {
-  off: 'The whole delta on the next report.',
-  half: 'Half the interval, half the delay.',
-  full: "The interval, at the mouse's own density.",
+  off: 'The whole movement at once.',
+  half: 'Half the gap, half the delay.',
+  full: 'The whole gap, at the device\'s own rate.',
 };
 
 // A percent this control cannot express, set by another client or an older session, keeps its own
@@ -482,7 +482,6 @@ const DeviceOptions = () => {
             <Section title="Spread">
             <p>
               How much of the gap between an aim loop's commands an injected delta is released across.
-              The box learns the gap from the commands it receives.
             </p>
             <RadioGroup
               name="spread-percent"

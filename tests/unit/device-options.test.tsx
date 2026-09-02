@@ -122,8 +122,8 @@ describe('DeviceOptions', () => {
   it('describes only the selected spread, and shows the interval in force', async () => {
     mock.spread = { percent: 50, spanUs: 4000 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Half the interval, half the delay.');
-    expect(queryByText('The whole delta on the next report.')).toBeNull();
+    await findByText('Half the gap, half the delay.');
+    expect(queryByText('The whole movement at once.')).toBeNull();
     await findByText('50%');
     await findByText('Over 4.0 ms');
   });
@@ -147,7 +147,7 @@ describe('DeviceOptions', () => {
   it('shows no interval chip at all with spreading off', async () => {
     mock.spread = { percent: 0, spanUs: 0 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('The whole delta on the next report.');
+    await findByText('The whole movement at once.');
     expect(queryByText('Waiting for an aim loop')).toBeNull();
     expect(queryByText(/Over .* ms/)).toBeNull();
   });
