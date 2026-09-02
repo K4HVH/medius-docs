@@ -796,10 +796,9 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
-            while no command period has been learned, and while{' '}
-            <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> has a window set. In
-            all three the whole delta goes out on the next report the box emits.
+            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code> and
+            while no command period has been learned. In both the whole delta goes out on the next
+            report the box emits.
           </p>
           <p>
             Library binding:{' '}

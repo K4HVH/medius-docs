@@ -473,12 +473,12 @@ const Option: Component = () => {
               of an earlier delta still waiting, so they mean the same thing whatever the percent is.
             </p>
             <p>
-              Nothing is spread while{' '}
-              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> has a window set.
-              Riding holds the same motion and already ties it to native reports, and it drops a hoard
-              left unridden past that window, so an interval holding motion back across it would have
-              the ride discard what was still being paced. The readback answers no interval in that
-              state, whatever the percent is.
+              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> composes, and is
+              where an interval has the most to do. Riding alone puts the whole delta on the first
+              native cursor report that carries it, so the wire gets the hand's own motion plus a lump
+              once per command; an interval divides it across the reports the hand makes instead. A
+              remainder still standing when the ride window lapses is dropped, as any unridden hoard
+              is: that is riding's rule, and the interval does not change it.
             </p>
             <p>
               This and <A href="/native/commands/option#render"><code>RENDER</code></A> are independent
