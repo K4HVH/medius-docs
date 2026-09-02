@@ -734,7 +734,7 @@ const Requests: Component = () => {
           <p>
             A <code>force_hz</code> set while{' '}
             <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
-            <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the device's own.
+            <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the native interval.
           </p>
           <p>
             Library binding:{' '}
@@ -769,7 +769,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>mode</code></td><td>the texture: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
-              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when the device's own motion is rendered by the model rather than relayed</td></tr>
+              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when native motion is rendered by the model rather than relayed</td></tr>
               <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
             </tbody>
           </table>

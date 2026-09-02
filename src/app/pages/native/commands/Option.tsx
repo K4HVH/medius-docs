@@ -342,7 +342,7 @@ const Option: Component = () => {
           <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
   mode = 0     | | | | | | | | | | | |      even fill at the paced rate
-  mode > 0     | | . | . . | | . | . |      the live mouse's own on/off texture`}</pre>
+  mode > 0     | | . | . . | | . | . |      the live device's on/off texture`}</pre>
           <table class="api-params">
             <thead><tr><th>Aspect</th><th><code>mode = 0</code></th><th><code>mode &gt; 0</code></th></tr></thead>
             <tbody>
@@ -355,13 +355,13 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. The device's own cursor delta is relayed byte for byte.</td></tr>
+              <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
               <tr><td><code>1</code></td><td>Renders both. The device's cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>
-              Rendering adds a small amount of latency, which reaches the device's own motion when{' '}
+              Rendering adds a small amount of latency, which reaches native motion when{' '}
               <code>full</code> is <code>1</code>.
             </p>
             <p>
@@ -373,7 +373,7 @@ const Option: Component = () => {
             <p>
               The <A href="/native/commands/option#emit">pace</A> caps the rendered rate, and the
               model's debt carries what the cap coalesces. Buttons, the wheel and every other field are
-              relayed at the device's own timing in both modes: the model renders cursor motion only.
+              relayed at native timing in both modes: the model renders cursor motion only.
             </p>
             <p>
               A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
@@ -381,8 +381,7 @@ const Option: Component = () => {
               for exact timing, which is what the renderer decides. With <code>full</code> on the
               rendered stream also ignores{' '}
               <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot drops a
-              hoard that goes unridden, and under <code>full</code> that hoard holds the device's own
-              motion. <A href="/native/commands/clip">Clip</A> motion never enters the model either, so
+              hoard that goes unridden, and under <code>full</code> that hoard holds native motion. <A href="/native/commands/clip">Clip</A> motion never enters the model either, so
               a clip playing under <code>full</code> puts a second texture on the wire.
             </p>
             <p>
@@ -403,7 +402,7 @@ const Option: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            De-spiked, rendering the device's own motion too (<code>mode = 2</code>,{' '}
+            De-spiked, rendering native motion too (<code>mode = 2</code>,{' '}
             <code>full = 1</code>):
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+

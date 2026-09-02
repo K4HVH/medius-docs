@@ -447,7 +447,7 @@ export class SerialLink {
     return this.scale(target, direction, LOCK_SCALE_PASS);
   }
 
-  // Move the cursor (§3.1). Relative, in the cloned mouse's own units. The wire field is an i16, so
+  // Move the cursor (§3.1). Relative, in the cloned mouse's units. The wire field is an i16, so
   // a larger delta saturates here rather than wrapping; the box then clamps that to the cloned
   // report's own field width and carries the remainder into later reports.
   moveRel(dx: number, dy: number, flags = 0): Promise<void> {
@@ -561,7 +561,7 @@ export class SerialLink {
   // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
   // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
   // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
-  // the clone advertises and the box polls the device at, 0 for the device's own; it needs IMPERFECT on
+  // the clone advertises and the box polls the device at, 0 for native ; it needs IMPERFECT on
   // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
   // every call. Persisted in NVS. Read back with `queryEmitPace`.
   setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
@@ -577,7 +577,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
-  // The texture motion is rendered with (§3.10). `full` puts the device's own motion through the same
+  // The texture motion is rendered with (§3.10). `full` puts native motion through the same
   // model rather than relaying it, so the latency rendering adds reaches it too; off by default. Both
   // ride one command, so both are written every call. Persisted in NVS. Read back with `queryRender`.
   setRender(mode: RenderMode, full: boolean): Promise<void> {
@@ -641,7 +641,7 @@ export class SerialLink {
   }
 
   // Run one clip engine verb (§3.11). Ignored by the box when no mouse is cloned: the clip is
-  // clocked by the mouse's own report tick, so without one it could never advance.
+  // clocked by native report tick, so without one it could never advance.
   clipCtrl(op: ClipOp): Promise<void> {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }

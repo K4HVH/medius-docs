@@ -129,7 +129,7 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
 
 // OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode is the pace (0 learned,
 // 1 follows the cloned poll rate, 2 fixed rate_hz). forceHz is the rate the clone advertises and the box
-// polls the device at, 0 for the device's own; it needs IMPERFECT on and re-clones the box when the
+// polls the device at, 0 for native ; it needs IMPERFECT on and re-clones the box when the
 // resolved interval changes. Both are written every call.
 export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
@@ -145,7 +145,7 @@ export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array
 }
 
 // OPTION(RENDER) (§3.10): [id=5][mode u8][full u8]. mode is the texture motion is rendered with; full puts
-// the device's own motion through the same model rather than relaying it. Both are written every call.
+// native motion through the same model rather than relaying it. Both are written every call.
 export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
   return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
 }

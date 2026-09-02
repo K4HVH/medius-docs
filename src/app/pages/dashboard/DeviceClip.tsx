@@ -1,6 +1,6 @@
 // Buffered clip playback: build a clip, load it into the box's ring, and drive the engine.
 //
-// The clip is clocked by the cloned mouse's own report tick, so a tick here is one native report,
+// The clip is clocked by the cloned mouse's report tick, so a tick here is one native report,
 // not a millisecond, and everything below is refused by the box when no mouse is cloned. The engine
 // is soft state on a 1 s dead-man switch, which the clip status poll doubles as the keepalive for.
 
