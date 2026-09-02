@@ -32,7 +32,7 @@ const EMIT_MODES: Record<string, EmitMode> = {
 
 const MODE_BLURB: Record<string, string> = {
   learned: "Matches native report rate.",
-  interval: "Follows the mouse's USB poll rate.",
+  interval: 'Follows the declared poll rate.',
   fixed: 'Pins the rate to the number you pick.',
 };
 
@@ -336,7 +336,7 @@ const DeviceOptions = () => {
             />
             <p style={muted}>
               {bearGeometry() === BearingMode.Vector
-                ? 'The physical delta is projected onto the injected XY vector, and only the part along it is weighed.'
+                ? 'Only the part of the physical delta along the injected vector is weighed.'
                 : 'Each axis is weighed against its own bearing.'}
             </p>
             <div style={controls}>
@@ -482,8 +482,8 @@ const DeviceOptions = () => {
               />
               <p style={muted}>
                 {forceOn()
-                  ? 'Runs the clone at a rate the mouse did not ask for.'
-                  : 'Runs the clone at the rate the mouse asked for.'}
+                  ? 'Advertises the interval you pick.'
+                  : 'Advertises the interval the device declares.'}
               </p>
             </div>
             <div style={controls}>
