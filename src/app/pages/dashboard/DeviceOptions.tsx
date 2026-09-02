@@ -31,7 +31,7 @@ const EMIT_MODES: Record<string, EmitMode> = {
 };
 
 const MODE_BLURB: Record<string, string> = {
-  learned: "Matches the mouse's own report rate.",
+  learned: "Matches native report rate.",
   interval: "Follows the mouse's USB poll rate.",
   fixed: 'Pins the rate to the number you pick.',
 };
@@ -51,9 +51,9 @@ const RENDER_MODES: Record<string, RenderMode> = {
 
 const RENDER_BLURB: Record<string, string> = {
   off: 'Even fill at the paced rate.',
-  stock: "Renders the mouse's own texture.",
-  despiked: "Renders the mouse's texture with a ramped onset.",
-  unsmoothed: "Renders the mouse's texture with no smoother.",
+  stock: 'Native texture, upstream smoother.',
+  despiked: 'Native texture, ramped onset.',
+  unsmoothed: 'Native texture, no smoother.',
 };
 
 const RENDER_NAMES: Record<number, string> = {
@@ -379,8 +379,8 @@ const DeviceOptions = () => {
           <div id="render" data-search-target>
             <Section title="Render">
             <p>
-              Emits injected motion with the mouse's own report texture, and sets whether the mouse's
-              own motion goes through it too. The box saves both together, so Apply writes both.
+              Emits injected motion with the native report texture, and picks which motion is
+              rendered. The box saves both together, so Apply writes both.
             </p>
             <RadioGroup
               name="render-mode"
@@ -402,12 +402,12 @@ const DeviceOptions = () => {
                 onChange={(v) => setFullEdit(v === 'both')}
                 options={[
                   { value: 'injected', label: 'Injected only' },
-                  { value: 'both', label: "Injected and the mouse's own" },
+                  { value: 'both', label: 'Injected and native' },
                 ]}
               />
               <p style={muted}>
                 {!fullOn()
-                  ? "The mouse's own motion is relayed untouched."
+                  ? "Native motion is relayed untouched."
                   : renderKey() === 'off'
                     ? 'Renders nothing while the mode is off.'
                     : 'Both go through the model as one stream.'}
@@ -434,8 +434,8 @@ const DeviceOptions = () => {
                         still relaying however the option is set. */}
                     <Chip variant={r().mode === RenderMode.Off || !r().ready ? 'neutral' : 'success'}>
                       {r().mode === RenderMode.Off || !r().ready
-                        ? "Mouse's own motion relayed"
-                        : "Mouse's own motion rendered"}
+                        ? 'Native motion relayed'
+                        : 'Native motion rendered'}
                     </Chip>
                   </Show>
                   <Show when={r().mode !== RenderMode.Off && !r().ready}>

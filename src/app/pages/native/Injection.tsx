@@ -133,9 +133,9 @@ const Injection: Component = () => {
 
       <div id="emission" data-search-target>
         <Card>
-          <CardHeader title="When the box sends a report" subtitle="At the mouse's own report rate, only on activity" />
+          <CardHeader title="When the box sends a report" subtitle="At native report rate, only on activity" />
           <p>
-            Two of the three rows below fire on the cloned mouse's own tick.
+            Two of the three rows below fire on the cloned mouse's tick.
           </p>
           <table class="api-params">
             <thead>
@@ -148,7 +148,7 @@ const Injection: Component = () => {
               </tr>
               <tr>
                 <td>the real mouse was still, but you have motion pending</td>
-                <td>A report carrying just the drained accumulator, paced to the mouse's own report rate (not one every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
+                <td>A report carrying just the drained accumulator, paced to native report rate (not one every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
               </tr>
               <tr>
                 <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>
@@ -164,7 +164,7 @@ const Injection: Component = () => {
             <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times that middle row,
             pacing to the mouse's learnt report rate.{' '}
             <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,
-            shapes the motion through a live per-device model, and can render the mouse's own motion the
+            shapes the motion through a live per-device model, and can render native motion the
             same way.
           </p>
         </Card>

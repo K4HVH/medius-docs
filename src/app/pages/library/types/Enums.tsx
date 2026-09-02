@@ -604,7 +604,7 @@ match stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
             <tbody>
               <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap, when the clone's own traffic passed it.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap, when native traffic passed it.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -676,7 +676,7 @@ match stream.recv()? {
           </table>
           <p>
             <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-            the other eight are the clone's own USB1 bus, which the control PC is not on.
+            the other eight are native USB1 bus, which the control PC is not on.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};

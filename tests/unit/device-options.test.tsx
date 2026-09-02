@@ -66,7 +66,7 @@ describe('DeviceOptions', () => {
     mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('Pins the rate to the number you pick.');
-    expect(queryByText("Matches the mouse's own report rate.")).toBeNull();
+    expect(queryByText("Matches native report rate.")).toBeNull();
     expect(queryByText("Follows the mouse's USB poll rate.")).toBeNull();
   });
 
@@ -89,10 +89,10 @@ describe('DeviceOptions', () => {
   it('describes only the selected texture, and only the setting in force', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText("Renders the mouse's texture with a ramped onset.");
+    await findByText('Native texture, ramped onset.');
     expect(queryByText('Even fill at the paced rate.')).toBeNull();
     await findByText('Both go through the model as one stream.');
-    expect(queryByText("The mouse's own motion is relayed untouched.")).toBeNull();
+    expect(queryByText("Native motion is relayed untouched.")).toBeNull();
   });
 
   // `full` stores and reads back with the texture off, but nothing is rendered in that state: there is
@@ -101,8 +101,8 @@ describe('DeviceOptions', () => {
     mock.render = { mode: RenderMode.Off, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('Renders nothing while the mode is off.');
-    await findByText("Mouse's own motion relayed");
-    expect(queryByText("Mouse's own motion rendered")).toBeNull();
+    await findByText('Native motion relayed');
+    expect(queryByText('Native motion rendered')).toBeNull();
   });
 
   // The option can read back set while the box is still relaying, so the chip has to follow `ready`
@@ -110,9 +110,9 @@ describe('DeviceOptions', () => {
   it('does not claim the mouse own motion is rendered before a profile arms', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: false };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText("Mouse's own motion relayed");
+    await findByText('Native motion relayed');
     await findByText('Move the mouse to start');
-    expect(queryByText("Mouse's own motion rendered")).toBeNull();
+    expect(queryByText('Native motion rendered')).toBeNull();
   });
 
   // Nothing is rendered until the box has learned a profile, so a box set to a mode and a box rendering
@@ -125,7 +125,7 @@ describe('DeviceOptions', () => {
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
     const armed = render(() => <DeviceOptions />);
-    await armed.findByText("Renders the mouse's texture with a ramped onset.");
+    await armed.findByText('Native texture, ramped onset.');
     expect(armed.queryByText('Move the mouse to start')).toBeNull();
   });
 

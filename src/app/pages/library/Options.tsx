@@ -123,7 +123,7 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The rate ceiling for injected motion.</td></tr>
-              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the native interval.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -237,7 +237,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             <A href="/library/options#set-emit-pace">emit-rate</A> tick while injection is pending. The
             other three push motion through an{' '}
             <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
-            model (MIT) fitted live from the mouse's own reports, and differ only in the smoother the
+            model (MIT) fitted live from native reports, and differ only in the smoother the
             model is fed.
           </p>
           <p>
@@ -247,7 +247,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
           </p>
           <div class="callout callout--warning">
             <p>
-              Rendering adds a small amount of latency, which reaches the mouse's own motion when{' '}
+              Rendering adds a small amount of latency, which reaches native motion when{' '}
               <code>full</code> is on. Motion asking for exact timing skips the model:{' '}
               <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
               <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
@@ -267,7 +267,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             </thead>
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; the box boots at <code>Despiked</code>.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether the mouse's own motion is rendered by the model rather than relayed; the box boots with it off.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered by the model rather than relayed; the box boots with it off.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -275,7 +275,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
 
 let device = Device::find()?;
 device.set_render(RenderMode::Despiked, false)?;   // the box's own default
-device.set_render(RenderMode::Despiked, true)?;    // render the mouse's own motion too
+device.set_render(RenderMode::Despiked, true)?;    // render native motion too
 device.set_render(RenderMode::Off, false)?;        // renderer out of the path, the paced fill`}</code></pre>
         </Card>
       </div>
@@ -332,7 +332,7 @@ match device.query_movement_riding()? {
             Returns an{' '}
             <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
             carrying the pace and the rates. <code>advertised_hz</code> is what the clone advertises now: the
-            device's own rate while nothing is forced, the forced rate once something is, with no
+            native rate while nothing is forced, the forced rate once something is, with no
             record of what the device declared before a force was applied.
           </p>
           <div class="api-response-label">EXAMPLE</div>
