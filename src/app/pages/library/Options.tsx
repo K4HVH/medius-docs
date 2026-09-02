@@ -311,8 +311,9 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
               <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
               <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
               <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Neither is wheel
-              motion, nor anything at all while{' '}
-              <A href="/library/options#set-movement-riding">movement riding</A> has a window set.
+              motion. <A href="/library/options#set-movement-riding">Movement riding</A> composes: the
+              delta is divided across the native reports it rides, and a remainder left when the ride
+              window lapses is dropped, as any unridden motion is.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -442,9 +443,9 @@ if !status.ready {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
-            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
-            the box has learned the host's command period, and while movement riding has a window set.
-            In all three the whole delta goes out on the next report.
+            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code> and
+            until the box has learned the host's command period. In both the whole delta goes out on
+            the next report.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
