@@ -132,7 +132,7 @@ export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE]; 
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
 export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
 export const OPT_RENDER = 5; // value [mode u8][full u8]; the texture motion is rendered with (§3.10)
-export const OPT_SPREAD = 6; // value [percent u16 LE]; share of the command interval an injected delta is released across (§3.13)
+export const OPT_SPREAD = 6; // value [percent u16 LE]; share of the command interval an injected delta is released across (§3.10)
 
 // The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
 export const NAME_MAX = 32;

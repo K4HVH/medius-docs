@@ -848,7 +848,7 @@ for ev in input.by_ref().take(20) {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval a delta is released across; <code>0</code> is the whole delta on the next report.</td></tr>
-              <tr><td><code>span_us</code></td><td><code>u32</code></td><td>The interval in effect, in microseconds. <code>0</code> until the box has learned the host's command period.</td></tr>
+              <tr><td><code>span_us</code></td><td><code>u32</code></td><td>The interval in effect, in microseconds. <code>0</code> whenever nothing is being spread.</td></tr>
             </tbody>
           </table>
         </Card>
