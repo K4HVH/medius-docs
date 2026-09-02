@@ -54,11 +54,11 @@ describe('DeviceOptions', () => {
   it('describes only the selected bearing geometry', async () => {
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('Each axis is weighed against its own bearing.');
-    expect(queryByText(/projected onto the injected XY vector/)).toBeNull();
+    expect(queryByText(/along the injected vector is weighed/)).toBeNull();
 
     fireEvent.click(container.querySelector('input[value="1"]')!);
     await settle();
-    await findByText(/projected onto the injected XY vector/);
+    await findByText(/along the injected vector is weighed/);
     expect(queryByText('Each axis is weighed against its own bearing.')).toBeNull();
   });
 
@@ -67,7 +67,7 @@ describe('DeviceOptions', () => {
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('Pins the rate to the number you pick.');
     expect(queryByText("Matches native report rate.")).toBeNull();
-    expect(queryByText("Follows the mouse's USB poll rate.")).toBeNull();
+    expect(queryByText('Follows the declared poll rate.')).toBeNull();
   });
 
   // Emit rate was the only control that offered Revert, so a pending bearing or riding edit looked
