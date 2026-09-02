@@ -91,8 +91,8 @@ describe('DeviceOptions', () => {
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText("Renders the mouse's texture with a ramped onset.");
     expect(queryByText('Even fill at the paced rate.')).toBeNull();
-    await findByText("Renders the mouse's own motion through the same model.");
-    expect(queryByText("Passes the mouse's own motion through untouched.")).toBeNull();
+    await findByText('Both go through the model as one stream.');
+    expect(queryByText("The mouse's own motion is relayed untouched.")).toBeNull();
   });
 
   // `full` stores and reads back with the texture off, but nothing is rendered in that state: there is
