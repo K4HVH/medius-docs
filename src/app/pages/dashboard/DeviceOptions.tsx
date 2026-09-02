@@ -395,22 +395,22 @@ const DeviceOptions = () => {
             />
             <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
             <div id="render-full" data-search-target>
-              <div class="api-response-label" style={section}>Mouse's own motion</div>
+              <div class="api-response-label" style={section}>Rendered motion</div>
               <RadioGroup
                 name="render-full"
-                value={fullOn() ? 'rendered' : 'relayed'}
-                onChange={(v) => setFullEdit(v === 'rendered')}
+                value={fullOn() ? 'both' : 'injected'}
+                onChange={(v) => setFullEdit(v === 'both')}
                 options={[
-                  { value: 'relayed', label: 'Relayed' },
-                  { value: 'rendered', label: 'Rendered' },
+                  { value: 'injected', label: 'Injected only' },
+                  { value: 'both', label: "Injected and the mouse's own" },
                 ]}
               />
               <p style={muted}>
                 {!fullOn()
-                  ? "Passes the mouse's own motion through untouched."
+                  ? "The mouse's own motion is relayed untouched."
                   : renderKey() === 'off'
                     ? 'Renders nothing while the mode is off.'
-                    : "Renders the mouse's own motion through the same model."}
+                    : 'Both go through the model as one stream.'}
               </p>
             </div>
             <div style={controls}>
