@@ -105,7 +105,7 @@ const cells = (f: (id: PortId) => Cell): Record<PortId, Cell> => ({
 
 /**
  * Writing firmware to one chip. The cable goes into the machine running this page, whatever that
- * socket does afterwards, and every other cable has to be out — a chip already powered through
+ * socket does afterwards, and every other cable has to be out: a chip already powered through
  * another port does not come up in download mode, and USB1 with USB3 can kill the computer.
  */
 export const InstallPorts = (props: { socket: PortId }) => (

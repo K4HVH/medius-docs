@@ -9,6 +9,7 @@
 // nothing without a bearing, so they are offered on axes alone.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
+import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -151,98 +152,98 @@ const DeviceLock = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Card>
-        <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
+      <div id="input-locks" data-search-target>
+        <Card>
+          <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
 
-        <UsagePicker
-          name="lock-target"
-          classes={CLASSES}
-          value={target()}
-          onChange={chooseTarget}
-          usageLabel="Which input"
-        />
-
-        <Show when={!isAxis()}>
-          <p>A button, key, or media usage carries one bit, so Lock and Unlock are all it has.</p>
-        </Show>
-
-        <Show when={isMedia()}>
-          <p>A media usage has no press and release edges, so the box suppresses it whole.</p>
-        </Show>
-
-        <div style={section}>
-          <div style={label}>Direction</div>
-          <RadioGroup
-            name="lock-direction"
-            value={direction()}
-            onChange={setDirection}
-            options={dirLabel()}
+          <UsagePicker
+            name="lock-target"
+            classes={CLASSES}
+            value={target()}
+            onChange={chooseTarget}
+            usageLabel="Which input"
           />
-        </div>
 
-        <Show when={isAxis()}>
+          <Show when={!isAxis()}>
+            <p>A button, key, or media usage carries one bit, so Lock and Unlock are all it has.</p>
+          </Show>
+
+          <Show when={isMedia()}>
+            <p>A media usage has no press and release edges, so the box suppresses it whole.</p>
+          </Show>
+
           <div style={section}>
-            <div style={label}>Keep {scale()}% of the real movement</div>
-            <Slider
-              value={scale()}
-              min={LOCK_SCALE_BLOCK}
-              max={LOCK_SCALE_MAX}
-              step={5}
-              onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
+            <div style={label}>Direction</div>
+            <RadioGroup
+              name="lock-direction"
+              value={direction()}
+              onChange={setDirection}
+              options={dirLabel()}
             />
           </div>
-        </Show>
 
-        <Show when={isAxis() && dir() === Direction.Both}>
-          <div class="callout callout--info" style={section}>
-            Both writes the percentage to the two fixed signs and a full pass to with and against, so
-            it means the same whether or not the box is injecting. A Both at 100% still clears all
-            four.
-          </div>
-        </Show>
-
-        <Show when={isAxis() && isRelativeDirection(dir())}>
-          <div class="callout callout--info" style={section}>
-            With and against are measured against the bearing: the sign the box is currently
-            injecting on that axis. Neither applies once the bearing window elapses with nothing
-            injected, leaving only the fixed-sign scale.
-          </div>
-        </Show>
-
-        <div style={{ ...section, ...row }}>
           <Show when={isAxis()}>
-            <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
-              Apply {scale()}%
-            </Button>
-          </Show>
-          <Button
-            variant={isAxis() ? 'secondary' : 'primary'}
-            disabled={cmd.busy()}
-            onClick={() => applyScale(LOCK_SCALE_BLOCK)}
-          >
-            Lock
-          </Button>
-          <Button variant="secondary" disabled={cmd.busy()} onClick={() => applyScale(LOCK_SCALE_PASS)}>
-            Unlock
-          </Button>
-        </div>
-        <Show when={cmd.error()}>
-          <div class="callout callout--danger" role="alert" style={section}>
-            {cmd.error()}
-          </div>
-        </Show>
-
-        <div style={section}>
-          <div style={label}>Active</div>
-          <Show when={active().length > 0} fallback={<p>Everything passing untouched.</p>}>
-            <div style={chips}>
-              <For each={active()}>
-                {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
-              </For>
+            <div style={section}>
+              <div style={label}>Keep {scale()}% of the real movement</div>
+              <Slider
+                value={scale()}
+                min={LOCK_SCALE_BLOCK}
+                max={LOCK_SCALE_MAX}
+                step={5}
+                onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
+              />
             </div>
           </Show>
-        </div>
-      </Card>
+
+          <Show when={isAxis() && dir() === Direction.Both}>
+            <div class="callout callout--info" style={section}>
+              Both means the same whether or not the box is injecting, and a Both at 100% clears every
+              direction.
+            </div>
+          </Show>
+
+          <Show when={isAxis() && isRelativeDirection(dir())}>
+            <div class="callout callout--info" style={section}>
+              With and against follow the direction the box is injecting on that axis. See{' '}
+              <A href="/native/commands/lock#bearing">the bearing</A>.
+            </div>
+          </Show>
+
+          <div style={{ ...section, ...row }}>
+            <Show when={isAxis()}>
+              <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
+                Apply {scale()}%
+              </Button>
+            </Show>
+            <Button
+              variant={isAxis() ? 'secondary' : 'primary'}
+              disabled={cmd.busy()}
+              onClick={() => applyScale(LOCK_SCALE_BLOCK)}
+            >
+              Lock
+            </Button>
+            <Button variant="secondary" disabled={cmd.busy()} onClick={() => applyScale(LOCK_SCALE_PASS)}>
+              Unlock
+            </Button>
+          </div>
+          <Show when={cmd.error()}>
+            <div class="callout callout--danger" role="alert" style={section}>
+              {cmd.error()}
+            </div>
+          </Show>
+
+          <div style={section}>
+            <div style={label}>Active</div>
+            <Show when={active().length > 0} fallback={<p>Everything passing untouched.</p>}>
+              <div style={chips}>
+                <For each={active()}>
+                  {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
+                </For>
+              </div>
+            </Show>
+          </div>
+        </Card>
+      </div>
     </Show>
   );
 };

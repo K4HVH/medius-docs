@@ -15,7 +15,8 @@ const Clip: Component = () => {
           <A href="/native/commands/move"><code>MOVE</code></A> feed.
         </p>
         <p>
-          Playback is box-clocked: no host scheduling jitter, no per-command send floor.
+          Playback is box-clocked: its timing does not depend on how fast or how evenly the host
+          can send.
         </p>
         <p>
           Like <A href="/native/commands/inject"><code>INJECT</code></A> a clip is field-generic and{' '}
@@ -33,19 +34,27 @@ const Clip: Component = () => {
           A clip runs in one of two shapes, set by the <code>retain</code> flag on{' '}
           <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.
         </p>
-        <ul>
-          <li>
-            <strong>Streaming</strong> (default): the box frees each entry as it plays, so a real-time host
-            keeps appending to the tail while the head drains. Good for open-ended or generated input; an
-            emptied ring underruns.
-          </li>
-          <li>
-            <strong>Retained</strong>: the box keeps entries after playing them, so once you've appended the
-            whole clip and marked it <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A>d you can{' '}
-            <code>START</code>, <code>RESTART</code>, or <code>loop</code> it as many times as you like without
-            re-appending. Good for a fixed macro you replay on a trigger.
-          </li>
-        </ul>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Mode</th><th>The ring</th><th>Replay</th><th>Suits</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>streaming <em>(default)</em></td>
+                <td>Each entry is freed as it plays, so the host appends to the tail while the head drains.</td>
+                <td>None; an emptied ring underruns.</td>
+                <td>Open-ended or generated input.</td>
+              </tr>
+              <tr>
+                <td>retained</td>
+                <td>Entries survive playback.</td>
+                <td><code>START</code>, <code>RESTART</code> or <code>loop</code> without re-appending, once the clip is appended whole and marked <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A>d.</td>
+                <td>A fixed macro replayed on a trigger.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="diagram">{`control PC                     box  (drains one entry per native frame)
       |                       +-----------------------------------------+
       |  CLIP_APPEND [e0][e1] |  ring [e0][e1][e2][e3][e4] ...          |
@@ -103,10 +112,10 @@ const Clip: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>flags</code></td><td><code>u8</code></td><td>always; OR of the bits below</td></tr>
-              <tr><td>+</td><td><code>dx</code>, <code>dy</code></td><td><code>i16 × 2</code></td><td><code>flags &amp; XY (0x01)</code>, cursor delta</td></tr>
+              <tr><td>+</td><td><code>dx</code>, <code>dy</code></td><td><code>i16 x 2</code></td><td><code>flags &amp; XY (0x01)</code>, cursor delta</td></tr>
               <tr><td>+</td><td><code>wheel</code></td><td><code>i16</code></td><td><code>flags &amp; WHEEL (0x02)</code></td></tr>
               <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; EDGES (0x04)</code>, edge count (max 8)</td></tr>
-              <tr><td>+</td><td><code>edges</code></td><td><code>n × 4 bytes</code></td><td>each edge is <code>[class u8][id u16][action u8]</code></td></tr>
+              <tr><td>+</td><td><code>edges</code></td><td><code>n x 4 bytes</code></td><td>each edge is <code>[class u8][id u16][action u8]</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EDGES</div>
@@ -117,7 +126,7 @@ const Clip: Component = () => {
           <div class="api-response-label">CLASS</div>
           <table class="api-params">
             <thead>
-              <tr><th><code>class</code></th><th>Value</th><th><code>id</code> is</th></tr>
+              <tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr>
             </thead>
             <tbody>
               <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2)</td></tr>
@@ -139,15 +148,14 @@ const Clip: Component = () => {
             An edge is a level: it sticks until a later tick changes it, and the box NAKs while it is held
             still. Motion (<code>dx</code>/<code>dy</code>/<code>wheel</code>) is a per-frame delta.
           </p>
-          <div class="api-response-label">MOTION AND EDGES ON ONE TICK</div>
+          <div class="api-response-label">COMBINED TICK</div>
           <p>
             Set several flag bits and the fields stack in a single tick, so a move and a press land on the
             same frame and the clone emits one report.
           </p>
           <pre class="diagram">{`05 0A 00 FC FF 01 00 00 00 01
    flags=XY|EDGES   dx=+10 dy=-4   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
-          <div class="api-response-label">A CLIP IS A TIMELINE</div>
-          <p>Entries play out one per frame, left to right.</p>
+          <div class="api-response-label">PLAYBACK ORDER</div>
           <table class="api-params">
             <thead>
               <tr><th>Frame</th><th>Entry</th><th>The clone emits</th></tr>
@@ -301,7 +309,7 @@ link loss   the inter-chip link drops`}</pre>
           <p>
             Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss) also flushes the
-            ring. The <A href="/native/injection#safety">1&nbsp;s safety net</A> reaches a clip like any
+            ring. The <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> reaches a clip like any
             other injection.
           </p>
           <p>
@@ -317,7 +325,6 @@ link loss   the inter-chip link drops`}</pre>
 +--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | op     | CRC16  |
 +--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>Every op has the same shape; only the <code>op</code> byte changes.</p>
         </Card>
       </div>
 
@@ -409,7 +416,7 @@ link loss   the inter-chip link drops`}</pre>
           </table>
           <div class="api-response-label">CLASS</div>
           <table class="api-params">
-            <thead><tr><th><code>class</code></th><th>Value</th><th><code>id</code> is</th></tr></thead>
+            <thead><tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr></thead>
             <tbody>
               <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A></td></tr>
               <tr><td>key</td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keycode</A></td></tr>

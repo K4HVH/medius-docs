@@ -10,7 +10,7 @@ const Structs: Component = () => {
         <Card>
           <CardHeader title="Structs" subtitle="Values the box reports back" />
           <p>
-            Plain value types you get back from queries and discovery. Their fields are public.
+            Fields are public; you get these back from queries and discovery.
           </p>
         </Card>
       </div>
@@ -25,12 +25,12 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>5</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>6</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
               <tr><td><code>mac</code></td><td><code>[u8; 6]</code></td><td>The device chip's base MAC, a stable per-box id.</td></tr>
-              <tr><td><code>name</code></td><td><code>String</code></td><td>The box's human-readable name (a synthesized default when unset), set via <A href="/library/options#set-name"><code>set_name</code></A>.</td></tr>
+              <tr><td><code>name</code></td><td><code>String</code></td><td>The box's human-readable name (a synthesised default when unset), set via <A href="/library/options#set-name"><code>set_name</code></A>.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 5, fw_major: 3, fw_minor: 2, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.2.0"); // Display omits proto_ver
+let v = Version { proto_ver: 6, fw_major: 3, fw_minor: 3, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.3.1"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -228,7 +228,6 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">READBACK</div>
           <table class="api-params">
             <thead><tr><th>Case</th><th>What the list holds</th></tr></thead>
             <tbody>
@@ -304,7 +303,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
             <tbody>
-              <tr><td><code>CatchFilter::watch(usage)</code></td><td>One <A href="/library/types/enums#usage"><code>Usage</code></A>: a button, a key, or a media usage, the same argument <A href="/library/lock#lock"><code>lock</code></A> takes.</td></tr>
+              <tr><td><code>CatchFilter::watch(usage)</code></td><td>One <A href="/library/types/structs#usage"><code>Usage</code></A>: a button, a key, or a media usage, the same argument <A href="/library/lock#lock"><code>lock</code></A> takes.</td></tr>
               <tr><td><code>CatchFilter::watch_axis(axis)</code></td><td>One <A href="/library/types/enums#axis"><code>Axis</code></A>.</td></tr>
               <tr><td><code>CatchFilter::watch_class(class)</code></td><td>Every usage in one <A href="/library/types/enums#class"><code>Class</code></A>.</td></tr>
               <tr><td><code>CatchFilter::watch_axes()</code></td><td>Every axis.</td></tr>
@@ -314,7 +313,6 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MODIFIERS AND ACCESSORS</div>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -328,7 +326,6 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>.same_address(other)</code></td><td><code>bool</code></td><td>Whether both name the same box table entry, whatever their captures.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MATCHING IS MOST-SPECIFIC-FIRST</div>
           <p>
             An exact <code>(class, id)</code> is matched before a class blanket, that before the wildcard, and a named direction before <code>Both</code>. That entry supplies the capture:
           </p>
@@ -344,7 +341,6 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             lengths are one box entry at the wider of the two. <code>same_address</code> is that
             comparison; <code>==</code> compares everything.
           </p>
-          <div class="api-response-label">CAPACITY AND REFUSALS</div>
           <p>
             The table holds 32 entries, and a subscription that would exceed it is refused before
             anything is sent. See <A href="/library/types/errors"><code>Error</code></A>. So is an
@@ -400,7 +396,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
           <p>
             The payload of a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A>: every held{' '}
-            <A href="/library/types/enums#usage"><code>Usage</code></A> of one class (buttons, keys, or
+            <A href="/library/types/structs#usage"><code>Usage</code></A> of one class (buttons, keys, or
             media, all one shape), captured before injection. Diff successive snapshots for press/release
             edges, or test one with <code>is_held</code>; a dropped frame self-corrects on the next.
           </p>
@@ -409,7 +405,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
             <tbody>
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds. See <A href="/library/catch#timestamps">Catch timestamps</A> for what the clock means.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code>: a held-usage snapshot is taken where the real device's report lands.</td></tr>
-              <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>The currently-held usages, all of one class per event.</td></tr>
+              <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The currently-held usages, all of one class per event.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -490,21 +486,19 @@ for ev in device.input_events(CatchFilter::all_input())? {
             One event frame carries at most 180 bytes, so <code>Capture::Whole</code> still truncates
             a longer packet, and still says so.
           </p>
-          <div class="api-response-label">FLAGS BY CLASS</div>
           <table class="api-params">
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
-              <tr><td><code>Control</code></td><td>How the proxied transfer ended: <code>0</code> completed, <code>0xFD</code> the device STALLed, <code>0xFE</code> it NAKed until the transfer timed out.</td></tr>
+              <tr><td><code>Control</code></td><td>How the proxied transfer ended; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CONTROL IS PER TRANSACTION</div>
           <p>
-            <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
-            <code>direction</code> says which way that data went. Requests answered from the box's
-            descriptor cache still raise events.
+            A <code>Control</code> event is one completed transaction: <code>bytes</code> is the
+            8-byte SETUP packet then the data stage, and <code>direction</code> says which way that
+            data went. Requests answered from the box's descriptor cache still raise events.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
@@ -520,12 +514,42 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         </Card>
       </div>
 
+      <div id="usage" data-search-target>
+        <Card>
+          <CardHeader title="Usage" subtitle="A momentary input: (class, id)" />
+          <pre class="api-signature">struct Usage {'{'} class: Class, id: u16 {'}'}</pre>
+          <p>
+            What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
+            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks. A{' '}
+            <A href="/library/types/enums#button"><code>Button</code></A>,{' '}
+            <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
+            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
+            <code>impl Into&lt;Usage&gt;</code>, so you pass one straight to any verb; build one by hand
+            with <code>Usage::new(class, id)</code>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>The input class (button, key, or media).</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The class-specific id: a button id, a HID keycode, or a Consumer usage.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Button, Class, Key, Usage};
+
+let from_button: Usage = Button::Left.into();      // Class::Button, id 0
+let from_key: Usage = Key::A.into();               // Class::Key, id 0x04
+let by_hand = Usage::new(Class::Media, 0x00E9);    // volume up
+device.press(from_button)?;                         // press takes any impl Into<Usage>`}</code></pre>
+        </Card>
+      </div>
+
       <div id="key" data-search-target>
         <Card>
           <CardHeader title="Key" subtitle="A HID keyboard keycode" />
           <p>
             A newtype over a HID keyboard/keypad usage. It converts{' '}
-            <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code>, so you pass one
+            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so you pass one
             straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
             <A href="/library/inject#inject"><code>press</code></A>. Modifiers are the usages{' '}
             <code>0xE0</code>-<code>0xE7</code>.
@@ -552,7 +576,7 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
           <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
           <p>
             A newtype over a 16-bit Consumer usage. It converts{' '}
-            <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code>, so you pass one
+            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so you pass one
             straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
             <A href="/library/inject#inject"><code>press</code></A>.
           </p>
@@ -705,9 +729,9 @@ match clock.age {
           <CardHeader title="Timeline" subtitle="Box stamps on this machine's clock" />
           <pre class="api-signature">struct Timeline {'{'} /* private */ {'}'}</pre>
           <p>
-            A catch stamp is microseconds on a chip that booted before this process did: it wraps
-            every ~71.6 minutes, restarts at zero on reboot, and has no relation to any clock here.
-            Feed every event in as it arrives, in order.
+            A catch stamp is microseconds on a chip that booted before this process did: it{' '}
+            <A href="/library/types/enums#clock-domain">wraps, restarts at zero on reboot</A>, and
+            has no relation to any clock here. Feed every event in as it arrives, in order.
           </p>
           <p>
             <code>&amp;event</code> is anything implementing <code>Timestamped</code>: an{' '}
@@ -730,8 +754,9 @@ match clock.age {
             Each domain is tracked separately, so both chips' stamps land on one comparable timeline.
           </p>
           <p>
-            The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box), not an
-            average. It improves as it runs and never steps backwards.
+            The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box), not
+            an average, because the error is one-sided: an event can arrive late but never early. It
+            improves as it runs and never steps backwards.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchFilter, Timeline};
@@ -786,11 +811,44 @@ for ev in input.by_ref().take(20) {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The selected mode; <code>Fixed</code> carries the requested rate.</td></tr>
-              <tr><td><code>resolved_hz</code></td><td><code>u16</code></td><td>The ceiling in effect (Hz); 0 = learnt/adaptive, or no device yet in <code>Interval</code>.</td></tr>
-              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The forced wire rate requested; <code>None</code> leaves the device's own.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The pace; <code>Fixed</code> carries the requested rate.</td></tr>
+              <tr><td><code>resolved_hz</code></td><td><code>u16</code></td><td>The ceiling in effect (Hz); 0 = learnt/adaptive, or no device yet in <code>Interval</code>; 1000 once the renderer has a profile.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The forced wire rate requested; <code>None</code> leaves the native interval.</td></tr>
               <tr><td><code>advertised_hz</code></td><td><code>u16</code></td><td>What the clone's input endpoints advertise now, forced or native; 0 = no clone.</td></tr>
               <tr><td><code>force_active</code></td><td><code>bool</code></td><td>Whether a forced interval is written into the descriptor being served.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="render-status" data-search-target>
+        <Card>
+          <CardHeader title="RenderStatus" subtitle="The texture motion is rendered with, and whether a profile has armed" />
+          <p>
+            The render state from{' '}
+            <A href="/library/options#query-render"><code>query_render()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; <code>Off</code> is the paced fill.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered by the model rather than relayed.</td></tr>
+              <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="spread-status" data-search-target>
+        <Card>
+          <CardHeader title="SpreadStatus" subtitle="How far an injected delta is spread, and the interval in effect" />
+          <p>
+            The spread state from{' '}
+            <A href="/library/options#query-spread"><code>query_spread()</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval a delta is released across; <code>0</code> is the whole delta on the next report.</td></tr>
+              <tr><td><code>span_us</code></td><td><code>u32</code></td><td>The interval in effect, in microseconds. <code>0</code> whenever nothing is being spread.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -816,7 +874,7 @@ for ev in input.by_ref().take(20) {
           <CardHeader title="PortInfo" subtitle="A discovered serial port" />
           <p>
             A serial port that looks like a Medius box, from{' '}
-            <A href="/library/guides/connection#choosing-a-port"><code>find_medius()</code></A>.{' '}
+            <A href="/library/connection#open"><code>find_medius()</code></A>.{' '}
             <code>serial</code> is the CH343 adapter's serial string, part of the box{' '}
             <A href="/library/discovery">identity</A>.
           </p>
@@ -831,6 +889,33 @@ for ev in input.by_ref().take(20) {
           </table>
         </Card>
       </div>
+      <div id="box-info" data-search-target>
+        <Card>
+          <CardHeader title="BoxInfo" subtitle="One discovered box" />
+          <p>
+            One entry from <A href="/library/discovery#list"><code>Device::list()</code></A>, and the
+            value <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate
+            receives.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>port</code></td><td><A href="/library/types/structs#port-info"><code>PortInfo</code></A></td><td>The control port (path and CH343 serial).</td></tr>
+              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
+              <tr><td><code>device</code></td><td><A href="/library/types/structs#device-info"><code>DeviceInfo</code></A></td><td>The device it clones.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>id()</code></td><td><code>String</code></td><td>The box identity: the MAC hex, as passed to <A href="/library/discovery#open-by-id"><code>open_by_id</code></A>.</td></tr>
+              <tr><td><code>name()</code></td><td><code>&amp;str</code></td><td>The box's human-readable <A href="/library/options#set-name">name</A> (from <code>version.name</code>), a display label rather than an opener key.</td></tr>
+              <tr><td><code>serial()</code></td><td><code>Option&lt;&amp;str&gt;</code></td><td>The CH343 adapter's serial, when it has one.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="counters-snapshot" data-search-target>
         <Card>
           <CardHeader title="CountersSnapshot" subtitle="Link statistics snapshot" />
@@ -906,7 +991,7 @@ if cfg.loop_ && cfg.finalized {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>on</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The button, key, or media usage that fires the trigger.</td></tr>
+              <tr><td><code>on</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A></td><td>The button, key, or media usage that fires the trigger.</td></tr>
               <tr><td><code>edge</code></td><td><A href="/library/types/enums#edge"><code>Edge</code></A></td><td>Which edge fires it: <code>Press</code>, <code>Release</code>, or <code>Both</code>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run (<code>Start</code>, <code>Stop</code>, <code>Toggle</code>, ...).</td></tr>
               <tr><td><code>consume</code></td><td><code>bool</code></td><td>Lock the trigger usage while it is active, so its edge never reaches the PC; the <code>.consume()</code> builder sets it true.</td></tr>
@@ -941,7 +1026,7 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
-              <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
+              <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1001,6 +1086,12 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>The chip being written.</td></tr>
               <tr><td><code>sent</code></td><td><code>usize</code></td><td>Bytes the box has acknowledged.</td></tr>
               <tr><td><code>total</code></td><td><code>usize</code></td><td>Bytes in the whole image.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>percent()</code></td><td><code>u8</code></td><td><code>sent</code> as a percentage of <code>total</code>; <code>100</code> when <code>total</code> is <code>0</code>.</td></tr>
             </tbody>
           </table>
         </Card>

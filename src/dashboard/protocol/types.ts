@@ -31,7 +31,7 @@ export interface Version {
   fwMinor: number;
   fwPatch: number;
   mac: number[]; // the device chip's base MAC (6 bytes), a stable per-box id
-  name: string; // the box's human-readable name; a synthesized "Medius-XXXX" default when unset
+  name: string; // the box's human-readable name; a synthesised "Medius-XXXX" default when unset
 }
 
 export function versionString(v: Version): string {
@@ -560,7 +560,7 @@ export interface UsageSnapshot {
   tsUs: number;
   // Always Host, like MotionEvent.clk.
   clk: ClockDomain;
-  // Which class this snapshot is of, from the frame header rather than the first usage -- an empty
+  // Which class this snapshot is of, from the frame header rather than the first usage: an empty
   // snapshot is a release-to-nothing and has no usage to read it from.
   cls: number;
   // The edge that produced it: the subscribed set grew (POS) or shrank (NEG).

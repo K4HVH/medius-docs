@@ -1,5 +1,5 @@
 import { Match, Show, Switch, createSignal } from 'solid-js';
-import { A } from '@solidjs/router';
+import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
@@ -18,6 +18,7 @@ import '../../../styles/docs.css';
 // reboot is not sitting in the same column as a test control that does not.
 const Control = () => {
   const dash = useDashboard();
+  const navigate = useNavigate();
   const [cleared, setCleared] = createSignal(false);
   const cmd = createCommand(() => {
     dash.refreshPoll('locks');
@@ -36,27 +37,47 @@ const Control = () => {
 
   return (
     <Show
-      when={dash.status() === 'connected'}
+      when={dash.status() === 'connected' && !dash.updateOnly()}
       fallback={
-        <Card>
-          <CardHeader title="Controls" subtitle="Drive the box to test it" />
-          <div aria-live="polite">
-            <Switch>
-              <Match when={dash.status() === 'connecting'}>
-                <Button loading disabled>Connecting...</Button>
-              </Match>
+        <Show
+          when={!dash.updateOnly()}
+          fallback={
+            <div id="update-needed" data-search-target>
+              <Card>
+                <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
+                <p>Update it to use these controls.</p>
+                <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                  Update
+                </Button>
+              </Card>
+            </div>
+          }
+        >
+          <div id="controls" data-search-target>
+            <Card>
+              <CardHeader title="Controls" subtitle="Drive the box to test it" />
+              <div aria-live="polite">
+                <Switch>
+                  <Match when={dash.status() === 'connecting'}>
+                    <Button loading disabled>Connecting...</Button>
+                  </Match>
 
-              <Match when={dash.status() === 'flashing'}>
-                <p>Updating. See the <A href="/dashboard/update">Update tab</A>.</p>
-              </Match>
+                  <Match when={dash.status() === 'flashing'}>
+                    <p>Updating. See the Update tab.</p>
+                    <Button variant="primary" disabled onClick={() => navigate('/dashboard/update')}>
+                      Go to Update
+                    </Button>
+                  </Match>
 
-              <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
-                <ConnectPanel />
-              </Match>
+                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
+                    <ConnectPanel />
+                  </Match>
 
-            </Switch>
+                </Switch>
+              </div>
+            </Card>
           </div>
-        </Card>
+        </Show>
       }
     >
       <>
@@ -65,22 +86,24 @@ const Control = () => {
           <DeviceInject />
           <DeviceLock />
           <DeviceLed />
-          <Card>
-            <CardHeader title="Safety clear" subtitle="Clear all injection, locks, subscriptions and the clip" />
-            <div style={row}>
-              <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
-                Clear everything
-              </Button>
-            </div>
-            <div aria-live="polite">
-              <Show when={cleared()}>
-                <p>Sent.</p>
-              </Show>
-              <Show when={cmd.error()}>
-                <div class="callout callout--danger" role="alert">{cmd.error()}</div>
-              </Show>
-            </div>
-          </Card>
+          <div id="safety-clear" data-search-target>
+            <Card>
+              <CardHeader title="Safety clear" subtitle="Clear all injection, locks, subscriptions and the clip" />
+              <div style={row}>
+                <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
+                  Clear everything
+                </Button>
+              </div>
+              <div aria-live="polite">
+                <Show when={cleared()}>
+                  <p>Sent.</p>
+                </Show>
+                <Show when={cmd.error()}>
+                  <div class="callout callout--danger" role="alert">{cmd.error()}</div>
+                </Show>
+              </div>
+            </Card>
+          </div>
         </div>
         <div style={col}>
           <DeviceEventCatch />

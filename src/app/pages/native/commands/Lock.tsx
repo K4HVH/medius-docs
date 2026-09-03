@@ -77,7 +77,7 @@ const Lock: Component = () => {
             <div class="api-response-label">RULES</div>
             <table class="api-params">
               <thead>
-                <tr><th>Rule</th><th>What the box does</th></tr>
+                <tr><th>Name</th><th>What the box does</th></tr>
               </thead>
               <tbody>
                 <tr><td>combine</td><td>A delta picks up one fixed-sign scale and one relative scale, multiplied. A <code>0</code> in either blocks.</td></tr>
@@ -110,7 +110,7 @@ const Lock: Component = () => {
             <div class="table-scroll">
               <table class="api-params">
                 <thead>
-                  <tr><th>Direction</th><th>Value</th><th>Axis</th><th>Button, key, media</th></tr>
+                  <tr><th>Name</th><th>Value</th><th>Axis</th><th>Button, key, media</th></tr>
                 </thead>
                 <tbody>
                   <tr><td>both</td><td><code>0</code></td><td>Both signs.</td><td>Press and release.</td></tr>
@@ -125,7 +125,7 @@ const Lock: Component = () => {
               Media has no sign and no edge, so{' '}
               <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> always reports
               its direction as <code>0</code>. Every shipped client refuses <code>3</code> and{' '}
-              <code>4</code> on all three momentary classes rather than depend on which.
+              <code>4</code> on all three momentary classes rather than depend on the class.
             </p>
             <p>
               On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to
@@ -161,14 +161,9 @@ const Lock: Component = () => {
             </table>
           </div>
 
-          <div class="api-response-label">PHYSICAL ONLY</div>
-          <p>
-            A scale weighs the physical device. Host <A href="/native/injection">injection</A> drives
-            the same field at full strength, so a blocked axis still moves when the box moves it.
-          </p>
 
           <div id="clearing" data-search-target>
-            <div class="api-response-label">A SCALE CLEARS ON</div>
+            <div class="api-response-label">CLEARS ON</div>
             <pre class="diagram">{`unlock      the matching unlock (scale = 100); direction 0 clears
             all four slots of that target
 silence     ~1 s with no control-PC frame
@@ -240,7 +235,7 @@ detach      the real device goes away`}</pre>
             <code>0</code> holds no bearing at all, so <code>with</code> and <code>against</code> stop
             weighing without being cleared.
           </p>
-                    <table class="api-params">
+          <table class="api-params">
             <thead>
               <tr><th>Event</th><th>Effect on the bearing</th></tr>
             </thead>
@@ -255,7 +250,6 @@ detach      the real device goes away`}</pre>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A>, ~1 s of control-PC silence, link loss, detach</td><td>Cleared with the rest of the PC-owned state.</td></tr>
             </tbody>
           </table>
-        
         </Card>
       </div>
 
@@ -295,7 +289,7 @@ detach      the real device goes away`}</pre>
           </p>
           <p>The wheel is never projected; it weighs against its own bearing.</p>
           <div class="api-response-label">THE TWO STAGES</div>
-                    <table class="api-params">
+          <table class="api-params">
             <thead>
               <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
             </thead>
@@ -304,7 +298,6 @@ detach      the real device goes away`}</pre>
               <tr><td>2. weigh</td><td>Each axis's own fixed pair, chosen by the sign now standing in the field.</td><td>What stage 1 left, not the delta the report carried.</td></tr>
             </tbody>
           </table>
-        
           <p>
             A fixed-sign scale governs what reaches the game PC, so it covers the across part as
             well as the physical delta. Only the relative pair is redistributed; the fixed pair is

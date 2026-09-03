@@ -35,7 +35,7 @@ const Connection: Component = () => {
           <table class="api-params">
             <thead>
               <tr>
-                <th>Function</th>
+                <th>Name</th>
                 <th>Description</th>
               </tr>
             </thead>
@@ -91,7 +91,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
               </tr>
               <tr>
                 <td><code>PROTO_VER</code></td>
-                <td><code>5</code></td>
+                <td><code>6</code></td>
               </tr>
             </tbody>
           </table>
@@ -106,7 +106,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
-println!("speaks protocol:   {}", PROTO_VER);                   // 5`}</code></pre>
+println!("speaks protocol:   {}", PROTO_VER);                   // 6`}</code></pre>
         </Card>
       </div>
 

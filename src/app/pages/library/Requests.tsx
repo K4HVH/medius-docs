@@ -43,8 +43,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.2.0
-println!("proto {}", v.proto_ver);     // proto 5
+println!("{v}");                       // fw 3.3.1
+println!("proto {}", v.proto_ver);     // proto 6
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -249,17 +249,9 @@ println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Aga
             32-entry table was full, or the filter itself was malformed.
           </p>
 
-          <div class="api-response-label">DROPS AND THE CLOCK</div>
           <p>
-            <code>CatchState::dropped</code> is box-wide and{' '}
-            <A href="/library/types/structs#catch-entry"><code>CatchEntry::dropped</code></A> is per
-            entry, with a lost event charged to every entry it resolved against. Drops on the entry you
-            care about mean the subscription is too broad for the link.
-          </p>
-          <p>
-            The two chips stamp events on clocks that share no epoch. <code>clock</code> is the
-            measured gap between them, and what its fields mean is on{' '}
-            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>.
+            A lost event is charged to every entry it resolved against, so drops on the entry you care
+            about mean the subscription is too broad for the link.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -346,25 +338,12 @@ println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
           <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Backs <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>. The
-            other firmware calls live on{' '}
-            <A href="/library/update">the update page</A>.
+            Returns a <A href="/library/types/structs#firmware-info"><code>FirmwareInfo</code></A>,
+            backing <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>;
+            the other firmware calls live on <A href="/library/update">the update page</A>.
           </p>
-          <div class="api-response-label">RETURNS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>device</code></td><td><code>ChipFirmware</code></td><td>version, slot, and image state</td></tr>
-              <tr><td><code>host</code></td><td><code>Option&lt;ChipFirmware&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link</td></tr>
-              <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
-              <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
-              <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
-            </tbody>
-          </table>
           <p>
-            This is the only call that reports the host chip's version.{' '}
+            It is the only call that reports the host chip's version, where{' '}
             <A href="/library/requests#version"><code>query_version</code></A> reports the device
             chip alone.
           </p>

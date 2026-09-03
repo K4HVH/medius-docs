@@ -40,7 +40,7 @@ const Async: Component = () => {
           <table class="api-params">
             <thead>
               <tr>
-                <th>Constructor</th>
+                <th>Name</th>
                 <th>Description</th>
               </tr>
             </thead>
@@ -101,7 +101,7 @@ let device = Device::find()?.into_async();`}</code></pre>
 
       <div id="queries" data-search-target>
         <Card>
-          <CardHeader title="Awaiting a query" subtitle="every query method is a future" />
+          <CardHeader title="Awaiting a query" subtitle="Every query method is a future" />
 
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
@@ -136,9 +136,8 @@ let device = Device::find()?.into_async();`}</code></pre>
             </tbody>
           </table>
           <p>
-            Two shown; the rest (<code>device_info</code>, <code>caps</code>, <code>query_rate</code>,{' '}
-            <code>query_stats</code>, <code>query_locks</code>, <code>query_catch</code>) resolve the same
-            way. The full list is on <A href="/library/requests#async"><code>Requests</code></A>.
+            Two shown; every other query resolves the same way. The full list is on{' '}
+            <A href="/library/requests#async"><code>Requests</code></A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

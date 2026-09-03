@@ -73,7 +73,7 @@ except NotFoundError:
 
       <div id="walkthrough" data-search-target>
         <Card>
-          <CardHeader title="Walkthrough" subtitle="What each call is and where its meaning lives" />
+          <CardHeader title="Walkthrough" subtitle="Each call, its kind, and its concept page" />
           <table class="api-params">
             <thead>
               <tr><th>Call</th><th>Kind</th><th>Does (follow the link)</th></tr>
@@ -92,17 +92,17 @@ except NotFoundError:
               <tr>
                 <td><A href="/bindings/python/api#move"><code>dev.move_rel(100, 0)</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Relative cursor move. See <A href="/native/commands/move#move">MOVE</A> / <A href="/library/move">Move</A>.</td>
+                <td>See <A href="/native/commands/move#move">MOVE</A> / <A href="/library/move">Move</A>.</td>
               </tr>
               <tr>
                 <td><A href="/bindings/python/api#inject"><code>dev.press(Usage.button(Button.LEFT))</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Hold a button. See the <A href="/native/injection#fire-and-forget">injection model</A> / <A href="/library/inject">Inject</A>.</td>
+                <td>Sends <code>Action.PRESS</code>. See the <A href="/native/injection#fire-and-forget">injection model</A> / <A href="/library/inject">Inject</A>.</td>
               </tr>
               <tr>
                 <td><A href="/bindings/python/api#inject"><code>dev.soft_release(Usage.button(Button.LEFT))</code></A></td>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Release, unless the user is physically holding it. See <A href="/native/injection">Injection</A>.</td>
+                <td>Sends <code>Action.SOFT_RELEASE</code>. See <A href="/native/injection">Injection</A>.</td>
               </tr>
               <tr>
                 <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.everything())</code></A></td>
@@ -128,7 +128,7 @@ except NotFoundError:
         <Card>
           <CardHeader title="Run it" subtitle="One command, expected output" />
           <pre><code class="language-bash">{`python first.py
-# firmware 3.2.0, proto 5
+# firmware 3.3.1, proto 6
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
             The <code>motion</code> line needs a real mouse move or click inside the 5-second window.{' '}
@@ -177,7 +177,7 @@ except NotFoundError:
 
       <div id="errors" data-search-target>
         <Card>
-          <CardHeader title="Errors" subtitle="Failures raise; they're never a return code" />
+          <CardHeader title="Errors" subtitle="Raised exceptions, not return codes" />
           <p>
             Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
             <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
@@ -226,23 +226,6 @@ except NotFoundError:
             until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
             <A href="/library/guides/connection#keepalive">keepalive</A> thread.
           </p>
-        </Card>
-      </div>
-
-      <div id="next" data-search-target>
-        <Card>
-          <CardHeader title="Next steps" subtitle="Further reading" />
-          <table class="api-params">
-            <thead>
-              <tr><th>Page</th><th>For</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><A href="/bindings/python/usage">Calls &amp; errors</A></td><td>how calls, enums, and error handling work in Python</td></tr>
-              <tr><td><A href="/bindings/python/streams">Streams</A></td><td>consuming catch events and device logs</td></tr>
-              <tr><td><A href="/bindings/python/api">API index</A></td><td>every call, one line each, linked to what it does</td></tr>
-              <tr><td><A href="/bindings/python/types">Types &amp; errors</A></td><td>the <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclasses</a>, <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">enums</a>, and exception tree</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
     </>

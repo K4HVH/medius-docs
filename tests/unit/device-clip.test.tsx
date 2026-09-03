@@ -40,6 +40,7 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   return {
     useDashboard: () => ({
       status: () => 'connected',
+      updateOnly: () => false,
       health: () => health,
       link: () => link,
       poll: (key: string) => () => (key === 'clip' ? clip() : key === 'moveRide' ? 0 : null),

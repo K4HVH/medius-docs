@@ -7,7 +7,7 @@ const Streams: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Streams" subtitle="Consume live input and device logs" />
+        <CardHeader title="Streams" subtitle="Live input and device logs" />
         <p>
           <A href="/native/hardware">The box</A> has two live channels: the traffic it carries
           (<A href="/library/catch">Catch</A>: physical input, and the USB bytes behind it) and its own
@@ -42,7 +42,7 @@ const Streams: Component = () => {
 
       <div id="subscribe" data-search-target>
         <Card>
-          <CardHeader title="Subscribe" subtitle="Open a stream from a Device" />
+          <CardHeader title="Subscribe" subtitle="Open an event, input, or log stream" />
           <p>
             All three calls live on the <A href="/bindings/python/api">Device</A> and send a
             subscribe request to the box.
@@ -74,29 +74,15 @@ CatchFilter.everything()                # every class, every id, one table entry
   .with_capture(n)                      # bytes kept per event, default 0 = whole packet
   .on_press() / .on_release()           # one edge of an input filter
   .inbound() / .outbound()              # one flow of a traffic filter`}</pre>
-          <table class="api-params">
-            <thead><tr><th>CatchClass</th><th>Value</th><th>id addresses</th><th>Yields</th></tr></thead>
-            <tbody>
-              <tr><td><code>BUTTON / KEY / MEDIA</code></td><td><code>0 / 1 / 2</code></td><td>a button slot, key usage, or Consumer usage</td><td><code>UsageSnapshot</code></td></tr>
-              <tr><td><code>AXIS</code></td><td><code>3</code></td><td>X, Y, or the wheel</td><td><code>MotionEvent</code></td></tr>
-              <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>a HID interface number</td><td rowspan="7"><code>TrafficEvent</code></td></tr>
-              <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an interrupt-OUT endpoint address</td></tr>
-              <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>a vendor interrupt endpoint address</td></tr>
-              <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>a vendor bulk endpoint address</td></tr>
-              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>a control endpoint number (<code>0</code> = EP0)</td></tr>
-              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an emitting endpoint address</td></tr>
-              <tr><td><code>BUS</code></td><td><code>10</code></td><td>nothing; the bus lifecycle</td></tr>
-            </tbody>
-          </table>
           <p>
-            Matching is most-specific-first: an exact <code>(class, id)</code> is matched before a blanket, and a blanket before <code>everything()</code>. Full semantics on{' '}
-            <A href="/bindings/python/types#catchfilter">Types</A> and{' '}
-            <A href="/library/catch">Catch</A>.
+            Every class and the ids it takes are on <code>CatchClass</code> above; matching order is
+            on <A href="/native/commands/catch#matching">The table</A>.
           </p>
           <div class="callout callout--warning">
             <p>
-              Subscribing checks the filters here and raises: <code>CatchTableFullError</code> past 32
-              entries, <code>CaptureNotApplicableError</code> for a capture on an input class,{' '}
+              Subscribing checks the filters here and raises: <code>CatchTableFullError</code> when
+              every subscription in this process together needs more than the box's 32 entries,{' '}
+              <code>CaptureNotApplicableError</code> for a capture on an input class,{' '}
               <code>EmptySubscriptionError</code> for none.
             </p>
             <p>
@@ -110,9 +96,9 @@ CatchFilter.everything()                # every class, every id, one table entry
           </div>
           <div class="callout callout--info">
             <p>
-              The control link runs at 4 Mbaud and vendor bulk alone measures 250 KiB/s through the
-              box. Events drain in four strict-priority queues (input and bus, then byte-oriented
-              classes, then control, then vendor bulk), so a busy mouse can starve a bulk trace.
+              Subscribing to everything at full length is more than the control link carries, and a
+              busy mouse leaves a bulk trace undrained. The queue ranking and the link budget are on{' '}
+              <A href="/native/commands/catch#delivery">Delivery</A>.
             </p>
           </div>
         </Card>
@@ -120,7 +106,7 @@ CatchFilter.everything()                # every class, every id, one table entry
 
       <div id="receive" data-search-target>
         <Card>
-          <CardHeader title="Receive" subtitle="Block, poll, time out, or iterate" />
+          <CardHeader title="Receive" subtitle="Blocking, polling, timed, and iterated reads" />
           <p>
             Every stream has the same four read methods plus <code>close()</code>. The table shows <code>EventStream</code>{' '}
             (yielding <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>);{' '}
@@ -145,7 +131,7 @@ CatchFilter.everything()                # every class, every id, one table entry
 
       <div id="events" data-search-target>
         <Card>
-          <CardHeader title="Event objects" subtitle="What recv() hands back" />
+          <CardHeader title="Event objects" subtitle="The dataclasses recv() returns" />
           <p>
             Every object here is a{' '}
             <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>.
@@ -222,7 +208,7 @@ with Device.find() as dev:
                     print("left held")
             if events.dropped:
                 print("fell behind:", events.dropped, "dropped")`}</code></pre>
-          <div class="api-response-label">TRACE A VENDOR ENDPOINT AND THE BUS</div>
+          <div class="api-response-label">TRAFFIC EVENTS</div>
           <pre><code class="language-python">{`from medius import Device, CatchFilter, CatchEventKind, TrafficClass
 
 VI = TrafficClass.VENDOR_INTERRUPT
@@ -254,7 +240,7 @@ while running:
     if ev is None:
         continue
     handle(ev)`}</code></pre>
-          <div class="api-response-label">CONFIRM THE BOX TOOK THEM</div>
+          <div class="api-response-label">READBACK</div>
           <pre><code class="language-python">{`st = dev.query_catch()
 if st.table_full:
     print("a filter was refused: the box's 32-entry table is full")
@@ -337,7 +323,7 @@ with Device.find() as dev:
 
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="No async" subtitle="Build it on the timeout / non-blocking reads" />
+          <CardHeader title="No async" subtitle="Build it on the non-blocking reads" />
           <div class="callout callout--warning">
             <p>
               The streams are synchronous: there are no <code>async def</code> or <code>await</code>{' '}

@@ -171,7 +171,7 @@ describe('Advanced', () => {
 
   it('the chip and image cannot be changed while a flash is in flight', async () => {
     // They were live across `requestRomPort` and `downloadAsset`, so a switch mid-download changed
-    // which offset the bytes went to -- an app image at 0x0 takes the bootloader with it.
+    // which offset the bytes went to: an app image at 0x0 takes the bootloader with it.
     mock.holdFlash = true;
     const r = render(() => <Advanced />);
     await openGate(r);

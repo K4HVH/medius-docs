@@ -15,6 +15,8 @@ import {
   type DecodedFrame,
   type DeviceInfo,
   type EmitPace,
+  type Render,
+  type Spread,
   type Health,
   type ImperfectStatus,
   type Locks,
@@ -25,13 +27,17 @@ import {
   type Version,
   ClipOp,
   EmitMode,
+  RenderMode,
   FrameDecoder,
   FrameType,
   MAX_PAYLOAD,
+  MIN_PROTO_VER,
   PROTO_VER,
   Q_CLIP,
   OPT_BEARING,
   OPT_EMIT,
+  OPT_RENDER,
+  OPT_SPREAD,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -58,6 +64,8 @@ import {
   clipSetPayload,
   clipTriggerPayload,
   emitPayload,
+  renderPayload,
+  spreadPayload,
   encode,
   encodeClipEntry,
   filterEverything,
@@ -187,9 +195,17 @@ const UPDATE_BACKLOG_MAX = 64;
 
 export class BadProtoVerError extends Error {
   constructor(readonly version: Version) {
-    super(`unsupported protocol version ${version.protoVer} (expected ${PROTO_VER})`);
+    super(
+      `unsupported protocol version ${version.protoVer} ` +
+        `(this page speaks ${MIN_PROTO_VER}..${PROTO_VER})`,
+    );
     this.name = 'BadProtoVerError';
   }
+}
+
+/** Whether a box speaks the current wire, or only enough of it to be updated. */
+export function speaksCurrentWire(version: Version): boolean {
+  return version.protoVer === PROTO_VER;
 }
 
 export interface SerialLinkEvents {
@@ -269,7 +285,7 @@ export class SerialLink {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;
     // Adopt a port that is already open rather than opening it again. A close that could not finish
-    // -- the usual cause is the box re-enumerating underneath it as it reboots into a new image --
+    // (the usual cause is the box re-enumerating underneath it as it reboots into a new image)
     // leaves the port open, and Web Serial answers the next open() with "the port is already open",
     // which strands the page with no way back except a replug.
     if (!this.port.readable || !this.port.writable) {
@@ -289,7 +305,9 @@ export class SerialLink {
     for (let i = 0; i < HANDSHAKE_ATTEMPTS; i++) {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
-        if (version.protoVer !== PROTO_VER) {
+        // Below MIN_PROTO_VER there is no UPDATE opcode to reach, and above PROTO_VER the box speaks
+        // a wire this page cannot know. Between them it connects, for updating.
+        if (version.protoVer < MIN_PROTO_VER || version.protoVer > PROTO_VER) {
           throw new BadProtoVerError(version);
         }
         return version;
@@ -410,7 +428,7 @@ export class SerialLink {
   // A blanket (id LOCK_ID_ALL) carries the direction to every member, so an every-key lock can block
   // press edges alone. A media usage has no edges and ignores the byte either way.
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
-    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent -- the
+    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent: the
     // box does a different thing per class with it, and every other client refuses it too. A media usage
     // has no edges at all, so an edge named on one goes out as Both, which is what the box reports back.
     if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
@@ -432,7 +450,7 @@ export class SerialLink {
     return this.scale(target, direction, LOCK_SCALE_PASS);
   }
 
-  // Move the cursor (§3.1). Relative, in the cloned mouse's own units. The wire field is an i16, so
+  // Move the cursor (§3.1). Relative, in the cloned mouse's units. The wire field is an i16, so
   // a larger delta saturates here rather than wrapping; the box then clamps that to the cloned
   // report's own field width and carries the remainder into later reports.
   moveRel(dx: number, dy: number, flags = 0): Promise<void> {
@@ -543,6 +561,16 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
   }
 
+  // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
+  // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
+  // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
+  // the clone advertises and the box polls the device at, 0 for native ; it needs IMPERFECT on
+  // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
+  // every call. Persisted in NVS. Read back with `queryEmitPace`.
+  setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
+  }
+
   // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
   // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
   // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
@@ -552,14 +580,33 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
-  // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
-  // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
-  // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
-  // the clone advertises and the box polls the device at, 0 for the device's own; it needs IMPERFECT on
-  // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
-  // every call. Persisted in NVS. Read back with `queryEmitPace`.
-  setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
-    return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
+  // The texture motion is rendered with (§3.10). `full` puts native motion through the same
+  // model rather than relaying it, so the latency rendering adds reaches it too; off by default. Both
+  // ride one command, so both are written every call. Persisted in NVS. Read back with `queryRender`.
+  setRender(mode: RenderMode, full: boolean): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), renderPayload(mode, full)));
+  }
+
+  // What motion is rendered with, and whether the box has learned a profile for the attached device
+  // (§4.14). Nothing is rendered until it has.
+  async queryRender(timeoutMs?: number): Promise<Render> {
+    const resp = parseResp(await this.queryOption(OPT_RENDER, timeoutMs));
+    if (resp?.kind !== 'render') throw new Error('unexpected reply to OPTIONS(RENDER) query');
+    return resp.render;
+  }
+
+  // The share of the interval between commands an injected delta is released across (§3.13). 0 puts
+  // the whole delta on the next report the box emits; above 100 overlaps. Persisted in NVS.
+  setSpread(percent: number): Promise<void> {
+    return this.send(encode(FrameType.Option, this.nextSeq(), spreadPayload(percent)));
+  }
+
+  // The percent set, and the interval the box is releasing across (§4.14). The interval is 0 until
+  // the box has learned the host's command period from MOVE arrivals.
+  async querySpread(timeoutMs?: number): Promise<Spread> {
+    const resp = parseResp(await this.queryOption(OPT_SPREAD, timeoutMs));
+    if (resp?.kind !== 'spread') throw new Error('unexpected reply to OPTIONS(SPREAD) query');
+    return resp.spread;
   }
 
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).
@@ -575,7 +622,7 @@ export class SerialLink {
   // CLIP_APPEND carries its own sequence: the box expects each append's SEQ to be exactly one past
   // the last one it saw, and faults the engine on any gap so a dropped append cannot be played as
   // if it were whole. That counter therefore cannot be the link's shared SEQ, which every query and
-  // command also advances -- a single health poll between two appends would look like a lost
+  // command also advances, and a single health poll between two appends would look like a lost
   // append. Appends count on their own.
   //
   // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
@@ -611,7 +658,7 @@ export class SerialLink {
   }
 
   // Run one clip engine verb (§3.11). Ignored by the box when no mouse is cloned: the clip is
-  // clocked by the mouse's own report tick, so without one it could never advance.
+  // clocked by native report tick, so without one it could never advance.
   clipCtrl(op: ClipOp): Promise<void> {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }
@@ -648,7 +695,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), namePayload(name)));
   }
 
-  // Clear the box name (§3.10): reverts to the firmware-synthesized "Medius-XXXX" default. Persisted
+  // Clear the box name (§3.10): reverts to the firmware-synthesised "Medius-XXXX" default. Persisted
   // in NVS. Fire-and-forget.
   clearName(): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
@@ -716,7 +763,7 @@ export class SerialLink {
     });
   }
 
-  // Serialize writes through one cached writer so concurrent callers cannot race
+  // Serialise writes through one cached writer so concurrent callers cannot race
   // on getWriter() or interleave frames on the wire.
   private send(frame: Uint8Array): Promise<void> {
     const run = this.writeChain.then(() => {

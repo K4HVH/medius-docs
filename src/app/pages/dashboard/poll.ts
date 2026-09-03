@@ -14,6 +14,8 @@ import type {
   ClipStatus,
   DeviceInfo,
   EmitPace,
+  Render,
+  Spread,
   Health,
   ImperfectStatus,
   Locks,
@@ -36,6 +38,8 @@ export interface PollValues {
   moveRide: number;
   bearing: Bearing;
   emit: EmitPace;
+  render: Render;
+  spread: Spread;
   clip: ClipStatus;
 }
 
@@ -54,6 +58,8 @@ const RUN: { [K in PollKey]: (l: SerialLink) => Promise<PollValues[K]> } = {
   moveRide: (l) => l.queryMovementRiding(),
   bearing: (l) => l.queryBearing(),
   emit: (l) => l.queryEmitPace(),
+  render: (l) => l.queryRender(),
+  spread: (l) => l.querySpread(),
   clip: (l) => l.queryClip(),
 };
 
@@ -81,6 +87,8 @@ const DEFAULT_MS: Record<PollKey, number> = {
   moveRide: 4000,
   bearing: 4000,
   emit: 4000,
+  render: 4000,
+  spread: 4000,
   clip: 1000,
 };
 

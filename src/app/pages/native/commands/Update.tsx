@@ -13,8 +13,8 @@ const Update: Component = () => {
           either chip while the box is running: a{' '}
           <A href="/native/commands/update#begin">session</A> per chip, the image in{' '}
           <A href="/native/commands/update#data">chunks</A>, and one{' '}
-          <A href="/native/commands/update#activate">commit</A> at the end. No ROM download mode, no
-          BOOT button, no cable move.
+          <A href="/native/commands/update#activate">commit</A> at the end, over the box's own
+          control port and with no BOOT button.
         </p>
         <pre class="diagram">{`   PC --CH343, framed 4 Mbaud--> DEVICE chip --> its own spare slot
                                      |
@@ -100,9 +100,12 @@ const Update: Component = () => {
           <p>
             Puts the whole box in update mode: injection and{' '}
             <A href="/native/commands/clip">clip</A> playback stop, the host chip stops polling the
-            real device, and the clone disconnects from the game PC. Then it erases the entire target
-            slot before answering <code>READY</code> with the credit in <code>arg</code>. Library
-            binding: <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
+            real device, and the clone disconnects from the game PC.
+          </p>
+          <p>
+            Then it erases the entire target slot before answering <code>READY</code> with the credit
+            in <code>arg</code>. Library binding:{' '}
+            <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
           </p>
           <p>
             The erase happens here, up front, and not lazily as bytes arrive. A 64 KB block erase
@@ -140,10 +143,15 @@ const Update: Component = () => {
           <div class="api-response-label">FLOW CONTROL</div>
           <p>
             <code>READY</code>'s <code>arg</code> says how many chunks the box will take before it
-            must answer. Read it rather than assuming: the device chip asks for 16, the host chip for
-            6, because a relayed chunk waits in the inter-chip link's receive ring while the chip
-            behind it writes the one before to flash. The window is a correctness requirement, not a
-            throughput knob.
+            must answer.
+          </p>
+          <p>
+            Read it rather than assuming: the device chip asks for 16, the host chip for 6, because a
+            relayed chunk waits in the inter-chip link's receive ring while the chip behind it writes
+            the one before to flash.
+          </p>
+          <p>
+            The window is a correctness requirement, not a throughput knob.
           </p>
           <pre class="diagram">{`  PC   |-- credit chunks --|                       |-- credit chunks --|
   box                       |-- write, ACK next --|                     |-- ACK next --|
@@ -155,7 +163,7 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
-              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 us at 4 Mbaud.</td></tr>
+              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 µs at 4 Mbaud.</td></tr>
               <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
               <tr><td>Inter-chip link ring</td><td>4096 bytes, which is what caps the relayed window.</td></tr>
             </tbody>
@@ -233,17 +241,22 @@ const Update: Component = () => {
             Once <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> is accepted the
             box answers new commands with <code>BUSY</code>, and this is the one exception: while the
             box is waiting on the host chip it abandons that wait and answers the{' '}
-            <code>ACTIVATE</code> with <code>TIMEOUT</code>. Past that point the boot partition is
-            already written, so there is nothing left to abort, and cancelling the reboot would leave
-            the box running one image with the loader pointed at the other.
+            <code>ACTIVATE</code> with <code>TIMEOUT</code>.
+          </p>
+          <p>
+            Past that point the boot partition is already written, so there is nothing left to abort,
+            and cancelling the reboot would leave the box running one image with the loader pointed
+            at the other.
           </p>
           <div class="callout callout--warning">
             <p>
-              Abandoning an activate disarms <em>both</em> chips, whichever target the frame names. One{' '}
-              <code>ACTIVATE</code> commits everything staged, so abandoning it abandons everything
-              staged; leaving one behind would let a later <code>ACTIVATE</code> commit that one alone
-              and put the two chips on different versions. Outside an activate, <code>ABORT</code> is
-              per-target as usual.
+              Abandoning an activate disarms <em>both</em> chips, whichever target the frame names.
+            </p>
+            <p>
+              One <code>ACTIVATE</code> commits everything staged, so abandoning it abandons
+              everything staged; leaving one behind would let a later <code>ACTIVATE</code> commit
+              that one alone and put the two chips on different versions. Outside an activate,{' '}
+              <code>ABORT</code> is per-target as usual.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -276,18 +289,25 @@ const Update: Component = () => {
           <p>
             If only one target is staged, only that one is committed. Anything that fails before{' '}
             <code>ACTIVATE</code> leaves both chips on their running slots untouched, so a failed
-            transfer costs a retry and nothing else. The reply is <code>OK</code> once both chips are
-            committed, <code>NOSTAGE</code> if nothing was staged, or <code>TIMEOUT</code> if the host
-            chip never came back on the new slot; it always names target <code>0</code>, so match it on
-            the op alone.
+            transfer costs a retry and nothing else.
+          </p>
+          <p>
+            The reply is <code>OK</code> once both chips are committed, <code>NOSTAGE</code> if
+            nothing was staged, or <code>TIMEOUT</code> if the host chip never came back on the new
+            slot; it always names target <code>0</code>, so match it on the op alone.
           </p>
           <div class="callout callout--warning">
             <p>
               A refused commit leaves the image staged. The host chip goes first, so if it refuses,
-              the device chip never commits. Both chips are still on their running slots, but the
-              device image stays staged and armed: the next <code>ACTIVATE</code> would commit it
-              alone and leave the two chips on different versions. After a failed{' '}
-              <code>ACTIVATE</code>, either retry the whole update or send{' '}
+              the device chip never commits.
+            </p>
+            <p>
+              Both chips are still on their running slots, but the device image stays staged and
+              armed: the next <code>ACTIVATE</code> would commit it alone and leave the two chips on
+              different versions.
+            </p>
+            <p>
+              After a failed <code>ACTIVATE</code>, either retry the whole update or send{' '}
               <A href="/native/commands/update#abort"><code>ABORT</code></A> for each staged target
               first. The dashboard and both reference clients do the latter for you.
             </p>
@@ -336,7 +356,7 @@ const Update: Component = () => {
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>Status</th><th>Value</th><th><code>arg</code></th><th>Meaning</th></tr>
+                <tr><th>Name</th><th>Value</th><th><code>arg</code></th><th>Meaning</th></tr>
               </thead>
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0x00</code></td><td><code>0</code></td><td>Accepted, nothing else to say.</td></tr>

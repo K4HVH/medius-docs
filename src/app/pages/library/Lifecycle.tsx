@@ -9,20 +9,14 @@ const Lifecycle: Component = () => {
       <Card>
         <CardHeader title="Lifecycle" subtitle="Re-asserting held overrides and recovering a dropped link" />
         <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them if the link drops and reopens.</p>
-        <ul>
-          <li>
-            <A href="/library/guides/connection#keepalive"><code>keepalive</code></A> (automatic) holds an
-            override past the silence timeout.
-          </li>
-          <li>
-            <A href="/library/lifecycle#reapply"><code>reapply</code></A> re-sends the held overrides
-            so the box matches the library.
-          </li>
-          <li>
-            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> rescans, reopens the
-            port, and restores held state after a dropped link.
-          </li>
-        </ul>
+        <table class="api-params">
+          <thead><tr><th>Call</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><A href="/library/guides/connection#keepalive"><code>keepalive</code></A> (automatic)</td><td>Holds an override past the silence timeout.</td></tr>
+            <tr><td><A href="/library/lifecycle#reapply"><code>reapply</code></A></td><td>Re-sends the held overrides so the box matches the library.</td></tr>
+            <tr><td><A href="/library/lifecycle#reconnect"><code>reconnect</code></A></td><td>Rescans, reopens the port, and restores held state after a dropped link.</td></tr>
+          </tbody>
+        </table>
       </Card>
 
       <div id="reapply" data-search-target>
@@ -52,7 +46,7 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <div class="callout callout--info">
             <p>
               Overrides are keyed by their{' '}
-              <A href="/library/types/enums#usage"><code>Usage</code></A> (a button, key, or media
+              <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media
               usage).{' '}
               <A href="/library/inject#inject"><code>press</code></A> and{' '}
               <A href="/library/inject#inject"><code>force_release</code></A> add a held override;{' '}

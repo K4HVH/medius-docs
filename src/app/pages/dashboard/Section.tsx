@@ -2,8 +2,8 @@
 //
 // The label alone was not enough separation: the space above a heading matched the space between a
 // control and its status chip, so a section's last readout looked like it belonged to the next
-// section's title. The rule makes the boundary unmissable, and the space around it is the largest
-// gap on the card.
+// section's title. The rule marks the boundary, and the space around it is the largest gap on
+// the card.
 
 import type { JSX } from 'solid-js';
 

@@ -170,11 +170,11 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Members</th><th>Values</th></tr></thead>
               <tbody>
-                <tr><td><code>A</code> … <code>Z</code></td><td><code>4</code> to <code>29</code></td></tr>
-                <tr><td><code>N1</code> … <code>N9</code>, <code>N0</code></td><td><code>30</code> to <code>39</code></td></tr>
+                <tr><td><code>A</code> .. <code>Z</code></td><td><code>4</code> to <code>29</code></td></tr>
+                <tr><td><code>N1</code> .. <code>N9</code>, <code>N0</code></td><td><code>30</code> to <code>39</code></td></tr>
                 <tr><td><code>ENTER</code> <code>ESCAPE</code> <code>BACKSPACE</code> <code>TAB</code> <code>SPACE</code></td><td><code>40</code> to <code>44</code></td></tr>
                 <tr><td><code>CAPS_LOCK</code></td><td><code>57</code></td></tr>
-                <tr><td><code>F1</code> … <code>F12</code></td><td><code>58</code> to <code>69</code></td></tr>
+                <tr><td><code>F1</code> .. <code>F12</code></td><td><code>58</code> to <code>69</code></td></tr>
                 <tr><td><code>INSERT</code> <code>HOME</code> <code>PAGE_UP</code> <code>DELETE</code> <code>END</code> <code>PAGE_DOWN</code></td><td><code>73</code> to <code>78</code></td></tr>
                 <tr><td><code>RIGHT</code> <code>LEFT</code> <code>DOWN</code> <code>UP</code> (arrows)</td><td><code>79</code> to <code>82</code></td></tr>
                 <tr><td><code>LEFT_CTRL</code> <code>LEFT_SHIFT</code> <code>LEFT_ALT</code> <code>LEFT_GUI</code></td><td><code>224</code> to <code>227</code></td></tr>
@@ -273,6 +273,28 @@ const Types: Component = () => {
               <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
               <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
             </p>
+          </div>
+        </Card>
+      </div>
+
+      <div id="render" data-search-target>
+        <Card>
+          <CardHeader title="Render" subtitle="RenderMode" />
+          <p>
+            Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_render()</code></A>.
+            See <A href="/library/options">Options</A>.
+          </p>
+          <div id="rendermode" data-search-target>
+            <div class="api-response-label">RenderMode</div>
+            <table class="api-params">
+              <thead><tr><th>Member</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>OFF</code></td><td><code>0</code></td></tr>
+                <tr><td><code>STOCK</code></td><td><code>1</code></td></tr>
+                <tr><td><code>DESPIKED</code></td><td><code>2</code></td></tr>
+                <tr><td><code>UNSMOOTHED</code></td><td><code>3</code></td></tr>
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>
@@ -425,9 +447,8 @@ const Types: Component = () => {
               true for <code>0</code> to <code>3</code>, <code>cls.is_traffic()</code> for the rest.
             </p>
             <p>
-              The input classes are tapped before lock suppression and injection, so an input you have
-              locked still reports here. <code>EMIT</code> is the opposite end, what the clone put on
-              the wire afterwards.
+              Where each class is tapped, and why a locked input still reports, is on{' '}
+              <A href="/native/commands/catch#catch">Catch</A>.
             </p>
           </div>
 
@@ -499,8 +520,8 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               </tbody>
             </table>
             <p>
-              Matching is most-specific-first: an exact <code>(class, id)</code> is matched before a class blanket, that before <code>everything()</code>, and a named direction before{' '}
-              <code>BOTH</code>. The winning entry supplies the <code>capture</code>.
+              The winning entry supplies the <code>capture</code>; the ranking that picks it is on{' '}
+              <A href="/native/commands/catch#matching">The table</A>.
             </p>
             <p>
               <code>same_address</code> is true across two filters that differ only in{' '}
@@ -557,7 +578,8 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           <div id="clockdomain" data-search-target>
             <div class="api-response-label">ClockDomain</div>
             <p>
-              Which of the box's two chips stamped an event's <code>ts_us</code>. The two{' '}
+              Which of the box's two <A href="/native/architecture">chips</A> stamped an event's{' '}
+              <code>ts_us</code>. The two{' '}
               <A href="/native/hardware">ESP32-S3s</A> boot independently, so nothing relates their
               timers.
             </p>
@@ -799,7 +821,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>fw_patch</code></td><td><code>int</code></td><td>firmware patch</td></tr>
                 <tr><td><code>mac</code></td><td><code>bytes</code></td><td>the device chip's base MAC (6 bytes), a stable per-box id</td></tr>
                 <tr><td><code>mac_hex</code></td><td><code>str</code></td><td>the MAC as 12 lowercase hex digits</td></tr>
-                <tr><td><code>name</code></td><td><code>str</code></td><td>the box's human-readable name (a synthesized default when unset), set with <A href="/bindings/python/api#led-admin-options"><code>set_name</code></A></td></tr>
+                <tr><td><code>name</code></td><td><code>str</code></td><td>the box's human-readable name (a synthesised default when unset), set with <A href="/bindings/python/api#led-admin-options"><code>set_name</code></A></td></tr>
               </tbody>
             </table>
           </div>
@@ -1091,11 +1113,36 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the selected mode</td></tr>
-                <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet</td></tr>
-                <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves the device's own</td></tr>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the pace</td></tr>
+                <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet, 1000 once the renderer has a profile</td></tr>
+                <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves native </td></tr>
                 <tr><td><code>advertised_hz</code></td><td><code>int</code></td><td>what the clone's input endpoints advertise now, forced or native; 0 = no clone</td></tr>
                 <tr><td><code>force_active</code></td><td><code>bool</code></td><td>whether a forced interval is written into the descriptor being served</td></tr>
+              </tbody>
+            </table>
+            <p>See <A href="/library/options">Options</A>.</p>
+          </div>
+
+          <div id="renderstatus" data-search-target>
+            <div class="api-response-label">RenderStatus (query_render())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>mode</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>the texture motion is rendered with; OFF is the paced fill</td></tr>
+                <tr><td><code>full</code></td><td><code>bool</code></td><td>whether native motion is rendered by the model rather than relayed</td></tr>
+                <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the attached device; nothing is rendered until it has</td></tr>
+              </tbody>
+            </table>
+            <p>See <A href="/library/options">Options</A>.</p>
+          </div>
+
+          <div id="spreadstatus" data-search-target>
+            <div class="api-response-label">SpreadStatus (query_spread())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>percent</code></td><td><code>int</code></td><td>share of the command interval a delta is released across; 0 is the whole delta on the next report</td></tr>
+                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 until the box has learned the host's command period</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
@@ -1140,7 +1187,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>
               </tbody>
             </table>
-            <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/discovery#box-info">BoxInfo</A>.</p>
+            <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/types/structs#box-info">BoxInfo</A>.</p>
           </div>
         </Card>
       </div>

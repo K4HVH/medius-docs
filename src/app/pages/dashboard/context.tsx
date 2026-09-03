@@ -26,6 +26,7 @@ import {
   grantedMediusPorts,
   isSecureContextOk,
   isWebSerialSupported,
+  speaksCurrentWire,
   requestMediusPort,
 } from '../../../dashboard/serial';
 import type { FlashKind, FlashProgress } from '../../../dashboard/flash';
@@ -52,6 +53,9 @@ export interface DashboardContextValue {
   secure: boolean;
   status: Accessor<ConnectionStatus>;
   version: Accessor<Version | null>;
+  // A box a protocol version behind connects for one thing: being updated. Everything else on this
+  // page speaks the current wire, so it is not offered while this is true.
+  updateOnly: Accessor<boolean>;
   health: Accessor<Health | null>;
   error: Accessor<string | null>;
   // Why the last connect attempt did not produce a link. Null once one succeeds, and null before
@@ -73,7 +77,7 @@ export interface DashboardContextValue {
   firmwareInfo: Accessor<FirmwareInfo | null>;
   readFirmwareInfo: () => Promise<FirmwareInfo | null>;
   // 'verified' only when the box came back and answered. 'sent' means the transfer and the activate
-  // succeeded but nothing has confirmed what is running now -- the box reverts an image that will
+  // succeeded but nothing has confirmed what is running now: the box reverts an image that will
   // not boot, so claiming a version here would be a claim nothing checked.
   updateOverControl: (images: {
     device?: Uint8Array;
@@ -85,6 +89,9 @@ export interface DashboardContextValue {
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
   clearInputEvents: () => void;
+  // Register a raw tap on the catch stream (the input-events store is capped and shared); returns an
+  // unsubscribe. Lets a high-rate consumer keep its own buffer.
+  subscribeEvents: (fn: (ev: CatchEvent, seq: number) => void) => () => void;
 }
 
 function formatLogLine(line: LogLine): string {
@@ -122,6 +129,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [flashLog, setFlashLog] = createSignal<string[]>([]);
   const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
   const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
+  const eventTaps = new Set<(ev: CatchEvent, seq: number) => void>();
 
   // Every card's readback runs through one poller. It is fed a derived link rather than `link`
   // itself so a flash silences it in one place: during a flash esptool owns a port and the control
@@ -134,7 +142,10 @@ export const DashboardProvider: ParentComponent = (props) => {
   const makeLink = (port: SerialPort): SerialLink => {
     const nl: SerialLink = new SerialLink(port, {
       onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
-      onEvent: (ev, seq) => setInputEvents((prev) => [...prev, { seq, ev }].slice(-200)),
+      onEvent: (ev, seq) => {
+        setInputEvents((prev) => [...prev, { seq, ev }].slice(-200));
+        eventTaps.forEach((fn) => fn(ev, seq));
+      },
       onClose: () => {
         // Only the stored link: another link may already own this port, and closing it would take
         // that one's port down with it.
@@ -233,8 +244,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       outcome = { ok: false, verdict: classifyConnectError(e) };
     }
 
-    // Something else may have moved on while the chooser and handshake ran -- a disconnect, or the
-    // setup wizard starting an install. Whoever changed the status owns it now; this link is not
+    // Something else may have moved on while the chooser and handshake ran (a disconnect, or the
+    // setup wizard starting an install). Whoever changed the status owns it now; this link is not
     // wanted and must not be installed over the top.
     if (disposed || status() !== 'connecting') {
       if (outcome.ok) await outcome.link.close().catch(() => undefined);
@@ -272,6 +283,10 @@ export const DashboardProvider: ParentComponent = (props) => {
   const clearFlashResult = () => setFlashProgress(null);
   const clearDeviceLog = () => setDeviceLog([]);
   const clearInputEvents = () => setInputEvents([]);
+  const subscribeEvents = (fn: (ev: CatchEvent, seq: number) => void) => {
+    eventTaps.add(fn);
+    return () => eventTaps.delete(fn);
+  };
 
   const readFirmwareInfo = async (): Promise<FirmwareInfo | null> => {
     const l = link();
@@ -330,7 +345,7 @@ export const DashboardProvider: ParentComponent = (props) => {
       if (!reconnected) {
         // Shared, not page-local: this is the one instruction that fixes it, and navigating to
         // another tab used to destroy it. Device, Control and Update all surface it. The claim is
-        // only what the code can support -- what is running now is what nothing has checked.
+        // only what the code can support: what is running now is what nothing has checked.
         setError(
           'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
         );
@@ -345,8 +360,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       // host first, the same order it was staged in. Each target gets its own try, so a box that
       // has already gone away on the first one does not skip the second.
       // Short, because the usual reason for being here is a box that has stopped answering, and the
-      // full op timeout twice over would leave the user watching a frozen progress bar for the best
-      // part of a minute before the real error appears. A box that IS answering replies at once.
+      // full op timeout twice over would hold the progress bar for tens of seconds before the real
+      // error appears. A box that IS answering replies at once.
       const staged: number[] = [];
       if (images.host) staged.push(OTA_TGT_HOST);
       if (images.device) staged.push(OTA_TGT_DEVICE);
@@ -412,11 +427,17 @@ export const DashboardProvider: ParentComponent = (props) => {
     if (status() !== 'flashing') void link()?.close().catch(() => undefined);
   });
 
+  const updateOnly = () => {
+    const v = version();
+    return status() === 'connected' && v !== null && !speaksCurrentWire(v);
+  };
+
   const value: DashboardContextValue = {
     supported,
     secure,
     status,
     version,
+    updateOnly,
     health,
     error,
     verdict,
@@ -436,6 +457,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     clearDeviceLog,
     inputEvents,
     clearInputEvents,
+    subscribeEvents,
   };
 
   return <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>;

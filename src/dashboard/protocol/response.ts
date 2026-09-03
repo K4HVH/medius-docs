@@ -10,9 +10,13 @@ import {
   DI_HAS_BOS,
   DI_HAS_SERIAL,
   EmitMode,
+  RenderMode,
+  renderModeFromU8,
   emitModeFromU8,
   OPT_BEARING,
   OPT_EMIT,
+  OPT_RENDER,
+  OPT_SPREAD,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   Q_CAPS,
@@ -83,7 +87,8 @@ import {
 } from './types';
 
 // Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, the rate
-// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode), the requested
+// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode; 1000 once the
+// renderer has a profile), the requested
 // wire rate (forceHz 0 = off), what the clone's input endpoints advertise now (advertisedHz 0 = no
 // clone), and whether a forced interval is in the served descriptor. mode null is a mode the box
 // reported that this build doesn't know.
@@ -96,7 +101,24 @@ export interface EmitPace {
   forceActive: boolean;
 }
 
+// What the box renders motion with, whether native motion goes through it, and whether a
+// profile has been learned for the attached device. Nothing is rendered until one has.
+export interface Render {
+  mode: RenderMode | null;
+  full: boolean;
+  ready: boolean;
+}
+
+// How far an injected delta is spread across the host's command interval, and the interval the box is
+// releasing across. `spanUs` is 0 until the box has learned the host's command period.
+export interface Spread {
+  percent: number;
+  spanUs: number;
+}
+
 export type Resp =
+  | { kind: 'render'; render: Render }
+  | { kind: 'spread'; spread: Spread }
   | { kind: 'version'; version: Version }
   | { kind: 'health'; health: Health }
   | { kind: 'deviceInfo'; deviceInfo: DeviceInfo }
@@ -370,13 +392,6 @@ export function parseResp(payload: Uint8Array): Resp | null {
           // [what=9][id=1][timeout u16 LE ms]
           if (payload.length < 4) return null;
           return { kind: 'movementRiding', windowMs: u16le(payload, 2) };
-        case OPT_BEARING:
-          // [what=9][id=4][window u16 LE ms][mode u8]
-          if (payload.length < 5) return null;
-          return {
-            kind: 'bearing',
-            bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
-          };
         case OPT_EMIT:
           // [what=9][id=2][mode u8][fixed_hz u16][resolved_hz u16][force_hz u16][advertised_hz u16][force_active u8]
           if (payload.length < 12) return null;
@@ -390,6 +405,31 @@ export function parseResp(payload: Uint8Array): Resp | null {
               advertisedHz: u16le(payload, 9),
               forceActive: payload[11] !== 0,
             },
+          };
+        case OPT_BEARING:
+          // [what=9][id=4][window u16 LE ms][mode u8]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'bearing',
+            bearing: { windowMs: u16le(payload, 2), mode: bearingModeFromU8(payload[4]) ?? BearingMode.PerAxis },
+          };
+        case OPT_RENDER:
+          // [what=9][id=5][mode u8][full u8][ready u8]
+          if (payload.length < 5) return null;
+          return {
+            kind: 'render',
+            render: {
+              mode: renderModeFromU8(payload[2]),
+              full: payload[3] !== 0,
+              ready: payload[4] !== 0,
+            },
+          };
+        case OPT_SPREAD:
+          // [what=9][id=6][percent u16 LE][span_us u32 LE]
+          if (payload.length < 8) return null;
+          return {
+            kind: 'spread',
+            spread: { percent: u16le(payload, 2), spanUs: u32le(payload, 4) },
           };
         default:
           return null;
@@ -415,7 +455,7 @@ export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
 // Parse a USAGE_EVENT payload (§4.10): [ts_us u32][clk u8][cls u8][dir u8][n u8] then
 // n × [class u8][id u16 LE]. A class-tagged held-usage snapshot (buttons, keys, or media, one class
 // per event). Class and edge are in the HEADER, not read off the entries: the snapshot that most
-// needs them is the empty one -- the release of the last held usage, which lists nothing.
+// needs them is the empty one: the release of the last held usage, which lists nothing.
 // Unsolicited.
 export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
   if (payload.length < EVENT_HDR + 3) return null;

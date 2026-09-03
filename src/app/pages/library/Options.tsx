@@ -9,7 +9,7 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Five box settings, each set and read on its own. All persist in NVS and survive a reboot. See
+          Seven box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command for the wire contract.
         </p>
@@ -18,9 +18,11 @@ const Options: Component = () => {
           <tbody>
             <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
             <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
-            <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
             <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
             <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
+            <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
+            <tr><td>motion texture</td><td><A href="/library/options#set-render"><code>set_render</code></A></td><td><A href="/library/options#query-render"><code>query_render</code></A></td></tr>
+            <tr><td>injection spreading</td><td><A href="/library/options#set-spread"><code>set_spread</code></A></td><td><A href="/library/options#query-spread"><code>query_spread</code></A></td></tr>
           </tbody>
         </table>
       </Card>
@@ -98,76 +100,15 @@ device.set_movement_riding(None)?;                             // back to gaples
         </Card>
       </div>
 
-      <div id="set-bearing" data-search-target>
-        <Card>
-          <CardHeader title="set_bearing" subtitle="What With and Against are measured against" />
-          <pre class="api-signature">fn set_bearing(&self, window: Option&lt;Duration&gt;, mode: BearingMode) -&gt; Result&lt;()&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <p>
-            Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
-            injecting, which <code>Direction::With</code> and <code>Direction::Against</code> weigh
-            against in <A href="/library/lock#scale"><code>scale</code></A>. Each axis holds the
-            direction of its last injected delta for <code>window</code> past the last one still owed,
-            then has none and both relative directions stop applying.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Persisted in NVS, so a box that has been set boots at its own value.{' '}
-            <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory one.
-          </p>
-          <div class="callout callout--warning">
-            <p>
-              <code>Vector</code> weighs a report twice, and the second pass reads whatever the
-              projection left standing on each axis, not what the device reported. Block <code>Y</code>{' '}
-              negative while the injection runs diagonally and a purely horizontal flick can come out with its
-              vertical share removed.
-            </p>
-            <p>
-              A change to either field drops the standing bearing and the box's banked fractions, which
-              is a visible step while a relative scale is live.
-            </p>
-          </div>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use std::time::Duration;
-use medius::{Axis, BearingMode, Device, Direction};
-
-let device = Device::find()?;
-device.set_bearing(Some(Duration::from_millis(20)), BearingMode::PerAxis)?;
-device.scale(Axis::X, Direction::Against, 40)?;  // motion opposing the injection, at 40%
-device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
-        </Card>
-      </div>
-
       <div id="set-emit-pace" data-search-target>
         <Card>
           <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
           <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Picks the emit-rate ceiling for injected motion.{' '}
-            <A href="/library/types/enums#emit-pace"><code>EmitPace::Learned</code></A> (the default)
-            paces injection to the rate the real mouse reports at.{' '}
-            <code>EmitPace::Interval</code> paces to the cloned mouse's declared poll rate (its
-            <code>bInterval</code>). <code>EmitPace::Fixed(hz)</code> paces to a rate you set.
-          </p>
-          <p>
-            The 1 ms frame clock snaps a fixed rate to <code>1000/n</code> Hz and caps it at 1 kHz. The
-            pace raises the ceiling only: idle stays idle, and the box emits a frame solely when
-            injection is pending.
-          </p>
-          <p>
-            <code>force_hz</code> writes one <code>bInterval</code> onto every HID interrupt-IN endpoint
-            of the descriptor the clone serves, and polls the real device at that same interval, so a
-            mouse that declares 125 Hz while able to deliver 1 kHz is not held to what it declared. It
-            snaps to <code>1000/n</code> Hz and floors at 10 ms on a low-speed clone (100 Hz).
+            <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
+            the clone serves and polls the device at it, so a mouse declaring 125 Hz can run at 1 kHz.
+            It snaps to <code>1000/n</code> Hz, and a low-speed clone floors at <code>bInterval</code> 16 (62 Hz).
           </p>
           <div class="callout callout--warning">
             <p>
@@ -182,21 +123,16 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td><code>Learned</code>, <code>Interval</code>, or <code>Fixed(hz)</code>.</td></tr>
-              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the device's own.</td></tr>
+              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The rate ceiling for injected motion.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the native interval.</td></tr>
             </tbody>
           </table>
-          <p>
-            The two are independent, and both ride one command, so every call writes both.
-          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 
 let device = Device::find()?;
-device.set_emit_pace(EmitPace::Fixed(1000), None)?;      // emit at a fixed 1 kHz
-device.allow_imperfect_clones(true)?;
-device.set_emit_pace(EmitPace::Learned, Some(1000))?;    // a 1 kHz clone, human-paced injection
-device.set_emit_pace(EmitPace::Learned, None)?;          // back to the defaults`}</code></pre>
+device.set_emit_pace(EmitPace::Fixed(1000), None)?;   // a fixed 1 kHz ceiling
+device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own default`}</code></pre>
         </Card>
       </div>
 
@@ -230,11 +166,11 @@ let name = device.query_version()?.name;  // read it back off Version`}</code></
 
       <div id="clear-name" data-search-target>
         <Card>
-          <CardHeader title="clear_name" subtitle="Back to the synthesized default" />
+          <CardHeader title="clear_name" subtitle="Back to the synthesised default" />
           <pre class="api-signature">fn clear_name(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Clears the custom name, reverting the box to a firmware-synthesized{' '}
+            Clears the custom name, reverting the box to a firmware-synthesised{' '}
             <code>Medius-XXXX</code> default derived from its MAC.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -242,6 +178,149 @@ let name = device.query_version()?.name;  // read it back off Version`}</code></
 
 let device = Device::find()?;
 device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="set-bearing" data-search-target>
+        <Card>
+          <CardHeader title="set_bearing" subtitle="What With and Against are measured against" />
+          <pre class="api-signature">fn set_bearing(&self, window: Option&lt;Duration&gt;, mode: BearingMode) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
+            injecting, which <code>Direction::With</code> and <code>Direction::Against</code> weigh
+            against in <A href="/library/lock#scale"><code>scale</code></A>. Each axis holds the
+            direction of its last injected delta for <code>window</code> past the last one still owed,
+            then has none and both relative directions stop applying.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory
+            setting.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              <A href="/library/types/enums#bearing-mode"><code>Vector</code></A> weighs a report
+              twice: block <code>Y</code> negative while the injection runs diagonally and a purely
+              horizontal flick can come out with its vertical share removed.
+            </p>
+            <p>
+              A change to either field drops the standing bearing and the box's banked fractions, which
+              is a visible step while a relative scale is live.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use std::time::Duration;
+use medius::{Axis, BearingMode, Device, Direction};
+
+let device = Device::find()?;
+device.set_bearing(Some(Duration::from_millis(20)), BearingMode::PerAxis)?;
+device.scale(Axis::X, Direction::Against, 40)?;  // motion opposing the injection, at 40%
+device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="set-render" data-search-target>
+        <Card>
+          <CardHeader title="set_render" subtitle="Pick the texture motion is rendered with" />
+          <pre class="api-signature">fn set_render(&self, mode: RenderMode, full: bool) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            <code>Off</code> is the paced fill: one frame per{' '}
+            <A href="/library/options#set-emit-pace">emit-rate</A> tick while injection is pending. The
+            other three push motion through an{' '}
+            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
+            model (MIT) fitted live from native reports, and differ only in the smoother the
+            model is fed.
+          </p>
+          <p>
+            <code>full</code> is whose motion the model renders: injected motion alone, or the mouse's
+            own cursor delta taken out of the relayed report and joined to it as one stream. Buttons,
+            the wheel and every other field stay relayed either way.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              Rendering adds a small amount of latency, which reaches native motion when{' '}
+              <code>full</code> is on. Motion asking for exact timing skips the model:{' '}
+              <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
+              <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A> take the paced
+              path, and with <code>full</code> on the rendered stream ignores{' '}
+              <A href="/library/options#set-movement-riding">movement riding</A>.
+            </p>
+            <p>
+              The renderer stays out of the path until a profile arms, and while <code>mode</code> is{' '}
+              <code>Off</code>:{' '}
+              <A href="/library/options#query-render"><code>query_render</code></A> reports both.
+            </p>
+          </div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; the box boots at <code>Despiked</code>.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered by the model rather than relayed; the box boots with it off.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Device, RenderMode};
+
+let device = Device::find()?;
+device.set_render(RenderMode::Despiked, false)?;   // the box's own default
+device.set_render(RenderMode::Despiked, true)?;    // render native motion too
+device.set_render(RenderMode::Off, false)?;        // renderer out of the path, the paced fill`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="set-spread" data-search-target>
+        <Card>
+          <CardHeader title="set_spread" subtitle="Set how far an injected delta is spread in time" />
+          <pre class="api-signature">fn set_spread(&self, percent: u16) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            An aim loop slower than the native report rate hands the box a delta worth several native
+            reports. <code>percent</code> is how much of the interval between commands the box releases
+            that delta across: <code>0</code> puts the whole delta on the next report, <code>100</code>
+            releases it evenly over one interval, and above <code>100</code> carries a standing backlog.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval, in percent; the box boots at <code>100</code>.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              Spreading costs half the interval in latency on average, about 4 ms on a 125 Hz loop.
+              The delivered total never changes, and a loop matched to the native report rate emits
+              exactly what that loop emitted before.
+            </p>
+            <p>
+              Motion asking for exact timing is not spread:{' '}
+              <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
+              <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Neither is wheel
+              motion.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+device.set_spread(100)?;   // the box's own default: one whole command interval
+device.set_spread(50)?;    // half the interval, for half the added latency
+device.set_spread(0)?;     // off: the whole delta on the next report`}</code></pre>
         </Card>
       </div>
 
@@ -288,6 +367,30 @@ match device.query_movement_riding()? {
         </Card>
       </div>
 
+      <div id="query-emit-pace" data-search-target>
+        <Card>
+          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and the rate the clone runs at" />
+          <pre class="api-signature">fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Returns an{' '}
+            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
+            carrying the pace and the rates. <code>advertised_hz</code> is what the clone advertises now: the
+            native rate while nothing is forced, the forced rate once something is, with no
+            record of what the device declared before a force was applied.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Device, EmitPace};
+
+let device = Device::find()?;
+let status = device.query_emit_pace()?;
+if let EmitPace::Fixed(hz) = status.mode {
+    println!("fixed {hz} Hz, emitting at {} Hz", status.resolved_hz);
+}
+println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
+        </Card>
+      </div>
+
       <div id="query-bearing" data-search-target>
         <Card>
           <CardHeader title="query_bearing" subtitle="Read the bearing window and geometry" />
@@ -309,27 +412,48 @@ if bearing.is_live() {
         </Card>
       </div>
 
-      <div id="query-emit-pace" data-search-target>
+      <div id="query-render" data-search-target>
         <Card>
-          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and the rate the clone runs at" />
-          <pre class="api-signature">fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
+          <CardHeader title="query_render" subtitle="Read the texture and whether a profile has armed" />
+          <pre class="api-signature">fn query_render(&self) -&gt; Result&lt;RenderStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Returns an{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>.{' '}
-            <code>advertised_hz</code> is what the clone advertises now: the device's own rate while
-            nothing is forced, the forced rate once something is. The reply carries no record of what the
-            device declared before a force was applied.
+            Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
+            <code>ready</code> is false until a profile arms; until then motion is relayed and injection
+            takes the paced fill whatever <code>mode</code> says.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, EmitPace};
+          <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
-let status = device.query_emit_pace()?;
-if let EmitPace::Fixed(hz) = status.mode {
-    println!("fixed {hz} Hz, emitting at {} Hz", status.resolved_hz);
-}
-println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
+let status = device.query_render()?;
+println!("{:?}, own motion rendered: {}", status.mode, status.full);
+if !status.ready {
+    println!("move the mouse: nothing is rendered until a profile arms");
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="query-spread" data-search-target>
+        <Card>
+          <CardHeader title="query_spread" subtitle="Read the percent and the interval in effect" />
+          <pre class="api-signature">fn query_spread(&self) -&gt; Result&lt;SpreadStatus&gt;</pre>
+          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+          <p>
+            Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
+            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code> and
+            until the box has learned the host's command period. In both the whole delta goes out on
+            the next report.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Device;
+
+let device = Device::find()?;
+let status = device.query_spread()?;
+println!("{}% over {} us", status.percent, status.span_us);
+if status.span_us == 0 {
+    println!("send a few moves: the command period is not learned yet");
+}`}</code></pre>
         </Card>
       </div>
 
@@ -339,8 +463,9 @@ println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
-            <code>query_movement_riding</code>, <code>query_bearing</code>, and{' '}
-            <code>query_emit_pace</code> futures, like the other queries.
+            <code>query_movement_riding</code>, <code>query_bearing</code>,{' '}
+            <code>query_emit_pace</code>, and <code>query_render</code> futures, like the other
+            queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;

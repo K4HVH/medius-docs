@@ -23,12 +23,13 @@ const Flashing: Component = () => {
         <div class="callout callout--info">
           <p>
             Write the bootloader, the partition table, the app and a blank <code>otadata</code>{' '}
-            together, or use the factory image, which contains all four. An app image on its own keeps
-            whatever layout the chip already has, and a chip with one app slot answers{' '}
-            <code>NOSLOT</code> to an{' '}
+            together, or use the factory image, which contains all four.
+          </p>
+          <p>
+            An app image on its own keeps whatever layout the chip already has, and a chip with one
+            app slot answers <code>NOSLOT</code> to an{' '}
             <A href="/native/commands/update"><code>UPDATE</code></A>. Installing the two slots is a
-            partition-table change, which an update cannot perform, so it takes one flash from here
-            per chip, once per box.
+            partition-table change, so it takes one flash from here per chip, once per box.
           </p>
         </div>
       </Card>

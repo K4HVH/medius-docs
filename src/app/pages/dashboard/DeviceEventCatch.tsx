@@ -370,224 +370,226 @@ const DeviceEventCatch = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Card>
-        <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
+      <div id="input-catch" data-search-target>
+        <Card>
+          <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
 
-        <div style={label}>How to choose</div>
-        <RadioGroup
-          name="catch-mode"
-          value={mode()}
-          onChange={setMode}
-          disabled={streaming()}
-          options={[
-            { value: 'preset', label: 'Presets' },
-            { value: 'custom', label: 'Build a table' },
-          ]}
-        />
+          <div style={label}>How to choose</div>
+          <RadioGroup
+            name="catch-mode"
+            value={mode()}
+            onChange={setMode}
+            disabled={streaming()}
+            options={[
+              { value: 'preset', label: 'Presets' },
+              { value: 'custom', label: 'Build a table' },
+            ]}
+          />
 
-        <Show when={mode() === 'preset'}>
-          <div style={section}>
-            <div style={label}>What to watch</div>
-            <RadioGroup
-              name="catch-preset"
-              value={preset()}
-              onChange={setPreset}
-              disabled={streaming()}
-              options={[
-                { value: 'input', label: 'All input' },
-                { value: 'buttons', label: 'Buttons only' },
-                { value: 'motion', label: 'Movement + wheel' },
-                { value: 'keys', label: 'Keyboard + media' },
-                { value: 'traffic', label: 'Raw endpoints' },
-                { value: 'bus', label: 'Bus events' },
-              ]}
-            />
-          </div>
-        </Show>
-
-        <Show when={mode() === 'custom'}>
-          <div style={section}>
-            <div style={label}>Class</div>
-            <Combobox
-              value={String(cls())}
-              onChange={(v) => setCls(Number(Array.isArray(v) ? v[0] : v))}
-              options={CLASS_OPTIONS}
-            />
-            <p style={{ ...muted, 'margin-top': '4px' }}>The id is {ID_MEANING[cls()] ?? 'class specific'}.</p>
-          </div>
-          <Show when={cls() !== CatchClass.Bus && cls() !== CatchClass.Any}>
+          <Show when={mode() === 'preset'}>
             <div style={section}>
-              <div style={label}>Which id</div>
+              <div style={label}>What to watch</div>
               <RadioGroup
-                name="catch-anyid"
-                value={anyId()}
-                onChange={setAnyId}
+                name="catch-preset"
+                value={preset()}
+                onChange={setPreset}
+                disabled={streaming()}
                 options={[
-                  { value: 'any', label: 'Every id' },
-                  { value: 'one', label: 'Just one' },
+                  { value: 'input', label: 'All input' },
+                  { value: 'buttons', label: 'Buttons only' },
+                  { value: 'motion', label: 'Movement + wheel' },
+                  { value: 'keys', label: 'Keyboard + media' },
+                  { value: 'traffic', label: 'Raw endpoints' },
+                  { value: 'bus', label: 'Bus events' },
                 ]}
               />
-              <Show when={anyId() === 'one'}>
-                <div style={{ 'max-width': '9rem', 'margin-top': 'var(--g-spacing-sm)' }}>
-                  <NumberInput label="Id" value={id()} min={0} max={65534} onChange={(v) => setId(v ?? 0)} />
-                </div>
-              </Show>
             </div>
           </Show>
-          <div style={section}>
-            <div style={label}>Direction</div>
-            <RadioGroup
-              name="catch-dir"
-              value={dir()}
-              onChange={setDir}
-              options={[
-                { value: String(Direction.Both), label: 'Both' },
-                { value: String(Direction.Positive), label: isInputClass(cls()) ? 'Press' : 'In' },
-                { value: String(Direction.Negative), label: isInputClass(cls()) ? 'Release' : 'Out' },
-              ]}
-            />
-          </div>
-          <Show when={!isInputClass(cls())}>
+
+          <Show when={mode() === 'custom'}>
             <div style={section}>
-              <div style={label}>Capture</div>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput
-                  label="Bytes (0 = all)"
-                  value={capture()}
-                  min={0}
-                  max={255}
-                  onChange={(v) => setCapture(v ?? 0)}
+              <div style={label}>Class</div>
+              <Combobox
+                value={String(cls())}
+                onChange={(v) => setCls(Number(Array.isArray(v) ? v[0] : v))}
+                options={CLASS_OPTIONS}
+              />
+              <p style={{ ...muted, 'margin-top': '4px' }}>The id is {ID_MEANING[cls()] ?? 'class specific'}.</p>
+            </div>
+            <Show when={cls() !== CatchClass.Bus && cls() !== CatchClass.Any}>
+              <div style={section}>
+                <div style={label}>Which id</div>
+                <RadioGroup
+                  name="catch-anyid"
+                  value={anyId()}
+                  onChange={setAnyId}
+                  options={[
+                    { value: 'any', label: 'Every id' },
+                    { value: 'one', label: 'Just one' },
+                  ]}
                 />
-              </div>
-            </div>
-          </Show>
-          <div style={{ ...section, ...row }}>
-            <Button variant="secondary" disabled={streaming()} onClick={addCustom}>
-              Add entry
-            </Button>
-            <Button variant="subtle" disabled={streaming()} onClick={() => setCustom([])}>
-              Clear
-            </Button>
-          </div>
-          <div style={section}>
-            <div style={label}>
-              Table ({custom().length} of {CATCH_TABLE_MAX})
-            </div>
-            <Show when={custom().length > 0} fallback={<p style={muted}>No entries yet.</p>}>
-              <div style={chips}>
-                <For each={custom()}>
-                  {(f) => (
-                    <Chip
-                      variant="info"
-                      onRemove={
-                        streaming()
-                          ? undefined
-                          : () => setCustom((prev) => prev.filter((p) => !sameFilter(p, f)))
-                      }
-                    >
-                      {describe(f)}
-                    </Chip>
-                  )}
-                </For>
+                <Show when={anyId() === 'one'}>
+                  <div style={{ 'max-width': '9rem', 'margin-top': 'var(--g-spacing-sm)' }}>
+                    <NumberInput label="Id" value={id()} min={0} max={65534} onChange={(v) => setId(v ?? 0)} />
+                  </div>
+                </Show>
               </div>
             </Show>
-          </div>
-        </Show>
-
-        <div style={{ ...section, ...row }}>
-          <Show
-            when={!streaming()}
-            fallback={
-              <Button variant="secondary" onClick={() => void stop().catch(() => {})}>
-                Stop
-              </Button>
-            }
-          >
-            <Button
-              variant="primary"
-              disabled={chosen().length === 0}
-              onClick={() => void start().catch(() => {})}
-            >
-              Watch
-            </Button>
-          </Show>
-        </div>
-
-        <Show when={droppedByBox()}>
-          <div class="callout callout--warning" style={section}>
-            The box cleared the subscription. It does that after one second with no control frame, which
-            a backgrounded tab can cause. Press Watch to start again.
-          </div>
-        </Show>
-
-        <Show when={streaming()}>
-          <Show when={refused().length > 0}>
-            <div class="callout callout--warning" style={section}>
-              The box refused {refused().length} of {active().length} entries:{' '}
-              {refused().map(describe).join(', ')}.{' '}
-              <Show
-                when={catchState()?.tableFull}
-                fallback={<>It does not know that address on this firmware.</>}
-              >
-                Its {CATCH_TABLE_MAX}-entry table is full.
-              </Show>
-            </div>
-          </Show>
-
-          <Show when={latestButtons()}>
             <div style={section}>
-              <div style={label}>Buttons held now</div>
-              <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
+              <div style={label}>Direction</div>
+              <RadioGroup
+                name="catch-dir"
+                value={dir()}
+                onChange={setDir}
+                options={[
+                  { value: String(Direction.Both), label: 'Both' },
+                  { value: String(Direction.Positive), label: isInputClass(cls()) ? 'Press' : 'In' },
+                  { value: String(Direction.Negative), label: isInputClass(cls()) ? 'Release' : 'Out' },
+                ]}
+              />
+            </div>
+            <Show when={!isInputClass(cls())}>
+              <div style={section}>
+                <div style={label}>Capture</div>
+                <div style={{ 'max-width': '9rem' }}>
+                  <NumberInput
+                    label="Bytes (0 = all)"
+                    value={capture()}
+                    min={0}
+                    max={255}
+                    onChange={(v) => setCapture(v ?? 0)}
+                  />
+                </div>
+              </div>
+            </Show>
+            <div style={{ ...section, ...row }}>
+              <Button variant="secondary" disabled={streaming()} onClick={addCustom}>
+                Add entry
+              </Button>
+              <Button variant="subtle" disabled={streaming()} onClick={() => setCustom([])}>
+                Clear
+              </Button>
+            </div>
+            <div style={section}>
+              <div style={label}>
+                Table ({custom().length} of {CATCH_TABLE_MAX})
+              </div>
+              <Show when={custom().length > 0} fallback={<p style={muted}>No entries yet.</p>}>
                 <div style={chips}>
-                  <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
+                  <For each={custom()}>
+                    {(f) => (
+                      <Chip
+                        variant="info"
+                        onRemove={
+                          streaming()
+                            ? undefined
+                            : () => setCustom((prev) => prev.filter((p) => !sameFilter(p, f)))
+                        }
+                      >
+                        {describe(f)}
+                      </Chip>
+                    )}
+                  </For>
                 </div>
               </Show>
             </div>
           </Show>
 
-          <div style={section}>
-            <div style={label}>Events by kind</div>
-            <div style={chips}>
-              <Chip variant={kindCounts().motion > 0 ? 'info' : 'neutral'}>Motion {kindCounts().motion}</Chip>
-              <Chip variant={kindCounts().buttons > 0 ? 'info' : 'neutral'}>Buttons {kindCounts().buttons}</Chip>
-              <Chip variant={kindCounts().keys > 0 ? 'info' : 'neutral'}>Keys {kindCounts().keys}</Chip>
-              <Chip variant={kindCounts().media > 0 ? 'info' : 'neutral'}>Media {kindCounts().media}</Chip>
-              <Chip variant={kindCounts().traffic > 0 ? 'info' : 'neutral'}>Traffic {kindCounts().traffic}</Chip>
-            </div>
-          </div>
-
-          <div style={section}>
-            <div style={label}>Clock</div>
-            <p style={muted}>{clockLine()}</p>
-          </div>
-
-          <div style={section}>
-            <div style={label}>
-              Recent events ({events().length} received, {catchState()?.dropped ?? 0} dropped by the
-              box, {entryDrops()} of those charged to an entry)
-            </div>
-            <Show when={events().length > 0} fallback={<p>Move, click, or type...</p>}>
-              <pre class="diagram" style={{ 'max-height': '14rem', overflow: 'auto', margin: 0 }}>
-                {events()
-                  .slice(-14)
-                  .reverse()
-                  .map((e) => {
-                    const d = eventClk(e);
-                    const base = origins()[d];
-                    const rel = base === undefined ? 0 : (eventTs(e) - base) / 1000;
-                    const tag = d === ClockDomain.Device ? 'D' : 'H';
-                    return `#${e.seq} ${tag}+${rel.toFixed(3)}ms  ${eventBody(e)}`;
-                  })
-                  .join('\n')}
-              </pre>
+          <div style={{ ...section, ...row }}>
+            <Show
+              when={!streaming()}
+              fallback={
+                <Button variant="secondary" onClick={() => void stop().catch(() => {})}>
+                  Stop
+                </Button>
+              }
+            >
+              <Button
+                variant="primary"
+                disabled={chosen().length === 0}
+                onClick={() => void start().catch(() => {})}
+              >
+                Watch
+              </Button>
             </Show>
-            <p style={{ ...muted, 'margin-top': '4px' }}>
-              H is the host chip's clock, D the device chip's. Times are from the earliest event held
-              in that clock, and only comparable within one of them.
-            </p>
           </div>
-        </Show>
-      </Card>
+
+          <Show when={droppedByBox()}>
+            <div class="callout callout--warning" style={section}>
+              The box cleared the subscription. It does that after one second with no control frame, which
+              a backgrounded tab can cause. Press Watch to start again.
+            </div>
+          </Show>
+
+          <Show when={streaming()}>
+            <Show when={refused().length > 0}>
+              <div class="callout callout--warning" style={section}>
+                The box refused {refused().length} of {active().length} entries:{' '}
+                {refused().map(describe).join(', ')}.{' '}
+                <Show
+                  when={catchState()?.tableFull}
+                  fallback={<>It does not know that address on this firmware.</>}
+                >
+                  Its {CATCH_TABLE_MAX}-entry table is full.
+                </Show>
+              </div>
+            </Show>
+
+            <Show when={latestButtons()}>
+              <div style={section}>
+                <div style={label}>Buttons held now</div>
+                <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
+                  <div style={chips}>
+                    <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
+                  </div>
+                </Show>
+              </div>
+            </Show>
+
+            <div style={section}>
+              <div style={label}>Events by kind</div>
+              <div style={chips}>
+                <Chip variant={kindCounts().motion > 0 ? 'info' : 'neutral'}>Motion {kindCounts().motion}</Chip>
+                <Chip variant={kindCounts().buttons > 0 ? 'info' : 'neutral'}>Buttons {kindCounts().buttons}</Chip>
+                <Chip variant={kindCounts().keys > 0 ? 'info' : 'neutral'}>Keys {kindCounts().keys}</Chip>
+                <Chip variant={kindCounts().media > 0 ? 'info' : 'neutral'}>Media {kindCounts().media}</Chip>
+                <Chip variant={kindCounts().traffic > 0 ? 'info' : 'neutral'}>Traffic {kindCounts().traffic}</Chip>
+              </div>
+            </div>
+
+            <div style={section}>
+              <div style={label}>Clock</div>
+              <p style={muted}>{clockLine()}</p>
+            </div>
+
+            <div style={section}>
+              <div style={label}>
+                Recent events ({events().length} received, {catchState()?.dropped ?? 0} dropped by the
+                box, {entryDrops()} of those charged to an entry)
+              </div>
+              <Show when={events().length > 0} fallback={<p>Move, click, or type...</p>}>
+                <pre class="diagram" style={{ 'max-height': '14rem', overflow: 'auto', margin: 0 }}>
+                  {events()
+                    .slice(-14)
+                    .reverse()
+                    .map((e) => {
+                      const d = eventClk(e);
+                      const base = origins()[d];
+                      const rel = base === undefined ? 0 : (eventTs(e) - base) / 1000;
+                      const tag = d === ClockDomain.Device ? 'D' : 'H';
+                      return `#${e.seq} ${tag}+${rel.toFixed(3)}ms  ${eventBody(e)}`;
+                    })
+                    .join('\n')}
+                </pre>
+              </Show>
+              <p style={{ ...muted, 'margin-top': '4px' }}>
+                H is the host chip's clock, D the device chip's. Times are from the earliest event held
+                in that clock, and only comparable within one of them.
+              </p>
+            </div>
+          </Show>
+        </Card>
+      </div>
     </Show>
   );
 };

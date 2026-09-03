@@ -14,8 +14,7 @@ const Update: Component = () => {
           <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>;{' '}
           <A href="/library/update#update-firmware"><code>update_firmware</code></A> does both for one
           chip, and <A href="/library/update#abort-update"><code>abort_update</code></A> throws a
-          transfer away. Read what each chip is running with{' '}
-          <A href="/library/requests#firmware-info"><code>firmware_info</code></A>. Nothing reboots
+          transfer away. Nothing reboots
           into ROM download and no second port is involved; the wire is{' '}
           <A href="/native/commands/update"><code>UPDATE</code></A>.
         </p>
@@ -62,10 +61,10 @@ device.activate_firmware()?;`}</code></pre>
           <pre class="api-signature">fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Blocks for the whole transfer, a few seconds per chip. The clone disconnects from the game
-            PC for the duration and comes back afterwards. Waits for both chips to confirm the image
-            they booted before it starts, because a chip on probation refuses to open another update
-            and returns <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
+            Blocks for the whole transfer, a few seconds per chip; the clone disconnects from the
+            game PC for the duration. A chip on probation refuses to open another update, so
+            this waits for both to confirm the image they booted and otherwise returns{' '}
+            <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
             <code>ON_PROBATION</code>.
           </p>
           <table class="api-params">
@@ -115,8 +114,8 @@ println!("\\nstaged {written} bytes, not yet booted");`}</code></pre>
             <code>NOTHING_STAGED</code>.
           </p>
           <p>
-            A chip that boots an image which cannot run is reverted by the bootloader without anyone
-            asking, so a bad image costs a reboot rather than a box. See{' '}
+            The bootloader reverts a chip that boots an image which cannot run, so a bad image costs
+            a reboot. See{' '}
             <A href="/native/commands/update#rollback">rollback</A>.
           </p>
           <div class="callout callout--warning">

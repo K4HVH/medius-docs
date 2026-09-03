@@ -32,7 +32,7 @@ ENV SITE_ORIGIN=https://medius.k4tech.net
 
 RUN node_modules/.bin/tsx scripts/prerender.ts
 
-# Stage 3: production runtime — the Bun server serving the enriched dist/.
+# Stage 3: production runtime, the Bun server serving the enriched dist/.
 FROM oven/bun:1-alpine AS runner
 
 WORKDIR /app

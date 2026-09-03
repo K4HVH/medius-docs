@@ -46,7 +46,7 @@ const Inject: Component = () => {
           <div class="api-response-label">CLASSES</div>
           <table class="api-params">
             <thead>
-              <tr><th>Class</th><th>Value</th><th><code>id</code> is</th></tr>
+              <tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr>
             </thead>
             <tbody>
               <tr><td><A href="/native/commands/inject#button">button</A></td><td><code>0</code></td><td>a semantic <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2)</td></tr>
@@ -60,11 +60,11 @@ const Inject: Component = () => {
             </thead>
             <tbody>
               <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of physical state.</td></tr>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop our override (whether it was a press or a force-release); a physical hold stays active.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the box's override (whether it was a press or a force-release); a physical hold stays active.</td></tr>
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too. The release the <A href="/native/injection#safety">safety auto-clear</A> uses.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHAT THE CLONE EMITS</div>
+          <div class="api-response-label">EMITTED STATE</div>
           <p>The two releases differ only when the user is physically holding the same input:</p>
           <table class="api-params">
             <thead>

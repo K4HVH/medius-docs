@@ -2,7 +2,14 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 5; // LOCK's trailing byte is a pass-through percentage rather than an on/off flag, its direction byte reaches two bearing-relative slots, and RESP(LOCKS) carries one entry per weighed direction
+export const PROTO_VER = 6; // the render settings are OPTION(RENDER), and OPTION(EMIT) is the pace alone
+
+// The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
+// and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
+// unchanged since; only the options moved, at 6. Refusing a proto-5 box outright would lock it out of
+// the one mechanism that brings it up to date. A box between this and PROTO_VER connects for updating
+// only: the rest of the dashboard speaks the current wire and is not offered.
+export const MIN_PROTO_VER = 5;
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
 export const INJ_BTN = 0;
@@ -36,7 +43,7 @@ export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring a
 export const Q_FIRMWARE = 11; // both chips' versions + which app slot each booted (§4.16)
 
 // CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
-// byte draws from, so a trigger runs the same verb the control PC would.
+// byte renders from, so a trigger runs the same verb the control PC would.
 export enum ClipOp {
   Start = 0,
   Stop = 1,
@@ -124,6 +131,8 @@ export const OPT_MOVE_RIDE = 1; // value [timeout u16 LE ms], 0 = off
 export const OPT_EMIT = 2; // value [mode u8][rate_hz u16 LE][force_hz u16 LE]; mode 0 learned / 1 interval / 2 fixed
 export const OPT_NAME = 3; // value [name ascii 1..32]; 0 value bytes clears it (read via RESP(VERSION), not Q_OPTIONS)
 export const OPT_BEARING = 4; // value [window u16 LE ms][mode u8]; what the With/Against lock directions are measured against (§3.12)
+export const OPT_RENDER = 5; // value [mode u8][full u8]; the texture motion is rendered with (§3.10)
+export const OPT_SPREAD = 6; // value [percent u16 LE]; share of the command interval an injected delta is released across (§3.10)
 
 // The box name's length bounds (§3.10): 1..32 printable ASCII bytes.
 export const NAME_MAX = 32;
@@ -133,6 +142,30 @@ export enum EmitMode {
   Learned = 0, // pace to the mouse's learnt native report rate (default)
   Interval = 1, // follow the cloned mouse's bInterval poll rate
   Fixed = 2, // pace at a fixed rate_hz
+}
+
+// OPTION(RENDER)'s mode: Off is the paced fill; the rest render the mouse's learned texture and differ only
+// in the onboard path smoother. The box boots at Despiked.
+export enum RenderMode {
+  Off = 0,
+  Stock = 1,
+  Despiked = 2,
+  Unsmoothed = 3,
+}
+
+export function renderModeFromU8(render: number): RenderMode | null {
+  switch (render) {
+    case 0:
+      return RenderMode.Off;
+    case 1:
+      return RenderMode.Stock;
+    case 2:
+      return RenderMode.Despiked;
+    case 3:
+      return RenderMode.Unsmoothed;
+    default:
+      return null;
+  }
 }
 
 export function emitModeFromU8(value: number): EmitMode | null {

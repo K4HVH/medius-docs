@@ -83,7 +83,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
     println!("{:?} {:#06x}: {} of {} bytes", t.class, t.id, t.bytes.len(), t.true_len);
 }
 // dropping \`events\` unsubscribes`}</code></pre>
-          <div class="api-response-label">LIFECYCLE</div>
           <p>
             The keepalive re-asserts the table, and it survives a{' '}
             <A href="/library/lifecycle#reconnect">reconnect</A>. It clears on control-PC silence, on{' '}
@@ -99,25 +98,11 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           <CardHeader title="CatchFilter" subtitle="One table entry: an address, a direction, a capture" />
           <p>
             The input constructors take what <A href="/library/lock#lock"><code>lock</code></A> takes,
-            so hiding an input from the game and watching it are written alike. Every constructor,
-            modifier and accessor is on{' '}
+            so hiding an input from the game and watching it are written alike. The box resolves to
+            the most specific match and that entry supplies the capture; every constructor, modifier
+            and accessor, and the resolution order, are on{' '}
             <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>.
           </p>
-          <div class="api-response-label">MOST-SPECIFIC-FIRST</div>
-          <p>
-            The box resolves to the most specific match: an exact <code>(class, id)</code> before a class blanket, a class blanket before{' '}
-            <code>everything()</code>, and a named direction before <code>Both</code>. That entry supplies the capture.
-          </p>
-          <pre class="diagram">{`  CatchFilter::everything().with_capture(Capture::First(16))
-  CatchFilter::traffic_class(TrafficClass::VendorInterrupt).with_capture(Capture::First(32))
-  CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83)
-
-  a 64-byte report on vendor interrupt endpoint 0x83
-    +- exact (class, id)?  HIT   -->  whole packet  -->  all 64 bytes
-
-  the same report on endpoint 0x81
-    +- exact (class, id)?  miss
-    +- class blanket?      HIT   -->  First(32)     -->  32 bytes, true_len 64`}</pre>
         </Card>
       </div>
 
@@ -174,20 +159,11 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">THE THREE VARIANTS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Variant</th><th>Carries</th><th>Raised by</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>Motion(MotionEvent)</code></td><td>the relative axes of one physical report, as a <A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>an <code>Axis</code> filter</td></tr>
-              <tr><td><code>Usages(UsageSnapshot)</code></td><td>the held usages of one class as a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>, a full snapshot rather than edges</td><td>a <code>Button</code>, <code>Key</code>, or <code>Media</code> filter</td></tr>
-              <tr><td><code>Traffic(TrafficEvent)</code></td><td>bytes plus the address they came from, as a <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>every other class</td></tr>
-            </tbody>
-          </table>
           <p>
-            <code>class()</code>, <code>id()</code>, <code>direction()</code>, <code>ts_us()</code>,{' '}
-            <code>clock()</code> and <code>bytes()</code> read the same fields on any variant.
+            Each event is one <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>{' '}
+            variant. <code>class()</code>, <code>id()</code>, <code>direction()</code>,{' '}
+            <code>ts_us()</code>, <code>clock()</code> and <code>bytes()</code> read the same fields
+            on any of them.
           </p>
           <div class="callout callout--info">
             <p>
@@ -197,7 +173,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               entry.
             </p>
           </div>
-          <div class="api-response-label">DELIVERY IS RANKED</div>
           <p>
             The box drains through strict-priority queues. Vendor bulk can go entirely undrained under a busy mouse: bulk-plus-input is what the control link cannot carry.
           </p>
@@ -238,7 +213,7 @@ for event in &device.catch_events([filter])? {
           </p>
           <p>
             A <code>Control</code> event is one completed transaction, not one stage:{' '}
-            <code>bytes</code> is <code>[setup 8][data…]</code>, split by <code>setup()</code> and{' '}
+            <code>bytes</code> is <code>[setup 8][data...]</code>, split by <code>setup()</code> and{' '}
             <code>data()</code>. A <code>Bus</code> event carries a{' '}
             <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind and its operands.
           </p>
@@ -261,10 +236,10 @@ for event in &device.catch_events([filter])? {
             </tbody>
           </table>
           <p>
-            Stamps are <code>u32</code> microseconds from that chip's boot: they wrap every ~71.6
-            minutes and restart at zero on reboot.{' '}
+            Stamps are <code>u32</code> microseconds from that chip's boot, so they{' '}
+            <A href="/library/types/enums#clock-domain">wrap and restart at zero on reboot</A>.{' '}
             <A href="/library/types/structs#timeline"><code>Timeline</code></A> handles all of it and
-            returns an <code>Instant</code>. It takes an{' '}
+            returns an <code>Instant</code>, taking an{' '}
             <A href="/library/types/structs#input-event"><code>InputEvent</code></A> or a raw{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> alike.
           </p>
@@ -279,11 +254,6 @@ for ev in input.by_ref().take(20) {
         println!("{u:?} down at {:?}, {:?} above the floor", at.host, at.excess);
     }
 }`}</code></pre>
-          <p>
-            It keeps a per-domain minimum of (elapsed here minus elapsed on the box) rather than an
-            average, because the error is one-sided: an event can arrive late but never early.
-          </p>
-          <div class="api-response-label">CROSSING DOMAINS ON THE BOX</div>
           <p>
             <A href="/library/requests#query-catch"><code>query_catch</code></A> returns a{' '}
             <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>: the box's

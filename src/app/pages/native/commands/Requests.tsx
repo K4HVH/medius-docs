@@ -20,8 +20,9 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#stats">stats</A>,{' '}
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
           <A href="/native/commands/requests#catch">catch</A> subscription, an{' '}
-          <A href="/native/commands/requests#options">option</A>, or the buffered{' '}
-          <A href="/native/commands/requests#clip">clip</A>.
+          <A href="/native/commands/requests#options">option</A>, the buffered{' '}
+          <A href="/native/commands/requests#clip">clip</A>, or the{' '}
+          <A href="/native/commands/requests#firmware">firmware</A> on both chips.
         </p>
       </Card>
 
@@ -145,12 +146,12 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 5</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 6</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
               <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the device chip's base MAC; the stable per-box id, rendered as 12 lowercase hex digits</td></tr>
-              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name, filling the rest of the payload (the frame <code>LEN</code> delimits it); a synthesized <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name, filling the rest of the payload (the frame <code>LEN</code> delimits it); a synthesised <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -161,12 +162,13 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.2.0</code>, protocol <code>5</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.3.1</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 05     | 03     | 02     | 00     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 01     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+
 | ...    | 12 34 56 78 9A BC  | 4C 6F 6B 69  | lo hi  |
 +--------+--------------------+--------------+--------+
 | ...    | mac (6 bytes)      | "Loki"       | CRC16  |
@@ -211,7 +213,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The first three bits set means the box is ready for input to reach the PC.
+            With the first three bits set the box is ready for input to reach the PC.
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -284,6 +286,7 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | vid    | pid    | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+
+
 | ...    | 10 01  | 01 02  | 03     | 02     | 47 35 30 32  | lo hi  |
 +--------+--------+--------+--------+--------+--------------+--------+
 | ...    | bcdDev | bcdUSB | flags  | kind   | "G502"       | CRC16  |
@@ -383,7 +386,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x04</td></tr>
               <tr><td>1</td><td><code>native_period_us</code></td><td><code>u16</code></td><td>realised native period in µs; 0 = not learned, or change-driven (see flags), Hz = 1e6/period</td></tr>
-              <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs; the honest figure for a change-driven input</td></tr>
+              <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs; the figure to read for a change-driven input</td></tr>
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
             </tbody>
           </table>
@@ -446,7 +449,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            <code>inject_emits</code> counts the no-halving / 1 kHz path. Library binding:{' '}
+            <code>inject_emits</code> counts reports the box emitted from injection alone. Library binding:{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -456,6 +459,7 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
 +--------+--------+--------+--------+--------+--------------+
+
 | 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | drops  | merges | maxdep | wedges | wakeup | resets | config | CRC16  |
@@ -587,7 +591,7 @@ const Requests: Component = () => {
           <div class="api-response-label">CONFIRMING A SUBSCRIPTION</div>
           <p>
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> is fire-and-forget, so this
-            reply is the only way to see that an entry landed. A refused entry is simply absent from
+            reply is the only way to see that an entry landed. A refused entry is absent from
             the list; <code>flags</code> b0 tells you the 32-entry table was the reason. Library
             binding: <A href="/library/requests#query-catch"><code>query_catch</code></A>.
           </p>
@@ -610,11 +614,11 @@ const Requests: Component = () => {
       delay  =  (t4 - t1) - (t3 - t2)     ->  the error bound is delay / 2`}</pre>
           <table class="api-params">
             <thead>
-              <tr><th>Field</th><th>What it buys you</th></tr>
+              <tr><th>Field</th><th>What it gives you</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>clk_delay_us</code></td><td>the round trip of the best exchange in the window, so the offset is good to about half of it. A caller that needs a hard bound has one.</td></tr>
-              <tr><td><code>clk_rate_ppb</code></td><td>lets you extrapolate between exchanges rather than trusting a stale offset, which two independent crystals make stale at up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit has been made, distinct from a fitted <code>0</code>, which means the crystals are matched.</td></tr>
+              <tr><td><code>clk_delay_us</code></td><td>The round trip of the best exchange in the window, so the offset is good to about half of it. A caller that needs a hard bound has one.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td>Lets you extrapolate between exchanges rather than trusting a stale offset, which two independent crystals make stale at up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit has been made, distinct from a fitted <code>0</code>, which means the crystals are matched.</td></tr>
               <tr><td><code>clk_age_ms</code></td><td>The age of the exchange the offset actually <em>rests on</em>, not of the newest one. The offset comes from the least-delayed exchange in the window, which is often older. <code>0xFFFF</code> distinguishes "no estimate yet" from "the offset happens to be zero", which both otherwise report as an offset of 0.</td></tr>
             </tbody>
           </table>
@@ -709,6 +713,33 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
           </p>
+          <div class="api-response-label">EMIT VALUE</div>
+          <p>
+            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace and wire rate
+            (id 2).
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>mode</code></td><td>the pace: <code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
+              <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
+              <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet, <code>1000</code> once the renderer has a profile</td></tr>
+              <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
+              <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
+              <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
+            </tbody>
+          </table>
+          <p>
+            A <code>force_hz</code> set while{' '}
+            <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
+            <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the native interval.
+          </p>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
+          </p>
           <div class="api-response-label">BEARING VALUE</div>
           <p>
             The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
@@ -727,31 +758,51 @@ const Requests: Component = () => {
             Library binding:{' '}
             <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
           </p>
-          <div class="api-response-label">EMIT VALUE</div>
+          <div class="api-response-label">RENDER VALUE</div>
           <p>
-            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pacing (id 2).
+            The current <A href="/native/commands/option#render"><code>RENDER</code></A> setting (id 5),
+            and whether the box has learned a profile to render with.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>2</td><td><code>mode</code></td><td><code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
-              <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
-              <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet</td></tr>
-              <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
-              <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
-              <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
+              <tr><td>2</td><td><code>mode</code></td><td>the texture: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
+              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when native motion is rendered by the model rather than relayed</td></tr>
+              <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
             </tbody>
           </table>
           <p>
-            A <code>force_hz</code> set while{' '}
-            <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
-            <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the device's own.
+            Nothing is rendered while <code>ready</code> reads <code>0</code>: motion is relayed and
+            injection takes the paced fill whatever <code>mode</code> says.
           </p>
           <p>
             Library binding:{' '}
-            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
+            <A href="/library/options#query-render"><code>query_render</code></A>.
+          </p>
+          <div class="api-response-label">SPREAD VALUE</div>
+          <p>
+            The current <A href="/native/commands/option#spread"><code>SPREAD</code></A> setting (id 6),
+            and the interval the box is releasing an injected delta across.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>percent</code></td><td><code>u16</code>, little-endian; share of the command interval, <code>100</code> = one whole interval <em>(default)</em></td></tr>
+              <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = nothing is being spread</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code> and
+            while no command period has been learned. In both the whole delta goes out on the next
+            report the box emits.
+          </p>
+          <p>
+            Library binding:{' '}
+            <A href="/library/options#query-spread"><code>query_spread</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
@@ -841,10 +892,12 @@ const Requests: Component = () => {
 +--------+--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
 +--------+--------+--------+--------+--------+--------+--------------+
+
 | 00 04 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
 +--------------+--------------+--------------+--------+--------+--------+
 | total        | played       | ticks        | undrun | ovrrun | seqgap |
 +--------------+--------------+--------------+--------+--------+--------+
+
 | 00     | 00     | 00     | 00     | lo hi  |
 +--------+--------+--------+--------+--------+
 | held_n | autolk | flags  | n_trig | CRC16  |
@@ -858,9 +911,12 @@ const Requests: Component = () => {
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 11</code>: both chips' versions, the slot each is running, and what is
-            staged. The only place the host chip's version appears, because{' '}
+            staged.
+          </p>
+          <p>
+            It is the only place the host chip's version appears:{' '}
             <A href="/native/commands/requests#version"><code>VERSION</code></A> reports the device
-            chip alone and its name tail is delimited by the frame <code>LEN</code>, so nothing can
+            chip alone, and its name tail is delimited by the frame <code>LEN</code>, so nothing can
             follow it.
           </p>
           <p>
@@ -911,18 +967,27 @@ const Requests: Component = () => {
             <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Both chips on 3.2.0, device on <code>ota_1</code>, host on <code>ota_0</code>, nothing staged:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03 02 00 01 | ...    |
-+--------+--------+--------+--------+--------+-------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | device      | host   |
-+--------+--------+--------+--------+--------+-------------+--------+
+          <p>
+            Both chips on <code>3.3.1</code>, device on <code>ota_1</code>, host on{' '}
+            <code>ota_0</code>, both images <code>valid</code>, nothing staged:
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 01     | 11 00  | 0B     | 03     | 03     | 01     |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | devmaj | devmin | devpat |
++--------+--------+--------+--------+--------+--------+--------+--------+
 
-+--------+-------------+--------+--------+
-| 02     | 00 00 0F 00 | 00     | lo hi  |
-+--------+-------------+--------+--------+
-| state  | slot_size   | staged | CRC16  |
-+--------+-------------+--------+--------+`}</pre>
++--------+--------+--------+--------+--------+--------+--------+--------+
+| 01     | 02     | 01     | 03     | 03     | 01     | 00     | 02     |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| devslt | devsta | hostpr | hstmaj | hstmin | hstpat | hstslt | hststa |
++--------+--------+--------+--------+--------+--------+--------+--------+
+
++-------------+--------+--------+
+| 00 00 0F 00 | 00     | lo hi  |
++-------------+--------+--------+
+| slot_size   | staged | CRC16  |
++-------------+--------+--------+`}</pre>
         </Card>
       </div>
 
