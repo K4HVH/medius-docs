@@ -19,7 +19,7 @@ const Usage: Component = () => {
 
       <div id="calls" data-search-target>
         <Card>
-          <CardHeader title="Fire-and-forget vs blocking" subtitle="What the two badges mean" />
+          <CardHeader title="Fire-and-forget vs blocking" subtitle="The two call-kind badges" />
           <p>
             Every <code>Device</code> call carries one of two badges, by whether it waits for{' '}
             <A href="/native/hardware">the box</A> to answer or{' '}
@@ -54,7 +54,7 @@ const Usage: Component = () => {
 
       <div id="errors" data-search-target>
         <Card>
-          <CardHeader title="Errors" subtitle="A failed call raises MediusError" />
+          <CardHeader title="Errors" subtitle="MediusError and its subclasses" />
           <p>
             There is no status return in Python: a failed call <strong>raises</strong>. The base type
             is <A href="/bindings/python/types#mediuserror"><code>MediusError</code></A> (an{' '}
@@ -63,7 +63,8 @@ const Usage: Component = () => {
             <A href="/library/types/errors">status code</A> (a <A href="/bindings/python/types#status"><code>Status</code></A>{' '}
             <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">IntEnum</a>)
             maps to its own <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
-            <code>MediusError</code> for all of them.
+            <code>MediusError</code> for all of them; the full mapping is on{' '}
+            <A href="/bindings/python/types#subclasses">Types &amp; errors</A>.
           </p>
           <pre class="api-signature">{`class MediusError(Exception):
     status:    Status   # the failure code
@@ -71,34 +72,6 @@ const Usage: Component = () => {
     proto_ver: int      # offending byte for BadProtoVerError, else 0
 
 str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
-          <div class="api-response-label">STATUS &rarr; EXCEPTION</div>
-          <table class="api-params">
-            <thead><tr><th><code>Status</code></th><th>Subclass raised</th><th>Typically means</th></tr></thead>
-            <tbody>
-              <tr><td><code>ERR_IO</code></td><td><code>IoError</code></td><td>serial read/write failed</td></tr>
-              <tr><td><code>ERR_NOT_FOUND</code></td><td><code>NotFoundError</code></td><td>no box at that path / none present</td></tr>
-              <tr><td><code>ERR_NO_REPLY</code></td><td><code>NoReplyError</code></td><td>box never answered</td></tr>
-              <tr><td><code>ERR_BAD_PROTO_VER</code></td><td><code>BadProtoVerError</code></td><td>firmware protocol mismatch (see <code>.proto_ver</code>)</td></tr>
-              <tr><td><code>ERR_QUERY_TIMEOUT</code></td><td><code>QueryTimeoutError</code></td><td>a <code>query_*</code> outran its wait</td></tr>
-              <tr><td><code>ERR_DISCONNECTED</code></td><td><code>DisconnectedError</code></td><td>the link dropped (see below)</td></tr>
-              <tr><td><code>ERR_FRAME_TOO_LONG</code></td><td><code>FrameTooLongError</code></td><td>payload over the frame limit</td></tr>
-              <tr><td><code>ERR_UPDATE</code></td><td><code>UpdateError</code></td><td>the box refused a <A href="/library/update">firmware update</A> op</td></tr>
-              <tr><td><code>ERR_INVALID_ARG</code></td><td><code>InvalidArgError</code></td><td>a bad argument value</td></tr>
-              <tr><td><code>ERR_PANIC</code></td><td><code>PanicError</code></td><td>the native core panicked</td></tr>
-              <tr><td><code>ERR_UNKNOWN</code></td><td><code>MediusError</code></td><td>anything unmapped</td></tr>
-              <tr><td><code>ERR_CATCH_TABLE_FULL</code></td><td><code>CatchTableFullError</code></td><td>the subscription needs more than the box's 32 entries</td></tr>
-              <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>EmptySubscriptionError</code></td><td>a subscription with no filters</td></tr>
-              <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>CaptureNotApplicableError</code></td><td>a <A href="/bindings/python/types#capture"><code>Capture</code></A> on an input class</td></tr>
-              <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>NotAnInputFilterError</code></td><td>a traffic class passed to <code>input_events</code></td></tr>
-              <tr><td><code>ERR_WILDCARD_NOT_INPUT</code></td><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code></td></tr>
-              <tr><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge</td></tr>
-              <tr><td><code>ERR_RESERVED_ID</code></td><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel</td></tr>
-              <tr><td><code>ERR_RELATIVE_DIRECTION</code></td><td><code>RelativeDirectionError</code></td><td><code>WITH</code> or <code>AGAINST</code> where only a fixed sign or edge fits</td></tr>
-            </tbody>
-          </table>
-          <p>
-            The last six are subscription refusals, raised before a frame reaches the box.
-          </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
 
@@ -125,7 +98,7 @@ except MediusError as e:
 
       <div id="lifecycle" data-search-target>
         <Card>
-          <CardHeader title="Lifecycle" subtitle="Open, clone, and release the handle" />
+          <CardHeader title="Lifecycle" subtitle="Handle ownership and release" />
           <p>
             A <code>Device</code> owns a native handle. Open one, optionally <A href="/bindings/python/api#connect"><code>clone()</code></A> it,
             and release it three ways. Connection sharing is on{' '}
@@ -145,7 +118,7 @@ except MediusError as e:
 dev.clone() ────┘
 
   each handle is freed on its own; the link closes with the last one`}</pre>
-          <div class="api-response-label">THREE WAYS TO RELEASE</div>
+          <div class="api-response-label">RELEASE ROUTES</div>
           <table class="api-params">
             <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
             <tbody>
@@ -176,7 +149,7 @@ dev.close()`}</code></pre>
 
       <div id="builders" data-search-target>
         <Card>
-          <CardHeader title="Building targets" subtitle="Usage · Motion · LockTarget · CatchFilter" />
+          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget, CatchFilter for the generic verbs" />
           <p>
             The <A href="/library/inject">inject</A>, <A href="/library/move">move</A>,{' '}
             <A href="/library/lock">lock</A>, and <A href="/library/catch">catch</A> calls take a{' '}

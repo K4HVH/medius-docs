@@ -4,6 +4,7 @@ import {
   anyPending,
   UPD_NAMES,
   OTA_CHUNK,
+  MIN_PROTO_VER,
   PROTO_VER,
   BearingMode,
   bearingModeFromU8,
@@ -23,6 +24,7 @@ import {
   sameFilter,
   DeviceKind,
   EmitMode,
+  RenderMode,
   FrameDecoder,
   FrameType,
   LogLevel,
@@ -60,6 +62,8 @@ import {
   isLocked,
   clearNamePayload,
   emitPayload,
+  renderPayload,
+  spreadPayload,
   imperfectPayload,
   ledPayload,
   lockAxis,
@@ -496,11 +500,20 @@ describe('LOCK command (§3.8)', () => {
     expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX]).toEqual([0, 100, 255]);
   });
 
+  it('still opens the wire one-click update arrived on', () => {
+    // UPDATE/UPDATE_RESP and QUERY(FIRMWARE) shipped in firmware 3.2.0 at protocol 5 and have not
+    // changed since. Raising this floor past 5 strands every 3.2.x box on USB setup, because the
+    // handshake would refuse the connection that carries the update. Raise it only when the update
+    // path itself stops working against that wire.
+    expect(MIN_PROTO_VER).toBe(5);
+    expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
+  });
+
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // The scale byte and the two bearing-relative directions arrived together with CTRL_PROTO_VER 5.
-    // Left at 4 the handshake would accept a box whose LOCK reads the last byte as an on/off flag,
-    // so every unlock this file encodes would reach it as a lock.
-    expect(PROTO_VER).toBe(5);
+    // v6 is the texture as OPTION(RENDER). OPTION(EMIT) is back on its released v5 shape, so the whole
+    // delta from v5 is one new id and one new readback. Left at 5 the handshake would accept a box
+    // that answers neither, and a host depending on the texture would find out by silence.
+    expect(PROTO_VER).toBe(6);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
@@ -1090,6 +1103,22 @@ describe('OPTION command (§3.10)', () => {
     expect(Array.from(emitPayload(EmitMode.Fixed, 500, 125))).toEqual([2, 2, 0xf4, 0x01, 0x7d, 0]);
   });
 
+  it('renderPayload packs [id=5][mode u8][full u8]', () => {
+    // The texture is its own command, so nothing about it can disturb the pace.
+    expect(Array.from(renderPayload(RenderMode.Off, false))).toEqual([5, 0, 0]);
+    expect(Array.from(renderPayload(RenderMode.Stock, false))).toEqual([5, 1, 0]);
+    expect(Array.from(renderPayload(RenderMode.Despiked, true))).toEqual([5, 2, 1]);
+    expect(Array.from(renderPayload(RenderMode.Unsmoothed, false))).toEqual([5, 3, 0]);
+  });
+
+  it('spreadPayload packs [id=6][percent u16 LE]', () => {
+    expect(Array.from(spreadPayload(0))).toEqual([6, 0, 0]);
+    expect(Array.from(spreadPayload(100))).toEqual([6, 100, 0]);
+    // Above a byte, so a percent packed as one would truncate here.
+    expect(Array.from(spreadPayload(250))).toEqual([6, 250, 0]);
+    expect(Array.from(spreadPayload(1000))).toEqual([6, 0xe8, 0x03]);
+  });
+
   it('namePayload packs [id=3][name ascii], filters non-printable, caps at 32; clear is the id alone', () => {
     expect(Array.from(namePayload('AB'))).toEqual([3, 0x41, 0x42]);
     expect(Array.from(clearNamePayload())).toEqual([3]); // clear = OPTION(NAME) with no value
@@ -1151,7 +1180,14 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // A mode this build doesn't know -> mode null, the rates still decode.
+    // The bit-packed encodings an older box used are just unknown paces now.
+    const decodePace = (byte: number) => {
+      const r = parseResp(new Uint8Array([9, 2, byte, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+      return r?.kind === 'emitPace' ? r.emit.mode : undefined;
+    };
+    expect(decodePace(0x80)).toBeNull();
+    expect(decodePace(0x82)).toBeNull();
+    // A pace this build doesn't know -> mode null, the rates still decode.
     expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
@@ -1165,10 +1201,54 @@ describe('OPTION command (§3.10)', () => {
     });
   });
 
+  it('RESP(OPTIONS, SPREAD) decodes the percent and the interval in effect', () => {
+    // 250 percent over 8125 us (0x1FBD): two distinct multi-byte values, so a swapped pair fails.
+    expect(parseResp(new Uint8Array([9, 6, 250, 0, 0xbd, 0x1f, 0, 0]))).toEqual({
+      kind: 'spread',
+      spread: { percent: 250, spanUs: 8125 },
+    });
+    // Off, with nothing learned.
+    expect(parseResp(new Uint8Array([9, 6, 0, 0, 0, 0, 0, 0]))).toEqual({
+      kind: 'spread',
+      spread: { percent: 0, spanUs: 0 },
+    });
+    // The interval is unsigned microseconds, so the top bit is not a sign.
+    expect(parseResp(new Uint8Array([9, 6, 1, 0, 0xff, 0xff, 0xff, 0xff]))).toEqual({
+      kind: 'spread',
+      spread: { percent: 1, spanUs: 0xffffffff },
+    });
+    // A short value is not padded out to a reading.
+    expect(parseResp(new Uint8Array([9, 6, 100, 0, 0, 0, 0]))).toBeNull();
+  });
+
+  it('RESP(OPTIONS, RENDER) decodes the texture, the full flag and whether a profile has armed', () => {
+    // Three distinct values, so swapping any two fields fails.
+    expect(parseResp(new Uint8Array([9, 5, 1, 1, 0]))).toEqual({
+      kind: 'render',
+      render: { mode: RenderMode.Stock, full: true, ready: false },
+    });
+    expect(parseResp(new Uint8Array([9, 5, 2, 0, 1]))).toEqual({
+      kind: 'render',
+      render: { mode: RenderMode.Despiked, full: false, ready: true },
+    });
+    // A mode this build doesn't know decodes to null rather than a default.
+    expect(parseResp(new Uint8Array([9, 5, 4, 0, 0]))).toEqual({
+      kind: 'render',
+      render: { mode: null, full: false, ready: false },
+    });
+    // Decoder tolerance: any non-zero reads as set. The box itself never sends one, since it
+    // discards a `full` above 1 whole and packs the stored 0 or 1.
+    expect(parseResp(new Uint8Array([9, 5, 0, 7, 9]))).toEqual({
+      kind: 'render',
+      render: { mode: RenderMode.Off, full: true, ready: true },
+    });
+  });
+
   it('returns null for a truncated or unknown OPTIONS payload', () => {
     expect(parseResp(new Uint8Array([9, 0, 1, 1]))).toBeNull(); // imperfect needs 5 bytes
     expect(parseResp(new Uint8Array([9, 1, 0]))).toBeNull(); // move_ride needs 4 bytes
     expect(parseResp(new Uint8Array([9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // emit needs 12 bytes
+    expect(parseResp(new Uint8Array([9, 5, 2, 1]))).toBeNull(); // render needs 5 bytes
     expect(parseResp(new Uint8Array([9, 0xff, 0, 0]))).toBeNull(); // unknown option id
   });
 });

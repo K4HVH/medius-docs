@@ -18,16 +18,21 @@ const find = (term: string): Entry[] => dash.filter((e) => haystack(e).includes(
 describe('dashboard search index', () => {
   it('points every card at the tab it actually lives on', () => {
     const onControl = ['Injection', 'Input locks', 'Input catch', 'Clip playback', 'Status light', 'Safety clear'];
-    const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Aim bearing', 'Emit-rate pacing', 'Capabilities', 'Performance', 'Device log'];
+    const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Bearing', 'Emit rate', 'Render', 'Capabilities', 'Performance', 'Device log'];
+    // The tab is the path before the anchor. A card entry without one lands on the tab and scrolls
+    // nowhere, which is what left every Dashboard result pointing at the same two pages.
+    const route = (e: Entry) => e.path.split('#')[0];
     for (const label of onControl) {
       const e = dash.find((x) => x.label === label);
       expect(e, label).toBeDefined();
-      expect(e!.path, label).toBe('/dashboard/control');
+      expect(route(e!), label).toBe('/dashboard/control');
+      expect(e!.path, label).toContain('#');
     }
     for (const label of onDevice) {
       const e = dash.find((x) => x.label === label);
       expect(e, label).toBeDefined();
-      expect(e!.path, label).toBe('/dashboard');
+      expect(route(e!), label).toBe('/dashboard');
+      expect(e!.path, label).toContain('#');
     }
   });
 
@@ -42,9 +47,21 @@ describe('dashboard search index', () => {
     for (const f of files) {
       const src = readFileSync(`src/app/pages/dashboard/${f}`, 'utf8');
       for (const m of src.matchAll(/CardHeader\s+title="([^"]+)"/g)) titles.add(m[1]);
+      // Options nests its controls as <Section title="...">, not as their own CardHeader. Only the
+      // anchored ones are addressable, and those are exactly the ones an index entry can point at:
+      // without this the oracle could not see Render, Emit rate, Bearing, Movement riding,
+      // Imperfect clone or Box name, and the comment above would be false for six of them.
+      for (const m of src.matchAll(
+        /<div id="[^"]+" data-search-target>\s*<Section\s+title="([^"]+)"/g,
+      )) {
+        titles.add(m[1]);
+      }
     }
     // Cards that are pure connection or progress state, not a feature to search for.
-    const notFeatures = new Set(['Controls', 'Your box', 'Status', 'Installing', 'Flashing']);
+    const notFeatures = new Set([
+      'Controls', 'Your box', 'Status', 'Installing', 'Flashing',
+      'Browser not supported', 'Page not secure',
+    ]);
     const missing = [...titles].filter((t) => !notFeatures.has(t) && find(t).length === 0);
     expect(missing).toEqual([]);
   });

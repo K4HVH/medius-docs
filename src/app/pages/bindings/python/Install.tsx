@@ -14,9 +14,7 @@ const Install: Component = () => {
         </p>
         <pre><code class="language-bash">pip install medius</code></pre>
         <p>
-          Prebuilt{' '}
-          <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/" target="_blank" rel="noreferrer">wheels</a>{' '}
-          cover Linux, macOS, and 64-bit Windows. The{' '}
+          The{' '}
           <A href="/bindings">Bindings overview</A> shows how the Python package, the{' '}
           <A href="/bindings/c">C ABI</A>, and the Rust{' '}
           <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">medius crate</a>{' '}
@@ -26,16 +24,16 @@ const Install: Component = () => {
 
       <div id="requirements" data-search-target>
         <Card>
-          <CardHeader title="Requirements" subtitle="What you need" />
+          <CardHeader title="Requirements" subtitle="Python version and platform" />
           <table class="api-params">
             <thead>
               <tr><th>Requirement</th><th>Value</th></tr>
             </thead>
             <tbody>
               <tr><td>Python</td><td><code>3.8</code> or newer</td></tr>
-              <tr><td>Platforms with a prebuilt wheel</td><td>Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a> / <a href="https://github.com/pypa/manylinux" target="_blank" rel="noreferrer">manylinux</a>), macOS, Windows x64</td></tr>
+              <tr><td>Platforms with a prebuilt <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/" target="_blank" rel="noreferrer">wheel</a></td><td>Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a> / <a href="https://github.com/pypa/manylinux" target="_blank" rel="noreferrer">manylinux</a>), macOS, Windows x64</td></tr>
               <tr><td><a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a></td><td>not needed</td></tr>
-              <tr><td>Other Python packages</td><td>none; it uses the standard library's <code><a href="https://docs.python.org/3/library/ctypes.html" target="_blank" rel="noreferrer">ctypes</a></code></td></tr>
+              <tr><td>Other Python packages</td><td>none</td></tr>
             </tbody>
           </table>
           <p>
@@ -55,7 +53,7 @@ const Install: Component = () => {
             <A href="/bindings/python/quickstart">first program</A>.
           </p>
           <pre><code class="language-bash">{`python -c "import medius; print(medius.version_string(), 'abi', medius.abi_version())"
-# 3.2.0 abi 5`}</code></pre>
+# 3.3.1 abi 6`}</code></pre>
           <div class="callout callout--warning">
             <p>
               An <code><a href="https://docs.python.org/3/library/exceptions.html#OSError" target="_blank" rel="noreferrer">OSError</a></code> on import means the native library didn't load: you're on an
@@ -68,7 +66,7 @@ const Install: Component = () => {
 
       <div id="connect" data-search-target>
         <Card>
-          <CardHeader title="Connect" subtitle="Find the box, then hand it back" />
+          <CardHeader title="Connect" subtitle="Open a box, read its version" />
           <p>
             Three lines that check the <A href="/native/hardware">box</A> is reachable.{' '}
             <A href="/bindings/python/api#connect"><code>Device.find()</code></A> opens the

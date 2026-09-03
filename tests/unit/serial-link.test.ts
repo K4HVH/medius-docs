@@ -7,6 +7,7 @@ import {
 import {
   CatchClass,
   EmitMode,
+  RenderMode,
   FrameDecoder,
   FrameType,
   Direction,
@@ -60,9 +61,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=5][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto=6][major=0][minor=1][patch=0][mac 6B]
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -70,7 +71,7 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 5,
+      protoVer: 6,
       fwMajor: 0,
       fwMinor: 1,
       fwPatch: 0,
@@ -88,14 +89,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(5);
+    expect(version.protoVer).toBe(6);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -175,6 +176,43 @@ describe('SerialLink', () => {
       fwMinor: 1,
       fwPatch: 0,
     });
+    await link.close();
+  });
+
+  it('handshakes a box one protocol version behind, so it can still be updated', async () => {
+    // One-click update arrived with proto 5 (firmware 3.2.0) and nothing it uses has changed since:
+    // QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP and LOG are all identical at 5 and 6. The
+    // whole v5 to v6 delta is one new option id and its readback; OPTION(EMIT) is unchanged at 12
+    // bytes. Refusing the handshake outright would lock a 3.2.x box out of the very mechanism that
+    // brings it up to date, and leave USB setup as the only way forward.
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 0) {
+        // a v3.2.1 box: proto 5
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 5, 3, 2, 1, 1, 2, 3, 4, 5, 6])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const version = await link.handshake();
+    expect(version).toMatchObject({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 1 });
+    await link.close();
+  });
+
+  it('refuses a box newer than the page, which speaks a wire it cannot know', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 0) {
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 7, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const err = await link.handshake().then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(BadProtoVerError);
     await link.close();
   });
 
@@ -276,7 +314,8 @@ describe('SerialLink', () => {
           // RESP(OPTIONS, MOVE_RIDE): [9][1][timeout u16 LE] = 5 ms
           mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 1, 5, 0])));
         } else if (f.payload[1] === 2) {
-          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16 LE][resolved u16 LE] = 500 Hz
+          // RESP(OPTIONS, EMIT): [9][2][mode=fixed][fixed u16][resolved u16][force u16]
+          //                      [advertised u16][force_active] = fixed 500 Hz, nothing forced
           mock.push(
             encode(
               FrameType.Resp,
@@ -284,6 +323,12 @@ describe('SerialLink', () => {
               new Uint8Array([9, 2, 2, 0xf4, 0x01, 0xf4, 0x01, 0x7d, 0x00, 0x64, 0x00, 0x01]),
             ),
           );
+        } else if (f.payload[1] === 5) {
+          // RESP(OPTIONS, RENDER): [9][5][mode=de-spiked][full][ready]
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 5, 2, 1, 1])));
+        } else if (f.payload[1] === 6) {
+          // RESP(OPTIONS, SPREAD): [9][6][percent=100 u16 LE][span=8002 us u32 LE]
+          mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([9, 6, 100, 0, 0x42, 0x1f, 0, 0])));
         }
       }
     };
@@ -303,10 +348,18 @@ describe('SerialLink', () => {
       advertisedHz: 100,
       forceActive: true,
     });
+    expect(await link.queryRender()).toEqual({
+      mode: RenderMode.Despiked,
+      full: true,
+      ready: true,
+    });
+    expect(await link.querySpread()).toEqual({ percent: 100, spanUs: 8002 });
     expect(reqs).toEqual([
       [9, 0],
       [9, 1],
       [9, 2],
+      [9, 5],
+      [9, 6],
     ]); // each option query carries its id byte, correlated on the Q_OPTIONS selector
     await link.close();
   });

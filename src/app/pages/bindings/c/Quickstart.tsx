@@ -7,7 +7,7 @@ const Quickstart: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="First program" subtitle="Find the box, send a command, read one event, free it" />
+        <CardHeader title="First program" subtitle="Connect, command, one event, free" />
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move the
           cursor, click the left button, wait for the user to move the real mouse, then free it.
@@ -87,9 +87,9 @@ int main(void) {
     medius_device_free(dev);                                   /* close link, join threads */
     return 0;
 }`}</code></pre>
-          <div class="api-response-label">PRINTS (numbers depend on your box)</div>
-          <pre><code class="language-c">{`medius-capi 3.2.0 (abi 5)
-firmware 3.2.0 (proto 5)
+          <div class="api-response-label">EXAMPLE OUTPUT</div>
+          <pre><code class="language-c">{`medius-capi 3.3.1 (abi 6)
+firmware 3.3.1 (proto 6)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
           <p>
             The subscription is an array of{' '}

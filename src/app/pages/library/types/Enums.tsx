@@ -10,7 +10,7 @@ const Enums: Component = () => {
         <Card>
           <CardHeader title="Enums" subtitle="Command and status enumerations" />
           <p>
-            Command and status enums, each tied to a wire byte. Conversion helpers are listed with each.
+            Each is tied to a wire byte; conversion helpers are listed with the type.
           </p>
         </Card>
       </div>
@@ -43,7 +43,7 @@ const Enums: Component = () => {
           <p>
             The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> command acts
             on. A <code>Button</code> converts{' '}
-            <code>Into&lt;<A href="/library/types/enums#usage">Usage</A>&gt;</code> as class button, so you
+            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button, so you
             pass one straight to <A href="/library/inject#inject"><code>inject</code></A>. Convert with{' '}
             <code>as_id() -&gt; u8</code> and <code>from_id(u8) -&gt; Option&lt;Button&gt;</code>.
           </p>
@@ -66,7 +66,7 @@ const Enums: Component = () => {
           <p>
             The shared override action for an{' '}
             <A href="/library/inject#inject"><code>inject</code></A> call, on any{' '}
-            <A href="/library/types/enums#usage"><code>Usage</code></A> class (button, key, or media). The
+            <A href="/library/types/structs#usage"><code>Usage</code></A> class (button, key, or media). The
             discriminant is the wire byte. Convert with <code>as_u8()</code> and{' '}
             <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
           </p>
@@ -78,7 +78,6 @@ const Enums: Component = () => {
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHAT THE EMITTED REPORT CARRIES</div>
           <p>The two releases differ only when the user physically holds the same input:</p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>User holds nothing</th><th>User is holding it</th></tr></thead>
@@ -95,7 +94,7 @@ const Enums: Component = () => {
           <CardHeader title="Class" subtitle="The class of a momentary usage" />
           <pre class="api-signature">enum Class {'{'} Button, Key, Media {'}'}</pre>
           <p>
-            The class byte of a <A href="/library/types/enums#usage"><code>Usage</code></A>, shared by{' '}
+            The class byte of a <A href="/library/types/structs#usage"><code>Usage</code></A>, shared by{' '}
             <A href="/native/commands/inject#inject"><code>INJECT</code></A>,{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A>, and{' '}
             <A href="/native/commands/catch"><code>CATCH</code></A>. Convert with <code>as_u8()</code> and{' '}
@@ -145,14 +144,12 @@ const Enums: Component = () => {
               <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">BLANKETS AND THE WILDCARD</div>
           <p>
             A blanket is one table entry, not an expansion into one per id. The wire sentinels never
             appear in Rust: <code>CatchFilter::watch_class(c)</code> and <code>traffic_class(c)</code>{' '}
             are the per-class blankets, and <code>CatchFilter::everything()</code> is the wildcard
             over all eleven, not a <code>CatchClass</code> variant.
           </p>
-          <div class="api-response-label">BEFORE AND AFTER</div>
           <p>
             The input classes are captured at the emission merge point, <em>before</em>{' '}
             <A href="/library/lock#lock">lock</A> suppression and{' '}
@@ -229,35 +226,6 @@ let trace = device.catch_events([
         </Card>
       </div>
 
-      <div id="usage" data-search-target>
-        <Card>
-          <CardHeader title="Usage" subtitle="A momentary input: (class, id)" />
-          <pre class="api-signature">struct Usage {'{'} class: Class, id: u16 {'}'}</pre>
-          <p>
-            What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
-            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks. A{' '}
-            <A href="/library/types/enums#button"><code>Button</code></A>,{' '}
-            <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
-            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
-            <code>impl Into&lt;Usage&gt;</code>, so you pass one straight to any verb; build one by hand
-            with <code>Usage::new(class, id)</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>class</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>The input class (button, key, or media).</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The class-specific id: a button id, a HID keycode, or a Consumer usage.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, Class, Key, Usage};
-
-let from_button: Usage = Button::Left.into();      // Class::Button, id 0
-let from_key: Usage = Key::A.into();               // Class::Key, id 0x04
-let by_hand = Usage::new(Class::Media, 0x00E9);    // volume up
-device.press(from_button)?;                         // press takes any impl Into<Usage>`}</code></pre>
-        </Card>
-      </div>
       <div id="motion" data-search-target>
         <Card>
           <CardHeader title="Motion" subtitle="A relative axis for move_axis" />
@@ -373,6 +341,28 @@ device.press(from_button)?;                         // press takes any impl Into
           </table>
         </Card>
       </div>
+      <div id="render-mode" data-search-target>
+        <Card>
+          <CardHeader title="RenderMode" subtitle="The texture the box renders motion with" />
+          <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
+          <p>
+            Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
+            <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>. The box boots
+            at <code>Despiked</code>, which is also this enum's <code>Default</code>. The model is{' '}
+            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
+            (MIT).
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
+              <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
+              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
       <div id="led-target" data-search-target>
         <Card>
           <CardHeader title="LedTarget" subtitle="Which chip's status LED to drive" />
@@ -427,7 +417,7 @@ device.press(from_button)?;                         // press takes any impl Into
             <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
             <tbody>
               <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A></td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
-              <tr><td><code>Usage</code></td><td><A href="/library/types/enums#usage"><code>Usage</code></A></td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
+              <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A></td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -614,10 +604,9 @@ match stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
             <tbody>
               <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap, when the clone's own traffic passed it.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap, when native traffic passed it.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHICH CLASS LANDS WHERE</div>
           <table class="api-params">
             <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
             <tbody>
@@ -687,7 +676,7 @@ match stream.recv()? {
           </table>
           <p>
             <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-            the other eight are the clone's own USB1 bus, which the control PC is not on.
+            the other eight are native USB1 bus, which the control PC is not on.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};
@@ -771,8 +760,9 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
       <div id="update-target" data-search-target>
         <Card>
           <CardHeader title="UpdateTarget" subtitle="Which chip an update op addresses" />
+          <pre class="api-signature">enum UpdateTarget {'{'} Device, Host {'}'}</pre>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Wire</th><th>Means</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
               <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
@@ -784,12 +774,13 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
       <div id="image-state" data-search-target>
         <Card>
           <CardHeader title="ImageState" subtitle="Where a booted image is in its probation" />
+          <pre class="api-signature">enum ImageState {'{'} New, PendingVerify, Valid, Invalid, Aborted, Unknown {'}'}</pre>
           <p>
             The bootloader's own record for a slot. See{' '}
             <A href="/native/commands/update#rollback">rollback</A>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Wire</th><th>Means</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
               <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>

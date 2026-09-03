@@ -7,7 +7,7 @@ const Streams: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Streams" subtitle="Read live input and logs in C" />
+        <CardHeader title="Streams" subtitle="Live input and device logs" />
         <p>
           Three live channels from <A href="/native/hardware">the box</A>: raw catch events, the same
           input decoded into edges, and device log lines
@@ -38,6 +38,8 @@ const Streams: Component = () => {
             <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, each
             built by a <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A>{' '}
             helper. The array is read during the call and not retained, so it can live on the stack.
+            The four filter fields are on <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>,
+            the classes on <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A>.
           </p>
           <pre class="api-signature">{`MediusStatus medius_device_catch_events(struct MediusDevice *dev,
                                         const MediusCatchFilter *filters,
@@ -53,34 +55,6 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
               <tr><td><code>medius_device_logs(dev, &amp;out)</code></td><td>Open the device LOG channel. See <A href="/library/diagnostics">Logs</A>.</td></tr>
               <tr><td><code>medius_event_stream_clone(stream)</code> / <code>medius_log_stream_clone(stream)</code></td><td>Another handle to the same subscription. Null in &rarr; null out.</td></tr>
               <tr><td><code>medius_event_stream_free(stream)</code> / <code>medius_log_stream_free(stream)</code></td><td>Release a handle (unsubscribes when the last clone drops). Null is a no-op.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">ONE FILTER ENTRY</div>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>Value</th><th>What it selects</th></tr></thead>
-            <tbody>
-              <tr><td><code>class_</code></td><td>a <code>MEDIUS_CATCH_CLASS_*</code></td><td>The address space, and which event arm the matches arrive on.</td></tr>
-              <tr><td><code>id</code></td><td>class-specific, or <code>MEDIUS_CATCH_ID_ANY</code></td><td>Which button, usage, axis, interface, or endpoint. <code>ID_ANY</code> is one blanket entry, not an expansion.</td></tr>
-              <tr><td><code>direction</code></td><td>a <code>MEDIUS_DIRECTION_*</code></td><td>The press/release edge for an input class; the transfer direction for a traffic class (<code>POSITIVE</code> = IN, <code>NEGATIVE</code> = OUT).</td></tr>
-              <tr><td><code>capture</code></td><td><code>0</code> to <code>255</code></td><td>Bytes kept per event, <code>0</code> = the whole packet. Traffic classes only: an input class carries no packet.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">CATCH CLASSES</div>
-          <table class="api-params">
-            <thead><tr><th>Constant</th><th>Value</th><th>Subscribes to</th><th>Arrives as</th></tr></thead>
-            <tbody>
-              <tr><td><code>MEDIUS_CATCH_CLASS_BTN</code></td><td><code>0</code></td><td>mouse buttons</td><td rowspan="3"><code>data.usages</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_KEY</code></td><td><code>1</code></td><td>keyboard keys and modifiers</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_MEDIA</code></td><td><code>2</code></td><td>media (Consumer) usages</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_AXIS</code></td><td><code>3</code></td><td>X, Y, and the wheel</td><td><code>data.motion</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_HID_IN</code></td><td><code>4</code></td><td>a cloned HID interface's reports</td><td rowspan="7"><code>data.traffic</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>an interrupt-OUT endpoint</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>a vendor interrupt endpoint</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>a vendor bulk endpoint</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>a control endpoint, one event per completed transaction</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>what the clone actually put on the wire</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>resets, suspends, configuration and attach changes</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>every class at once (<code>id</code> must be <code>MEDIUS_CATCH_ID_ANY</code>)</td><td>any arm</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -102,17 +76,14 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
             <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_CATCH_ENTRIES</code></A> (32)
             entries. Asking for more, or for a filter the box cannot honour, fails the whole call with
             its own <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> rather than
-            quietly narrowing the subscription.
+            narrowing the subscription with no status.
           </p>
           <div class="callout callout--info">
             <p>
-              The control link runs at 4 Mbaud and vendor bulk alone measures 250 KiB/s through the
-              box, so subscribing to everything at full length cannot be delivered.
-            </p>
-            <p>
-              Delivery is four strict-priority queues (input and bus, then the other traffic classes,
-              then control, then vendor bulk), and bulk can starve entirely under a busy mouse. Use{' '}
-              <code>capture</code> to buy headroom.
+              Subscribing to everything at full length is more than the control link carries, and
+              bulk goes undrained under a busy mouse. Use <code>capture</code> to buy headroom; the
+              queue ranking and the link budget are on{' '}
+              <A href="/native/commands/catch#delivery">Delivery</A>.
             </p>
           </div>
         </Card>
@@ -120,7 +91,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
 
       <div id="receive" data-search-target>
         <Card>
-          <CardHeader title="Receive" subtitle="Pull one event off the queue" />
+          <CardHeader title="Receive" subtitle="Blocking, polling, and timed reads" />
           <p>
             There's no iterator. Loop a receive call until it returns{' '}
             <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> (the stream closes after a{' '}
@@ -204,9 +175,9 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
             </tbody>
           </table>
           <p>
-            Host-chip stamps cover motion, usages, <code>HID_IN</code> and IN traffic; device-chip
-            stamps cover <code>HID_OUT</code>, OUT traffic, <code>CONTROL</code>, <code>EMIT</code>{' '}
-            and <code>BUS</code>. The two chips boot independently, so put both on your own clock with
+            <A href="/native/architecture">Host-chip</A> stamps cover motion, usages,{' '}
+            <code>HID_IN</code> and IN traffic; device-chip stamps cover <code>HID_OUT</code>, OUT
+            traffic, <code>CONTROL</code>, <code>EMIT</code> and <code>BUS</code>. The two chips boot independently, so put both on your own clock with
             a <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.
           </p>
           <div class="api-response-label">INSPECTORS</div>
@@ -280,7 +251,7 @@ medius_event_stream_free(events);`}</code></pre>
 
       <div id="input" data-search-target>
         <Card>
-          <CardHeader title="Decoded input" subtitle="Press and release edges, not held sets" />
+          <CardHeader title="Decoded input" subtitle="Press and release edges, not snapshots" />
           <p>
             The box reports held-usage snapshots.{' '}
             <code>medius_device_input_events</code> diffs them into edges, so nothing on your side has
@@ -343,7 +314,7 @@ medius_input_stream_free(input);`}</code></pre>
 
       <div id="timeline" data-search-target>
         <Card>
-          <CardHeader title="Timeline" subtitle="Put box stamps on your own clock" />
+          <CardHeader title="Timeline" subtitle="Put box stamps on this machine's clock" />
           <p>
             A catch stamp is microseconds on a chip that booted before your process did: it wraps every
             ~71.6 minutes and relates to nothing here. A <code>MediusTimeline</code> maps it.
@@ -392,7 +363,7 @@ medius_timeline_free(tl);`}</code></pre>
 
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="No async" subtitle="Build it on the non-blocking receives" />
+          <CardHeader title="No async" subtitle="Build it on the non-blocking reads" />
           <div class="callout callout--warning">
             <p>
               The <A href="/bindings/c">C ABI</A> is synchronous; there's no <A href="/library/features/async">async</A> API.

@@ -32,7 +32,7 @@ const Discovery: Component = () => {
             Opens each connected box in turn, handshakes, reads its{' '}
             <A href="/library/types/structs#version"><code>Version</code></A> (with the box MAC and name) and cloned{' '}
             <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, then closes it,
-            returning one <A href="/library/discovery#box-info"><code>BoxInfo</code></A> per box.
+            returning one <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> per box.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -107,7 +107,7 @@ kbd_box.press(Key::A)?;`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             The general form the <code>find_*_box</code> helpers build on: opens the first box whose{' '}
-            <A href="/library/discovery#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>.
+            <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>.
             Match on any field. Returns{' '}
             <A href="/library/types/errors"><code>Error::NotFound</code></A> when none match.
           </p>
@@ -116,32 +116,6 @@ kbd_box.press(Key::A)?;`}</code></pre>
 
 // the box cloning a Logitech device:
 let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
-        </Card>
-      </div>
-
-      <div id="box-info" data-search-target>
-        <Card>
-          <CardHeader title="BoxInfo" subtitle="One discovered box" />
-          <p>
-            One entry from <A href="/library/discovery#list"><code>Device::list</code></A>, and the value{' '}
-            <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate receives.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>port</code></td><td><A href="/library/types/structs#port-info"><code>PortInfo</code></A></td><td>The control port (path + CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
-              <tr><td><code>device</code></td><td><A href="/library/types/structs#device-info"><code>DeviceInfo</code></A></td><td>The device it clones.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>id()</code></td><td><code>String</code></td><td>The box identity: the MAC hex, as passed to <A href="/library/discovery#open-by-id"><code>open_by_id</code></A>.</td></tr>
-              <tr><td><code>name()</code></td><td><code>&amp;str</code></td><td>The box's human-readable <A href="/library/options#set-name">name</A> (from <code>version.name</code>), a display label rather than an opener key.</td></tr>
-              <tr><td><code>serial()</code></td><td><code>Option&lt;&amp;str&gt;</code></td><td>The CH343 adapter's serial, when it has one.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 

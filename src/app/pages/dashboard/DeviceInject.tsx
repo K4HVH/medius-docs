@@ -56,7 +56,7 @@ const DeviceInject = () => {
   const health = () => dash.health();
   // Both flags, because they mean different things: the clone can be configured by the game PC
   // while carrying no mouse collection at all, and every motion and button command is then dropped
-  // by the box in silence.
+  // by the box with no reply.
   const mouseReady = () => health()?.cloneConfigured === true && health()?.mouseAttached === true;
   const kbdReady = () => health()?.kbdAttached === true;
 
@@ -227,173 +227,174 @@ const DeviceInject = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Card>
-        <CardHeader title="Injection" subtitle="Drive the clone's inputs from here" />
+      <div id="injection" data-search-target>
+        <Card>
+          <CardHeader title="Injection" subtitle="Drive the clone's inputs from here" />
 
-        <Section title="Cursor" first>
-          <Show when={mouseReady()} fallback={<p style={muted}>No mouse is cloned.</p>}>
-          <div
-            style={pad}
-            onPointerDown={onPadDown}
-            onPointerMove={onPadMove}
-            onPointerUp={onPadUp}
-            onPointerCancel={onPadUp}
-            onLostPointerCapture={endDrag}
-            role="application"
-            aria-label="Cursor drag pad. The buttons below move the cursor by a fixed step instead."
+          <Section title="Cursor" first>
+            <Show when={mouseReady()} fallback={<p style={muted}>No mouse is cloned.</p>}>
+            <div
+              style={pad}
+              onPointerDown={onPadDown}
+              onPointerMove={onPadMove}
+              onPointerUp={onPadUp}
+              onPointerCancel={onPadUp}
+              onLostPointerCapture={endDrag}
+              role="application"
+              aria-label="Cursor drag pad. The buttons below move the cursor by a fixed step instead."
+            >
+              <span style={muted}>
+                <Show when={dragging()} fallback="Drag here to move the cursor">
+                  {moved().dx}, {moved().dy}
+                </Show>
+              </span>
+            </div>
+            <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
+              <div style={{ 'max-width': '7rem' }}>
+                <NumberInput
+                  label="Step"
+                  value={step()}
+                  min={1}
+                  max={32767}
+                  onChange={(v) => setStep(v ?? 1)}
+                />
+              </div>
+              <Button variant="secondary" onClick={() => void moveCursor(-step(), 0)}>
+                Move left
+              </Button>
+              <Button variant="secondary" onClick={() => void moveCursor(step(), 0)}>
+                Move right
+              </Button>
+              <Button variant="secondary" onClick={() => void moveCursor(0, -step())}>
+                Move up
+              </Button>
+              <Button variant="secondary" onClick={() => void moveCursor(0, step())}>
+                Move down
+              </Button>
+            </div>
+
+            <div style={{ ...section, ...checkColumn }}>
+              <Checkbox
+                label="Bypass movement riding"
+                checked={bypass()}
+                onChange={setBypass}
+              />
+            </div>
+            <div style={{ ...section, ...row }}>
+              <Button variant="secondary" onClick={() => void link()?.flushMotion()?.catch(fail)}>
+                Send held motion
+              </Button>
+              <Button variant="secondary" onClick={() => void link()?.discardMotion()?.catch(fail)}>
+                Drop held motion
+              </Button>
+            </div>
+            <p style={muted}>
+              Bypass applies to the cursor and the wheel. The buttons send or drop motion already waiting.
+            </p>
+
+            </Show>
+          </Section>
+
+          <Show when={mouseReady()}>
+            <Section title="Wheel">
+              <div style={{ ...row, 'align-items': 'flex-end' }}>
+              <div style={{ 'max-width': '7rem' }}>
+                <NumberInput
+                  label="Detents"
+                  value={detents()}
+                  min={1}
+                  max={32767}
+                  onChange={(v) => setDetents(v ?? 1)}
+                />
+              </div>
+              <Button variant="secondary" onClick={() => void scroll(detents())}>
+                Scroll up
+              </Button>
+              <Button variant="secondary" onClick={() => void scroll(-detents())}>
+                Scroll down
+              </Button>
+            </div>
+
+            </Section>
+
+            <Section title="Buttons">
+              <div style={chips}>
+                <For each={BUTTONS}>
+                  {(b) => (
+                    <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b.id })}>
+                      {b.name}
+                    </Button>
+                  )}
+                </For>
+              </div>
+            </Section>
+          </Show>
+
+          <Section title="Any input">
+          <Show
+            when={kbdReady() || mouseReady()}
+            fallback={<p style={muted}>Nothing is cloned to inject into.</p>}
           >
-            <span style={muted}>
-              <Show when={dragging()} fallback="Drag here to move the cursor">
-                {moved().dx}, {moved().dy}
-              </Show>
-            </span>
-          </div>
-          <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-            <div style={{ 'max-width': '7rem' }}>
-              <NumberInput
-                label="Step"
-                value={step()}
-                min={1}
-                max={32767}
-                onChange={(v) => setStep(v ?? 1)}
-              />
-            </div>
-            <Button variant="secondary" onClick={() => void moveCursor(-step(), 0)}>
-              Move left
-            </Button>
-            <Button variant="secondary" onClick={() => void moveCursor(step(), 0)}>
-              Move right
-            </Button>
-            <Button variant="secondary" onClick={() => void moveCursor(0, -step())}>
-              Move up
-            </Button>
-            <Button variant="secondary" onClick={() => void moveCursor(0, step())}>
-              Move down
-            </Button>
-          </div>
-
-          <div style={{ ...section, ...checkColumn }}>
-            <Checkbox
-              label="Bypass movement riding"
-              checked={bypass()}
-              onChange={setBypass}
+            <Show when={!kbdReady()}>
+              <p style={muted}>No keyboard is attached, so the box discards key and media holds.</p>
+            </Show>
+            <UsagePicker
+              name="inject-usage"
+              classes={CLASSES}
+              value={pick()}
+              onChange={setPick}
             />
-          </div>
-          <div style={{ ...section, ...row }}>
-            <Button variant="secondary" onClick={() => void link()?.flushMotion()?.catch(fail)}>
-              Send held motion
-            </Button>
-            <Button variant="secondary" onClick={() => void link()?.discardMotion()?.catch(fail)}>
-              Drop held motion
-            </Button>
-          </div>
-          <p style={muted}>
-            Bypass applies to the cursor and the wheel; the buttons send or drop motion already waiting.
-          </p>
-
-          </Show>
-        </Section>
-
-        <Show when={mouseReady()}>
-          <Section title="Wheel">
-            <div style={{ ...row, 'align-items': 'flex-end' }}>
-            <div style={{ 'max-width': '7rem' }}>
-              <NumberInput
-                label="Detents"
-                value={detents()}
-                min={1}
-                max={32767}
-                onChange={(v) => setDetents(v ?? 1)}
-              />
+            <div style={{ ...section, ...row }}>
+              <Button variant="secondary" {...holdPicked}>
+                Hold {pickName()}
+              </Button>
+              <Button variant="primary" onClick={() => hold(pick(), Action.Press)}>
+                Press
+              </Button>
+              <Button variant="secondary" onClick={() => hold(pick(), Action.ForceRelease)}>
+                Mask
+              </Button>
+              <Button variant="secondary" onClick={() => release(pick())}>
+                Release
+              </Button>
             </div>
-            <Button variant="secondary" onClick={() => void scroll(detents())}>
-              Scroll up
-            </Button>
-            <Button variant="secondary" onClick={() => void scroll(-detents())}>
-              Scroll down
-            </Button>
-          </div>
-
+            <p style={muted}>
+              Mask forces the input up even while it is physically held. Release clears either override.
+            </p>
+          </Show>
           </Section>
 
-          <Section title="Buttons">
-            <div style={chips}>
-              <For each={BUTTONS}>
-                {(b) => (
-                  <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b.id })}>
-                    {b.name}
-                  </Button>
-                )}
-              </For>
+          <Show when={dropped()}>
+            <div class="callout callout--warning" style={section}>
+              The box cleared every injected hold. It does that after one second with no control frame,
+              which a backgrounded tab can cause.
             </div>
-          </Section>
-        </Show>
-
-        <Section title="Any input">
-        <Show
-          when={kbdReady() || mouseReady()}
-          fallback={<p style={muted}>Nothing is cloned to inject into.</p>}
-        >
-          <Show when={!kbdReady()}>
-            <p style={muted}>No keyboard is attached, so the box discards key and media holds.</p>
           </Show>
-          <UsagePicker
-            name="inject-usage"
-            classes={CLASSES}
-            value={pick()}
-            onChange={setPick}
-          />
-          <div style={{ ...section, ...row }}>
-            <Button variant="secondary" {...holdPicked}>
-              Hold {pickName()}
-            </Button>
-            <Button variant="primary" onClick={() => hold(pick(), Action.Press)}>
-              Press
-            </Button>
-            <Button variant="secondary" onClick={() => hold(pick(), Action.ForceRelease)}>
-              Mask
-            </Button>
-            <Button variant="secondary" onClick={() => release(pick())}>
-              Release
-            </Button>
-          </div>
-          <p style={muted}>
-            Mask forces the input up, overriding a physical hold; Release clears either
-            override.
-          </p>
-        </Show>
-        </Section>
+          <Show when={err()}>
+            <div class="callout callout--danger" role="alert" style={section}>
+              {err()}
+            </div>
+          </Show>
 
-        <Show when={dropped()}>
-          <div class="callout callout--warning" style={section}>
-            The box cleared every injected hold. It does that after one second with no control frame,
-            which a backgrounded tab can cause.
-          </div>
-        </Show>
-        <Show when={err()}>
-          <div class="callout callout--danger" role="alert" style={section}>
-            {err()}
-          </div>
-        </Show>
-
-        <Section title="Held now">
-        <Show when={holds().length > 0} fallback={<p>Nothing held.</p>}>
-          <UsageChips
-            items={heldItems()}
-            variant="warning"
-            onRemove={(k) => {
-              const h = holds().find((x) => key(x) === k);
-              if (h) release(h);
-            }}
-          />
-          <div style={{ ...section, ...row }}>
-            <Button variant="secondary" onClick={releaseAll}>
-              Release all
-            </Button>
-          </div>
-        </Show>
-        </Section>
-      </Card>
+          <Section title="Held now">
+          <Show when={holds().length > 0} fallback={<p>Nothing held.</p>}>
+            <UsageChips
+              items={heldItems()}
+              variant="warning"
+              onRemove={(k) => {
+                const h = holds().find((x) => key(x) === k);
+                if (h) release(h);
+              }}
+            />
+            <div style={{ ...section, ...row }}>
+              <Button variant="secondary" onClick={releaseAll}>
+                Release all
+              </Button>
+            </div>
+          </Show>
+          </Section>
+        </Card>
+      </div>
     </Show>
   );
 };

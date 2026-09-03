@@ -89,7 +89,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>State</th><th>Behavior</th></tr>
+              <tr><th>State</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
               <tr><td>Override held</td><td>Keepalive thread runs; the health reply is dropped.</td></tr>
@@ -100,7 +100,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
           <pre><code class="language-rust">{`device.press(Button::Left)?;
 
 // No further calls. The keepalive thread sends QUERY(HEALTH) on its own,
-// so the hold survives well past the 1000 ms silence window.
+// so the hold survives past the 1000 ms silence window.
 std::thread::sleep(std::time::Duration::from_secs(5));
 
 device.reset()?;`}</code></pre>

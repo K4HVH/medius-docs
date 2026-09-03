@@ -1,6 +1,6 @@
 // Buffered clip playback: build a clip, load it into the box's ring, and drive the engine.
 //
-// The clip is clocked by the cloned mouse's own report tick, so a tick here is one native report,
+// The clip is clocked by the cloned mouse's report tick, so a tick here is one native report,
 // not a millisecond, and everything below is refused by the box when no mouse is cloned. The engine
 // is soft state on a 1 s dead-man switch, which the clip status poll doubles as the keepalive for.
 
@@ -312,329 +312,331 @@ const DeviceClip = () => {
   });
 
   // Removing the fully-wild binding is byte-identical to the clear-all sentinel, so the box wipes
-  // every binding rather than that one. Say so instead of letting it surprise someone.
+  // every binding rather than that one. The note below states it.
   const isWildcard = (t: ClipTrigger) =>
     t.cls === CLIP_COND_ANY_CLASS && t.id === CLIP_COND_ANY_ID && t.edge === Direction.Both;
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Card>
-        <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
+      <div id="clip-playback" data-search-target>
+        <Card>
+          <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
 
-        <Show when={ready()} fallback={<p style={muted}>The box refuses every clip command without a cloned mouse, because a clip is clocked by the mouse's report rate.</p>}>
-          <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
-            <div class="callout callout--warning">
-              Movement riding is on and this clip is set to ride it, so clip motion is only emitted
-              alongside a real mouse move. Button and key ticks still play.
-            </div>
-          </Show>
-
-          <Section title="Engine" first>
-          <div style={chips}>
-            <Chip
-              variant={
-                state() === ClipState.Playing
-                  ? 'success'
-                  : state() === ClipState.Faulted
-                    ? 'error'
-                    : state() === ClipState.Paused
-                      ? 'warning'
-                      : 'neutral'
-              }
-            >
-              {clipStateLabel(state())}
-            </Chip>
-            <Chip variant="neutral">{clip()?.totalBytes ?? 0} B loaded</Chip>
-            <Chip variant="neutral">{clip()?.freeBytes ?? 0} B free</Chip>
-            <Show when={finalized()}>
-              <Chip variant="neutral">Finalized</Chip>
-            </Show>
-            <Show when={clip()?.retain}>
-              <Chip variant="neutral">
-                {clip()!.totalBytes > 0
-                  ? `${Math.round(((clip()!.played ?? 0) / clip()!.totalBytes) * 100)}% played`
-                  : 'not started'}
-              </Chip>
-            </Show>
-            <Chip variant={delta((s) => s.ticks) > 0 ? 'info' : 'neutral'}>
-              {plural(delta((s) => s.ticks), 'tick')}
-            </Chip>
-            <Show when={delta((s) => s.underruns) > 0}>
-              <Chip variant="warning">{plural(delta((s) => s.underruns), 'underrun')}</Chip>
-            </Show>
-            <Show when={delta((s) => s.overruns) > 0}>
-              <Chip variant="error">{plural(delta((s) => s.overruns), 'overrun')}</Chip>
-            </Show>
-            <Show when={delta((s) => s.seqGaps) > 0}>
-              <Chip variant="error">{plural(delta((s) => s.seqGaps), 'lost append')}</Chip>
-            </Show>
-          </div>
-          <p style={{ ...muted, 'margin-top': '4px' }}>Counts are since this clip was loaded.</p>
-
-          <Show when={state() === ClipState.Faulted}>
-            <div class="callout callout--danger" role="alert">
-              An append was lost or the ring overran, so the stream may be misaligned and the box
-              stopped it. Clear is the only way to recover, and it discards the clip.
-            </div>
-          </Show>
-
-          <Show when={(clip()?.held.length ?? 0) > 0}>
-            <div style={section}>
-              <div style={label}>Held by injection now</div>
-              <div style={chips}>
-                <For each={clip()?.held ?? []}>
-                  {(u) => <Chip variant="warning">{usageName(u.cls, u.id)}</Chip>}
-                </For>
+          <Show when={ready()} fallback={<p style={muted}>Clips need a cloned mouse. Plug one into USB3.</p>}>
+            <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
+              <div class="callout callout--warning">
+                Movement riding is on and this clip is set to ride it, so clip motion is only emitted
+                alongside a real mouse move. Button and key ticks still play.
               </div>
+            </Show>
+
+            <Section title="Engine" first>
+            <div style={chips}>
+              <Chip
+                variant={
+                  state() === ClipState.Playing
+                    ? 'success'
+                    : state() === ClipState.Faulted
+                      ? 'error'
+                      : state() === ClipState.Paused
+                        ? 'warning'
+                        : 'neutral'
+                }
+              >
+                {clipStateLabel(state())}
+              </Chip>
+              <Chip variant="neutral">{clip()?.totalBytes ?? 0} B loaded</Chip>
+              <Chip variant="neutral">{clip()?.freeBytes ?? 0} B free</Chip>
+              <Show when={finalized()}>
+                <Chip variant="neutral">Complete</Chip>
+              </Show>
+              <Show when={clip()?.retain}>
+                <Chip variant="neutral">
+                  {clip()!.totalBytes > 0
+                    ? `${Math.round(((clip()!.played ?? 0) / clip()!.totalBytes) * 100)}% played`
+                    : 'not started'}
+                </Chip>
+              </Show>
+              <Chip variant={delta((s) => s.ticks) > 0 ? 'info' : 'neutral'}>
+                {plural(delta((s) => s.ticks), 'tick')}
+              </Chip>
+              <Show when={delta((s) => s.underruns) > 0}>
+                <Chip variant="warning">{plural(delta((s) => s.underruns), 'underrun')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.overruns) > 0}>
+                <Chip variant="error">{plural(delta((s) => s.overruns), 'overrun')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.seqGaps) > 0}>
+                <Chip variant="error">{plural(delta((s) => s.seqGaps), 'lost append')}</Chip>
+              </Show>
             </div>
-          </Show>
+            <p style={{ ...muted, 'margin-top': '4px' }}>Counts are since this clip was loaded.</p>
 
-          <div style={{ ...section, ...row }}>
-            <For each={OPS}>
-              {(o) => (
-                <Button
-                  variant={o.op === ClipOp.Start ? 'primary' : 'secondary'}
-                  disabled={busy() || (o.op === ClipOp.Start && !loaded())}
-                  onClick={() => ctrl(o.op)}
-                >
-                  {o.name}
-                </Button>
-              )}
-            </For>
-            <Button variant="danger" disabled={busy()} onClick={() => ctrl(ClipOp.Clear)}>
-              Clear
-            </Button>
-          </div>
-          <p style={muted}>
-            Start on a paused clip resumes it rather than replaying from the beginning.
-          </p>
+            <Show when={state() === ClipState.Faulted}>
+              <div class="callout callout--danger" role="alert">
+                An append was lost or the ring overran, so the stream may be misaligned and the box
+                stopped it. Clear is the only way to recover, and it discards the clip.
+              </div>
+            </Show>
 
-          </Section>
+            <Show when={(clip()?.held.length ?? 0) > 0}>
+              <div style={section}>
+                <div style={label}>Held by injection now</div>
+                <div style={chips}>
+                  <For each={clip()?.held ?? []}>
+                    {(u) => <Chip variant="warning">{usageName(u.cls, u.id)}</Chip>}
+                  </For>
+                </div>
+              </div>
+            </Show>
 
-          <Section title="Settings">
-          <div style={checkColumn}>
-            <Checkbox
-              label="Replayable (keep the clip after playing it)"
-              checked={retainOn()}
-              disabled={busy() || loaded()}
-              title={loaded() ? 'Only changeable while the ring is empty. Clear the clip first.' : ''}
-              onChange={(on) => setFlag(CLIP_SET_RETAIN, on)}
-            />
-          </div>
-          <div style={checkColumn}>
-            <Checkbox
-              label="Loop"
-              checked={loopOn()}
-              disabled={busy() || !retainOn()}
-              onChange={(on) => setFlag(CLIP_SET_LOOP, on)}
-            />
-          </div>
-          <div style={checkColumn}>
-            <Checkbox
-              label="Motion rides a real report (only matters with movement riding on)"
-              checked={rideOn()}
-              disabled={busy()}
-              onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
-            />
-          </div>
-
-          <div style={section}>
-            <div style={label}>Lock these inputs while a clip plays</div>
-            <div style={checkColumn}>
-              <For each={SCOPES}>
-                {(s) => (
-                  <Checkbox
-                    label={s.name}
-                    checked={(scope() & s.bit) !== 0}
-                    disabled={busy()}
-                    onChange={(on) => setScope(s.bit, on)}
-                  />
+            <div style={{ ...section, ...row }}>
+              <For each={OPS}>
+                {(o) => (
+                  <Button
+                    variant={o.op === ClipOp.Start ? 'primary' : 'secondary'}
+                    disabled={busy() || (o.op === ClipOp.Start && !loaded())}
+                    onClick={() => ctrl(o.op)}
+                  >
+                    {o.name}
+                  </Button>
                 )}
               </For>
+              <Button variant="danger" disabled={busy()} onClick={() => ctrl(ClipOp.Clear)}>
+                Clear
+              </Button>
             </div>
-            <p style={{ ...muted, 'margin-top': '4px' }}>Applied at the next start, not to a clip already playing.</p>
-          </div>
+            <p style={muted}>
+              Start on a paused clip resumes it rather than replaying from the beginning.
+            </p>
 
-          </Section>
+            </Section>
 
-          <Section title="Build">
-          <div style={label}>Add a tick</div>
-          <RadioGroup
-            name="clip-kind"
-            value={kind()}
-            onChange={setKind}
-            options={[
-              { value: 'move', label: 'Move' },
-              { value: 'wheel', label: 'Wheel' },
-              { value: 'gap', label: 'Wait' },
-              { value: 'edge', label: 'Button or key' },
-            ]}
-          />
-          <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-            <Show when={kind() === 'move'}>
-              <div style={{ 'max-width': '7rem' }}>
-                <NumberInput label="dx" value={dx()} min={-32768} max={32767} onChange={(v) => setDx(v ?? 0)} />
-              </div>
-              <div style={{ 'max-width': '7rem' }}>
-                <NumberInput label="dy" value={dy()} min={-32768} max={32767} onChange={(v) => setDy(v ?? 0)} />
-              </div>
-            </Show>
-            <Show when={kind() === 'wheel'}>
-              <div style={{ 'max-width': '7rem' }}>
-                <NumberInput label="Detents" value={dz()} min={-32768} max={32767} onChange={(v) => setDz(v ?? 0)} />
-              </div>
-            </Show>
-            <Show when={kind() === 'gap'}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput label="Ticks" value={gap()} min={1} max={65535} onChange={(v) => setGap(v ?? 1)} />
-              </div>
-            </Show>
-            <Button variant="secondary" onClick={addEntry}>
-              Add
-            </Button>
-          </div>
-          <Show when={kind() === 'edge'}>
-            <UsagePicker name="clip-edge" classes={CLASSES} value={edgeUsage()} onChange={setEdgeUsage} />
+            <Section title="Settings">
+            <div style={checkColumn}>
+              <Checkbox
+                label="Replayable (keep the clip after playing it)"
+                checked={retainOn()}
+                disabled={busy() || loaded()}
+                title={loaded() ? 'Only changeable while the ring is empty. Clear the clip first.' : ''}
+                onChange={(on) => setFlag(CLIP_SET_RETAIN, on)}
+              />
+            </div>
+            <div style={checkColumn}>
+              <Checkbox
+                label="Loop"
+                checked={loopOn()}
+                disabled={busy() || !retainOn()}
+                onChange={(on) => setFlag(CLIP_SET_LOOP, on)}
+              />
+            </div>
+            <div style={checkColumn}>
+              <Checkbox
+                label="Motion rides a real report"
+                checked={rideOn()}
+                disabled={busy()}
+                onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
+              />
+            </div>
+
             <div style={section}>
-              <div style={label}>Action</div>
-              <RadioGroup name="clip-edge-action" value={edgeAction()} onChange={setEdgeAction} options={ACTIONS} />
+              <div style={label}>Lock these inputs while a clip plays</div>
+              <div style={checkColumn}>
+                <For each={SCOPES}>
+                  {(s) => (
+                    <Checkbox
+                      label={s.name}
+                      checked={(scope() & s.bit) !== 0}
+                      disabled={busy()}
+                      onChange={(on) => setScope(s.bit, on)}
+                    />
+                  )}
+                </For>
+              </div>
+              <p style={{ ...muted, 'margin-top': '4px' }}>Applied at the next start, not to a clip already playing.</p>
             </div>
-          </Show>
 
-          <div style={section}>
-            <div style={label}>
-              Not yet sent ({plural(draft().length, 'tick')}, {draftBytes()} B)
+            </Section>
+
+            <Section title="Build">
+            <div style={label}>Add a tick</div>
+            <RadioGroup
+              name="clip-kind"
+              value={kind()}
+              onChange={setKind}
+              options={[
+                { value: 'move', label: 'Move' },
+                { value: 'wheel', label: 'Wheel' },
+                { value: 'gap', label: 'Wait' },
+                { value: 'edge', label: 'Button or key' },
+              ]}
+            />
+            <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
+              <Show when={kind() === 'move'}>
+                <div style={{ 'max-width': '7rem' }}>
+                  <NumberInput label="dx" value={dx()} min={-32768} max={32767} onChange={(v) => setDx(v ?? 0)} />
+                </div>
+                <div style={{ 'max-width': '7rem' }}>
+                  <NumberInput label="dy" value={dy()} min={-32768} max={32767} onChange={(v) => setDy(v ?? 0)} />
+                </div>
+              </Show>
+              <Show when={kind() === 'wheel'}>
+                <div style={{ 'max-width': '7rem' }}>
+                  <NumberInput label="Detents" value={dz()} min={-32768} max={32767} onChange={(v) => setDz(v ?? 0)} />
+                </div>
+              </Show>
+              <Show when={kind() === 'gap'}>
+                <div style={{ 'max-width': '9rem' }}>
+                  <NumberInput label="Ticks" value={gap()} min={1} max={65535} onChange={(v) => setGap(v ?? 1)} />
+                </div>
+              </Show>
+              <Button variant="secondary" onClick={addEntry}>
+                Add
+              </Button>
             </div>
-            <Show when={draft().length > 0} fallback={<p style={muted}>Nothing built yet.</p>}>
+            <Show when={kind() === 'edge'}>
+              <UsagePicker name="clip-edge" classes={CLASSES} value={edgeUsage()} onChange={setEdgeUsage} />
+              <div style={section}>
+                <div style={label}>Action</div>
+                <RadioGroup name="clip-edge-action" value={edgeAction()} onChange={setEdgeAction} options={ACTIONS} />
+              </div>
+            </Show>
+
+            <div style={section}>
+              <div style={label}>
+                Not yet sent ({plural(draft().length, 'tick')}, {draftBytes()} B)
+              </div>
+              <Show when={draft().length > 0} fallback={<p style={muted}>Nothing built yet.</p>}>
+                <div style={chips}>
+                  <For each={draft()}>
+                    {(e, i) => (
+                      <Chip variant="info" onRemove={() => setDraft((d) => d.filter((_, j) => j !== i()))}>
+                        {entryText(e)}
+                      </Chip>
+                    )}
+                  </For>
+                </div>
+              </Show>
+              <Show when={finalized()}>
+                <div class="callout callout--warning">
+                  This clip is marked complete, so the box drops anything more sent to it. Clear it to
+                  load a different one.
+                </div>
+              </Show>
+              <Show when={wontFit()}>
+                <div class="callout callout--warning">
+                  More than the ring has free. A long clip goes out as several frames, so the box
+                  would take the first few, drop the one that overflows, and fault with a partial clip
+                  loaded.
+                </div>
+              </Show>
+              <div style={{ ...section, ...row }}>
+                <Button
+                  variant="primary"
+                  disabled={busy() || draft().length === 0 || wontFit() || finalized()}
+                  onClick={append}
+                >
+                  Send to box
+                </Button>
+                <Button variant="subtle" disabled={draft().length === 0} onClick={() => setDraft([])}>
+                  Discard
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={busy() || completeWhy() !== null}
+                  title={completeWhy() ?? 'Set the clip end so playback stops or loops there'}
+                  onClick={() => ctrl(ClipOp.Finalize)}
+                >
+                  Mark complete
+                </Button>
+              </div>
+            </div>
+
+            </Section>
+
+            <Section title="Triggers">
+            <p style={muted}>
+              Up to {CLIP_TRIG_MAX} bindings.
+            </p>
+            <Show when={(clip()?.triggers.length ?? 0) > 0} fallback={<p>No triggers bound.</p>}>
               <div style={chips}>
-                <For each={draft()}>
-                  {(e, i) => (
-                    <Chip variant="info" onRemove={() => setDraft((d) => d.filter((_, j) => j !== i()))}>
-                      {entryText(e)}
+                <For each={clip()?.triggers ?? []}>
+                  {(t) => (
+                    <Chip variant="info" onRemove={() => removeTrigger(t)}>
+                      {triggerText(t)}
                     </Chip>
                   )}
                 </For>
               </div>
+              <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
+                <p style={muted}>
+                  Removing the any-input binding clears every trigger: the box reads that exact address
+                  as its clear-all.
+                </p>
+              </Show>
             </Show>
-            <Show when={finalized()}>
-              <div class="callout callout--warning">
-                This clip is finalized, so the box drops anything more that is sent to it. Clear it
-                to load a different one.
+
+            <div style={section}>
+              <UsagePicker
+                name="clip-trigger"
+                classes={TRIGGER_CLASSES}
+                value={trigUsage()}
+                onChange={setTrigUsage}
+              />
+              <div style={section}>
+                <div style={label}>Edge</div>
+                <RadioGroup
+                  name="clip-trig-edge"
+                  value={trigEdge()}
+                  onChange={setTrigEdge}
+                  options={[
+                    { value: String(Direction.Positive), label: 'Press' },
+                    { value: String(Direction.Negative), label: 'Release' },
+                    { value: String(Direction.Both), label: 'Both' },
+                  ]}
+                />
+              </div>
+              <div style={section}>
+                <div style={label}>Runs</div>
+                <RadioGroup
+                  name="clip-trig-op"
+                  value={trigOp()}
+                  onChange={setTrigOp}
+                  options={OPS.map((o) => ({ value: String(o.op), label: o.name }))}
+                />
+              </div>
+              <div style={section}>
+                <Checkbox
+                  label="Consume the trigger"
+                  checked={trigConsume()}
+                  onChange={setTrigConsume}
+                />
+              </div>
+              <div style={{ ...section, ...row }}>
+                <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
+                  {replacing() ? 'Replace' : 'Bind'}
+                </Button>
+              </div>
+              <Show when={trigFull()}>
+                <p style={muted}>All {CLIP_TRIG_MAX} slots are used. Remove one first.</p>
+              </Show>
+              <Show when={replacing()}>
+                <p style={muted}>
+                  Already bound; binding again replaces it and re-arms every trigger's edge detector.
+                </p>
+              </Show>
+            </div>
+
+            </Section>
+
+            <Show when={err()}>
+              <div class="callout callout--danger" role="alert">
+                {err()}
               </div>
             </Show>
-            <Show when={wontFit()}>
-              <div class="callout callout--warning">
-                More than the ring has free. A long clip goes out as several frames, so the box
-                would take the first few, drop the one that overflows, and fault with a partial clip
-                loaded.
-              </div>
-            </Show>
-            <div style={{ ...section, ...row }}>
-              <Button
-                variant="primary"
-                disabled={busy() || draft().length === 0 || wontFit() || finalized()}
-                onClick={append}
-              >
-                Send to box
-              </Button>
-              <Button variant="subtle" disabled={draft().length === 0} onClick={() => setDraft([])}>
-                Discard
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={busy() || completeWhy() !== null}
-                title={completeWhy() ?? 'Set the clip end so playback stops or loops there'}
-                onClick={() => ctrl(ClipOp.Finalize)}
-              >
-                Mark complete
-              </Button>
-            </div>
-          </div>
-
-          </Section>
-
-          <Section title="Triggers">
-          <p style={muted}>
-            Up to {CLIP_TRIG_MAX} bindings.
-          </p>
-          <Show when={(clip()?.triggers.length ?? 0) > 0} fallback={<p>No triggers bound.</p>}>
-            <div style={chips}>
-              <For each={clip()?.triggers ?? []}>
-                {(t) => (
-                  <Chip variant="info" onRemove={() => removeTrigger(t)}>
-                    {triggerText(t)}
-                  </Chip>
-                )}
-              </For>
-            </div>
-            <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
-              <p style={muted}>
-                Removing the any-input binding clears every trigger: the box reads that exact address
-                as its clear-all.
-              </p>
-            </Show>
           </Show>
-
-          <div style={section}>
-            <UsagePicker
-              name="clip-trigger"
-              classes={TRIGGER_CLASSES}
-              value={trigUsage()}
-              onChange={setTrigUsage}
-            />
-            <div style={section}>
-              <div style={label}>Edge</div>
-              <RadioGroup
-                name="clip-trig-edge"
-                value={trigEdge()}
-                onChange={setTrigEdge}
-                options={[
-                  { value: String(Direction.Positive), label: 'Press' },
-                  { value: String(Direction.Negative), label: 'Release' },
-                  { value: String(Direction.Both), label: 'Both' },
-                ]}
-              />
-            </div>
-            <div style={section}>
-              <div style={label}>Runs</div>
-              <RadioGroup
-                name="clip-trig-op"
-                value={trigOp()}
-                onChange={setTrigOp}
-                options={OPS.map((o) => ({ value: String(o.op), label: o.name }))}
-              />
-            </div>
-            <div style={section}>
-              <Checkbox
-                label="Consume the trigger"
-                checked={trigConsume()}
-                onChange={setTrigConsume}
-              />
-            </div>
-            <div style={{ ...section, ...row }}>
-              <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
-                {replacing() ? 'Replace' : 'Bind'}
-              </Button>
-            </div>
-            <Show when={trigFull()}>
-              <p style={muted}>All {CLIP_TRIG_MAX} slots are used. Remove one first.</p>
-            </Show>
-            <Show when={replacing()}>
-              <p style={muted}>
-                Already bound; binding again replaces it and re-arms every trigger's edge detector.
-              </p>
-            </Show>
-          </div>
-
-          </Section>
-
-          <Show when={err()}>
-            <div class="callout callout--danger" role="alert">
-              {err()}
-            </div>
-          </Show>
-        </Show>
-      </Card>
+        </Card>
+      </div>
     </Show>
   );
 };

@@ -39,6 +39,7 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   return {
     useDashboard: () => ({
       status: () => 'connected',
+      updateOnly: () => false,
       health: () => health(),
       link: () => link,
     }),

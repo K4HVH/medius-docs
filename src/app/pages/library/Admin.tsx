@@ -101,9 +101,11 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to
               <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
             </p>
           </div>
-        <p>A box that already runs Medius takes firmware over the open connection with the{' '}
-        <A href="/library/update">update</A> calls, so a <code>Download</code> reboot is only for a
-        first install or a chip whose app will not boot.</p>
+          <p>
+            A box that already runs Medius takes firmware over the open connection with the{' '}
+            <A href="/library/update">update</A> calls, so a <code>Download</code> reboot is only for
+            a first install or a chip whose app will not boot.
+          </p>
         </Card>
       </div>
 

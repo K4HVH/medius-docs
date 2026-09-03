@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>3.2.0</code></td>
+              <td><code>3.3.1</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -190,7 +190,7 @@ const Introduction: Component = () => {
 
       <div id="guides" data-search-target>
         <Card>
-          <CardHeader title="Guides" subtitle="Behavior and how-to, outside the reference" />
+          <CardHeader title="Guides" subtitle="Behaviour and how-to, outside the reference" />
           <div class="docs-grid">
             <A href="/library/guides/calls" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">

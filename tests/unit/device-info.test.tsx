@@ -25,6 +25,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
   return {
     useDashboard: () => ({
       status: () => 'connected',
+      updateOnly: () => false,
       health: () => mock.health,
       link: () => ({}),
       poll: (key: string) => () => VALUES[key]?.() ?? null,
@@ -62,7 +63,7 @@ describe('DeviceInfo: one Capabilities card', () => {
     await findByText('Rollover');                      // keyboard section (rollover row is keyboard-only)
     await findByText('Media keys');                    // a capability chip
     await findByText('Huntsman Mini');                  // the cloned device's product name
-    // the cloned device's kind, capitalized, shown as a chip (distinct from the section header):
+    // the cloned device's kind, capitalised, shown as a chip (distinct from the section header):
     expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Keyboard');
     await findByText(/31E3:1232/);                     // the cloned device's USB id
     await findByText('Full clone');                    // over-capacity as a terse row...
@@ -92,7 +93,7 @@ describe('DeviceInfo: one Capabilities card', () => {
     await findByText('Buttons');          // mouse section (buttons row is mouse-only)
     await findByText('Wheel');            // a capability chip
     await findByText('G502 HERO');        // the cloned device's product name
-    // the cloned device's kind, capitalized, shown as a chip:
+    // the cloned device's kind, capitalised, shown as a chip:
     expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Mouse');
     await findByText(/046D:C08B/);
     await findByText('Full clone');

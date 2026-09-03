@@ -10,7 +10,7 @@ const Diagnostics: Component = () => {
         <Card>
           <CardHeader title="Diagnostics" subtitle="Read-only views of the link" />
           <p>
-            <code>logs</code> and <code>counters</code> are lock-free, read-only views on{' '}
+            <code>logs</code> and <code>counters</code> are lock-free, on both{' '}
             <A href="/library/connection"><code>Device</code></A> and{' '}
             <A href="/library/features/async"><code>AsyncDevice</code></A>.
           </p>
@@ -54,7 +54,7 @@ const Diagnostics: Component = () => {
           <table class="api-params">
             <thead>
               <tr>
-                <th>Method</th>
+                <th>Name</th>
                 <th>Returns</th>
                 <th>Blocks</th>
                 <th>Description</th>

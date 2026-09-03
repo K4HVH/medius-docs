@@ -5,12 +5,15 @@ import {
   CLIP_TRIG_F_PRESENT,
   ClipOp,
   EmitMode,
+  RenderMode,
   MAX_PAYLOAD,
   MOTION_CURSOR,
   MOTION_WHEEL,
   NAME_MAX,
   OPT_BEARING,
   OPT_EMIT,
+  OPT_RENDER,
+  OPT_SPREAD,
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   OPT_NAME,
@@ -125,10 +128,10 @@ export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array 
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
 }
 
-// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode 0 learned (default), 1
-// follows the cloned poll rate, 2 paces at a fixed rate_hz, and raises the emit ceiling only. forceHz is
-// the rate the clone advertises and the box polls the device at, 0 for the device's own; it needs
-// IMPERFECT on and re-clones the box when the resolved interval changes. Both are written every call.
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode is the pace (0 learned,
+// 1 follows the cloned poll rate, 2 fixed rate_hz). forceHz is the rate the clone advertises and the box
+// polls the device at, 0 for native ; it needs IMPERFECT on and re-clones the box when the
+// resolved interval changes. Both are written every call.
 export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
   const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
@@ -142,8 +145,21 @@ export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array
   ]);
 }
 
+// OPTION(RENDER) (§3.10): [id=5][mode u8][full u8]. mode is the texture motion is rendered with; full puts
+// native motion through the same model rather than relaying it. Both are written every call.
+export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
+  return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
+}
+
+// OPTION(SPREAD) (§3.10): [id=6][percent u16 LE]. The share of the interval between commands an
+// injected delta is released across; 0 puts the whole delta on the next report the box emits.
+export function spreadPayload(percent: number): Uint8Array {
+  const p = percent & 0xffff;
+  return new Uint8Array([OPT_SPREAD, p & 0xff, p >> 8]);
+}
+
 // OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the
-// id alone (0 value bytes) clears it, reverting to the firmware-synthesized "Medius-XXXX" default. The
+// id alone (0 value bytes) clears it, reverting to the firmware-synthesised "Medius-XXXX" default. The
 // name is read back on RESP(VERSION), not Q_OPTIONS. Persisted in NVS. Non-ASCII/out-of-range bytes are
 // dropped so only a valid name is ever sent.
 export function namePayload(name: string): Uint8Array {
@@ -156,7 +172,7 @@ export function namePayload(name: string): Uint8Array {
   return new Uint8Array([OPT_NAME, ...bytes]);
 }
 
-// OPTION(NAME) clear (§3.10): the id alone, no value bytes, reverting to the synthesized default.
+// OPTION(NAME) clear (§3.10): the id alone, no value bytes, reverting to the synthesised default.
 export function clearNamePayload(): Uint8Array {
   return new Uint8Array([OPT_NAME]);
 }

@@ -7,12 +7,14 @@ const Install: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Install" subtitle="No build step, works in C and C++" />
+        <CardHeader title="Install" subtitle="One header and one prebuilt library" />
         <p>
-          The binding is one header (<code>medius.h</code>) and one prebuilt library
-          (<code>libmedius_capi</code>). It's the same for C and C++. The header compiles as both, so
-          a C++ program <code>#include</code>s it and calls the same functions. Nothing to build, no{' '}
-          <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust</a> needed.
+          Download the archive for your platform, point the compiler at <code>include/</code> and{' '}
+          <code>lib/</code>, and link. One header (<code>medius.h</code>) and one prebuilt library
+          (<code>libmedius_capi</code>) serve{' '}
+          <a href="https://learn.microsoft.com/en-us/cpp/" target="_blank" rel="noreferrer">C and C++</a>,
+          with no <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust</a> toolchain
+          needed.
         </p>
       </Card>
 
@@ -53,8 +55,7 @@ const Install: Component = () => {
 
           <div class="api-response-label">WINDOWS · VISUAL STUDIO</div>
           <p>
-            In your project's <strong>Properties</strong> (use the same values for{' '}
-            <a href="https://learn.microsoft.com/en-us/cpp/" target="_blank" rel="noreferrer">C and C++</a>):
+            In your project's <strong>Properties</strong> (the same values for C and C++):
           </p>
           <ol>
             <li>Under <strong>C/C++ → General → Additional Include Directories</strong>, add the unzipped <code>include\</code> folder.</li>
@@ -64,7 +65,8 @@ const Install: Component = () => {
           </ol>
           <p>Build and run as normal. To skip the DLL, add <code>medius_capi.lib</code> in step 3 instead (static, nothing to copy).</p>
 
-          <div class="api-response-label">WINDOWS · COMMAND LINE (x64 Native Tools Command Prompt)</div>
+          <div class="api-response-label">WINDOWS · COMMAND LINE</div>
+          <p>From the <strong>x64 Native Tools Command Prompt</strong>:</p>
           <pre><code class="language-bash">{`cl app.c /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: C++:  cl /std:c++17 app.cpp /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: then copy medius_capi.dll next to app.exe, and run:
@@ -100,8 +102,9 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
         <Card>
           <CardHeader title="Verify" subtitle="Version print, no box needed" />
           <p>
-            <code>medius_version_string</code> and <code>medius_abi_version</code> are pure library
-            calls. If this builds and prints a version, you're set.
+            <A href="/bindings/c/api#module"><code>medius_version_string</code></A> and{' '}
+            <A href="/bindings/c/api#module"><code>medius_abi_version</code></A> are pure library
+            calls. A printed version means the header and library are wired in.
           </p>
           <pre><code class="language-c">{`// app.c
 #include <stdio.h>

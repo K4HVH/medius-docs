@@ -52,7 +52,7 @@ let device = Device::with_mock(mock.clone());
           <table class="api-params">
             <thead>
               <tr>
-                <th>Constructor</th>
+                <th>Name</th>
                 <th>Handshake</th>
                 <th>Returns</th>
                 <th>Description</th>
@@ -106,6 +106,12 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_stats(self, stats: Stats) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_render(self, mode: RenderMode, full: bool) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_render_ready(self, ready: bool) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn with_spread_learned(self, period_us: u32) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_version(&self, version: Version)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_health(&self, health: Health)</pre>
@@ -126,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 5, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 6, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -155,31 +161,49 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            All put bytes on the inbound stream as if the box emitted them. The three event calls each
-            raise one <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant on
-            an <A href="/library/catch#event-stream"><code>EventStream</code></A>;{' '}
-            <code>push_log</code> raises a <A href="/library/types/structs#log-line"><code>LogLine</code></A>{' '}
-            on <A href="/library/diagnostics#logs"><code>logs()</code></A>, and <code>push_raw</code>{' '}
-            sends arbitrary bytes.
+            All put bytes on the inbound stream as if the box emitted them; the <code>seq</code>{' '}
+            counter is shared across the three event calls, exactly as it is on the wire.
           </p>
 
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Raises</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>push_log</code></td>
+                <td>a <A href="/library/types/structs#log-line"><code>LogLine</code></A> on <A href="/library/diagnostics#logs"><code>logs()</code></A></td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><code>push_raw</code></td>
+                <td>arbitrary bytes</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><code>push_motion</code></td>
+                <td><code>Motion</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
+                <td>Stamps itself <A href="/library/types/enums#clock-domain"><code>ClockDomain::HostChip</code></A>, the only domain the box stamps this frame in.</td>
+              </tr>
+              <tr>
+                <td><code>push_usages</code></td>
+                <td><code>Usages</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
+                <td>Stamps itself <code>HostChip</code> for the same reason, and carries its own <code>class</code>, so a test can push the empty snapshot.</td>
+              </tr>
+              <tr>
+                <td><code>push_traffic</code></td>
+                <td><code>Traffic</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
+                <td><code>true_len</code> need not agree with <code>bytes.len()</code>, which is how you exercise <code>truncated()</code> with no real capture behind it.</td>
+              </tr>
+            </tbody>
+          </table>
+
           <p>
-            The <code>seq</code> counter is shared across all three, exactly as it is on the wire.
-          </p>
-          <p>
-            Real losses do not show up here. Exercise loss handling through{' '}
+            The three event rows each name one{' '}
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. Real
+            losses do not show up here: exercise loss handling through{' '}
             <code>CatchState::dropped</code> instead.
-          </p>
-          <p>
-            <code>push_motion</code> and <code>push_usages</code> stamp themselves{' '}
-            <A href="/library/types/enums#clock-domain"><code>ClockDomain::HostChip</code></A>, the only
-            domain the box stamps those two frames in. <code>push_usages</code> carries its own{' '}
-            <code>class</code>, so a test can push the empty snapshot.
-          </p>
-          <p>
-            On <code>push_traffic</code>, <code>true_len</code> need not agree with{' '}
-            <code>bytes.len()</code>, which is how you exercise <code>truncated()</code> with no real
-            capture behind it.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -225,7 +249,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
           <table class="api-params">
             <thead>
               <tr>
-                <th>Method</th>
+                <th>Name</th>
                 <th>Returns</th>
                 <th>Description</th>
               </tr>
@@ -255,9 +279,8 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
           </table>
 
           <p>
-            A <A href="/library/types/frames"><code>DecodedFrame</code></A> is{' '}
-            <code>{`{ ty, seq, payload }`}</code>; a{' '}
-            <A href="/library/inject"><code>press(Button::Left)</code></A> records a{' '}
+            A <A href="/library/types/frames"><code>DecodedFrame</code></A> from a{' '}
+            <A href="/library/inject"><code>press(Button::Left)</code></A> is a{' '}
             <A href="/library/types/frames"><code>FrameType::Inject</code></A> frame with payload{' '}
             <code>[0, 0, 0, 1]</code> (class <code>0</code> = button, id <code>0</code>, action{' '}
             <code>1</code>).

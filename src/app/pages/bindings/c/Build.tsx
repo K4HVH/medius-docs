@@ -40,7 +40,7 @@ const Build: Component = () => {
               </tr>
             </tbody>
           </table>
-          <div class="api-response-label">BUILD WITH THE SURFACES, THEN COMPILE AGAINST THEM</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-bash">{`# build the library with the surface
 cargo build -p medius-capi --release --features mock
 
@@ -93,7 +93,7 @@ cc app.c -DMEDIUS_FEATURE_MOCK \\
               <tr><td>Windows</td><td><code>medius_capi.dll</code></td><td><code>medius_capi.lib</code></td><td>link <code>medius_capi.dll.lib</code> (import) or <code>.lib</code> (static); no <code>lib</code> prefix</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">COMPILE A ONE-LINE SANITY CHECK</div>
+          <div class="api-response-label">SANITY CHECK</div>
           <pre><code class="language-c">{`// hello.c: proves the library links and loads
 #include <medius.h>
 #include <stdio.h>
@@ -104,7 +104,7 @@ int main(void) {
 }`}</code></pre>
           <pre><code class="language-bash">{`cc hello.c -I medius-capi/include -L target/release -lmedius_capi -lpthread -o hello
 LD_LIBRARY_PATH=target/release ./hello
-# medius 3.2.0, abi 5`}</code></pre>
+# medius 3.3.1, abi 6`}</code></pre>
           <div class="callout callout--info">
             <p>
               <code>-L</code> only helps the linker. The shared
@@ -134,8 +134,8 @@ LD_LIBRARY_PATH=target/release ./hello
               <tr><th>Inside the tarball</th><th>Contents</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>include/medius.h</code></td><td>the header (mock/flash declarations gated by the macros)</td></tr>
-              <tr><td><code>lib/</code></td><td>the prebuilt <code>libmedius_capi</code>, shared and static, with mock and flash off</td></tr>
+              <tr><td><code>include/medius.h</code></td><td>the header (mock declarations gated by the macro)</td></tr>
+              <tr><td><code>lib/</code></td><td>the prebuilt <code>libmedius_capi</code>, shared and static, with mock off</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">

@@ -12,7 +12,7 @@ const Tracing: Component = () => {
           The <code>tracing</code> feature wires the crate into{' '}
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
           it emits a span and events as it works the link, but adds no medius functions and changes no
-          behavior. You read them by installing a{' '}
+          behaviour. You read them by installing a{' '}
           <A href="/library/features/tracing#subscriber">subscriber</A>.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
@@ -74,7 +74,7 @@ const Tracing: Component = () => {
           <pre><code class="language-rust">{`// With "medius=debug" and a box that replies on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
-//   INFO  connect: medius::device: connected proto_ver=5 fw_major=3 fw_minor=2 fw_patch=0
+//   INFO  connect: medius::device: connected proto_ver=6 fw_major=3 fw_minor=3 fw_patch=1
 // "connect:" is the span; the rest is the event with its fields.`}</code></pre>
         </Card>
       </div>
@@ -120,7 +120,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr now carries the connect span and an INFO event, e.g.:
-//   INFO  connect: medius::device: connected proto_ver=5 fw_major=3 fw_minor=2 fw_patch=0`}</code></pre>
+//   INFO  connect: medius::device: connected proto_ver=6 fw_major=3 fw_minor=3 fw_patch=1`}</code></pre>
         </Card>
       </div>
 
@@ -164,7 +164,7 @@ tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
 // Each event is now a JSON line, e.g.:
-//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":5}}`}</code></pre>
+//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":6}}`}</code></pre>
         </Card>
       </div>
     </>
