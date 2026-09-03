@@ -467,18 +467,8 @@ const Option: Component = () => {
             <p>
               A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag is not spread:{' '}
               <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each ask for exact timing.
-              When it reaches the wire is still{' '}
-              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>'s decision, as it
-              is for an unflagged one. <code>FLUSH</code> and <code>DISCARD</code> also act on the part
+<code>FLUSH</code> and <code>DISCARD</code> also act on the part
               of an earlier delta still waiting, so they mean the same thing whatever the percent is.
-            </p>
-            <p>
-              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> composes, and is
-              where an interval has the most to do. Riding alone puts the whole delta on the first
-              native cursor report that carries it, so the wire gets the hand's own motion plus a lump
-              once per command; an interval divides it across the reports the hand makes instead. A
-              remainder still standing when the ride window lapses is dropped, as any unridden hoard
-              is: that is riding's rule, and the interval does not change it.
             </p>
             <p>
               This and <A href="/native/commands/option#render"><code>RENDER</code></A> are independent
