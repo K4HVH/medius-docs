@@ -289,8 +289,8 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           <p>
             An aim loop slower than the native report rate hands the box a delta worth several native
             reports. <code>percent</code> is how much of the interval between commands the box releases
-            it across: <code>0</code> puts the whole delta on the next report, <code>100</code> spreads
-            it evenly over one interval, and above <code>100</code> carries a standing backlog.
+            that delta across: <code>0</code> puts the whole delta on the next report, <code>100</code>
+            releases it evenly over one interval, and above <code>100</code> carries a standing backlog.
           </p>
           <table class="api-params">
             <thead>
@@ -304,7 +304,7 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
             <p>
               Spreading costs half the interval in latency on average, about 4 ms on a 125 Hz loop.
               The delivered total never changes, and a loop matched to the native report rate emits
-              exactly what it did before.
+              exactly what that loop emitted before.
             </p>
             <p>
               Motion asking for exact timing is not spread:{' '}
@@ -319,7 +319,7 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
 
 let device = Device::find()?;
 device.set_spread(100)?;   // the box's own default: one whole command interval
-device.set_spread(50)?;    // half of it, for half the added latency
+device.set_spread(50)?;    // half the interval, for half the added latency
 device.set_spread(0)?;     // off: the whole delta on the next report`}</code></pre>
         </Card>
       </div>
