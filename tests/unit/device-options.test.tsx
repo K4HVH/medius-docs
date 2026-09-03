@@ -122,10 +122,9 @@ describe('DeviceOptions', () => {
   it('describes only the selected spread, and shows the interval in force', async () => {
     mock.spread = { percent: 50, spanUs: 4000 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Half the gap, half the delay.');
-    expect(queryByText('The whole movement at once.')).toBeNull();
-    await findByText('50%');
-    await findByText('Over 4.0 ms');
+    await findByText('Injected motion over half the command interval.');
+    expect(queryByText('Injected motion on one report.')).toBeNull();
+    await findByText('Half · 4.0 ms');
   });
 
   // The percent reads back set while the box is still releasing a delta whole: it releases nothing
@@ -134,22 +133,23 @@ describe('DeviceOptions', () => {
   it('says it is waiting while no command period has been learned', async () => {
     mock.spread = { percent: 100, spanUs: 0 };
     const waiting = render(() => <DeviceOptions />);
-    await waiting.findByText('Waiting for an aim loop');
+    await waiting.findByText('Waiting for injection');
     cleanup();
 
     mock.spread = { percent: 100, spanUs: 8002 };
     const learned = render(() => <DeviceOptions />);
-    await learned.findByText('Over 8.0 ms');
-    expect(learned.queryByText('Waiting for an aim loop')).toBeNull();
+    await learned.findByText('Full · 8.0 ms');
+    expect(learned.queryByText('Waiting for injection')).toBeNull();
   });
 
   // Off is not "waiting": there is no interval to wait for, and a warning chip there reads as a fault.
   it('shows no interval chip at all with spreading off', async () => {
     mock.spread = { percent: 0, spanUs: 0 };
-    const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('The whole movement at once.');
-    expect(queryByText('Waiting for an aim loop')).toBeNull();
-    expect(queryByText(/Over .* ms/)).toBeNull();
+    const { container, queryByText, findByText } = render(() => <DeviceOptions />);
+    await findByText('Injected motion on one report.');
+    expect(queryByText('Waiting for injection')).toBeNull();
+    // Scoped to this section: the riding and bearing chips carry the same "Name . N ms" shape.
+    expect(container.querySelector('#spread')!.textContent).not.toMatch(/ ms/);
   });
 
   // Nothing is rendered until the box has learned a profile, so a box set to a mode and a box rendering

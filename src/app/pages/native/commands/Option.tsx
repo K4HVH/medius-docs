@@ -424,17 +424,17 @@ const Option: Component = () => {
           <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
           <p>
             A host loop slower than the native report rate hands the box a delta worth several native
-            reports. The percent says how much of the interval between commands the box releases it
-            across.
+            reports. The percent says how much of the interval between commands the box releases that
+            delta across.
           </p>
           <div class="api-response-label">PERCENT</div>
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>The whole delta goes out on the next report the box emits.</td></tr>
-              <tr><td><code>1..99</code></td><td>Released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
-              <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
-              <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
+              <tr><td><code>1..99</code></td><td>The delta is released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
+              <tr><td><code>100</code> <em>(default)</em></td><td>The delta is released evenly across one whole command interval.</td></tr>
+              <tr><td><code>101..65535</code></td><td>The delta is released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`a 250 Hz host on a 1000 Hz native rate: one MOVE of 8 every 4 ms, 12 ms of wire

@@ -13,6 +13,7 @@ import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
 import {
   type EmitPace,
+  type Spread,
   BEARING_WINDOW_DEFAULT_MS,
   BearingMode,
   EmitMode,
@@ -73,15 +74,21 @@ const RENDER_LABEL: Record<number, string> = {
 const SPREAD_PERCENTS: Record<string, number> = { off: 0, half: 50, full: 100 };
 
 const SPREAD_BLURB: Record<string, string> = {
-  off: 'The whole movement at once.',
-  half: 'Half the gap, half the delay.',
-  full: 'The whole gap, at the device\'s own rate.',
+  off: 'Injected motion on one report.',
+  half: 'Injected motion over half the command interval.',
+  full: 'Injected motion over the whole command interval.',
 };
 
 // A percent this control cannot express, set by another client or an older session, keeps its own
 // entry rather than reading as one of the three.
 const spreadKeyFor = (percent: number): string =>
   percent === 0 ? 'off' : percent === 50 ? 'half' : percent === 100 ? 'full' : 'custom';
+
+const spreadLabel = (sp: Spread): string => {
+  if (sp.percent === 0) return 'Off';
+  const base = sp.percent === 50 ? 'Half' : sp.percent === 100 ? 'Full' : `${sp.percent}%`;
+  return sp.spanUs > 0 ? `${base} · ${(sp.spanUs / 1000).toFixed(1)} ms` : base;
+};
 
 const emitLabel = (e: EmitPace): string => {
   let base: string;
@@ -481,7 +488,8 @@ const DeviceOptions = () => {
           <div id="spread" data-search-target>
             <Section title="Spread">
             <p>
-              How much of the gap between an aim loop's commands an injected delta is released across.
+              Releases injected motion across the interval between host commands instead of on one
+              report, so injected reports carry the native per-report magnitude.
             </p>
             <RadioGroup
               name="spread-percent"
@@ -493,7 +501,7 @@ const DeviceOptions = () => {
                 { value: 'full', label: 'Full' },
               ]}
             />
-            <p style={muted}>{SPREAD_BLURB[spreadKey()] ?? `${spread()?.percent ?? 0}% of the interval.`}</p>
+            <p style={muted}>{SPREAD_BLURB[spreadKey()] ?? 'Injected motion over its own share of the command interval.'}</p>
             <div style={controls}>
               <Button variant="primary" disabled={cmd.busy()} onClick={applySpread}>
                 Apply
@@ -506,23 +514,15 @@ const DeviceOptions = () => {
             </div>
             <Show when={spread()} fallback={<p style={status}>Reading status...</p>}>
               {(sp) => (
-                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>
-                    {sp().percent === 0 ? 'Off' : `${sp().percent}%`}
-                  </Chip>
-                  {/* The interval is 0 until the box has learned the loop, and a delta goes out whole
-                      until it has, however the percent is set. */}
-                  <Show when={sp().percent > 0}>
-                    <Chip variant={sp().spanUs > 0 ? 'success' : 'warning'}>
-                      {sp().spanUs > 0
-                        ? `Over ${(sp().spanUs / 1000).toFixed(1)} ms`
-                        : 'Waiting for an aim loop'}
-                    </Chip>
+                <div style={status}>
+                  <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
+                  {/* The box learns the interval from injection, so a set percent spreads nothing
+                      until some has arrived. */}
+                  <Show when={sp().percent > 0 && sp().spanUs === 0}>
+                    <Chip variant="warning">Waiting for injection</Chip>
                   </Show>
                   <Show when={spreadDirty()}>
-                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      not applied yet
-                    </span>
+                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
                   </Show>
                 </div>
               )}
