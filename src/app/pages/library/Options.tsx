@@ -311,9 +311,7 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
               <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
               <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
               <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Neither is wheel
-              motion. <A href="/library/options#set-movement-riding">Movement riding</A> composes: the
-              delta is divided across the native reports it rides, and a remainder left when the ride
-              window lapses is dropped, as any unridden motion is.
+              motion.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
