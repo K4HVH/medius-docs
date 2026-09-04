@@ -162,9 +162,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.3.2</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.3.3</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 01     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 03     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -968,17 +968,17 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.3.2</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.3.3</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03     | 03     | 01     |
+| A5     | 06     | 01     | 11 00  | 0B     | 03     | 03     | 03     |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | devmaj | devmin | devpat |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 
 +--------+--------+--------+--------+--------+--------+--------+--------+
-| 01     | 02     | 01     | 03     | 03     | 01     | 00     | 02     |
+| 01     | 02     | 01     | 03     | 03     | 03     | 00     | 02     |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | devslt | devsta | hostpr | hstmaj | hstmin | hstpat | hstslt | hststa |
 +--------+--------+--------+--------+--------+--------+--------+--------+

@@ -43,7 +43,7 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.3.2
+println!("{v}");                       // fw 3.3.3
 println!("proto {}", v.proto_ver);     // proto 6
 println!("name {}", v.name);           // Loki`}</code></pre>
 
