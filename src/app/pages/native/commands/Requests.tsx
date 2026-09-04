@@ -162,7 +162,7 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.3.1</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.3.2</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 01     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -968,7 +968,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.3.1</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.3.2</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
