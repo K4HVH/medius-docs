@@ -219,7 +219,8 @@ const Clip: Component = () => {
             Keep an append under{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes.
             In streaming mode the box drains from the head while you append to the tail, so{' '}
-            <code>free</code> opens back up as it plays.
+            <code>free</code> opens back up as it plays. The ring itself is 64 KB on a box with PSRAM and
+            16 KB on one without, so never assume a size.
           </p>
           <pre class="diagram">{`  the ring, read by QUERY(CLIP):
 
