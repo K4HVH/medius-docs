@@ -56,6 +56,12 @@ const Clip: Component = () => {
               edges ride.
             </p>
           </div>
+          <div class="callout callout--info">
+            <p>
+              The ring is 64 KB on a box with PSRAM and 16 KB on one without, so never assume a
+              size: <code>ClipStatus::free</code> on a cleared ring is the size.
+            </p>
+          </div>
         </Card>
       </div>
 
