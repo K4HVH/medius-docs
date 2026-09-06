@@ -438,7 +438,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
               <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
-              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports dropped on TX-queue overflow; should stay 0</td></tr>
+              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>packets dropped on a full queue, in either direction; should stay 0</td></tr>
               <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
               <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>deepest the TX queue has reached</td></tr>
               <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
