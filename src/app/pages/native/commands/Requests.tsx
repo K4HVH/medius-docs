@@ -164,7 +164,7 @@ const Requests: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <p>Firmware <code>3.4.0</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 04     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 07     | 03     | 04     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -181,9 +181,9 @@ const Requests: Component = () => {
           <CardHeader title="HEALTH" subtitle="RESP payload, what = 1" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 1</code>: a single <code>flags</code> byte, each bit an independent status.
+            <code>what = 1</code>: a two-byte <code>flags</code> word (<code>u16</code>, little-endian), each bit an independent status.
           </p>
-          <pre class="api-signature">QUERY  what = 1  ·  RESP 2 bytes</pre>
+          <pre class="api-signature">QUERY  what = 1  ·  RESP 3 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -192,7 +192,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x01</td></tr>
-              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>the status bits below</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u16</code></td><td>the status bits below, little-endian</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -209,6 +209,9 @@ const Requests: Component = () => {
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
               <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming. It says nothing about <em>what</em> is subscribed; read <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> for the table</td></tr>
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
+              <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: at least one <A href="/library/developer/rewrite">rewrite rule</A> is installed (the table is non-empty)</td></tr>
+              <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: a <A href="/library/developer/patch">descriptor patch</A> set is applied to the clone</td></tr>
+              <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a field transform is active (reserved for a later release)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -217,9 +220,9 @@ const Requests: Component = () => {
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x07</code>):</p>
+          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x0007</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 02 00  | 01     | 07     | lo hi  |
+| A5     | 06     | 00     | 03 00  | 01     | 07 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | flags  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
