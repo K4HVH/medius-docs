@@ -70,6 +70,7 @@ import PyBuild from './pages/bindings/python/Build';
 import DashboardDevice from './pages/dashboard/Device';
 import DashboardSetup from './pages/dashboard/Setup';
 import DashboardControl from './pages/dashboard/Control';
+import DashboardDeveloper from './pages/dashboard/DeviceDeveloper';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
@@ -155,6 +156,7 @@ const App: Component = () => {
           <Route path="/dashboard" component={DashboardDevice} />
           <Route path="/dashboard/setup" component={DashboardSetup} />
           <Route path="/dashboard/control" component={DashboardControl} />
+          <Route path="/dashboard/developer" component={DashboardDeveloper} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />

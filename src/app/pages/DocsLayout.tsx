@@ -13,7 +13,7 @@ import {
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
-  BsBoxes, BsFiletypePy, BsUsbPlug,
+  BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -154,6 +154,7 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
+  { value: '/dashboard/developer', label: 'Developer', icon: BsCodeSlash },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
