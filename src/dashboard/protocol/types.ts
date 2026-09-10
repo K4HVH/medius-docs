@@ -18,11 +18,17 @@ import {
   H_LINK_UP,
   H_LOCK_ON,
   H_MOUSE_ATT,
+  H_PATCH_ON,
   H_RATE_CONFIDENT,
+  H_REWRITE_ON,
+  H_TRANSFORM_ON,
   KBC_CONSUMER,
   KBC_NKRO,
   KBC_REPORT_ID,
   KBC_SYSTEM,
+  RewriteAction,
+  PatchSection,
+  TransferStatus,
 } from './opcode';
 
 export interface Version {
@@ -52,8 +58,14 @@ export interface Health {
   lockOn: boolean;
   catchOn: boolean;
   kbdAttached: boolean;
+  // The developer-layer state (§4.2), in the high byte HEALTH gained at proto 7.
+  rewriteOn: boolean;
+  patchOn: boolean;
+  transformOn: boolean;
 }
 
+// From proto 7 the flags word is a u16, so `flags` carries both bytes. A proto-6 box answers a single
+// byte; read through this the high three bits are then 0, which is the truth for a box without the layer.
 export function healthFromFlags(flags: number): Health {
   return {
     linkUp: (flags & H_LINK_UP) !== 0,
@@ -64,6 +76,9 @@ export function healthFromFlags(flags: number): Health {
     lockOn: (flags & H_LOCK_ON) !== 0,
     catchOn: (flags & H_CATCH_ON) !== 0,
     kbdAttached: (flags & H_KBD_ATT) !== 0,
+    rewriteOn: (flags & H_REWRITE_ON) !== 0,
+    patchOn: (flags & H_PATCH_ON) !== 0,
+    transformOn: (flags & H_TRANSFORM_ON) !== 0,
   };
 }
 
@@ -852,3 +867,170 @@ export const IMAGE_STATE_NAMES: Record<number, string> = {
   4: 'aborted',
   0xff: 'unknown',
 };
+
+// The v3.4.0 developer layer (§3.14 / §4.17): rewrite rules and descriptor patches, both addressed in
+// the CATCH (class, id, dir) space and both admitted only under OPTION(IMPERFECT).
+
+// The rewrite classes are the traffic classes CATCH already names (§4.17): a report or control surface
+// a rule can address, plus the any-class wildcard the box uses for a whole-table clear.
+export const REWRITE_CLASSES: CatchClass[] = [
+  CatchClass.HidIn,
+  CatchClass.HidOut,
+  CatchClass.VendorInterrupt,
+  CatchClass.VendorBulk,
+  CatchClass.Control,
+  CatchClass.Emit,
+];
+
+// One rewrite rule as RESP(REWRITE) summarises it (§4.17): the address, the action, the match/payload
+// lengths, and the running hit count. The match and payload bytes themselves come from RESP(REWRITE_ENTRY).
+export interface RewriteRuleInfo {
+  cls: number;
+  id: number;
+  dir: Direction;
+  action: RewriteAction | null;
+  mlen: number;
+  off: number;
+  plen: number;
+  hits: number;
+}
+
+// The decoded RESP(REWRITE) table (§4.17). `gen` increments on every change that alters the table, so a
+// host reads one byte to tell whether its own view is current; `tableFull` marks a refused add.
+export interface RewriteTable {
+  tableFull: boolean;
+  gen: number;
+  entries: RewriteRuleInfo[];
+}
+
+// A rewrite rule in full, the shape RESP(REWRITE_ENTRY) returns and the REWRITE command takes: the
+// address, the action, the offset, and the raw match/mask/payload bytes. A read entry replays as a set.
+export interface RewriteRule {
+  cls: number;
+  id: number;
+  dir: Direction;
+  action: RewriteAction;
+  off: number;
+  match: Uint8Array;
+  mask: Uint8Array;
+  payload: Uint8Array;
+}
+
+// One descriptor patch as RESP(PATCHES) summarises it (§4.17): which served descriptor it overwrites,
+// where, and how many bytes. The bytes themselves come from RESP(PATCH_ENTRY).
+export interface PatchInfo {
+  section: PatchSection | null;
+  cfg: number;
+  index: number;
+  offset: number;
+  len: number;
+}
+
+// The decoded RESP(PATCHES) set (§4.17). A patch is stored whether or not the opt-in is on; `applied` is
+// whether the served clone carries it now, `pending` whether a stored patch is waiting for an apply, and
+// `refused` whether the last apply rejected one for falling outside the descriptor it targets.
+export interface PatchSet {
+  applied: boolean;
+  pending: boolean;
+  refused: boolean;
+  tableFull: boolean;
+  entries: PatchInfo[];
+}
+
+// A descriptor patch in full, the shape RESP(PATCH_ENTRY) returns and the PATCH command takes.
+export interface PatchEntry {
+  section: PatchSection | null;
+  cfg: number;
+  index: number;
+  offset: number;
+  bytes: Uint8Array;
+}
+
+// The decoded TRANSFER_RESP (§3.14): which endpoint answered, the device's status, and the IN data.
+export interface TransferResult {
+  ep: number;
+  status: TransferStatus;
+  data: Uint8Array;
+}
+
+// The rewrite action's short name, for a rule readout and the editor's dropdown.
+export function rewriteActionName(action: RewriteAction | null): string {
+  switch (action) {
+    case RewriteAction.Pass:
+      return 'pass';
+    case RewriteAction.Drop:
+      return 'drop';
+    case RewriteAction.Patch:
+      return 'patch';
+    case RewriteAction.Replace:
+      return 'replace';
+    case RewriteAction.Answer:
+      return 'answer';
+    case RewriteAction.Stall:
+      return 'stall';
+    case RewriteAction.Nak:
+      return 'nak';
+    case RewriteAction.ReplyPatch:
+      return 'reply-patch';
+    case RewriteAction.ReplyReplace:
+      return 'reply-replace';
+    default:
+      return 'unknown';
+  }
+}
+
+// The patch section's short name, for a patch readout and the editor's dropdown.
+export function patchSectionName(section: PatchSection | null): string {
+  switch (section) {
+    case PatchSection.Device:
+      return 'device';
+    case PatchSection.Config:
+      return 'configuration';
+    case PatchSection.Report:
+      return 'report';
+    case PatchSection.String:
+      return 'string';
+    case PatchSection.Bos:
+      return 'BOS';
+    default:
+      return 'unknown';
+  }
+}
+
+// The transfer status's short name, for the console readout.
+export function transferStatusName(status: TransferStatus): string {
+  switch (status) {
+    case TransferStatus.Ok:
+      return 'ok';
+    case TransferStatus.Refused:
+      return 'refused';
+    case TransferStatus.Stall:
+      return 'stall';
+    case TransferStatus.Nak:
+      return 'nak';
+    default:
+      return 'no device';
+  }
+}
+
+// The rewrite class's short name, reusing the CATCH class vocabulary (§4.17).
+export function rewriteClassName(cls: number): string {
+  switch (cls) {
+    case CatchClass.HidIn:
+      return 'HID in';
+    case CatchClass.HidOut:
+      return 'HID out';
+    case CatchClass.VendorInterrupt:
+      return 'vendor interrupt';
+    case CatchClass.VendorBulk:
+      return 'vendor bulk';
+    case CatchClass.Control:
+      return 'control';
+    case CatchClass.Emit:
+      return 'emit';
+    case CatchClass.Any:
+      return 'any';
+    default:
+      return `class ${cls}`;
+  }
+}
