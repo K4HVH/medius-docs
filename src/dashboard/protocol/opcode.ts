@@ -352,7 +352,7 @@ export enum FrameType {
   Update = 0x17,
   UpdateResp = 0x18,
   // v3.4.0 developer layer (§3.14), gated on OPTION(IMPERFECT).
-  Raw = 0x19, // [ep u8][bytes..] put a raw report on a cloned endpoint
+  Raw = 0x19, // [ep_num u8][dir u8][bytes...] put a raw report on a cloned endpoint
   Transfer = 0x1a, // [ep u8][setup 8][OUT data..] run a control request on the device
   TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (its own opcode, SEQ-correlated)
   Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
