@@ -86,6 +86,7 @@ import {
   vidPid,
   moveCursorPayload,
   moveWheelPayload,
+  movePanPayload,
   MV_F_DISCARD,
   MV_F_FLUSH,
   MV_F_NOW,
@@ -943,22 +944,22 @@ describe('CATCH command (§3.9)', () => {
     expect(parseResp(short)).toBeNull();
   });
 
-  it('parseMotionEvent decodes [ts][clk][dx][dy][dz] with i16 sign-extension', () => {
-    // ts = 1, host clock, dx = +1, dy = -2, dz = -1.
+  it('parseMotionEvent decodes [ts][clk][dx][dy][dz][dpan] with i16 sign-extension', () => {
+    // ts = 1, host clock, dx = +1, dy = -2, dz = -1, dpan = +2.
     const ev = parseMotionEvent(
-      new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]),
+      new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff, 0x02, 0x00]),
     );
-    expect(ev).toEqual({ tsUs: 1, clk: ClockDomain.Host, dx: 1, dy: -2, dz: -1 });
+    expect(ev).toEqual({ tsUs: 1, clk: ClockDomain.Host, dx: 1, dy: -2, dz: -1, dpan: 2 });
   });
 
   it('parseMotionEvent returns null for a short payload', () => {
-    expect(parseMotionEvent(new Uint8Array(10))).toBeNull(); // needs 11 bytes
+    expect(parseMotionEvent(new Uint8Array(12))).toBeNull(); // needs 13 bytes (four axes)
   });
 
   it('round-trips a MOTION_EVENT frame through the decoder', () => {
-    // ts = 0x000F4240 (1 s), host clock, dx = -1000, dy = +1000, dz = -120 (one notch up).
+    // ts = 0x000F4240 (1 s), host clock, dx = -1000, dy = +1000, dz = -120 (one notch up), dpan = +240.
     const payload = new Uint8Array([
-      0x40, 0x42, 0x0f, 0x00, 0x00, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff,
+      0x40, 0x42, 0x0f, 0x00, 0x00, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff, 0xf0, 0x00,
     ]);
     const frames = decodeAll(new FrameDecoder(), encode(FrameType.MotionEvent, 200, payload));
     expect(frames).toHaveLength(1);
@@ -970,6 +971,7 @@ describe('CATCH command (§3.9)', () => {
       dx: -1000,
       dy: 1000,
       dz: -120,
+      dpan: 240,
     });
   });
 });
@@ -1087,6 +1089,10 @@ describe('MOVE command (§3.1)', () => {
 
   it('wheel payload is [motion=1][dz i16 LE][flags]', () => {
     expect(Array.from(moveWheelPayload(-2))).toEqual([1, 0xfe, 0xff, 0]);
+  });
+
+  it('pan payload is [motion=2][dpan i16 LE][flags]', () => {
+    expect(Array.from(movePanPayload(-2))).toEqual([2, 0xfe, 0xff, 0]);
   });
 
   it('saturates rather than wrapping past the i16 the wire carries', () => {
@@ -1346,7 +1352,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(resp).toEqual({
       kind: 'caps',
       caps: {
-        mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+        mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasPan: false, hasReportId: false, nHid: 2 },
         keyboard: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
         mouseChangeDriven: false,
         kbdChangeDriven: true,

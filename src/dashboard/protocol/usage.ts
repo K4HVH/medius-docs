@@ -23,6 +23,30 @@ export const BUTTONS: NamedUsage[] = [
   { id: 4, name: 'Side 2', group: 'Mouse' },
 ];
 
+// The compile-time ceiling the box caps a declared button count at (ctrl_proto.h MAX_BUTTONS): the
+// widest owned mice declare sixteen, so a picker never offers a numbered button past it.
+export const MAX_BUTTONS = 16;
+
+// The name for one button id: the five standard buttons by name, then a numeric id up to the count
+// the cloned mouse declares. The box drives any button the descriptor declares, so a picker that
+// stopped at the five named ones would invent a limit the firmware does not have.
+export function buttonName(id: number): string {
+  return BUTTONS[id]?.name ?? `Button ${id + 1}`;
+}
+
+// The button list a picker offers for a mouse declaring `n` buttons (RESP(CAPS) n_buttons, the
+// injection cap): the five named, plus a numbered entry for each declared button past them. Falls
+// back to the five named when the count is unknown or narrower.
+export function buttonsUpTo(n: number): NamedUsage[] {
+  const count = Math.min(Math.max(n, BUTTONS.length), MAX_BUTTONS);
+  if (count <= BUTTONS.length) return BUTTONS;
+  const extra = Array.from({ length: count - BUTTONS.length }, (_, i) => {
+    const id = BUTTONS.length + i;
+    return { id, name: buttonName(id), group: 'Mouse' };
+  });
+  return [...BUTTONS, ...extra];
+}
+
 const letters = (): NamedUsage[] =>
   Array.from({ length: 26 }, (_, i) => ({
     id: 0x04 + i,
@@ -182,8 +206,12 @@ for (const cls of [INJ_BTN, INJ_KEY, INJ_MEDIA]) {
 
 // A usage's display name, falling back to the hex id. Every id is addressable whether or not the
 // table names it, so the fallback is the normal case for an unnamed Consumer usage, not an error.
+// A mouse button past the five named ones reads as its number rather than a hex id.
 export function usageName(cls: number, id: number): string {
-  return index.get(`${cls}:${id}`) ?? `0x${id.toString(16)}`;
+  const named = index.get(`${cls}:${id}`);
+  if (named) return named;
+  if (cls === INJ_BTN && id < MAX_BUTTONS) return buttonName(id);
+  return `0x${id.toString(16)}`;
 }
 
 export const CLASS_LABELS: Record<number, string> = {

@@ -155,6 +155,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
               <tr><td><code>has_x</code></td><td><code>bool</code></td><td>The report carries an X axis.</td></tr>
               <tr><td><code>has_y</code></td><td><code>bool</code></td><td>The report carries a Y axis.</td></tr>
               <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>The report carries a wheel.</td></tr>
+              <tr><td><code>has_pan</code></td><td><code>bool</code></td><td>The report carries an AC Pan (horizontal scroll) axis.</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
               <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
             </tbody>
@@ -162,7 +163,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::MouseCaps;
 
-let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
+let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_pan: false, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
         </Card>
       </div>
@@ -383,6 +384,7 @@ drop(stream);`}</code></pre>
               <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
               <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
               <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
+              <tr><td><code>dpan</code></td><td><code>i16</code></td><td>AC Pan (horizontal scroll) this report (right positive).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -390,7 +392,7 @@ drop(stream);`}</code></pre>
 
 let stream = device.catch_events([CatchFilter::watch_axes()])?;
 if let CatchEvent::Motion(m) = stream.recv()? {
-    println!("at {} us ({:?}): moved {} {}, wheel {}", m.ts_us, m.clock, m.dx, m.dy, m.dz);
+    println!("at {} us ({:?}): moved {} {}, wheel {}, pan {}", m.ts_us, m.clock, m.dx, m.dy, m.dz, m.dpan);
 }`}</code></pre>
         </Card>
       </div>

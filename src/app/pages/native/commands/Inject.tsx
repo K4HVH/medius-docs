@@ -49,7 +49,7 @@ const Inject: Component = () => {
               <tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/native/commands/inject#button">button</A></td><td><code>0</code></td><td>a semantic <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2)</td></tr>
+              <tr><td><A href="/native/commands/inject#button">button</A></td><td><code>0</code></td><td>a semantic <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2, then numeric to the declared count)</td></tr>
               <tr><td><A href="/native/commands/inject#key">key</A></td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keyboard usage</A> (0xE0-0xE7 = modifier)</td></tr>
               <tr><td><A href="/native/commands/inject#media">media</A></td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
             </tbody>
@@ -97,9 +97,17 @@ RESET      releases every override at once`}</pre>
           <CardHeader title="class = button" subtitle="Mouse button override" />
           <p>
             With <code>class = 0</code>, <code>id</code> is a semantic{' '}
-            <A href="/native/commands/usage#buttons">button id</A> (0=Left, 1=Right, 2=Middle,
-            3=Side1, 4=Side2), bound at clone time to the real mouse's buttons. The override sets that
-            button's bit in the emitted report.
+            <A href="/native/commands/usage#buttons">button id</A>: 0=Left, 1=Right, 2=Middle,
+            3=Side1, 4=Side2, then a numeric id for each further button up to the count{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A> reports. The five named are
+            bound at clone time to the real mouse's buttons; the override sets that button's bit in
+            the emitted report.
+          </p>
+          <p>
+            Injecting a button the device declares but never itself wires is descriptor-faithful: the
+            box drives the full declared button count, and which of those a mouse treats as natural is
+            the host's to shape. A button id past the declared count reaches no report field, the way
+            an unmapped key does.
           </p>
           <p>
             Library bindings:{' '}

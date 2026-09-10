@@ -1,6 +1,7 @@
 // Typed response/event decoders (box -> PC).
 
 import {
+  CAP_PAN,
   CAP_REPORT_ID,
   CAP_WHEEL,
   CAP_X,
@@ -231,6 +232,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
             hasX: (axis & CAP_X) !== 0,
             hasY: (axis & CAP_Y) !== 0,
             hasWheel: (axis & CAP_WHEEL) !== 0,
+            hasPan: (axis & CAP_PAN) !== 0,
             hasReportId: (axis & CAP_REPORT_ID) !== 0,
             nHid: payload[3],
           },
@@ -580,15 +582,17 @@ export function parseTransferResp(payload: Uint8Array): TransferResult {
   };
 }
 
-// Parse a MOTION_EVENT payload (§4.10): [ts_us u32][clk u8][dx i16][dy i16][dz i16]. Unsolicited.
+// Parse a MOTION_EVENT payload (§4.10): [ts_us u32][clk u8][dx i16][dy i16][dz i16][dpan i16].
+// Unsolicited. AC Pan (dpan) is the fourth relative axis, a peer of the wheel.
 export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
-  if (payload.length < EVENT_HDR + 6) return null;
+  if (payload.length < EVENT_HDR + 8) return null;
   return {
     tsUs: u32le(payload, 0),
     clk: clockDomainFromU8(payload[EVENT_TS_LEN]),
     dx: i16le(payload, EVENT_HDR),
     dy: i16le(payload, EVENT_HDR + 2),
     dz: i16le(payload, EVENT_HDR + 4),
+    dpan: i16le(payload, EVENT_HDR + 6),
   };
 }
 

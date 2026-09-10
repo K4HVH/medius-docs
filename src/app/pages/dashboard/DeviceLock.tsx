@@ -18,7 +18,7 @@ import { Slider } from '../../../components/inputs/Slider';
 import {
   type LockEntry,
   type NamedUsage,
-  BUTTONS,
+  buttonsUpTo,
   Direction,
   KEYS,
   LOCK_ID_ALL,
@@ -40,13 +40,7 @@ const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'Move left/right (X)', group: 'Axes' },
   { id: LockAxis.Y, name: 'Move up/down (Y)', group: 'Axes' },
   { id: LockAxis.Wheel, name: 'Scroll wheel', group: 'Axes' },
-];
-
-const CLASSES: PickerClass[] = [
-  { value: LockClass.Axis, label: 'Axis', table: AXES, blanket: LOCK_ID_ALL, blanketLabel: 'Every axis', hideId: true },
-  { value: LockClass.Button, label: 'Button', table: BUTTONS, blanket: LOCK_ID_ALL, blanketLabel: 'Every button' },
-  { value: LockClass.Key, label: 'Key', table: KEYS, blanket: LOCK_ID_ALL, blanketLabel: 'Every key' },
-  { value: LockClass.Media, label: 'Media', table: MEDIA, blanket: LOCK_ID_ALL, blanketLabel: 'Every media key' },
+  { id: LockAxis.Pan, name: 'Pan (horizontal scroll)', group: 'Axes' },
 ];
 
 const BLANKET_NAMES: Record<number, string> = {
@@ -83,12 +77,22 @@ const DeviceLock = () => {
   const locks = dash.poll('locks');
   const cmd = createCommand(() => dash.refreshPoll('locks'));
 
+  // The five named buttons plus a numbered entry for each button the mouse declares past them
+  // (RESP(CAPS) n_buttons), so a lock can address any button the cloned device carries.
+  const caps = dash.poll('caps');
+  const classes = (): PickerClass[] => [
+    { value: LockClass.Axis, label: 'Axis', table: AXES, blanket: LOCK_ID_ALL, blanketLabel: 'Every axis', hideId: true },
+    { value: LockClass.Button, label: 'Button', table: buttonsUpTo(caps()?.mouse?.nButtons ?? 0), blanket: LOCK_ID_ALL, blanketLabel: 'Every button' },
+    { value: LockClass.Key, label: 'Key', table: KEYS, blanket: LOCK_ID_ALL, blanketLabel: 'Every key' },
+    { value: LockClass.Media, label: 'Media', table: MEDIA, blanket: LOCK_ID_ALL, blanketLabel: 'Every media key' },
+  ];
+
   const dir = (): Direction => Number(direction()) as Direction;
 
   // An every-axis lock goes out as one frame per axis rather than the class wildcard. The box has no
   // blanket representation for the mouse classes: it expands one into per-target scales and reads it
-  // back as three entries either way. Firmware that predates the axis blanket drops the wildcard on
-  // arrival, so the three frames are both equivalent and the only form that works everywhere.
+  // back as one entry per axis either way. Firmware that predates the axis blanket drops the wildcard
+  // on arrival, so the per-axis frames are both equivalent and the only form that works everywhere.
   const targets = (): { cls: LockClass; id: number }[] => {
     const t = target();
     if (t.cls === LockClass.Axis && t.id === LOCK_ID_ALL) {
@@ -157,8 +161,8 @@ const DeviceLock = () => {
           <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
 
           <UsagePicker
+            classes={classes()}
             name="lock-target"
-            classes={CLASSES}
             value={target()}
             onChange={chooseTarget}
             usageLabel="Which input"

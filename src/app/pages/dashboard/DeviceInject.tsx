@@ -12,24 +12,18 @@ import { NumberInput } from '../../../components/inputs/NumberInput';
 import {
   type Usage,
   Action,
-  BUTTONS,
   INJ_BTN,
   INJ_KEY,
   INJ_MEDIA,
   KEYS,
   MEDIA,
+  buttonsUpTo,
   usageName,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { UsageChips, UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
 import { checkColumn, chips, label, muted, row, section } from './ui';
-
-const CLASSES: PickerClass[] = [
-  { value: INJ_BTN, label: 'Button', table: BUTTONS },
-  { value: INJ_KEY, label: 'Key', table: KEYS },
-  { value: INJ_MEDIA, label: 'Media', table: MEDIA },
-];
 
 // A usage the dashboard is currently overriding, and which way.
 interface Hold extends Usage {
@@ -60,8 +54,20 @@ const DeviceInject = () => {
   const mouseReady = () => health()?.cloneConfigured === true && health()?.mouseAttached === true;
   const kbdReady = () => health()?.kbdAttached === true;
 
+  // The five named buttons plus a numbered entry for each button the mouse declares past them
+  // (RESP(CAPS) n_buttons, the injection cap). The box drives any declared button; injecting one it
+  // declares but never itself wires is descriptor-faithful, so the picker offers the whole count.
+  const caps = dash.poll('caps');
+  const buttons = () => buttonsUpTo(caps()?.mouse?.nButtons ?? 0);
+  const classes = (): PickerClass[] => [
+    { value: INJ_BTN, label: 'Button', table: buttons() },
+    { value: INJ_KEY, label: 'Key', table: KEYS },
+    { value: INJ_MEDIA, label: 'Media', table: MEDIA },
+  ];
+
   const [step, setStep] = createSignal(20);
   const [detents, setDetents] = createSignal(1);
+  const [pans, setPans] = createSignal(1);
   // With movement riding on, an ordinary move waits for a real cursor report to carry it, so nothing
   // this card sends reaches the game PC while the real mouse sits still. Bypassing sends it on the
   // box's own clock instead. With riding off it changes nothing.
@@ -209,6 +215,9 @@ const DeviceInject = () => {
 
   const scroll = (dz: number) => (bypass() ? link()?.wheelNow(dz) : link()?.wheel(dz))?.catch(fail);
 
+  const panScroll = (dpan: number) =>
+    (bypass() ? link()?.panNow(dpan) : link()?.pan(dpan))?.catch(fail);
+
   const onPadUp = (e: PointerEvent & { currentTarget: HTMLDivElement }) => {
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -289,7 +298,7 @@ const DeviceInject = () => {
               </Button>
             </div>
             <p style={muted}>
-              Bypass applies to the cursor and the wheel. The buttons send or drop motion already waiting.
+              Bypass applies to the cursor, the wheel, and pan. The buttons send or drop motion already waiting.
             </p>
 
             </Show>
@@ -317,9 +326,30 @@ const DeviceInject = () => {
 
             </Section>
 
+            <Section title="Pan">
+              <div style={{ ...row, 'align-items': 'flex-end' }}>
+              <div style={{ 'max-width': '7rem' }}>
+                <NumberInput
+                  label="Detents"
+                  value={pans()}
+                  min={1}
+                  max={32767}
+                  onChange={(v) => setPans(v ?? 1)}
+                />
+              </div>
+              <Button variant="secondary" onClick={() => void panScroll(-pans())}>
+                Pan left
+              </Button>
+              <Button variant="secondary" onClick={() => void panScroll(pans())}>
+                Pan right
+              </Button>
+            </div>
+
+            </Section>
+
             <Section title="Buttons">
               <div style={chips}>
-                <For each={BUTTONS}>
+                <For each={buttons()}>
                   {(b) => (
                     <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b.id })}>
                       {b.name}
@@ -340,7 +370,7 @@ const DeviceInject = () => {
             </Show>
             <UsagePicker
               name="inject-usage"
-              classes={CLASSES}
+              classes={classes()}
               value={pick()}
               onChange={setPick}
             />

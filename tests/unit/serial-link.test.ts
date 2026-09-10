@@ -259,6 +259,8 @@ describe('SerialLink', () => {
     await link.moveRelNow(7, -2);
     await link.wheel(3);
     await link.wheelNow(3);
+    await link.pan(3);
+    await link.panNow(3);
     await link.flushMotion();
     await link.discardMotion();
     // payload starts at byte 5: [SOF][TYPE][SEQ][LEN lo][LEN hi]
@@ -268,6 +270,8 @@ describe('SerialLink', () => {
       [0, 7, 0, 0xfe, 0xff, 0x01],
       [1, 3, 0, 0x00],
       [1, 3, 0, 0x01],
+      [2, 3, 0, 0x00],
+      [2, 3, 0, 0x01],
       [0, 0, 0, 0, 0, 0x02],
       [0, 0, 0, 0, 0, 0x04],
     ]);
@@ -413,7 +417,7 @@ describe('SerialLink', () => {
     // A motion event, a class-tagged held-usage snapshot (a held button), then a byte-oriented
     // traffic event. Each frame leads with [ts_us u32][clk u8].
     mock.push(
-      encode(FrameType.MotionEvent, 10, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])),
+      encode(FrameType.MotionEvent, 10, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])),
     );
     // [ts u32][clk u8][cls u8][dir u8][n u8] then n x [class][id u16 LE]: one held key on the press edge.
     mock.push(

@@ -135,6 +135,7 @@ export interface MouseCaps {
   hasX: boolean;
   hasY: boolean;
   hasWheel: boolean;
+  hasPan: boolean;
   hasReportId: boolean;
   nHid: number;
 }
@@ -264,6 +265,7 @@ export enum LockAxis {
   X = 0,
   Y = 1,
   Wheel = 2,
+  Pan = 3,
 }
 
 // The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
@@ -472,7 +474,7 @@ export const filterWatch = (cls: CatchClass, id: number): CatchFilter => ({
   capture: 0,
 });
 
-// One relative axis (LockAxis: X, Y, or Wheel).
+// One relative axis (LockAxis: X, Y, Wheel, or Pan).
 export const filterWatchAxis = (axis: number): CatchFilter => ({
   cls: CatchClass.Axis,
   id: axis,
@@ -566,6 +568,8 @@ export interface MotionEvent {
   dx: number;
   dy: number;
   dz: number;
+  // AC Pan (horizontal scroll) this report; + = right. A first-class relative axis peer of the wheel.
+  dpan: number;
 }
 
 // A class-tagged held-usage snapshot from the CATCH stream (a USAGE_EVENT frame, §4.10). One event
