@@ -62,7 +62,7 @@ const CLASS_OPTIONS = REWRITE_CLASSES.map((c) => ({ value: String(c), label: rew
 const idLabel = (cls: number): string => {
   if (cls === CatchClass.HidIn) return 'Interface number';
   if (cls === CatchClass.Control) return 'Endpoint number (0 = EP0)';
-  return 'Endpoint address (e.g. 0x81)';
+  return 'Endpoint number (e.g. 1)';
 };
 
 // A report surface can pass, drop, or rewrite a packet; the control class trades Drop for the answer and
@@ -255,21 +255,22 @@ const DeviceDeveloper = () => {
   });
 
   // Raw & control-transfer console.
-  const [rawEp, setRawEp] = createSignal('0x81');
+  const [rawEp, setRawEp] = createSignal('1');
+  const [rawDir, setRawDir] = createSignal(String(Direction.Positive));
   const [rawBytes, setRawBytes] = createSignal('');
   const rawCmd = createCommand();
   const sendRaw = () => {
     const ep = parseNum(rawEp());
     const bytes = parseHex(rawBytes());
     if (ep === null) {
-      rawCmd.run(() => Promise.reject(new Error('Enter a valid endpoint.')));
+      rawCmd.run(() => Promise.reject(new Error('Enter a valid endpoint number.')));
       return;
     }
     if (bytes === null || bytes.length === 0) {
       rawCmd.run(() => Promise.reject(new Error('Enter the bytes to put on the endpoint.')));
       return;
     }
-    rawCmd.run(() => dash.link()!.raw(ep, bytes));
+    rawCmd.run(() => dash.link()!.raw(ep, Number(rawDir()), bytes));
   };
 
   const [tEp, setTEp] = createSignal('0');
@@ -581,8 +582,20 @@ const DeviceDeveloper = () => {
               reaches the device.
             </p>
             <div style={{ display: 'flex', gap: 'var(--g-spacing)', 'flex-wrap': 'wrap' }}>
+              <div style={{ ...section, flex: '0 1 120px' }}>
+                <TextField label="Endpoint number" value={rawEp()} onInput={setRawEp} placeholder="1" />
+              </div>
               <div style={{ ...section, flex: '0 1 160px' }}>
-                <TextField label="Endpoint" value={rawEp()} onInput={setRawEp} placeholder="0x81" />
+                <div style={label}>Direction</div>
+                <RadioGroup
+                  name="raw-dir"
+                  value={rawDir()}
+                  onChange={setRawDir}
+                  options={[
+                    { value: String(Direction.Positive), label: 'In' },
+                    { value: String(Direction.Negative), label: 'Out' },
+                  ]}
+                />
               </div>
               <div style={{ ...section, flex: '1 1 240px' }}>
                 <TextField label="Bytes (hex)" value={rawBytes()} onInput={setRawBytes} placeholder="e.g. 01 00 05 00" />

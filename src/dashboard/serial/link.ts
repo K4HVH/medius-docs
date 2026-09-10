@@ -755,8 +755,8 @@ export class SerialLink {
 
   // Put bytes verbatim on a cloned endpoint: an IN endpoint reaches the game PC, an OUT endpoint reaches
   // the device. Fire-and-forget.
-  raw(ep: number, bytes: Uint8Array): Promise<void> {
-    return this.send(encode(FrameType.Raw, this.nextSeq(), rawPayload(ep, bytes)));
+  raw(epNum: number, dir: number, bytes: Uint8Array): Promise<void> {
+    return this.send(encode(FrameType.Raw, this.nextSeq(), rawPayload(epNum, dir, bytes)));
   }
 
   // Run one control request against the real device and return its status and IN data. The setup packet

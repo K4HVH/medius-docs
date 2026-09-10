@@ -84,11 +84,11 @@ const Catch: Component = () => {
               <tr><td><code>MEDIA</code></td><td><code>2</code></td><td>16-bit Consumer usage</td><td>every media usage</td></tr>
               <tr><td><code>AXIS</code></td><td><code>3</code></td><td><code>TGT_X</code> / <code>TGT_Y</code> / <code>TGT_WHEEL</code> / <code>TGT_PAN</code></td><td>every axis</td></tr>
               <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>interface number</td><td>every HID interface</td></tr>
-              <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint address</td><td>every interrupt-OUT endpoint</td></tr>
-              <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint address</td><td>every vendor interrupt endpoint</td></tr>
-              <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint address</td><td>every vendor bulk endpoint</td></tr>
+              <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
+              <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
+              <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
               <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
-              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint address</td><td>every emitting endpoint</td></tr>
+              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
               <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>must be <code>0xFFFF</code></td><td>every class</td></tr>
             </tbody>
@@ -398,7 +398,7 @@ const Catch: Component = () => {
               <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>when the tap fired, little-endian</td></tr>
               <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>which chip's clock stamped it; see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
               <tr><td>5</td><td><code>class</code></td><td><code>u8</code></td><td>the address class (<A href="/native/commands/catch#catch">table above</A>)</td></tr>
-              <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint address, interface number, or endpoint number, little-endian</td></tr>
+              <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint number or interface number, little-endian</td></tr>
               <tr><td>8</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN (device to PC), <code>2</code> = OUT (PC to device), <code>0</code> for <code>BUS</code>, which is not a transfer</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>class-specific (table below)</td></tr>
               <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>the packet's length <em>before</em> <code>snaplen</code> truncation, little-endian</td></tr>
