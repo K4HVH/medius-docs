@@ -1626,7 +1626,8 @@ describe('RESP(FIRMWARE)', () => {
 // mirror tools/medius.py, so a transposed field fails here rather than on the wire.
 describe('developer layer (§3.14 / §4.17)', () => {
   it('RAW is [ep][bytes..]', () => {
-    expect(toHex(rawPayload(0x81, fromHex('01 00 05 00')))).toBe('81 01 00 05 00');
+    // interrupt-IN endpoint 1: [ep_num=01][dir=01 (Positive/IN)][bytes].
+    expect(toHex(rawPayload(1, Direction.Positive, fromHex('01 00 05 00')))).toBe('01 01 01 00 05 00');
   });
 
   it('TRANSFER is [ep][setup 8][out..], setup little-endian', () => {

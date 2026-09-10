@@ -70,7 +70,7 @@ let device = Device::find()?;
 device.allow_imperfect_clones(true)?;
 
 // Mute the clone's own wire on interrupt-IN endpoint 1.
-device.set_rewrite(&RewriteRule::new(RewriteClass::Emit, 0x81, Direction::Both, RewriteAction::Drop))?;
+device.set_rewrite(&RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop))?;
 
 // Overwrite byte 2 of the device's report on interface 0, when byte 0 is the report id 0x01.
 device.set_rewrite(
@@ -92,7 +92,7 @@ device.set_rewrite(
             <code>action</code> and <code>payload</code> are ignored. A no-op when no such rule is held.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let rule = RewriteRule::new(RewriteClass::Emit, 0x81, Direction::Both, RewriteAction::Drop);
+          <pre><code class="language-rust">{`let rule = RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop);
 device.set_rewrite(&rule)?;
 device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
         </Card>
@@ -174,7 +174,7 @@ for i in 0..table.entries.len() as u8 {
             </thead>
             <tbody>
               <tr><td><code>class</code></td><td><A href="/library/developer/rewrite#class"><code>RewriteClass</code></A></td><td>The traffic class the rule addresses.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The address within the class: an interface number, endpoint address, or endpoint number.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The address within the class: an interface number or an endpoint number.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/developer/rewrite#action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
@@ -199,19 +199,19 @@ for i in 0..table.entries.len() as u8 {
               </thead>
               <tbody>
                 <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, before the renderer.</td><td>the interface number</td></tr>
-                <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the interface number</td></tr>
-                <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint address</td></tr>
-                <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint address</td></tr>
+                <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the endpoint number</td></tr>
+                <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
+                <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
                 <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
-                <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint address</td></tr>
+                <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
                 <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every rewritable class at once.</td><td>ignored</td></tr>
               </tbody>
             </table>
           </div>
           <p>
-            The direction picks the flow. <code>REWRITE</code> takes <code>Both</code>,{' '}
-            <code>Positive</code>, or <code>Negative</code> only; the bearing-relative directions resolve
-            at emit time and are refused.
+            The direction picks the flow: on an endpoint class <code>Positive</code> is IN and{' '}
+            <code>Negative</code> is OUT. <code>REWRITE</code> takes those or <code>Both</code>; the
+            bearing-relative directions resolve at emit time and are refused.
           </p>
         </Card>
       </div>
@@ -314,7 +314,7 @@ use medius::{AsyncDevice, Direction, RewriteRule, RewriteClass, RewriteAction};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.allow_imperfect_clones(true)?;
-let rule = RewriteRule::new(RewriteClass::Emit, 0x81, Direction::Both, RewriteAction::Drop);
+let rule = RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop);
 block_on(device.set_rewrite(&rule))?;            // awaits the opt-in gate
 device.remove_rewrite(&rule)?;                   // sync: no gate
 let table = block_on(device.query_rewrite())?;   // query awaits`}</code></pre>

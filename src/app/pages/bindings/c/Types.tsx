@@ -552,11 +552,11 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_MEDIA</code></td><td><code>2</code></td><td>A 16-bit Consumer usage.</td><td>Every media usage.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_AXIS</code></td><td><code>3</code></td><td>A <A href="/bindings/c/types#axis"><code>MediusAxis</code></A>: X, Y, or the wheel.</td><td>Every axis.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_IN</code></td><td><code>4</code></td><td>A cloned HID interface number.</td><td>Every HID interface.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint address.</td><td>Every interrupt-OUT endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint address.</td><td>Every vendor interrupt endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint address.</td><td>Every vendor bulk endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint number.</td><td>Every interrupt-OUT endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint number.</td><td>Every vendor interrupt endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint number.</td><td>Every vendor bulk endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint address.</td><td>Every emitting endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>Nothing; must be <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every class at once.</td></tr>
             </tbody>
@@ -1402,7 +1402,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which class produced the event; it also selects how <code>flags</code> reads.</td></tr>
-              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The endpoint address, endpoint number, or interface number, per the class.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The endpoint number or interface number, per the class.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td><code>POSITIVE</code> = IN (device to PC), <code>NEGATIVE</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>uint8_t</code></td><td>Class-specific; see the table below. <code>0</code> for classes that define none.</td></tr>
               <tr><td><code>true_len</code></td><td><code>uint16_t</code></td><td>The packet's length on the bus, before <code>capture</code> cut it.</td></tr>
@@ -1705,7 +1705,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>class_</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_REWRITE_CLASS_*</code> value (see below).</td></tr>
-              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>Interface number, endpoint address, or endpoint number.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>Interface number or endpoint number.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_DIRECTION_*</code> value (<code>BOTH</code>/<code>POSITIVE</code>/<code>NEGATIVE</code>).</td></tr>
               <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_REWRITE_ACTION_*</code> value (see below).</td></tr>
               <tr><td><code>offset</code></td><td><code>uint16_t</code></td><td>Where a patching action writes.</td></tr>
@@ -1845,6 +1845,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td><code>18</code></td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>20</code></td><td>A developer-layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>21</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>22</code></td><td>A rewrite action that is not valid for its class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>23</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>24</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_INVERT_ZERO_SCALE</code></td><td><code>25</code></td><td>A scale of 0 on an invert, which ignores its scale.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>26</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
             </tbody>
           </table>
           <table class="api-params">

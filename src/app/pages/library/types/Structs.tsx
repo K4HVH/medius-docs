@@ -54,7 +54,7 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
           <p>
             Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
             bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
-            <code>to_flags()</code> convert it: bits 0&ndash;7 are the original byte, and the{' '}
+            <code>to_flags()</code> convert it: bits 0 to 7 are the original byte, and the{' '}
             <A href="/library/developer/rewrite">developer layer</A> opened three more in the high byte.
           </p>
           <table class="api-params">
@@ -476,7 +476,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clock</code>.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
               <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space the event came from.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint address, endpoint number, or interface number inside that class.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint number or interface number inside that class.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Positive</code> = IN (device to PC), <code>Negative</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>u8</code></td><td>Class-specific, see below; <code>0</code> for the classes that define none.</td></tr>
               <tr><td><code>true_len</code></td><td><code>u16</code></td><td>The packet's length <em>before</em> the <A href="/library/types/enums#capture"><code>Capture</code></A> cut it.</td></tr>

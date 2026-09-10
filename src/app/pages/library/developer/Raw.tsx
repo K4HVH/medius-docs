@@ -9,8 +9,8 @@ const Raw: Component = () => {
       <Card>
         <CardHeader title="Raw injection" subtitle="Put a report byte-for-byte on a cloned endpoint" />
         <p>
-          <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint: an IN endpoint
-          (<code>ep &amp; 0x80</code>) emits toward the game PC, an OUT endpoint relays to the real
+          <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint, named by number and
+          direction: <code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real
           device. It carries no semantic model and no merge with native motion.
         </p>
         <p>
@@ -21,11 +21,11 @@ const Raw: Component = () => {
 
   HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN--->  reads report
                                                                     ^
-                                                                    +-- raw(ep | 0x80)   <== a report toward the PC
+                                                                    +-- raw(n, IN)   <== a report toward the PC
 
   relayed     <--OUT---  [ HID_OUT ]<-- relay <---------------- interrupt-OUT <--  writes report
                          (VEND_INTR / VEND_BULK)                 ^
-                                                                 +-- raw(ep)        <== a report toward the device
+                                                                 +-- raw(n, OUT)  <== a report toward the device
 
   control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  GET_DESCRIPTOR, SET_*
   enumerate   descriptor patches overwrite what the clone presents`}</pre>
@@ -43,36 +43,24 @@ const Raw: Component = () => {
       <div id="raw" data-search-target>
         <Card>
           <CardHeader title="raw" subtitle="One report on one endpoint, fire-and-forget" />
-          <pre class="api-signature">fn raw(&self, ep: u8, bytes: &[u8]) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn raw(&self, ep: u8, direction: Direction, bytes: &[u8]) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>ep</code></td><td><code>u8</code></td><td>The cloned endpoint address. Bit 7 is the direction: <code>ep &amp; 0x80</code> is an IN endpoint (toward the game PC), a clear bit 7 is an OUT endpoint (toward the real device). The low nibble is the endpoint number.</td></tr>
+              <tr><td><code>ep</code></td><td><code>u8</code></td><td>The cloned endpoint number, 0 to 15.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
               <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, on the wire as given. At most one interrupt endpoint's <code>wMaxPacketSize</code>; a bulk endpoint takes up to the developer-frame limit of 512 bytes.</td></tr>
             </tbody>
           </table>
-          <p>
-            The direction bit decides which way the report goes, so the same call reaches the game PC or
-            the device from the address alone.
-          </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead><tr><th>Address</th><th>Direction</th><th>The bytes land on</th></tr></thead>
-              <tbody>
-                <tr><td><code>ep &amp; 0x80</code> set (e.g. <code>0x81</code>)</td><td>IN</td><td>The outgoing wire, toward the game PC, as one report from the clone.</td></tr>
-                <tr><td><code>ep &amp; 0x80</code> clear (e.g. <code>0x01</code>)</td><td>OUT</td><td>The relay to the real device, as one report the device receives.</td></tr>
-              </tbody>
-            </table>
-          </div>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::{Device, Direction};
 
 let device = Device::find()?;
 device.allow_imperfect_clones(true)?;
-device.raw(0x81, &[0x00, 0x01, 0x00, 0x00])?;  // one report on interrupt-IN endpoint 1`}</code></pre>
+device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on interrupt-IN endpoint 1`}</code></pre>
         </Card>
       </div>
 
@@ -116,7 +104,7 @@ device.raw(0x81, &[0x00, 0x01, 0x00, 0x00])?;  // one report on interrupt-IN end
             <table class="api-params">
               <thead><tr><th></th><th><A href="/library/inject"><code>inject</code></A> / <A href="/library/move"><code>move_rel</code></A></th><th><code>raw</code></th></tr></thead>
               <tbody>
-                <tr><td>Addresses</td><td>An axis or usage, by <A href="/library/types/enums#axis">semantic</A> id</td><td>An endpoint, by address</td></tr>
+                <tr><td>Addresses</td><td>An axis or usage, by <A href="/library/types/enums#axis">semantic</A> id</td><td>An endpoint, by number and direction</td></tr>
                 <tr><td>On the wire</td><td>Merged into the native report, clamped to the field width, paced to the native rate</td><td>The bytes as given, one report</td></tr>
                 <tr><td>State</td><td>Held until cleared; rides the native stream</td><td>Stateless; the next native report overwrites it</td></tr>
                 <tr><td>Rewrite rules</td><td>Apply</td><td>Bypassed</td></tr>
@@ -164,11 +152,11 @@ device.raw(0x81, &[0x00, 0x01, 0x00, 0x00])?;  // one report on interrupt-IN end
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;
-use medius::AsyncDevice;
+use medius::{AsyncDevice, Direction};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.allow_imperfect_clones(true)?;
-block_on(device.raw(0x81, &[0x00, 0x01, 0x00, 0x00]))?;  // awaits the opt-in gate`}</code></pre>
+block_on(device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00]))?;  // awaits the opt-in gate`}</code></pre>
         </Card>
       </div>
     </>

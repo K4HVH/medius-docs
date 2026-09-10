@@ -385,7 +385,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_raw(MediusDevice *dev, uint8_t ep, const uint8_t *bytes, size_t len)</code></td><td>Put <code>bytes</code> verbatim on cloned endpoint <code>ep</code> (bit 7 set = IN, toward the game PC).</td></tr>
+              <tr><td><code>medius_device_raw(MediusDevice *dev, uint8_t ep_num, uint8_t dir, const uint8_t *bytes, size_t len)</code></td><td>Put <code>bytes</code> verbatim on cloned endpoint <code>ep_num</code>. <code>dir</code> is a <code>MEDIUS_DIRECTION_*</code> value: <code>POSITIVE</code> (IN) toward the game PC, <code>NEGATIVE</code> (OUT) to the device.</td></tr>
               <tr><td><code>medius_device_transfer(MediusDevice *dev, uint8_t ep, MediusSetup setup, const uint8_t *out_data, size_t out_len, MediusTransferOutcome *out)</code></td><td>Run one control transfer against the real device; fill <code>out</code> with its <A href="/bindings/c/types#transfer-outcome"><code>status</code> and IN data</A>.</td></tr>
               <tr><td><code>medius_device_set_rewrite(MediusDevice *dev, const MediusRewriteRule *rule)</code></td><td>Install or overwrite one <A href="/bindings/c/types#rewrite-rule"><code>rewrite rule</code></A>.</td></tr>
               <tr><td><code>medius_device_remove_rewrite(MediusDevice *dev, const MediusRewriteRule *rule)</code></td><td>Drop the rule with this rule's key.</td></tr>

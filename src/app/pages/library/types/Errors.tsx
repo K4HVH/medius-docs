@@ -126,6 +126,13 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>RawDirection {'{'} direction {'}'}</code></td>
+                <td>
+                  A <A href="/library/developer/raw"><code>raw</code></A> call's direction was not{' '}
+                  <code>IN</code> or <code>OUT</code>.
+                </td>
+              </tr>
+              <tr>
                 <td><code>RewriteMaskLength {'{'} match_len, mask_len {'}'}</code></td>
                 <td>
                   A <A href="/library/developer/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
@@ -136,7 +143,7 @@ const Errors: Component = () => {
                 <td><code>RewriteActionClass {'{'} action, class {'}'}</code></td>
                 <td>
                   A rewrite rule's{' '}
-                  <A href="/library/developer/rewrite#matrix">action does not fit its class</A>.
+                  <A href="/library/developer/rewrite#action">action does not fit its class</A>.
                 </td>
               </tr>
               <tr>
@@ -144,6 +151,20 @@ const Errors: Component = () => {
                 <td>
                   A rewrite rule's payload does not fit the box's <code>cap</code>-byte head for the
                   class.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformOpFields {'{'} op, src, dst {'}'}</code></td>
+                <td>
+                  A <A href="/library/transform">transform</A>'s op does not fit its source and
+                  destination fields.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformInvertZeroScale</code></td>
+                <td>
+                  An <A href="/library/transform">invert</A> with a <code>scale</code> of{' '}
+                  <code>0</code>, which it would ignore.
                 </td>
               </tr>
               <tr>

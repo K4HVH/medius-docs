@@ -292,7 +292,7 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.raw(ep, data)</code></td><td>Put <code>data</code> verbatim on cloned endpoint <code>ep</code> (bit 7 set = IN, toward the game PC).</td></tr>
+              <tr><td><code>dev.raw(ep, direction, data)</code></td><td>Put <code>data</code> verbatim on cloned endpoint number <code>ep</code>. <code>direction</code> is <code>Direction.IN</code> (toward the game PC) or <code>OUT</code> (to the device).</td></tr>
               <tr><td><code>dev.transfer(ep, setup, out=b"")</code></td><td>Run one control transfer; returns a <A href="/bindings/python/types#transfer-outcome"><code>TransferOutcome</code></A>.</td></tr>
               <tr><td><code>dev.set_rewrite(rule)</code></td><td>Install or overwrite one <A href="/bindings/python/types#rewrite-rule"><code>RewriteRule</code></A>.</td></tr>
               <tr><td><code>dev.remove_rewrite(rule)</code></td><td>Drop the rule with this rule's key.</td></tr>

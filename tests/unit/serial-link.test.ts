@@ -518,14 +518,14 @@ describe('SerialLink', () => {
 
   // The v3.4.0 developer layer (§3.14): the fire-and-forget writes, TRANSFER's SEQ correlation on its
   // own opcode, and the readbacks.
-  it('raw() sends a RAW frame of [ep][bytes]', async () => {
+  it('raw() sends a RAW frame of [ep_num][dir][bytes]', async () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));
     await link.open();
-    await link.raw(0x81, new Uint8Array([1, 0, 5, 0]));
+    await link.raw(1, 1, new Uint8Array([1, 0, 5, 0]));   // endpoint 1, dir 1 = IN
     const frame = mock.written[0];
     expect(frame[1]).toBe(FrameType.Raw);
-    expect(Array.from(frame.slice(5, 10))).toEqual([0x81, 1, 0, 5, 0]);
+    expect(Array.from(frame.slice(5, 11))).toEqual([1, 1, 1, 0, 5, 0]);
     await link.close();
   });
 
