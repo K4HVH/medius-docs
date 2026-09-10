@@ -90,6 +90,13 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
 
+const libraryDeveloperTabs: TabOption[] = [
+  { value: '/library/developer/raw', label: 'Raw injection', icon: BsBroadcast },
+  { value: '/library/developer/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
+  { value: '/library/developer/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
+  { value: '/library/developer/patch', label: 'Descriptor patches', icon: BsFileCode },
+];
+
 const libraryFeatureTabs: TabOption[] = [
   { value: '/library/features/async', label: 'Async', icon: BsStars },
   { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
@@ -111,7 +118,7 @@ const libraryReferenceTabs: TabOption[] = [
 ];
 
 const allLibraryTabs = [
-  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs,
+  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryDeveloperTabs, ...libraryFeatureTabs,
   ...libraryGuidesTabs, ...libraryReferenceTabs,
 ];
 
@@ -368,6 +375,14 @@ const DocsLayout = (props: RouteSectionProps) => {
               value={location.pathname}
               onChange={handlePageNav}
               options={libraryApiTabs}
+            />
+            <Divider spacing="compact" label="Developer layer" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={libraryDeveloperTabs}
             />
             <Divider spacing="compact" label="Features" labelAlign="start" />
             <Tabs

@@ -839,6 +839,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>lock_on</code></td><td><code>bool</code></td></tr>
                 <tr><td><code>catch_on</code></td><td><code>bool</code></td></tr>
                 <tr><td><code>kbd_attached</code></td><td><code>bool</code></td></tr>
+                <tr><td><code>rewrite_on</code></td><td><code>bool</code></td></tr>
+                <tr><td><code>patch_on</code></td><td><code>bool</code></td></tr>
+                <tr><td><code>transform_on</code></td><td><code>bool</code></td></tr>
               </tbody>
             </table>
           </div>
