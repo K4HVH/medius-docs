@@ -9,6 +9,7 @@ import {
   MAX_PAYLOAD,
   MOTION_CURSOR,
   MOTION_WHEEL,
+  MOTION_PAN,
   NAME_MAX,
   OPT_BEARING,
   OPT_EMIT,
@@ -58,6 +59,15 @@ export function moveWheelPayload(dz: number, flags = 0): Uint8Array {
   const out = new Uint8Array(4);
   out[0] = MOTION_WHEEL;
   new DataView(out.buffer).setInt16(1, clampI16(dz), true);
+  out[3] = flags & 0x07;
+  return out;
+}
+
+// MOVE pan (§3.1): [motion=2][dpan i16 LE][flags]. AC Pan, same carry behaviour as the wheel.
+export function movePanPayload(dpan: number, flags = 0): Uint8Array {
+  const out = new Uint8Array(4);
+  out[0] = MOTION_PAN;
+  new DataView(out.buffer).setInt16(1, clampI16(dpan), true);
   out[3] = flags & 0x07;
   return out;
 }

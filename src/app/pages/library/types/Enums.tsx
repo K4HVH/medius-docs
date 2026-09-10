@@ -39,24 +39,33 @@ const Enums: Component = () => {
       <div id="button" data-search-target>
         <Card>
           <CardHeader title="Button" subtitle="The button a command acts on" />
-          <pre class="api-signature">enum Button {'{'} Left, Right, Middle, Side1, Side2 {'}'}</pre>
+          <pre class="api-signature">struct Button(u8)</pre>
           <p>
-            The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> command acts
-            on. A <code>Button</code> converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button, so you
-            pass one straight to <A href="/library/inject#inject"><code>inject</code></A>. Convert with{' '}
-            <code>as_id() -&gt; u8</code> and <code>from_id(u8) -&gt; Option&lt;Button&gt;</code>.
+            The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A> command acts on: an open numeric
+            id, the five standard buttons by name and any further id up to the count the mouse declares
+            (<A href="/library/requests#caps"><code>caps</code></A> <code>n_buttons</code>). Build one
+            with <code>Button::new(id)</code> or a named constructor below. A <code>Button</code>{' '}
+            converts <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class
+            button, so you pass one straight to{' '}
+            <A href="/library/inject#inject"><code>inject</code></A>. Read the id with{' '}
+            <code>as_id() -&gt; u8</code>; <code>from_id(u8)</code> is total.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Constructor</th><th>id</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Left</code></td><td><code>0</code></td><td>Left button.</td></tr>
-              <tr><td><code>Right</code></td><td><code>1</code></td><td>Right button.</td></tr>
-              <tr><td><code>Middle</code></td><td><code>2</code></td><td>Middle button.</td></tr>
-              <tr><td><code>Side1</code></td><td><code>3</code></td><td>First thumb button.</td></tr>
-              <tr><td><code>Side2</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
+              <tr><td><code>Button::left()</code></td><td><code>0</code></td><td>Left button.</td></tr>
+              <tr><td><code>Button::right()</code></td><td><code>1</code></td><td>Right button.</td></tr>
+              <tr><td><code>Button::middle()</code></td><td><code>2</code></td><td>Middle button.</td></tr>
+              <tr><td><code>Button::side1()</code></td><td><code>3</code></td><td>First thumb button.</td></tr>
+              <tr><td><code>Button::side2()</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
+              <tr><td><code>Button::new(id)</code></td><td><code>5 ..</code></td><td>A further declared button, up to <code>n_buttons - 1</code>.</td></tr>
             </tbody>
           </table>
+          <p>
+            Injecting a button the device declares but never itself wires is descriptor-faithful: the
+            box drives the full declared count, and one past it is a no-op.
+          </p>
         </Card>
       </div>
       <div id="action" data-search-target>
@@ -216,7 +225,7 @@ let trace = device.catch_events([
       <div id="input" data-search-target>
         <Card>
           <CardHeader title="Input" subtitle="One decoded input edge" />
-          <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16 {'}'} {'}'}</pre>
+          <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16, dpan: i16 {'}'} {'}'}</pre>
           <p>
             What <A href="/library/catch#input-events"><code>input_events</code></A> yields, wrapped in
             an <A href="/library/types/structs#input-event"><code>InputEvent</code></A> with its
@@ -283,13 +292,13 @@ let trace = device.catch_events([
       <div id="axis" data-search-target>
         <Card>
           <CardHeader title="Axis" subtitle="A single relative axis" />
-          <pre class="api-signature">enum Axis {'{'} X, Y, Wheel {'}'}</pre>
+          <pre class="api-signature">enum Axis {'{'} X, Y, Wheel, Pan {'}'}</pre>
           <p>
             One relative axis. A{' '}
             <A href="/library/lock#lock-axis"><code>lock_axis</code></A> or a{' '}
             <A href="/library/types/enums#lock-target"><code>LockTarget::Axis</code></A> names one, with
             the sign given by a <A href="/library/types/enums#direction"><code>Direction</code></A>.
-            Convert with <code>as_u16()</code>.
+            Convert with <code>as_u16()</code> and <code>from_u16()</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
@@ -297,6 +306,7 @@ let trace = device.catch_events([
               <tr><td><code>X</code></td><td><code>0</code></td><td>The X cursor axis.</td></tr>
               <tr><td><code>Y</code></td><td><code>1</code></td><td>The Y cursor axis.</td></tr>
               <tr><td><code>Wheel</code></td><td><code>2</code></td><td>The wheel.</td></tr>
+              <tr><td><code>Pan</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
             </tbody>
           </table>
         </Card>

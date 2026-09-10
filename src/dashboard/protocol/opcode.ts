@@ -17,6 +17,7 @@ export const INJ_KEY = 1;
 export const INJ_MEDIA = 2;
 export const MOTION_CURSOR = 0;
 export const MOTION_WHEEL = 1;
+export const MOTION_PAN = 2; // AC Pan (horizontal scroll), a first-class relative axis peer of the wheel
 
 // MOVE flags (§3.1): the per-command movement-riding override. Applied DISCARD, then FLUSH, then the
 // delta; FLUSH and DISCARD together contradict and the box refuses the frame.
@@ -213,6 +214,7 @@ export const CAP_X = 0x01;
 export const CAP_Y = 0x02;
 export const CAP_WHEEL = 0x04;
 export const CAP_REPORT_ID = 0x08;
+export const CAP_PAN = 0x10;
 
 // CAPS kbd_flags (§4.4). n_keys 0xff means an NKRO bitmap.
 export const KBC_NKRO = 0x01;

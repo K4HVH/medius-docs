@@ -85,6 +85,7 @@ import {
   lockPayload,
   moveCursorPayload,
   moveWheelPayload,
+  movePanPayload,
   moveRidePayload,
   MV_F_DISCARD,
   MV_F_FLUSH,
@@ -495,6 +496,11 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), moveWheelPayload(dz, flags)));
   }
 
+  // Pan horizontally (§3.1, AC Pan), in detents, same carry behaviour as `wheel`. + = right.
+  pan(dpan: number, flags = 0): Promise<void> {
+    return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
+  }
+
   // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta emits on the box's
   // own clock instead of waiting for a native cursor-motion report to carry it. With riding off these
   // are the same as `moveRel` / `wheel`.
@@ -504,6 +510,10 @@ export class SerialLink {
 
   wheelNow(dz: number): Promise<void> {
     return this.wheel(dz, MV_F_NOW);
+  }
+
+  panNow(dpan: number): Promise<void> {
+    return this.pan(dpan, MV_F_NOW);
   }
 
   // Emit the motion the box is holding for a ride, now, ignoring the ride window (§3.1, MV_F_FLUSH).

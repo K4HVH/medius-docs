@@ -101,6 +101,7 @@ const DeviceInfo = () => {
                     <CapChip on={c().mouse.hasX}>X axis</CapChip>
                     <CapChip on={c().mouse.hasY}>Y axis</CapChip>
                     <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
+                    <CapChip on={c().mouse.hasPan}>Pan</CapChip>
                     <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
                   </div>
                   </Section>

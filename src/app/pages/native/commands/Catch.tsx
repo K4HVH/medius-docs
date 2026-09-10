@@ -20,8 +20,8 @@ const Catch: Component = () => {
         </p>
         <p>
           While subscribed the box pushes a{' '}
-          <A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A> for movement and
-          the wheel, a{' '}
+          <A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A> for movement,
+          the wheel, and pan, a{' '}
           <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> for buttons, keys
           and media, and a{' '}
           <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A> for everything
@@ -82,7 +82,7 @@ const Catch: Component = () => {
               <tr><td><code>BTN</code></td><td><code>0</code></td><td>button id</td><td>every button</td></tr>
               <tr><td><code>KEY</code></td><td><code>1</code></td><td>HID keyboard usage</td><td>every key and modifier</td></tr>
               <tr><td><code>MEDIA</code></td><td><code>2</code></td><td>16-bit Consumer usage</td><td>every media usage</td></tr>
-              <tr><td><code>AXIS</code></td><td><code>3</code></td><td><code>TGT_X</code> / <code>TGT_Y</code> / <code>TGT_WHEEL</code></td><td>every axis</td></tr>
+              <tr><td><code>AXIS</code></td><td><code>3</code></td><td><code>TGT_X</code> / <code>TGT_Y</code> / <code>TGT_WHEEL</code> / <code>TGT_PAN</code></td><td>every axis</td></tr>
               <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>interface number</td><td>every HID interface</td></tr>
               <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint address</td><td>every interrupt-OUT endpoint</td></tr>
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint address</td><td>every vendor interrupt endpoint</td></tr>
@@ -286,7 +286,7 @@ const Catch: Component = () => {
             so it runs gapless and losses are read from{' '}
             <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
           </p>
-          <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 11 bytes</pre>
+          <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 13 bytes</pre>
           <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -299,6 +299,7 @@ const Catch: Component = () => {
               <tr><td>5</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
               <tr><td>7</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
               <tr><td>9</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
+              <tr><td>11</td><td><code>dpan</code></td><td><code>i16</code></td><td>physical AC Pan (horizontal scroll) delta this report; + = right, little-endian</td></tr>
             </tbody>
           </table>
           <p>
@@ -306,12 +307,12 @@ const Catch: Component = () => {
             it is always the host chip's.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>The user moves +10 right, no vertical or wheel motion (<code>dx = 10</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+
-| A5     | 0C     | 2A     | 0B 00  | 40 42 0F 00 | 00     | 0A 00  | 00 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | dx     | dy     | dz     | CRC16  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+`}</pre>
+          <p>The user moves +10 right, no vertical, wheel, or pan motion (<code>dx = 10</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+
+| A5     | 0C     | 2A     | 0D 00  | 40 42 0F 00 | 00     | 0A 00  | 00 00  | 00 00  | 00 00  | lo hi  |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | dx     | dy     | dz     | dpan   | CRC16  |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 
