@@ -146,7 +146,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 6</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 7</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -162,7 +162,7 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.3.4</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.0</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 04     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -968,7 +968,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.3.4</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.0</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
