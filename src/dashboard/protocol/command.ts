@@ -238,10 +238,9 @@ export function clipTriggerPayload(t: ClipTrigger, present: boolean): Uint8Array
   return new Uint8Array([t.cls, t.id & 0xff, (t.id >> 8) & 0xff, t.edge, t.action, flags]);
 }
 
-// RAW (§3.14): [ep u8][bytes..]. Put bytes verbatim on a cloned endpoint: an IN endpoint reaches the
-// game PC, an OUT endpoint reaches the device. Fire-and-forget, and dropped unless OPTION(IMPERFECT) is on.
-// RAW (§3.14): [ep_num u8][dir u8][bytes...]. The endpoint is named by number and direction (POS = IN,
-// toward the game PC; NEG = OUT, to the device), never a packed address.
+// RAW (§3.14): [ep_num u8][dir u8][bytes...]. Put bytes verbatim on a cloned endpoint, named by number
+// and direction (POS = IN, toward the game PC; NEG = OUT, to the device), never a packed address.
+// Fire-and-forget, and dropped unless OPTION(IMPERFECT) is on.
 export function rawPayload(epNum: number, dir: number, bytes: Uint8Array): Uint8Array {
   const out = new Uint8Array(2 + bytes.length);
   out[0] = epNum & 0x0f;
