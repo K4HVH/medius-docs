@@ -7,7 +7,7 @@ const Move: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Move" subtitle="Cursor motion and scroll" />
+        <CardHeader title="Move" subtitle="Cursor motion, scroll, and pan" />
         <p>
           One field-generic verb, <A href="/library/move#move"><code>move_axis</code></A>, drives the
           relative axes; the rest are thin wrappers over it. Each call queues one{' '}
@@ -19,6 +19,7 @@ const Move: Component = () => {
           <tbody>
             <tr><td>cursor</td><td><A href="/library/move#move-rel"><code>move_rel</code></A></td><td><A href="/library/move#move-rel-now"><code>move_rel_now</code></A></td></tr>
             <tr><td>wheel</td><td><A href="/library/move#wheel"><code>wheel</code></A></td><td><A href="/library/move#wheel-now"><code>wheel_now</code></A></td></tr>
+            <tr><td>pan</td><td><A href="/library/move#pan"><code>pan</code></A></td><td><A href="/library/move#pan-now"><code>pan_now</code></A></td></tr>
           </tbody>
         </table>
         <p>
@@ -40,7 +41,7 @@ const Move: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>motion</code></td><td><A href="/library/types/enums#motion"><code>Motion</code></A></td><td>The axis to drive: <code>Cursor {'{'} dx, dy {'}'}</code> or <code>Wheel(dz)</code>.</td></tr>
+              <tr><td><code>motion</code></td><td><A href="/library/types/enums#motion"><code>Motion</code></A></td><td>The axis to drive: <code>Cursor {'{'} dx, dy {'}'}</code>, <code>Wheel(dz)</code>, or <code>Pan(dz)</code>.</td></tr>
               <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Whether this delta waits for a real move or emits on the box's own clock.</td></tr>
               <tr><td><code>pending</code></td><td><A href="/library/types/enums#pending-motion"><code>PendingMotion</code></A></td><td>What happens to motion the box is already holding for a real move.</td></tr>
             </tbody>
@@ -119,6 +120,35 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
         </Card>
       </div>
 
+      <div id="pan" data-search-target>
+        <Card>
+          <CardHeader title="pan" subtitle="AC Pan (horizontal scroll)" />
+          <pre class="api-signature">fn pan(&self, delta: i16) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            A wrapper over <A href="/library/move#move"><code>move_axis</code></A> with{' '}
+            <code>Motion::Pan</code>, a full peer of the <A href="/library/move#wheel"><code>wheel</code></A>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>delta</code></td><td><code>i16</code></td><td>Pan steps (horizontal scroll). Positive pans right, negative pans left.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>) and
+            feeds the same <A href="/native/injection#state">accumulator</A> as the wheel, pacing large
+            values across reports. Present only on a device whose descriptor declares AC Pan; check{' '}
+            <A href="/library/requests#caps"><code>caps</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`device.pan(3)?;   // pan right
+device.pan(-1)?;  // pan left`}</code></pre>
+        </Card>
+      </div>
+
       <div id="move-rel-now" data-search-target>
         <Card>
           <CardHeader title="move_rel_now" subtitle="Cursor movement that bypasses riding" />
@@ -163,6 +193,27 @@ device.move_rel_now(100, 0)?;  // emits whether they move or not`}</code></pre>
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.wheel_now(-1)?;  // one notch down, on the box's clock`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="pan-now" data-search-target>
+        <Card>
+          <CardHeader title="pan_now" subtitle="Pan that bypasses riding" />
+          <pre class="api-signature">fn pan_now(&self, delta: i16) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>delta</code></td><td><code>i16</code></td><td>Pan steps (horizontal scroll). Positive pans right, negative pans left.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <A href="/library/move#pan"><code>pan</code></A> with <code>MoveTiming::Now</code>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`device.pan_now(-1)?;  // one step left, on the box's clock`}</code></pre>
         </Card>
       </div>
 

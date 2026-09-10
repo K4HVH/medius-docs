@@ -70,7 +70,7 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
               <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/developer/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
               <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/developer/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
-              <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A field transform is active; reserved (v3.4.0).</td></tr>
+              <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A <A href="/library/transform">field transform</A> is active (v3.4.0).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

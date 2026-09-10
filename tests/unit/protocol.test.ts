@@ -95,12 +95,15 @@ import {
   rewritePayload,
   clearRewritePayload,
   patchPayload,
+  transformPayload,
+  clearTransformPayload,
   patchApplyPayload,
   patchClearPayload,
   queryEntryPayload,
   parseTransferResp,
   RewriteAction,
   PatchSection,
+  TransformOp,
   TransferStatus,
   Q_REWRITE,
   Q_REWRITE_ENTRY,
@@ -1755,12 +1758,49 @@ describe('developer layer (§3.14 / §4.17)', () => {
   });
 
   it('round-trips the new frame types through the decoder', () => {
-    for (const ty of [FrameType.Raw, FrameType.Transfer, FrameType.TransferResp, FrameType.Rewrite, FrameType.Patch]) {
+    for (const ty of [FrameType.Raw, FrameType.Transfer, FrameType.TransferResp, FrameType.Rewrite, FrameType.Patch, FrameType.Transform]) {
       const frames = decodeAll(new FrameDecoder(), encode(ty, 7, fromHex('01 02 03')));
       expect(frames).toHaveLength(1);
       expect(frames[0].ty).toBe(ty);
     }
     expect(frameTypeFromU8(0x1a)).toBe(FrameType.Transfer);
     expect(frameTypeFromU8(0x1d)).toBe(FrameType.Patch);
+    expect(frameTypeFromU8(0x1e)).toBe(FrameType.Transform);
+  });
+});
+
+describe('transforms (§3.15 / §4.18)', () => {
+  it('TRANSFORM is [op][sclass][sid u16][dclass][did u16][scale i16][state]', () => {
+    // invert Y: op=2, source and dest (axis=3, id=1), placeholder scale 100, state 1.
+    const inv = { op: TransformOp.Invert, sclass: 3, sid: 1, dclass: 3, did: 1, scale: 100 };
+    expect(toHex(transformPayload(inv, 1))).toBe('02 03 01 00 03 01 00 64 00 01');
+    // scale the wheel x2: op=3, (axis 3, id 2), scale 200 (0x00c8).
+    const sc = { op: TransformOp.Scale, sclass: 3, sid: 2, dclass: 3, did: 2, scale: 200 };
+    expect(toHex(transformPayload(sc, 1))).toBe('03 03 02 00 03 02 00 c8 00 01');
+    // a negative scale is a two's-complement i16: -50 = 0xffce.
+    const half = { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 };
+    expect(toHex(transformPayload(half, 1))).toBe('03 03 00 00 03 00 00 ce ff 01');
+    // state 0 removes; op and scale are ignored on the box but carried as given.
+    expect(toHex(transformPayload(inv, 0))).toBe('02 03 01 00 03 01 00 64 00 00');
+  });
+
+  it('the TRANSFORM clear is the any-class, any-id, state-0 sentinel', () => {
+    expect(toHex(clearTransformPayload())).toBe('00 ff ff ff ff ff ff 00 00 00');
+  });
+
+  it('decodes RESP(TRANSFORMS): the full flag and the entry list, scale signed', () => {
+    // [16][flags=01][n=2] then invert Y (scale 0064) and scale X by -50 (scale ffce). No state byte.
+    const payload = fromHex('10 01 02 02 03 01 00 03 01 00 64 00 03 03 00 00 03 00 00 ce ff');
+    const r = parseResp(payload);
+    if (r?.kind !== 'transforms') throw new Error('expected transforms');
+    expect(r.transforms.tableFull).toBe(true);
+    expect(r.transforms.entries).toEqual([
+      { op: TransformOp.Invert, sclass: 3, sid: 1, dclass: 3, did: 1, scale: 100 },
+      { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 },
+    ]);
+  });
+
+  it('rejects a RESP(TRANSFORMS) that claims more entries than it carries', () => {
+    expect(parseResp(fromHex('10 00 03 02 03 01 00 03 01 00 64 00'))).toBeNull();
   });
 });

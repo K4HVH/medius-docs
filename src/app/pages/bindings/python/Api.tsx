@@ -66,9 +66,11 @@ const Api: Component = () => {
               <tr><td><code>dev.wheel(delta)</code></td><td>Scroll the wheel.</td></tr>
               <tr><td><code>dev.move_rel_now(dx, dy)</code></td><td>The same, bypassing <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
               <tr><td><code>dev.wheel_now(delta)</code></td><td>Scroll, bypassing movement riding.</td></tr>
+              <tr><td><code>dev.pan(delta)</code></td><td>AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
+              <tr><td><code>dev.pan_now(delta)</code></td><td>Pan, bypassing movement riding.</td></tr>
               <tr><td><code>dev.flush_motion()</code></td><td>Emit the motion riding is holding, now.</td></tr>
               <tr><td><code>dev.discard_motion()</code></td><td>Drop the motion riding is holding.</td></tr>
-              <tr><td><code>dev.move_axis(motion, timing, pending)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A> or <code>Motion.wheel(delta)</code>, with a <code>MoveTiming</code> and a <code>PendingMotion</code>.</td></tr>
+              <tr><td><code>dev.move_axis(motion, timing, pending)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A>, <code>Motion.wheel(delta)</code>, or <code>Motion.pan(delta)</code>, with a <code>MoveTiming</code> and a <code>PendingMotion</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -278,6 +280,50 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>clip.clear()</code></td><td>Drop the ring's entries.</td></tr>
               <tr><td><code>clip.query_status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth, playback state, held usages, counters.</td></tr>
               <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, bound triggers.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="developer" data-search-target>
+        <Card>
+          <CardHeader title="Developer layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
+          <p>The imperfect-clone developer layer. See <A href="/library/developer/raw">Raw injection</A>, <A href="/library/developer/transfer">Control transfers</A>, <A href="/library/developer/rewrite">Rewrite rules</A>, and <A href="/library/developer/patch">Descriptor patches</A>. <code>dev.raw</code>, <code>set_rewrite</code>, and <code>apply_patch</code> need the opt-in (<code>dev.allow_imperfect_clones(True)</code>) or raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off returns <code>TransferStatus.REFUSED</code> rather than raising.</p>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev.raw(ep, data)</code></td><td>Put <code>data</code> verbatim on cloned endpoint <code>ep</code> (bit 7 set = IN, toward the game PC).</td></tr>
+              <tr><td><code>dev.transfer(ep, setup, out=b"")</code></td><td>Run one control transfer; returns a <A href="/bindings/python/types#transfer-outcome"><code>TransferOutcome</code></A>.</td></tr>
+              <tr><td><code>dev.set_rewrite(rule)</code></td><td>Install or overwrite one <A href="/bindings/python/types#rewrite-rule"><code>RewriteRule</code></A>.</td></tr>
+              <tr><td><code>dev.remove_rewrite(rule)</code></td><td>Drop the rule with this rule's key.</td></tr>
+              <tr><td><code>dev.clear_rewrite()</code></td><td>Drop the whole rewrite table.</td></tr>
+              <tr><td><code>dev.query_rewrite()</code></td><td>The <A href="/bindings/python/types#rewrite-rule"><code>RewriteTable</code></A> summary.</td></tr>
+              <tr><td><code>dev.query_rewrite_entry(index)</code></td><td>One rule in full, in the shape <code>set_rewrite</code> takes.</td></tr>
+              <tr><td><code>dev.set_patch(patch)</code></td><td>Store one <A href="/bindings/python/types#patch"><code>Patch</code></A> (empty bytes removes it).</td></tr>
+              <tr><td><code>dev.apply_patch()</code></td><td>Re-present the clone with the stored patch set (one replug).</td></tr>
+              <tr><td><code>dev.clear_patch()</code></td><td>Drop every patch and re-present unpatched.</td></tr>
+              <tr><td><code>dev.query_patches()</code></td><td>The <A href="/bindings/python/types#patch"><code>PatchSet</code></A> and its apply state.</td></tr>
+              <tr><td><code>dev.query_patch_entry(index)</code></td><td>One patch in full.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="Transforms" subtitle="Negate, scale, swap, or remap a field on the wire" />
+          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>) so it can move a button onto a key or media usage.</p>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev.transform(t)</code></td><td>Install or overwrite one <A href="/bindings/python/types#transform"><code>Transform</code></A>.</td></tr>
+              <tr><td><code>dev.untransform(t)</code></td><td>Drop the transform with this one's (source, dest) key.</td></tr>
+              <tr><td><code>dev.clear_transforms()</code></td><td>Drop the whole transform table.</td></tr>
+              <tr><td><code>dev.invert(axis)</code></td><td>Negate an axis.</td></tr>
+              <tr><td><code>dev.scale_transform(axis, percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
+              <tr><td><code>dev.swap(a, b)</code></td><td>Exchange two axes.</td></tr>
+              <tr><td><code>dev.remap(source, dest)</code></td><td>Move a source field into a destination.</td></tr>
+              <tr><td><code>dev.query_transforms()</code></td><td>The <A href="/bindings/python/types#transforms"><code>Transforms</code></A> table (up to eight entries).</td></tr>
             </tbody>
           </table>
         </Card>

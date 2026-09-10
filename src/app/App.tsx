@@ -20,6 +20,7 @@ import CmdAdmin from './pages/native/commands/Admin';
 import CmdLed from './pages/native/commands/Led';
 import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
+import CmdTransform from './pages/native/commands/Transform';
 import CmdOption from './pages/native/commands/Option';
 import CmdClip from './pages/native/commands/Clip';
 import CmdUpdate from './pages/native/commands/Update';
@@ -37,6 +38,7 @@ import LibUpdate from './pages/library/Update';
 import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
+import LibTransform from './pages/library/Transform';
 import LibOptions from './pages/library/Options';
 import LibClip from './pages/library/Clip';
 import LibLifecycle from './pages/library/Lifecycle';
@@ -110,6 +112,7 @@ const App: Component = () => {
           <Route path="/native/commands/led" component={CmdLed} />
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
+          <Route path="/native/commands/transform" component={CmdTransform} />
           <Route path="/native/commands/option" component={CmdOption} />
           <Route path="/native/commands/clip" component={CmdClip} />
           <Route path="/native/commands/usage" component={CmdUsage} />
@@ -127,6 +130,7 @@ const App: Component = () => {
           <Route path="/library/led" component={LibLed} />
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
+          <Route path="/library/transform" component={LibTransform} />
           <Route path="/library/options" component={LibOptions} />
           <Route path="/library/clip" component={LibClip} />
           <Route path="/library/lifecycle" component={LibLifecycle} />

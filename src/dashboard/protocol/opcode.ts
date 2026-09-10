@@ -46,6 +46,7 @@ export const Q_REWRITE = 12; // rewrite-rule table summary (RESP(REWRITE): flags
 export const Q_REWRITE_ENTRY = 13; // one rewrite rule in full, in the REWRITE command's own shape (§4.17)
 export const Q_PATCHES = 14; // descriptor-patch set summary (RESP(PATCHES): flags + list, §4.17)
 export const Q_PATCH_ENTRY = 15; // one descriptor patch in full, in the PATCH command's own shape (§4.17)
+export const Q_TRANSFORMS = 16; // field-transform table (RESP(TRANSFORMS): flags + list, §4.18)
 
 // CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
 // byte renders from, so a trigger runs the same verb the control PC would.
@@ -194,8 +195,8 @@ export const H_RATE_CONFIDENT = 0x10;
 export const H_LOCK_ON = 0x20;
 export const H_CATCH_ON = 0x40;
 export const H_KBD_ATT = 0x80;
-// HEALTH is a u16 from proto 7 (RESP(HEALTH) carries [what][flags u16 LE]); the high byte is the
-// developer layer's state. TRANSFORM_ON is defined for the field-transform milestone and reads 0 until it ships.
+// HEALTH is a u16 from proto 7 (RESP(HEALTH) carries [what][flags u16 LE]); the high byte carries the
+// developer layer's state and the field-transform flag.
 export const H_REWRITE_ON = 0x0100; // the rewrite-rule table is non-empty
 export const H_PATCH_ON = 0x0200; // a descriptor-patch set is applied to the clone
 export const H_TRANSFORM_ON = 0x0400; // a field transform is active
@@ -262,6 +263,24 @@ export enum PatchSection {
 export const PATCH_SEC_COUNT = 5;
 export const PATCH_APPLY = 0xfe; // re-present the clone with the stored set
 export const PATCH_CLEAR = 0xff; // drop every patch for this device, re-present
+
+// TRANSFORM op (§3.15): what a field transform does. Invert and Scale act on one axis (source == dest),
+// Swap exchanges two axes, Remap moves a source field into a destination. The scale is a signed percent.
+export enum TransformOp {
+  Remap = 0,
+  Swap = 1,
+  Invert = 2,
+  Scale = 3,
+}
+export const TF_OP_COUNT = 4;
+export const TRANSFORM_MAX_ENTRIES = 8; // the box holds up to eight; a further entry is refused
+export const TF_F_FULL = 0x01; // RESP(TRANSFORMS).flags bit 0: the table is full
+export const RESP_TRANSFORMS_HDR = 3; // [what][flags u8][n u8]
+export const TRANSFORMS_ENTRY_LEN = 9; // [op][sclass][sid u16][dclass][did u16][scale i16], no state byte
+
+export function transformOpFromU8(v: number): TransformOp | null {
+  return v >= 0 && v < TF_OP_COUNT ? (v as TransformOp) : null;
+}
 
 export function patchSectionFromU8(v: number): PatchSection | null {
   return v >= 0 && v < PATCH_SEC_COUNT ? (v as PatchSection) : null;
@@ -338,6 +357,7 @@ export enum FrameType {
   TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (its own opcode, SEQ-correlated)
   Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
   Patch = 0x1d, // [section][cfg][index][offset u16][bytes..] a descriptor patch
+  Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][scale i16][state] a field transform
 }
 
 // Byte width of the ts_us field every catch event frame leads with (§4.10).
@@ -464,6 +484,8 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.Rewrite;
     case 0x1d:
       return FrameType.Patch;
+    case 0x1e:
+      return FrameType.Transform;
     default:
       return null;
   }

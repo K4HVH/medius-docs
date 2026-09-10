@@ -764,8 +764,9 @@ if ev.usage == Usage.button(Button.SIDE1):
           <div id="motion" data-search-target>
             <div class="api-response-label">Motion</div>
             <pre class="api-signature">{`Motion.cursor(dx, dy) -> Motion
-Motion.wheel(delta)   -> Motion`}</pre>
-            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>. See <A href="/library/move">Move</A>.</p>
+Motion.wheel(delta)   -> Motion
+Motion.pan(delta)     -> Motion`}</pre>
+            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>; <code>pan</code> is AC Pan (horizontal scroll), a full peer of the wheel. See <A href="/library/move">Move</A>.</p>
           </div>
 
 
@@ -774,6 +775,7 @@ Motion.wheel(delta)   -> Motion`}</pre>
             <pre class="api-signature">{`LockTarget.x()            -> LockTarget
 LockTarget.y()            -> LockTarget
 LockTarget.wheel()        -> LockTarget
+LockTarget.pan()          -> LockTarget
 LockTarget.usage(usage)   -> LockTarget
 LockTarget.button(button) -> LockTarget
 LockTarget.key(key)       -> LockTarget
@@ -888,6 +890,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>has_x</code></td><td><code>bool</code></td><td>X axis present</td></tr>
                 <tr><td><code>has_y</code></td><td><code>bool</code></td><td>Y axis present</td></tr>
                 <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>wheel present</td></tr>
+                <tr><td><code>pan</code></td><td><code>bool</code></td><td>AC Pan (horizontal scroll) present</td></tr>
                 <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>reports carry a report id</td></tr>
                 <tr><td><code>n_hid</code></td><td><code>int</code></td><td>HID interface count</td></tr>
               </tbody>
@@ -1382,6 +1385,94 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
             <p>Only meaningful with the <A href="/library/features/mock">mock</A> feature.</p>
+          </div>
+        </Card>
+      </div>
+
+      <div id="developer-types" data-search-target>
+        <Card>
+          <CardHeader title="Developer-layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
+          <p>The value types for the imperfect-clone developer layer. See <A href="/library/developer/raw">Raw injection</A>, <A href="/library/developer/transfer">Control transfers</A>, <A href="/library/developer/rewrite">Rewrite rules</A>, and <A href="/library/developer/patch">Descriptor patches</A>.</p>
+
+          <div id="setup">
+            <div class="api-response-label">Setup</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>request_type</code></td><td><code>int</code></td><td><code>bmRequestType</code>: direction in bit 7 (set = device-to-host).</td></tr>
+                <tr><td><code>request</code></td><td><code>int</code></td><td><code>bRequest</code>.</td></tr>
+                <tr><td><code>value</code></td><td><code>int</code></td><td><code>wValue</code>.</td></tr>
+                <tr><td><code>index</code></td><td><code>int</code></td><td><code>wIndex</code>.</td></tr>
+                <tr><td><code>length</code></td><td><code>int</code></td><td><code>wLength</code>: the data-stage length.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="transfer-outcome">
+            <div class="api-response-label">TransferOutcome</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td><code>OK</code> (0x00), <code>REFUSED</code> (0xFC), <code>STALL</code> (0xFD), <code>NAK</code> (0xFE), <code>NO_DEVICE</code> (0xFF), or a byte no constant names.</td></tr>
+                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data the device returned.</td></tr>
+                <tr><td><code>is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="rewrite-rule">
+            <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
+            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#developer"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
+            <table class="api-params">
+              <thead><tr><th>RewriteRule field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>rewrite_class</code></td><td><code>RewriteClass</code></td><td><code>HID_IN</code> 4, <code>HID_OUT</code> 5, <code>VENDOR_INTERRUPT</code> 6, <code>VENDOR_BULK</code> 7, <code>CONTROL</code> 8, <code>EMIT</code> 9, <code>ANY</code> 0xFF.</td></tr>
+                <tr><td><code>id</code></td><td><code>int</code></td><td>Interface number, endpoint address, or endpoint number.</td></tr>
+                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>BOTH</code> / <code>POSITIVE</code> / <code>NEGATIVE</code>.</td></tr>
+                <tr><td><code>action</code></td><td><code>RewriteAction</code></td><td><code>PASS</code> 0, <code>DROP</code> 1, <code>PATCH</code> 2, <code>REPLACE</code> 3, <code>ANSWER</code> 4, <code>STALL</code> 5, <code>NAK</code> 6, <code>REPLY_PATCH</code> 7, <code>REPLY_REPLACE</code> 8.</td></tr>
+                <tr><td><code>offset</code></td><td><code>int</code></td><td>Where a patching action writes.</td></tr>
+                <tr><td><code>match_bytes</code>, <code>mask</code>, <code>payload</code></td><td><code>bytes</code></td><td>The head compare (equal length) and the action's payload.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="patch">
+            <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
+            <p><code>Patch</code> is what <A href="/bindings/python/api#developer"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries.</p>
+            <table class="api-params">
+              <thead><tr><th>Patch field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>section</code></td><td><code>PatchSection</code></td><td><code>DEVICE</code> 0, <code>CONFIG</code> 1, <code>REPORT</code> 2, <code>STRING</code> 3, <code>BOS</code> 4.</td></tr>
+                <tr><td><code>cfg</code></td><td><code>int</code></td><td>Configuration index, for <code>CONFIG</code>/<code>REPORT</code>.</td></tr>
+                <tr><td><code>index</code></td><td><code>int</code></td><td>Interface or string index, for <code>REPORT</code>/<code>STRING</code>.</td></tr>
+                <tr><td><code>offset</code></td><td><code>int</code></td><td>Byte offset within the descriptor.</td></tr>
+                <tr><td><code>bytes</code></td><td><code>bytes</code></td><td>The overwrite bytes; empty removes the patch.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
+      <div id="transform" data-search-target>
+        <Card>
+          <CardHeader title="Transform types" subtitle="Transform · Transforms" />
+          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table.</p>
+          <div id="transforms">
+            <pre class="api-signature">{`Transform.invert(axis)            -> Transform
+Transform.scale_axis(axis, pct)   -> Transform
+Transform.swap(a, b)              -> Transform
+Transform.remap(source, dest)     -> Transform
+Transform(op, source, dest, scale).with_scale(pct)`}</pre>
+            <table class="api-params">
+              <thead><tr><th>Transform field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1, <code>INVERT</code> 2, <code>SCALE</code> 3.</td></tr>
+                <tr><td><code>source</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field the transform reads.</td></tr>
+                <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes (equal to <code>source</code> for invert and scale).</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent (-100 inverts, 100 identity, 200 doubles); ignored by <code>INVERT</code>.</td></tr>
+              </tbody>
+            </table>
+            <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>), up to eight.</p>
           </div>
         </Card>
       </div>

@@ -143,7 +143,7 @@ const Enums: Component = () => {
               <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/enums#button"><code>Button</code></A> id (0 = Left .. 4 = Side2).</td><td>every mouse button.</td></tr>
               <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
               <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
-              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, or the wheel.</td><td>every axis.</td></tr>
+              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
               <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
               <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint address.</td><td>every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint address.</td><td>every vendor interrupt endpoint.</td></tr>
@@ -238,7 +238,7 @@ let trace = device.catch_events([
       <div id="motion" data-search-target>
         <Card>
           <CardHeader title="Motion" subtitle="A relative axis for move_axis" />
-          <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16) {'}'}</pre>
+          <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16), Pan(i16) {'}'}</pre>
           <p>
             What <A href="/library/move#move"><code>move_axis</code></A> drives. Both span the full{' '}
             <code>i16</code> range. A lock names a single{' '}
@@ -249,6 +249,7 @@ let trace = device.catch_events([
             <tbody>
               <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
               <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
+              <tr><td><code>Pan</code></td><td><code>i16</code></td><td>Relative AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
             </tbody>
           </table>
         </Card>

@@ -94,9 +94,11 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_wheel(MediusDevice *dev, int16_t delta)</code></td><td>Scroll the wheel.</td></tr>
               <tr><td><code>medius_device_move_rel_now(MediusDevice *dev, int16_t dx, int16_t dy)</code></td><td>The same, bypassing <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
               <tr><td><code>medius_device_wheel_now(MediusDevice *dev, int16_t delta)</code></td><td>Scroll, bypassing movement riding.</td></tr>
+              <tr><td><code>medius_device_pan(MediusDevice *dev, int16_t delta)</code></td><td>AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
+              <tr><td><code>medius_device_pan_now(MediusDevice *dev, int16_t delta)</code></td><td>Pan, bypassing movement riding.</td></tr>
               <tr><td><code>medius_device_flush_motion(MediusDevice *dev)</code></td><td>Emit the motion riding is holding, now.</td></tr>
               <tr><td><code>medius_device_discard_motion(MediusDevice *dev)</code></td><td>Drop the motion riding is holding.</td></tr>
-              <tr><td><code>medius_device_move_axis(MediusDevice *dev, MediusMotion motion, MediusMoveTiming timing, MediusPendingMotion pending)</code></td><td>Drive one axis from a <code>medius_motion_cursor(...)</code> or <code>medius_motion_wheel(...)</code>.</td></tr>
+              <tr><td><code>medius_device_move_axis(MediusDevice *dev, MediusMotion motion, MediusMoveTiming timing, MediusPendingMotion pending)</code></td><td>Drive one axis from a <code>medius_motion_cursor(...)</code>, <code>medius_motion_wheel(...)</code>, or <code>medius_motion_pan(...)</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -376,6 +378,50 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
         </Card>
       </div>
 
+      <div id="developer" data-search-target>
+        <Card>
+          <CardHeader title="Developer layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
+          <p>The imperfect-clone developer layer. See <A href="/library/developer/raw">Raw injection</A>, <A href="/library/developer/transfer">Control transfers</A>, <A href="/library/developer/rewrite">Rewrite rules</A>, and <A href="/library/developer/patch">Descriptor patches</A>. <code>medius_device_raw</code>, <code>set_rewrite</code>, and <code>apply_patch</code> need the opt-in (<code>medius_device_allow_imperfect_clones(dev, true)</code>) or return <code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code>; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off comes back <code>MEDIUS_TRANSFER_STATUS_REFUSED</code> rather than erroring.</p>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_device_raw(MediusDevice *dev, uint8_t ep, const uint8_t *bytes, size_t len)</code></td><td>Put <code>bytes</code> verbatim on cloned endpoint <code>ep</code> (bit 7 set = IN, toward the game PC).</td></tr>
+              <tr><td><code>medius_device_transfer(MediusDevice *dev, uint8_t ep, MediusSetup setup, const uint8_t *out_data, size_t out_len, MediusTransferOutcome *out)</code></td><td>Run one control transfer against the real device; fill <code>out</code> with its <A href="/bindings/c/types#transfer-outcome"><code>status</code> and IN data</A>.</td></tr>
+              <tr><td><code>medius_device_set_rewrite(MediusDevice *dev, const MediusRewriteRule *rule)</code></td><td>Install or overwrite one <A href="/bindings/c/types#rewrite-rule"><code>rewrite rule</code></A>.</td></tr>
+              <tr><td><code>medius_device_remove_rewrite(MediusDevice *dev, const MediusRewriteRule *rule)</code></td><td>Drop the rule with this rule's key.</td></tr>
+              <tr><td><code>medius_device_clear_rewrite(MediusDevice *dev)</code></td><td>Drop the whole rewrite table.</td></tr>
+              <tr><td><code>medius_device_query_rewrite(MediusDevice *dev, MediusRewriteTable *out)</code></td><td>Read the table summary.</td></tr>
+              <tr><td><code>medius_device_query_rewrite_entry(MediusDevice *dev, uint8_t index, MediusRewriteRule *out)</code></td><td>Read one rule in full, in the shape <code>set_rewrite</code> takes.</td></tr>
+              <tr><td><code>medius_device_set_patch(MediusDevice *dev, const MediusPatch *patch)</code></td><td>Store one <A href="/bindings/c/types#patch"><code>descriptor patch</code></A> (empty bytes removes it).</td></tr>
+              <tr><td><code>medius_device_apply_patch(MediusDevice *dev)</code></td><td>Re-present the clone with the stored patch set (one replug).</td></tr>
+              <tr><td><code>medius_device_clear_patch(MediusDevice *dev)</code></td><td>Drop every patch and re-present unpatched.</td></tr>
+              <tr><td><code>medius_device_query_patches(MediusDevice *dev, MediusPatchSet *out)</code></td><td>Read the stored set and its apply state.</td></tr>
+              <tr><td><code>medius_device_query_patch_entry(MediusDevice *dev, uint8_t index, MediusPatch *out)</code></td><td>Read one patch in full.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="Transforms" subtitle="Negate, scale, swap, or remap a field on the wire" />
+          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s so it can move a button onto a key or media usage.</p>
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_device_transform(MediusDevice *dev, const MediusTransform *transform)</code></td><td>Install or overwrite one <A href="/bindings/c/types#transform"><code>transform</code></A>.</td></tr>
+              <tr><td><code>medius_device_untransform(MediusDevice *dev, const MediusTransform *transform)</code></td><td>Drop the transform with this one's (source, dest) key.</td></tr>
+              <tr><td><code>medius_device_clear_transforms(MediusDevice *dev)</code></td><td>Drop the whole transform table.</td></tr>
+              <tr><td><code>medius_device_invert(MediusDevice *dev, uint8_t axis)</code></td><td>Negate an axis.</td></tr>
+              <tr><td><code>medius_device_scale_transform(MediusDevice *dev, uint8_t axis, int16_t percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
+              <tr><td><code>medius_device_swap(MediusDevice *dev, uint8_t a, uint8_t b)</code></td><td>Exchange two axes.</td></tr>
+              <tr><td><code>medius_device_remap(MediusDevice *dev, MediusLockTarget source, MediusLockTarget dest)</code></td><td>Move a source field into a destination.</td></tr>
+              <tr><td><code>medius_device_query_transforms(MediusDevice *dev, MediusTransforms *out)</code></td><td>Read the active table (up to eight entries).</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="builders" data-search-target>
         <Card>
           <CardHeader title="Usage, motion & lock-target builders" subtitle="Make the value structs the calls take" />
@@ -388,6 +434,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_usage_media(MediusMediaKey media)</code></td><td><code>MediusUsage</code> addressing a media key.</td></tr>
               <tr><td><code>medius_motion_cursor(int16_t dx, int16_t dy)</code></td><td><A href="/bindings/c/types#motion"><code>MediusMotion</code></A> for <code>medius_device_move_axis</code>.</td></tr>
               <tr><td><code>medius_motion_wheel(int16_t delta)</code></td><td><code>MediusMotion</code> for a wheel scroll.</td></tr>
+              <tr><td><code>medius_motion_pan(int16_t delta)</code></td><td><code>MediusMotion</code> for AC Pan (horizontal scroll).</td></tr>
               <tr><td><code>medius_lock_target_axis(MediusLockTargetKind kind)</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> for an axis (<code>X</code> / <code>Y</code> / <code>Wheel</code>).</td></tr>
               <tr><td><code>medius_lock_target_usage(MediusUsage usage)</code></td><td><code>MediusLockTarget</code> for a usage (button, key, or media).</td></tr>
             </tbody>
