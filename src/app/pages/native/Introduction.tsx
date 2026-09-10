@@ -33,11 +33,11 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>3.3.4</code></td>
+              <td><code>3.4.0</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>6</code></td>
+              <td><code>7</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -69,7 +69,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>6</code>. Confirm it during the{' '}
+                These pages describe version <code>7</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
