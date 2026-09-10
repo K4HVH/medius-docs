@@ -17,12 +17,17 @@ import {
   OPT_IMPERFECT,
   OPT_MOVE_RIDE,
   OPT_NAME,
+  PATCH_APPLY,
+  PATCH_CLEAR,
+  PatchSection,
 } from './opcode';
 import {
   type ClipEntry,
   type ClipTrigger,
+  type RewriteRule,
   BearingMode,
   CatchClass,
+  CATCH_ID_ANY,
   Direction,
   LedMode,
   LOCK_SCALE_MAX,
@@ -219,4 +224,111 @@ export function clipSetPayload(id: number, value: number): Uint8Array {
 export function clipTriggerPayload(t: ClipTrigger, present: boolean): Uint8Array {
   const flags = (present ? CLIP_TRIG_F_PRESENT : 0) | (t.consume ? CLIP_TRIG_F_CONSUME : 0);
   return new Uint8Array([t.cls, t.id & 0xff, (t.id >> 8) & 0xff, t.edge, t.action, flags]);
+}
+
+// RAW (§3.14): [ep u8][bytes..]. Put bytes verbatim on a cloned endpoint: an IN endpoint reaches the
+// game PC, an OUT endpoint reaches the device. Fire-and-forget, and dropped unless OPTION(IMPERFECT) is on.
+export function rawPayload(ep: number, bytes: Uint8Array): Uint8Array {
+  const out = new Uint8Array(1 + bytes.length);
+  out[0] = ep & 0xff;
+  out.set(bytes, 1);
+  return out;
+}
+
+// TRANSFER (§3.14): [ep u8][setup 8][OUT data..]. The setup packet is the 8 USB bytes
+// [bmRequestType u8][bRequest u8][wValue u16 LE][wIndex u16 LE][wLength u16 LE]. The box runs the
+// request against the real device and answers with TRANSFER_RESP (its own opcode, correlated by SEQ).
+export function transferPayload(
+  ep: number,
+  bmRequestType: number,
+  bRequest: number,
+  wValue: number,
+  wIndex: number,
+  wLength: number,
+  out: Uint8Array = new Uint8Array(0),
+): Uint8Array {
+  const buf = new Uint8Array(9 + out.length);
+  buf[0] = ep & 0xff;
+  buf[1] = bmRequestType & 0xff;
+  buf[2] = bRequest & 0xff;
+  const dv = new DataView(buf.buffer);
+  dv.setUint16(3, wValue & 0xffff, true);
+  dv.setUint16(5, wIndex & 0xffff, true);
+  dv.setUint16(7, wLength & 0xffff, true);
+  buf.set(out, 9);
+  return buf;
+}
+
+// REWRITE (§3.14): [cls u8][id u16 LE][dir u8][state u8][action u8][off u16 LE][mlen u8][match mlen]
+// [mask mlen][payload..]. state 1 adds or overwrites, 0 removes; a rule is keyed by (cls, id, dir, match,
+// mask). match and mask are the same length, and the box refuses an action its class does not allow.
+export function rewritePayload(rule: RewriteRule, state: number): Uint8Array {
+  const mlen = Math.min(rule.match.length, rule.mask.length);
+  const head = new Uint8Array(9);
+  head[0] = rule.cls & 0xff;
+  const dv = new DataView(head.buffer);
+  dv.setUint16(1, rule.id & 0xffff, true);
+  head[3] = rule.dir & 0xff;
+  head[4] = state & 0xff;
+  head[5] = rule.action & 0xff;
+  dv.setUint16(6, rule.off & 0xffff, true);
+  head[8] = mlen & 0xff;
+  const out = new Uint8Array(head.length + 2 * mlen + rule.payload.length);
+  out.set(head, 0);
+  out.set(rule.match.subarray(0, mlen), head.length);
+  out.set(rule.mask.subarray(0, mlen), head.length + mlen);
+  out.set(rule.payload, head.length + 2 * mlen);
+  return out;
+}
+
+// REWRITE clear (§3.14): the any-class, any-id, state-0 sentinel clears the whole table in one frame.
+export function clearRewritePayload(): Uint8Array {
+  return rewritePayload(
+    {
+      cls: CatchClass.Any,
+      id: CATCH_ID_ANY,
+      dir: Direction.Both,
+      action: 0,
+      off: 0,
+      match: new Uint8Array(0),
+      mask: new Uint8Array(0),
+      payload: new Uint8Array(0),
+    },
+    0,
+  );
+}
+
+// PATCH (§3.14): [section u8][cfg u8][index u8][offset u16 LE][bytes..]. Overwrite bytes in a served
+// descriptor; a zero-length `bytes` removes the patch at that (section, cfg, index, offset) key. The box
+// stores it whether or not OPTION(IMPERFECT) is on, but applies it to the clone only under the opt-in.
+export function patchPayload(
+  section: PatchSection,
+  cfg: number,
+  index: number,
+  offset: number,
+  bytes: Uint8Array,
+): Uint8Array {
+  const buf = new Uint8Array(5 + bytes.length);
+  buf[0] = section & 0xff;
+  buf[1] = cfg & 0xff;
+  buf[2] = index & 0xff;
+  new DataView(buf.buffer).setUint16(3, offset & 0xffff, true);
+  buf.set(bytes, 5);
+  return buf;
+}
+
+// PATCH apply (§3.14): re-present the clone with the stored patch set (the game PC sees one replug).
+export function patchApplyPayload(): Uint8Array {
+  return new Uint8Array([PATCH_APPLY]);
+}
+
+// PATCH clear (§3.14): drop every patch for this device and re-present unpatched.
+export function patchClearPayload(): Uint8Array {
+  return new Uint8Array([PATCH_CLEAR]);
+}
+
+// QUERY for one full rewrite rule or descriptor patch by list index (§4.17): [what][index]. The reply
+// still leads with `what`, so it correlates on that selector like every other RESP.
+export function queryEntryPayload(what: number, index: number): Uint8Array {
+  return new Uint8Array([what, index & 0xff]);
 }

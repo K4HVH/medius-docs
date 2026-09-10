@@ -46,9 +46,27 @@ import {
   EVENT_TS_LEN,
   Q_CLIP,
   Q_FIRMWARE,
+  Q_REWRITE,
+  Q_REWRITE_ENTRY,
+  Q_PATCHES,
+  Q_PATCH_ENTRY,
   RESP_FIRMWARE_LEN,
   RESP_CLIP_HDR,
+  RESP_REWRITE_HDR,
+  REWRITE_ENTRY_LEN,
+  REWRITE_TAB_MAX,
+  REWRITE_F_FULL,
+  RESP_PATCHES_HDR,
+  PATCHES_ENTRY_LEN,
+  PATCHES_MAX,
+  PATCHES_F_APPLIED,
+  PATCHES_F_PENDING,
+  PATCHES_F_REFUSED,
+  PATCHES_F_FULL,
   clipStateFromU8,
+  rewriteActionFromU8,
+  patchSectionFromU8,
+  transferStatusFromU8,
 } from './opcode';
 import {
   type Caps,
@@ -69,6 +87,13 @@ import {
   type LogLine,
   type MotionEvent,
   type Rate,
+  type RewriteTable,
+  type RewriteRuleInfo,
+  type RewriteRule,
+  type PatchSet,
+  type PatchInfo,
+  type PatchEntry,
+  type TransferResult,
   type Stats,
   type TrafficEvent,
   type Usage,
@@ -132,7 +157,11 @@ export type Resp =
   | { kind: 'movementRiding'; windowMs: number } // 0 = off
   | { kind: 'emitPace'; emit: EmitPace }
   | { kind: 'clip'; clip: ClipStatus }
-  | { kind: 'firmware'; firmware: FirmwareInfo };
+  | { kind: 'firmware'; firmware: FirmwareInfo }
+  | { kind: 'rewrite'; rewrite: RewriteTable }
+  | { kind: 'rewriteEntry'; index: number; rule: RewriteRule }
+  | { kind: 'patches'; patches: PatchSet }
+  | { kind: 'patchEntry'; index: number; patch: PatchEntry };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -169,8 +198,9 @@ export function parseResp(payload: Uint8Array): Resp | null {
         },
       };
     case Q_HEALTH:
-      if (payload.length < 2) return null;
-      return { kind: 'health', health: healthFromFlags(payload[1]) };
+      // Proto 7 widened the flags to a u16 LE, so the reply is [what][flags_lo][flags_hi].
+      if (payload.length < 3) return null;
+      return { kind: 'health', health: healthFromFlags(u16le(payload, 1)) };
     case Q_DEVICE_INFO: {
       // [2][vid][pid][bcd_device][bcd_usb][flags][primary_kind] = 11-byte header, then the product tail.
       if (payload.length < 11) return null;
@@ -435,9 +465,119 @@ export function parseResp(payload: Uint8Array): Resp | null {
           return null;
       }
     }
+    case Q_REWRITE: {
+      // [what][flags][gen][n] then n × [cls][id u16 LE][dir][action][mlen][off u16 LE][plen u16 LE][hits u16 LE].
+      // The summary order is [mlen][off], the opposite of the command; the full match/payload come from
+      // RESP(REWRITE_ENTRY).
+      if (payload.length < RESP_REWRITE_HDR) return null;
+      const n = payload[3];
+      if (n > REWRITE_TAB_MAX) return null;
+      if (payload.length < RESP_REWRITE_HDR + REWRITE_ENTRY_LEN * n) return null;
+      const entries: RewriteRuleInfo[] = [];
+      for (let i = 0; i < n; i++) {
+        const off = RESP_REWRITE_HDR + REWRITE_ENTRY_LEN * i;
+        entries.push({
+          cls: payload[off],
+          id: u16le(payload, off + 1),
+          dir: directionFromU8(payload[off + 3]) ?? (payload[off + 3] as Direction),
+          action: rewriteActionFromU8(payload[off + 4]),
+          mlen: payload[off + 5],
+          off: u16le(payload, off + 6),
+          plen: u16le(payload, off + 8),
+          hits: u16le(payload, off + 10),
+        });
+      }
+      return {
+        kind: 'rewrite',
+        rewrite: { tableFull: (payload[1] & REWRITE_F_FULL) !== 0, gen: payload[2], entries },
+      };
+    }
+    case Q_REWRITE_ENTRY: {
+      // [what][index] then the REWRITE command body with state pinned to 1:
+      // [cls][id u16 LE][dir][1][action][off u16 LE][mlen][match mlen][mask mlen][payload..].
+      if (payload.length < 11) return null;
+      const mlen = payload[10];
+      if (payload.length < 11 + 2 * mlen) return null;
+      const match = payload.slice(11, 11 + mlen);
+      const mask = payload.slice(11 + mlen, 11 + 2 * mlen);
+      const paylo = payload.slice(11 + 2 * mlen);
+      return {
+        kind: 'rewriteEntry',
+        index: payload[1],
+        rule: {
+          cls: payload[2],
+          id: u16le(payload, 3),
+          dir: directionFromU8(payload[5]) ?? (payload[5] as Direction),
+          action: rewriteActionFromU8(payload[7]) ?? 0,
+          off: u16le(payload, 8),
+          match,
+          mask,
+          payload: paylo,
+        },
+      };
+    }
+    case Q_PATCHES: {
+      // [what][flags][n] then n × [section][cfg][index][offset u16 LE][len u16 LE]. len is a u16: a
+      // report or configuration descriptor patch routinely exceeds 255 bytes.
+      if (payload.length < RESP_PATCHES_HDR) return null;
+      const n = payload[2];
+      if (n > PATCHES_MAX) return null;
+      if (payload.length < RESP_PATCHES_HDR + PATCHES_ENTRY_LEN * n) return null;
+      const flags = payload[1];
+      const entries: PatchInfo[] = [];
+      for (let i = 0; i < n; i++) {
+        const off = RESP_PATCHES_HDR + PATCHES_ENTRY_LEN * i;
+        entries.push({
+          section: patchSectionFromU8(payload[off]),
+          cfg: payload[off + 1],
+          index: payload[off + 2],
+          offset: u16le(payload, off + 3),
+          len: u16le(payload, off + 5),
+        });
+      }
+      return {
+        kind: 'patches',
+        patches: {
+          applied: (flags & PATCHES_F_APPLIED) !== 0,
+          pending: (flags & PATCHES_F_PENDING) !== 0,
+          refused: (flags & PATCHES_F_REFUSED) !== 0,
+          tableFull: (flags & PATCHES_F_FULL) !== 0,
+          entries,
+        },
+      };
+    }
+    case Q_PATCH_ENTRY: {
+      // [what][list_index][section][cfg][index][offset u16 LE][bytes..], the PATCH command's own shape.
+      if (payload.length < 7) return null;
+      return {
+        kind: 'patchEntry',
+        index: payload[1],
+        patch: {
+          section: patchSectionFromU8(payload[2]),
+          cfg: payload[3],
+          index: payload[4],
+          offset: u16le(payload, 5),
+          bytes: payload.slice(7),
+        },
+      };
+    }
     default:
       return null;
   }
+}
+
+// Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. Its own opcode, not a RESP
+// frame, correlated by the SEQ that echoes the TRANSFER. `status` reads through TransferStatus; a
+// too-short frame reads as a refusal with no data rather than throwing.
+export function parseTransferResp(payload: Uint8Array): TransferResult {
+  if (payload.length < 2) {
+    return { ep: payload[0] ?? 0, status: transferStatusFromU8(0xfc), data: new Uint8Array(0) };
+  }
+  return {
+    ep: payload[0],
+    status: transferStatusFromU8(payload[1]),
+    data: payload.slice(2),
+  };
 }
 
 // Parse a MOTION_EVENT payload (§4.10): [ts_us u32][clk u8][dx i16][dy i16][dz i16]. Unsolicited.
