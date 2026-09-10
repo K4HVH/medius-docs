@@ -40,7 +40,7 @@ const Types: Component = () => {
           </p>
           <p>
             Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>6</code>, the
+            it, never a pointer you own. The shapes on this page are ABI version <code>7</code>, the
             number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
           </p>
         </div>
@@ -873,6 +873,9 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>lock_on</code></td><td><code>uint8_t</code></td><td>At least one input is off a full pass: blocked, or merely weighed.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>uint8_t</code></td><td>A catch subscription is streaming.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>uint8_t</code></td><td>A keyboard is attached, cloned, and injectable.</td></tr>
+              <tr><td><code>rewrite_on</code></td><td><code>uint8_t</code></td><td>The rewrite-rule table is non-empty (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>uint8_t</code></td><td>A descriptor-patch set is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>transform_on</code></td><td><code>uint8_t</code></td><td>A field transform is active; reserved (v3.4.0).</td></tr>
             </tbody>
           </table>
         </Card>

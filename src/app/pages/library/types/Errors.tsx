@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>6</code>;{' '}
+                  The box replied, but its <code>proto_ver</code> wasn't <code>7</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>
@@ -115,6 +115,35 @@ const Errors: Component = () => {
                   fixed sign or edge fits; <code>what</code> names it. Those are resolved against the{' '}
                   <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is
                   made; use <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ImperfectRequired</code></td>
+                <td>
+                  A <A href="/library/developer/raw">developer-layer</A> call while the imperfect-clone
+                  opt-in is off. Turn it on with{' '}
+                  <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteMaskLength {'{'} match_len, mask_len {'}'}</code></td>
+                <td>
+                  A <A href="/library/developer/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
+                  <code>mask</code> were not the same length.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteActionClass {'{'} action, class {'}'}</code></td>
+                <td>
+                  A rewrite rule's{' '}
+                  <A href="/library/developer/rewrite#matrix">action does not fit its class</A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewritePayloadTooLarge {'{'} action, class, len, offset, cap {'}'}</code></td>
+                <td>
+                  A rewrite rule's payload does not fit the box's <code>cap</code>-byte head for the
+                  class.
                 </td>
               </tr>
               <tr>

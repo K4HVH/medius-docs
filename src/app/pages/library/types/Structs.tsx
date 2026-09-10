@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>6</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>7</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 6, fw_major: 3, fw_minor: 3, fw_patch: 4, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.3.4"); // Display omits proto_ver
+let v = Version { proto_ver: 7, fw_major: 3, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -53,7 +53,9 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
           <CardHeader title="Health" subtitle="Box readiness flags" />
           <p>
             Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
-            bool per bit. <code>from_flags(u8)</code> and <code>to_flags()</code> convert the byte.
+            bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
+            <code>to_flags()</code> convert it: bits 0&ndash;7 are the original byte, and the{' '}
+            <A href="/library/developer/rewrite">developer layer</A> opened three more in the high byte.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>True when</th></tr></thead>
@@ -66,6 +68,9 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input is off a full pass, whether <A href="/library/lock#lock"><code>lock</code></A>ed or merely <A href="/library/lock#scale"><code>scale</code></A>d.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>The <A href="/library/catch#catch-events"><code>catch</code></A> table holds at least one <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>, whatever class it addresses.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
+              <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/developer/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/developer/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A field transform is active; reserved (v3.4.0).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -73,8 +78,8 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
 
 let h = Health::from_flags(0b0000_0011); // link_up | mouse_attached
 assert!(h.link_up && h.mouse_attached);
-assert!(!h.clone_configured);
-assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code></pre>
+assert!(!h.clone_configured && !h.rewrite_on);
+assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code></pre>
         </Card>
       </div>
       <div id="device-info" data-search-target>
