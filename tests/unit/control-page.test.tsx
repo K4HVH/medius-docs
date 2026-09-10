@@ -150,6 +150,7 @@ describe('Control page', () => {
     const { findByText } = mount();
     await findByText('Injection');
     await findByText('Input locks');
+    await findByText('Transforms');
     await findByText('Status light');
     await findByText('Input catch');
     await findByText('Clip playback');

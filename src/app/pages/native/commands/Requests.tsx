@@ -211,7 +211,7 @@ const Requests: Component = () => {
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
               <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: at least one <A href="/library/developer/rewrite">rewrite rule</A> is installed (the table is non-empty)</td></tr>
               <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: a <A href="/library/developer/patch">descriptor patch</A> set is applied to the clone</td></tr>
-              <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a field transform is active (reserved for a later release)</td></tr>
+              <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>

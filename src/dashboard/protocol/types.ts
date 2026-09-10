@@ -28,6 +28,7 @@ import {
   KBC_SYSTEM,
   RewriteAction,
   PatchSection,
+  TransformOp,
   TransferStatus,
 } from './opcode';
 
@@ -948,6 +949,25 @@ export interface PatchEntry {
   index: number;
   offset: number;
   bytes: Uint8Array;
+}
+
+// A field transform in full, the shape RESP(TRANSFORMS) returns and the TRANSFORM command takes (§3.15).
+// Invert and Scale act on one axis (source == dest); Swap exchanges two axes; Remap moves the source
+// field into the destination. `scale` is a signed percent: -100 inverts, 100 identity, 200 doubles.
+export interface Transform {
+  op: TransformOp;
+  sclass: number;
+  sid: number;
+  dclass: number;
+  did: number;
+  scale: number;
+}
+
+// The decoded RESP(TRANSFORMS) table (§4.18): the full flag and one entry per transform. There is no
+// generation counter and no per-entry state byte; the table is re-asserted wholesale on reconnect.
+export interface TransformTable {
+  tableFull: boolean;
+  entries: Transform[];
 }
 
 // The decoded TRANSFER_RESP (§3.14): which endpoint answered, the device's status, and the IN data.

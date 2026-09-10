@@ -7,6 +7,7 @@ import { ConnectPanel } from './ConnectPanel';
 import { createCommand } from './action';
 import DeviceInject from './DeviceInject';
 import DeviceLock from './DeviceLock';
+import DeviceTransform from './DeviceTransform';
 import DeviceEventCatch from './DeviceEventCatch';
 import DeviceClip from './DeviceClip';
 import DeviceLed from './DeviceLed';
@@ -85,6 +86,7 @@ const Control = () => {
         <div style={col}>
           <DeviceInject />
           <DeviceLock />
+          <DeviceTransform />
           <DeviceLed />
           <div id="safety-clear" data-search-target>
             <Card>

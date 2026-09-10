@@ -10,16 +10,12 @@ const Transfer: Component = () => {
         <CardHeader title="Control transfers" subtitle="Run a control request against the real device, read its answer" />
         <p>
           <code>transfer</code> runs one USB control transfer against the real device on the host chip
-          and returns the device's actual answer. You give it the endpoint, the eight-byte{' '}
-          <A href="/library/developer/transfer#setup"><code>Setup</code></A> packet, and any OUT data;
-          you get back a <A href="/library/developer/transfer#outcome"><code>TransferOutcome</code></A>{' '}
-          carrying the status and any IN data the device returned.
+          and returns its answer as a{' '}
+          <A href="/library/developer/transfer#outcome"><code>TransferOutcome</code></A>.
         </p>
         <p>
-          It rides its own inter-chip link pair, never the game PC's EP0 proxy, so a request here never
-          disturbs what the PC sees on the clone. It is single-outstanding: issue one and wait for the
-          reply. This is how you read a descriptor, string, or vendor value straight from the device
-          the box is cloning.
+          It rides its own inter-chip link pair, not the game PC's EP0 proxy, and is single-outstanding.
+          Read a descriptor, string, or vendor value straight from the device.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
@@ -67,7 +63,7 @@ const Transfer: Component = () => {
             direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
             little-endian).
           </p>
-          <div class="api-response-label">RUST</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Setup;
 
 // GET_DESCRIPTOR(Device): standard device-to-host request for the 18-byte device descriptor.
@@ -92,19 +88,17 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             </tbody>
           </table>
           <p>
-            The <code>Ok(_)</code> of the returned <code>Result</code> means the box answered at all. A
-            status other than <A href="/library/developer/transfer#status"><code>Ok</code></A> is a real
-            protocol result, so it comes back in the outcome rather than as an error.
+            <code>Ok(_)</code> means the box answered at all; a status other than{' '}
+            <A href="/library/developer/transfer#status"><code>Ok</code></A> comes back in the outcome,
+            not as an error.
           </p>
           <div class="callout callout--info">
             <p>
-              <code>transfer</code> uses <code>DEFAULT_TRANSFER_TIMEOUT</code> (1.5&nbsp;s), longer than a
-              box-local query because a control transfer to a real device can be slower. The box gives up
-              after its own ~800&nbsp;ms window; keep <code>transfer_timeout</code> at or above that so a
-              short deadline never abandons the wait before a slow device answers.
+              <code>transfer</code> uses <code>DEFAULT_TRANSFER_TIMEOUT</code> (1.5&nbsp;s). The box gives
+              up after its own ~800&nbsp;ms window; keep <code>transfer_timeout</code> at or above that.
             </p>
           </div>
-          <div class="api-response-label">RUST</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Setup, TransferStatus};
 
 let device = Device::find()?;
@@ -114,26 +108,6 @@ let reply = device.transfer(0, Setup::new(0x80, 0x06, 0x0100, 0x0000, 18), &[])?
 if reply.status == TransferStatus::Ok {
     println!("device descriptor: {:02x?}", reply.data());
 }`}</code></pre>
-          <div class="api-response-label">C</div>
-          <pre><code class="language-c">{`MediusDevice *dev = medius_device_find();
-medius_device_allow_imperfect_clones(dev, true);
-
-MediusSetup setup = { 0x80, 0x06, 0x0100, 0x0000, 18 };  // GET_DESCRIPTOR(Device)
-MediusTransferOutcome reply;
-medius_device_transfer(dev, 0, setup, NULL, 0, &reply);
-if (reply.status == MEDIUS_TRANSFER_STATUS_OK) {
-    // reply.data[0 .. reply.len] holds the 18 descriptor bytes
-}`}</code></pre>
-          <div class="api-response-label">PYTHON</div>
-          <pre><code class="language-python">{`import medius
-from medius import Setup, TransferStatus
-
-device = medius.Device.find()
-device.allow_imperfect_clones(True)
-
-reply = device.transfer(0, Setup(0x80, 0x06, 0x0100, 0x0000, 18))  # GET_DESCRIPTOR(Device)
-if reply.status == TransferStatus.OK:
-    print("device descriptor:", reply.data.hex())`}</code></pre>
         </Card>
       </div>
 
@@ -141,10 +115,8 @@ if reply.status == TransferStatus.OK:
         <Card>
           <CardHeader title="TransferOutcome" subtitle="The device's answer: status and any IN data" />
           <p>
-            A <code>TransferOutcome</code> is what the device answered. A{' '}
-            <A href="/library/developer/transfer#status"><code>TransferStatus</code></A> other than{' '}
-            <code>Ok</code> is a real protocol outcome, not a link error, so it is returned rather than
-            raised. A non-<code>Ok</code> answer carries no data.
+            What the device answered. A non-<code>Ok</code>{' '}
+            <A href="/library/developer/transfer#status"><code>status</code></A> carries no data.
           </p>
           <table class="api-params">
             <thead><tr><th>Member</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -163,9 +135,8 @@ if reply.status == TransferStatus.OK:
         <Card>
           <CardHeader title="TransferStatus" subtitle="How a transfer ended" />
           <p>
-            The <code>status</code> byte of the answer. The codes sit at the top of the byte range so
-            they never collide with a real length; a byte no variant names is carried through as{' '}
-            <code>Other(u8)</code>, so a newer box's value is not lost.
+            The <code>status</code> byte. The codes sit at the top of the byte range so they never
+            collide with a length; an unknown byte is carried through as <code>Other(u8)</code>.
           </p>
           <div class="table-scroll">
             <table class="api-params">
@@ -176,18 +147,18 @@ if reply.status == TransferStatus.OK:
                 <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
                 <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device NAKed to a timeout, or never answered.</td></tr>
                 <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No device is attached on the host chip.</td></tr>
-                <tr><td><code>Other(u8)</code></td><td>&mdash;</td><td>A status byte this build does not name.</td></tr>
+                <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
               </tbody>
             </table>
           </div>
           <div class="callout callout--info">
             <p>
               <code>Refused</code> is the box turning the request away; <code>Stall</code> and{' '}
-              <code>Nak</code> are the device's own answers. The difference tells you whether the request
-              reached the device at all.
+              <code>Nak</code> are the device answering. The difference says whether the request reached
+              the device.
             </p>
           </div>
-          <div class="api-response-label">RUST</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::TransferStatus;
 
 match reply.status {
@@ -196,6 +167,27 @@ match reply.status {
     TransferStatus::NoDevice => println!("nothing attached on the host chip"),
     TransferStatus::Refused => println!("box refused it: opt-in off, malformed, or too large"),
     other => println!("other status: {other:?}"),
+}`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="async" data-search-target>
+        <Card>
+          <CardHeader title="On AsyncDevice" subtitle="transfer awaits the device's answer" />
+          <p>
+            <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>transfer</code>{' '}
+            and <code>transfer_timeout</code> futures, awaited like any query, since each waits for the
+            device's answer.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use futures::executor::block_on;
+use medius::{AsyncDevice, Setup, TransferStatus};
+
+let device = AsyncDevice::open("/dev/ttyACM0")?;
+device.allow_imperfect_clones(true)?;
+let reply = block_on(device.transfer(0, Setup::new(0x80, 0x06, 0x0100, 0x0000, 18), &[]))?;
+if reply.status == TransferStatus::Ok {
+    println!("device descriptor: {:02x?}", reply.data());
 }`}</code></pre>
         </Card>
       </div>

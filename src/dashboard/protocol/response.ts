@@ -51,6 +51,7 @@ import {
   Q_REWRITE_ENTRY,
   Q_PATCHES,
   Q_PATCH_ENTRY,
+  Q_TRANSFORMS,
   RESP_FIRMWARE_LEN,
   RESP_CLIP_HDR,
   RESP_REWRITE_HDR,
@@ -64,9 +65,14 @@ import {
   PATCHES_F_PENDING,
   PATCHES_F_REFUSED,
   PATCHES_F_FULL,
+  TF_F_FULL,
+  TRANSFORM_MAX_ENTRIES,
+  RESP_TRANSFORMS_HDR,
+  TRANSFORMS_ENTRY_LEN,
   clipStateFromU8,
   rewriteActionFromU8,
   patchSectionFromU8,
+  transformOpFromU8,
   transferStatusFromU8,
 } from './opcode';
 import {
@@ -93,6 +99,8 @@ import {
   type RewriteRule,
   type PatchSet,
   type PatchInfo,
+  type Transform,
+  type TransformTable,
   type PatchEntry,
   type TransferResult,
   type Stats,
@@ -162,7 +170,8 @@ export type Resp =
   | { kind: 'rewrite'; rewrite: RewriteTable }
   | { kind: 'rewriteEntry'; index: number; rule: RewriteRule }
   | { kind: 'patches'; patches: PatchSet }
-  | { kind: 'patchEntry'; index: number; patch: PatchEntry };
+  | { kind: 'patchEntry'; index: number; patch: PatchEntry }
+  | { kind: 'transforms'; transforms: TransformTable };
 
 const u16le = (p: Uint8Array, i: number): number => p[i] | (p[i + 1] << 8);
 const u32le = (p: Uint8Array, i: number): number =>
@@ -466,6 +475,30 @@ export function parseResp(payload: Uint8Array): Resp | null {
         default:
           return null;
       }
+    }
+    case Q_TRANSFORMS: {
+      // [what][flags][n] then n × [op][sclass][sid u16 LE][dclass][did u16 LE][scale i16 LE]. No
+      // per-entry state byte: a read-back entry is always a live one. The scale is signed.
+      if (payload.length < RESP_TRANSFORMS_HDR) return null;
+      const n = payload[2];
+      if (n > TRANSFORM_MAX_ENTRIES) return null;
+      if (payload.length < RESP_TRANSFORMS_HDR + TRANSFORMS_ENTRY_LEN * n) return null;
+      const entries: Transform[] = [];
+      for (let i = 0; i < n; i++) {
+        const off = RESP_TRANSFORMS_HDR + TRANSFORMS_ENTRY_LEN * i;
+        const op = transformOpFromU8(payload[off]);
+        if (op === null) continue; // an op a newer box added; skip this entry, read the rest
+        const raw = u16le(payload, off + 7);
+        entries.push({
+          op,
+          sclass: payload[off + 1],
+          sid: u16le(payload, off + 2),
+          dclass: payload[off + 4],
+          did: u16le(payload, off + 5),
+          scale: raw >= 0x8000 ? raw - 0x10000 : raw,
+        });
+      }
+      return { kind: 'transforms', transforms: { tableFull: (payload[1] & TF_F_FULL) !== 0, entries } };
     }
     case Q_REWRITE: {
       // [what][flags][gen][n] then n × [cls][id u16 LE][dir][action][mlen][off u16 LE][plen u16 LE][hits u16 LE].

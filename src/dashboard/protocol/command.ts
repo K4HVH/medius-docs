@@ -21,11 +21,13 @@ import {
   PATCH_APPLY,
   PATCH_CLEAR,
   PatchSection,
+  TransformOp,
 } from './opcode';
 import {
   type ClipEntry,
   type ClipTrigger,
   type RewriteRule,
+  type Transform,
   BearingMode,
   CatchClass,
   CATCH_ID_ANY,
@@ -341,4 +343,29 @@ export function patchClearPayload(): Uint8Array {
 // still leads with `what`, so it correlates on that selector like every other RESP.
 export function queryEntryPayload(what: number, index: number): Uint8Array {
   return new Uint8Array([what, index & 0xff]);
+}
+
+// TRANSFORM (§3.15): [op u8][sclass u8][sid u16 LE][dclass u8][did u16 LE][scale i16 LE][state u8].
+// state 1 adds or overwrites, 0 removes; an entry is keyed by (source, dest). Invert and Scale act on one
+// axis (source == dest), Swap on two axes, Remap moves the source field into the destination. The scale
+// is a signed percent, clamped by the box to the destination field's declared range.
+export function transformPayload(t: Transform, state: number): Uint8Array {
+  const out = new Uint8Array(10);
+  const dv = new DataView(out.buffer);
+  out[0] = t.op & 0xff;
+  out[1] = t.sclass & 0xff;
+  dv.setUint16(2, t.sid & 0xffff, true);
+  out[4] = t.dclass & 0xff;
+  dv.setUint16(5, t.did & 0xffff, true);
+  dv.setInt16(7, t.scale, true);
+  out[9] = state & 0xff;
+  return out;
+}
+
+// TRANSFORM clear (§3.15): the any-class, any-id, state-0 sentinel drops the whole table in one frame.
+export function clearTransformPayload(): Uint8Array {
+  return transformPayload(
+    { op: TransformOp.Remap, sclass: 0xff, sid: CATCH_ID_ANY, dclass: 0xff, did: CATCH_ID_ANY, scale: 0 },
+    0,
+  );
 }

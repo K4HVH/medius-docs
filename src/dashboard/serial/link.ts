@@ -26,6 +26,8 @@ import {
   type RewriteRule,
   type RewriteTable,
   type PatchSet,
+  type Transform,
+  type TransformTable,
   type PatchEntry,
   type TransferResult,
   PatchSection,
@@ -106,11 +108,14 @@ import {
   patchPayload,
   patchApplyPayload,
   patchClearPayload,
+  transformPayload,
+  clearTransformPayload,
   queryEntryPayload,
   Q_REWRITE,
   Q_REWRITE_ENTRY,
   Q_PATCHES,
   Q_PATCH_ENTRY,
+  Q_TRANSFORMS,
   type FirmwareInfo,
   anyPending,
   Q_FIRMWARE,
@@ -875,6 +880,30 @@ export class SerialLink {
     );
     if (resp?.kind !== 'patchEntry') throw new Error('unexpected reply to PATCH_ENTRY query');
     return resp.patch;
+  }
+
+  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new op or
+  // scale overwrites. Transforms are faithful and ungated. Fire-and-forget; read the table back with
+  // `queryTransforms` to see that it landed rather than being refused by a full or undeclared field.
+  setTransform(t: Transform): Promise<void> {
+    return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 1)));
+  }
+
+  // Remove one transform, matched on its (source, dest) key; the op and scale are ignored.
+  removeTransform(t: Transform): Promise<void> {
+    return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 0)));
+  }
+
+  // Clear the whole transform table in one frame (the any-class, any-id, state-0 sentinel).
+  clearTransforms(): Promise<void> {
+    return this.send(encode(FrameType.Transform, this.nextSeq(), clearTransformPayload()));
+  }
+
+  // The transform table (§4.18): the full flag and one entry per transform, in installation order.
+  async queryTransforms(timeoutMs?: number): Promise<TransformTable> {
+    const resp = parseResp(await this.query(Q_TRANSFORMS, timeoutMs));
+    if (resp?.kind !== 'transforms') throw new Error('unexpected reply to TRANSFORMS query');
+    return resp.transforms;
   }
 
   async close(): Promise<void> {

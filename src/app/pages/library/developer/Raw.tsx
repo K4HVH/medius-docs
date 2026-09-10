@@ -9,23 +9,13 @@ const Raw: Component = () => {
       <Card>
         <CardHeader title="Raw injection" subtitle="Put a report byte-for-byte on a cloned endpoint" />
         <p>
-          <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint. An IN endpoint
-          (<code>ep &amp; 0x80</code>) emits the bytes toward the game PC as if the clone had produced
-          them; an OUT endpoint relays them to the real device. It carries no semantic model: there is
-          no axis, no usage, no merge with the native stream. The bytes on the wire are the bytes you
-          pass.
+          <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint: an IN endpoint
+          (<code>ep &amp; 0x80</code>) emits toward the game PC, an OUT endpoint relays to the real
+          device. It carries no semantic model and no merge with native motion.
         </p>
         <p>
-          The write is stateless and one-shot. The next native report on that endpoint carries the
-          device's own state, not the raw one, and <code>raw</code> bypasses the{' '}
-          <A href="/library/developer/rewrite">rewrite rules</A> entirely. It is the whole developer
-          layer's escape hatch: a report no <A href="/native/injection">semantic call</A> can express,
-          delivered exactly.
-        </p>
-        <p>
-          The developer layer sits between the real device on the host chip and the clone the game PC
-          sees. Raw injection taps the endpoint stage: an IN report joins the outgoing wire, an OUT
-          report joins the relay to the device.
+          The write is stateless: the next native report overwrites it, and <code>raw</code> bypasses
+          the <A href="/library/developer/rewrite">rewrite rules</A>.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
@@ -77,24 +67,12 @@ const Raw: Component = () => {
               </tbody>
             </table>
           </div>
-          <div class="api-response-label">RUST</div>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 device.allow_imperfect_clones(true)?;
 device.raw(0x81, &[0x00, 0x01, 0x00, 0x00])?;  // one report on interrupt-IN endpoint 1`}</code></pre>
-          <div class="api-response-label">C</div>
-          <pre><code class="language-c">{`MediusDevice *dev = medius_device_find();
-medius_device_allow_imperfect_clones(dev, true);
-
-const uint8_t report[] = { 0x00, 0x01, 0x00, 0x00 };
-medius_device_raw(dev, 0x81, report, sizeof report);  // interrupt-IN endpoint 1`}</code></pre>
-          <div class="api-response-label">PYTHON</div>
-          <pre><code class="language-python">{`import medius
-
-device = medius.Device.find()
-device.allow_imperfect_clones(True)
-device.raw(0x81, bytes([0x00, 0x01, 0x00, 0x00]))  # interrupt-IN endpoint 1`}</code></pre>
         </Card>
       </div>
 
@@ -174,6 +152,23 @@ device.raw(0x81, bytes([0x00, 0x01, 0x00, 0x00]))  # interrupt-IN endpoint 1`}</
             gate the native <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>{' '}
             sets.
           </p>
+        </Card>
+      </div>
+
+      <div id="async" data-search-target>
+        <Card>
+          <CardHeader title="On AsyncDevice" subtitle="raw awaits the opt-in gate" />
+          <p>
+            <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>raw</code> a
+            future: it awaits the imperfect-clone opt-in check, then the send itself is fire-and-forget.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use futures::executor::block_on;
+use medius::AsyncDevice;
+
+let device = AsyncDevice::open("/dev/ttyACM0")?;
+device.allow_imperfect_clones(true)?;
+block_on(device.raw(0x81, &[0x00, 0x01, 0x00, 0x00]))?;  // awaits the opt-in gate`}</code></pre>
         </Card>
       </div>
     </>
