@@ -59,7 +59,7 @@ export interface Health {
   lockOn: boolean;
   catchOn: boolean;
   kbdAttached: boolean;
-  // The developer-layer state (§4.2), in the high byte HEALTH gained at proto 7.
+  // The advanced control layer state (§4.2), in the high byte HEALTH gained at proto 7.
   rewriteOn: boolean;
   patchOn: boolean;
   transformOn: boolean;
@@ -873,7 +873,7 @@ export const IMAGE_STATE_NAMES: Record<number, string> = {
   0xff: 'unknown',
 };
 
-// The v3.4.0 developer layer (§3.14 / §4.17): rewrite rules and descriptor patches, both addressed in
+// The v3.4.0 advanced control layer (§3.14 / §4.17): rewrite rules and descriptor patches, both addressed in
 // the CATCH (class, id, dir) space and both admitted only under OPTION(IMPERFECT).
 
 // The rewrite classes are the traffic classes CATCH already names (§4.17): a report or control surface

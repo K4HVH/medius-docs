@@ -1656,7 +1656,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="setup" data-search-target>
         <Card>
           <CardHeader title="MediusSetup" subtitle="A USB control-transfer setup packet" />
-          <p>Passed by value to <A href="/bindings/c/api#developer"><code>medius_device_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/developer/transfer">Control transfers</A>.</p>
+          <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1673,7 +1673,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="transfer-outcome" data-search-target>
         <Card>
           <CardHeader title="MediusTransferOutcome" subtitle="The device's answer to a control transfer" />
-          <p>Filled by <A href="/bindings/c/api#developer"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means the box answered at all; <code>status</code> is the protocol result.</p>
+          <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means the box answered at all; <code>status</code> is the protocol result.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1700,7 +1700,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="rewrite-rule" data-search-target>
         <Card>
           <CardHeader title="MediusRewriteRule" subtitle="One rewrite rule, as set and read back in full" />
-          <p>Passed to <A href="/bindings/c/api#developer"><code>medius_device_set_rewrite</code></A> and filled by <code>medius_device_query_rewrite_entry</code>. A rule is keyed by <code>(class_, id, direction, match, mask)</code>. See <A href="/library/developer/rewrite">Rewrite rules</A>.</p>
+          <p>Passed to <A href="/bindings/c/api#advanced"><code>medius_device_set_rewrite</code></A> and filled by <code>medius_device_query_rewrite_entry</code>. A rule is keyed by <code>(class_, id, direction, match, mask)</code>. See <A href="/library/advanced/rewrite">Rewrite rules</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1733,7 +1733,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="rewrite-table" data-search-target>
         <Card>
           <CardHeader title="MediusRewriteTable & MediusRewriteEntry" subtitle="The rewrite-table summary" />
-          <p>Filled by <A href="/bindings/c/api#developer"><code>medius_device_query_rewrite</code></A>: a full flag, a generation counter, and one <code>MediusRewriteEntry</code> per rule (address, action, <code>match_len</code>, <code>offset</code>, <code>payload_len</code>, and saturating <code>hits</code>) without the bytes.</p>
+          <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_rewrite</code></A>: a full flag, a generation counter, and one <code>MediusRewriteEntry</code> per rule (address, action, <code>match_len</code>, <code>offset</code>, <code>payload_len</code>, and saturating <code>hits</code>) without the bytes.</p>
           <table class="api-params">
             <thead><tr><th>MediusRewriteTable</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1749,7 +1749,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="patch" data-search-target>
         <Card>
           <CardHeader title="MediusPatch" subtitle="One descriptor patch, as set and read back in full" />
-          <p>Passed to <A href="/bindings/c/api#developer"><code>medius_device_set_patch</code></A> and filled by <code>medius_device_query_patch_entry</code>. Keyed by <code>(section, cfg, index, offset)</code>; a <code>len</code> of 0 removes the patch at that key. See <A href="/library/developer/patch">Descriptor patches</A>.</p>
+          <p>Passed to <A href="/bindings/c/api#advanced"><code>medius_device_set_patch</code></A> and filled by <code>medius_device_query_patch_entry</code>. Keyed by <code>(section, cfg, index, offset)</code>; a <code>len</code> of 0 removes the patch at that key. See <A href="/library/advanced/patch">Descriptor patches</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1767,7 +1767,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="patch-set" data-search-target>
         <Card>
           <CardHeader title="MediusPatchSet & MediusPatchEntry" subtitle="The stored patch set and its apply state" />
-          <p>Filled by <A href="/bindings/c/api#developer"><code>medius_device_query_patches</code></A>: the four apply-state flags and one <code>MediusPatchEntry</code> per patch (section, cfg, index, offset, len) without the bytes.</p>
+          <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_patches</code></A>: the four apply-state flags and one <code>MediusPatchEntry</code> per patch (section, cfg, index, offset, len) without the bytes.</p>
           <table class="api-params">
             <thead><tr><th>MediusPatchSet</th><th>C type</th><th>Set when</th></tr></thead>
             <tbody>
@@ -1845,7 +1845,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td><code>18</code></td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>20</code></td><td>A developer-layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>20</code></td><td>An advanced control layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>21</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>22</code></td><td>A rewrite action that is not valid for its class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>23</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>

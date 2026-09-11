@@ -12,7 +12,7 @@ const Transform: Component = () => {
           A transform negates, scales, swaps, or remaps a field the clone's descriptor declares, clamped
           to that field's declared range so every emitted report is one <A href="/native/injection">native</A>{' '}
           could produce. It needs no <A href="/library/options#allow-imperfect-clones">imperfect-clone
-          opt-in</A>, unlike the <A href="/library/developer/raw">developer layer</A>.
+          opt-in</A>, unlike the <A href="/library/advanced/raw">advanced control layer</A>.
         </p>
         <p>
           Transforms run before rendering, so <A href="/library/inject">injection</A>, riding, and

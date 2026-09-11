@@ -93,10 +93,10 @@ const libraryApiTabs: TabOption[] = [
 ];
 
 const libraryDeveloperTabs: TabOption[] = [
-  { value: '/library/developer/raw', label: 'Raw injection', icon: BsBroadcast },
-  { value: '/library/developer/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
-  { value: '/library/developer/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
-  { value: '/library/developer/patch', label: 'Descriptor patches', icon: BsFileCode },
+  { value: '/library/advanced/raw', label: 'Raw injection', icon: BsBroadcast },
+  { value: '/library/advanced/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
+  { value: '/library/advanced/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
+  { value: '/library/advanced/patch', label: 'Descriptor patches', icon: BsFileCode },
 ];
 
 const libraryFeatureTabs: TabOption[] = [
@@ -163,7 +163,7 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
-  { value: '/dashboard/developer', label: 'Developer', icon: BsCodeSlash },
+  { value: '/dashboard/advanced-control', label: 'Advanced control', icon: BsCodeSlash },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
@@ -378,7 +378,7 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={libraryApiTabs}
             />
-            <Divider spacing="compact" label="Developer layer" labelAlign="start" />
+            <Divider spacing="compact" label="Advanced control layer" labelAlign="start" />
             <Tabs
               orientation="vertical"
               variant="subtle"

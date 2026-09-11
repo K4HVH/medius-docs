@@ -13,9 +13,9 @@ const Patch: Component = () => {
           <code>(section, cfg, index, offset)</code> and persisted per device (VID:PID) in the box's NVS.
         </p>
         <p>
-          Unlike a <A href="/library/developer/rewrite">rewrite rule</A>, a patch is configuration, not
+          Unlike a <A href="/library/advanced/rewrite">rewrite rule</A>, a patch is configuration, not
           session state: it survives a reconnect and clears only on{' '}
-          <A href="/library/developer/patch#clear-patch"><code>clear_patch</code></A>. The box stores a
+          <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>. The box stores a
           patch whatever the opt-in, and applies the stored set only under it.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
@@ -37,7 +37,7 @@ const Patch: Component = () => {
         </div>
         <p>
           The setters are <A href="/native/injection#fire-and-forget">fire-and-forget</A>;{' '}
-          <A href="/library/developer/patch#query-patches"><code>query_patches</code></A> reads back the
+          <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A> reads back the
           stored set and its apply state.
         </p>
       </Card>
@@ -52,13 +52,13 @@ const Patch: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>patch</code></td><td><A href="/library/developer/patch#patch"><code>Patch</code></A></td><td>The overwrite: its <A href="/library/developer/patch#section">section</A>, address, offset, and bytes.</td></tr>
+              <tr><td><code>patch</code></td><td><A href="/library/advanced/patch#patch"><code>Patch</code></A></td><td>The overwrite: its <A href="/library/advanced/patch#section">section</A>, address, offset, and bytes.</td></tr>
             </tbody>
           </table>
           <p>
             A patch is keyed by <code>(section, cfg, index, offset)</code>; setting one whose key exists
             overwrites it, and empty <code>bytes</code> removes it. Storing is not gated and does not
-            re-present the clone; <A href="/library/developer/patch#apply-patch"><code>apply_patch</code></A> does.
+            re-present the clone; <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> does.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Patch, PatchSection};
@@ -82,7 +82,7 @@ device.apply_patch()?;`}</code></pre>
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
             with the opt-in off it returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>. A refused
-            apply shows in <A href="/library/developer/patch#readback"><code>query_patches</code></A>'s{' '}
+            apply shows in <A href="/library/advanced/patch#readback"><code>query_patches</code></A>'s{' '}
             <code>refused</code> flag.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -111,7 +111,7 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
           <pre class="api-signature">fn query_patches(&self) -&gt; Result&lt;PatchSet&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Returns a <A href="/library/developer/patch#readback"><code>PatchSet</code></A>: the four
+            Returns a <A href="/library/advanced/patch#readback"><code>PatchSet</code></A>: the four
             apply-state flags and a row per stored patch without its bytes. The store holds up to 16
             patches; a further one sets the <code>table_full</code> flag.
           </p>
@@ -134,12 +134,12 @@ if set.refused {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/developer/patch#query-patches"><code>query_patches</code></A> summary.</td></tr>
+              <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A> summary.</td></tr>
             </tbody>
           </table>
           <p>
             Returns one patch in full, in the shape{' '}
-            <A href="/library/developer/patch#set-patch"><code>set_patch</code></A> takes.
+            <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A> takes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let set = device.query_patches()?;
@@ -166,7 +166,7 @@ for i in 0..set.entries.len() as u8 {
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>section</code></td><td><A href="/library/developer/patch#section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
+              <tr><td><code>section</code></td><td><A href="/library/advanced/patch#section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
               <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>.</td></tr>
               <tr><td><code>index</code></td><td><code>u8</code></td><td>The interface or string index, for <code>Report</code> / <code>String</code>.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at.</td></tr>
@@ -204,7 +204,7 @@ for i in 0..set.entries.len() as u8 {
           <p>
             The four apply-state flags plus a row per patch (its key and length, without the bytes).
             Read a full patch with{' '}
-            <A href="/library/developer/patch#query-patch-entry"><code>query_patch_entry</code></A>.
+            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>PatchSet flag</th><th>Set when</th></tr></thead>

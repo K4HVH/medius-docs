@@ -11,7 +11,7 @@ const Transfer: Component = () => {
         <p>
           <code>transfer</code> runs one USB control transfer against the real device on the host chip
           and returns its answer as a{' '}
-          <A href="/library/developer/transfer#outcome"><code>TransferOutcome</code></A>.
+          <A href="/library/advanced/transfer#outcome"><code>TransferOutcome</code></A>.
         </p>
         <p>
           It rides its own inter-chip link pair, not the game PC's EP0 proxy, and is single-outstanding.
@@ -27,7 +27,7 @@ const Transfer: Component = () => {
                              +-- transfer(ep, setup)   <== your own control request, its own link pair`}</pre>
         <div class="callout callout--warning">
           <p>
-            The developer layer is gated on the imperfect-clone opt-in. With{' '}
+            The advanced control layer is gated on the imperfect-clone opt-in. With{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
             off, the box answers <code>Refused</code> rather than reaching the device.
           </p>
@@ -83,13 +83,13 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
               <tr><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> for EP0, or a control endpoint number the device declares.</td></tr>
-              <tr><td><code>setup</code></td><td><A href="/library/developer/transfer#setup"><code>Setup</code></A></td><td>The eight-byte setup packet.</td></tr>
+              <tr><td><code>setup</code></td><td><A href="/library/advanced/transfer#setup"><code>Setup</code></A></td><td>The eight-byte setup packet.</td></tr>
               <tr><td><code>out</code></td><td><code>&amp;[u8]</code></td><td>The OUT data stage: the bytes carried after the setup packet. Empty for an IN transfer.</td></tr>
             </tbody>
           </table>
           <p>
             <code>Ok(_)</code> means the box answered at all; a status other than{' '}
-            <A href="/library/developer/transfer#status"><code>Ok</code></A> comes back in the outcome,
+            <A href="/library/advanced/transfer#status"><code>Ok</code></A> comes back in the outcome,
             not as an error.
           </p>
           <div class="callout callout--info">
@@ -116,12 +116,12 @@ if reply.status == TransferStatus::Ok {
           <CardHeader title="TransferOutcome" subtitle="The device's answer: status and any IN data" />
           <p>
             What the device answered. A non-<code>Ok</code>{' '}
-            <A href="/library/developer/transfer#status"><code>status</code></A> carries no data.
+            <A href="/library/advanced/transfer#status"><code>status</code></A> carries no data.
           </p>
           <table class="api-params">
             <thead><tr><th>Member</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>status</code></td><td><A href="/library/developer/transfer#status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
+              <tr><td><code>status</code></td><td><A href="/library/advanced/transfer#status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
               <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
               <tr><td><code>is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
               <tr><td><code>data()</code></td><td><code>&amp;[u8]</code></td><td>The returned data.</td></tr>

@@ -92,10 +92,10 @@ afterEach(() => {
 });
 
 describe('DeviceDeveloper', () => {
-  it('renders every card of the developer layer', () => {
+  it('renders every card of the advanced control layer', () => {
     on();
     const { getByText } = render(() => <DeviceDeveloper />);
-    expect(getByText('Developer layer')).toBeTruthy();
+    expect(getByText('Advanced control layer')).toBeTruthy();
     expect(getByText('Rewrite rules')).toBeTruthy();
     expect(getByText('Descriptor patches')).toBeTruthy();
     expect(getByText('Raw and control transfer')).toBeTruthy();
@@ -117,7 +117,7 @@ describe('DeviceDeveloper', () => {
   it('says the layer is active once imperfect clones are on', () => {
     on();
     const { getByText } = render(() => <DeviceDeveloper />);
-    expect(getByText('Developer layer active')).toBeTruthy();
+    expect(getByText('Advanced control layer active')).toBeTruthy();
   });
 
   it('adds a rewrite rule from the form defaults (a control-class pass)', async () => {

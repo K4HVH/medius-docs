@@ -749,7 +749,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
   }
 
-  // The developer layer (§3.14), addressed in the CATCH (class, id, dir) space and admitted only under
+  // The advanced control layer (§3.14), addressed in the CATCH (class, id, dir) space and admitted only under
   // OPTION(IMPERFECT). RAW, REWRITE and PATCH are fire-and-forget and dropped while the opt-in is off; a
   // PATCH is stored regardless and applied only under it; TRANSFER answers Refused while it is off.
 

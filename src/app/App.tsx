@@ -46,10 +46,10 @@ import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
 import FeatMock from './pages/library/features/Mock';
 import FeatTracing from './pages/library/features/Tracing';
-import DevRaw from './pages/library/developer/Raw';
-import DevTransfer from './pages/library/developer/Transfer';
-import DevRewrite from './pages/library/developer/Rewrite';
-import DevPatch from './pages/library/developer/Patch';
+import DevRaw from './pages/library/advanced/Raw';
+import DevTransfer from './pages/library/advanced/Transfer';
+import DevRewrite from './pages/library/advanced/Rewrite';
+import DevPatch from './pages/library/advanced/Patch';
 import GuideCalls from './pages/library/GuideCalls';
 import GuideConnection from './pages/library/GuideConnection';
 import GuideTesting from './pages/library/GuideTesting';
@@ -138,10 +138,10 @@ const App: Component = () => {
           <Route path="/library/features/async" component={FeatAsync} />
           <Route path="/library/features/mock" component={FeatMock} />
           <Route path="/library/features/tracing" component={FeatTracing} />
-          <Route path="/library/developer/raw" component={DevRaw} />
-          <Route path="/library/developer/transfer" component={DevTransfer} />
-          <Route path="/library/developer/rewrite" component={DevRewrite} />
-          <Route path="/library/developer/patch" component={DevPatch} />
+          <Route path="/library/advanced/raw" component={DevRaw} />
+          <Route path="/library/advanced/transfer" component={DevTransfer} />
+          <Route path="/library/advanced/rewrite" component={DevRewrite} />
+          <Route path="/library/advanced/patch" component={DevPatch} />
           <Route path="/library/guides/calls" component={GuideCalls} />
           <Route path="/library/guides/connection" component={GuideConnection} />
           <Route path="/library/guides/testing" component={GuideTesting} />
@@ -168,7 +168,7 @@ const App: Component = () => {
           <Route path="/dashboard" component={DashboardDevice} />
           <Route path="/dashboard/setup" component={DashboardSetup} />
           <Route path="/dashboard/control" component={DashboardControl} />
-          <Route path="/dashboard/developer" component={DashboardDeveloper} />
+          <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />

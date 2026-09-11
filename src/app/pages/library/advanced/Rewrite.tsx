@@ -31,7 +31,7 @@ const Rewrite: Component = () => {
               a rule acts at any [ bracketed ] stage`}</pre>
         <div class="callout callout--warning">
           <p>
-            The developer layer is gated on the imperfect-clone opt-in. With{' '}
+            The advanced control layer is gated on the imperfect-clone opt-in. With{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
             off, <code>set_rewrite</code> returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
@@ -40,7 +40,7 @@ const Rewrite: Component = () => {
         <p>
           <code>set_rewrite</code>, <code>remove_rewrite</code>, and <code>clear_rewrite</code> are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>;{' '}
-          <A href="/library/developer/rewrite#query-rewrite"><code>query_rewrite</code></A> reads back
+          <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> reads back
           what the box actually holds.
         </p>
       </Card>
@@ -55,13 +55,13 @@ const Rewrite: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>rule</code></td><td><A href="/library/developer/rewrite#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its address, its <A href="/library/developer/rewrite#action"><code>action</code></A>, and any masked match or payload.</td></tr>
+              <tr><td><code>rule</code></td><td><A href="/library/advanced/rewrite#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its address, its <A href="/library/advanced/rewrite#action"><code>action</code></A>, and any masked match or payload.</td></tr>
             </tbody>
           </table>
           <p>
             A rule is keyed by <code>(class, id, direction, match, mask)</code>; setting one whose key
             exists overwrites it. The crate validates a rule before sending; see the{' '}
-            <A href="/library/developer/rewrite#refusals">refusals</A>.
+            <A href="/library/advanced/rewrite#refusals">refusals</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Direction, RewriteRule, RewriteClass, RewriteAction};
@@ -118,7 +118,7 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
           <pre class="api-signature">fn query_rewrite(&self) -&gt; Result&lt;RewriteTable&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Returns a <A href="/library/developer/rewrite#readback"><code>RewriteTable</code></A>: a full
+            Returns a <A href="/library/advanced/rewrite#readback"><code>RewriteTable</code></A>: a full
             flag, a generation counter, and a row per rule without its match, mask, or payload bytes. The
             box holds up to 16 rules; a further one sets the <code>table_full</code> flag.
           </p>
@@ -141,12 +141,12 @@ for e in &table.entries {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/developer/rewrite#query-rewrite"><code>query_rewrite</code></A> summary.</td></tr>
+              <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> summary.</td></tr>
             </tbody>
           </table>
           <p>
             Returns one rule in full, in the shape{' '}
-            <A href="/library/developer/rewrite#set-rewrite"><code>set_rewrite</code></A> takes.
+            <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> takes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let table = device.query_rewrite()?;
@@ -173,10 +173,10 @@ for i in 0..table.entries.len() as u8 {
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>class</code></td><td><A href="/library/developer/rewrite#class"><code>RewriteClass</code></A></td><td>The traffic class the rule addresses.</td></tr>
+              <tr><td><code>class</code></td><td><A href="/library/advanced/rewrite#class"><code>RewriteClass</code></A></td><td>The traffic class the rule addresses.</td></tr>
               <tr><td><code>id</code></td><td><code>u16</code></td><td>The address within the class: an interface number or an endpoint number.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.</td></tr>
-              <tr><td><code>action</code></td><td><A href="/library/developer/rewrite#action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/library/advanced/rewrite#action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
               <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, the same length; empty matches every packet.</td></tr>
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies.</td></tr>

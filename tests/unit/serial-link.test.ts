@@ -516,7 +516,7 @@ describe('SerialLink', () => {
     await expect(pending).rejects.toThrow();
   });
 
-  // The v3.4.0 developer layer (§3.14): the fire-and-forget writes, TRANSFER's SEQ correlation on its
+  // The v3.4.0 advanced control layer (§3.14): the fire-and-forget writes, TRANSFER's SEQ correlation on its
   // own opcode, and the readbacks.
   it('raw() sends a RAW frame of [ep_num][dir][bytes]', async () => {
     const mock = new MockSerialPort();
@@ -621,7 +621,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('queryHealth() decodes the u16 flags, including the developer-layer bits', async () => {
+  it('queryHealth() decodes the u16 flags, including the advanced control layer bits', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
