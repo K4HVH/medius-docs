@@ -28,6 +28,7 @@ import {
   rewriteClassName,
   transferStatusName,
 } from '../../../dashboard/protocol';
+import { ConnectPanel } from './ConnectPanel';
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Section } from './Section';
@@ -304,7 +305,27 @@ const DeviceDeveloper = () => {
     s === TransferStatus.Ok ? 'success' : s === TransferStatus.Refused ? 'warning' : 'error';
 
   return (
-    <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
+    <Show
+      when={dash.status() === 'connected' && !dash.updateOnly()}
+      fallback={
+        <div id="advanced-control-layer" data-search-target>
+          <Card>
+            <CardHeader title="Advanced control layer" subtitle="Raw injection, rewrite rules, and descriptor patches" />
+            <Show
+              when={!dash.updateOnly()}
+              fallback={
+                <p>
+                  This box speaks an older protocol, so the advanced control layer is unavailable.{' '}
+                  <A href="/dashboard/update">Update it</A> to use it.
+                </p>
+              }
+            >
+              <ConnectPanel />
+            </Show>
+          </Card>
+        </div>
+      }
+    >
       <div id="advanced-control-layer" data-search-target>
         <Card>
           <CardHeader title="Advanced control layer" subtitle="Raw injection, rewrite rules, and descriptor patches" />
