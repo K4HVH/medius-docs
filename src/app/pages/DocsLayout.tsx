@@ -92,7 +92,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
 ];
 
-const libraryDeveloperTabs: TabOption[] = [
+const libraryAdvancedTabs: TabOption[] = [
   { value: '/library/advanced/raw', label: 'Raw injection', icon: BsBroadcast },
   { value: '/library/advanced/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
   { value: '/library/advanced/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
@@ -120,7 +120,7 @@ const libraryReferenceTabs: TabOption[] = [
 ];
 
 const allLibraryTabs = [
-  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryDeveloperTabs, ...libraryFeatureTabs,
+  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryAdvancedTabs, ...libraryFeatureTabs,
   ...libraryGuidesTabs, ...libraryReferenceTabs,
 ];
 
@@ -384,7 +384,7 @@ const DocsLayout = (props: RouteSectionProps) => {
               variant="subtle"
               value={location.pathname}
               onChange={handlePageNav}
-              options={libraryDeveloperTabs}
+              options={libraryAdvancedTabs}
             />
             <Divider spacing="compact" label="Features" labelAlign="start" />
             <Tabs

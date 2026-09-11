@@ -562,7 +562,7 @@ describe('LOCK command (§3.8)', () => {
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
     // v7 opens the advanced control layer (raw/transfer/rewrite/patch) and widens HEALTH to a u16. A box on v6
     // has no rewrite table, patch store or transfer opcode, and answers HEALTH in one byte; left at 6
-    // the handshake would accept it and the developer editor would find the missing wire by silence.
+    // the handshake would accept it and the advanced control editor would find the missing wire by silence.
     expect(PROTO_VER).toBe(7);
   });
 
