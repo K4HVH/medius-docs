@@ -1,4 +1,4 @@
-// The developer layer (§3.14): rewrite rules, descriptor patches, and the raw/transfer console.
+// The advanced control layer (§3.14): rewrite rules, descriptor patches, and the raw/transfer console.
 //
 // All of it is addressed in the CATCH (class, id, dir) space and admitted only under OPTION(IMPERFECT).
 // The layer is inert while the opt-in is off: a rewrite rule or a raw report is dropped, a transfer is
@@ -305,11 +305,11 @@ const DeviceDeveloper = () => {
 
   return (
     <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
-      <div id="developer-layer" data-search-target>
+      <div id="advanced-control-layer" data-search-target>
         <Card>
-          <CardHeader title="Developer layer" subtitle="Raw injection, rewrite rules, and descriptor patches" />
+          <CardHeader title="Advanced control layer" subtitle="Raw injection, rewrite rules, and descriptor patches" />
           <p>
-            The developer layer reaches every traffic class the box carries, on the same{' '}
+            The advanced control layer reaches every traffic class the box carries, on the same{' '}
             <A href="/native/commands/catch">(class, id, direction)</A> addresses a subscription uses. A
             rewrite rule rewrites a matched packet in flight, a descriptor patch overwrites the bytes the
             clone presents, and the console below puts raw reports and control requests on the wire.
@@ -326,7 +326,7 @@ const DeviceDeveloper = () => {
             }
           >
             <div style={{ ...chips, ...section }}>
-              <Chip variant="success">Developer layer active</Chip>
+              <Chip variant="success">Advanced control layer active</Chip>
             </div>
           </Show>
         </Card>

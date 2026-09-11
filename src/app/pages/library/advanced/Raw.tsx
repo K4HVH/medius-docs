@@ -15,7 +15,7 @@ const Raw: Component = () => {
         </p>
         <p>
           The write is stateless: the next native report overwrites it, and <code>raw</code> bypasses
-          the <A href="/library/developer/rewrite">rewrite rules</A>.
+          the <A href="/library/advanced/rewrite">rewrite rules</A>.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
@@ -31,7 +31,7 @@ const Raw: Component = () => {
   enumerate   descriptor patches overwrite what the clone presents`}</pre>
         <div class="callout callout--warning">
           <p>
-            The whole developer layer is gated on the imperfect-clone opt-in. With{' '}
+            The whole advanced control layer is gated on the imperfect-clone opt-in. With{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
             off, <code>raw</code> returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A> rather
@@ -52,7 +52,7 @@ const Raw: Component = () => {
             <tbody>
               <tr><td><code>ep</code></td><td><code>u8</code></td><td>The cloned endpoint number, 0 to 15.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, on the wire as given. At most one interrupt endpoint's <code>wMaxPacketSize</code>; a bulk endpoint takes up to the developer-frame limit of 512 bytes.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, on the wire as given. At most one interrupt endpoint's <code>wMaxPacketSize</code>; a bulk endpoint takes up to the 512-byte frame limit.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -82,7 +82,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           </div>
           <div class="callout callout--info">
             <p>
-              A single developer frame carries up to 512 payload bytes (the{' '}
+              A single advanced control layer frame carries up to 512 payload bytes (the{' '}
               <A href="/native/frame#layout">frame limit</A>), the bound the C and Python buffers
               (<code>MEDIUS_MAX_DEV_PAYLOAD</code>) are sized to.
             </p>
@@ -124,7 +124,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
         <Card>
           <CardHeader title="The imperfect-clone gate" subtitle="One opt-in admits the whole layer" />
           <p>
-            The box admits the developer layer under the imperfect-clone opt-in and nothing else. The
+            The box admits the advanced control layer under the imperfect-clone opt-in and nothing else. The
             crate reads that state before it sends, so an off opt-in is a real error rather than a frame
             the box silently drops.
           </p>

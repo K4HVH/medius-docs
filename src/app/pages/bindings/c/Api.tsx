@@ -378,10 +378,10 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
         </Card>
       </div>
 
-      <div id="developer" data-search-target>
+      <div id="advanced" data-search-target>
         <Card>
-          <CardHeader title="Developer layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
-          <p>The imperfect-clone developer layer. See <A href="/library/developer/raw">Raw injection</A>, <A href="/library/developer/transfer">Control transfers</A>, <A href="/library/developer/rewrite">Rewrite rules</A>, and <A href="/library/developer/patch">Descriptor patches</A>. <code>medius_device_raw</code>, <code>set_rewrite</code>, and <code>apply_patch</code> need the opt-in (<code>medius_device_allow_imperfect_clones(dev, true)</code>) or return <code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code>; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off comes back <code>MEDIUS_TRANSFER_STATUS_REFUSED</code> rather than erroring.</p>
+          <CardHeader title="Advanced control layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
+          <p>The imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. <code>medius_device_raw</code>, <code>set_rewrite</code>, and <code>apply_patch</code> need the opt-in (<code>medius_device_allow_imperfect_clones(dev, true)</code>) or return <code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code>; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off comes back <code>MEDIUS_TRANSFER_STATUS_REFUSED</code> rather than erroring.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>

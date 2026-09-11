@@ -285,10 +285,10 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
         </Card>
       </div>
 
-      <div id="developer" data-search-target>
+      <div id="advanced" data-search-target>
         <Card>
-          <CardHeader title="Developer layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
-          <p>The imperfect-clone developer layer. See <A href="/library/developer/raw">Raw injection</A>, <A href="/library/developer/transfer">Control transfers</A>, <A href="/library/developer/rewrite">Rewrite rules</A>, and <A href="/library/developer/patch">Descriptor patches</A>. <code>dev.raw</code>, <code>set_rewrite</code>, and <code>apply_patch</code> need the opt-in (<code>dev.allow_imperfect_clones(True)</code>) or raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off returns <code>TransferStatus.REFUSED</code> rather than raising.</p>
+          <CardHeader title="Advanced control layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
+          <p>The imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. <code>dev.raw</code>, <code>set_rewrite</code>, and <code>apply_patch</code> need the opt-in (<code>dev.allow_imperfect_clones(True)</code>) or raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off returns <code>TransferStatus.REFUSED</code> rather than raising.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>

@@ -1389,10 +1389,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
         </Card>
       </div>
 
-      <div id="developer-types" data-search-target>
+      <div id="advanced-types" data-search-target>
         <Card>
-          <CardHeader title="Developer-layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
-          <p>The value types for the imperfect-clone developer layer. See <A href="/library/developer/raw">Raw injection</A>, <A href="/library/developer/transfer">Control transfers</A>, <A href="/library/developer/rewrite">Rewrite rules</A>, and <A href="/library/developer/patch">Descriptor patches</A>.</p>
+          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
+          <p>The value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
 
           <div id="setup">
             <div class="api-response-label">Setup</div>
@@ -1422,7 +1422,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
 
           <div id="rewrite-rule">
             <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
-            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#developer"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
+            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
             <table class="api-params">
               <thead><tr><th>RewriteRule field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1438,7 +1438,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
 
           <div id="patch">
             <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
-            <p><code>Patch</code> is what <A href="/bindings/python/api#developer"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries.</p>
+            <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries.</p>
             <table class="api-params">
               <thead><tr><th>Patch field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1552,7 +1552,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge, which cannot be decoded into press and release</td></tr>
                 <tr><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel, which would address the whole class instead</td></tr>
                 <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
-                <tr><td><code>ImperfectRequiredError</code></td><td>a developer-layer call with the imperfect-clone opt-in off</td></tr>
+                <tr><td><code>ImperfectRequiredError</code></td><td>an advanced control layer call with the imperfect-clone opt-in off</td></tr>
                 <tr><td><code>RewriteMaskLengthError</code></td><td>a rewrite rule whose <code>match</code> and <code>mask</code> are different lengths</td></tr>
                 <tr><td><code>RewriteActionClassError</code></td><td>a rewrite action that its rule's class does not accept</td></tr>
                 <tr><td><code>RewritePayloadTooLargeError</code></td><td>a rewrite payload past the head the box holds for its class</td></tr>

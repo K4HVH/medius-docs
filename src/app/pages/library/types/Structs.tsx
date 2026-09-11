@@ -55,7 +55,7 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
             Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
             bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
             <code>to_flags()</code> convert it: bits 0 to 7 are the original byte, and the{' '}
-            <A href="/library/developer/rewrite">developer layer</A> opened three more in the high byte.
+            <A href="/library/advanced/rewrite">advanced control layer</A> opened three more in the high byte.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>True when</th></tr></thead>
@@ -68,8 +68,8 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input is off a full pass, whether <A href="/library/lock#lock"><code>lock</code></A>ed or merely <A href="/library/lock#scale"><code>scale</code></A>d.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>The <A href="/library/catch#catch-events"><code>catch</code></A> table holds at least one <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>, whatever class it addresses.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
-              <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/developer/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
-              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/developer/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/advanced/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/advanced/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
               <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A <A href="/library/transform">field transform</A> is active (v3.4.0).</td></tr>
             </tbody>
           </table>

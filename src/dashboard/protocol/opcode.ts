@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 7; // the developer layer (raw/transfer/rewrite/patch) and HEALTH widened to 16 bits
+export const PROTO_VER = 7; // the advanced control layer (raw/transfer/rewrite/patch) and HEALTH widened to 16 bits
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
 // and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
@@ -196,7 +196,7 @@ export const H_LOCK_ON = 0x20;
 export const H_CATCH_ON = 0x40;
 export const H_KBD_ATT = 0x80;
 // HEALTH is a u16 from proto 7 (RESP(HEALTH) carries [what][flags u16 LE]); the high byte carries the
-// developer layer's state and the field-transform flag.
+// advanced control layer's state and the field-transform flag.
 export const H_REWRITE_ON = 0x0100; // the rewrite-rule table is non-empty
 export const H_PATCH_ON = 0x0200; // a descriptor-patch set is applied to the clone
 export const H_TRANSFORM_ON = 0x0400; // a field transform is active
@@ -351,7 +351,7 @@ export enum FrameType {
   TrafficEvent = 0x16,
   Update = 0x17,
   UpdateResp = 0x18,
-  // v3.4.0 developer layer (§3.14), gated on OPTION(IMPERFECT).
+  // v3.4.0 advanced control layer (§3.14), gated on OPTION(IMPERFECT).
   Raw = 0x19, // [ep_num u8][dir u8][bytes...] put a raw report on a cloned endpoint
   Transfer = 0x1a, // [ep u8][setup 8][OUT data..] run a control request on the device
   TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (its own opcode, SEQ-correlated)

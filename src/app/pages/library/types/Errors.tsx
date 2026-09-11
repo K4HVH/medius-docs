@@ -120,7 +120,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ImperfectRequired</code></td>
                 <td>
-                  A <A href="/library/developer/raw">developer-layer</A> call while the imperfect-clone
+                  A <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
                   opt-in is off. Turn it on with{' '}
                   <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.
                 </td>
@@ -128,14 +128,14 @@ const Errors: Component = () => {
               <tr>
                 <td><code>RawDirection {'{'} direction {'}'}</code></td>
                 <td>
-                  A <A href="/library/developer/raw"><code>raw</code></A> call's direction was not{' '}
+                  A <A href="/library/advanced/raw"><code>raw</code></A> call's direction was not{' '}
                   <code>IN</code> or <code>OUT</code>.
                 </td>
               </tr>
               <tr>
                 <td><code>RewriteMaskLength {'{'} match_len, mask_len {'}'}</code></td>
                 <td>
-                  A <A href="/library/developer/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
+                  A <A href="/library/advanced/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
                   <code>mask</code> were not the same length.
                 </td>
               </tr>
@@ -143,7 +143,7 @@ const Errors: Component = () => {
                 <td><code>RewriteActionClass {'{'} action, class {'}'}</code></td>
                 <td>
                   A rewrite rule's{' '}
-                  <A href="/library/developer/rewrite#action">action does not fit its class</A>.
+                  <A href="/library/advanced/rewrite#action">action does not fit its class</A>.
                 </td>
               </tr>
               <tr>

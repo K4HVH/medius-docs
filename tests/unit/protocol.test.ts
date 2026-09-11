@@ -456,7 +456,7 @@ describe('helpers', () => {
     });
   });
 
-  it('healthFromFlags decodes the developer-layer bits in the high byte (proto 7)', () => {
+  it('healthFromFlags decodes the advanced control layer bits in the high byte (proto 7)', () => {
     expect(healthFromFlags(0x0100).rewriteOn).toBe(true);
     expect(healthFromFlags(0x0200).patchOn).toBe(true);
     expect(healthFromFlags(0x0400).transformOn).toBe(true);
@@ -560,7 +560,7 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // v7 opens the developer layer (raw/transfer/rewrite/patch) and widens HEALTH to a u16. A box on v6
+    // v7 opens the advanced control layer (raw/transfer/rewrite/patch) and widens HEALTH to a u16. A box on v6
     // has no rewrite table, patch store or transfer opcode, and answers HEALTH in one byte; left at 6
     // the handshake would accept it and the developer editor would find the missing wire by silence.
     expect(PROTO_VER).toBe(7);
@@ -1621,10 +1621,10 @@ describe('RESP(FIRMWARE)', () => {
   });
 });
 
-// The v3.4.0 developer layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the four
+// The v3.4.0 advanced control layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the four
 // readback decoders, and TRANSFER_RESP. Byte layouts are pinned to the firmware's ctrl_proto.h and
 // mirror tools/medius.py, so a transposed field fails here rather than on the wire.
-describe('developer layer (§3.14 / §4.17)', () => {
+describe('advanced control layer (§3.14 / §4.17)', () => {
   it('RAW is [ep][bytes..]', () => {
     // interrupt-IN endpoint 1: [ep_num=01][dir=01 (Positive/IN)][bytes].
     expect(toHex(rawPayload(1, Direction.Positive, fromHex('01 00 05 00')))).toBe('01 01 01 00 05 00');
@@ -1741,14 +1741,14 @@ describe('developer layer (§3.14 / §4.17)', () => {
     expect(parseTransferResp(fromHex('00')).status).toBe(TransferStatus.Refused);
   });
 
-  it('parses the developer-layer status bytes', () => {
+  it('parses the advanced control layer status bytes', () => {
     expect(parseTransferResp(fromHex('83 fd')).status).toBe(TransferStatus.Stall);
     expect(parseTransferResp(fromHex('83 fe')).status).toBe(TransferStatus.Nak);
     expect(parseTransferResp(fromHex('83 ff')).status).toBe(TransferStatus.NoDevice);
     expect(parseTransferResp(fromHex('83 fc')).status).toBe(TransferStatus.Refused);
   });
 
-  it('reads the developer-layer health bits through a u16 RESP(HEALTH)', () => {
+  it('reads the advanced control layer health bits through a u16 RESP(HEALTH)', () => {
     // [what=1][flags 0x0300 LE] = rewrite + patch on, nothing in the low byte.
     const r = parseResp(fromHex('01 00 03'));
     if (r?.kind !== 'health') throw new Error('expected health');
