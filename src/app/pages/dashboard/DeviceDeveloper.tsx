@@ -419,10 +419,10 @@ const DeviceDeveloper = () => {
             <Button variant="primary" disabled={rwCmd.busy() || !allowed()} onClick={addRule}>
               Add rule
             </Button>
-            <Button variant="secondary" disabled={rwCmd.busy()} onClick={removeRule}>
+            <Button variant="secondary" disabled={rwCmd.busy() || !allowed()} onClick={removeRule}>
               Remove rule
             </Button>
-            <Button variant="subtle" disabled={rwCmd.busy()} onClick={clearTable}>
+            <Button variant="subtle" disabled={rwCmd.busy() || !allowed()} onClick={clearTable}>
               Clear table
             </Button>
           </div>
