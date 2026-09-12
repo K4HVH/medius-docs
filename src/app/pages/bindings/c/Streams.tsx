@@ -154,7 +154,7 @@ struct MediusUsageEvent {               // one class's held usages
 
 struct MediusTrafficEvent {             // one captured packet
     MediusCatchClass class_;            // which class matched
-    uint16_t id;                        // endpoint address / endpoint no. / interface no.
+    uint16_t id;                        // endpoint no. / interface no.
     uint8_t direction;                  // POSITIVE = IN, NEGATIVE = OUT
     uint8_t flags;                      // class-specific; the kind, for BUS
     uint16_t true_len;                  // length on the bus, before capture

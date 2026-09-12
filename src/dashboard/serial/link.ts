@@ -23,6 +23,14 @@ import {
   type LockTarget,
   type LogLine,
   type Rate,
+  type RewriteRule,
+  type RewriteTable,
+  type PatchSet,
+  type Transform,
+  type TransformTable,
+  type PatchEntry,
+  type TransferResult,
+  PatchSection,
   type Stats,
   type Version,
   ClipOp,
@@ -79,6 +87,7 @@ import {
   lockPayload,
   moveCursorPayload,
   moveWheelPayload,
+  movePanPayload,
   moveRidePayload,
   MV_F_DISCARD,
   MV_F_FLUSH,
@@ -88,9 +97,25 @@ import {
   parseMotionEvent,
   parseResp,
   parseTrafficEvent,
+  parseTransferResp,
   parseUsageEvent,
   queryPayload,
   rebootPayload,
+  rawPayload,
+  transferPayload,
+  rewritePayload,
+  clearRewritePayload,
+  patchPayload,
+  patchApplyPayload,
+  patchClearPayload,
+  transformPayload,
+  clearTransformPayload,
+  queryEntryPayload,
+  Q_REWRITE,
+  Q_REWRITE_ENTRY,
+  Q_PATCHES,
+  Q_PATCH_ENTRY,
+  Q_TRANSFORMS,
   type FirmwareInfo,
   anyPending,
   Q_FIRMWARE,
@@ -224,6 +249,18 @@ interface Pending {
   timer: ReturnType<typeof setTimeout>;
 }
 
+// A TRANSFER_RESP waiter, keyed by the SEQ the reply echoes. TRANSFER_RESP is its own opcode carrying
+// [ep][status] rather than a selector byte, so it cannot ride the RESP path that correlates on the
+// selector; it needs its own SEQ-keyed map.
+interface TransferWaiter {
+  resolve: (result: TransferResult) => void;
+  reject: (err: Error) => void;
+  timer: ReturnType<typeof setTimeout>;
+}
+
+/** How long a TRANSFER waits for the device to answer before it gives up. */
+const DEFAULT_TRANSFER_TIMEOUT_MS = 1500;
+
 // Open a Web Serial port chooser filtered to the CH343 control link.
 export async function requestMediusPort(): Promise<SerialPort> {
   if (!isWebSerialSupported()) {
@@ -259,6 +296,8 @@ export class SerialLink {
   private readLoop: Promise<void> | null = null;
   private writeChain: Promise<void> = Promise.resolve();
   private pending = new Map<number, Pending>();
+  // TRANSFER_RESP waiters, keyed by the SEQ the reply echoes (§3.14).
+  private transferWaiters = new Map<number, TransferWaiter>();
   // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
   // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
   private updateWaiters = new Map<number, (r: UpdateResp | null, cause?: Error) => void>();
@@ -462,6 +501,11 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), moveWheelPayload(dz, flags)));
   }
 
+  // Pan horizontally (§3.1, AC Pan), in detents, same carry behaviour as `wheel`. + = right.
+  pan(dpan: number, flags = 0): Promise<void> {
+    return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
+  }
+
   // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta emits on the box's
   // own clock instead of waiting for a native cursor-motion report to carry it. With riding off these
   // are the same as `moveRel` / `wheel`.
@@ -471,6 +515,10 @@ export class SerialLink {
 
   wheelNow(dz: number): Promise<void> {
     return this.wheel(dz, MV_F_NOW);
+  }
+
+  panNow(dpan: number): Promise<void> {
+    return this.pan(dpan, MV_F_NOW);
   }
 
   // Emit the motion the box is holding for a ride, now, ignoring the ride window (§3.1, MV_F_FLUSH).
@@ -701,6 +749,163 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
   }
 
+  // The advanced control layer (§3.14), addressed in the CATCH (class, id, dir) space and admitted only under
+  // OPTION(IMPERFECT). RAW, REWRITE and PATCH are fire-and-forget and dropped while the opt-in is off; a
+  // PATCH is stored regardless and applied only under it; TRANSFER answers Refused while it is off.
+
+  // Put bytes verbatim on a cloned endpoint: an IN endpoint reaches the game PC, an OUT endpoint reaches
+  // the device. Fire-and-forget.
+  raw(epNum: number, dir: number, bytes: Uint8Array): Promise<void> {
+    return this.send(encode(FrameType.Raw, this.nextSeq(), rawPayload(epNum, dir, bytes)));
+  }
+
+  // Run one control request against the real device and return its status and IN data. The setup packet
+  // is the 8 USB bytes; `out` carries the OUT-stage data for a host-to-device request. Answers
+  // TRANSFER_RESP, correlated by SEQ.
+  transfer(
+    ep: number,
+    bmRequestType: number,
+    bRequest: number,
+    wValue: number,
+    wIndex: number,
+    wLength: number,
+    out: Uint8Array = new Uint8Array(0),
+    timeoutMs = DEFAULT_TRANSFER_TIMEOUT_MS,
+  ): Promise<TransferResult> {
+    const seq = this.nextSeq();
+    const frame = encode(
+      FrameType.Transfer,
+      seq,
+      transferPayload(ep, bmRequestType, bRequest, wValue, wIndex, wLength, out),
+    );
+    return new Promise<TransferResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.transferWaiters.delete(seq);
+        reject(new QueryTimeoutError());
+      }, timeoutMs);
+      this.transferWaiters.set(seq, { resolve, reject, timer });
+      this.send(frame).catch((err) => {
+        clearTimeout(timer);
+        this.transferWaiters.delete(seq);
+        reject(err as Error);
+      });
+    });
+  }
+
+  // Add or overwrite a rewrite rule (§3.14). Keyed by (class, id, dir, match, mask): a matching key with
+  // a new action or payload overwrites, an identical set is a no-op. Fire-and-forget. Read the table
+  // back with `queryRewrite` to see that it landed rather than being refused by a full table.
+  setRewrite(rule: RewriteRule): Promise<void> {
+    return this.send(encode(FrameType.Rewrite, this.nextSeq(), rewritePayload(rule, 1)));
+  }
+
+  // Remove one rule, matched on its (class, id, dir, match, mask) key; the action and payload are ignored.
+  removeRewrite(rule: RewriteRule): Promise<void> {
+    return this.send(encode(FrameType.Rewrite, this.nextSeq(), rewritePayload(rule, 0)));
+  }
+
+  // Clear the whole rewrite table in one frame (the any-class, any-id, state-0 sentinel).
+  clearRewrite(): Promise<void> {
+    return this.send(encode(FrameType.Rewrite, this.nextSeq(), clearRewritePayload()));
+  }
+
+  // The rewrite table (§4.17): the full flag, the generation counter, and one summary per rule. The
+  // generation counter increments on every change that alters the table, so a divergence from a cached
+  // one is how a reconnect learns to re-send its rules.
+  async queryRewrite(timeoutMs?: number): Promise<RewriteTable> {
+    const resp = parseResp(await this.query(Q_REWRITE, timeoutMs));
+    if (resp?.kind !== 'rewrite') throw new Error('unexpected reply to REWRITE query');
+    return resp.rewrite;
+  }
+
+  // One rewrite rule in full (§4.17): the match, mask and payload bytes the summary omits. The reply
+  // replays as a set, so an edit reads the rule, changes a field, and sends it back.
+  async queryRewriteEntry(index: number, timeoutMs?: number): Promise<RewriteRule> {
+    const resp = parseResp(
+      await this.queryRaw(
+        Q_REWRITE_ENTRY,
+        queryEntryPayload(Q_REWRITE_ENTRY, index),
+        timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS,
+      ),
+    );
+    if (resp?.kind !== 'rewriteEntry') throw new Error('unexpected reply to REWRITE_ENTRY query');
+    return resp.rule;
+  }
+
+  // Overwrite bytes in a served descriptor (§3.14). Stored regardless of the opt-in, applied to the
+  // clone only under it. A zero-length `bytes` removes the patch at that key. Fire-and-forget.
+  setPatch(
+    section: PatchSection,
+    cfg: number,
+    index: number,
+    offset: number,
+    bytes: Uint8Array,
+  ): Promise<void> {
+    return this.send(
+      encode(FrameType.Patch, this.nextSeq(), patchPayload(section, cfg, index, offset, bytes)),
+    );
+  }
+
+  // Remove the patch at a (section, cfg, index, offset) key (a zero-length set).
+  removePatch(section: PatchSection, cfg: number, index: number, offset: number): Promise<void> {
+    return this.setPatch(section, cfg, index, offset, new Uint8Array(0));
+  }
+
+  // Re-present the clone with the stored patch set (the game PC sees one replug). Needs the opt-in.
+  applyPatch(): Promise<void> {
+    return this.send(encode(FrameType.Patch, this.nextSeq(), patchApplyPayload()));
+  }
+
+  // Drop every patch for this device and re-present unpatched.
+  clearPatch(): Promise<void> {
+    return this.send(encode(FrameType.Patch, this.nextSeq(), patchClearPayload()));
+  }
+
+  // The descriptor-patch set (§4.17): the applied, pending, refused and full flags, and one summary per
+  // stored patch.
+  async queryPatches(timeoutMs?: number): Promise<PatchSet> {
+    const resp = parseResp(await this.query(Q_PATCHES, timeoutMs));
+    if (resp?.kind !== 'patches') throw new Error('unexpected reply to PATCHES query');
+    return resp.patches;
+  }
+
+  // One descriptor patch in full (§4.17): the bytes the summary omits.
+  async queryPatchEntry(index: number, timeoutMs?: number): Promise<PatchEntry> {
+    const resp = parseResp(
+      await this.queryRaw(
+        Q_PATCH_ENTRY,
+        queryEntryPayload(Q_PATCH_ENTRY, index),
+        timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS,
+      ),
+    );
+    if (resp?.kind !== 'patchEntry') throw new Error('unexpected reply to PATCH_ENTRY query');
+    return resp.patch;
+  }
+
+  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new op or
+  // scale overwrites. Transforms are faithful and ungated. Fire-and-forget; read the table back with
+  // `queryTransforms` to see that it landed rather than being refused by a full or undeclared field.
+  setTransform(t: Transform): Promise<void> {
+    return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 1)));
+  }
+
+  // Remove one transform, matched on its (source, dest) key; the op and scale are ignored.
+  removeTransform(t: Transform): Promise<void> {
+    return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 0)));
+  }
+
+  // Clear the whole transform table in one frame (the any-class, any-id, state-0 sentinel).
+  clearTransforms(): Promise<void> {
+    return this.send(encode(FrameType.Transform, this.nextSeq(), clearTransformPayload()));
+  }
+
+  // The transform table (§4.18): the full flag and one entry per transform, in installation order.
+  async queryTransforms(timeoutMs?: number): Promise<TransformTable> {
+    const resp = parseResp(await this.query(Q_TRANSFORMS, timeoutMs));
+    if (resp?.kind !== 'transforms') throw new Error('unexpected reply to TRANSFORMS query');
+    return resp.transforms;
+  }
+
   async close(): Promise<void> {
     this.closing = true;
     this.failAll(new Error('link closed'));
@@ -852,6 +1057,18 @@ export class SerialLink {
           // Drop the oldest only once past the cap; the newest is the one that explains a failure.
           if (this.updateBacklog.length > UPDATE_BACKLOG_MAX) this.updateBacklog.shift();
         }
+      }
+      return;
+    }
+    if (f.ty === FrameType.TransferResp) {
+      // Its own opcode, correlated by the SEQ that echoes the TRANSFER. A reply left over from before
+      // a reboot can land under a SEQ this connection is reusing; the waiter is claimed and deleted, so
+      // a second reply for the same SEQ finds nothing and is dropped.
+      const w = this.transferWaiters.get(f.seq);
+      if (w) {
+        clearTimeout(w.timer);
+        this.transferWaiters.delete(f.seq);
+        w.resolve(parseTransferResp(f.payload));
       }
       return;
     }
@@ -1010,6 +1227,11 @@ export class SerialLink {
       p.reject(err);
     }
     this.pending.clear();
+    for (const w of this.transferWaiters.values()) {
+      clearTimeout(w.timer);
+      w.reject(err);
+    }
+    this.transferWaiters.clear();
     // Update waiters too: without this an in-flight op sits out its full 20 to 60 second timeout
     // after the port is already gone.
     for (const w of this.updateWaiters.values()) w(null, err);   // the real cause, not a supersession

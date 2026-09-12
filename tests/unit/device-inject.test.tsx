@@ -29,6 +29,12 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
     wheelNow: async (dz: number) => {
       mock.sent.push({ kind: 'wheelNow', args: [dz] });
     },
+    pan: async (dpan: number) => {
+      mock.sent.push({ kind: 'pan', args: [dpan] });
+    },
+    panNow: async (dpan: number) => {
+      mock.sent.push({ kind: 'panNow', args: [dpan] });
+    },
     flushMotion: async () => {
       mock.sent.push({ kind: 'flush', args: [] });
     },
@@ -42,6 +48,7 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       updateOnly: () => false,
       health: () => health(),
       link: () => link,
+      poll: () => () => null,
     }),
   };
 });
@@ -247,5 +254,13 @@ describe('DeviceInject', () => {
     fireEvent.click(await findByText('Send held motion'));
     fireEvent.click(await findByText('Drop held motion'));
     expect(mock.sent.map((s) => s.kind)).toEqual(['flush', 'discard']);
+  });
+
+  it('drives AC Pan left and right as its own axis', async () => {
+    mock.setHealth(health());
+    const { findByText } = render(() => <DeviceInject />);
+    fireEvent.click(await findByText('Pan right'));
+    fireEvent.click(await findByText('Pan left'));
+    expect(mock.sent.filter((s) => s.kind === 'pan').map((s) => s.args)).toEqual([[1], [-1]]);
   });
 });

@@ -20,6 +20,9 @@ import type {
   ImperfectStatus,
   Locks,
   Rate,
+  RewriteTable,
+  PatchSet,
+  TransformTable,
   Stats,
   Version,
 } from '../../../dashboard/protocol';
@@ -41,6 +44,9 @@ export interface PollValues {
   render: Render;
   spread: Spread;
   clip: ClipStatus;
+  rewrite: RewriteTable;
+  patches: PatchSet;
+  transforms: TransformTable;
 }
 
 export type PollKey = keyof PollValues;
@@ -61,6 +67,9 @@ const RUN: { [K in PollKey]: (l: SerialLink) => Promise<PollValues[K]> } = {
   render: (l) => l.queryRender(),
   spread: (l) => l.querySpread(),
   clip: (l) => l.queryClip(),
+  rewrite: (l) => l.queryRewrite(),
+  patches: (l) => l.queryPatches(),
+  transforms: (l) => l.queryTransforms(),
 };
 
 // The box drops injection, locks, the catch table and the loaded clip after this long with no
@@ -90,6 +99,13 @@ const DEFAULT_MS: Record<PollKey, number> = {
   render: 4000,
   spread: 4000,
   clip: 1000,
+  // The rewrite table is PC-owned session state a safety clear releases; its editor polls fast so the
+  // live table and the generation counter stay current as rules are added and removed.
+  rewrite: 1000,
+  transforms: 1000,
+  // Patches persist in the box's store across a reboot, so their set only changes when a client changes
+  // it; a write refreshes it at once.
+  patches: 2000,
 };
 
 const MIN_MS = 100;

@@ -86,9 +86,29 @@ import {
   vidPid,
   moveCursorPayload,
   moveWheelPayload,
+  movePanPayload,
   MV_F_DISCARD,
   MV_F_FLUSH,
   MV_F_NOW,
+  rawPayload,
+  transferPayload,
+  rewritePayload,
+  clearRewritePayload,
+  patchPayload,
+  transformPayload,
+  clearTransformPayload,
+  patchApplyPayload,
+  patchClearPayload,
+  queryEntryPayload,
+  parseTransferResp,
+  RewriteAction,
+  PatchSection,
+  TransformOp,
+  TransferStatus,
+  Q_REWRITE,
+  Q_REWRITE_ENTRY,
+  Q_PATCHES,
+  Q_PATCH_ENTRY,
 } from '../../src/dashboard/protocol';
 
 const toHex = (b: Uint8Array) =>
@@ -113,7 +133,7 @@ const VEC = {
   empty_reset: 'a5 04 02 00 00 51 20',
   // RESP(VERSION): [what=0][proto=1][major=0][minor=1][patch=0][mac=12 34 56 78 9a bc] (11-byte payload).
   resp_version: 'a5 06 00 0b 00 00 01 00 01 00 12 34 56 78 9a bc 91 d2',
-  resp_health: 'a5 06 03 02 00 01 0f 95 42',
+  resp_health: 'a5 06 03 03 00 01 0f 00 d7 57',
 };
 
 describe('crc16Ccitt', () => {
@@ -152,7 +172,8 @@ describe('encode (vs Rust-crate vectors)', () => {
     ).toBe(VEC.resp_version);
   });
   it('multi-byte payload (RESP HEALTH shape)', () => {
-    expect(toHex(encode(FrameType.Resp, 3, new Uint8Array([1, 0x0f])))).toBe(VEC.resp_health);
+    // Proto 7 widened HEALTH to a u16 LE, so the payload is [what][flags_lo][flags_hi].
+    expect(toHex(encode(FrameType.Resp, 3, new Uint8Array([1, 0x0f, 0x00])))).toBe(VEC.resp_health);
   });
 
   it('throws PayloadTooLongError past 512 bytes', () => {
@@ -197,6 +218,9 @@ describe('FrameDecoder', () => {
         lockOn: false,
         catchOn: false,
         kbdAttached: false,
+        rewriteOn: false,
+        patchOn: false,
+        transformOn: false,
       },
     });
   });
@@ -287,7 +311,8 @@ describe('parseResp / parseLog', () => {
   it('returns null for short or empty RESP payloads', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
     expect(parseResp(new Uint8Array([0, 1, 0, 1, 0]))).toBeNull(); // version needs 11 bytes (was 5, now carries the MAC)
-    expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 2 bytes
+    expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 3 bytes: what + u16 flags
+    expect(parseResp(new Uint8Array([1, 0x0f]))).toBeNull(); // a single flags byte is the proto-6 width
     expect(parseResp(new Uint8Array([9]))).toBeNull(); // OPTIONS needs an id byte
     expect(parseResp(new Uint8Array([8]))).toBeNull(); // selector 8 retired
   });
@@ -354,6 +379,9 @@ describe('helpers', () => {
       lockOn: false,
       catchOn: false,
       kbdAttached: false,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
   });
 
@@ -368,6 +396,9 @@ describe('helpers', () => {
       lockOn: false,
       catchOn: false,
       kbdAttached: false,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
   });
 
@@ -383,6 +414,9 @@ describe('helpers', () => {
       lockOn: true,
       catchOn: false,
       kbdAttached: false,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
   });
 
@@ -398,6 +432,9 @@ describe('helpers', () => {
       lockOn: true,
       catchOn: true,
       kbdAttached: false,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
   });
 
@@ -413,7 +450,20 @@ describe('helpers', () => {
       lockOn: true,
       catchOn: true,
       kbdAttached: true,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
+  });
+
+  it('healthFromFlags decodes the advanced control layer bits in the high byte (proto 7)', () => {
+    expect(healthFromFlags(0x0100).rewriteOn).toBe(true);
+    expect(healthFromFlags(0x0200).patchOn).toBe(true);
+    expect(healthFromFlags(0x0400).transformOn).toBe(true);
+    // The low byte is untouched by the high three, and vice versa.
+    expect(healthFromFlags(0x00ff).rewriteOn).toBe(false);
+    expect(healthFromFlags(0x0100).linkUp).toBe(false);
+    expect(healthFromFlags(0x0700)).toMatchObject({ rewriteOn: true, patchOn: true, transformOn: true });
   });
 
   it('versionString formats major.minor.patch', () => {
@@ -510,10 +560,10 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // v6 is the texture as OPTION(RENDER). OPTION(EMIT) is back on its released v5 shape, so the whole
-    // delta from v5 is one new id and one new readback. Left at 5 the handshake would accept a box
-    // that answers neither, and a host depending on the texture would find out by silence.
-    expect(PROTO_VER).toBe(6);
+    // v7 opens the advanced control layer (raw/transfer/rewrite/patch) and widens HEALTH to a u16. A box on v6
+    // has no rewrite table, patch store or transfer opcode, and answers HEALTH in one byte; left at 6
+    // the handshake would accept it and the advanced control editor would find the missing wire by silence.
+    expect(PROTO_VER).toBe(7);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
@@ -897,22 +947,22 @@ describe('CATCH command (§3.9)', () => {
     expect(parseResp(short)).toBeNull();
   });
 
-  it('parseMotionEvent decodes [ts][clk][dx][dy][dz] with i16 sign-extension', () => {
-    // ts = 1, host clock, dx = +1, dy = -2, dz = -1.
+  it('parseMotionEvent decodes [ts][clk][dx][dy][dz][dpan] with i16 sign-extension', () => {
+    // ts = 1, host clock, dx = +1, dy = -2, dz = -1, dpan = +2.
     const ev = parseMotionEvent(
-      new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff]),
+      new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff, 0x02, 0x00]),
     );
-    expect(ev).toEqual({ tsUs: 1, clk: ClockDomain.Host, dx: 1, dy: -2, dz: -1 });
+    expect(ev).toEqual({ tsUs: 1, clk: ClockDomain.Host, dx: 1, dy: -2, dz: -1, dpan: 2 });
   });
 
   it('parseMotionEvent returns null for a short payload', () => {
-    expect(parseMotionEvent(new Uint8Array(10))).toBeNull(); // needs 11 bytes
+    expect(parseMotionEvent(new Uint8Array(12))).toBeNull(); // needs 13 bytes (four axes)
   });
 
   it('round-trips a MOTION_EVENT frame through the decoder', () => {
-    // ts = 0x000F4240 (1 s), host clock, dx = -1000, dy = +1000, dz = -120 (one notch up).
+    // ts = 0x000F4240 (1 s), host clock, dx = -1000, dy = +1000, dz = -120 (one notch up), dpan = +240.
     const payload = new Uint8Array([
-      0x40, 0x42, 0x0f, 0x00, 0x00, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff,
+      0x40, 0x42, 0x0f, 0x00, 0x00, 0x18, 0xfc, 0xe8, 0x03, 0x88, 0xff, 0xf0, 0x00,
     ]);
     const frames = decodeAll(new FrameDecoder(), encode(FrameType.MotionEvent, 200, payload));
     expect(frames).toHaveLength(1);
@@ -924,6 +974,7 @@ describe('CATCH command (§3.9)', () => {
       dx: -1000,
       dy: 1000,
       dz: -120,
+      dpan: 240,
     });
   });
 });
@@ -1041,6 +1092,10 @@ describe('MOVE command (§3.1)', () => {
 
   it('wheel payload is [motion=1][dz i16 LE][flags]', () => {
     expect(Array.from(moveWheelPayload(-2))).toEqual([1, 0xfe, 0xff, 0]);
+  });
+
+  it('pan payload is [motion=2][dpan i16 LE][flags]', () => {
+    expect(Array.from(movePanPayload(-2))).toEqual([2, 0xfe, 0xff, 0]);
   });
 
   it('saturates rather than wrapping past the i16 the wire carries', () => {
@@ -1300,7 +1355,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(resp).toEqual({
       kind: 'caps',
       caps: {
-        mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 2 },
+        mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasPan: false, hasReportId: false, nHid: 2 },
         keyboard: { nKeys: 6, nkro: false, hasConsumer: true, hasSystem: false, hasReportId: true },
         mouseChangeDriven: false,
         kbdChangeDriven: true,
@@ -1563,5 +1618,190 @@ describe('RESP(FIRMWARE)', () => {
     expect(OTA_CHUNK + 4).toBe(508);
     expect(OTA_CHUNK % 4).toBe(0);
     expect(OTA_CHUNK * 0xffff).toBeGreaterThanOrEqual(0xf0000);
+  });
+});
+
+// The v3.4.0 advanced control layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the four
+// readback decoders, and TRANSFER_RESP. Byte layouts are pinned to the firmware's ctrl_proto.h and
+// mirror tools/medius.py, so a transposed field fails here rather than on the wire.
+describe('advanced control layer (§3.14 / §4.17)', () => {
+  it('RAW is [ep][bytes..]', () => {
+    // interrupt-IN endpoint 1: [ep_num=01][dir=01 (Positive/IN)][bytes].
+    expect(toHex(rawPayload(1, Direction.Positive, fromHex('01 00 05 00')))).toBe('01 01 01 00 05 00');
+  });
+
+  it('TRANSFER is [ep][setup 8][out..], setup little-endian', () => {
+    // GET_DESCRIPTOR(device, 18): bmRequestType 0x80, bRequest 6, wValue 0x0100, wIndex 0, wLength 18.
+    expect(toHex(transferPayload(0, 0x80, 6, 0x0100, 0, 18))).toBe('00 80 06 00 01 00 00 12 00');
+    // A host-to-device request carries its OUT stage after the setup packet.
+    expect(toHex(transferPayload(0, 0x00, 9, 1, 0, 0, fromHex('aa bb')))).toBe(
+      '00 00 09 01 00 00 00 00 00 aa bb',
+    );
+  });
+
+  it('REWRITE is [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload]', () => {
+    const rule = {
+      cls: 8,
+      id: 0,
+      dir: 0,
+      action: RewriteAction.Patch,
+      off: 2,
+      match: fromHex('21 09'),
+      mask: fromHex('ff ff'),
+      payload: fromHex('aa'),
+    };
+    expect(toHex(rewritePayload(rule, 1))).toBe('08 00 00 00 01 02 02 00 02 21 09 ff ff aa');
+    // state 0 removes; the same key, no payload needed to match it.
+    expect(toHex(rewritePayload({ ...rule, payload: new Uint8Array(0) }, 0))).toBe(
+      '08 00 00 00 00 02 02 00 02 21 09 ff ff',
+    );
+  });
+
+  it('the REWRITE clear is the any-class, any-id, state-0 sentinel', () => {
+    expect(toHex(clearRewritePayload())).toBe('ff ff ff 00 00 00 00 00 00');
+  });
+
+  it('PATCH is [section][cfg][index][offset u16][bytes..]', () => {
+    expect(toHex(patchPayload(PatchSection.Report, 0, 1, 0x0009, fromHex('04')))).toBe(
+      '02 00 01 09 00 04',
+    );
+    expect(toHex(patchApplyPayload())).toBe('fe');
+    expect(toHex(patchClearPayload())).toBe('ff');
+  });
+
+  it('an entry query is [what][index]', () => {
+    expect(toHex(queryEntryPayload(Q_REWRITE_ENTRY, 3))).toBe('0d 03');
+    expect(toHex(queryEntryPayload(Q_PATCH_ENTRY, 0))).toBe('0f 00');
+  });
+
+  it('decodes RESP(REWRITE): the full flag, the generation, and the summary list', () => {
+    // [12][flags=01][gen=05][n=1] then [cls=08][id=0000][dir=00][action=02][mlen=02][off=0002][plen=0001][hits=0007].
+    const payload = fromHex('0c 01 05 01 08 00 00 00 02 02 02 00 01 00 07 00');
+    const r = parseResp(payload);
+    if (r?.kind !== 'rewrite') throw new Error('expected rewrite');
+    expect(r.rewrite.tableFull).toBe(true);
+    expect(r.rewrite.gen).toBe(5);
+    expect(r.rewrite.entries).toEqual([
+      { cls: 8, id: 0, dir: 0, action: RewriteAction.Patch, mlen: 2, off: 2, plen: 1, hits: 7 },
+    ]);
+  });
+
+  it('rejects a RESP(REWRITE) that claims more rules than it carries', () => {
+    expect(parseResp(fromHex('0c 00 00 03 08 00 00 00 02 02 02 00 01 00 07 00'))).toBeNull();
+  });
+
+  it('decodes RESP(REWRITE_ENTRY) back into the rule the command takes', () => {
+    // [13][index=00][cls=08][id=0000][dir=00][state=01][action=02][off=0002][mlen=02][match 21 09][mask ff ff][payload aa].
+    const payload = fromHex('0d 00 08 00 00 00 01 02 02 00 02 21 09 ff ff aa');
+    const r = parseResp(payload);
+    if (r?.kind !== 'rewriteEntry') throw new Error('expected rewriteEntry');
+    expect(r.index).toBe(0);
+    expect(r.rule.cls).toBe(8);
+    expect(r.rule.action).toBe(RewriteAction.Patch);
+    expect(r.rule.off).toBe(2);
+    expect(toHex(r.rule.match)).toBe('21 09');
+    expect(toHex(r.rule.mask)).toBe('ff ff');
+    expect(toHex(r.rule.payload)).toBe('aa');
+    // The readback replays byte-for-byte as the command that sets it (state pinned to 1).
+    expect(toHex(rewritePayload(r.rule, 1))).toBe('08 00 00 00 01 02 02 00 02 21 09 ff ff aa');
+  });
+
+  it('decodes RESP(PATCHES): the applied/pending/refused/full flags and the list, len as u16', () => {
+    // [14][flags=03][n=1] then [section=02][cfg=00][index=01][offset=0009][len=0001].
+    const r = parseResp(fromHex('0e 03 01 02 00 01 09 00 01 00'));
+    if (r?.kind !== 'patches') throw new Error('expected patches');
+    expect(r.patches).toEqual({
+      applied: true,
+      pending: true,
+      refused: false,
+      tableFull: false,
+      entries: [{ section: PatchSection.Report, cfg: 0, index: 1, offset: 9, len: 1 }],
+    });
+  });
+
+  it('decodes RESP(PATCH_ENTRY) back into the patch the command takes', () => {
+    // [15][index=00][section=02][cfg=00][index=01][offset=0009][bytes 04].
+    const r = parseResp(fromHex('0f 00 02 00 01 09 00 04'));
+    if (r?.kind !== 'patchEntry') throw new Error('expected patchEntry');
+    expect(r.index).toBe(0);
+    expect(r.patch.section).toBe(PatchSection.Report);
+    expect(r.patch.offset).toBe(9);
+    expect(toHex(r.patch.bytes)).toBe('04');
+    expect(toHex(patchPayload(r.patch.section!, r.patch.cfg, r.patch.index, r.patch.offset, r.patch.bytes))).toBe(
+      '02 00 01 09 00 04',
+    );
+  });
+
+  it('parses TRANSFER_RESP into ep, status, and IN data', () => {
+    const r = parseTransferResp(fromHex('00 00 12 01 10 01'));
+    expect(r.ep).toBe(0);
+    expect(r.status).toBe(TransferStatus.Ok);
+    expect(toHex(r.data)).toBe('12 01 10 01');
+    // A short frame is a refusal with no data, not a throw.
+    expect(parseTransferResp(fromHex('00')).status).toBe(TransferStatus.Refused);
+  });
+
+  it('parses the advanced control layer status bytes', () => {
+    expect(parseTransferResp(fromHex('83 fd')).status).toBe(TransferStatus.Stall);
+    expect(parseTransferResp(fromHex('83 fe')).status).toBe(TransferStatus.Nak);
+    expect(parseTransferResp(fromHex('83 ff')).status).toBe(TransferStatus.NoDevice);
+    expect(parseTransferResp(fromHex('83 fc')).status).toBe(TransferStatus.Refused);
+  });
+
+  it('reads the advanced control layer health bits through a u16 RESP(HEALTH)', () => {
+    // [what=1][flags 0x0300 LE] = rewrite + patch on, nothing in the low byte.
+    const r = parseResp(fromHex('01 00 03'));
+    if (r?.kind !== 'health') throw new Error('expected health');
+    expect(r.health.rewriteOn).toBe(true);
+    expect(r.health.patchOn).toBe(true);
+    expect(r.health.transformOn).toBe(false);
+    expect(r.health.linkUp).toBe(false);
+  });
+
+  it('round-trips the new frame types through the decoder', () => {
+    for (const ty of [FrameType.Raw, FrameType.Transfer, FrameType.TransferResp, FrameType.Rewrite, FrameType.Patch, FrameType.Transform]) {
+      const frames = decodeAll(new FrameDecoder(), encode(ty, 7, fromHex('01 02 03')));
+      expect(frames).toHaveLength(1);
+      expect(frames[0].ty).toBe(ty);
+    }
+    expect(frameTypeFromU8(0x1a)).toBe(FrameType.Transfer);
+    expect(frameTypeFromU8(0x1d)).toBe(FrameType.Patch);
+    expect(frameTypeFromU8(0x1e)).toBe(FrameType.Transform);
+  });
+});
+
+describe('transforms (§3.15 / §4.18)', () => {
+  it('TRANSFORM is [op][sclass][sid u16][dclass][did u16][scale i16][state]', () => {
+    // invert Y: op=2, source and dest (axis=3, id=1), placeholder scale 100, state 1.
+    const inv = { op: TransformOp.Invert, sclass: 3, sid: 1, dclass: 3, did: 1, scale: 100 };
+    expect(toHex(transformPayload(inv, 1))).toBe('02 03 01 00 03 01 00 64 00 01');
+    // scale the wheel x2: op=3, (axis 3, id 2), scale 200 (0x00c8).
+    const sc = { op: TransformOp.Scale, sclass: 3, sid: 2, dclass: 3, did: 2, scale: 200 };
+    expect(toHex(transformPayload(sc, 1))).toBe('03 03 02 00 03 02 00 c8 00 01');
+    // a negative scale is a two's-complement i16: -50 = 0xffce.
+    const half = { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 };
+    expect(toHex(transformPayload(half, 1))).toBe('03 03 00 00 03 00 00 ce ff 01');
+    // state 0 removes; op and scale are ignored on the box but carried as given.
+    expect(toHex(transformPayload(inv, 0))).toBe('02 03 01 00 03 01 00 64 00 00');
+  });
+
+  it('the TRANSFORM clear is the any-class, any-id, state-0 sentinel', () => {
+    expect(toHex(clearTransformPayload())).toBe('00 ff ff ff ff ff ff 00 00 00');
+  });
+
+  it('decodes RESP(TRANSFORMS): the full flag and the entry list, scale signed', () => {
+    // [16][flags=01][n=2] then invert Y (scale 0064) and scale X by -50 (scale ffce). No state byte.
+    const payload = fromHex('10 01 02 02 03 01 00 03 01 00 64 00 03 03 00 00 03 00 00 ce ff');
+    const r = parseResp(payload);
+    if (r?.kind !== 'transforms') throw new Error('expected transforms');
+    expect(r.transforms.tableFull).toBe(true);
+    expect(r.transforms.entries).toEqual([
+      { op: TransformOp.Invert, sclass: 3, sid: 1, dclass: 3, did: 1, scale: 100 },
+      { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 },
+    ]);
+  });
+
+  it('rejects a RESP(TRANSFORMS) that claims more entries than it carries', () => {
+    expect(parseResp(fromHex('10 00 03 02 03 01 00 03 01 00 64 00'))).toBeNull();
   });
 });

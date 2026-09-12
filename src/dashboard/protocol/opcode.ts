@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 6; // the render settings are OPTION(RENDER), and OPTION(EMIT) is the pace alone
+export const PROTO_VER = 7; // the advanced control layer (raw/transfer/rewrite/patch) and HEALTH widened to 16 bits
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
 // and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
@@ -17,6 +17,7 @@ export const INJ_KEY = 1;
 export const INJ_MEDIA = 2;
 export const MOTION_CURSOR = 0;
 export const MOTION_WHEEL = 1;
+export const MOTION_PAN = 2; // AC Pan (horizontal scroll), a first-class relative axis peer of the wheel
 
 // MOVE flags (§3.1): the per-command movement-riding override. Applied DISCARD, then FLUSH, then the
 // delta; FLUSH and DISCARD together contradict and the box refuses the frame.
@@ -41,6 +42,11 @@ export const Q_CATCH = 7;
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
 export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring accounting, held usages, config
 export const Q_FIRMWARE = 11; // both chips' versions + which app slot each booted (§4.16)
+export const Q_REWRITE = 12; // rewrite-rule table summary (RESP(REWRITE): flags + gen + list, §4.17)
+export const Q_REWRITE_ENTRY = 13; // one rewrite rule in full, in the REWRITE command's own shape (§4.17)
+export const Q_PATCHES = 14; // descriptor-patch set summary (RESP(PATCHES): flags + list, §4.17)
+export const Q_PATCH_ENTRY = 15; // one descriptor patch in full, in the PATCH command's own shape (§4.17)
+export const Q_TRANSFORMS = 16; // field-transform table (RESP(TRANSFORMS): flags + list, §4.18)
 
 // CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
 // byte renders from, so a trigger runs the same verb the control PC would.
@@ -189,6 +195,11 @@ export const H_RATE_CONFIDENT = 0x10;
 export const H_LOCK_ON = 0x20;
 export const H_CATCH_ON = 0x40;
 export const H_KBD_ATT = 0x80;
+// HEALTH is a u16 from proto 7 (RESP(HEALTH) carries [what][flags u16 LE]); the high byte carries the
+// advanced control layer's state and the field-transform flag.
+export const H_REWRITE_ON = 0x0100; // the rewrite-rule table is non-empty
+export const H_PATCH_ON = 0x0200; // a descriptor-patch set is applied to the clone
+export const H_TRANSFORM_ON = 0x0400; // a field transform is active
 
 // DEVICE_INFO flags (§4.3).
 export const DI_HAS_SERIAL = 0x01;
@@ -204,6 +215,7 @@ export const CAP_X = 0x01;
 export const CAP_Y = 0x02;
 export const CAP_WHEEL = 0x04;
 export const CAP_REPORT_ID = 0x08;
+export const CAP_PAN = 0x10;
 
 // CAPS kbd_flags (§4.4). n_keys 0xff means an NKRO bitmap.
 export const KBC_NKRO = 0x01;
@@ -218,6 +230,104 @@ export const CAPS_CD_KBD = 0x02;
 // RATE flags (§4.5).
 export const RATE_CONFIDENT = 0x01;
 export const RATE_CHANGE_DRIVEN = 0x02;
+
+// REWRITE action (§3.14): what a matched rule does to the packet. A report class can Pass, Drop,
+// Patch, or Replace; the control class adds Answer, Stall, Nak, and the two Reply_* forms that rewrite
+// the device's own reply. The box validates the action against the class and refuses a mismatch.
+export enum RewriteAction {
+  Pass = 0, // matched a broader rule but leaves the packet untouched
+  Drop = 1, // report class: the packet is not delivered
+  Patch = 2, // overwrite the payload bytes at the offset, length preserved
+  Replace = 3, // the packet becomes the payload
+  Answer = 4, // control: answer from the payload without asking the device
+  Stall = 5, // control: protocol STALL
+  Nak = 6, // control: NAK to a timeout
+  ReplyPatch = 7, // control IN: overwrite the device's reply at the offset
+  ReplyReplace = 8, // control IN: replace the device's reply with the payload
+}
+export const RW_ACTION_COUNT = 9;
+
+export function rewriteActionFromU8(v: number): RewriteAction | null {
+  return v >= 0 && v < RW_ACTION_COUNT ? (v as RewriteAction) : null;
+}
+
+// PATCH section (§3.14): which served descriptor a patch overwrites. Apply and Clear are engine verbs
+// carried in the same section byte and handled before the store, never keys in it.
+export enum PatchSection {
+  Device = 0, // the 18-byte device descriptor (cfg/index ignored)
+  Config = 1, // a configuration descriptor (cfg = configuration index)
+  Report = 2, // an interface's report descriptor (cfg + index = interface number)
+  String = 3, // a string descriptor (index = string index), the whole string
+  Bos = 4, // the BOS descriptor (cfg/index ignored)
+}
+export const PATCH_SEC_COUNT = 5;
+export const PATCH_APPLY = 0xfe; // re-present the clone with the stored set
+export const PATCH_CLEAR = 0xff; // drop every patch for this device, re-present
+
+// TRANSFORM op (§3.15): what a field transform does. Invert and Scale act on one axis (source == dest),
+// Swap exchanges two axes, Remap moves a source field into a destination. The scale is a signed percent.
+export enum TransformOp {
+  Remap = 0,
+  Swap = 1,
+  Invert = 2,
+  Scale = 3,
+}
+export const TF_OP_COUNT = 4;
+export const TRANSFORM_MAX_ENTRIES = 8; // the box holds up to eight; a further entry is refused
+export const TF_F_FULL = 0x01; // RESP(TRANSFORMS).flags bit 0: the table is full
+export const RESP_TRANSFORMS_HDR = 3; // [what][flags u8][n u8]
+export const TRANSFORMS_ENTRY_LEN = 9; // [op][sclass][sid u16][dclass][did u16][scale i16], no state byte
+
+export function transformOpFromU8(v: number): TransformOp | null {
+  return v >= 0 && v < TF_OP_COUNT ? (v as TransformOp) : null;
+}
+
+export function patchSectionFromU8(v: number): PatchSection | null {
+  return v >= 0 && v < PATCH_SEC_COUNT ? (v as PatchSection) : null;
+}
+
+// TRANSFER_RESP status (§3.14): what the real device answered a proxied control request with.
+export enum TransferStatus {
+  Ok = 0x00,
+  Refused = 0xfc, // the opt-in is off, or the request was malformed or too large
+  Stall = 0xfd, // the device protocol-STALLed the request
+  Nak = 0xfe, // the device did not answer before the box timed out
+  NoDevice = 0xff, // no device is cloned to run it against
+}
+
+export function transferStatusFromU8(v: number): TransferStatus {
+  switch (v) {
+    case 0x00:
+      return TransferStatus.Ok;
+    case 0xfc:
+      return TransferStatus.Refused;
+    case 0xfd:
+      return TransferStatus.Stall;
+    case 0xfe:
+      return TransferStatus.Nak;
+    default:
+      return TransferStatus.NoDevice;
+  }
+}
+
+// RESP(REWRITE) (§4.17): a 4-byte scalar header (what + flags + gen + n), then 12 bytes per rule. The
+// summary lays fields out as [cls][id u16][dir][action][mlen][off u16][plen u16][hits u16]; the REWRITE
+// command and RESP(REWRITE_ENTRY) carry [off][mlen] the other way round so a read entry replays as a set.
+export const REWRITE_TAB_MAX = 32; // agrees with the box's REWRITE_TAB_MAX
+export const REWRITE_MATCH_MAX = 16; // the widest masked-match head a rule carries
+export const RESP_REWRITE_HDR = 4;
+export const REWRITE_ENTRY_LEN = 12;
+export const REWRITE_F_FULL = 0x01; // the table is full
+
+// RESP(PATCHES) (§4.17): a 3-byte scalar header (what + flags + n), then 7 bytes per patch. `len` is a
+// u16: a report or configuration descriptor patch routinely exceeds 255 bytes.
+export const PATCHES_MAX = 16; // agrees with the box's PATCH_MAX
+export const RESP_PATCHES_HDR = 3;
+export const PATCHES_ENTRY_LEN = 7;
+export const PATCHES_F_APPLIED = 0x01;
+export const PATCHES_F_PENDING = 0x02;
+export const PATCHES_F_REFUSED = 0x04; // the last apply refused a patch (out of range for the served descriptor)
+export const PATCHES_F_FULL = 0x08;
 
 export enum FrameType {
   Move = 0x01,
@@ -241,6 +351,13 @@ export enum FrameType {
   TrafficEvent = 0x16,
   Update = 0x17,
   UpdateResp = 0x18,
+  // v3.4.0 advanced control layer (§3.14), gated on OPTION(IMPERFECT).
+  Raw = 0x19, // [ep_num u8][dir u8][bytes...] put a raw report on a cloned endpoint
+  Transfer = 0x1a, // [ep u8][setup 8][OUT data..] run a control request on the device
+  TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (its own opcode, SEQ-correlated)
+  Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
+  Patch = 0x1d, // [section][cfg][index][offset u16][bytes..] a descriptor patch
+  Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][scale i16][state] a field transform
 }
 
 // Byte width of the ts_us field every catch event frame leads with (§4.10).
@@ -357,6 +474,18 @@ export function frameTypeFromU8(value: number): FrameType | null {
       return FrameType.Update;
     case 0x18:
       return FrameType.UpdateResp;
+    case 0x19:
+      return FrameType.Raw;
+    case 0x1a:
+      return FrameType.Transfer;
+    case 0x1b:
+      return FrameType.TransferResp;
+    case 0x1c:
+      return FrameType.Rewrite;
+    case 0x1d:
+      return FrameType.Patch;
+    case 0x1e:
+      return FrameType.Transform;
     default:
       return null;
   }

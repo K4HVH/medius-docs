@@ -21,7 +21,7 @@ const Types: Component = () => {
             <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer"><code>enum.IntEnum</code></a>. A member{' '}
             <em>is</em> its <A href="/native/frame">wire byte</A>: <code>int(Button.LEFT) == 0</code>,
             and anywhere an enum is accepted a bare <code>int</code> works too, for a raw HID id, an
-            endpoint address, or an interface number with no named member.
+            endpoint number, or an interface number with no named member.
           </p>
         </div>
       </Card>
@@ -433,11 +433,11 @@ const Types: Component = () => {
                 <tr><td><code>MEDIA</code></td><td><code>2</code></td><td>a 16-bit Consumer usage</td><td>every media usage</td></tr>
                 <tr><td><code>AXIS</code></td><td><code>3</code></td><td>an <A href="/bindings/python/types#axis"><code>Axis</code></A></td><td>every axis</td></tr>
                 <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>an interface number</td><td>every HID interface</td></tr>
-                <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint address</td><td>every interrupt-OUT endpoint</td></tr>
-                <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>an endpoint address</td><td>every vendor interrupt endpoint</td></tr>
-                <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>an endpoint address</td><td>every vendor bulk endpoint</td></tr>
+                <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
+                <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>an endpoint number</td><td>every vendor interrupt endpoint</td></tr>
+                <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>an endpoint number</td><td>every vendor bulk endpoint</td></tr>
                 <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
-                <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint address</td><td>every emitting endpoint</td></tr>
+                <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>the bus lifecycle</td></tr>
               </tbody>
             </table>
@@ -764,8 +764,9 @@ if ev.usage == Usage.button(Button.SIDE1):
           <div id="motion" data-search-target>
             <div class="api-response-label">Motion</div>
             <pre class="api-signature">{`Motion.cursor(dx, dy) -> Motion
-Motion.wheel(delta)   -> Motion`}</pre>
-            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>. See <A href="/library/move">Move</A>.</p>
+Motion.wheel(delta)   -> Motion
+Motion.pan(delta)     -> Motion`}</pre>
+            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>; <code>pan</code> is AC Pan (horizontal scroll), a full peer of the wheel. See <A href="/library/move">Move</A>.</p>
           </div>
 
 
@@ -774,6 +775,7 @@ Motion.wheel(delta)   -> Motion`}</pre>
             <pre class="api-signature">{`LockTarget.x()            -> LockTarget
 LockTarget.y()            -> LockTarget
 LockTarget.wheel()        -> LockTarget
+LockTarget.pan()          -> LockTarget
 LockTarget.usage(usage)   -> LockTarget
 LockTarget.button(button) -> LockTarget
 LockTarget.key(key)       -> LockTarget
@@ -839,6 +841,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>lock_on</code></td><td><code>bool</code></td></tr>
                 <tr><td><code>catch_on</code></td><td><code>bool</code></td></tr>
                 <tr><td><code>kbd_attached</code></td><td><code>bool</code></td></tr>
+                <tr><td><code>rewrite_on</code></td><td><code>bool</code></td></tr>
+                <tr><td><code>patch_on</code></td><td><code>bool</code></td></tr>
+                <tr><td><code>transform_on</code></td><td><code>bool</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -885,6 +890,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>has_x</code></td><td><code>bool</code></td><td>X axis present</td></tr>
                 <tr><td><code>has_y</code></td><td><code>bool</code></td><td>Y axis present</td></tr>
                 <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>wheel present</td></tr>
+                <tr><td><code>pan</code></td><td><code>bool</code></td><td>AC Pan (horizontal scroll) present</td></tr>
                 <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>reports carry a report id</td></tr>
                 <tr><td><code>n_hid</code></td><td><code>int</code></td><td>HID interface count</td></tr>
               </tbody>
@@ -1265,7 +1271,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>catch_class</code></td><td><A href="/bindings/python/types#catchclass"><code>CatchClass</code></A></td><td>which class produced it</td></tr>
-                <tr><td><code>id</code></td><td><code>int</code></td><td>endpoint address, interface number, or endpoint number, per the class</td></tr>
+                <tr><td><code>id</code></td><td><code>int</code></td><td>endpoint number or interface number, per the class</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>IN</code> (device to PC) or <code>OUT</code> (PC to device)</td></tr>
                 <tr><td><code>flags</code></td><td><code>int</code></td><td>class-specific, see the table below</td></tr>
                 <tr><td><code>true_len</code></td><td><code>int</code></td><td>the packet's length <em>before</em> capture truncation</td></tr>
@@ -1383,6 +1389,94 @@ LockTarget.media(media)   -> LockTarget`}</pre>
         </Card>
       </div>
 
+      <div id="advanced-types" data-search-target>
+        <Card>
+          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
+          <p>The value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
+
+          <div id="setup">
+            <div class="api-response-label">Setup</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>request_type</code></td><td><code>int</code></td><td><code>bmRequestType</code>: direction in bit 7 (set = device-to-host).</td></tr>
+                <tr><td><code>request</code></td><td><code>int</code></td><td><code>bRequest</code>.</td></tr>
+                <tr><td><code>value</code></td><td><code>int</code></td><td><code>wValue</code>.</td></tr>
+                <tr><td><code>index</code></td><td><code>int</code></td><td><code>wIndex</code>.</td></tr>
+                <tr><td><code>length</code></td><td><code>int</code></td><td><code>wLength</code>: the data-stage length.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="transfer-outcome">
+            <div class="api-response-label">TransferOutcome</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td><code>OK</code> (0x00), <code>REFUSED</code> (0xFC), <code>STALL</code> (0xFD), <code>NAK</code> (0xFE), <code>NO_DEVICE</code> (0xFF), or a byte no constant names.</td></tr>
+                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data the device returned.</td></tr>
+                <tr><td><code>is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="rewrite-rule">
+            <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
+            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
+            <table class="api-params">
+              <thead><tr><th>RewriteRule field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>rewrite_class</code></td><td><code>RewriteClass</code></td><td><code>HID_IN</code> 4, <code>HID_OUT</code> 5, <code>VENDOR_INTERRUPT</code> 6, <code>VENDOR_BULK</code> 7, <code>CONTROL</code> 8, <code>EMIT</code> 9, <code>ANY</code> 0xFF.</td></tr>
+                <tr><td><code>id</code></td><td><code>int</code></td><td>Interface number or endpoint number.</td></tr>
+                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>BOTH</code> / <code>POSITIVE</code> / <code>NEGATIVE</code>.</td></tr>
+                <tr><td><code>action</code></td><td><code>RewriteAction</code></td><td><code>PASS</code> 0, <code>DROP</code> 1, <code>PATCH</code> 2, <code>REPLACE</code> 3, <code>ANSWER</code> 4, <code>STALL</code> 5, <code>NAK</code> 6, <code>REPLY_PATCH</code> 7, <code>REPLY_REPLACE</code> 8.</td></tr>
+                <tr><td><code>offset</code></td><td><code>int</code></td><td>Where a patching action writes.</td></tr>
+                <tr><td><code>match_bytes</code>, <code>mask</code>, <code>payload</code></td><td><code>bytes</code></td><td>The head compare (equal length) and the action's payload.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="patch">
+            <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
+            <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries.</p>
+            <table class="api-params">
+              <thead><tr><th>Patch field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>section</code></td><td><code>PatchSection</code></td><td><code>DEVICE</code> 0, <code>CONFIG</code> 1, <code>REPORT</code> 2, <code>STRING</code> 3, <code>BOS</code> 4.</td></tr>
+                <tr><td><code>cfg</code></td><td><code>int</code></td><td>Configuration index, for <code>CONFIG</code>/<code>REPORT</code>.</td></tr>
+                <tr><td><code>index</code></td><td><code>int</code></td><td>Interface or string index, for <code>REPORT</code>/<code>STRING</code>.</td></tr>
+                <tr><td><code>offset</code></td><td><code>int</code></td><td>Byte offset within the descriptor.</td></tr>
+                <tr><td><code>bytes</code></td><td><code>bytes</code></td><td>The overwrite bytes; empty removes the patch.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
+      <div id="transform" data-search-target>
+        <Card>
+          <CardHeader title="Transform types" subtitle="Transform · Transforms" />
+          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table.</p>
+          <div id="transforms">
+            <pre class="api-signature">{`Transform.invert(axis)            -> Transform
+Transform.scale_axis(axis, pct)   -> Transform
+Transform.swap(a, b)              -> Transform
+Transform.remap(source, dest)     -> Transform
+Transform(op, source, dest, scale).with_scale(pct)`}</pre>
+            <table class="api-params">
+              <thead><tr><th>Transform field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1, <code>INVERT</code> 2, <code>SCALE</code> 3.</td></tr>
+                <tr><td><code>source</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field the transform reads.</td></tr>
+                <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes (equal to <code>source</code> for invert and scale).</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent (-100 inverts, 100 identity, 200 doubles); ignored by <code>INVERT</code>.</td></tr>
+              </tbody>
+            </table>
+            <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>), up to eight.</p>
+          </div>
+        </Card>
+      </div>
+
       <div id="errors" data-search-target>
         <Card>
           <CardHeader title="Errors" subtitle="MediusError, its subclasses, and the Status codes" />
@@ -1435,10 +1529,17 @@ except MediusError as e:     # any other failure
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td></tr>
                 <tr><td><code>ReservedIdError</code></td><td><code>ERR_RESERVED_ID</code></td></tr>
                 <tr><td><code>RelativeDirectionError</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td></tr>
+                <tr><td><code>ImperfectRequiredError</code></td><td><code>ERR_IMPERFECT_REQUIRED</code></td></tr>
+                <tr><td><code>RewriteMaskLengthError</code></td><td><code>ERR_REWRITE_MASK_LENGTH</code></td></tr>
+                <tr><td><code>RewriteActionClassError</code></td><td><code>ERR_REWRITE_ACTION_CLASS</code></td></tr>
+                <tr><td><code>RewritePayloadTooLargeError</code></td><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td></tr>
+                <tr><td><code>TransformOpFieldsError</code></td><td><code>ERR_TRANSFORM_OP_FIELDS</code></td></tr>
+                <tr><td><code>TransformInvertZeroScaleError</code></td><td><code>ERR_TRANSFORM_INVERT_ZERO_SCALE</code></td></tr>
+                <tr><td><code>RawDirectionError</code></td><td><code>ERR_RAW_DIRECTION</code></td></tr>
               </tbody>
             </table>
             <p>
-              The last eight are argument refusals, raised before a frame reaches the box.
+              The last fifteen are argument refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
@@ -1451,6 +1552,13 @@ except MediusError as e:     # any other failure
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge, which cannot be decoded into press and release</td></tr>
                 <tr><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel, which would address the whole class instead</td></tr>
                 <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
+                <tr><td><code>ImperfectRequiredError</code></td><td>an advanced control layer call with the imperfect-clone opt-in off</td></tr>
+                <tr><td><code>RewriteMaskLengthError</code></td><td>a rewrite rule whose <code>match</code> and <code>mask</code> are different lengths</td></tr>
+                <tr><td><code>RewriteActionClassError</code></td><td>a rewrite action that its rule's class does not accept</td></tr>
+                <tr><td><code>RewritePayloadTooLargeError</code></td><td>a rewrite payload past the head the box holds for its class</td></tr>
+                <tr><td><code>TransformOpFieldsError</code></td><td>a transform op that cannot address its source and destination fields</td></tr>
+                <tr><td><code>TransformInvertZeroScaleError</code></td><td>an invert with a scale of 0, which it ignores</td></tr>
+                <tr><td><code>RawDirectionError</code></td><td>a raw injection direction other than <code>Direction.IN</code> or <code>Direction.OUT</code></td></tr>
               </tbody>
             </table>
             <div class="callout callout--info">

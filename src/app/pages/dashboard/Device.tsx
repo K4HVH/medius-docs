@@ -19,6 +19,9 @@ const healthItems = (h: Health) => [
   { label: 'Locks active', value: h.lockOn },
   { label: 'Events streaming', value: h.catchOn },
   { label: 'Keyboard attached', value: h.kbdAttached },
+  { label: 'Rewrite rules', value: h.rewriteOn },
+  { label: 'Descriptor patches', value: h.patchOn },
+  { label: 'Field transforms', value: h.transformOn },
 ];
 
 const col = {
