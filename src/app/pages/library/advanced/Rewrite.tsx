@@ -120,7 +120,7 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
           <p>
             Returns a <A href="/library/advanced/rewrite#readback"><code>RewriteTable</code></A>: a full
             flag, a generation counter, and a row per rule without its match, mask, or payload bytes. The
-            box holds up to 16 rules; a further one sets the <code>table_full</code> flag.
+            box holds up to 32 rules; a further one sets the <code>table_full</code> flag.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let table = device.query_rewrite()?;

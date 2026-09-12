@@ -313,7 +313,7 @@ export function transferStatusFromU8(v: number): TransferStatus {
 // RESP(REWRITE) (§4.17): a 4-byte scalar header (what + flags + gen + n), then 12 bytes per rule. The
 // summary lays fields out as [cls][id u16][dir][action][mlen][off u16][plen u16][hits u16]; the REWRITE
 // command and RESP(REWRITE_ENTRY) carry [off][mlen] the other way round so a read entry replays as a set.
-export const REWRITE_TAB_MAX = 16; // agrees with the box's REWRITE_TAB_MAX
+export const REWRITE_TAB_MAX = 32; // agrees with the box's REWRITE_TAB_MAX
 export const REWRITE_MATCH_MAX = 16; // the widest masked-match head a rule carries
 export const RESP_REWRITE_HDR = 4;
 export const REWRITE_ENTRY_LEN = 12;
