@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import {
+  CATCH_ID_ANY,
   CatchClass,
   Direction,
   PatchSection,
@@ -23,6 +24,7 @@ const mock = vi.hoisted(() => ({
 
 vi.mock('@solidjs/router', () => ({
   A: (p: { children: unknown }) => p.children,
+  useNavigate: () => () => {},
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -57,7 +59,6 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
       return mock.transferReply;
     },
     queryRewriteEntry: async () => ({}),
-    queryPatchEntry: async () => ({}),
   };
   return {
     useDashboard: () => ({
@@ -95,29 +96,37 @@ describe('DeviceDeveloper', () => {
   it('renders every card of the advanced control layer', () => {
     on();
     const { getByText } = render(() => <DeviceDeveloper />);
-    expect(getByText('Advanced control layer')).toBeTruthy();
     expect(getByText('Rewrite rules')).toBeTruthy();
     expect(getByText('Descriptor patches')).toBeTruthy();
-    expect(getByText('Raw and control transfer')).toBeTruthy();
+    expect(getByText('Raw report')).toBeTruthy();
+    expect(getByText('Control transfer')).toBeTruthy();
   });
 
-  it('shows the opt-in banner and disables the writes while imperfect clones are off', () => {
+  // The box drops a rule and a raw report that arrive with the opt-in off, so those two cards stand
+  // their controls down entirely. A patch is stored either way, so only its apply is withheld.
+  it('stands the gated controls down while imperfect clones are off', () => {
     mock.poll = {
       imperfect: { allowed: false, overCapacity: false, cloneImperfect: false },
       rewrite: { tableFull: false, gen: 0, entries: [] },
       patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
     };
     const { getByText, container } = render(() => <DeviceDeveloper />);
-    expect(getByText(/The layer is off/)).toBeTruthy();
-    const add = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add rule');
-    expect(add).toBeTruthy();
-    expect((add as HTMLButtonElement).disabled).toBe(true);
+    expect(getByText(/Rewrite rules need/)).toBeTruthy();
+    expect(getByText(/Raw reports need/)).toBeTruthy();
+    expect(getByText(/Control transfers need/)).toBeTruthy();
+    const button = (name: string) =>
+      [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === name);
+    expect(button('Add rule')).toBeUndefined();
+    expect(button('Send')).toBeUndefined();
+    expect(button('Set patch')).toBeTruthy();
+    expect((button('Apply') as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('says the layer is active once imperfect clones are on', () => {
+  it('offers the gated controls once imperfect clones are on', () => {
     on();
     const { getByText } = render(() => <DeviceDeveloper />);
-    expect(getByText('Advanced control layer active')).toBeTruthy();
+    expect(getByText('Add rule')).toBeTruthy();
+    expect(getByText('Send')).toBeTruthy();
   });
 
   it('adds a rewrite rule from the form defaults (a control-class pass)', async () => {
@@ -135,15 +144,42 @@ describe('DeviceDeveloper', () => {
     });
   });
 
-  it('clears the whole rewrite table', async () => {
+  // The box ranks id == CATCH_ID_ANY as a class blanket, which the bare number field cannot reach.
+  it('sends the class blanket when the id is every id', async () => {
     on();
-    const { getByText } = render(() => <DeviceDeveloper />);
-    fireEvent.click(getByText('Clear table'));
+    const { getByText, container } = render(() => <DeviceDeveloper />);
+    const every = [...container.querySelectorAll('input[type=radio]')].find(
+      (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === 'Every id',
+    );
+    fireEvent.click(every!);
+    fireEvent.click(getByText('Add rule'));
+    await settle();
+    expect(mock.rewrites[0]).toMatchObject({ cls: CatchClass.Control, id: CATCH_ID_ANY, state: 1 });
+  });
+
+  // Scoped to the card: the patch card carries a Clear all of its own, and an empty table stands
+  // this one down.
+  it('clears the whole rewrite table', async () => {
+    mock.poll = {
+      imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
+      rewrite: {
+        tableFull: false,
+        gen: 0,
+        entries: [
+          { cls: CatchClass.Control, id: 0, dir: Direction.Both, action: RewriteAction.Pass, mlen: 0, off: 0, plen: 0, hits: 0 },
+        ],
+      },
+      patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
+    };
+    const { container } = render(() => <DeviceDeveloper />);
+    const card = container.querySelector('#rewrite-rules')!;
+    const clear = [...card.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Clear all');
+    fireEvent.click(clear!);
     await settle();
     expect(mock.cleared).toBe(1);
   });
 
-  it('renders the live rewrite table with its generation and rules', () => {
+  it('describes each live rewrite rule by what it does', () => {
     mock.poll = {
       imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
       rewrite: {
@@ -156,8 +192,7 @@ describe('DeviceDeveloper', () => {
       patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
     };
     const { getByText } = render(() => <DeviceDeveloper />);
-    expect(getByText('Generation 4')).toBeTruthy();
-    expect(getByText(/9 hits/)).toBeTruthy();
+    expect(getByText('Patch control 0 both, 9 hits')).toBeTruthy();
   });
 
   it('applies the stored patch set and renders its flags', async () => {
@@ -179,6 +214,96 @@ describe('DeviceDeveloper', () => {
     expect(mock.applied).toBe(1);
   });
 
+  // The helper copy on every sibling card is a function of the live selection, not a fixed string.
+  // These pin that: pick another option, get another sentence.
+  const radio = (container: HTMLElement, name: string): HTMLInputElement => {
+    const el = [...container.querySelectorAll('input[type=radio]')].find(
+      (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
+    );
+    if (!el) throw new Error(`no radio labelled ${name}`);
+    return el as HTMLInputElement;
+  };
+
+  it('blurbs the picked rewrite class, not a fixed sentence', async () => {
+    on();
+    const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
+    await findByText('Setup packets on a control endpoint.');
+    expect(queryByText('Reports the game PC sends the device, by endpoint.')).toBeNull();
+
+    fireEvent.click(radio(container, 'HID out'));
+    await findByText('Reports the game PC sends the device, by endpoint.');
+    expect(queryByText('Setup packets on a control endpoint.')).toBeNull();
+  });
+
+  it('blurbs the picked rewrite action', async () => {
+    on();
+    const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
+    await findByText('Leaves the packet untouched.');
+    expect(queryByText('The packet becomes the payload.')).toBeNull();
+
+    const box = container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    fireEvent.click(box);
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await new Promise((r) => setTimeout(r, 20));
+    const replace = [...document.querySelectorAll('[role="option"]')].find(
+      (o) => o.textContent?.trim() === 'Replace',
+    );
+    fireEvent.click(replace!);
+    await waitFor(() => {
+      if (!queryByText('The packet becomes the payload.')) throw new Error('blurb did not follow');
+    });
+    expect(queryByText('Leaves the packet untouched.')).toBeNull();
+  });
+
+  it('blurbs what the patch offset counts from, per descriptor', async () => {
+    on();
+    const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
+    await findByText('Offset into the 18-byte device descriptor.');
+
+    fireEvent.click(radio(container, 'String descriptor'));
+    await findByText('Offset into that string descriptor, its two-byte header included.');
+    expect(queryByText('Offset into the 18-byte device descriptor.')).toBeNull();
+  });
+
+  // Scoped: the rewrite card carries an In/Out direction of its own.
+  it('blurbs where a raw report lands, per direction', async () => {
+    on();
+    const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
+    await findByText('The report reaches the game PC.');
+
+    fireEvent.click(radio(container.querySelector('#raw-report') as HTMLElement, 'Out'));
+    await findByText('The report reaches the device.');
+    expect(queryByText('The report reaches the game PC.')).toBeNull();
+  });
+
+  // A class request's bRequest is not a standard one, so the standard name must not be claimed for it.
+  it('names a standard request only when the type is standard', async () => {
+    on();
+    const { container, findByText, queryByText } = render(() => <DeviceDeveloper />);
+    await findByText('Device to host, standard, to the device: GET_DESCRIPTOR.');
+    const bm = [...container.querySelectorAll('input')].find(
+      (i) => (i as HTMLInputElement).value === '0x80',
+    ) as HTMLInputElement;
+    fireEvent.input(bm, { target: { value: '0xa1' } });
+    await findByText('Device to host, class, to an interface.');
+    expect(queryByText(/GET_DESCRIPTOR/)).toBeNull();
+  });
+
+  it('reads the setup packet back in words as bmRequestType changes', async () => {
+    on();
+    const { container, findByText, queryByText } = render(() => <DeviceDeveloper />);
+    await findByText('Device to host, standard, to the device: GET_DESCRIPTOR.');
+    await findByText('Unused: this request reads, it does not write.');
+
+    const field = [...container.querySelectorAll('input')].find(
+      (i) => (i as HTMLInputElement).value === '0x80',
+    ) as HTMLInputElement;
+    fireEvent.input(field, { target: { value: '0x21' } });
+    await findByText('Host to device, class, to an interface.');
+    await findByText('The data stage this request carries to the device.');
+    expect(queryByText('Device to host, standard, to the device: GET_DESCRIPTOR.')).toBeNull();
+  });
+
   it('runs a control transfer and shows the device answer', async () => {
     on();
     mock.transferReply = { ep: 0, status: TransferStatus.Ok, data: new Uint8Array([0x12, 0x01]) };
@@ -187,7 +312,7 @@ describe('DeviceDeveloper', () => {
     await settle();
     // The default setup is GET_DESCRIPTOR for the 18-byte device descriptor.
     expect(mock.transfers[0]).toEqual([0, 0x80, 6, 0x0100, 0, 18]);
-    expect(getByText('ok')).toBeTruthy();
-    expect(getByText('2B in')).toBeTruthy();
+    expect(getByText('OK')).toBeTruthy();
+    expect(getByText('2 B in')).toBeTruthy();
   });
 });

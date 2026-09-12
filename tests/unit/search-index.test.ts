@@ -42,7 +42,8 @@ describe('dashboard search index', () => {
     const files = [
       'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceEventCatch.tsx',
       'DeviceClip.tsx', 'DeviceLed.tsx', 'DeviceOptions.tsx', 'DeviceInfo.tsx', 'Device.tsx',
-      'DeviceDeveloper.tsx',
+      'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx', 'DeviceRaw.tsx',
+      'DeviceTransfer.tsx',
     ];
     const titles = new Set<string>();
     for (const f of files) {
