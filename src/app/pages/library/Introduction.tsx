@@ -38,7 +38,7 @@ const Introduction: Component = () => {
             </tr>
             <tr>
               <td>Transport</td>
-              <td>4 Mbaud, framed-only</td>
+              <td>6 Mbaud, framed-only</td>
             </tr>
             <tr>
               <td>Thread safety</td>

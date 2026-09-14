@@ -178,7 +178,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           </p>
           <pre class="diagram">{`  Button Key Media Axis Bus    -->  [ queue 0 ]  --+
   HidIn HidOut                                     |
-  VendorInterrupt Emit         -->  [ queue 1 ]  --+--->  control link, 4 Mbaud
+  VendorInterrupt Emit         -->  [ queue 1 ]  --+--->  control link, 6 Mbaud
   Control                      -->  [ queue 2 ]  --+
   VendorBulk                   -->  [ queue 3 ]  --+
 

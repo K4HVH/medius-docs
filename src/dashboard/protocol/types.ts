@@ -412,7 +412,7 @@ export function isLocked(locks: Locks, target: LockTarget, direction: Direction)
 // CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
 // unchanged, so one address vocabulary covers locking a field and catching it; 4 and up reach the
 // byte-oriented traffic the box carries. Addressing doubles as the filter because the control link
-// is 4 Mbaud and vendor bulk alone measures 250 KiB/s through the box, so a subscription has to be
+// is 6 Mbaud and vendor bulk alone measures 250 KiB/s through the box, so a subscription has to be
 // able to name one endpoint rather than a whole class. Wire values match ctrl_proto.h.
 export enum CatchClass {
   Button = 0,

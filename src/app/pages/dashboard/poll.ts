@@ -1,7 +1,7 @@
 // One poller for the whole dashboard. Cards ask for a value and get a signal; the poller owns the
 // timers, deduplicates subscribers, and stops a query the moment nothing is watching it.
 //
-// It exists because the control link is one 4 Mbaud pipe shared with the catch event stream. Four
+// It exists because the control link is one 6 Mbaud pipe shared with the catch event stream. Four
 // cards each running their own interval put a steady round-trip load on that pipe whether or not
 // anyone was looking, and the persistent-option reads repeated four times a second for values that
 // only change when the dashboard changes them.
