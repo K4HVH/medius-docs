@@ -41,7 +41,7 @@ const Catch: Component = () => {
                            at the merge point,
                            before the lock scale and before injection`}</pre>
         <p>
-          Addressing doubles as the filter. The control link runs at 4&nbsp;Mbaud and vendor bulk
+          Addressing doubles as the filter. The control link runs at 6&nbsp;Mbaud and vendor bulk
           alone measures ~250&nbsp;KiB/s through the box, so every class at once cannot be delivered.
         </p>
       </Card>
