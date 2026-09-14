@@ -24,7 +24,7 @@ const Connection: Component = () => {
           <CardHeader title="Handshake" subtitle="One round-trip to confirm the box" />
           <ol>
             <li>
-              Open the serial port at <code>4,000,000</code> baud
+              Open the serial port at <code>6,000,000</code> baud
               (<A href="/native/transport">Transport</A>). The box speaks{' '}
               <A href="/native/frame">framed binary</A> from the first byte.
             </li>

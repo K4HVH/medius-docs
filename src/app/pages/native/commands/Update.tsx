@@ -410,12 +410,15 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>Device</td><td>Ten seconds of a running main loop.</td><td>30 s</td></tr>
-              <tr><td>Host</td><td>A completed clock exchange over the link.</td><td>15 s</td></tr>
+              <tr><td>Host</td><td>A completed clock exchange over the link, and nothing else.</td><td>40 s</td></tr>
             </tbody>
           </table>
           <p>
-            Measured on hardware: an image that panics in its entry point is back on the old slot in
-            0.8 s, and one that boots but never confirms is reverted by its own grace timer.
+            The host row admits no fallback on purpose: its image arrives over the link, and the link
+            is the only way back to it, so an image that runs but cannot talk would otherwise be
+            reachable only by opening the case. Measured on hardware: an image that panics in its
+            entry point is back on the old slot in 0.8 s, and one built deliberately deaf to the link
+            reverted itself and brought the link back with no intervention.
           </p>
           <div class="callout callout--warning">
             <p>

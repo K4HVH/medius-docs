@@ -56,7 +56,7 @@ src/
         Quickstart.tsx                # Open the port and send a MOVE
         Architecture.tsx              # Mouse -> box -> PC data path
         Hardware.tsx                  # Three USB ports, the USB3 hazard
-        Transport.tsx                 # 4 Mbaud framed serial, CH343, USB id
+        Transport.tsx                 # 6 Mbaud framed serial, CH343, USB id
         Connection.tsx                # Handshake and the boot version hello
         Frame.tsx                     # Frame format, CRC16, opcodes
         Injection.tsx                 # Injection model, carry, emission, safety

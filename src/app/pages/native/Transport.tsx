@@ -61,7 +61,7 @@ const Transport: Component = () => {
               </tr>
               <tr>
                 <td>Baud</td>
-                <td><code>4,000,000</code></td>
+                <td><code>6,000,000</code></td>
               </tr>
               <tr>
                 <td>Framing</td>

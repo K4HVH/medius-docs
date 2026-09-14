@@ -213,8 +213,8 @@ interface UpdateResp {
 const UPDATE_OP_TIMEOUT_MS = 20_000;
 /** ACTIVATE reboots the host chip and waits for it back on the link before the device chip follows. */
 const ACTIVATE_TIMEOUT_MS = 60_000;
-/** A chip confirms the image it booted after about ten seconds of running. */
-const CONFIRM_TIMEOUT_MS = 45_000;
+/** Outlasts the mouse-side chip's 40 s probation, which is the longer of the two. */
+const CONFIRM_TIMEOUT_MS = 55_000;
 /** Replies held for a waiter that has not registered yet. A window is 16 frames; this is slack. */
 const UPDATE_BACKLOG_MAX = 64;
 

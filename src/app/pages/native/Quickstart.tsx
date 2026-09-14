@@ -53,7 +53,7 @@ const Quickstart: Component = () => {
           <CardHeader title="Open the link" subtitle="Open at the fixed baud, speak binary" />
           <p>
             Open <code>/dev/ttyACM0</code> (Linux) or <code>COMx</code> (Windows) at{' '}
-            <code>4,000,000</code> baud, <code>8N1</code>, and speak binary immediately. There's no{' '}
+            <code>6,000,000</code> baud, <code>8N1</code>, and speak binary immediately. There's no{' '}
             <code>115200</code> handshake and no baud-switch frame.
           </p>
           <p>

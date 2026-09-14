@@ -19,7 +19,7 @@ const Catch: Component = () => {
         <p>
           A subscription is a table of{' '}
           <A href="/library/catch#filters"><code>CatchFilter</code></A> entries. Addressing doubles as
-          the filter: the control link runs at 4&nbsp;Mbaud and vendor bulk alone measures
+          the filter: the control link runs at 6&nbsp;Mbaud and vendor bulk alone measures
           ~250&nbsp;KiB/s, so a subscription has to be able to name one endpoint.
         </p>
       </Card>
