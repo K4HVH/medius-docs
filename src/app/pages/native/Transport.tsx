@@ -20,7 +20,7 @@ const Transport: Component = () => {
         <Card>
           <CardHeader title="Serial link" subtitle="Baud and framing" />
           <p>
-            Fixed <code>4,000,000</code> baud (4 Mbaud), no negotiation. Open the port at that exact
+            Fixed <code>6,000,000</code> baud (6 Mbaud), no negotiation. Open the port at that exact
             baud and start sending bytes; any other baud fails.
           </p>
           <p>

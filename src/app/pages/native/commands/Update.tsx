@@ -16,9 +16,9 @@ const Update: Component = () => {
           <A href="/native/commands/update#activate">commit</A> at the end, over the box's own
           control port and with no BOOT button.
         </p>
-        <pre class="diagram">{`   PC --CH343, framed 4 Mbaud--> DEVICE chip --> its own spare slot
+        <pre class="diagram">{`   PC --CH343, framed 6 Mbaud--> DEVICE chip --> its own spare slot
                                      |
-                                     +--UART1, 5 Mbaud--> HOST chip --> its own spare slot`}</pre>
+                                     +--UART1, 20 Mbaud-> HOST chip --> its own spare slot`}</pre>
         <p>
           The host chip has no serial port of its own and no wire to one: only GPIO1 and GPIO2 connect
           the two chips. Its image is relayed chunk for chunk and never buffered on the way.
@@ -163,9 +163,9 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
-              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 µs at 4 Mbaud.</td></tr>
+              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 213 µs at 6 Mbaud.</td></tr>
               <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
-              <tr><td>Inter-chip link ring</td><td>4096 bytes, which is what caps the relayed window.</td></tr>
+              <tr><td>Inter-chip link ring</td><td>8192 bytes, which is what caps the relayed window.</td></tr>
             </tbody>
           </table>
           <p>

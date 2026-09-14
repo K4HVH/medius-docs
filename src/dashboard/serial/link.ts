@@ -136,7 +136,7 @@ import {
 } from '../protocol';
 import { isWebSerialSupported } from './support';
 
-export const CTRL_BAUD = 4_000_000;
+export const CTRL_BAUD = 6_000_000;
 export const WCH_VID = 0x1a86;
 export const CH343_PID = 0x55d3;
 export const ESP_ROM_VID = 0x303a;

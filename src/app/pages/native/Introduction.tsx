@@ -41,7 +41,7 @@ const NativeIntroduction: Component = () => {
             </tr>
             <tr>
               <td>Transport</td>
-              <td>4 Mbaud, framed-only (<a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer">CH343</a>)</td>
+              <td>6 Mbaud, framed-only (<a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer">CH343</a>)</td>
             </tr>
             <tr>
               <td>USB ID</td>
@@ -129,7 +129,7 @@ const NativeIntroduction: Component = () => {
           <div class="docs-grid">
             <A href="/native/transport" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Transport" subtitle="4 Mbaud, framed-only" />
+                <CardHeader title="Transport" subtitle="6 Mbaud, framed-only" />
               </Card>
             </A>
             <A href="/native/connection" style={{ "text-decoration": "none" }}>

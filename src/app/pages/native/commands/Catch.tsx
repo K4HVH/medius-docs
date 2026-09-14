@@ -509,7 +509,7 @@ const Catch: Component = () => {
           </p>
           <pre class="diagram">{`  BTN KEY MEDIA AXIS BUS    -->  [ queue 0 ]  --+
   HID_IN HID_OUT                                |
-  VEND_INTR EMIT            -->  [ queue 1 ]  --+--->  control link, 4 Mbaud
+  VEND_INTR EMIT            -->  [ queue 1 ]  --+--->  control link, 6 Mbaud
   CONTROL                   -->  [ queue 2 ]  --+
   VEND_BULK                 -->  [ queue 3 ]  --+
 
