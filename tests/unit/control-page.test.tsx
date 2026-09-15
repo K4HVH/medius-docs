@@ -219,8 +219,7 @@ describe('Control page', () => {
     expect((await set.findByText(/Movement riding is on/)).textContent).not.toMatch(/rendering/);
     cleanup();
 
-    // An armed render profile takes the clip's cursor motion, and riding holds the rendered stream whatever
-    // the clip's own setting says, so the warning appears with that setting off and says why.
+    // An armed profile makes the rendered cursor motion ride whatever the clip's own setting says.
     const armed = { mode: RenderMode.Despiked, full: false, ready: true };
     const rendered = mount(stub({ moveRide: 20, render: armed }));
     expect((await rendered.findByText(/Movement riding is on/)).textContent).toMatch(/rendering motion/);

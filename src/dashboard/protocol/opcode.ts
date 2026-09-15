@@ -65,8 +65,7 @@ export enum ClipOp {
 export const CLIP_SET_AUTOLOCK = 0; // value = CLIP_LOCK_* scope bits
 export const CLIP_SET_LOOP = 1; // value != 0
 export const CLIP_SET_RETAIN = 2; // value != 0 (0 = streaming, the default)
-export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a native report (0 = the box's own clock, the default); only its wheel while rendering is on with a profile armed
-
+export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a native report (0 = the box's own clock, the default)
 // CLIP_TRIGGER binding set (§3.11), shaped like LOCK. Keyed by (class, id, edge).
 export const CLIP_TRIG_MAX = 8;
 export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove

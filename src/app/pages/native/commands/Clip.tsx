@@ -314,24 +314,15 @@ link loss   the inter-chip link drops`}</pre>
             other injection.
           </p>
           <p>
-            Unless rendering takes its cursor motion (below), a clip's motion bypasses{' '}
-            <A href="/native/commands/option#move-ride">movement riding</A> by default, so it plays on its
-            own timeline; <code>CLIP_SET(ride)</code> puts it back on the
+            A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
+            default, so it plays on its own timeline; <code>CLIP_SET(ride)</code> puts it back on the
             ride, additive to the user's own movement and dropped while they hold still.
           </p>
           <p>
             While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
             clip's cursor motion is rendered like a <A href="/native/commands/move"><code>MOVE</code></A>{' '}
-            with no flag, except that it is never spread: each entry is already one frame's delta. Movement
-            riding governs the rendered stream as it does a <code>MOVE</code>'s (not under{' '}
-            <code>full</code>), and <code>CLIP_SET(ride)</code> applies to the wheel only. Entries still
-            play at the emit pace.
-          </p>
-          <p>
-            The model trails the clip tick by a few milliseconds, and longer while entries carry more than
-            the 127 counts a report holds, so an edge in the same entry reaches the wire first, and motion it still holds goes out after <code>PAUSE</code>, <code>STOP</code> or{' '}
-            <code>CLEAR</code>. <A href="/native/commands/move#flags"><code>FLUSH</code></A> and{' '}
-            <code>DISCARD</code> act on that held part, as they do for a rendered <code>MOVE</code>.
+            with no flag and rides the same way; <code>CLIP_SET(ride)</code> then moves only the wheel.
+            Edges stay on the clip tick, ahead of the rendered motion.
           </p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
@@ -364,7 +355,7 @@ link loss   the inter-chip link drops`}</pre>
               <tr><td><code>0</code></td><td><code>autolock</code></td><td>class bitmask</td><td>the physical-input classes <code>START</code> locks while playing (below)</td></tr>
               <tr><td><code>1</code></td><td><code>loop</code></td><td><code>0</code> / <code>1</code></td><td>a finalized clip replays from the head instead of ending</td></tr>
               <tr><td><code>2</code></td><td><code>retain</code></td><td><code>0</code> / <code>1</code></td><td>keep entries after playing so <code>START</code> / <code>RESTART</code> can replay them</td></tr>
-              <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's own clock. While rendering is on with a profile armed, cursor motion is rendered and this applies to the wheel only</td></tr>
+              <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's own clock; only the wheel while rendering is on with a profile armed</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">AUTO-LOCK</div>

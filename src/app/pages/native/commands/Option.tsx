@@ -372,8 +372,7 @@ const Option: Component = () => {
             </p>
             <p>
               The model emits at most 127 counts per axis per report and carries the rest as debt, so
-              motion past that rate finishes later than the mouse made it, by however long the excess
-              takes at 127 counts a report.
+              motion past that rate finishes late by as long as the excess takes to emit.
             </p>
           </div>
           <div class="callout callout--info">

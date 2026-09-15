@@ -389,7 +389,7 @@ const Types: Component = () => {
                 <tr><td><code>loop</code></td><td><code>bool</code></td><td>playback loops at the clip end (retained mode only)</td></tr>
                 <tr><td><code>retain</code></td><td><code>bool</code></td><td>the loaded clip is retained so it can rewind and replay</td></tr>
                 <tr><td><code>finalized</code></td><td><code>bool</code></td><td>a retained clip's end is fixed, ready to replay and loop</td></tr>
-                <tr><td><code>ride</code></td><td><code>bool</code></td><td>the clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; only its wheel while rendering is on with a profile armed</td></tr>
+                <tr><td><code>ride</code></td><td><code>bool</code></td><td>the clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A></td></tr>
                 <tr><td><code>triggers</code></td><td><code>List[<A href="/bindings/python/types#cliptrigger">ClipTrigger</A>]</code></td><td>the bound trigger set (up to 8)</td></tr>
               </tbody>
             </table>

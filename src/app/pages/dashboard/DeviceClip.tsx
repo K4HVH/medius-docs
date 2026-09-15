@@ -190,8 +190,7 @@ const DeviceClip = () => {
   const loopOn = () => flagEdit().loop ?? clip()?.loop === true;
   const retainOn = () => flagEdit().retain ?? clip()?.retain === true;
   const rideOn = () => flagEdit().ride ?? clip()?.ride === true;
-  // An armed render profile takes the clip's cursor motion, and riding then holds the rendered stream
-  // unless full rendering is on; the clip's own ride setting is left governing the wheel.
+  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the wheel.
   const rendered = () =>
     render()?.ready === true && (render()?.mode ?? RenderMode.Off) !== RenderMode.Off;
   const riding = () => (moveRide() ?? 0) > 0;
