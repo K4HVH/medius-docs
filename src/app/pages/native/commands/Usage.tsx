@@ -22,12 +22,13 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="Button ids" subtitle="Mouse buttons (class = button)" />
           <p>
-            A small semantic id, bound at clone time to the real mouse's buttons, and the same id for{' '}
+            A semantic id, bound at clone time to the real mouse's buttons, and the same id for{' '}
             <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A>. A command for an
-            id the mouse lacks is a no-op, so read{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
-            <code>n_buttons</code> first.
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named; a
+            mouse that declares more carries a numeric id for each, up to the count{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>{' '}
+            reports. A command for an id past that count is a no-op, so read <code>n_buttons</code>{' '}
+            first.
           </p>
           <table class="api-params">
             <thead><tr><th>Button</th><th><code>id</code></th></tr></thead>
@@ -37,12 +38,14 @@ const Usage: Component = () => {
               <tr><td>Middle</td><td><code>2</code></td></tr>
               <tr><td>Side1 (first thumb)</td><td><code>3</code></td></tr>
               <tr><td>Side2 (second thumb)</td><td><code>4</code></td></tr>
+              <tr><td>further declared buttons</td><td><code>5 .. n_buttons - 1</code></td></tr>
             </tbody>
           </table>
           <p>
-            The Rust library exposes these as the named{' '}
-            <A href="/library/types/enums#button"><code>Button</code></A> enum
-            (<code>Button::Left</code>, <code>Button::Side2</code>, ...).
+            The Rust library names the five as{' '}
+            <A href="/library/types/enums#button"><code>Button</code></A> constructors
+            (<code>Button::left()</code>, <code>Button::side2()</code>, ...) and takes any id past them
+            up to the declared count.
           </p>
         </Card>
       </div>

@@ -146,7 +146,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 6</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 7</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -162,9 +162,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.3.4</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.0</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 04     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 07     | 03     | 04     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -181,9 +181,9 @@ const Requests: Component = () => {
           <CardHeader title="HEALTH" subtitle="RESP payload, what = 1" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 1</code>: a single <code>flags</code> byte, each bit an independent status.
+            <code>what = 1</code>: a two-byte <code>flags</code> word (<code>u16</code>, little-endian), each bit an independent status.
           </p>
-          <pre class="api-signature">QUERY  what = 1  ·  RESP 2 bytes</pre>
+          <pre class="api-signature">QUERY  what = 1  ·  RESP 3 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -192,7 +192,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x01</td></tr>
-              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>the status bits below</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u16</code></td><td>the status bits below, little-endian</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -209,6 +209,9 @@ const Requests: Component = () => {
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
               <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming. It says nothing about <em>what</em> is subscribed; read <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> for the table</td></tr>
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
+              <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: at least one <A href="/library/advanced/rewrite">rewrite rule</A> is installed (the table is non-empty)</td></tr>
+              <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: a <A href="/library/advanced/patch">descriptor patch</A> set is applied to the clone</td></tr>
+              <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -217,9 +220,9 @@ const Requests: Component = () => {
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x07</code>):</p>
+          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x0007</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 02 00  | 01     | 07     | lo hi  |
+| A5     | 06     | 00     | 03 00  | 01     | 07 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | flags  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -315,7 +318,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
-              <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries</td></tr>
+              <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
               <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
               <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite</td></tr>
               <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
@@ -333,6 +336,7 @@ const Requests: Component = () => {
               <tr><td>b1</td><td><code>0x02</code></td><td><code>Y</code>: the report carries a Y axis</td></tr>
               <tr><td>b2</td><td><code>0x04</code></td><td><code>WHEEL</code>: the report carries a wheel</td></tr>
               <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the mouse report sits behind a HID report ID</td></tr>
+              <tr><td>b4</td><td><code>0x10</code></td><td><code>PAN</code>: the report carries an AC Pan (horizontal scroll) axis</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">KBD_FLAGS</div>
@@ -968,7 +972,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.3.4</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.0</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+

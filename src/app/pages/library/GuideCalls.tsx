@@ -113,7 +113,7 @@ for _ in 0..200 {
 }`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              The library applies no rate limit. A no-sleep loop queues frames faster than 4 Mbaud drains; pace your
+              The library applies no rate limit. A no-sleep loop queues frames faster than 6 Mbaud drains; pace your
               own steps.
             </p>
           </div>

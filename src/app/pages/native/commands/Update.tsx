@@ -16,9 +16,9 @@ const Update: Component = () => {
           <A href="/native/commands/update#activate">commit</A> at the end, over the box's own
           control port and with no BOOT button.
         </p>
-        <pre class="diagram">{`   PC --CH343, framed 4 Mbaud--> DEVICE chip --> its own spare slot
+        <pre class="diagram">{`   PC --CH343, framed 6 Mbaud--> DEVICE chip --> its own spare slot
                                      |
-                                     +--UART1, 5 Mbaud--> HOST chip --> its own spare slot`}</pre>
+                                     +--UART1, 20 Mbaud-> HOST chip --> its own spare slot`}</pre>
         <p>
           The host chip has no serial port of its own and no wire to one: only GPIO1 and GPIO2 connect
           the two chips. Its image is relayed chunk for chunk and never buffered on the way.
@@ -163,9 +163,9 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
-              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 320 µs at 4 Mbaud.</td></tr>
+              <tr><td>UART0 RX FIFO</td><td>128 bytes, which is 213 µs at 6 Mbaud.</td></tr>
               <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
-              <tr><td>Inter-chip link ring</td><td>4096 bytes, which is what caps the relayed window.</td></tr>
+              <tr><td>Inter-chip link ring</td><td>8192 bytes, which is what caps the relayed window.</td></tr>
             </tbody>
           </table>
           <p>
@@ -410,12 +410,15 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>Device</td><td>Ten seconds of a running main loop.</td><td>30 s</td></tr>
-              <tr><td>Host</td><td>A completed clock exchange over the link.</td><td>15 s</td></tr>
+              <tr><td>Host</td><td>A completed clock exchange over the link, and nothing else.</td><td>40 s</td></tr>
             </tbody>
           </table>
           <p>
-            Measured on hardware: an image that panics in its entry point is back on the old slot in
-            0.8 s, and one that boots but never confirms is reverted by its own grace timer.
+            The host row admits no fallback on purpose: its image arrives over the link, and the link
+            is the only way back to it, so an image that runs but cannot talk would otherwise be
+            reachable only by opening the case. Measured on hardware: an image that panics in its
+            entry point is back on the old slot in 0.8 s, and one built deliberately deaf to the link
+            reverted itself and brought the link back with no intervention.
           </p>
           <div class="callout callout--warning">
             <p>

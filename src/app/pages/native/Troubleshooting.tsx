@@ -30,7 +30,7 @@ const Troubleshooting: Component = () => {
           </p>
           <ul>
             <li>
-              The port wasn't opened at <code>4,000,000</code> baud. The box speaks{' '}
+              The port wasn't opened at <code>6,000,000</code> baud. The box speaks{' '}
               <A href="/native/frame">framed binary</A> from the first byte, with no slower startup
               speed.
             </li>

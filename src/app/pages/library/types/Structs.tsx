@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>6</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>7</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 6, fw_major: 3, fw_minor: 3, fw_patch: 4, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.3.4"); // Display omits proto_ver
+let v = Version { proto_ver: 7, fw_major: 3, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -53,7 +53,9 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
           <CardHeader title="Health" subtitle="Box readiness flags" />
           <p>
             Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
-            bool per bit. <code>from_flags(u8)</code> and <code>to_flags()</code> convert the byte.
+            bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
+            <code>to_flags()</code> convert it: bits 0 to 7 are the original byte, and the{' '}
+            <A href="/library/advanced/rewrite">advanced control layer</A> opened three more in the high byte.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>True when</th></tr></thead>
@@ -66,6 +68,9 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input is off a full pass, whether <A href="/library/lock#lock"><code>lock</code></A>ed or merely <A href="/library/lock#scale"><code>scale</code></A>d.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>The <A href="/library/catch#catch-events"><code>catch</code></A> table holds at least one <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>, whatever class it addresses.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
+              <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/advanced/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/advanced/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A <A href="/library/transform">field transform</A> is active (v3.4.0).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -73,8 +78,8 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
 
 let h = Health::from_flags(0b0000_0011); // link_up | mouse_attached
 assert!(h.link_up && h.mouse_attached);
-assert!(!h.clone_configured);
-assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code></pre>
+assert!(!h.clone_configured && !h.rewrite_on);
+assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code></pre>
         </Card>
       </div>
       <div id="device-info" data-search-target>
@@ -150,6 +155,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
               <tr><td><code>has_x</code></td><td><code>bool</code></td><td>The report carries an X axis.</td></tr>
               <tr><td><code>has_y</code></td><td><code>bool</code></td><td>The report carries a Y axis.</td></tr>
               <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>The report carries a wheel.</td></tr>
+              <tr><td><code>has_pan</code></td><td><code>bool</code></td><td>The report carries an AC Pan (horizontal scroll) axis.</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
               <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
             </tbody>
@@ -157,7 +163,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::MouseCaps;
 
-let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
+let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_pan: false, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
         </Card>
       </div>
@@ -378,6 +384,7 @@ drop(stream);`}</code></pre>
               <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
               <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
               <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
+              <tr><td><code>dpan</code></td><td><code>i16</code></td><td>AC Pan (horizontal scroll) this report (right positive).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -385,7 +392,7 @@ drop(stream);`}</code></pre>
 
 let stream = device.catch_events([CatchFilter::watch_axes()])?;
 if let CatchEvent::Motion(m) = stream.recv()? {
-    println!("at {} us ({:?}): moved {} {}, wheel {}", m.ts_us, m.clock, m.dx, m.dy, m.dz);
+    println!("at {} us ({:?}): moved {} {}, wheel {}, pan {}", m.ts_us, m.clock, m.dx, m.dy, m.dz, m.dpan);
 }`}</code></pre>
         </Card>
       </div>
@@ -469,7 +476,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clock</code>.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
               <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space the event came from.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint address, endpoint number, or interface number inside that class.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint number or interface number inside that class.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Positive</code> = IN (device to PC), <code>Negative</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>u8</code></td><td>Class-specific, see below; <code>0</code> for the classes that define none.</td></tr>
               <tr><td><code>true_len</code></td><td><code>u16</code></td><td>The packet's length <em>before</em> the <A href="/library/types/enums#capture"><code>Capture</code></A> cut it.</td></tr>
