@@ -777,6 +777,7 @@ export interface ClipStatus {
   retain: boolean;
   finalized: boolean;
   // Whether the clip's motion waits to ride a native report (CLIP_SET ride). Off = the box's own clock.
+  // While rendering is on with a profile armed it applies to the wheel only.
   ride: boolean;
   triggers: ClipTrigger[];
 }
