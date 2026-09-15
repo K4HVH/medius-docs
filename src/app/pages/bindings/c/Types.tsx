@@ -1612,7 +1612,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>loop_</code></td><td><code>uint8_t</code></td><td>Playback loops at the clip end (retained mode only).</td></tr>
               <tr><td><code>retain</code></td><td><code>uint8_t</code></td><td>The loaded clip is retained so it can rewind and replay (0 = streaming).</td></tr>
               <tr><td><code>finalized</code></td><td><code>uint8_t</code></td><td>A retained clip's end is fixed, so it can replay and loop.</td></tr>
-              <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
+              <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; only its wheel while rendering is on with a profile armed.</td></tr>
               <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound triggers, <code>triggers[0..n]</code>.</td></tr>
               <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>triggers</code>.</td></tr>
             </tbody>

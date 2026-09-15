@@ -3,7 +3,7 @@ import { render, cleanup } from '@solidjs/testing-library';
 import { MemoryRouter, Route } from '@solidjs/router';
 import { DashboardContext, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
 import Control from '../../src/app/pages/dashboard/Control';
-import { ClipOp, ClipState, Direction, EmitMode } from '../../src/dashboard/protocol';
+import { ClipOp, ClipState, Direction, EmitMode, RenderMode } from '../../src/dashboard/protocol';
 
 // The Control page mounts five cards against one context. Each card has its own unit tests; this
 // covers what those cannot: that the whole page composes, that every card reaches the connected
@@ -57,6 +57,7 @@ const VALUES: Record<string, unknown> = {
   },
   imperfect: { allowed: false, overCapacity: false, cloneImperfect: false },
   moveRide: 0,
+  render: { mode: RenderMode.Despiked, full: false, ready: false },
   emit: { mode: EmitMode.Fixed, fixedHz: 250, resolvedHz: 250 },
 };
 
@@ -208,15 +209,33 @@ describe('Control page', () => {
     expect(start!.disabled).toBe(true);
   });
 
-  it('warns about riding only when the clip is actually set to ride it', async () => {
+  it('warns about riding only when something actually makes clip motion ride', async () => {
     // The clip bypasses riding by default, so the option being on is not enough: warning on that alone
     // told the user their clip would be swallowed when it plays perfectly well.
     const riding = mount(stub({ moveRide: 20 })).container;
     expect(riding.textContent).not.toMatch(/Movement riding is on/);
 
-    const { findByText } = mount(
-      stub({ moveRide: 20, clip: { ...(VALUES.clip as object), ride: true } }),
-    );
-    await findByText(/Movement riding is on/);
+    const set = mount(stub({ moveRide: 20, clip: { ...(VALUES.clip as object), ride: true } }));
+    expect((await set.findByText(/Movement riding is on/)).textContent).not.toMatch(/rendering/);
+    cleanup();
+
+    // An armed render profile takes the clip's cursor motion, and riding holds the rendered stream whatever
+    // the clip's own setting says, so the warning appears with that setting off and says why.
+    const armed = { mode: RenderMode.Despiked, full: false, ready: true };
+    const rendered = mount(stub({ moveRide: 20, render: armed }));
+    expect((await rendered.findByText(/Movement riding is on/)).textContent).toMatch(/rendering motion/);
+    expect(rendered.container.textContent).toMatch(/Wheel motion rides a real report/);
+    cleanup();
+
+    // Full rendering takes the rendered stream off the ride, so an armed profile alone warns of nothing.
+    const full = mount(stub({ moveRide: 20, render: { ...armed, full: true } })).container;
+    expect(full.textContent).not.toMatch(/Movement riding is on/);
+    cleanup();
+
+    // Until the render poll has answered, where the cursor motion goes is unknown, so nothing is claimed.
+    const unknown = mount(
+      stub({ moveRide: 20, render: null, clip: { ...(VALUES.clip as object), ride: true } }),
+    ).container;
+    expect(unknown.textContent).not.toMatch(/Movement riding is on/);
   });
 });

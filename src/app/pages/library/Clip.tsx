@@ -145,7 +145,7 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
               <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
               <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
               <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
-              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback.</td></tr>
+              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback. While rendering is on with a profile armed, cursor motion is rendered and this applies to the wheel only.</td></tr>
               <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
             </tbody>
           </table>
