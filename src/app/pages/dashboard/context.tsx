@@ -14,13 +14,17 @@ import {
   type LogLine,
   type Version,
   LogLevel,
+  type ChipFirmware,
   type FirmwareInfo,
+  ImageState,
   OTA_TGT_DEVICE,
   OTA_TGT_HOST,
 } from '../../../dashboard/protocol';
 import {
+  CONFIRM_TIMEOUT_MS,
   type ConnectVerdict,
   SerialLink,
+  attachLink,
   attemptConnect,
   classifyConnectError,
   grantedMediusPorts,
@@ -116,6 +120,15 @@ function flashErrorText(e: unknown): string {
   return String(e);
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// 'host': the main chip came back and decided, and the mouse-side chip never did.
+type Verdict = 'ok' | 'gone' | 'host';
+
+// An image marked invalid is about to reboot into the other one, so it is no verdict either.
+const decided = (c: ChipFirmware) =>
+  c.state !== ImageState.PendingVerify && c.state !== ImageState.Invalid && c.state !== ImageState.Aborted;
+
 export const DashboardProvider: ParentComponent = (props) => {
   const supported = isWebSerialSupported();
   const secure = isSecureContextOk();
@@ -139,6 +152,9 @@ export const DashboardProvider: ParentComponent = (props) => {
   // reading the value.
   const health = poller.subscribe('health');
 
+  // An update waiting for its verdict reattaches on its own, and owns the status until it ends.
+  let updating = false;
+
   const makeLink = (port: SerialPort): SerialLink => {
     const nl: SerialLink = new SerialLink(port, {
       onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
@@ -150,9 +166,12 @@ export const DashboardProvider: ParentComponent = (props) => {
         // Only the stored link: another link may already own this port, and closing it would take
         // that one's port down with it.
         if (link() !== nl) return;
-        setStatus('disconnected');
-        setVersion(null);
-        setError(null);
+        if (!updating) {
+          setStatus('disconnected');
+          setVersion(null);
+          setFirmwareInfo(null);
+          setError(null);
+        }
         setLink(null);
         poller.reset();
         // The read loop is finished but the port is still open and its writer still locked. Without
@@ -163,27 +182,18 @@ export const DashboardProvider: ParentComponent = (props) => {
     return nl;
   };
 
-  // After the main chip reboots to run, reconnect and read the version back as a
-  // verification. Returns false if it never came back (then a power-cycle is needed).
+  // Reopen the port after an activate, at whichever rate the box answers; `awaitVerdict` settles what it
+  // runs. Returns false if it never came back (then a power-cycle is needed). The status stays the caller's.
   const tryReconnect = async (port: SerialPort): Promise<boolean> => {
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
     await sleep(2000);
     for (let attempt = 0; attempt < 4; attempt++) {
-      const nl = makeLink(port);
       try {
-        await nl.open();
-        const v = await nl.handshake();
+        const { link: nl, version: v } = await attachLink(port, makeLink);
         setVersion(v);
         setLink(nl);
         poller.reset();
-        setStatus('connected');
         return true;
       } catch {
-        try {
-          await nl.close();
-        } catch {
-          // ignore
-        }
         await sleep(1000);
       }
     }
@@ -199,9 +209,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     setFlashProgress(null);
     setDeviceLog([]);
     setInputEvents([]);
+    setFirmwareInfo(null);
     setStatus('connecting');
-    // Every link built here is tracked, so a port that opened but did not answer is closed on the
-    // way out rather than left holding the device against the next attempt.
     // A link left behind by a failed update still holds the port's writer lock. Opening a second
     // link over it throws where nothing can recover, so let go of it first.
     const stale = link();
@@ -212,7 +221,6 @@ export const DashboardProvider: ParentComponent = (props) => {
       await stale.close().catch(() => undefined);
     }
 
-    const built = new Map<SerialPort, SerialLink>();
     let outcome: Awaited<ReturnType<typeof attemptConnect<SerialLink>>>;
     try {
       outcome = await attemptConnect<SerialLink>(
@@ -221,20 +229,7 @@ export const DashboardProvider: ParentComponent = (props) => {
           secure: () => secure,
           granted: grantedMediusPorts,
           choose: requestMediusPort,
-          attach: async (port) => {
-            const l = makeLink(port);
-            built.set(port, l);
-            await l.open();
-            return { link: l, version: await l.handshake() };
-          },
-          detach: async (port) => {
-            try {
-              await built.get(port)?.close();
-            } catch {
-              // A port that will not close is not a reason to stop trying the next one.
-            }
-            built.delete(port);
-          },
+          attach: (port) => attachLink(port, makeLink),
         },
         { skipGranted: force },
       );
@@ -300,6 +295,46 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
   };
 
+  // Wait for each chip's verdict on the image it booted, reattaching whenever the box stops answering: a
+  // revert reboots the main chip, possibly onto the other control rate. No verdict by the deadline is no
+  // verification.
+  const awaitVerdict = async (port: SerialPort, hostExpected: boolean): Promise<Verdict> => {
+    const deadline = Date.now() + CONFIRM_TIMEOUT_MS;
+    const drop = async () => {
+      const l = link();
+      setLink(null);
+      poller.reset();
+      await l?.close().catch(() => undefined);
+    };
+    const fail = async (why: Verdict) => {
+      await drop();
+      setVersion(null);
+      setFirmwareInfo(null);
+      return why;
+    };
+    // The handshake's version can predate a revert that kept the rate; the read that decided cannot.
+    const settle = async (info: FirmwareInfo): Promise<Verdict> => {
+      const query = () => link()?.queryVersion().catch(() => undefined);
+      const v = (await query()) ?? (await query()) ?? version();
+      if (v) setVersion({ ...v, fwMajor: info.device.major, fwMinor: info.device.minor, fwPatch: info.device.patch });
+      return 'ok';
+    };
+    let last: FirmwareInfo | null = null;
+    for (;;) {
+      // A second read before abandoning the link: one lost reply is not a reboot.
+      const info = link() ? ((await readFirmwareInfo()) ?? (await readFirmwareInfo())) : null;
+      if (info && decided(info.device) && (!hostExpected || (info.host && decided(info.host)))) return settle(info);
+      last = info ?? last;
+      if (Date.now() >= deadline) return fail(last && decided(last.device) ? 'host' : 'gone');
+      if (info) {
+        await sleep(500);
+        continue;
+      }
+      await drop();
+      if (!(await tryReconnect(port))) return fail('gone');
+    }
+  };
+
   // Update over the control port the user is already connected to. Nothing reboots into ROM download
   // and no second port grant is needed: each chip writes the slot it is not running, and the box
   // reverts anything that will not boot. The host chip's image is relayed over the inter-chip link,
@@ -333,26 +368,34 @@ export const DashboardProvider: ParentComponent = (props) => {
           setFlashProgress({ phase: 'writing', written, total }),
         );
       }
+      // A mouse-side chip that answered before the activate has to answer after it, whatever was sent.
+      const read = () => l.queryFirmware().catch(() => null);
+      const hostBefore = ((await read()) ?? (await read()))?.host != null;
       setFlashProgress({ phase: 'connecting' });
+      updating = true;
       await l.activateFirmware();
-      // The device chip reboots a moment after it answers, so the link this call rode is gone.
+      // The link is reopened either way; the main chip reboots unless only the mouse-side chip was sent.
       setLink(null);
       setVersion(null);
+      setFirmwareInfo(null);
       poller.reset();
       await l.close().catch(() => undefined);
-      const reconnected = await tryReconnect(ctrlPort);
+      const hostExpected = images.host !== undefined || hostBefore;
+      const verdict = (await tryReconnect(ctrlPort)) ? await awaitVerdict(ctrlPort, hostExpected) : 'gone';
       setFlashProgress({ phase: 'done' });
-      if (!reconnected) {
+      if (verdict !== 'ok') {
         // Shared, not page-local: this is the one instruction that fixes it, and navigating to
         // another tab used to destroy it. Device, Control and Update all surface it. The claim is
         // only what the code can support: what is running now is what nothing has checked.
         setError(
-          'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
+          verdict === 'host'
+            ? "The update was sent, but the mouse-side chip isn't answering. Unplug the box, plug it back in, then connect. If it still isn't answering, open Set up."
+            : 'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
         );
         setStatus('disconnected');
         return 'sent';
       }
-      await readFirmwareInfo();
+      setStatus('connected');
       return 'verified';
     } catch (e) {
       // A refused activate stops at the host chip, and whatever is staged stays armed: the next
@@ -375,6 +418,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       setError(flashErrorText(e));
       setStatus('error');
       return 'failed';
+    } finally {
+      updating = false;
     }
   };
 

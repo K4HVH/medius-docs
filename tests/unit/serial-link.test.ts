@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   BadProtoVerError,
+  NoReplyError,
   QueryTimeoutError,
   SerialLink,
+  attachLink,
 } from '../../src/dashboard/serial';
 import {
   CatchClass,
@@ -637,5 +639,125 @@ describe('SerialLink', () => {
     expect(h.patchOn).toBe(true);
     expect(h.transformOn).toBe(false);
     await link.close();
+  });
+});
+
+// A port that behaves like Web Serial across a close: its streams exist only while it is open, and the
+// box behind it answers only at the rate its firmware runs the control link at.
+class RatedPort {
+  opens: number[] = [];
+  closes = 0;
+  private isOpen = false;
+  private rs: ReadableStream<Uint8Array> | null = null;
+  private ws: WritableStream<Uint8Array> | null = null;
+  private controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+  private baud = 0;
+
+  constructor(
+    private readonly boxBaud: number,
+    private readonly protoVer = 7,
+    private readonly openError: Error | null = null,
+  ) {}
+
+  // As in Chromium, an open port hands out a fresh readable once the previous one was cancelled.
+  get readable(): ReadableStream<Uint8Array> | null {
+    if (!this.isOpen) return null;
+    if (!this.rs) {
+      this.rs = new ReadableStream<Uint8Array>({
+        start: (c) => {
+          this.controller = c;
+        },
+        cancel: () => {
+          this.rs = null;
+          this.controller = null;
+        },
+      });
+    }
+    return this.rs;
+  }
+
+  get writable(): WritableStream<Uint8Array> | null {
+    return this.isOpen ? this.ws : null;
+  }
+
+  async open({ baudRate }: { baudRate: number }): Promise<void> {
+    this.opens.push(baudRate);
+    if (this.isOpen) throw new DOMException('The port is already open.', 'InvalidStateError');
+    if (this.openError) throw this.openError;
+    this.baud = baudRate;
+    this.isOpen = true;
+    const dec = new FrameDecoder();
+    this.ws = new WritableStream<Uint8Array>({
+      write: (chunk) => dec.feed(chunk, (f) => this.answer(f)),
+    });
+  }
+
+  async setSignals(): Promise<void> {}
+
+  // Chromium's only refusals: a port that is not open, and streams still locked.
+  async close(): Promise<void> {
+    if (!this.isOpen) throw new DOMException('The port is already closed.', 'InvalidStateError');
+    if (this.rs?.locked || this.ws?.locked) throw new TypeError('Cannot cancel a locked stream');
+    this.closes++;
+    try {
+      this.controller?.close();
+    } catch {
+      // already cancelled by the reader
+    }
+    this.isOpen = false;
+    this.rs = null;
+    this.ws = null;
+    this.controller = null;
+  }
+
+  private answer(f: { ty: FrameType; seq: number; payload: Uint8Array }): void {
+    if (this.baud !== this.boxBaud || f.ty !== FrameType.Query || f.payload[0] !== 0) return;
+    this.controller?.enqueue(
+      encode(FrameType.Resp, f.seq, new Uint8Array([0, this.protoVer, 3, 4, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+    );
+  }
+}
+
+describe('attachLink', () => {
+  const make = (p: SerialPort) => new SerialLink(p);
+  const asSerial = (r: RatedPort) => r as unknown as SerialPort;
+
+  it('stops at the current rate when the box answers there', async () => {
+    const port = new RatedPort(6_000_000);
+    const { link, version } = await attachLink(asSerial(port), make);
+    expect(version.protoVer).toBe(7);
+    expect(port.opens).toEqual([6_000_000]);
+    expect(port.closes).toBe(0);
+    await link.close();
+  });
+
+  it('reaches a box on the previous rate, closing the silent attempt before reopening', async () => {
+    const port = new RatedPort(4_000_000, 6);
+    const { link, version } = await attachLink(asSerial(port), make);
+    expect(version.protoVer).toBe(6);
+    expect(port.opens).toEqual([6_000_000, 4_000_000]);
+    expect(port.closes).toBe(1);
+    await link.close();
+  }, 10000);
+
+  it('a box silent at every rate is NoReplyError, and leaves the port closed', async () => {
+    const port = new RatedPort(115_200);
+    await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(NoReplyError);
+    expect(port.opens).toEqual([6_000_000, 4_000_000]);
+    expect(port.closes).toBe(2);
+    expect(port.readable).toBeNull();
+  }, 10000);
+
+  it('a box on a protocol this page cannot speak is not retried at another rate', async () => {
+    const port = new RatedPort(6_000_000, 4);
+    await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(BadProtoVerError);
+    expect(port.opens).toEqual([6_000_000]);
+    expect(port.readable).toBeNull();
+  });
+
+  it('a port that will not open is not retried at another rate', async () => {
+    const port = new RatedPort(6_000_000, 7, new DOMException('Failed to open serial port.', 'NetworkError'));
+    await expect(attachLink(asSerial(port), make)).rejects.toMatchObject({ name: 'NetworkError' });
+    expect(port.opens).toEqual([6_000_000]);
   });
 });

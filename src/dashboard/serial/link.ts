@@ -137,6 +137,8 @@ import {
 import { isWebSerialSupported } from './support';
 
 export const CTRL_BAUD = 6_000_000;
+// Firmware before 3.4.0 runs the control link at 4 Mbaud, and has to stay reachable to be updated.
+export const CTRL_BAUDS = [CTRL_BAUD, 4_000_000] as const;
 export const WCH_VID = 0x1a86;
 export const CH343_PID = 0x55d3;
 export const ESP_ROM_VID = 0x303a;
@@ -214,7 +216,7 @@ const UPDATE_OP_TIMEOUT_MS = 20_000;
 /** ACTIVATE reboots the host chip and waits for it back on the link before the device chip follows. */
 const ACTIVATE_TIMEOUT_MS = 60_000;
 /** Outlasts the mouse-side chip's 40 s probation, which is the longer of the two. */
-const CONFIRM_TIMEOUT_MS = 55_000;
+export const CONFIRM_TIMEOUT_MS = 55_000;
 /** Replies held for a waiter that has not registered yet. A window is 16 frames; this is slack. */
 const UPDATE_BACKLOG_MAX = 64;
 
@@ -320,7 +322,7 @@ export class SerialLink {
     return this.port;
   }
 
-  async open(): Promise<void> {
+  async open(baudRate: number = CTRL_BAUD): Promise<void> {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;
     // Adopt a port that is already open rather than opening it again. A close that could not finish
@@ -328,7 +330,7 @@ export class SerialLink {
     // leaves the port open, and Web Serial answers the next open() with "the port is already open",
     // which strands the page with no way back except a replug.
     if (!this.port.readable || !this.port.writable) {
-      await this.port.open({ baudRate: CTRL_BAUD });
+      await this.port.open({ baudRate });
     }
     // Deassert DTR/RTS so opening the port cannot strap or reset the device chip.
     try {
@@ -1238,4 +1240,26 @@ export class SerialLink {
     this.updateWaiters.clear();
     this.updateBacklog.length = 0;
   }
+}
+
+// Open and handshake at each control rate in turn. Only silence moves on to the next rate: a protocol
+// this page cannot speak, or a port that will not open, says nothing about the rate. Every link that
+// does not come back is closed here.
+export async function attachLink(
+  port: SerialPort,
+  make: (port: SerialPort) => SerialLink,
+): Promise<{ link: SerialLink; version: Version }> {
+  let silent: unknown;
+  for (const baudRate of CTRL_BAUDS) {
+    const link = make(port);
+    try {
+      await link.open(baudRate);
+      return { link, version: await link.handshake() };
+    } catch (e) {
+      await link.close().catch(() => undefined);
+      if (!(e instanceof NoReplyError)) throw e;
+      silent = e;
+    }
+  }
+  throw silent;
 }
