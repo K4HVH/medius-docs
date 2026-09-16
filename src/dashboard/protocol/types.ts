@@ -18,11 +18,18 @@ import {
   H_LINK_UP,
   H_LOCK_ON,
   H_MOUSE_ATT,
+  H_PATCH_ON,
   H_RATE_CONFIDENT,
+  H_REWRITE_ON,
+  H_TRANSFORM_ON,
   KBC_CONSUMER,
   KBC_NKRO,
   KBC_REPORT_ID,
   KBC_SYSTEM,
+  RewriteAction,
+  PatchSection,
+  TransformOp,
+  TransferStatus,
 } from './opcode';
 
 export interface Version {
@@ -52,8 +59,14 @@ export interface Health {
   lockOn: boolean;
   catchOn: boolean;
   kbdAttached: boolean;
+  // The advanced control layer state (§4.2), in the high byte HEALTH gained at proto 7.
+  rewriteOn: boolean;
+  patchOn: boolean;
+  transformOn: boolean;
 }
 
+// From proto 7 the flags word is a u16, so `flags` carries both bytes. A proto-6 box answers a single
+// byte; read through this the high three bits are then 0, which is the truth for a box without the layer.
 export function healthFromFlags(flags: number): Health {
   return {
     linkUp: (flags & H_LINK_UP) !== 0,
@@ -64,6 +77,9 @@ export function healthFromFlags(flags: number): Health {
     lockOn: (flags & H_LOCK_ON) !== 0,
     catchOn: (flags & H_CATCH_ON) !== 0,
     kbdAttached: (flags & H_KBD_ATT) !== 0,
+    rewriteOn: (flags & H_REWRITE_ON) !== 0,
+    patchOn: (flags & H_PATCH_ON) !== 0,
+    transformOn: (flags & H_TRANSFORM_ON) !== 0,
   };
 }
 
@@ -120,6 +136,7 @@ export interface MouseCaps {
   hasX: boolean;
   hasY: boolean;
   hasWheel: boolean;
+  hasPan: boolean;
   hasReportId: boolean;
   nHid: number;
 }
@@ -249,6 +266,7 @@ export enum LockAxis {
   X = 0,
   Y = 1,
   Wheel = 2,
+  Pan = 3,
 }
 
 // The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
@@ -296,11 +314,13 @@ export const LOCK_ID_ALL = 0xffff;
 
 // LOCK scale (§3.8): the percent of the physical value the box keeps on that direction. Blocking and
 // passing are the two ends of one number, so a lock is Block and an unlock is Pass; above Pass it
-// amplifies. A momentary usage carries one bit, so anything under Pass locks it and there is nothing
-// in between.
+// amplifies. The percent is signed: a negative one reverses what it keeps, so Min is a 2.55x
+// reversal and -100 a plain inversion. A momentary usage carries one bit, so anything under Pass locks
+// it, there is nothing in between, and a negative is refused outright.
 export const LOCK_SCALE_BLOCK = 0;
 export const LOCK_SCALE_PASS = 100;
 export const LOCK_SCALE_MAX = 255;
+export const LOCK_SCALE_MIN = -255;
 
 // OPTION(BEARING) geometry (§3.12): how the box compares physical motion against its own injection
 // its own injection.
@@ -360,8 +380,9 @@ export interface Locks {
 }
 
 // The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
-// weighs it. Both reports the lowest across every direction, so the worst case a delta could meet.
-// Where several entries cover the same direction the lowest is reported, matching the box multiplying them.
+// weighs it. Both reports the least that survives across every direction, so the worst case a delta
+// could meet, ranked by magnitude so a block outranks a reversal of any size. Where several entries
+// cover the same direction the least is reported, matching the box multiplying them.
 export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
   // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
   // target it never names. Matching on the exact id alone under-reported one, which is how a blanket
@@ -375,7 +396,12 @@ export function scaleOf(locks: Locks, target: LockTarget, direction: Direction):
         x.direction === Direction.Both ||
         x.direction === direction),
   );
-  return covering.length ? Math.min(...covering.map((x) => x.scale)) : LOCK_SCALE_PASS;
+  // By magnitude, not by value: a signed minimum ranks -50 below 0 and would report a reversal over a
+  // block, when the block is what the delta actually meets.
+  if (!covering.length) return LOCK_SCALE_PASS;
+  return covering
+    .map((x) => x.scale)
+    .reduce((a, b) => (Math.abs(b) < Math.abs(a) || (Math.abs(b) === Math.abs(a) && b < a) ? b : a));
 }
 
 // True when the target is blocked outright on that direction. A direction merely weighed is not
@@ -394,7 +420,7 @@ export function isLocked(locks: Locks, target: LockTarget, direction: Direction)
 // CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
 // unchanged, so one address vocabulary covers locking a field and catching it; 4 and up reach the
 // byte-oriented traffic the box carries. Addressing doubles as the filter because the control link
-// is 4 Mbaud and vendor bulk alone measures 250 KiB/s through the box, so a subscription has to be
+// is 6 Mbaud and vendor bulk alone measures 250 KiB/s through the box, so a subscription has to be
 // able to name one endpoint rather than a whole class. Wire values match ctrl_proto.h.
 export enum CatchClass {
   Button = 0,
@@ -457,7 +483,7 @@ export const filterWatch = (cls: CatchClass, id: number): CatchFilter => ({
   capture: 0,
 });
 
-// One relative axis (LockAxis: X, Y, or Wheel).
+// One relative axis (LockAxis: X, Y, Wheel, or Pan).
 export const filterWatchAxis = (axis: number): CatchFilter => ({
   cls: CatchClass.Axis,
   id: axis,
@@ -551,6 +577,8 @@ export interface MotionEvent {
   dx: number;
   dy: number;
   dz: number;
+  // AC Pan (horizontal scroll) this report; + = right. A first-class relative axis peer of the wheel.
+  dpan: number;
 }
 
 // A class-tagged held-usage snapshot from the CATCH stream (a USAGE_EVENT frame, §4.10). One event
@@ -852,3 +880,189 @@ export const IMAGE_STATE_NAMES: Record<number, string> = {
   4: 'aborted',
   0xff: 'unknown',
 };
+
+// The v3.4.0 advanced control layer (§3.14 / §4.17): rewrite rules and descriptor patches, both addressed in
+// the CATCH (class, id, dir) space and both admitted only under OPTION(IMPERFECT).
+
+// The rewrite classes are the traffic classes CATCH already names (§4.17): a report or control surface
+// a rule can address, plus the any-class wildcard the box uses for a whole-table clear.
+export const REWRITE_CLASSES: CatchClass[] = [
+  CatchClass.HidIn,
+  CatchClass.HidOut,
+  CatchClass.VendorInterrupt,
+  CatchClass.VendorBulk,
+  CatchClass.Control,
+  CatchClass.Emit,
+];
+
+// One rewrite rule as RESP(REWRITE) summarises it (§4.17): the address, the action, the match/payload
+// lengths, and the running hit count. The match and payload bytes themselves come from RESP(REWRITE_ENTRY).
+export interface RewriteRuleInfo {
+  cls: number;
+  id: number;
+  dir: Direction;
+  action: RewriteAction | null;
+  mlen: number;
+  off: number;
+  plen: number;
+  hits: number;
+}
+
+// The decoded RESP(REWRITE) table (§4.17). `gen` increments on every change that alters the table, so a
+// host reads one byte to tell whether its own view is current; `tableFull` marks a refused add.
+export interface RewriteTable {
+  tableFull: boolean;
+  gen: number;
+  entries: RewriteRuleInfo[];
+}
+
+// A rewrite rule in full, the shape RESP(REWRITE_ENTRY) returns and the REWRITE command takes: the
+// address, the action, the offset, and the raw match/mask/payload bytes. A read entry replays as a set.
+export interface RewriteRule {
+  cls: number;
+  id: number;
+  dir: Direction;
+  action: RewriteAction;
+  off: number;
+  match: Uint8Array;
+  mask: Uint8Array;
+  payload: Uint8Array;
+}
+
+// One descriptor patch as RESP(PATCHES) summarises it (§4.17): which served descriptor it overwrites,
+// where, and how many bytes. The bytes themselves come from RESP(PATCH_ENTRY).
+export interface PatchInfo {
+  section: PatchSection | null;
+  cfg: number;
+  index: number;
+  offset: number;
+  len: number;
+}
+
+// The decoded RESP(PATCHES) set (§4.17). A patch is stored whether or not the opt-in is on; `applied` is
+// whether the served clone carries it now, `pending` whether a stored patch is waiting for an apply, and
+// `refused` whether the last apply rejected one for falling outside the descriptor it targets.
+export interface PatchSet {
+  applied: boolean;
+  pending: boolean;
+  refused: boolean;
+  tableFull: boolean;
+  entries: PatchInfo[];
+}
+
+// A descriptor patch in full, the shape RESP(PATCH_ENTRY) returns and the PATCH command takes.
+export interface PatchEntry {
+  section: PatchSection | null;
+  cfg: number;
+  index: number;
+  offset: number;
+  bytes: Uint8Array;
+}
+
+// A field transform in full, the shape RESP(TRANSFORMS) returns and the TRANSFORM command takes (§3.15).
+// Swap exchanges two axes; Remap moves the source field into the destination. It is structural only:
+// how much of the value survives the move is the lock's, which runs first and whose percent is signed.
+// Neither op takes a field onto itself, since there would be nowhere to move the value to.
+export interface Transform {
+  op: TransformOp;
+  sclass: number;
+  sid: number;
+  dclass: number;
+  did: number;
+}
+
+// The decoded RESP(TRANSFORMS) table (§4.18): the full flag and one entry per transform. There is no
+// generation counter and no per-entry state byte; the table is re-asserted wholesale on reconnect.
+export interface TransformTable {
+  tableFull: boolean;
+  entries: Transform[];
+}
+
+// The decoded TRANSFER_RESP (§3.14): which endpoint answered, the device's status, and the IN data.
+export interface TransferResult {
+  ep: number;
+  status: TransferStatus;
+  data: Uint8Array;
+}
+
+// The rewrite action's short name, for a rule readout and the editor's dropdown.
+export function rewriteActionName(action: RewriteAction | null): string {
+  switch (action) {
+    case RewriteAction.Pass:
+      return 'pass';
+    case RewriteAction.Drop:
+      return 'drop';
+    case RewriteAction.Patch:
+      return 'patch';
+    case RewriteAction.Replace:
+      return 'replace';
+    case RewriteAction.Answer:
+      return 'answer';
+    case RewriteAction.Stall:
+      return 'stall';
+    case RewriteAction.Nak:
+      return 'nak';
+    case RewriteAction.ReplyPatch:
+      return 'reply-patch';
+    case RewriteAction.ReplyReplace:
+      return 'reply-replace';
+    default:
+      return 'unknown';
+  }
+}
+
+// The patch section's short name, for a patch readout and the editor's dropdown.
+export function patchSectionName(section: PatchSection | null): string {
+  switch (section) {
+    case PatchSection.Device:
+      return 'device';
+    case PatchSection.Config:
+      return 'configuration';
+    case PatchSection.Report:
+      return 'report';
+    case PatchSection.String:
+      return 'string';
+    case PatchSection.Bos:
+      return 'BOS';
+    default:
+      return 'unknown';
+  }
+}
+
+// The transfer status's short name, for the console readout.
+export function transferStatusName(status: TransferStatus): string {
+  switch (status) {
+    case TransferStatus.Ok:
+      return 'ok';
+    case TransferStatus.Refused:
+      return 'refused';
+    case TransferStatus.Stall:
+      return 'stall';
+    case TransferStatus.Nak:
+      return 'nak';
+    default:
+      return 'no device';
+  }
+}
+
+// The rewrite class's short name, reusing the CATCH class vocabulary (§4.17).
+export function rewriteClassName(cls: number): string {
+  switch (cls) {
+    case CatchClass.HidIn:
+      return 'HID in';
+    case CatchClass.HidOut:
+      return 'HID out';
+    case CatchClass.VendorInterrupt:
+      return 'vendor interrupt';
+    case CatchClass.VendorBulk:
+      return 'vendor bulk';
+    case CatchClass.Control:
+      return 'control';
+    case CatchClass.Emit:
+      return 'emit';
+    case CatchClass.Any:
+      return 'any';
+    default:
+      return `class ${cls}`;
+  }
+}

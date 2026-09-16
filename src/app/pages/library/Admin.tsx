@@ -63,8 +63,8 @@ device.reset()?;                // back to passthrough`}</code></pre>
           <pre><code class="language-rust">{`use medius::Button;
 
 device.move_rel(40, 0)?;        // nudge the cursor 40 right
-device.press(Button::Left)?;    // hold left down
-device.release(Button::Left)?;  // let it back up
+device.press(Button::LEFT)?;    // hold left down
+device.release(Button::LEFT)?;  // let it back up
 
 device.reset()?;                // drop all of the above, back to passthrough`}</code></pre>
         </Card>

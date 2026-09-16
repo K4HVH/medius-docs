@@ -5,8 +5,9 @@
 // list below could already render them when another client set them.
 //
 // Blocking and passing are the two ends of one scale. The buttons are shortcuts to those two named
-// constants, which the slider's own range reaches as well. The two bearing-relative directions mean
-// nothing without a bearing, so they are offered on axes alone.
+// constants, which the slider's own range reaches as well, and the range is signed because the sign is
+// what inverts an axis. The two bearing-relative directions mean nothing without a bearing, so they
+// are offered on axes alone, and a reversal only on axes at all: one bit has nothing to reverse.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -18,12 +19,13 @@ import { Slider } from '../../../components/inputs/Slider';
 import {
   type LockEntry,
   type NamedUsage,
-  BUTTONS,
+  buttonsUpTo,
   Direction,
   KEYS,
   LOCK_ID_ALL,
   LOCK_SCALE_BLOCK,
   LOCK_SCALE_MAX,
+  LOCK_SCALE_MIN,
   LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
@@ -40,13 +42,7 @@ const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'Move left/right (X)', group: 'Axes' },
   { id: LockAxis.Y, name: 'Move up/down (Y)', group: 'Axes' },
   { id: LockAxis.Wheel, name: 'Scroll wheel', group: 'Axes' },
-];
-
-const CLASSES: PickerClass[] = [
-  { value: LockClass.Axis, label: 'Axis', table: AXES, blanket: LOCK_ID_ALL, blanketLabel: 'Every axis', hideId: true },
-  { value: LockClass.Button, label: 'Button', table: BUTTONS, blanket: LOCK_ID_ALL, blanketLabel: 'Every button' },
-  { value: LockClass.Key, label: 'Key', table: KEYS, blanket: LOCK_ID_ALL, blanketLabel: 'Every key' },
-  { value: LockClass.Media, label: 'Media', table: MEDIA, blanket: LOCK_ID_ALL, blanketLabel: 'Every media key' },
+  { id: LockAxis.Pan, name: 'Pan (horizontal scroll)', group: 'Axes' },
 ];
 
 const BLANKET_NAMES: Record<number, string> = {
@@ -83,12 +79,22 @@ const DeviceLock = () => {
   const locks = dash.poll('locks');
   const cmd = createCommand(() => dash.refreshPoll('locks'));
 
+  // The five named buttons plus a numbered entry for each button the mouse declares past them
+  // (RESP(CAPS) n_buttons), so a lock can address any button the cloned device carries.
+  const caps = dash.poll('caps');
+  const classes = (): PickerClass[] => [
+    { value: LockClass.Axis, label: 'Axis', table: AXES, blanket: LOCK_ID_ALL, blanketLabel: 'Every axis', hideId: true },
+    { value: LockClass.Button, label: 'Button', table: buttonsUpTo(caps()?.mouse?.nButtons ?? 0), blanket: LOCK_ID_ALL, blanketLabel: 'Every button' },
+    { value: LockClass.Key, label: 'Key', table: KEYS, blanket: LOCK_ID_ALL, blanketLabel: 'Every key' },
+    { value: LockClass.Media, label: 'Media', table: MEDIA, blanket: LOCK_ID_ALL, blanketLabel: 'Every media key' },
+  ];
+
   const dir = (): Direction => Number(direction()) as Direction;
 
   // An every-axis lock goes out as one frame per axis rather than the class wildcard. The box has no
   // blanket representation for the mouse classes: it expands one into per-target scales and reads it
-  // back as three entries either way. Firmware that predates the axis blanket drops the wildcard on
-  // arrival, so the three frames are both equivalent and the only form that works everywhere.
+  // back as one entry per axis either way. Firmware that predates the axis blanket drops the wildcard
+  // on arrival, so the per-axis frames are both equivalent and the only form that works everywhere.
   const targets = (): { cls: LockClass; id: number }[] => {
     const t = target();
     if (t.cls === LockClass.Axis && t.id === LOCK_ID_ALL) {
@@ -114,7 +120,12 @@ const DeviceLock = () => {
       const head = dn ? `${targetName(e.cls, e.id)} ${dn}` : targetName(e.cls, e.id);
       return {
         key: `${e.cls}:${e.id}:${e.direction}`,
-        text: e.scale === LOCK_SCALE_BLOCK ? head : `${head} at ${e.scale}%`,
+        text:
+          e.scale === LOCK_SCALE_BLOCK
+            ? head
+            : e.scale < 0
+              ? `${head} reversed at ${e.scale}%`
+              : `${head} at ${e.scale}%`,
         blocked: e.scale === LOCK_SCALE_BLOCK,
       };
     }),
@@ -157,8 +168,8 @@ const DeviceLock = () => {
           <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
 
           <UsagePicker
+            classes={classes()}
             name="lock-target"
-            classes={CLASSES}
             value={target()}
             onChange={chooseTarget}
             usageLabel="Which input"
@@ -184,10 +195,14 @@ const DeviceLock = () => {
 
           <Show when={isAxis()}>
             <div style={section}>
-              <div style={label}>Keep {scale()}% of the real movement</div>
+              <div style={label}>
+                {scale() < 0
+                  ? `Reverse the real motion, keeping ${Math.abs(scale())}%`
+                  : `Keep ${scale()}% of the real motion`}
+              </div>
               <Slider
                 value={scale()}
-                min={LOCK_SCALE_BLOCK}
+                min={LOCK_SCALE_MIN}
                 max={LOCK_SCALE_MAX}
                 step={5}
                 onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
@@ -201,6 +216,7 @@ const DeviceLock = () => {
               direction.
             </div>
           </Show>
+
 
           <Show when={isAxis() && isRelativeDirection(dir())}>
             <div class="callout callout--info" style={section}>

@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>6</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>7</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 6, fw_major: 3, fw_minor: 3, fw_patch: 4, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.3.4"); // Display omits proto_ver
+let v = Version { proto_ver: 7, fw_major: 3, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -53,7 +53,9 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
           <CardHeader title="Health" subtitle="Box readiness flags" />
           <p>
             Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
-            bool per bit. <code>from_flags(u8)</code> and <code>to_flags()</code> convert the byte.
+            bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
+            <code>to_flags()</code> convert it: bits 0 to 7 are the original byte, and the{' '}
+            <A href="/library/advanced/rewrite">advanced control layer</A> opened three more in the high byte.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>True when</th></tr></thead>
@@ -66,6 +68,9 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input is off a full pass, whether <A href="/library/lock#lock"><code>lock</code></A>ed or merely <A href="/library/lock#scale"><code>scale</code></A>d.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>The <A href="/library/catch#catch-events"><code>catch</code></A> table holds at least one <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>, whatever class it addresses.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
+              <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/advanced/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/advanced/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A <A href="/library/transform">field transform</A> is active (v3.4.0).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -73,8 +78,8 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
 
 let h = Health::from_flags(0b0000_0011); // link_up | mouse_attached
 assert!(h.link_up && h.mouse_attached);
-assert!(!h.clone_configured);
-assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same byte`}</code></pre>
+assert!(!h.clone_configured && !h.rewrite_on);
+assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code></pre>
         </Card>
       </div>
       <div id="device-info" data-search-target>
@@ -150,6 +155,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
               <tr><td><code>has_x</code></td><td><code>bool</code></td><td>The report carries an X axis.</td></tr>
               <tr><td><code>has_y</code></td><td><code>bool</code></td><td>The report carries a Y axis.</td></tr>
               <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>The report carries a wheel.</td></tr>
+              <tr><td><code>has_pan</code></td><td><code>bool</code></td><td>The report carries an AC Pan (horizontal scroll) axis.</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
               <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
             </tbody>
@@ -157,7 +163,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::MouseCaps;
 
-let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_report_id: false, n_hid: 1 };
+let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_pan: false, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
         </Card>
       </div>
@@ -223,7 +229,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every weighed direction, one entry each, across specific targets and whole-class blankets.</td></tr>
-              <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>scale_of(target, dir)</code></td><td><code>i16</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest, a reversing (negative) one being lower than any pass. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
@@ -234,7 +240,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>Both</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>Both</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction under <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>96 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
+              <tr><td>85 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -244,7 +250,7 @@ let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Positive) {
     // physical +X is zeroed
 }
-if locks.is_locked(Button::Left, Direction::Negative) {
+if locks.is_locked(Button::LEFT, Direction::Negative) {
     // a left-click is latched down: the release edge is blocked
 }
 // how much of a delta opposing the injection survives
@@ -254,7 +260,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
       <div id="lock-entry" data-search-target>
         <Card>
           <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
-          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: u8 {'}'}</pre>
+          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: i16 {'}'}</pre>
           <p>
             One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
             list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
@@ -265,7 +271,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             <tbody>
               <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which direction of it this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>u8</code></td><td>Percent of the physical value kept. A momentary usage carries one bit, so the box stores the block or pass it renders and this never reads between them.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept, signed: a negative one reverses what it keeps. A momentary usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative.</td></tr>
             </tbody>
           </table>
           <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
@@ -378,6 +384,7 @@ drop(stream);`}</code></pre>
               <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
               <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
               <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
+              <tr><td><code>dpan</code></td><td><code>i16</code></td><td>AC Pan (horizontal scroll) this report (right positive).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -385,7 +392,7 @@ drop(stream);`}</code></pre>
 
 let stream = device.catch_events([CatchFilter::watch_axes()])?;
 if let CatchEvent::Motion(m) = stream.recv()? {
-    println!("at {} us ({:?}): moved {} {}, wheel {}", m.ts_us, m.clock, m.dx, m.dy, m.dz);
+    println!("at {} us ({:?}): moved {} {}, wheel {}, pan {}", m.ts_us, m.clock, m.dx, m.dy, m.dz, m.dpan);
 }`}</code></pre>
         </Card>
       </div>
@@ -420,7 +427,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
 
 let stream = device.catch_events([CatchFilter::watch_class(Class::Button)])?;
 if let CatchEvent::Usages(s) = stream.recv()? {
-    if s.is_held(Button::Left) {
+    if s.is_held(Button::LEFT) {
         println!("left button held");
     }
 }`}</code></pre>
@@ -469,7 +476,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clock</code>.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
               <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space the event came from.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint address, endpoint number, or interface number inside that class.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint number or interface number inside that class.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Positive</code> = IN (device to PC), <code>Negative</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>u8</code></td><td>Class-specific, see below; <code>0</code> for the classes that define none.</td></tr>
               <tr><td><code>true_len</code></td><td><code>u16</code></td><td>The packet's length <em>before</em> the <A href="/library/types/enums#capture"><code>Capture</code></A> cut it.</td></tr>
@@ -514,6 +521,44 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         </Card>
       </div>
 
+      <div id="button" data-search-target>
+        <Card>
+          <CardHeader title="Button" subtitle="The button a command acts on" />
+          <pre class="api-signature">struct Button(pub u8)</pre>
+          <p>
+            The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A> command acts on: an open numeric
+            id, the five standard buttons as named constants and any further id the mouse declares
+            (<A href="/library/requests#caps"><code>caps</code></A> <code>n_buttons</code>). A{' '}
+            <code>Button</code> converts{' '}
+            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button,
+            so <A href="/library/inject#inject"><code>inject</code></A> takes one directly.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Constant</th><th>id</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button::LEFT</code></td><td><code>0</code></td><td>Left button.</td></tr>
+              <tr><td><code>Button::RIGHT</code></td><td><code>1</code></td><td>Right button.</td></tr>
+              <tr><td><code>Button::MIDDLE</code></td><td><code>2</code></td><td>Middle button.</td></tr>
+              <tr><td><code>Button::SIDE1</code></td><td><code>3</code></td><td>First thumb button.</td></tr>
+              <tr><td><code>Button::SIDE2</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button::new(id)</code></td><td><code>Button</code></td><td>Any 0-based id, named or not: <code>Button::new(5)</code> is the sixth button.</td></tr>
+              <tr><td><code>Button::from_id(id)</code></td><td><code>Button</code></td><td>The same from a wire id byte. Total: every byte is a valid button.</td></tr>
+              <tr><td><code>.as_id()</code></td><td><code>u8</code></td><td>The wire id byte.</td></tr>
+              <tr><td><code>.0</code></td><td><code>u8</code></td><td>The id itself; the field is public.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Injecting a button the device declares but never itself wires is descriptor-faithful: the
+            box drives the full declared count, and one past it is a no-op.
+          </p>
+        </Card>
+      </div>
       <div id="usage" data-search-target>
         <Card>
           <CardHeader title="Usage" subtitle="A momentary input: (class, id)" />
@@ -521,7 +566,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <p>
             What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
             <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks. A{' '}
-            <A href="/library/types/enums#button"><code>Button</code></A>,{' '}
+            <A href="/library/types/structs#button"><code>Button</code></A>,{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
             <code>impl Into&lt;Usage&gt;</code>, so you pass one straight to any verb; build one by hand
@@ -537,7 +582,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, Class, Key, Usage};
 
-let from_button: Usage = Button::Left.into();      // Class::Button, id 0
+let from_button: Usage = Button::LEFT.into();      // Class::Button, id 0
 let from_key: Usage = Key::A.into();               // Class::Key, id 0x04
 let by_hand = Usage::new(Class::Media, 0x00E9);    // volume up
 device.press(from_button)?;                         // press takes any impl Into<Usage>`}</code></pre>
@@ -784,6 +829,84 @@ for ev in input.by_ref().take(20) {
         </Card>
       </div>
 
+      <div id="transform" data-search-target>
+        <Card>
+          <CardHeader title="Transform" subtitle="One field operation and the two fields it moves between" />
+          <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget {'}'}</pre>
+          <p>
+            One entry in the table you hand to{' '}
+            <A href="/library/transform#transform"><code>transform</code></A>. The named constructors
+            cover the common cases; <code>new</code> is the general form.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Transform::new(op, source, dest)</code></td><td><code>Transform</code></td><td>Any <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>, from an explicit source and destination.</td></tr>
+              <tr><td><code>Transform::swap(a, b)</code></td><td><code>Transform</code></td><td>A <code>Swap</code> of two axes.</td></tr>
+              <tr><td><code>Transform::remap(source, dest)</code></td><td><code>Transform</code></td><td>A <code>Remap</code>. Any <A href="/library/types/enums#axis"><code>Axis</code></A>, <code>Button</code>, <code>Key</code>, <code>MediaKey</code> or <A href="/library/types/structs#usage"><code>Usage</code></A> converts into the <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> it takes.</td></tr>
+              <tr><td><code>.key()</code></td><td><A href="/library/types/structs#transform-key"><code>TransformKey</code></A></td><td>The <code>(source, dest)</code> this entry is filed under.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>op</code></td><td><A href="/library/types/enums#transform-op"><code>TransformOp</code></A></td><td>What the transform does. An op that cannot address this source and destination pair is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>.</td></tr>
+              <tr><td><code>source</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform reads: an axis, or a button. A key or media field can only be a destination, so naming one here is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. One the clone's descriptor does not declare is refused box-side, and absent from the readback.</td></tr>
+              <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes. The same field as <code>source</code> is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. A cross-class remap with no destination collection is refused box-side.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The written value is clamped to the destination field's declared range. To weigh a field,
+            or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>, which runs first.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Axis, Button, Key, Transform, TransformOp};
+
+let swap = Transform::swap(Axis::X, Axis::Y);
+assert_eq!(swap.op, TransformOp::Swap);
+
+let wheel_drives_y = Transform::remap(Axis::Wheel, Axis::Y); // the wheel moves the cursor
+let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button types 'A'`}</code></pre>
+        </Card>
+      </div>
+      <div id="transform-key" data-search-target>
+        <Card>
+          <CardHeader title="TransformKey" subtitle="The (source, dest) pair an entry is filed under" />
+          <pre class="api-signature">struct TransformKey {'{'} source: LockTarget, dest: LockTarget {'}'}</pre>
+          <p>
+            What <A href="/library/types/structs#transform"><code>Transform::key</code></A> returns, and
+            what <A href="/library/transform#untransform"><code>untransform</code></A> drops by. Two
+            transforms sharing a key are one entry: setting the second overwrites the first's op in
+            place, keeping its position in the table.
+          </p>
+        </Card>
+      </div>
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="Transforms" subtitle="The transform table, read back" />
+          <pre class="api-signature">struct Transforms {'{'} table_full: bool, entries: Vec&lt;Transform&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/transform#query-transforms"><code>query_transforms</code></A>{' '}
+            returns: the held entries, as the commands that rebuild them. Every entry read back is a
+            live one, and the table is re-asserted wholesale on reconnect.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>table_full</code></td><td><code>bool</code></td><td>A further entry was, or would be, refused past <code>Transforms::CAPACITY</code>, the 32 the box holds.</td></tr>
+              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#transform">Transform</A>&gt;</code></td><td>One per installed transform, in installation order, which is the order the box applies them. Two that write the same field do not commute, so that order is part of the state.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Transforms;
+
+let table = device.query_transforms()?;
+println!("{}/{} transforms", table.entries.len(), Transforms::CAPACITY);
+for t in &table.entries {
+    println!("  {:?} {:?} -> {:?}", t.op, t.source, t.dest);
+}`}</code></pre>
+        </Card>
+      </div>
       <div id="imperfect-status" data-search-target>
         <Card>
           <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />
@@ -987,7 +1110,6 @@ if cfg.loop_ && cfg.finalized {
             Build one with the constructor, where <code>consume</code> defaults to false:
           </p>
           <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1001,7 +1123,7 @@ if cfg.loop_ && cfg.finalized {
           <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
 
 // Toggle the clip on a Side1 press, and suppress that press.
-let trig = ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle).consume();
+let trig = ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle).consume();
 handle.bind(trig)?;`}</code></pre>
         </Card>
       </div>
@@ -1092,6 +1214,224 @@ handle.bind(trig)?;`}</code></pre>
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>percent()</code></td><td><code>u8</code></td><td><code>sent</code> as a percentage of <code>total</code>; <code>100</code> when <code>total</code> is <code>0</code>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="setup" data-search-target>
+        <Card>
+          <CardHeader title="Setup" subtitle="The eight-byte USB setup packet" />
+          <pre class="api-signature">struct Setup {'{'} request_type: u8, request: u8, value: u16, index: u16, length: u16 {'}'}</pre>
+          <p>
+            What a <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries. It
+            is the <a href="https://www.usb.org/document-library/usb-20-specification" target="_blank" rel="noreferrer">USB §9.3</a>{' '}
+            setup packet: <code>bmRequestType</code>, <code>bRequest</code>, <code>wValue</code>,{' '}
+            <code>wIndex</code>, <code>wLength</code>, little-endian on the wire.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>request_type</code></td><td><code>u8</code></td><td><code>bmRequestType</code>: direction in bit 7 (set is device-to-host / IN), then type and recipient.</td></tr>
+              <tr><td><code>request</code></td><td><code>u8</code></td><td><code>bRequest</code>: the request code.</td></tr>
+              <tr><td><code>value</code></td><td><code>u16</code></td><td><code>wValue</code>: request-specific.</td></tr>
+              <tr><td><code>index</code></td><td><code>u16</code></td><td><code>wIndex</code>: request-specific, often an interface or endpoint.</td></tr>
+              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the device may return fewer); for an OUT request, the length of the data you pass.</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`  byte   0            1          2   3         4   5         6   7
+        +------------+----------+---------+---------+---------+
+        |request_type| request  |  value  |  index  | length  |
+        | bmRequest  | bRequest  | wValue  | wIndex  | wLength |
+        +------------+----------+---------+---------+---------+
+                                  <-- LE -> <-- LE -> <-- LE ->`}</pre>
+          <p>
+            <code>Setup::new</code> builds one from its five fields; <code>is_in</code> reads the
+            direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
+            little-endian). It is what a{' '}
+            <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Setup;
+
+// GET_DESCRIPTOR(Device): standard device-to-host request for the 18-byte device descriptor.
+let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
+assert!(setup.is_in());
+assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
+        </Card>
+      </div>
+      <div id="transfer-outcome" data-search-target>
+        <Card>
+          <CardHeader title="TransferOutcome" subtitle="The device's answer: status and any IN data" />
+          <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
+            non-<code>Ok</code> <A href="/library/types/enums#transfer-status"><code>status</code></A>{' '}
+            carries no data.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>status</code></td><td><A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
+              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>.is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
+              <tr><td><code>.data()</code></td><td><code>&amp;[u8]</code></td><td>The returned data.</td></tr>
+              <tr><td><code>.ok_data()</code></td><td><code>Option&lt;Vec&lt;u8&gt;&gt;</code></td><td>The data if the transfer completed, else <code>None</code>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="rewrite-rule" data-search-target>
+        <Card>
+          <CardHeader title="RewriteRule" subtitle="The rewrite rule you install" />
+          <pre class="api-signature">fn new(class: RewriteClass, id: u16, direction: Direction, action: RewriteAction) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+          <p>
+            One entry in the table you hand to{' '}
+            <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
+            chaining onto <code>new</code>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>class</code></td><td><A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A></td><td>The traffic class the rule addresses.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The address within the class: an interface number or an endpoint number.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code> (IN) or <code>Negative</code> (OUT). <code>With</code> and <code>Against</code> resolve at emit time, after a rule is addressed, so either is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet. One that does not fit the class is <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, or the rule is <A href="/library/types/errors#errors"><code>Error::RewriteMaskLength</code></A>; empty matches every packet on the address.</td></tr>
+              <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="rewrite-table" data-search-target>
+        <Card>
+          <CardHeader title="RewriteTable" subtitle="The rewrite table, read back" />
+          <pre class="api-signature">struct RewriteTable {'{'} table_full: bool, generation: u8, entries: Vec&lt;RewriteEntry&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>{' '}
+            returns: a summary row per rule, without its match, mask, or payload bytes. Read one rule in
+            full with{' '}
+            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>table_full</code></td><td><code>bool</code></td><td>A further rule was, or would be, refused past the 32 the box holds (<code>REWRITE_MAX_ENTRIES</code>).</td></tr>
+              <tr><td><code>generation</code></td><td><code>u8</code></td><td>Bumps only on a change that alters the table, so a host holding a last-seen value re-sends only when the box's diverges. The crate does this for you.</td></tr>
+              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#rewrite-entry">RewriteEntry</A>&gt;</code></td><td>One row per rule, in installation order, not the most-specific-first order the box selects a match by.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <A href="/library/requests#health"><code>query_health</code></A> reports a non-empty table in
+            its <A href="/library/types/structs#health"><code>rewrite_on</code></A> flag.
+          </p>
+        </Card>
+      </div>
+      <div id="rewrite-entry" data-search-target>
+        <Card>
+          <CardHeader title="RewriteEntry" subtitle="One row in a RewriteTable" />
+          <pre class="api-signature">struct RewriteEntry {'{'} class: RewriteClass, id: u16, direction: Direction, action: RewriteAction, match_len: u8, offset: u16, payload_len: u16, hits: u16 {'}'}</pre>
+          <p>
+            One rule's summary in a{' '}
+            <A href="/library/types/structs#rewrite-table"><code>RewriteTable</code></A>: its address and
+            action, the lengths of what it carries, and its hit count. The bytes come from{' '}
+            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>class</code>, <code>id</code>, <code>direction</code>, <code>action</code></td><td>as set</td><td>The rule's address and action.</td></tr>
+              <tr><td><code>match_len</code></td><td><code>u8</code></td><td>How many match and mask bytes the rule compares.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The write offset for a patching action.</td></tr>
+              <tr><td><code>payload_len</code></td><td><code>u16</code></td><td>How many payload bytes the rule carries.</td></tr>
+              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the rule has matched since it was installed, saturating.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="patch" data-search-target>
+        <Card>
+          <CardHeader title="Patch" subtitle="The descriptor overwrite you store" />
+          <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <pre class="api-signature">fn in_string(index: u8, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <p>
+            One entry in the set you hand to{' '}
+            <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A>, with a constructor
+            per section.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>section</code></td><td><A href="/library/types/enums#patch-section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
+              <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>.</td></tr>
+              <tr><td><code>index</code></td><td><code>u8</code></td><td>The interface or string index, for <code>Report</code> / <code>String</code>.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The overwrite bytes; empty removes the patch at this key.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="patch-set" data-search-target>
+        <Card>
+          <CardHeader title="PatchSet" subtitle="The stored patch set and its apply state" />
+          <pre class="api-signature">struct PatchSet {'{'} applied: bool, pending: bool, refused: bool, table_full: bool, entries: Vec&lt;PatchEntry&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>{' '}
+            returns, as four apply-state flags over a list of{' '}
+            <A href="/library/types/structs#patch-entry"><code>PatchEntry</code></A>.{' '}
+            <A href="/library/requests#health"><code>query_health</code></A> reports an applied set in its{' '}
+            <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Set when</th></tr></thead>
+            <tbody>
+              <tr><td><code>applied</code></td><td>The stored set is applied to the live clone.</td></tr>
+              <tr><td><code>pending</code></td><td>A stored change has not been applied yet; an <code>apply_patch</code> would re-present with it.</td></tr>
+              <tr><td><code>refused</code></td><td>The last apply was refused: a patched descriptor's advertised length no longer matched what it serves. The box logged why.</td></tr>
+              <tr><td><code>table_full</code></td><td>The store is full: a further patch was, or would be, refused past the 16 it holds (<code>PATCH_MAX_ENTRIES</code>).</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`  set_patch        --> stored          (survives reconnect; NVS, per VID:PID)
+     |                     |
+     | apply_patch         v
+     +-------------> pending -> applied  (one replug; the clone re-presents patched)
+                            \\
+                             +-> refused (a patched length diverged; logged)`}</pre>
+        </Card>
+      </div>
+      <div id="patch-entry" data-search-target>
+        <Card>
+          <CardHeader title="PatchEntry" subtitle="One row in a PatchSet" />
+          <pre class="api-signature">struct PatchEntry {'{'} section: PatchSection, cfg: u8, index: u8, offset: u16, len: u16 {'}'}</pre>
+          <p>
+            One patch's key and length in a{' '}
+            <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>, without its bytes. Read
+            a full patch with{' '}
+            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>section</code>, <code>cfg</code>, <code>index</code>, <code>offset</code></td><td>as set</td><td>The patch's key.</td></tr>
+              <tr><td><code>len</code></td><td><code>u16</code></td><td>How many bytes the patch overwrites.</td></tr>
             </tbody>
           </table>
         </Card>

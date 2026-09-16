@@ -40,7 +40,7 @@ const Types: Component = () => {
           </p>
           <p>
             Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>6</code>, the
+            it, never a pointer you own. The shapes on this page are ABI version <code>7</code>, the
             number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
           </p>
         </div>
@@ -205,13 +205,14 @@ const Types: Component = () => {
           <pre class="api-signature">{`enum MediusMotionKind : uint8_t`}</pre>
           <p>
             Tags the <A href="/bindings/c/types#motion"><code>MediusMotion</code></A> you build with{' '}
-            <A href="/bindings/c/api#builders"><code>medius_motion_cursor/_wheel</code></A>. See <A href="/library/move">Move</A>.
+            <A href="/bindings/c/api#builders"><code>medius_motion_cursor/_wheel/_pan</code></A>. See <A href="/library/move">Move</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_MOTION_KIND_CURSOR</code></td><td><code>0</code></td><td><code>dx</code>/<code>dy</code> apply.</td></tr>
               <tr><td><code>MEDIUS_MOTION_KIND_WHEEL</code></td><td><code>1</code></td><td><code>wheel</code> applies.</td></tr>
+              <tr><td><code>MEDIUS_MOTION_KIND_PAN</code></td><td><code>2</code></td><td><code>pan</code> applies (AC Pan, horizontal scroll).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -551,11 +552,11 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_MEDIA</code></td><td><code>2</code></td><td>A 16-bit Consumer usage.</td><td>Every media usage.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_AXIS</code></td><td><code>3</code></td><td>A <A href="/bindings/c/types#axis"><code>MediusAxis</code></A>: X, Y, or the wheel.</td><td>Every axis.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_IN</code></td><td><code>4</code></td><td>A cloned HID interface number.</td><td>Every HID interface.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint address.</td><td>Every interrupt-OUT endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint address.</td><td>Every vendor interrupt endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint address.</td><td>Every vendor bulk endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint number.</td><td>Every interrupt-OUT endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint number.</td><td>Every vendor interrupt endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint number.</td><td>Every vendor bulk endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint address.</td><td>Every emitting endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>Nothing; must be <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every class at once.</td></tr>
             </tbody>
@@ -795,16 +796,17 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusMotion" subtitle="A relative axis for move_axis" />
           <p>
             What <A href="/bindings/c/api#move"><code>medius_device_move_axis</code></A> drives. Build with{' '}
-            <A href="/bindings/c/api#builders"><code>medius_motion_cursor(dx, dy)</code></A> or <code>medius_motion_wheel(delta)</code>. See{' '}
+            <A href="/bindings/c/api#builders"><code>medius_motion_cursor(dx, dy)</code></A>, <code>medius_motion_wheel(delta)</code>, or <code>medius_motion_pan(delta)</code>. See{' '}
             <A href="/library/move">Move</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#motion-kind"><code>MediusMotionKind</code></A></td><td>Cursor vs wheel.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#motion-kind"><code>MediusMotionKind</code></A></td><td>Cursor, wheel, or pan.</td></tr>
               <tr><td><code>dx</code></td><td><code>int16_t</code></td><td>X movement (Cursor only).</td></tr>
               <tr><td><code>dy</code></td><td><code>int16_t</code></td><td>Y movement (Cursor only).</td></tr>
               <tr><td><code>wheel</code></td><td><code>int16_t</code></td><td>Scroll delta (Wheel only).</td></tr>
+              <tr><td><code>pan</code></td><td><code>int16_t</code></td><td>AC Pan delta (Pan only).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -873,6 +875,9 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>lock_on</code></td><td><code>uint8_t</code></td><td>At least one input is off a full pass: blocked, or merely weighed.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>uint8_t</code></td><td>A catch subscription is streaming.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>uint8_t</code></td><td>A keyboard is attached, cloned, and injectable.</td></tr>
+              <tr><td><code>rewrite_on</code></td><td><code>uint8_t</code></td><td>The rewrite-rule table is non-empty (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>uint8_t</code></td><td>A descriptor-patch set is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>transform_on</code></td><td><code>uint8_t</code></td><td>A field transform is active (v3.4.0).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -929,6 +934,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>has_x</code></td><td><code>uint8_t</code></td><td>The report carries an X axis.</td></tr>
               <tr><td><code>has_y</code></td><td><code>uint8_t</code></td><td>The report carries a Y axis.</td></tr>
               <tr><td><code>has_wheel</code></td><td><code>uint8_t</code></td><td>The report carries a wheel.</td></tr>
+              <tr><td><code>pan</code></td><td><code>uint8_t</code></td><td>The report carries AC Pan (horizontal scroll).</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>uint8_t</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
               <tr><td><code>n_hid</code></td><td><code>uint8_t</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
             </tbody>
@@ -1045,7 +1051,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Asked with <code>MEDIUS_DIRECTION_BOTH</code></th><th>Answers about</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_scale_of</code></td><td>The lowest scale across every direction, relative pair included. Not the figure a delta meets: a delta picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>medius_locks_scale_of</code></td><td>The lowest scale across every direction, relative pair included, where a reversing (negative) one is lower than any pass. Not the figure a delta meets: a delta picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>medius_locks_is_locked</code></td><td>The two fixed signs only. Name <code>_WITH</code> or <code>_AGAINST</code> to ask about one of those.</td></tr>
             </tbody>
           </table>
@@ -1063,6 +1069,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>Keep none of the physical value.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>Keep all of it, untouched.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_SCALE_MIN</code></td><td><code>-255</code></td><td>2.55x reversed, the floor. A negative reverses what it keeps, so -100 inverts an axis; axes only.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MEDIUSLOCKENTRY</div>
@@ -1072,7 +1079,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The weighed axis or usage.</td></tr>
               <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The entry covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>Which direction of the target this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>uint8_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked. A momentary usage carries one bit, so the box stores the block or pass it renders and this never reads between them.</td></tr>
+              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked and a negative reverses what it keeps. A momentary usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>
@@ -1082,7 +1089,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>MEDIUS_DIRECTION_BOTH</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td><code>MEDIUS_DIRECTION_BOTH</code>, always.</td></tr>
               <tr><td>A relative direction under <code>MEDIUS_BEARING_MODE_VECTOR</code></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>The wire cap</td><td>One reply carries 96 entries, well under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
+              <tr><td>The wire cap</td><td>One reply carries 85 entries, well under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
               <tr><td>A <code>direction</code> byte no constant names</td><td>The entry is dropped rather than trusted, and <code>n</code> moves with the drop.</td></tr>
             </tbody>
           </table>
@@ -1396,7 +1403,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which class produced the event; it also selects how <code>flags</code> reads.</td></tr>
-              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The endpoint address, endpoint number, or interface number, per the class.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The endpoint number or interface number, per the class.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td><code>POSITIVE</code> = IN (device to PC), <code>NEGATIVE</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>uint8_t</code></td><td>Class-specific; see the table below. <code>0</code> for classes that define none.</td></tr>
               <tr><td><code>true_len</code></td><td><code>uint16_t</code></td><td>The packet's length on the bus, before <code>capture</code> cut it.</td></tr>
@@ -1647,6 +1654,164 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </Card>
       </div>
 
+      <div id="setup" data-search-target>
+        <Card>
+          <CardHeader title="MediusSetup" subtitle="A USB control-transfer setup packet" />
+          <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>request_type</code></td><td><code>uint8_t</code></td><td><code>bmRequestType</code>: direction in bit 7 (set = device-to-host).</td></tr>
+              <tr><td><code>request</code></td><td><code>uint8_t</code></td><td><code>bRequest</code>.</td></tr>
+              <tr><td><code>value</code></td><td><code>uint16_t</code></td><td><code>wValue</code>.</td></tr>
+              <tr><td><code>index</code></td><td><code>uint16_t</code></td><td><code>wIndex</code>.</td></tr>
+              <tr><td><code>length</code></td><td><code>uint16_t</code></td><td><code>wLength</code>: the data-stage length.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="transfer-outcome" data-search-target>
+        <Card>
+          <CardHeader title="MediusTransferOutcome" subtitle="The device's answer to a control transfer" />
+          <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means the box answered at all; <code>status</code> is the protocol result.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFER_STATUS_*</code> value (see below).</td></tr>
+              <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>data</code>.</td></tr>
+              <tr><td><code>data</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>The IN data the device returned.</td></tr>
+            </tbody>
+          </table>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed; data is in <code>data</code>.</td></tr>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it: opt-in off, malformed, or too large.</td></tr>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The device STALLed.</td></tr>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The device NAKed to a timeout.</td></tr>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No device attached on the host chip.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
+      <div id="rewrite-rule" data-search-target>
+        <Card>
+          <CardHeader title="MediusRewriteRule" subtitle="One rewrite rule, as set and read back in full" />
+          <p>Passed to <A href="/bindings/c/api#advanced"><code>medius_device_set_rewrite</code></A> and filled by <code>medius_device_query_rewrite_entry</code>. A rule is keyed by <code>(class_, id, direction, match, mask)</code>. See <A href="/library/advanced/rewrite">Rewrite rules</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_REWRITE_CLASS_*</code> value (see below).</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>Interface number or endpoint number.</td></tr>
+              <tr><td><code>direction</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_DIRECTION_*</code> value (<code>BOTH</code>/<code>POSITIVE</code>/<code>NEGATIVE</code>).</td></tr>
+              <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_REWRITE_ACTION_*</code> value (see below).</td></tr>
+              <tr><td><code>offset</code></td><td><code>uint16_t</code></td><td>Where a patching action writes.</td></tr>
+              <tr><td><code>match_len</code>, <code>mask_len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>match_bytes</code> / <code>mask</code> (equal).</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code>, <code>payload</code></td><td><code>uint8_t[]</code></td><td>The head compare and the action's payload.</td></tr>
+            </tbody>
+          </table>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>MediusRewriteClass</th><th>Value</th><th>MediusRewriteAction</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>_HID_IN</code></td><td><code>4</code></td><td><code>_PASS</code></td><td><code>0</code></td></tr>
+                <tr><td><code>_HID_OUT</code></td><td><code>5</code></td><td><code>_DROP</code> (report only)</td><td><code>1</code></td></tr>
+                <tr><td><code>_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td><code>_PATCH</code></td><td><code>2</code></td></tr>
+                <tr><td><code>_VENDOR_BULK</code></td><td><code>7</code></td><td><code>_REPLACE</code></td><td><code>3</code></td></tr>
+                <tr><td><code>_CONTROL</code></td><td><code>8</code></td><td><code>_ANSWER</code> (control)</td><td><code>4</code></td></tr>
+                <tr><td><code>_EMIT</code></td><td><code>9</code></td><td><code>_STALL</code> / <code>_NAK</code> (control)</td><td><code>5</code> / <code>6</code></td></tr>
+                <tr><td><code>_ANY</code></td><td><code>0xFF</code></td><td><code>_REPLY_PATCH</code> / <code>_REPLY_REPLACE</code> (control)</td><td><code>7</code> / <code>8</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
+      <div id="rewrite-table" data-search-target>
+        <Card>
+          <CardHeader title="MediusRewriteTable & MediusRewriteEntry" subtitle="The rewrite-table summary" />
+          <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_rewrite</code></A>: a full flag, a generation counter, and one <code>MediusRewriteEntry</code> per rule (address, action, <code>match_len</code>, <code>offset</code>, <code>payload_len</code>, and saturating <code>hits</code>) without the bytes.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>A further rule was, or would be, refused.</td></tr>
+              <tr><td><code>generation</code></td><td><code>uint8_t</code></td><td>Bumps only on a change that alters the table.</td></tr>
+              <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Valid entries in <code>entries</code>.</td></tr>
+              <tr><td><code>entries</code></td><td><code>MediusRewriteEntry[MEDIUS_MAX_REWRITE_ENTRIES]</code></td><td>One row per rule.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="patch" data-search-target>
+        <Card>
+          <CardHeader title="MediusPatch" subtitle="One descriptor patch, as set and read back in full" />
+          <p>Passed to <A href="/bindings/c/api#advanced"><code>medius_device_set_patch</code></A> and filled by <code>medius_device_query_patch_entry</code>. Keyed by <code>(section, cfg, index, offset)</code>; a <code>len</code> of 0 removes the patch at that key. See <A href="/library/advanced/patch">Descriptor patches</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>section</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_PATCH_SECTION_*</code> value: <code>_DEVICE</code> 0, <code>_CONFIG</code> 1, <code>_REPORT</code> 2, <code>_STRING</code> 3, <code>_BOS</code> 4.</td></tr>
+              <tr><td><code>cfg</code></td><td><code>uint8_t</code></td><td>Configuration index, for <code>Config</code>/<code>Report</code>.</td></tr>
+              <tr><td><code>index</code></td><td><code>uint8_t</code></td><td>Interface or string index, for <code>Report</code>/<code>String</code>.</td></tr>
+              <tr><td><code>offset</code></td><td><code>uint16_t</code></td><td>Byte offset within the descriptor.</td></tr>
+              <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>bytes</code>; 0 removes the patch.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>The overwrite bytes.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="patch-set" data-search-target>
+        <Card>
+          <CardHeader title="MediusPatchSet & MediusPatchEntry" subtitle="The stored patch set and its apply state" />
+          <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_patches</code></A>: the four apply-state flags and one <code>MediusPatchEntry</code> per patch (section, cfg, index, offset, len) without the bytes.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Set when</th></tr></thead>
+            <tbody>
+              <tr><td><code>applied</code></td><td><code>uint8_t</code></td><td>The stored set is applied to the live clone.</td></tr>
+              <tr><td><code>pending</code></td><td><code>uint8_t</code></td><td>A stored change is not applied yet.</td></tr>
+              <tr><td><code>refused</code></td><td><code>uint8_t</code></td><td>The last apply was refused (a patched length diverged).</td></tr>
+              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>The store is full.</td></tr>
+              <tr><td><code>n</code>, <code>entries</code></td><td><code>uint16_t</code>, <code>MediusPatchEntry[]</code></td><td>The stored patches.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="transform" data-search-target>
+        <Card>
+          <CardHeader title="MediusTransform" subtitle="One field transform" />
+          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, and may not name the same field. To weigh a field, or reverse it, use <code>medius_device_scale</code>, whose percent is signed. See <A href="/library/transform">Transform</A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFORM_OP_*</code> value: <code>_REMAP</code> 0, <code>_SWAP</code> 1.</td></tr>
+              <tr><td><code>source</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field the transform reads.</td></tr>
+              <tr><td><code>dest</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field it writes.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="MediusTransforms" subtitle="The transform-table summary" />
+          <p>Filled by <A href="/bindings/c/api#transforms"><code>medius_device_query_transforms</code></A>: a full flag and one <A href="/bindings/c/types#transform"><code>MediusTransform</code></A> per entry, up to <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code> (8). No generation counter and no per-entry state.</p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>A further entry was, or would be, refused.</td></tr>
+              <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Valid entries in <code>entries</code>.</td></tr>
+              <tr><td><code>entries</code></td><td><code>MediusTransform[MEDIUS_MAX_TRANSFORM_ENTRIES]</code></td><td>One entry per transform.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="errors" data-search-target>
         <Card>
           <CardHeader title="Errors" subtitle="MediusStatus plus a thread-local message" />
@@ -1680,6 +1845,16 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td><code>18</code></td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_RANGE</code></td><td><code>20</code></td><td>A lock scale outside <code>MEDIUS_LOCK_SCALE_MIN</code> to <code>MEDIUS_LOCK_SCALE_MAX</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code></td><td><code>21</code></td><td>A negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td>An advanced control layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td>A rewrite action that is not valid for its class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td>A rewrite rule added to a table that already holds <code>MEDIUS_MAX_REWRITE_ENTRIES</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>27</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair, or one field named as both.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td><td>A transform added to a table that already holds <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
             </tbody>
           </table>
           <table class="api-params">

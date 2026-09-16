@@ -97,7 +97,7 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.press(Button::Left)?;
+          <pre><code class="language-rust">{`device.press(Button::LEFT)?;
 
 // No further calls. The keepalive thread sends QUERY(HEALTH) on its own,
 // so the hold survives past the 1000 ms silence window.

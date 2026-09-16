@@ -27,7 +27,7 @@ const Inject: Component = () => {
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             <code>usage</code> is any <A href="/library/types/structs#usage"><code>Usage</code></A>: a{' '}
-            <A href="/library/types/enums#button"><code>Button</code></A>, a{' '}
+            <A href="/library/types/structs#button"><code>Button</code></A>, a{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and a{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one.{' '}
             <code>action</code> is the shared{' '}
@@ -42,7 +42,7 @@ const Inject: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, Key, MediaKey, Action};
 
-device.inject(Button::Left, Action::Press)?;        // mouse button
+device.inject(Button::LEFT, Action::Press)?;        // mouse button
 device.inject(Key::LEFT_SHIFT, Action::Press)?;     // keyboard key
 device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
         </Card>
@@ -64,8 +64,8 @@ device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, Key};
 
-device.press(Button::Left)?;          // held down
-device.release(Button::Left)?;        // your press cleared; a physical hold survives
+device.press(Button::LEFT)?;          // held down
+device.release(Button::LEFT)?;        // your press cleared; a physical hold survives
 device.force_release(Key::LEFT_GUI)?; // forced up even under a physical hold`}</code></pre>
         </Card>
       </div>
@@ -81,7 +81,7 @@ device.force_release(Key::LEFT_GUI)?; // forced up even under a physical hold`}<
           <pre><code class="language-rust">{`use medius::{Button, Key};
 
 // async_device: medius::AsyncDevice
-async_device.press(Button::Left)?;   // no .await, it just queues the frame
+async_device.press(Button::LEFT)?;   // no .await, it just queues the frame
 async_device.press(Key::ESCAPE)?;`}</code></pre>
           <div class="callout callout--info">
             <p>

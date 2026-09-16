@@ -51,14 +51,14 @@ Entering download mode:
 
 - Running firmware: send the framed `REBOOT` command (opcode `0x07`, one target byte).
   Target 0 = device chip to ROM download, target 1 = host chip to ROM download (relayed over
-  the 5 Mbaud inter-chip UART), targets 2/3 = reboot to run. The chip force-boots into ROM
+  the 20 Mbaud inter-chip UART), targets 2/3 = reboot to run. The chip force-boots into ROM
   via `RTC_CNTL_FORCE_DOWNLOAD_BOOT`. Then esptool writes with no-reset.
 - Blank/bricked: disconnect all USB, hold the button beside the socket you are plugging in, replug. That chip enumerates as
   native ESP32-S3 ROM devices (303A:0009). Then esptool writes.
 
 Two transports the dashboard handles:
 
-- CH343 CDC port (1A86:55D3, 4 Mbaud framed): all control, and device-chip flash after a
+- CH343 CDC port (1A86:55D3, 6 Mbaud framed): all control, and device-chip flash after a
   software REBOOT.
 - Native ESP32-S3 ROM port (303A:0009): host-chip flash, and blank-chip recovery for either
   chip after the BOOT-button step.

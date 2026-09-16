@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   BadProtoVerError,
+  NoReplyError,
   QueryTimeoutError,
   SerialLink,
+  attachLink,
 } from '../../src/dashboard/serial';
 import {
   CatchClass,
@@ -11,6 +13,9 @@ import {
   FrameDecoder,
   FrameType,
   Direction,
+  RewriteAction,
+  PatchSection,
+  TransferStatus,
   encode,
 } from '../../src/dashboard/protocol';
 
@@ -105,7 +110,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x03])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x03, 0x00])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -120,6 +125,9 @@ describe('SerialLink', () => {
       lockOn: false,
       catchOn: false,
       kbdAttached: false,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
     await link.close();
   });
@@ -128,7 +136,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0xff])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0xff, 0x00])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -143,6 +151,9 @@ describe('SerialLink', () => {
       lockOn: true,
       catchOn: true,
       kbdAttached: true,
+      rewriteOn: false,
+      patchOn: false,
+      transformOn: false,
     });
     await link.close();
   });
@@ -203,7 +214,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 7, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 8, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -250,6 +261,8 @@ describe('SerialLink', () => {
     await link.moveRelNow(7, -2);
     await link.wheel(3);
     await link.wheelNow(3);
+    await link.pan(3);
+    await link.panNow(3);
     await link.flushMotion();
     await link.discardMotion();
     // payload starts at byte 5: [SOF][TYPE][SEQ][LEN lo][LEN hi]
@@ -259,6 +272,8 @@ describe('SerialLink', () => {
       [0, 7, 0, 0xfe, 0xff, 0x01],
       [1, 3, 0, 0x00],
       [1, 3, 0, 0x01],
+      [2, 3, 0, 0x00],
+      [2, 3, 0, 0x01],
       [0, 0, 0, 0, 0, 0x02],
       [0, 0, 0, 0, 0, 0x04],
     ]);
@@ -404,7 +419,7 @@ describe('SerialLink', () => {
     // A motion event, a class-tagged held-usage snapshot (a held button), then a byte-oriented
     // traffic event. Each frame leads with [ts_us u32][clk u8].
     mock.push(
-      encode(FrameType.MotionEvent, 10, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])),
+      encode(FrameType.MotionEvent, 10, new Uint8Array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])),
     );
     // [ts u32][clk u8][cls u8][dir u8][n u8] then n x [class][id u16 LE]: one held key on the press edge.
     mock.push(
@@ -466,7 +481,7 @@ describe('SerialLink', () => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         // A stale VERSION reply on the same SEQ must be ignored; the HEALTH reply wins.
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0])));
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x0f])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x0f, 0x00])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -483,7 +498,7 @@ describe('SerialLink', () => {
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 2, 3, 4, 0, 0, 0, 0, 0, 0])));
       }
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x01])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x01, 0x00])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -501,5 +516,248 @@ describe('SerialLink', () => {
     const pending = link.queryVersion(5000);
     await link.close();
     await expect(pending).rejects.toThrow();
+  });
+
+  // The v3.4.0 advanced control layer (§3.14): the fire-and-forget writes, TRANSFER's SEQ correlation on its
+  // own opcode, and the readbacks.
+  it('raw() sends a RAW frame of [ep_num][dir][bytes]', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.raw(1, 1, new Uint8Array([1, 0, 5, 0]));   // endpoint 1, dir 1 = IN
+    const frame = mock.written[0];
+    expect(frame[1]).toBe(FrameType.Raw);
+    expect(Array.from(frame.slice(5, 11))).toEqual([1, 1, 1, 0, 5, 0]);
+    await link.close();
+  });
+
+  it('transfer() correlates TRANSFER_RESP by SEQ on its own opcode', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Transfer) {
+        // The request is [ep][setup 8][out..]; echo the SEQ back on TRANSFER_RESP with [ep][status][IN..].
+        expect(Array.from(f.payload.slice(0, 9))).toEqual([0, 0x80, 6, 0, 1, 0, 0, 18, 0]);
+        mock.push(encode(FrameType.TransferResp, f.seq, new Uint8Array([0, 0x00, 0x12, 0x01, 0x10, 0x01])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const r = await link.transfer(0, 0x80, 6, 0x0100, 0, 18);
+    expect(r.status).toBe(TransferStatus.Ok);
+    expect(Array.from(r.data)).toEqual([0x12, 0x01, 0x10, 0x01]);
+    await link.close();
+  });
+
+  it('transfer() rejects when the device never answers', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await expect(link.transfer(0, 0x80, 6, 0x0100, 0, 18, new Uint8Array(0), 20)).rejects.toThrow();
+    await link.close();
+  });
+
+  it('setRewrite() and clearRewrite() send REWRITE frames', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.setRewrite({
+      cls: CatchClass.Control,
+      id: 0,
+      dir: Direction.Both,
+      action: RewriteAction.Patch,
+      off: 2,
+      match: new Uint8Array([0x21, 0x09]),
+      mask: new Uint8Array([0xff, 0xff]),
+      payload: new Uint8Array([0xaa]),
+    });
+    let frame = mock.written[0];
+    expect(frame[1]).toBe(FrameType.Rewrite);
+    expect(Array.from(frame.slice(5, 5 + 14))).toEqual([8, 0, 0, 0, 1, 2, 2, 0, 2, 0x21, 0x09, 0xff, 0xff, 0xaa]);
+    await link.clearRewrite();
+    frame = mock.written[1];
+    expect(frame[1]).toBe(FrameType.Rewrite);
+    expect(Array.from(frame.slice(5, 5 + 9))).toEqual([0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0]);
+    await link.close();
+  });
+
+  it('queryRewrite() decodes RESP(REWRITE)', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 12) {
+        mock.push(
+          encode(
+            FrameType.Resp,
+            f.seq,
+            new Uint8Array([12, 1, 5, 1, 8, 0, 0, 0, 2, 2, 2, 0, 1, 0, 7, 0]),
+          ),
+        );
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const t = await link.queryRewrite();
+    expect(t.tableFull).toBe(true);
+    expect(t.gen).toBe(5);
+    expect(t.entries[0]).toMatchObject({ cls: 8, action: RewriteAction.Patch, off: 2, plen: 1, hits: 7 });
+    await link.close();
+  });
+
+  it('setPatch() and applyPatch() send PATCH frames, and queryPatches() decodes the set', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 14) {
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([14, 3, 1, 2, 0, 1, 9, 0, 1, 0])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.setPatch(PatchSection.Report, 0, 1, 9, new Uint8Array([0x04]));
+    expect(mock.written[0][1]).toBe(FrameType.Patch);
+    expect(Array.from(mock.written[0].slice(5, 5 + 6))).toEqual([2, 0, 1, 9, 0, 0x04]);
+    await link.applyPatch();
+    expect(mock.written[1][1]).toBe(FrameType.Patch);
+    expect(mock.written[1][5]).toBe(0xfe);
+    const p = await link.queryPatches();
+    expect(p).toMatchObject({ applied: true, pending: true, refused: false, tableFull: false });
+    expect(p.entries[0]).toMatchObject({ section: PatchSection.Report, offset: 9, len: 1 });
+    await link.close();
+  });
+
+  it('queryHealth() decodes the u16 flags, including the advanced control layer bits', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 1) {
+        // [what=1][flags 0x0301 LE] = link up + rewrite on + patch on.
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x01, 0x03])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const h = await link.queryHealth();
+    expect(h.linkUp).toBe(true);
+    expect(h.rewriteOn).toBe(true);
+    expect(h.patchOn).toBe(true);
+    expect(h.transformOn).toBe(false);
+    await link.close();
+  });
+});
+
+// A port that behaves like Web Serial across a close: its streams exist only while it is open, and the
+// box behind it answers only at the rate its firmware runs the control link at.
+class RatedPort {
+  opens: number[] = [];
+  closes = 0;
+  private isOpen = false;
+  private rs: ReadableStream<Uint8Array> | null = null;
+  private ws: WritableStream<Uint8Array> | null = null;
+  private controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+  private baud = 0;
+
+  constructor(
+    private readonly boxBaud: number,
+    private readonly protoVer = 7,
+    private readonly openError: Error | null = null,
+  ) {}
+
+  // As in Chromium, an open port hands out a fresh readable once the previous one was cancelled.
+  get readable(): ReadableStream<Uint8Array> | null {
+    if (!this.isOpen) return null;
+    if (!this.rs) {
+      this.rs = new ReadableStream<Uint8Array>({
+        start: (c) => {
+          this.controller = c;
+        },
+        cancel: () => {
+          this.rs = null;
+          this.controller = null;
+        },
+      });
+    }
+    return this.rs;
+  }
+
+  get writable(): WritableStream<Uint8Array> | null {
+    return this.isOpen ? this.ws : null;
+  }
+
+  async open({ baudRate }: { baudRate: number }): Promise<void> {
+    this.opens.push(baudRate);
+    if (this.isOpen) throw new DOMException('The port is already open.', 'InvalidStateError');
+    if (this.openError) throw this.openError;
+    this.baud = baudRate;
+    this.isOpen = true;
+    const dec = new FrameDecoder();
+    this.ws = new WritableStream<Uint8Array>({
+      write: (chunk) => dec.feed(chunk, (f) => this.answer(f)),
+    });
+  }
+
+  async setSignals(): Promise<void> {}
+
+  // Chromium's only refusals: a port that is not open, and streams still locked.
+  async close(): Promise<void> {
+    if (!this.isOpen) throw new DOMException('The port is already closed.', 'InvalidStateError');
+    if (this.rs?.locked || this.ws?.locked) throw new TypeError('Cannot cancel a locked stream');
+    this.closes++;
+    try {
+      this.controller?.close();
+    } catch {
+      // already cancelled by the reader
+    }
+    this.isOpen = false;
+    this.rs = null;
+    this.ws = null;
+    this.controller = null;
+  }
+
+  private answer(f: { ty: FrameType; seq: number; payload: Uint8Array }): void {
+    if (this.baud !== this.boxBaud || f.ty !== FrameType.Query || f.payload[0] !== 0) return;
+    this.controller?.enqueue(
+      encode(FrameType.Resp, f.seq, new Uint8Array([0, this.protoVer, 3, 4, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+    );
+  }
+}
+
+describe('attachLink', () => {
+  const make = (p: SerialPort) => new SerialLink(p);
+  const asSerial = (r: RatedPort) => r as unknown as SerialPort;
+
+  it('stops at the current rate when the box answers there', async () => {
+    const port = new RatedPort(6_000_000);
+    const { link, version } = await attachLink(asSerial(port), make);
+    expect(version.protoVer).toBe(7);
+    expect(port.opens).toEqual([6_000_000]);
+    expect(port.closes).toBe(0);
+    await link.close();
+  });
+
+  it('reaches a box on the previous rate, closing the silent attempt before reopening', async () => {
+    const port = new RatedPort(4_000_000, 6);
+    const { link, version } = await attachLink(asSerial(port), make);
+    expect(version.protoVer).toBe(6);
+    expect(port.opens).toEqual([6_000_000, 4_000_000]);
+    expect(port.closes).toBe(1);
+    await link.close();
+  }, 10000);
+
+  it('a box silent at every rate is NoReplyError, and leaves the port closed', async () => {
+    const port = new RatedPort(115_200);
+    await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(NoReplyError);
+    expect(port.opens).toEqual([6_000_000, 4_000_000]);
+    expect(port.closes).toBe(2);
+    expect(port.readable).toBeNull();
+  }, 10000);
+
+  it('a box on a protocol this page cannot speak is not retried at another rate', async () => {
+    const port = new RatedPort(6_000_000, 4);
+    await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(BadProtoVerError);
+    expect(port.opens).toEqual([6_000_000]);
+    expect(port.readable).toBeNull();
+  });
+
+  it('a port that will not open is not retried at another rate', async () => {
+    const port = new RatedPort(6_000_000, 7, new DOMException('Failed to open serial port.', 'NetworkError'));
+    await expect(attachLink(asSerial(port), make)).rejects.toMatchObject({ name: 'NetworkError' });
+    expect(port.opens).toEqual([6_000_000]);
   });
 });

@@ -1,6 +1,7 @@
 /// <reference types="w3c-web-serial" />
 // One connect attempt, one verdict. Free of the DOM and of SerialLink so every branch is reachable
-// from a test: the caller supplies how to list, choose, open and close a port.
+// from a test: the caller supplies how to list, choose and attach to a port, and an attach that fails
+// closes whatever it opened.
 
 import type { Version } from '../protocol';
 import { BadProtoVerError, NoReplyError } from './link';
@@ -21,7 +22,6 @@ export interface ConnectDeps<L> {
   granted: () => Promise<SerialPort[]>;
   choose: () => Promise<SerialPort>;
   attach: (port: SerialPort) => Promise<{ link: L; version: Version }>;
-  detach: (port: SerialPort) => Promise<void>;
 }
 
 export type ConnectOutcome<L> =
@@ -85,14 +85,6 @@ export async function attemptConnect<L>(
   if (!deps.supported()) return { ok: false, verdict: { kind: 'unsupported' } };
   if (!deps.secure()) return { ok: false, verdict: { kind: 'insecure' } };
 
-  const drop = async (port: SerialPort) => {
-    try {
-      await deps.detach(port);
-    } catch {
-      // A port that will not let go is not a reason to abandon the attempt.
-    }
-  };
-
   let best: ConnectVerdict | null = null;
 
   if (!opts.skipGranted) {
@@ -108,7 +100,6 @@ export async function attemptConnect<L>(
         const { link, version } = await deps.attach(p);
         return { ok: true, port: p, link, version };
       } catch (e) {
-        await drop(p);
         best = better(best, classifyConnectError(e));
       }
     }
@@ -133,7 +124,6 @@ export async function attemptConnect<L>(
     const { link, version } = await deps.attach(picked);
     return { ok: true, port: picked, link, version };
   } catch (e) {
-    await drop(picked);
     return { ok: false, verdict: classifyConnectError(e) };
   }
 }

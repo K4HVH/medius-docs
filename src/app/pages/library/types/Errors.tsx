@@ -53,7 +53,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>6</code>;{' '}
+                  The box replied, but its <code>proto_ver</code> wasn't <code>7</code>;{' '}
                   <code>got</code> carries the reported value. See the{' '}
                   <A href="/library/connection">handshake</A>.
                 </td>
@@ -115,6 +115,82 @@ const Errors: Component = () => {
                   fixed sign or edge fits; <code>what</code> names it. Those are resolved against the{' '}
                   <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is
                   made; use <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>LockScaleRange {'{'} scale, min, max {'}'}</code></td>
+                <td>
+                  A <A href="/library/lock#scale">lock scale</A> outside <code>min</code> to{' '}
+                  <code>max</code>. The percent is signed, so the range runs from a full reversal to a
+                  full amplification.
+                </td>
+              </tr>
+              <tr>
+                <td><code>LockScaleUsage {'{'} scale, class {'}'}</code></td>
+                <td>
+                  A negative (reversing) <A href="/library/lock#scale">lock scale</A> on a button, key
+                  or media usage. One bit has nothing to reverse: use <code>0</code> to block it or{' '}
+                  <code>100</code> to pass it.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ImperfectRequired</code></td>
+                <td>
+                  An <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
+                  opt-in is off. Turn it on with{' '}
+                  <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RawDirection {'{'} direction {'}'}</code></td>
+                <td>
+                  A <A href="/library/advanced/raw"><code>raw</code></A> call's direction was not{' '}
+                  <code>IN</code> or <code>OUT</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteMaskLength {'{'} match_len, mask_len {'}'}</code></td>
+                <td>
+                  A <A href="/library/advanced/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
+                  <code>mask</code> were not the same length.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteActionClass {'{'} action, class {'}'}</code></td>
+                <td>
+                  A rewrite rule's{' '}
+                  <A href="/library/types/enums#rewrite-action"><code>action</code></A> does not fit its{' '}
+                  <A href="/library/types/enums#rewrite-class"><code>class</code></A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewritePayloadTooLarge {'{'} action, class, len, offset, cap {'}'}</code></td>
+                <td>
+                  A rewrite rule's payload does not fit the box's <code>cap</code>-byte head for the
+                  class.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteTableFull {'{'} limit {'}'}</code></td>
+                <td>
+                  A further <A href="/library/advanced/rewrite">rewrite rule</A> with all{' '}
+                  <code>limit</code> already in use. Remove one first.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformOpFields {'{'} op, src, dst {'}'}</code></td>
+                <td>
+                  A <A href="/library/types/structs#transform">transform</A>'s{' '}
+                  <A href="/library/types/enums#transform-op"><code>op</code></A> does not fit its
+                  source and destination fields, or names one field as both. To weigh a field in
+                  place, use <A href="/library/lock#scale"><code>scale</code></A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformTableFull {'{'} limit {'}'}</code></td>
+                <td>
+                  A further <A href="/library/transform">transform</A> with all <code>limit</code>{' '}
+                  already in use. Remove one first.
                 </td>
               </tr>
               <tr>

@@ -20,6 +20,7 @@ import CmdAdmin from './pages/native/commands/Admin';
 import CmdLed from './pages/native/commands/Led';
 import CmdLock from './pages/native/commands/Lock';
 import CmdCatch from './pages/native/commands/Catch';
+import CmdTransform from './pages/native/commands/Transform';
 import CmdOption from './pages/native/commands/Option';
 import CmdClip from './pages/native/commands/Clip';
 import CmdUpdate from './pages/native/commands/Update';
@@ -37,6 +38,7 @@ import LibUpdate from './pages/library/Update';
 import LibLed from './pages/library/Led';
 import LibLock from './pages/library/Lock';
 import LibCatch from './pages/library/Catch';
+import LibTransform from './pages/library/Transform';
 import LibOptions from './pages/library/Options';
 import LibClip from './pages/library/Clip';
 import LibLifecycle from './pages/library/Lifecycle';
@@ -44,6 +46,10 @@ import LibDiagnostics from './pages/library/Diagnostics';
 import FeatAsync from './pages/library/features/Async';
 import FeatMock from './pages/library/features/Mock';
 import FeatTracing from './pages/library/features/Tracing';
+import DevRaw from './pages/library/advanced/Raw';
+import DevTransfer from './pages/library/advanced/Transfer';
+import DevRewrite from './pages/library/advanced/Rewrite';
+import DevPatch from './pages/library/advanced/Patch';
 import GuideCalls from './pages/library/GuideCalls';
 import GuideConnection from './pages/library/GuideConnection';
 import GuideTesting from './pages/library/GuideTesting';
@@ -70,6 +76,7 @@ import PyBuild from './pages/bindings/python/Build';
 import DashboardDevice from './pages/dashboard/Device';
 import DashboardSetup from './pages/dashboard/Setup';
 import DashboardControl from './pages/dashboard/Control';
+import DashboardDeveloper from './pages/dashboard/DeviceDeveloper';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
@@ -105,6 +112,7 @@ const App: Component = () => {
           <Route path="/native/commands/led" component={CmdLed} />
           <Route path="/native/commands/lock" component={CmdLock} />
           <Route path="/native/commands/catch" component={CmdCatch} />
+          <Route path="/native/commands/transform" component={CmdTransform} />
           <Route path="/native/commands/option" component={CmdOption} />
           <Route path="/native/commands/clip" component={CmdClip} />
           <Route path="/native/commands/usage" component={CmdUsage} />
@@ -122,6 +130,7 @@ const App: Component = () => {
           <Route path="/library/led" component={LibLed} />
           <Route path="/library/lock" component={LibLock} />
           <Route path="/library/catch" component={LibCatch} />
+          <Route path="/library/transform" component={LibTransform} />
           <Route path="/library/options" component={LibOptions} />
           <Route path="/library/clip" component={LibClip} />
           <Route path="/library/lifecycle" component={LibLifecycle} />
@@ -129,6 +138,10 @@ const App: Component = () => {
           <Route path="/library/features/async" component={FeatAsync} />
           <Route path="/library/features/mock" component={FeatMock} />
           <Route path="/library/features/tracing" component={FeatTracing} />
+          <Route path="/library/advanced/raw" component={DevRaw} />
+          <Route path="/library/advanced/transfer" component={DevTransfer} />
+          <Route path="/library/advanced/rewrite" component={DevRewrite} />
+          <Route path="/library/advanced/patch" component={DevPatch} />
           <Route path="/library/guides/calls" component={GuideCalls} />
           <Route path="/library/guides/connection" component={GuideConnection} />
           <Route path="/library/guides/testing" component={GuideTesting} />
@@ -155,6 +168,7 @@ const App: Component = () => {
           <Route path="/dashboard" component={DashboardDevice} />
           <Route path="/dashboard/setup" component={DashboardSetup} />
           <Route path="/dashboard/control" component={DashboardControl} />
+          <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
           <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />

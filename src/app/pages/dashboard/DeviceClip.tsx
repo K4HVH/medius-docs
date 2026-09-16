@@ -40,6 +40,7 @@ import {
   INJ_MEDIA,
   KEYS,
   MEDIA,
+  RenderMode,
   clipStateLabel,
   encodeClipEntry,
   isTriggerAction,
@@ -131,6 +132,7 @@ const DeviceClip = () => {
   const clip = dash.poll('clip');
   const health = () => dash.health();
   const moveRide = dash.poll('moveRide');
+  const render = dash.poll('render');
   const ready = () => health()?.cloneConfigured === true;
 
   const [draft, setDraft] = createSignal<ClipEntry[]>([]);
@@ -188,6 +190,12 @@ const DeviceClip = () => {
   const loopOn = () => flagEdit().loop ?? clip()?.loop === true;
   const retainOn = () => flagEdit().retain ?? clip()?.retain === true;
   const rideOn = () => flagEdit().ride ?? clip()?.ride === true;
+  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the wheel.
+  const rendered = () =>
+    render()?.ready === true && (render()?.mode ?? RenderMode.Off) !== RenderMode.Off;
+  const riding = () => (moveRide() ?? 0) > 0;
+  const cursorRides = () => riding() && (rendered() ? render()?.full !== true : rideOn());
+  const wheelRides = () => riding() && rideOn();
   createEffect(() => {
     const c = clip();
     if (!c) return;
@@ -323,10 +331,17 @@ const DeviceClip = () => {
           <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
 
           <Show when={ready()} fallback={<p style={muted}>Clips need a cloned mouse. Plug one into USB3.</p>}>
-            <Show when={(moveRide() ?? 0) > 0 && rideOn()}>
+            <Show when={render() && (cursorRides() || wheelRides())}>
               <div class="callout callout--warning">
-                Movement riding is on and this clip is set to ride it, so clip motion is only emitted
-                alongside a real mouse move. Button and key ticks still play.
+                {cursorRides() && rendered()
+                  ? 'Movement riding is on and the box is rendering motion, so '
+                  : 'Movement riding is on, so '}
+                {cursorRides() && wheelRides()
+                  ? 'clip motion is'
+                  : cursorRides()
+                    ? "the clip's cursor motion is"
+                    : "the clip's wheel motion is"}{' '}
+                only emitted alongside a real mouse move. Button, key and media ticks still play.
               </div>
             </Show>
 
@@ -432,7 +447,7 @@ const DeviceClip = () => {
             </div>
             <div style={checkColumn}>
               <Checkbox
-                label="Motion rides a real report"
+                label={rendered() ? 'Wheel motion rides a real report' : 'Motion rides a real report'}
                 checked={rideOn()}
                 disabled={busy()}
                 onChange={(on) => setFlag(CLIP_SET_RIDE, on)}

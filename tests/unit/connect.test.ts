@@ -29,7 +29,6 @@ const deps = (over: Partial<ConnectDeps<'L'>> = {}): ConnectDeps<'L'> => ({
   attach: async () => {
     throw new NoReplyError();
   },
-  detach: async () => {},
   ...over,
 });
 
@@ -130,12 +129,10 @@ describe('attemptConnect', () => {
   it('a granted port that will not open falls through to the chooser', async () => {
     const stale = port('stale');
     const picked = port('picked');
-    const detach = vi.fn(async () => {});
     const r = await attemptConnect(
       deps({
         granted: async () => [stale],
         choose: async () => picked,
-        detach,
         attach: async (p) => {
           if (p === stale) throw new Error('Failed to open serial port.');
           return { link: 'L', version: version(5) };
@@ -143,7 +140,6 @@ describe('attemptConnect', () => {
       }),
     );
     expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(5) });
-    expect(detach).toHaveBeenCalledWith(stale);
   });
 
   it('a granted port that opens and stays silent is the answer, not a reason to ask again', async () => {
@@ -252,27 +248,5 @@ describe('attemptConnect', () => {
       }),
     );
     expect(r).toEqual({ ok: true, port: port('p'), link: 'L', version: version(5) });
-  });
-
-  it('a detach that throws does not escape the attempt', async () => {
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [port('a')],
-        detach: async () => {
-          throw new Error('port would not close');
-        },
-        attach: async () => {
-          throw new Error('Failed to open serial port.');
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: false, verdict: { kind: 'busy' } });
-  });
-
-  it('closes the port it could not use', async () => {
-    const p = port('p');
-    const detach = vi.fn(async () => {});
-    await attemptConnect(deps({ choose: async () => p, detach }));
-    expect(detach).toHaveBeenCalledWith(p);
   });
 });

@@ -21,8 +21,14 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
           <A href="/native/commands/requests#catch">catch</A> subscription, an{' '}
           <A href="/native/commands/requests#options">option</A>, the buffered{' '}
-          <A href="/native/commands/requests#clip">clip</A>, or the{' '}
-          <A href="/native/commands/requests#firmware">firmware</A> on both chips.
+          <A href="/native/commands/requests#clip">clip</A>, the{' '}
+          <A href="/native/commands/requests#firmware">firmware</A> on both chips, or the{' '}
+          <A href="/native/commands/requests#transforms">field-transform table</A>.
+        </p>
+        <p>
+          Four more selectors read the <A href="/library/advanced/rewrite">rewrite</A> and{' '}
+          <A href="/library/advanced/patch">descriptor-patch</A> tables, each as a summary and as
+          one entry in full.
         </p>
       </Card>
 
@@ -59,10 +65,15 @@ const Requests: Component = () => {
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription table, plus its drop counts and the cross-chip clock estimate.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
-              <tr><td><code>8</code></td><td>reserved</td><td>-</td></tr>
+              <tr><td><code>8</code></td><td>retired; folded into <A href="/native/commands/requests#caps"><code>CAPS</code></A></td><td>-</td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
               <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
               <tr><td><code>11</code></td><td>Both chips' firmware versions, the slot each runs, and what is staged.</td><td><A href="/native/commands/requests#firmware"><code>FIRMWARE</code></A></td></tr>
+              <tr><td><code>12</code></td><td>The rewrite-rule table, as a summary.</td><td><A href="/library/advanced/rewrite#query-rewrite"><code>REWRITE</code></A></td></tr>
+              <tr><td><code>13</code></td><td>One rewrite rule in full, in the <code>REWRITE</code> command's own shape.</td><td><A href="/library/advanced/rewrite#query-rewrite-entry"><code>REWRITE_ENTRY</code></A></td></tr>
+              <tr><td><code>14</code></td><td>The descriptor-patch set, as a summary.</td><td><A href="/library/advanced/patch#query-patches"><code>PATCHES</code></A></td></tr>
+              <tr><td><code>15</code></td><td>One descriptor patch in full, in the <code>PATCH</code> command's own shape.</td><td><A href="/library/advanced/patch#query-patch-entry"><code>PATCH_ENTRY</code></A></td></tr>
+              <tr><td><code>16</code></td><td>The active field-transform table.</td><td><A href="/native/commands/requests#transforms"><code>TRANSFORMS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -84,9 +95,10 @@ const Requests: Component = () => {
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
             <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
-            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
-            <A href="/library/requests#clip-status"><code>status</code></A> query, and{' '}
-            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, the clip{' '}
+            <A href="/library/requests#clip-status"><code>status</code></A> query,{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>, and{' '}
+            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -146,7 +158,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 6</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 7</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -162,9 +174,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.3.4</code>, protocol <code>6</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.0</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 06     | 03     | 03     | 04     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 07     | 03     | 04     | 00     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -181,9 +193,9 @@ const Requests: Component = () => {
           <CardHeader title="HEALTH" subtitle="RESP payload, what = 1" />
           <p>
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 1</code>: a single <code>flags</code> byte, each bit an independent status.
+            <code>what = 1</code>: a two-byte <code>flags</code> word (<code>u16</code>, little-endian), each bit an independent status.
           </p>
-          <pre class="api-signature">QUERY  what = 1  ·  RESP 2 bytes</pre>
+          <pre class="api-signature">QUERY  what = 1  ·  RESP 3 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -192,7 +204,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x01</td></tr>
-              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>the status bits below</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u16</code></td><td>the status bits below, little-endian</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -209,6 +221,9 @@ const Requests: Component = () => {
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
               <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming. It says nothing about <em>what</em> is subscribed; read <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> for the table</td></tr>
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
+              <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: at least one <A href="/library/advanced/rewrite">rewrite rule</A> is installed (the table is non-empty)</td></tr>
+              <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: a <A href="/library/advanced/patch">descriptor patch</A> set is applied to the clone</td></tr>
+              <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -217,9 +232,9 @@ const Requests: Component = () => {
             Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x07</code>):</p>
+          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x0007</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 02 00  | 01     | 07     | lo hi  |
+| A5     | 06     | 00     | 03 00  | 01     | 07 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | flags  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -315,7 +330,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
-              <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries</td></tr>
+              <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
               <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
               <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite</td></tr>
               <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
@@ -333,6 +348,7 @@ const Requests: Component = () => {
               <tr><td>b1</td><td><code>0x02</code></td><td><code>Y</code>: the report carries a Y axis</td></tr>
               <tr><td>b2</td><td><code>0x04</code></td><td><code>WHEEL</code>: the report carries a wheel</td></tr>
               <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the mouse report sits behind a HID report ID</td></tr>
+              <tr><td>b4</td><td><code>0x10</code></td><td><code>PAN</code>: the report carries an AC Pan (horizontal scroll) axis</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">KBD_FLAGS</div>
@@ -476,7 +492,7 @@ const Requests: Component = () => {
             <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per direction that is not
             passing untouched. An empty list (<code>n = 0</code>) means everything passes.
           </p>
-          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 5n bytes</pre>
+          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 6n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -485,11 +501,11 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 96</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 85</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the weighed field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
               <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>which direction of it, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
-              <tr><td>+</td><td><code>scale</code></td><td><code>u8</code></td><td>percent of the physical value kept, <code>0-255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies</td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies, negative reverses</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>
@@ -508,7 +524,8 @@ const Requests: Component = () => {
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent.</td></tr>
+              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent, and never a negative.</td></tr>
+              <tr><td>A reversed axis</td><td>Its negative scale, sign and all. A reader that takes the field as a <code>u8</code> sees <code>156</code> where the box holds <code>-100</code> and reads an amplification as a reversal.</td></tr>
               <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
             </tbody>
           </table>
@@ -518,16 +535,18 @@ const Requests: Component = () => {
               <tr><th>Order</th><th>Source</th><th>Most it spends</th></tr>
             </thead>
             <tbody>
-              <tr><td>1</td><td>Mouse axes and buttons</td><td>22: 3 axes x 4 directions, plus 5 buttons x 2 edges. A button has no relative pair, so 10 of the table's 32 slots are out of reach.</td></tr>
+              <tr><td>1</td><td>Mouse axes and buttons</td><td>48: 4 axes x 4 directions, plus 16 buttons x 2 edges. A button has no relative pair, so its other two slots are out of reach.</td></tr>
               <tr><td>2</td><td>The blanket key lock</td><td>2, one per blocked edge</td></tr>
               <tr><td>3</td><td>The blanket media lock</td><td>1</td></tr>
               <tr><td>4</td><td>Specific media usages</td><td>8, the whole media-lock table</td></tr>
-              <tr><td>5</td><td>Specific keys</td><td>the rest of the 96, so at least 63, one per blocked edge</td></tr>
+              <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so at least 26, one per blocked edge</td></tr>
             </tbody>
           </table>
           <p>
-            Rows 1 to 4 are capped by the box's own tables and spend 33 between them, so they are always
-            in the reply. A keyboard usage is the one unbounded class: 252 of them, two edges each.
+            The cap is the frame, not a table: <code>2 + 85 x 6</code> is the 512-byte payload exactly.
+            Rows 1 to 4 are capped by the box's own tables and spend 59 between them at worst, so they
+            are always in the reply. A keyboard usage is the one unbounded class: 252 of them, two
+            edges each.
           </p>
           <div class="callout callout--warning">
             <p>
@@ -543,7 +562,7 @@ const Requests: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <p>One entry: the wheel's negative (scroll-down) sign blocked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>direction = 2</code>, <code>scale = 0</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 07 00  | 06     | 01     | 03     | 02 00  | 02     | 00     | lo hi  |
+| A5     | 06     | 00     | 08 00  | 06     | 01     | 03     | 02 00  | 02     | 00 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dir    | scale  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -968,7 +987,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.3.4</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.0</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -988,6 +1007,90 @@ const Requests: Component = () => {
 +-------------+--------+--------+
 | slot_size   | staged | CRC16  |
 +-------------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="TRANSFORMS" subtitle="RESP payload, what = 16" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 16</code>: the installed{' '}
+            <A href="/native/commands/transform"><code>TRANSFORM</code></A> table. A three-byte
+            header, then seven bytes per entry, in the order the entries were installed.
+          </p>
+          <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 7n bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x10</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 32</td></tr>
+              <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
+              <tr><td>+</td><td><code>sclass</code></td><td><code>u8</code></td><td>per entry: source class, 0=button 1=key 2=media 3=axis</td></tr>
+              <tr><td>+</td><td><code>sid</code></td><td><code>u16</code></td><td>the source id within the class, little-endian</td></tr>
+              <tr><td>+</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
+              <tr><td>+</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">READBACK</div>
+          <p>
+            An entry mirrors the <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>{' '}
+            frame field for field except the <code>state</code> byte, so what comes back is what you
+            would send to reproduce it.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Reports as</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>An installed entry</td><td>One 7-byte line, under its own <code>(source, dest)</code> key.</td></tr>
+              <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only way to see that an entry landed.</td></tr>
+              <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 set to say the table was the reason.</td></tr>
+              <tr><td>An entry whose destination this configuration does not declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: an entry was refused because the table already held 32. Nothing is evicted, and removing any entry clears the bit</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets its{' '}
+            <code>TRANSFORM_ON</code> bit (<code>0x0400</code>) while the table is non-empty, so the
+            bit and a non-empty list here say the same thing.
+          </p>
+          <p>
+            The table is PC-owned session state on the{' '}
+            <A href="/native/commands/transform#clearing">same lifecycle</A> as locks and the catch
+            subscription, so an empty list can mean the silence timeout took it. Library binding:{' '}
+            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>
+            One entry, X and Y swapped (<code>op = 1</code>, source <code>(axis 3, id 0)</code>, dest{' '}
+            <code>(axis 3, id 1)</code>), with the table not full:
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 0A 00  | 10     | 00     | 01     |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
++--------+--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+--------+
+| 01     | 03     | 00 00  | 03     | 01 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| op     | sclass | sid    | dclass | did    | CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

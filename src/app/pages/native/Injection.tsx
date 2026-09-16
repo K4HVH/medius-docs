@@ -108,7 +108,8 @@ const Injection: Component = () => {
                 <td>
                   The same total for motion that never waits: a <code>MOVE</code> carrying{' '}
                   <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and{' '}
-                  <A href="/native/commands/clip">clip</A> playback. Both accumulators always exist;
+                  <A href="/native/commands/clip">clip</A> motion with <code>ride</code> off that is not
+                  being rendered. Both accumulators always exist;
                   riding gates whether the first one drains, not which one a move lands in.
                 </td>
               </tr>

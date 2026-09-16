@@ -29,7 +29,7 @@ const Overview: Component = () => {
         ┌──────────────▼──────────────┐
         │     medius (Rust core)      │   ◀ the client library
         └──────────────┬──────────────┘
-                       │   4 Mbaud USB-serial frames
+                       │   6 Mbaud USB-serial frames
         ┌──────────────▼──────────────┐
         │       the medius box        │   ▶ mouse + game PC
         └─────────────────────────────┘`}</pre>
