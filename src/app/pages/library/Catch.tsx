@@ -18,7 +18,7 @@ const Catch: Component = () => {
         </p>
         <p>
           A subscription is a table of{' '}
-          <A href="/library/catch#filters"><code>CatchFilter</code></A> entries. Addressing doubles as
+          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries. Addressing doubles as
           the filter: the control link runs at 6&nbsp;Mbaud and vendor bulk alone measures
           ~250&nbsp;KiB/s, so a subscription has to be able to name one endpoint.
         </p>
@@ -93,18 +93,6 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
         </Card>
       </div>
 
-      <div id="filters" data-search-target>
-        <Card>
-          <CardHeader title="CatchFilter" subtitle="One table entry: an address, a direction, a capture" />
-          <p>
-            The input constructors take what <A href="/library/lock#lock"><code>lock</code></A> takes,
-            so hiding an input from the game and watching it are written alike. The box resolves to
-            the most specific match and that entry supplies the capture; every constructor, modifier
-            and accessor, and the resolution order, are on{' '}
-            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>.
-          </p>
-        </Card>
-      </div>
 
       <div id="input-stream" data-search-target>
         <Card>
