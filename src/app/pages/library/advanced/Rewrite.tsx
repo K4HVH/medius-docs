@@ -55,7 +55,7 @@ const Rewrite: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its address, its <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload. Installing one with the whole table already in use is <A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A>.</td></tr>
+              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its <A href="/library/types/enums#rewrite-class">address</A>, its <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload. Installing one with the whole table already in use is <A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -158,29 +158,7 @@ for i in 0..table.entries.len() as u8 {
         </Card>
       </div>
 
-      <div id="class" data-search-target>
-        <Card>
-          <CardHeader title="RewriteClass" subtitle="Which traffic a rule addresses, and where within it" />
-          <p>
-            The class picks the traffic and the id the address within it: an interface number for a
-            HID-in rule, an endpoint number everywhere else. The direction picks the flow:{' '}
-            <code>Positive</code> is IN, <code>Negative</code> is OUT. Every class and its id are on{' '}
-            <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A>.
-          </p>
-        </Card>
-      </div>
 
-      <div id="action" data-search-target>
-        <Card>
-          <CardHeader title="RewriteAction" subtitle="What the winning rule does to a matched packet" />
-          <p>
-            One rule wins a packet and its action decides that packet's fate: pass it, drop it, rewrite
-            its bytes, or, on the control class, answer it without the device. Every action, which class
-            takes it and whether it carries a payload, are on{' '}
-            <A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A>.
-          </p>
-        </Card>
-      </div>
 
       <div id="async" data-search-target>
         <Card>

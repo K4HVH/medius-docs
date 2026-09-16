@@ -54,7 +54,7 @@ const Transform: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The operation and the source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A> and the source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -133,17 +133,6 @@ for t in &table.entries {
         </Card>
       </div>
 
-      <div id="op" data-search-target>
-        <Card>
-          <CardHeader title="TransformOp" subtitle="Remap or swap, and the pairs each takes" />
-          <p>
-            The op decides how a transform's source and destination relate: remap moves one field into
-            another, swap exchanges two axes. Neither takes a field onto itself, since both move a
-            value. Which pairs each op admits, and the wire byte each is, are on{' '}
-            <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>.
-          </p>
-        </Card>
-      </div>
 
       <div id="async" data-search-target>
         <Card>
