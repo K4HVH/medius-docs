@@ -105,9 +105,8 @@ RESET      releases every override at once`}</pre>
           </p>
           <p>
             Injecting a button the device declares but never itself wires is descriptor-faithful: the
-            box drives the full declared button count, and which of those a mouse treats as natural is
-            the host's to shape. A button id past the declared count reaches no report field, the way
-            an unmapped key does.
+            box drives the full declared button count. A button id past that count reaches no report
+            field, the way an unmapped key does.
           </p>
           <p>
             Library bindings:{' '}

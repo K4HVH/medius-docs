@@ -4,7 +4,6 @@
 // clones are off, so the card stands its body down rather than reporting a send that went nowhere.
 
 import { Show, createSignal } from 'solid-js';
-import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { NumberInput } from '../../../components/inputs/NumberInput';
@@ -51,8 +50,7 @@ const DeviceRaw = () => {
             when={allowed()}
             fallback={
               <p style={muted}>
-                Raw reports need <A href="/dashboard#imperfect-clone">imperfect clones</A>, on the
-                Device tab.
+                Raw reports need imperfect clones, on the Device tab.
               </p>
             }
           >

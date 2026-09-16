@@ -152,7 +152,7 @@ for i in 0..set.entries.len() as u8 {
 
       <div id="section" data-search-target>
         <Card>
-          <CardHeader title="The section (patch)" subtitle="Which descriptor a patch overwrites" />
+          <CardHeader title="PatchSection" subtitle="Which descriptor a patch overwrites" />
           <p>
             A patch names one descriptor and a byte offset inside it: the device descriptor, a
             configuration, an interface's report descriptor, a string, or the BOS. Which section takes a{' '}

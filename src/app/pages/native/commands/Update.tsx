@@ -414,11 +414,13 @@ const Update: Component = () => {
             </tbody>
           </table>
           <p>
-            The host row admits no fallback on purpose: its image arrives over the link, and the link
-            is the only way back to it, so an image that runs but cannot talk would otherwise be
-            reachable only by opening the case. Measured on hardware: an image that panics in its
-            entry point is back on the old slot in 0.8 s, and one built deliberately deaf to the link
-            reverted itself and brought the link back with no intervention.
+            The host chip confirms on a link exchange and nothing else: its image arrives over the
+            link, and the link is the only way back to it, so one that runs but cannot talk has to
+            revert on its own.
+          </p>
+          <p>
+            Measured on hardware: one that panics in its entry point is back on the old slot in
+            0.8 s, and one built deaf to the link reverted and brought the link back unaided.
           </p>
           <div class="callout callout--warning">
             <p>

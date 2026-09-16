@@ -160,7 +160,7 @@ for i in 0..table.entries.len() as u8 {
 
       <div id="class" data-search-target>
         <Card>
-          <CardHeader title="The class and its id" subtitle="Which traffic a rule addresses, and where within it" />
+          <CardHeader title="RewriteClass" subtitle="Which traffic a rule addresses, and where within it" />
           <p>
             The class picks the traffic and the id the address within it: an interface number for a
             HID-in rule, an endpoint number everywhere else. The direction picks the flow:{' '}
@@ -172,7 +172,7 @@ for i in 0..table.entries.len() as u8 {
 
       <div id="action" data-search-target>
         <Card>
-          <CardHeader title="The action (rewrite)" subtitle="What the winning rule does to a matched packet" />
+          <CardHeader title="RewriteAction" subtitle="What the winning rule does to a matched packet" />
           <p>
             One rule wins a packet and its action decides that packet's fate: pass it, drop it, rewrite
             its bytes, or, on the control class, answer it without the device. Every action, which class

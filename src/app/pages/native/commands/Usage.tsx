@@ -43,9 +43,9 @@ const Usage: Component = () => {
           </table>
           <p>
             The Rust library names the five as{' '}
-            <A href="/library/types/enums#button"><code>Button</code></A> constructors
-            (<code>Button::left()</code>, <code>Button::side2()</code>, ...) and takes any id past them
-            up to the declared count.
+            <A href="/library/types/structs#button"><code>Button</code></A> constants
+            (<code>Button::LEFT</code> to <code>Button::SIDE2</code>) and takes any id past them up to
+            the declared count.
           </p>
         </Card>
       </div>

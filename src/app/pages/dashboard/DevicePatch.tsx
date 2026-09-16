@@ -5,7 +5,6 @@
 // never comes up, and clearing is the way back.
 
 import { For, Show, createSignal } from 'solid-js';
-import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -155,8 +154,7 @@ const DevicePatch = () => {
           </p>
           <Show when={!allowed()}>
             <div class="callout callout--info" style={section}>
-              A patch is stored now and applied once{' '}
-              <A href="/dashboard#imperfect-clone">imperfect clones</A> are on, on the Device tab.
+              A patch is stored now and applied once imperfect clones are on, on the Device tab.
             </div>
           </Show>
           <Show when={patches()?.tableFull}>

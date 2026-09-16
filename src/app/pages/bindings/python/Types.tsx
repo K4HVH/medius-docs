@@ -1424,7 +1424,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
             <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
             <table class="api-params">
-              <thead><tr><th>RewriteRule field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>rewrite_class</code></td><td><code>RewriteClass</code></td><td><code>HID_IN</code> 4, <code>HID_OUT</code> 5, <code>VENDOR_INTERRUPT</code> 6, <code>VENDOR_BULK</code> 7, <code>CONTROL</code> 8, <code>EMIT</code> 9, <code>ANY</code> 0xFF.</td></tr>
                 <tr><td><code>id</code></td><td><code>int</code></td><td>Interface number or endpoint number.</td></tr>
@@ -1440,7 +1440,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
             <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries.</p>
             <table class="api-params">
-              <thead><tr><th>Patch field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>section</code></td><td><code>PatchSection</code></td><td><code>DEVICE</code> 0, <code>CONFIG</code> 1, <code>REPORT</code> 2, <code>STRING</code> 3, <code>BOS</code> 4.</td></tr>
                 <tr><td><code>cfg</code></td><td><code>int</code></td><td>Configuration index, for <code>CONFIG</code>/<code>REPORT</code>.</td></tr>
@@ -1464,12 +1464,12 @@ Transform.swap(a, b)              -> Transform
 Transform.remap(source, dest)     -> Transform
 Transform(op, source, dest, scale).with_scale(pct)`}</pre>
             <table class="api-params">
-              <thead><tr><th>Transform field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1, <code>SCALE</code> 2.</td></tr>
                 <tr><td><code>source</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field the transform reads.</td></tr>
                 <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes, equal to <code>source</code> for a scale.</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>LOCK_SCALE_MAX</code>; a button, key or media source takes only 100.</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>LOCK_SCALE_MAX</code>; a button source takes only 100, and a key or media field can only be a destination. On an axis remap a 0 still zeroes the source.</td></tr>
               </tbody>
             </table>
             <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>, in the order the box applies them).</p>

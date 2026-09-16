@@ -120,7 +120,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ImperfectRequired</code></td>
                 <td>
-                  A <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
+                  An <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
                   opt-in is off. Turn it on with{' '}
                   <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.
                 </td>
@@ -179,8 +179,9 @@ const Errors: Component = () => {
               <tr>
                 <td><code>TransformUsageScale {'{'} src, scale, pass {'}'}</code></td>
                 <td>
-                  A percentage on a button, key, or media source, which carries one bit rather than a
-                  magnitude. Only the full <code>pass</code> fits.
+                  A percentage on a button source, which carries one bit rather than a magnitude.
+                  Only the full <code>pass</code> fits; a key or media field can only be a
+                  destination, so naming one as a source is <code>TransformOpFields</code>.
                 </td>
               </tr>
               <tr>

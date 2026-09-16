@@ -1684,7 +1684,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           </table>
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th>MediusTransferStatus</th><th>Byte</th><th>Meaning</th></tr></thead>
+              <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed; data is in <code>data</code>.</td></tr>
                 <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it: opt-in off, malformed, or too large.</td></tr>
@@ -1735,7 +1735,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusRewriteTable & MediusRewriteEntry" subtitle="The rewrite-table summary" />
           <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_rewrite</code></A>: a full flag, a generation counter, and one <code>MediusRewriteEntry</code> per rule (address, action, <code>match_len</code>, <code>offset</code>, <code>payload_len</code>, and saturating <code>hits</code>) without the bytes.</p>
           <table class="api-params">
-            <thead><tr><th>MediusRewriteTable</th><th>C type</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>A further rule was, or would be, refused.</td></tr>
               <tr><td><code>generation</code></td><td><code>uint8_t</code></td><td>Bumps only on a change that alters the table.</td></tr>
@@ -1769,7 +1769,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusPatchSet & MediusPatchEntry" subtitle="The stored patch set and its apply state" />
           <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_patches</code></A>: the four apply-state flags and one <code>MediusPatchEntry</code> per patch (section, cfg, index, offset, len) without the bytes.</p>
           <table class="api-params">
-            <thead><tr><th>MediusPatchSet</th><th>C type</th><th>Set when</th></tr></thead>
+            <thead><tr><th>Field</th><th>C type</th><th>Set when</th></tr></thead>
             <tbody>
               <tr><td><code>applied</code></td><td><code>uint8_t</code></td><td>The stored set is applied to the live clone.</td></tr>
               <tr><td><code>pending</code></td><td><code>uint8_t</code></td><td>A stored change is not applied yet.</td></tr>
@@ -1791,7 +1791,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFORM_OP_*</code> value: <code>_REMAP</code> 0, <code>_SWAP</code> 1, <code>_SCALE</code> 2.</td></tr>
               <tr><td><code>source</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field the transform reads.</td></tr>
               <tr><td><code>dest</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field it writes.</td></tr>
-              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>MEDIUS_LOCK_SCALE_MAX</code>; a button, key or media source takes only 100.</td></tr>
+              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>MEDIUS_LOCK_SCALE_MAX</code>; a button source takes only 100, and a key or media field can only be a destination. On an axis remap a 0 still zeroes the source.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1852,7 +1852,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_TABLE_FULL</code></td><td><code>24</code></td><td>A rewrite rule added to a table that already holds <code>MEDIUS_MAX_REWRITE_ENTRIES</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>25</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_SCALE_RANGE</code></td><td><code>26</code></td><td>A transform scale whose magnitude is past <code>MEDIUS_LOCK_SCALE_MAX</code>, the widest the box weighs.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_USAGE_SCALE</code></td><td><code>27</code></td><td>A transform percentage on a button, key or media source, which carries one bit.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_USAGE_SCALE</code></td><td><code>27</code></td><td>A transform percentage on a button source, which carries one bit.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td><td>A transform added to a table that already holds <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
             </tbody>

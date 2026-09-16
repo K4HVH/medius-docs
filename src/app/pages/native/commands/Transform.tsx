@@ -89,8 +89,8 @@ const Transform: Component = () => {
                 <tr><th>Value</th><th>Effect</th></tr>
               </thead>
               <tbody>
-                <tr><td><code>-100</code></td><td>Negates. This is the whole of what an invert op would have been.</td></tr>
-                <tr><td><code>0</code></td><td>Blocks the source. On a remap the destination is left as the device sent it.</td></tr>
+                <tr><td><code>-100</code></td><td>Negates, exactly.</td></tr>
+                <tr><td><code>0</code></td><td>Blocks the source. On an axis remap the source is still zeroed and the destination is left as the device sent it.</td></tr>
                 <tr><td><code>100</code></td><td>Identity, and the only value a button source takes.</td></tr>
                 <tr><td><code>200</code></td><td>Doubles. <code>-50</code> halves and flips.</td></tr>
               </tbody>
@@ -116,8 +116,8 @@ const Transform: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>op</code> is above <code>2</code></td><td>remap, swap and scale are the whole set; there is no invert op to reach</td></tr>
-              <tr><td>the op does not admit that <A href="/native/commands/transform#pairs">class pair</A></td><td>each op names the shapes it can read and write; nothing else is coherent</td></tr>
-              <tr><td><code>swap</code> names one axis twice</td><td>a swap needs two different axes; an axis exchanged with itself is a no-op dressed as an entry</td></tr>
+              <tr><td>the op does not admit that <A href="/native/commands/transform#pairs">class pair</A></td><td>each op names the shapes it can read and write</td></tr>
+              <tr><td><code>swap</code> names one axis twice</td><td>a swap needs two different axes; the same axis twice is a scale's key</td></tr>
               <tr><td>a button source with a scale other than <code>100</code></td><td>a button is one bit, so a percentage of it has no value to carry</td></tr>
               <tr><td>a field this clone does not declare</td><td>the box will not store an address it cannot reach; re-send the entry after a re-clone</td></tr>
               <tr><td>the table already holds 32 entries</td><td>nothing is evicted; the readback's full flag says an entry was turned away</td></tr>
@@ -239,9 +239,10 @@ const Transform: Component = () => {
           </p>
           <div class="api-response-label">INERT WHEN UNBOUND</div>
           <p>
-            A remap whose destination this configuration does not declare does nothing, and in
-            particular does not clear its source: the button keeps reaching the game PC. The entry
-            starts working the moment the destination collection binds again.
+            An entry naming a destination collection the box has not bound is refused outright. One
+            whose collection goes away with a configuration switch turns inert: it does nothing and
+            does not clear its source, so the button keeps reaching the game PC until that
+            collection binds again.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
@@ -301,9 +302,8 @@ const Transform: Component = () => {
           <p>
             The input classes of{' '}
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> tap the physical report
-            before the pass, so they still report the untransformed value.{' '}
-            <A href="/native/commands/catch#catch"><code>EMIT</code></A> is the mirror and carries
-            what the clone actually put on the wire.
+            before the pass, so they still report the untransformed value. Its <code>EMIT</code>{' '}
+            class is the mirror and carries what the clone actually put on the wire.
           </p>
         </Card>
       </div>

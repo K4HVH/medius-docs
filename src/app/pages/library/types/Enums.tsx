@@ -36,44 +36,6 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
-      <div id="button" data-search-target>
-        <Card>
-          <CardHeader title="Button" subtitle="The button a command acts on" />
-          <pre class="api-signature">struct Button(pub u8)</pre>
-          <p>
-            The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> command acts on: an open numeric
-            id, the five standard buttons as named constants and any further id the mouse declares
-            (<A href="/library/requests#caps"><code>caps</code></A> <code>n_buttons</code>). A{' '}
-            <code>Button</code> converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button,
-            so <A href="/library/inject#inject"><code>inject</code></A> takes one directly.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Constant</th><th>id</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Button::LEFT</code></td><td><code>0</code></td><td>Left button.</td></tr>
-              <tr><td><code>Button::RIGHT</code></td><td><code>1</code></td><td>Right button.</td></tr>
-              <tr><td><code>Button::MIDDLE</code></td><td><code>2</code></td><td>Middle button.</td></tr>
-              <tr><td><code>Button::SIDE1</code></td><td><code>3</code></td><td>First thumb button.</td></tr>
-              <tr><td><code>Button::SIDE2</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Button::new(id)</code></td><td><code>Button</code></td><td>Any 0-based id, named or not: <code>Button::new(5)</code> is the sixth button.</td></tr>
-              <tr><td><code>Button::from_id(id)</code></td><td><code>Button</code></td><td>The same from a wire id byte. Total: every byte is a valid button.</td></tr>
-              <tr><td><code>.as_id()</code></td><td><code>u8</code></td><td>The wire id byte.</td></tr>
-              <tr><td><code>.0</code></td><td><code>u8</code></td><td>The id itself; the field is public.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Injecting a button the device declares but never itself wires is descriptor-faithful: the
-            box drives the full declared count, and one past it is a no-op.
-          </p>
-        </Card>
-      </div>
       <div id="action" data-search-target>
         <Card>
           <CardHeader title="Action" subtitle="The shared press / release tri-state" />
@@ -118,7 +80,7 @@ const Enums: Component = () => {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/enums#button"><code>Button</code></A> id (0=Left .. 4=Side2).</td></tr>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td></tr>
               <tr><td><code>Key</code></td><td><code>1</code></td><td>A keyboard key; id is a HID keycode (0xE0 .. 0xE7 is a modifier).</td></tr>
               <tr><td><code>Media</code></td><td><code>2</code></td><td>A media usage; id is a 16-bit Consumer usage.</td></tr>
             </tbody>
@@ -146,7 +108,7 @@ const Enums: Component = () => {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
             <tbody>
-              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/enums#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
               <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
               <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
               <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
@@ -732,7 +694,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           </p>
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th>Variant</th><th>Value</th><th>Fields it admits</th><th>Effect</th></tr></thead>
+              <thead><tr><th>Variant</th><th>Byte</th><th>Fields it admits</th><th>Effect</th></tr></thead>
               <tbody>
                 <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's contribution into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
                 <tr><td><code>Swap</code></td><td><code>1</code></td><td>two different axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
@@ -902,7 +864,7 @@ match reply.status {
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>Variant</th><th>Value</th><th>Traffic</th><th>id</th></tr>
+                <tr><th>Variant</th><th>Byte</th><th>Traffic</th><th>id</th></tr>
               </thead>
               <tbody>
                 <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, before the renderer.</td><td>the interface number</td></tr>
@@ -934,7 +896,7 @@ match reply.status {
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>Variant</th><th>Value</th><th>Class</th><th>Payload</th><th>Effect</th></tr>
+                <tr><th>Variant</th><th>Byte</th><th>Class</th><th>Payload</th><th>Effect</th></tr>
               </thead>
               <tbody>
                 <tr><td><code>Pass</code></td><td><code>0</code></td><td>any</td><td>no</td><td>Matched, but left untouched: a shadow over a broader rule.</td></tr>
@@ -962,7 +924,7 @@ match reply.status {
           </p>
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th>Variant</th><th>Value</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
+              <thead><tr><th>Variant</th><th>Byte</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
               <tbody>
                 <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
                 <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index</td></tr>

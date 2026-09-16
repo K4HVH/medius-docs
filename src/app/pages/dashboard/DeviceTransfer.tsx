@@ -5,7 +5,6 @@
 // the wrong instrument for the one card whose whole subject is the setup packet.
 
 import { For, Show, createSignal } from 'solid-js';
-import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -104,8 +103,7 @@ const DeviceTransfer = () => {
             when={allowed()}
             fallback={
               <p style={muted}>
-                Control transfers need <A href="/dashboard#imperfect-clone">imperfect clones</A>, on the
-                Device tab.
+                Control transfers need imperfect clones, on the Device tab.
               </p>
             }
           >
