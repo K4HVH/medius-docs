@@ -17,7 +17,7 @@ const find = (term: string): Entry[] => dash.filter((e) => haystack(e).includes(
 
 describe('dashboard search index', () => {
   it('points every card at the tab it actually lives on', () => {
-    const onControl = ['Injection', 'Input locks', 'Input catch', 'Clip playback', 'Status light', 'Safety clear'];
+    const onControl = ['Injection', 'Input locks', 'Transforms', 'Input catch', 'Clip playback', 'Status light', 'Safety clear'];
     const onDevice = ['Options', 'Imperfect clone', 'Movement riding', 'Bearing', 'Emit rate', 'Render', 'Capabilities', 'Performance', 'Device log'];
     // The tab is the path before the anchor. A card entry without one lands on the tab and scrolls
     // nowhere, which is what left every Dashboard result pointing at the same two pages.
@@ -42,8 +42,8 @@ describe('dashboard search index', () => {
     const files = [
       'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceEventCatch.tsx',
       'DeviceClip.tsx', 'DeviceLed.tsx', 'DeviceOptions.tsx', 'DeviceInfo.tsx', 'Device.tsx',
-      'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx', 'DeviceRaw.tsx',
-      'DeviceTransfer.tsx',
+      'DeviceTransform.tsx', 'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx',
+      'DeviceRaw.tsx', 'DeviceTransfer.tsx',
     ];
     const titles = new Set<string>();
     for (const f of files) {

@@ -1466,13 +1466,13 @@ Transform(op, source, dest, scale).with_scale(pct)`}</pre>
             <table class="api-params">
               <thead><tr><th>Transform field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1, <code>INVERT</code> 2, <code>SCALE</code> 3.</td></tr>
+                <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1, <code>SCALE</code> 2.</td></tr>
                 <tr><td><code>source</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field the transform reads.</td></tr>
-                <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes (equal to <code>source</code> for invert and scale).</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent (-100 inverts, 100 identity, 200 doubles); ignored by <code>INVERT</code>.</td></tr>
+                <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes, equal to <code>source</code> for a scale.</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>LOCK_SCALE_MAX</code>; a button, key or media source takes only 100.</td></tr>
               </tbody>
             </table>
-            <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>), up to eight.</p>
+            <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>, in the order the box applies them).</p>
           </div>
         </Card>
       </div>
@@ -1533,13 +1533,16 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RewriteMaskLengthError</code></td><td><code>ERR_REWRITE_MASK_LENGTH</code></td></tr>
                 <tr><td><code>RewriteActionClassError</code></td><td><code>ERR_REWRITE_ACTION_CLASS</code></td></tr>
                 <tr><td><code>RewritePayloadTooLargeError</code></td><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td></tr>
+                <tr><td><code>RewriteTableFullError</code></td><td><code>ERR_REWRITE_TABLE_FULL</code></td></tr>
                 <tr><td><code>TransformOpFieldsError</code></td><td><code>ERR_TRANSFORM_OP_FIELDS</code></td></tr>
-                <tr><td><code>TransformInvertZeroScaleError</code></td><td><code>ERR_TRANSFORM_INVERT_ZERO_SCALE</code></td></tr>
+                <tr><td><code>TransformScaleRangeError</code></td><td><code>ERR_TRANSFORM_SCALE_RANGE</code></td></tr>
+                <tr><td><code>TransformUsageScaleError</code></td><td><code>ERR_TRANSFORM_USAGE_SCALE</code></td></tr>
+                <tr><td><code>TransformTableFullError</code></td><td><code>ERR_TRANSFORM_TABLE_FULL</code></td></tr>
                 <tr><td><code>RawDirectionError</code></td><td><code>ERR_RAW_DIRECTION</code></td></tr>
               </tbody>
             </table>
             <p>
-              The last fifteen are argument refusals, raised before a frame reaches the box.
+              The last eighteen are argument refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
@@ -1557,7 +1560,10 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RewriteActionClassError</code></td><td>a rewrite action that its rule's class does not accept</td></tr>
                 <tr><td><code>RewritePayloadTooLargeError</code></td><td>a rewrite payload past the head the box holds for its class</td></tr>
                 <tr><td><code>TransformOpFieldsError</code></td><td>a transform op that cannot address its source and destination fields</td></tr>
-                <tr><td><code>TransformInvertZeroScaleError</code></td><td>an invert with a scale of 0, which it ignores</td></tr>
+                <tr><td><code>RewriteTableFullError</code></td><td>a rewrite rule past the table's capacity</td></tr>
+                <tr><td><code>TransformScaleRangeError</code></td><td>a transform scale past the widest magnitude the box weighs</td></tr>
+                <tr><td><code>TransformUsageScaleError</code></td><td>a transform percentage on a source that carries one bit</td></tr>
+                <tr><td><code>TransformTableFullError</code></td><td>a transform past the table's capacity</td></tr>
                 <tr><td><code>RawDirectionError</code></td><td>a raw injection direction other than <code>Direction.IN</code> or <code>Direction.OUT</code></td></tr>
               </tbody>
             </table>

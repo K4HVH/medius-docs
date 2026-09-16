@@ -21,8 +21,14 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#locks">locks</A>, the{' '}
           <A href="/native/commands/requests#catch">catch</A> subscription, an{' '}
           <A href="/native/commands/requests#options">option</A>, the buffered{' '}
-          <A href="/native/commands/requests#clip">clip</A>, or the{' '}
-          <A href="/native/commands/requests#firmware">firmware</A> on both chips.
+          <A href="/native/commands/requests#clip">clip</A>, the{' '}
+          <A href="/native/commands/requests#firmware">firmware</A> on both chips, or the{' '}
+          <A href="/native/commands/requests#transforms">field-transform table</A>.
+        </p>
+        <p>
+          Four more selectors read the <A href="/library/advanced/rewrite">rewrite</A> and{' '}
+          <A href="/library/advanced/patch">descriptor-patch</A> tables, each as a summary and as
+          one entry in full.
         </p>
       </Card>
 
@@ -59,10 +65,15 @@ const Requests: Component = () => {
               <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
               <tr><td><code>6</code></td><td>The active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
               <tr><td><code>7</code></td><td>The active catch subscription table, plus its drop counts and the cross-chip clock estimate.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
-              <tr><td><code>8</code></td><td>reserved</td><td>-</td></tr>
+              <tr><td><code>8</code></td><td>retired; folded into <A href="/native/commands/requests#caps"><code>CAPS</code></A></td><td>-</td></tr>
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
               <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
               <tr><td><code>11</code></td><td>Both chips' firmware versions, the slot each runs, and what is staged.</td><td><A href="/native/commands/requests#firmware"><code>FIRMWARE</code></A></td></tr>
+              <tr><td><code>12</code></td><td>The rewrite-rule table, as a summary.</td><td><A href="/library/advanced/rewrite#query-rewrite"><code>REWRITE</code></A></td></tr>
+              <tr><td><code>13</code></td><td>One rewrite rule in full, in the <code>REWRITE</code> command's own shape.</td><td><A href="/library/advanced/rewrite#query-rewrite-entry"><code>REWRITE_ENTRY</code></A></td></tr>
+              <tr><td><code>14</code></td><td>The descriptor-patch set, as a summary.</td><td><A href="/library/advanced/patch#query-patches"><code>PATCHES</code></A></td></tr>
+              <tr><td><code>15</code></td><td>One descriptor patch in full, in the <code>PATCH</code> command's own shape.</td><td><A href="/library/advanced/patch#query-patch-entry"><code>PATCH_ENTRY</code></A></td></tr>
+              <tr><td><code>16</code></td><td>The active field-transform table.</td><td><A href="/native/commands/requests#transforms"><code>TRANSFORMS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -84,9 +95,10 @@ const Requests: Component = () => {
             <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
             <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
             <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
-            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, and the clip{' '}
-            <A href="/library/requests#clip-status"><code>status</code></A> query, and{' '}
-            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
+            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, the clip{' '}
+            <A href="/library/requests#clip-status"><code>status</code></A> query,{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>, and{' '}
+            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>what = 0</code> (read the version):</p>
@@ -992,6 +1004,92 @@ const Requests: Component = () => {
 +-------------+--------+--------+
 | slot_size   | staged | CRC16  |
 +-------------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="TRANSFORMS" subtitle="RESP payload, what = 16" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 16</code>: the installed{' '}
+            <A href="/native/commands/transform"><code>TRANSFORM</code></A> table. A three-byte
+            header, then nine bytes per entry, in the order the entries were installed.
+          </p>
+          <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 9n bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x10</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 32</td></tr>
+              <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap, 2 scale (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
+              <tr><td>+</td><td><code>sclass</code></td><td><code>u8</code></td><td>per entry: source class, 0=button 1=key 2=media 3=axis</td></tr>
+              <tr><td>+</td><td><code>sid</code></td><td><code>u16</code></td><td>the source id within the class, little-endian</td></tr>
+              <tr><td>+</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
+              <tr><td>+</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>the signed percent the entry carries, little-endian (as <A href="/native/commands/transform#scale"><code>TRANSFORM</code></A>)</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">READBACK</div>
+          <p>
+            An entry mirrors the <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>{' '}
+            frame field for field except the <code>state</code> byte, so what comes back is what you
+            would send to reproduce it.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Reports as</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>An installed entry</td><td>One 9-byte line, under its own <code>(source, dest)</code> key.</td></tr>
+              <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only way to see that an entry landed.</td></tr>
+              <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 set to say the table was the reason.</td></tr>
+              <tr><td>An entry whose destination this configuration does not declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
+              <tr><td>A negation</td><td>A scale of <code>-100</code>. There is no invert op to report.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: an entry was refused because the table already held 32. Nothing is evicted, and removing any entry clears the bit</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets its{' '}
+            <code>TRANSFORM_ON</code> bit (<code>0x0400</code>) while the table is non-empty, so the
+            bit and a non-empty list here say the same thing.
+          </p>
+          <p>
+            The table is PC-owned session state on the{' '}
+            <A href="/native/commands/transform#clearing">same lifecycle</A> as locks and the catch
+            subscription, so an empty list can mean the silence timeout took it. Library binding:{' '}
+            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>
+            One entry, Y negated (<code>op = 2</code> scale, source and dest{' '}
+            <code>(axis 3, id 1)</code>, <code>scale = -100</code>), with the table not full:
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 0C 00  | 10     | 00     | 01     |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
++--------+--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+--------+--------+
+| 02     | 03     | 01 00  | 03     | 01 00  | 9C FF  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+
+| op     | sclass | sid    | dclass | did    | scale  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

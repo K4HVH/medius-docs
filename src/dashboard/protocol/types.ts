@@ -952,8 +952,10 @@ export interface PatchEntry {
 }
 
 // A field transform in full, the shape RESP(TRANSFORMS) returns and the TRANSFORM command takes (§3.15).
-// Invert and Scale act on one axis (source == dest); Swap exchanges two axes; Remap moves the source
-// field into the destination. `scale` is a signed percent: -100 inverts, 100 identity, 200 doubles.
+// Scale acts on one axis (source == dest); Swap exchanges two different axes; Remap moves the source
+// field into the destination. `scale` is a signed percent: -100 negates, 100 identity, 200 doubles,
+// 0 blocks the source. The magnitude may not exceed LOCK_SCALE_MAX, and a source that carries one
+// bit (a button) takes LOCK_SCALE_PASS alone.
 export interface Transform {
   op: TransformOp;
   sclass: number;

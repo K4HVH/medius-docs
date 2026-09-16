@@ -1772,17 +1772,20 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
 
 describe('transforms (§3.15 / §4.18)', () => {
   it('TRANSFORM is [op][sclass][sid u16][dclass][did u16][scale i16][state]', () => {
-    // invert Y: op=2, source and dest (axis=3, id=1), placeholder scale 100, state 1.
-    const inv = { op: TransformOp.Invert, sclass: 3, sid: 1, dclass: 3, did: 1, scale: 100 };
-    expect(toHex(transformPayload(inv, 1))).toBe('02 03 01 00 03 01 00 64 00 01');
-    // scale the wheel x2: op=3, (axis 3, id 2), scale 200 (0x00c8).
+    // negate Y: there is no invert op, so it is a scale of -100 (0xff9c) on one axis (3, id 1).
+    const neg = { op: TransformOp.Scale, sclass: 3, sid: 1, dclass: 3, did: 1, scale: -100 };
+    expect(toHex(transformPayload(neg, 1))).toBe('02 03 01 00 03 01 00 9c ff 01');
+    // scale the wheel x2: op=2, (axis 3, id 2), scale 200 (0x00c8).
     const sc = { op: TransformOp.Scale, sclass: 3, sid: 2, dclass: 3, did: 2, scale: 200 };
-    expect(toHex(transformPayload(sc, 1))).toBe('03 03 02 00 03 02 00 c8 00 01');
+    expect(toHex(transformPayload(sc, 1))).toBe('02 03 02 00 03 02 00 c8 00 01');
     // a negative scale is a two's-complement i16: -50 = 0xffce.
     const half = { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 };
-    expect(toHex(transformPayload(half, 1))).toBe('03 03 00 00 03 00 00 ce ff 01');
+    expect(toHex(transformPayload(half, 1))).toBe('02 03 00 00 03 00 00 ce ff 01');
+    // a cross-class remap: op=0, button 3 (class 0) onto a key (class 1) usage 0x04, full pass.
+    const remap = { op: TransformOp.Remap, sclass: 0, sid: 3, dclass: 1, did: 4, scale: 100 };
+    expect(toHex(transformPayload(remap, 1))).toBe('00 00 03 00 01 04 00 64 00 01');
     // state 0 removes; op and scale are ignored on the box but carried as given.
-    expect(toHex(transformPayload(inv, 0))).toBe('02 03 01 00 03 01 00 64 00 00');
+    expect(toHex(transformPayload(neg, 0))).toBe('02 03 01 00 03 01 00 9c ff 00');
   });
 
   it('the TRANSFORM clear is the any-class, any-id, state-0 sentinel', () => {
@@ -1790,13 +1793,25 @@ describe('transforms (§3.15 / §4.18)', () => {
   });
 
   it('decodes RESP(TRANSFORMS): the full flag and the entry list, scale signed', () => {
-    // [16][flags=01][n=2] then invert Y (scale 0064) and scale X by -50 (scale ffce). No state byte.
-    const payload = fromHex('10 01 02 02 03 01 00 03 01 00 64 00 03 03 00 00 03 00 00 ce ff');
+    // [16][flags=01][n=2] then swap X and Y at a full pass (scale 0064) and scale X by -50 (ffce).
+    // No state byte.
+    const payload = fromHex('10 01 02 01 03 00 00 03 01 00 64 00 02 03 00 00 03 00 00 ce ff');
     const r = parseResp(payload);
     if (r?.kind !== 'transforms') throw new Error('expected transforms');
     expect(r.transforms.tableFull).toBe(true);
     expect(r.transforms.entries).toEqual([
-      { op: TransformOp.Invert, sclass: 3, sid: 1, dclass: 3, did: 1, scale: 100 },
+      { op: TransformOp.Swap, sclass: 3, sid: 0, dclass: 3, did: 1, scale: 100 },
+      { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 },
+    ]);
+  });
+
+  it('drops an entry whose op byte no constant names, and keeps the rest', () => {
+    // A newer box adding an op must not blank the whole readback: 0x7f is unknown, the scale after
+    // it is not.
+    const payload = fromHex('10 00 02 7f 03 01 00 03 01 00 64 00 02 03 00 00 03 00 00 ce ff');
+    const r = parseResp(payload);
+    if (r?.kind !== 'transforms') throw new Error('expected transforms');
+    expect(r.transforms.entries).toEqual([
       { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 },
     ]);
   });

@@ -35,7 +35,7 @@ const Lifecycle: Component = () => {
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.press(Button::Left)?;
+          <pre><code class="language-rust">{`device.press(Button::LEFT)?;
 device.reapply()?; // re-assert the held override, e.g. if the box reset under you`}</code></pre>
 
           <div class="api-response-label">EXAMPLE</div>

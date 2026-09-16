@@ -52,7 +52,7 @@ const Patch: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>patch</code></td><td><A href="/library/advanced/patch#patch"><code>Patch</code></A></td><td>The overwrite: its <A href="/library/advanced/patch#section">section</A>, address, offset, and bytes.</td></tr>
+              <tr><td><code>patch</code></td><td><A href="/library/types/structs#patch"><code>Patch</code></A></td><td>The overwrite: its <A href="/library/types/enums#patch-section">section</A>, address, offset, and bytes.</td></tr>
             </tbody>
           </table>
           <p>
@@ -82,7 +82,8 @@ device.apply_patch()?;`}</code></pre>
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
             with the opt-in off it returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>. A refused
-            apply shows in <A href="/library/advanced/patch#readback"><code>query_patches</code></A>'s{' '}
+            apply shows in{' '}
+            <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>'s{' '}
             <code>refused</code> flag.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -111,9 +112,8 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
           <pre class="api-signature">fn query_patches(&self) -&gt; Result&lt;PatchSet&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Returns a <A href="/library/advanced/patch#readback"><code>PatchSet</code></A>: the four
-            apply-state flags and a row per stored patch without its bytes. The store holds up to 16
-            patches; a further one sets the <code>table_full</code> flag.
+            Returns a <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>: the four
+            apply-state flags and a row per stored patch, without its bytes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let set = device.query_patches()?;
@@ -138,8 +138,8 @@ if set.refused {
             </tbody>
           </table>
           <p>
-            Returns one patch in full, in the shape{' '}
-            <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A> takes.
+            Returns one <A href="/library/types/structs#patch"><code>Patch</code></A> in full, in the
+            shape <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A> takes.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let set = device.query_patches()?;
@@ -150,82 +150,15 @@ for i in 0..set.entries.len() as u8 {
         </Card>
       </div>
 
-      <div id="patch" data-search-target>
-        <Card>
-          <CardHeader title="Patch" subtitle="The overwrite you store" />
-          <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <pre class="api-signature">fn in_string(index: u8, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <p>
-            A constructor per section. <code>offset</code> is where the overwrite starts within the
-            descriptor; an empty <code>bytes</code> removes the patch.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>section</code></td><td><A href="/library/advanced/patch#section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
-              <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>.</td></tr>
-              <tr><td><code>index</code></td><td><code>u8</code></td><td>The interface or string index, for <code>Report</code> / <code>String</code>.</td></tr>
-              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The overwrite bytes; empty removes the patch at this key.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-
       <div id="section" data-search-target>
         <Card>
-          <CardHeader title="PatchSection" subtitle="Which descriptor a patch overwrites" />
+          <CardHeader title="The section (patch)" subtitle="Which descriptor a patch overwrites" />
           <p>
-            The section names the descriptor, and <code>cfg</code> and <code>index</code> address within
-            it.
+            A patch names one descriptor and a byte offset inside it: the device descriptor, a
+            configuration, an interface's report descriptor, a string, or the BOS. Which section takes a{' '}
+            <code>cfg</code> and which takes an <code>index</code> is on{' '}
+            <A href="/library/types/enums#patch-section"><code>PatchSection</code></A>.
           </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead><tr><th>Section</th><th>Value</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
-              <tbody>
-                <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
-                <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index</td></tr>
-                <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is the configuration, <code>index</code> the interface number</td></tr>
-                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor (the whole string is replaced).</td><td><code>index</code> is the string index</td></tr>
-                <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-
-      <div id="readback" data-search-target>
-        <Card>
-          <CardHeader title="PatchSet and PatchEntry" subtitle="The stored set and its apply state" />
-          <p>
-            The four apply-state flags plus a row per patch (its key and length, without the bytes).
-            Read a full patch with{' '}
-            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>PatchSet flag</th><th>Set when</th></tr></thead>
-            <tbody>
-              <tr><td><code>applied</code></td><td>The stored set is applied to the live clone.</td></tr>
-              <tr><td><code>pending</code></td><td>A stored change has not been applied yet; an <code>apply_patch</code> would re-present with it.</td></tr>
-              <tr><td><code>refused</code></td><td>The last apply was refused: a patched descriptor's advertised length no longer matched what it serves. The box logged why.</td></tr>
-              <tr><td><code>table_full</code></td><td>The store is full: a further patch was, or would be, refused.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            The store holds up to 16 patches.{' '}
-            <A href="/library/requests#health"><code>query_health</code></A> reports an applied set in its{' '}
-            <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
-          </p>
-          <pre class="diagram">{`  set_patch        --> stored          (survives reconnect; NVS, per VID:PID)
-     |                     |
-     | apply_patch         v
-     +-------------> pending -> applied  (one replug; the clone re-presents patched)
-                            \\
-                             +-> refused (a patched length diverged; logged)`}</pre>
         </Card>
       </div>
 

@@ -263,16 +263,16 @@ export const PATCH_SEC_COUNT = 5;
 export const PATCH_APPLY = 0xfe; // re-present the clone with the stored set
 export const PATCH_CLEAR = 0xff; // drop every patch for this device, re-present
 
-// TRANSFORM op (§3.15): what a field transform does. Invert and Scale act on one axis (source == dest),
-// Swap exchanges two axes, Remap moves a source field into a destination. The scale is a signed percent.
+// TRANSFORM op (§3.15): what a field transform does. Remap moves a source field into a destination,
+// Swap exchanges two different axes, Scale weighs one axis (source == dest). There is no invert op:
+// a negation is a Scale of -100, which the box applies exactly.
 export enum TransformOp {
   Remap = 0,
   Swap = 1,
-  Invert = 2,
-  Scale = 3,
+  Scale = 2,
 }
-export const TF_OP_COUNT = 4;
-export const TRANSFORM_MAX_ENTRIES = 8; // the box holds up to eight; a further entry is refused
+export const TF_OP_COUNT = 3;
+export const TRANSFORM_MAX_ENTRIES = 32; // the box's table size; a further entry is refused
 export const TF_F_FULL = 0x01; // RESP(TRANSFORMS).flags bit 0: the table is full
 export const RESP_TRANSFORMS_HDR = 3; // [what][flags u8][n u8]
 export const TRANSFORMS_ENTRY_LEN = 9; // [op][sclass][sid u16][dclass][did u16][scale i16], no state byte
