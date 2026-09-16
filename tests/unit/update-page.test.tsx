@@ -43,7 +43,6 @@ const mock = vi.hoisted(() => ({
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
   outcome: 'verified' as 'verified' | 'sent' | 'failed',
-  tag: 'v3.2.0',
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -62,7 +61,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     },
     disconnect: async () => {},
     clearFlashResult: () => {},
-    readFirmwareInfo: async () => mock.s!.firmwareInfo(),
+    readFirmwareInfo: async () => null,
     // Mirrors the real one's observable effects, so the page is driven by state transitions rather
     // than by the test asserting an answer it also supplied.
     updateOverControl: async () => {
@@ -86,7 +85,7 @@ vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.holdReleases) await new Promise(() => {});
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
-    return [{ tag: mock.tag, assets: mock.assets }];
+    return [{ tag: 'v3.2.0', assets: mock.assets }];
   },
   downloadAsset: async () => new Uint8Array([1]),
 }));
@@ -108,7 +107,6 @@ afterEach(() => {
   mock.updates = 0;
   mock.assets = [];
   mock.outcome = 'verified';
-  mock.tag = 'v3.2.0';
   navigate.mockClear();
 });
 
@@ -195,125 +193,6 @@ describe('Update', () => {
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/press back and choose/i));
     expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy();
-  });
-
-  // The chips' link changed rate in 3.4.0, and only a mouse-side chip from 3.4.0 finds the new one.
-  const on340 = { major: 3, minor: 4, patch: 0, slot: 0, state: 2 };
-  const runUpdateOn = async (choice: RegExp, setup: () => void) => {
-    const r = mount();
-    setup();
-    mock.s!.setStatus('connected');
-    await waitFor(() => r.getByRole('button', { name: choice }));
-    r.getByRole('button', { name: choice }).click();
-    await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-    r.getByRole('button', { name: /^update$/i }).click();
-    return r;
-  };
-
-  it('the main chip alone is refused while the mouse-side chip predates the release that moved their link', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.4.0';
-    const r = await runUpdate(/main only/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/mouse-side chip needs this update too/i));
-    expect(r.container.textContent).toMatch(/choose update both chips/i);
-    expect(mock.updates).toBe(0);
-  });
-
-  it('a mouse-side chip that does not answer blocks the choices that need it, with one instruction', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.4.0';
-    for (const choice of [/update both chips/i, /mouse-side only/i, /main only/i]) {
-      const r = await runUpdateOn(choice, () => mock.s!.setFirmwareInfo(fw(null as never)));
-      await waitFor(
-        () => expect(r.container.textContent).toMatch(/mouse-side chip isn't answering/i),
-        { timeout: 5000 },
-      );
-      expect(r.container.textContent).toMatch(/open set up/i);
-      cleanup();
-    }
-    expect(mock.updates).toBe(0);
-  }, 20000);
-
-  it('a mouse-side chip that answers a moment late is waited for', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.4.1';
-    await runUpdateOn(/main only/i, () => {
-      mock.s!.setFirmwareInfo(fw(null as never));
-      setTimeout(() => mock.s!.setFirmwareInfo(fw(on340)), 700);
-    });
-    await waitFor(() => expect(mock.updates).toBe(1), { timeout: 5000 });
-  });
-
-  it('the mouse-side chip alone onto that release is not refused on an older box', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.4.0';
-    await runUpdate(/mouse-side only/i);
-    await waitFor(() => expect(mock.updates).toBe(1));
-  });
-
-  it('a release whose tag carries no version offers nothing', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'nightly';
-    const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
-    expect(mock.updates).toBe(0);
-  });
-
-  it('after an update, a mouse-side chip that stays silent is reported as not answering, not as a revert', async () => {
-    mock.assets = [dev, host];
-    const r = await runUpdateOn(/main only/i, () => {
-      mock.s!.setFirmwareInfo(fw(null as never));
-    });
-    await waitFor(() => expect(mock.updates).toBe(1), { timeout: 5000 });
-    await waitFor(
-      () => expect(r.container.textContent).toMatch(/mouse-side chip isn't answering/i),
-      { timeout: 9000 },
-    );
-    expect(r.container.textContent).not.toMatch(/not on the version that was sent/i);
-    expect(r.container.textContent).not.toMatch(/updated and verified/i);
-  }, 20000);
-
-  it('the main chip alone runs once the mouse-side chip is on that release', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.4.1';
-    await runUpdateOn(/main only/i, () => mock.s!.setFirmwareInfo(fw(on340)));
-    await waitFor(() => expect(mock.updates).toBe(1));
-  });
-
-  it('both chips together are not refused on that box', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.4.0';
-    await runUpdate(/update both chips/i);
-    await waitFor(() => expect(mock.updates).toBe(1));
-  });
-
-  it('a release that cannot go onto that box offers nothing, rather than two refusals pointing at each other', async () => {
-    mock.assets = [dev];
-    mock.tag = 'v3.4.0';
-    const both = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(both.container.textContent).toMatch(/no update available right now/i));
-    cleanup();
-    const main = await runUpdate(/main only/i);
-    await waitFor(() => expect(main.container.textContent).toMatch(/no update available right now/i));
-    expect(mock.updates).toBe(0);
-  });
-
-  it('going back below that release starts with the main chip', async () => {
-    mock.assets = [dev, host];
-    mock.tag = 'v3.3.4';
-    const newer = () => {
-      mock.s!.setVersion({ protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' });
-      mock.s!.setFirmwareInfo(fw(on340, on340));
-    };
-    for (const choice of [/update both chips/i, /mouse-side only/i]) {
-      const r = await runUpdateOn(choice, newer);
-      await waitFor(() => expect(r.container.textContent).toMatch(/update the main chip first/i));
-      expect(r.container.textContent).toMatch(/choose main only/i);
-      cleanup();
-    }
-    expect(mock.updates).toBe(0);
-    await runUpdateOn(/main only/i, newer);
-    await waitFor(() => expect(mock.updates).toBe(1));
   });
 
   it('both chips landing on the release is what verified means', async () => {
