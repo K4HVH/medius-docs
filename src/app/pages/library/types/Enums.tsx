@@ -36,29 +36,6 @@ const Enums: Component = () => {
           </table>
         </Card>
       </div>
-      <div id="button" data-search-target>
-        <Card>
-          <CardHeader title="Button" subtitle="The button a command acts on" />
-          <pre class="api-signature">enum Button {'{'} Left, Right, Middle, Side1, Side2 {'}'}</pre>
-          <p>
-            The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> command acts
-            on. A <code>Button</code> converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button, so you
-            pass one straight to <A href="/library/inject#inject"><code>inject</code></A>. Convert with{' '}
-            <code>as_id() -&gt; u8</code> and <code>from_id(u8) -&gt; Option&lt;Button&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Left</code></td><td><code>0</code></td><td>Left button.</td></tr>
-              <tr><td><code>Right</code></td><td><code>1</code></td><td>Right button.</td></tr>
-              <tr><td><code>Middle</code></td><td><code>2</code></td><td>Middle button.</td></tr>
-              <tr><td><code>Side1</code></td><td><code>3</code></td><td>First thumb button.</td></tr>
-              <tr><td><code>Side2</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
       <div id="action" data-search-target>
         <Card>
           <CardHeader title="Action" subtitle="The shared press / release tri-state" />
@@ -103,7 +80,7 @@ const Enums: Component = () => {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/enums#button"><code>Button</code></A> id (0=Left .. 4=Side2).</td></tr>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td></tr>
               <tr><td><code>Key</code></td><td><code>1</code></td><td>A keyboard key; id is a HID keycode (0xE0 .. 0xE7 is a modifier).</td></tr>
               <tr><td><code>Media</code></td><td><code>2</code></td><td>A media usage; id is a 16-bit Consumer usage.</td></tr>
             </tbody>
@@ -131,16 +108,16 @@ const Enums: Component = () => {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
             <tbody>
-              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/enums#button"><code>Button</code></A> id (0 = Left .. 4 = Side2).</td><td>every mouse button.</td></tr>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
               <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
               <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
-              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, or the wheel.</td><td>every axis.</td></tr>
+              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
               <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
-              <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint address.</td><td>every interrupt-OUT endpoint.</td></tr>
-              <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint address.</td><td>every vendor interrupt endpoint.</td></tr>
-              <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint address.</td><td>every vendor bulk endpoint.</td></tr>
+              <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
+              <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
+              <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
               <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0).</td><td>every control endpoint.</td></tr>
-              <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint address on the clone.</td><td>every emitting endpoint.</td></tr>
+              <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
               <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
             </tbody>
           </table>
@@ -168,9 +145,9 @@ const Enums: Component = () => {
           <pre><code class="language-rust">{`use medius::{Button, Capture, CatchFilter, Direction, TrafficClass};
 
 // The same target, once as a lock and once as a catch.
-device.lock(Button::Side1, Direction::Both)?;                    // suppressed in the emitted report
+device.lock(Button::SIDE1, Direction::Both)?;                    // suppressed in the emitted report
 let stream = device.catch_events([
-    CatchFilter::watch(Button::Side1).on_press(),                // the tap is before suppression
+    CatchFilter::watch(Button::SIDE1).on_press(),                // the tap is before suppression
 ])?;
 
 // A byte-oriented class instead: one vendor interrupt endpoint, IN only, 16 bytes a packet.
@@ -216,7 +193,7 @@ let trace = device.catch_events([
       <div id="input" data-search-target>
         <Card>
           <CardHeader title="Input" subtitle="One decoded input edge" />
-          <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16 {'}'} {'}'}</pre>
+          <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16, dpan: i16 {'}'} {'}'}</pre>
           <p>
             What <A href="/library/catch#input-events"><code>input_events</code></A> yields, wrapped in
             an <A href="/library/types/structs#input-event"><code>InputEvent</code></A> with its
@@ -229,7 +206,7 @@ let trace = device.catch_events([
       <div id="motion" data-search-target>
         <Card>
           <CardHeader title="Motion" subtitle="A relative axis for move_axis" />
-          <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16) {'}'}</pre>
+          <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16), Pan(i16) {'}'}</pre>
           <p>
             What <A href="/library/move#move"><code>move_axis</code></A> drives. Both span the full{' '}
             <code>i16</code> range. A lock names a single{' '}
@@ -240,6 +217,7 @@ let trace = device.catch_events([
             <tbody>
               <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
               <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
+              <tr><td><code>Pan</code></td><td><code>i16</code></td><td>Relative AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -283,13 +261,13 @@ let trace = device.catch_events([
       <div id="axis" data-search-target>
         <Card>
           <CardHeader title="Axis" subtitle="A single relative axis" />
-          <pre class="api-signature">enum Axis {'{'} X, Y, Wheel {'}'}</pre>
+          <pre class="api-signature">enum Axis {'{'} X, Y, Wheel, Pan {'}'}</pre>
           <p>
             One relative axis. A{' '}
             <A href="/library/lock#lock-axis"><code>lock_axis</code></A> or a{' '}
             <A href="/library/types/enums#lock-target"><code>LockTarget::Axis</code></A> names one, with
             the sign given by a <A href="/library/types/enums#direction"><code>Direction</code></A>.
-            Convert with <code>as_u16()</code>.
+            Convert with <code>as_u16()</code> and <code>from_u16()</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
@@ -297,6 +275,7 @@ let trace = device.catch_events([
               <tr><td><code>X</code></td><td><code>0</code></td><td>The X cursor axis.</td></tr>
               <tr><td><code>Y</code></td><td><code>1</code></td><td>The Y cursor axis.</td></tr>
               <tr><td><code>Wheel</code></td><td><code>2</code></td><td>The wheel.</td></tr>
+              <tr><td><code>Pan</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
             </tbody>
           </table>
         </Card>
@@ -405,19 +384,29 @@ let trace = device.catch_events([
       </div>
       <div id="lock-target" data-search-target>
         <Card>
-          <CardHeader title="LockTarget" subtitle="What a lock acts on" />
+          <CardHeader title="LockTarget" subtitle="One addressable input field: an axis or a usage" />
           <pre class="api-signature">enum LockTarget {'{'} Axis(Axis), Usage(Usage) {'}'}</pre>
           <p>
-            What a <A href="/native/commands/lock"><code>LOCK</code></A> command blocks. An{' '}
-            <code>Axis</code> and any <code>impl Into&lt;Usage&gt;</code> each convert{' '}
-            <code>Into&lt;LockTarget&gt;</code>, so you pass one straight to{' '}
-            <A href="/library/lock#lock"><code>lock</code></A>. A button locks exactly like a key.
+            The box addresses a field the same way everywhere: this is what a{' '}
+            <A href="/library/lock#lock"><code>lock</code></A> weighs and what a{' '}
+            <A href="/library/types/structs#transform"><code>Transform</code></A> reads and writes. An{' '}
+            <code>Axis</code> and any <code>impl Into&lt;Usage&gt;</code> convert{' '}
+            <code>Into&lt;LockTarget&gt;</code>, so you pass one straight to either. A button locks
+            exactly like a key.
           </p>
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
             <tbody>
-              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A></td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
-              <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A></td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
+              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan</td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
+              <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A>: a button, key, or media usage</td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>.class_id()</code></td><td><code>(u8, u16)</code></td><td>The wire <code>(class, id)</code> this field encodes to.</td></tr>
+              <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse; <code>None</code> for a class no field names or an axis id past the declared axes.</td></tr>
+              <tr><td><code>.as_axis()</code></td><td><code>Option&lt;<A href="/library/types/enums#axis">Axis</A>&gt;</code></td><td>The axis this field names, or <code>None</code> for a momentary usage.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -693,6 +682,31 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         </Card>
       </div>
 
+      <div id="transform-op" data-search-target>
+        <Card>
+          <CardHeader title="TransformOp" subtitle="What a transform does to its fields" />
+          <pre class="api-signature">enum TransformOp {'{'} Remap, Swap {'}'}</pre>
+          <p>
+            How a <A href="/library/types/structs#transform"><code>Transform</code></A>'s source and
+            destination relate. <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte,
+            and <code>admits(source, dest)</code> answers whether a pair fits, the check the crate
+            makes before it sends.
+          </p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>Variant</th><th>Byte</th><th>Fields it admits</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's value into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
+                <tr><td><code>Swap</code></td><td><code>1</code></td><td>two axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>admits</code> refuses a pair whose source and destination are the same field. To
+            weigh a field, or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>.
+          </p>
+        </Card>
+      </div>
       <div id="clip-state" data-search-target>
         <Card>
           <CardHeader title="ClipState" subtitle="The buffered-clip lifecycle state" />
@@ -790,6 +804,134 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
               <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+
+      <div id="transfer-status" data-search-target>
+        <Card>
+          <CardHeader title="TransferStatus" subtitle="How a control transfer ended" />
+          <pre class="api-signature">enum TransferStatus {'{'} Ok, Refused, Stall, Nak, NoDevice, Other(u8) {'}'}</pre>
+          <p>
+            The status byte of a{' '}
+            <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>. The
+            codes sit at the top of the byte range so they never collide with a length; an unknown byte
+            is carried through as <code>Other</code>.
+          </p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
+                <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the device: the opt-in is off, the request was malformed, or the data stage was larger than one control frame carries.</td></tr>
+                <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
+                <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device NAKed to a timeout, or never answered.</td></tr>
+                <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No device is attached on the host chip.</td></tr>
+                <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout callout--info">
+            <p>
+              <code>Refused</code> is the box turning the request away; <code>Stall</code> and{' '}
+              <code>Nak</code> are the device answering. The difference says whether the request reached
+              the device.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::TransferStatus;
+
+match reply.status {
+    TransferStatus::Ok => println!("{} bytes", reply.data().len()),
+    TransferStatus::Stall => println!("device rejected the request"),
+    TransferStatus::NoDevice => println!("nothing attached on the host chip"),
+    TransferStatus::Refused => println!("box refused it: opt-in off, malformed, or too large"),
+    other => println!("other status: {other:?}"),
+}`}</code></pre>
+        </Card>
+      </div>
+      <div id="rewrite-class" data-search-target>
+        <Card>
+          <CardHeader title="RewriteClass" subtitle="Which traffic a rewrite rule addresses" />
+          <pre class="api-signature">enum RewriteClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Any {'}'}</pre>
+          <p>
+            The class picks the traffic a{' '}
+            <A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A> addresses and the
+            id picks the address within it, the writable half of{' '}
+            <A href="/library/catch">catch</A>'s address space.
+          </p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Variant</th><th>Byte</th><th>Traffic</th><th>id</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, before the renderer.</td><td>the interface number</td></tr>
+                <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the endpoint number</td></tr>
+                <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
+                <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
+                <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
+                <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
+                <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every rewritable class at once.</td><td>ignored</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            The parsed-input classes and the bus class are not rewritable and have no variant here.{' '}
+            <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte.
+          </p>
+        </Card>
+      </div>
+      <div id="rewrite-action" data-search-target>
+        <Card>
+          <CardHeader title="RewriteAction" subtitle="What the winning rewrite rule does" />
+          <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
+          <p>
+            The winning rule's action decides a matched packet's fate. The class column is which{' '}
+            <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
+            report-only action on a control class, or the reverse, is{' '}
+            <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.
+          </p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Variant</th><th>Byte</th><th>Class</th><th>Payload</th><th>Effect</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>Pass</code></td><td><code>0</code></td><td>any</td><td>no</td><td>Matched, but left untouched: a shadow over a broader rule.</td></tr>
+                <tr><td><code>Drop</code></td><td><code>1</code></td><td>report</td><td>no</td><td>Not delivered. An <code>Emit</code> drop mutes the wire; a <code>HidIn</code> drop drops the device's contribution while injection still emits.</td></tr>
+                <tr><td><code>Patch</code></td><td><code>2</code></td><td>any</td><td>yes</td><td>Overwrite the payload bytes at <code>offset</code>, length preserved.</td></tr>
+                <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload.</td></tr>
+                <tr><td><code>Answer</code></td><td><code>4</code></td><td>control</td><td>yes</td><td>Answer from the payload without asking the device.</td></tr>
+                <tr><td><code>Stall</code></td><td><code>5</code></td><td>control</td><td>no</td><td>Protocol STALL.</td></tr>
+                <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>NAK to a timeout.</td></tr>
+                <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the device's reply at <code>offset</code>.</td></tr>
+                <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the device's reply with the payload.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+      <div id="patch-section" data-search-target>
+        <Card>
+          <CardHeader title="PatchSection" subtitle="Which descriptor a patch overwrites" />
+          <pre class="api-signature">enum PatchSection {'{'} Device, Config, Report, String, Bos {'}'}</pre>
+          <p>
+            The section names the descriptor a{' '}
+            <A href="/library/types/structs#patch"><code>Patch</code></A> overwrites, and that patch's{' '}
+            <code>cfg</code> and <code>index</code> address within it.
+          </p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>Variant</th><th>Byte</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
+              <tbody>
+                <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
+                <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index</td></tr>
+                <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is the configuration, <code>index</code> the interface number</td></tr>
+                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor (the whole string is replaced).</td><td><code>index</code> is the string index</td></tr>
+                <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
 

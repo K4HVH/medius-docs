@@ -100,7 +100,7 @@ println!("{v}");`}</code></pre>
           <CardHeader title="Smooth motion" subtitle="Subdivide the delta, pace the steps" />
           <p>
             <A href="/library/move#move-rel"><code>move_rel</code></A> applies one delta at once. To spread it over time, subdivide the move and pace the steps yourself, roughly one per
-            millisecond. There's no <code>move_smooth</code>.
+            millisecond.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::thread::sleep;
@@ -113,7 +113,7 @@ for _ in 0..200 {
 }`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              The library applies no rate limit. A no-sleep loop queues frames faster than 4 Mbaud drains; pace your
+              The library applies no rate limit. A no-sleep loop queues frames faster than 6 Mbaud drains; pace your
               own steps.
             </p>
           </div>
@@ -132,9 +132,9 @@ for _ in 0..200 {
           <pre><code class="language-rust">{`use std::{thread, time::Duration};
 use medius::Button;
 
-device.press(Button::Left)?;
+device.press(Button::LEFT)?;
 thread::sleep(Duration::from_millis(20));
-device.release(Button::Left)?;`}</code></pre>
+device.release(Button::LEFT)?;`}</code></pre>
           <p>
             <A href="/library/admin#reset"><code>reset</code></A> drops every override at once; a held
             press is re-asserted on reconnect via{' '}

@@ -24,7 +24,7 @@ fn press_queues_an_inject() {
     let mock = MockBox::new();
     let device = Device::with_mock(mock.clone());
 
-    device.press(Button::Left).unwrap();
+    device.press(Button::LEFT).unwrap();
 
     assert!(mock.saw(FrameType::Inject));
     let frame = mock

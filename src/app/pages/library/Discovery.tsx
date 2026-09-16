@@ -151,6 +151,7 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
             <A href="/library/requests#device-info"><code>device_info</code></A> query is the awaitable
             part.
           </p>
+          <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::AsyncDevice;
 
 let device = AsyncDevice::find_mouse_box()?; // blocks on the handshake

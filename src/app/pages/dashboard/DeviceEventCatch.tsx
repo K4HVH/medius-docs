@@ -94,13 +94,13 @@ const ID_MEANING: Record<number, string> = {
   [CatchClass.Button]: 'button id',
   [CatchClass.Key]: 'HID keycode',
   [CatchClass.Media]: 'Consumer usage',
-  [CatchClass.Axis]: 'axis (0 X, 1 Y, 2 wheel)',
+  [CatchClass.Axis]: 'axis (0 X, 1 Y, 2 wheel, 3 pan)',
   [CatchClass.HidIn]: 'interface number',
-  [CatchClass.HidOut]: 'endpoint address',
-  [CatchClass.VendorInterrupt]: 'endpoint address',
-  [CatchClass.VendorBulk]: 'endpoint address',
+  [CatchClass.HidOut]: 'endpoint number',
+  [CatchClass.VendorInterrupt]: 'endpoint number',
+  [CatchClass.VendorBulk]: 'endpoint number',
   [CatchClass.Control]: 'endpoint number (0 is EP0)',
-  [CatchClass.Emit]: 'endpoint address',
+  [CatchClass.Emit]: 'endpoint number',
   [CatchClass.Bus]: 'no id',
   [CatchClass.Any]: 'no id',
 };
@@ -151,7 +151,7 @@ const trafficFlags = (cls: CatchClass, flags: number): string => {
 const eventBody = (e: InputEventEntry): string => {
   if (e.ev.kind === 'motion') {
     const m = e.ev.motion;
-    return `motion dx=${m.dx} dy=${m.dy} dz=${m.dz}`;
+    return `motion dx=${m.dx} dy=${m.dy} dz=${m.dz} dpan=${m.dpan}`;
   }
   if (e.ev.kind === 'traffic') {
     const t = e.ev.traffic;
@@ -397,7 +397,7 @@ const DeviceEventCatch = () => {
                 options={[
                   { value: 'input', label: 'All input' },
                   { value: 'buttons', label: 'Buttons only' },
-                  { value: 'motion', label: 'Movement + wheel' },
+                  { value: 'motion', label: 'Movement, wheel, pan' },
                   { value: 'keys', label: 'Keyboard + media' },
                   { value: 'traffic', label: 'Raw endpoints' },
                   { value: 'bus', label: 'Bus events' },

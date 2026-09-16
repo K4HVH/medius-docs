@@ -13,7 +13,7 @@ import {
   BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
-  BsBoxes, BsFiletypePy, BsUsbPlug,
+  BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
 } from 'solid-icons/bs';
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
@@ -48,6 +48,7 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/move', label: 'Move', icon: BsArrowsMove },
   { value: '/native/commands/lock', label: 'Lock', icon: BsLock },
   { value: '/native/commands/catch', label: 'Catch', icon: BsActivity },
+  { value: '/native/commands/transform', label: 'Transform', icon: BsSliders },
   { value: '/native/commands/option', label: 'Option', icon: BsPuzzle },
   { value: '/native/commands/clip', label: 'Clip', icon: BsStack },
   { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
@@ -80,6 +81,7 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/move', label: 'Move', icon: BsArrowsMove },
   { value: '/library/lock', label: 'Lock', icon: BsLock },
   { value: '/library/catch', label: 'Catch', icon: BsActivity },
+  { value: '/library/transform', label: 'Transform', icon: BsSliders },
   { value: '/library/options', label: 'Options', icon: BsPuzzle },
   { value: '/library/clip', label: 'Clip', icon: BsStack },
   { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
@@ -88,6 +90,13 @@ const libraryApiTabs: TabOption[] = [
   { value: '/library/update', label: 'Update', icon: BsDownload },
   { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
   { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
+];
+
+const libraryAdvancedTabs: TabOption[] = [
+  { value: '/library/advanced/raw', label: 'Raw injection', icon: BsBroadcast },
+  { value: '/library/advanced/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
+  { value: '/library/advanced/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
+  { value: '/library/advanced/patch', label: 'Descriptor patches', icon: BsFileCode },
 ];
 
 const libraryFeatureTabs: TabOption[] = [
@@ -111,7 +120,7 @@ const libraryReferenceTabs: TabOption[] = [
 ];
 
 const allLibraryTabs = [
-  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryFeatureTabs,
+  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryAdvancedTabs, ...libraryFeatureTabs,
   ...libraryGuidesTabs, ...libraryReferenceTabs,
 ];
 
@@ -154,6 +163,7 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
   { value: '/dashboard', label: 'Device', icon: BsCpu },
   { value: '/dashboard/control', label: 'Control', icon: BsSliders },
+  { value: '/dashboard/advanced-control', label: 'Advanced control', icon: BsCodeSlash },
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
@@ -367,6 +377,14 @@ const DocsLayout = (props: RouteSectionProps) => {
               value={location.pathname}
               onChange={handlePageNav}
               options={libraryApiTabs}
+            />
+            <Divider spacing="compact" label="Advanced control layer" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={libraryAdvancedTabs}
             />
             <Divider spacing="compact" label="Features" labelAlign="start" />
             <Tabs

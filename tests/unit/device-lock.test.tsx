@@ -106,8 +106,16 @@ describe('DeviceLock', () => {
       { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_BLOCK },
       { cls: LockClass.Axis, id: LockAxis.Y, dir: 0, scale: LOCK_SCALE_BLOCK },
       { cls: LockClass.Axis, id: LockAxis.Wheel, dir: 0, scale: LOCK_SCALE_BLOCK },
+      { cls: LockClass.Axis, id: LockAxis.Pan, dir: 0, scale: LOCK_SCALE_BLOCK },
     ]);
     expect(mock.sent.some((f) => f.id === LOCK_ID_ALL)).toBe(false);
+  });
+
+  it('offers AC Pan as a lockable axis alongside X, Y and the wheel', async () => {
+    const { getByText, container } = render(() => <DeviceLock />);
+    fireEvent.click(getByText('Axis'));
+    const options = await openOptions(container);
+    expect(options.join('|')).toMatch(/pan/i);
   });
 
   it('still offers the blanket for the classes the box does implement it for', async () => {

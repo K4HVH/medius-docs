@@ -22,7 +22,7 @@ const Clip: Component = () => {
         </p>
         <pre class="diagram">{`  1. build a clip with ClipBuilder
        clip.move_by(10, 0)
-       clip.press(Button::Left)
+       clip.press(Button::LEFT)
        clip.gap(20)
        clip.release(...)
 
@@ -100,9 +100,9 @@ const Clip: Component = () => {
 
 let mut clip = ClipBuilder::new();
 for _ in 0..200 { clip.move_by(10, 0); }   // 200 box-timed frames of +10 dx
-clip.press(Button::Left)                   // a click, held for 20 frames
+clip.press(Button::LEFT)                   // a click, held for 20 frames
     .gap(20)
-    .release(Button::Left);
+    .release(Button::LEFT);
 clip.press(Key::A)                         // then type 'a'
     .gap(3)
     .release(Key::A);`}</code></pre>
@@ -116,12 +116,12 @@ clip.press(Key::A)                         // then type 'a'
 let mut clip = ClipBuilder::new();
 
 // move (+10, -4) AND press Left on the same frame
-clip.frame(10, -4, 0, &[(Button::Left.into(), Action::Press)]);
+clip.frame(10, -4, 0, &[(Button::LEFT.into(), Action::Press)]);
 
 // press once, keep moving while held, then release
-clip.frame(8, -2, 0, &[(Button::Left.into(), Action::Press)]);
+clip.frame(8, -2, 0, &[(Button::LEFT.into(), Action::Press)]);
 for _ in 0..60 { clip.move_by(8, -2); }   // Left stays down (edges are sticky)
-clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pre>
+clip.frame(0, 0, 0, &[(Button::LEFT.into(), Action::SoftRelease)]);`}</code></pre>
         </Card>
       </div>
 
@@ -145,7 +145,7 @@ clip.frame(0, 0, 0, &[(Button::Left.into(), Action::SoftRelease)]);`}</code></pr
               <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
               <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
               <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
-              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback.</td></tr>
+              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback. Only its wheel while rendering is on with a profile armed.</td></tr>
               <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
             </tbody>
           </table>
@@ -297,7 +297,7 @@ clip.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start).consume())?;
 clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop))?;
 
 // Or one side-button that toggles play/stop:
-clip.bind(ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
+clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
         </Card>
       </div>
 

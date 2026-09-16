@@ -7,11 +7,12 @@ const Move: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Move" subtitle="Cursor motion and scroll" />
+        <CardHeader title="Move" subtitle="Cursor motion, scroll, and pan" />
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis: the
-          cursor pair (X and Y together) or the wheel, picked by a <code>motion</code>{' '}
-          byte. It injects on top of the real mouse, so the emitted report carries both, and it's{' '}
+          cursor pair (X and Y together), the wheel, or AC Pan (horizontal scroll), picked by a{' '}
+          <code>motion</code> byte. It injects on top of the real mouse, so the emitted report
+          carries both, and it's{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
         <p>
@@ -23,6 +24,7 @@ const Move: Component = () => {
           <tbody>
             <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A> (X, Y)</td><td><code>dx</code>, <code>dy</code> (i16)</td><td>6 bytes</td></tr>
             <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>4 bytes</td></tr>
+            <tr><td><code>2</code></td><td><A href="/native/commands/move#pan">pan</A> (AC Pan)</td><td><code>dpan</code> (i16)</td><td>4 bytes</td></tr>
           </tbody>
         </table>
       </Card>
@@ -102,6 +104,47 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
 | A5     | 01     | 00     | 04 00  | 01     | 01 00  | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | motion | dz     | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="pan" data-search-target>
+        <Card>
+          <CardHeader title="MOVE (pan)" subtitle="Horizontal scroll (AC Pan)" />
+          <p>
+            With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, the mouse's horizontal
+            scroll (Consumer usage <code>0x0238</code>), by a relative amount. A first-class relative
+            axis, a peer of the wheel.
+          </p>
+          <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <div class="api-response-label">PAYLOAD (pan, motion = 2)</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>2</code> = pan</td></tr>
+              <tr><td>1</td><td><code>dpan</code></td><td><code>i16</code></td><td>pan steps; + = right, - = left, little-endian</td></tr>
+              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>the riding override, <code>0</code> for an ordinary move</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            The box adds <code>dpan</code> into its{' '}
+            <A href="/native/injection#state">accumulator</A> and drains it across{' '}
+            <A href="/native/frame">frames</A> with carry, no clamp, exactly as the wheel does.{' '}
+            <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Pan is{' '}
+            <A href="/native/commands/lock">lockable</A> in any direction and{' '}
+            <A href="/native/commands/catch#motion-event">catchable</A> as the fourth axis of a
+            motion event.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Pan <code>dpan = 1</code>, one step right (<code>motion = 2</code>):</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 01     | 00     | 04 00  | 02     | 01 00  | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | motion | dpan   | flags  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>

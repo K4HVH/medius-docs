@@ -14,8 +14,10 @@ const Lock: Component = () => {
           <A href="/native/injection">injection</A> drives that same input at full strength whatever
           the scale says.
         </p>
-        <pre class="diagram">{`  0     block   --X    nothing reaches the PC
-  40            -.->   40 of every 100 counts, carried across reports
+        <pre class="diagram">{` -255   min     <==    2.55x, reversed
+ -100   invert  <--    all of it, the other way round
+    0   block   --X    nothing reaches the PC
+   40           -.->   40 of every 100 counts, carried across reports
   100   pass    -->    all of it, byte for byte
   255   max     ==>    2.55x, clamped to the field's declared range
 
@@ -30,10 +32,10 @@ const Lock: Component = () => {
             <tr><th>Class</th><th>Value</th><th><code>id</code> is</th></tr>
           </thead>
           <tbody>
-            <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2)</td></tr>
+            <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2, then numeric to the declared count)</td></tr>
             <tr><td>key</td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keyboard usage</A> (0xE0-0xE7 = modifier)</td></tr>
             <tr><td>media</td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
-            <tr><td>axis</td><td><code>3</code></td><td>0=X, 1=Y, 2=wheel (the sign is the direction)</td></tr>
+            <tr><td>axis</td><td><code>3</code></td><td>0=X, 1=Y, 2=wheel, 3=pan (the sign is the direction)</td></tr>
           </tbody>
         </table>
       </Card>
@@ -47,7 +49,7 @@ const Lock: Component = () => {
             <code>(class, id)</code> space, so a button locks exactly like a key.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x0A</code>.
           </p>
-          <pre class="api-signature">LOCK  0x0A  ·  payload 5 bytes</pre>
+          <pre class="api-signature">LOCK  0x0A  ·  payload 6 bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -58,7 +60,7 @@ const Lock: Component = () => {
               <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>the input class, as the <A href="/native/commands/lock">table above</A></td></tr>
               <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>which input within the class, little-endian; <code>0xFFFF</code> = a <A href="/native/commands/lock#blanket">blanket</A></td></tr>
               <tr><td>3</td><td><code>direction</code></td><td><code>u8</code></td><td>which sign or which edge, <A href="/native/commands/lock#direction"><code>0-4</code></A></td></tr>
-              <tr><td>4</td><td><code>scale</code></td><td><code>u8</code></td><td>percent of the physical value kept, <A href="/native/commands/lock#scale"><code>0-255</code></A></td></tr>
+              <tr><td>4</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <A href="/native/commands/lock#scale"><code>-255 to 255</code></A></td></tr>
             </tbody>
           </table>
 
@@ -69,6 +71,8 @@ const Lock: Component = () => {
                 <tr><th>Name</th><th>Value</th><th>Effect</th></tr>
               </thead>
               <tbody>
+                <tr><td>min</td><td><code>-255</code></td><td>2.55x, reversed. Anything negative reverses what it keeps.</td></tr>
+                <tr><td>invert</td><td><code>-100</code></td><td>All of it, the other way round. The inversion, exactly.</td></tr>
                 <tr><td>block</td><td><code>0</code></td><td>None of the physical value reaches the PC.</td></tr>
                 <tr><td>pass</td><td><code>100</code></td><td>All of it, byte for byte.</td></tr>
                 <tr><td>max</td><td><code>255</code></td><td>2.55x. Anything above <code>100</code> amplifies.</td></tr>
@@ -84,6 +88,8 @@ const Lock: Component = () => {
                 <tr><td>carry</td><td>A physical delta at 1 kHz is almost always <code>+/-1</code>, so the dropped fraction is banked per axis and sign: <code>40</code> on a run of <code>-1</code> emits <code>0 0 -1 0 -1</code>.</td></tr>
                 <tr><td>saturate</td><td>A weighed value clamps to the field's declared range, never wraps, and forfeits the fraction it could not carry.</td></tr>
                 <tr><td>one bit</td><td>A button, key or media usage locks below <code>100</code> and passes at <code>100</code>. The box stores that, not the number sent.</td></tr>
+                <tr><td>sign</td><td>A negative reverses what it keeps: the magnitude is weighed and the result flipped, so <code>-100</code> is an inversion with no rounding. A momentary usage carries one bit and has nothing to reverse, so a negative on one is refused.</td></tr>
+                <tr><td>direction</td><td>The slot is picked from the sign of the delta <em>before</em> the weigh, so a directional negative does not loop: <code>-100</code> on <code>positive</code> sends rightward motion left and leaves leftward motion alone.</td></tr>
               </tbody>
             </table>
             <div class="callout callout--warning">
@@ -128,9 +134,9 @@ const Lock: Component = () => {
               <code>4</code> on all three momentary classes rather than depend on the class.
             </p>
             <p>
-              On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to
-              the relative pair: written to all four it would land at 50% with no bearing and 25% with
-              one. An unlock clears all four.
+              On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to the
+              relative pair, so a <code>both</code> of 50 means 50% whether or not a bearing is live.
+              An unlock clears all four.
             </p>
           </div>
 
@@ -143,10 +149,10 @@ const Lock: Component = () => {
                   <tr><th>Class</th><th>Covers</th><th>Direction</th><th>Reads back as</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td>button</td><td>All five buttons.</td><td>As a named button.</td><td>One entry per button and edge, under its own id.</td></tr>
+                  <tr><td>button</td><td>Every button the device declares.</td><td>As a named button.</td><td>One entry per button and edge, under its own id.</td></tr>
                   <tr><td>key</td><td>Every keyboard usage.</td><td>Honoured: <code>1</code> blocks press edges, <code>2</code> release edges, <code>0</code> both.</td><td>One entry per blocked edge, id <code>0xFFFF</code>.</td></tr>
                   <tr><td>media</td><td>Every Consumer usage.</td><td>Ignored.</td><td>One entry, id <code>0xFFFF</code>, direction <code>0</code>.</td></tr>
-                  <tr><td>axis</td><td>X, Y, and the wheel.</td><td>As a named axis.</td><td>One entry per axis and direction, under its own id.</td></tr>
+                  <tr><td>axis</td><td>X, Y, the wheel, and pan.</td><td>As a named axis.</td><td>One entry per axis and direction, under its own id.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -191,12 +197,12 @@ detach      the real device goes away`}</pre>
             <A href="/library/lock#lock"><code>lock</code></A>,{' '}
             <A href="/library/lock#unlock"><code>unlock</code></A>, and{' '}
             <A href="/library/lock#lock-all"><code>scale_all</code></A>, which sends this frame for
-            buttons, keys and media and per-axis frames for X, Y and the wheel.
+            buttons, keys and media and per-axis frames for X, Y, the wheel and pan.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Block the wheel's negative (scroll-down) sign: <code>class = 3</code> (axis), <code>id = 2</code> (wheel), <code>direction = 2</code>, <code>scale = 0</code>:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 00     | 05 00  | 03     | 02 00  | 02     | 00     | lo hi  |
+| A5     | 0A     | 00     | 06 00  | 03     | 02 00  | 02     | 00 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -206,7 +212,16 @@ detach      the real device goes away`}</pre>
             <code>-4</code>, and as <code>-10</code> again once the bearing lapses:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 01     | 05 00  | 03     | 00 00  | 04     | 28     | lo hi  |
+| A5     | 0A     | 01     | 06 00  | 03     | 00 00  | 04     | 28 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>
+            Invert X on both signs: <code>scale = -100</code>, which is <code>0xFF9C</code>{' '}
+            little-endian.
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 0A     | 02     | 06 00  | 03     | 00 00  | 00     | 9C FF  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -287,7 +302,7 @@ detach      the real device goes away`}</pre>
             effective number on both axes, so a readback replayed as commands levels the higher stored
             byte down to it.
           </p>
-          <p>The wheel is never projected; it weighs against its own bearing.</p>
+          <p>The wheel and pan are never projected; each weighs against its own bearing.</p>
           <div class="api-response-label">THE TWO STAGES</div>
           <table class="api-params">
             <thead>

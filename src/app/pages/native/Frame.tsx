@@ -56,7 +56,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x18</code>. An unrecognised opcode is
+            The opcodes run from <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is
             ignored harmlessly.
           </p>
           <table class="api-params">
@@ -73,9 +73,9 @@ const Frame: Component = () => {
               <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>5 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
               <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
-              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>11 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>13 bytes</td><td>none</td></tr>
               <tr><td><code>0x0D</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x0E</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
@@ -88,6 +88,12 @@ const Frame: Component = () => {
               <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2 to 508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
               <tr><td><code>0x18</code></td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
+              <tr><td><code>0x19</code></td><td><A href="/library/advanced/raw"><code>RAW</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x1A</code></td><td><A href="/library/advanced/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>varies</td><td><code>TRANSFER_RESP</code></td></tr>
+              <tr><td><code>0x1B</code></td><td><A href="/library/advanced/transfer#transfer"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x1C</code></td><td><A href="/library/advanced/rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x1D</code></td><td><A href="/library/advanced/patch"><code>PATCH</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x1E</code></td><td><A href="/native/commands/transform#transform"><code>TRANSFORM</code></A></td><td>PC→box</td><td>8 bytes</td><td>none</td></tr>
             </tbody>
           </table>
           <p>
