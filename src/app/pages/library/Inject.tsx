@@ -27,7 +27,7 @@ const Inject: Component = () => {
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             <code>usage</code> is any <A href="/library/types/structs#usage"><code>Usage</code></A>: a{' '}
-            <A href="/library/types/enums#button"><code>Button</code></A>, a{' '}
+            <A href="/library/types/structs#button"><code>Button</code></A>, a{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and a{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> all convert into one.{' '}
             <code>action</code> is the shared{' '}

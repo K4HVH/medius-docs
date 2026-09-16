@@ -17,8 +17,9 @@ const Transform: Component = () => {
         <p>
           Transforms run before rendering, so <A href="/library/inject">injection</A>, riding, and
           rendering see the transformed field. They are session state, re-asserted on reconnect like a{' '}
-          <A href="/library/lock"><code>lock</code></A>, and cleared on control-PC silence,{' '}
-          <A href="/library/admin#reset"><code>reset</code></A>, a detach, or a re-clone.
+          <A href="/library/lock"><code>lock</code></A>, and cleared on control-PC silence, on{' '}
+          <A href="/library/admin#reset"><code>reset</code></A>, on inter-chip link loss, on a device
+          detach, and on a re-clone.
         </p>
         <pre class="diagram">{`  native report        the box's semantic path                          the wire
 
@@ -32,7 +33,8 @@ const Transform: Component = () => {
             <thead><tr><th>Transform a...</th><th>Negate or weigh it</th><th>Exchange it with another</th><th>Move it into another field</th></tr></thead>
             <tbody>
               <tr><td>relative axis (X / Y / wheel / pan)</td><td><A href="/library/transform#helpers"><code>transform_invert</code></A> / <A href="/library/transform#helpers"><code>transform_scale</code></A></td><td><A href="/library/transform#helpers"><code>transform_swap</code></A></td><td><A href="/library/transform#helpers"><code>transform_remap</code></A></td></tr>
-              <tr><td>button, key, or media usage</td><td>a full pass only</td><td>axes only</td><td><A href="/library/transform#helpers"><code>transform_remap</code></A>, from a button</td></tr>
+              <tr><td>button</td><td>a full pass only</td><td>axes only</td><td><A href="/library/transform#helpers"><code>transform_remap</code></A>, into a button, key, or media</td></tr>
+              <tr><td>key or media usage</td><td>not a source</td><td>not a source</td><td>destination only, from a button</td></tr>
             </tbody>
           </table>
         </div>
@@ -55,14 +57,14 @@ const Transform: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The operation, the source and destination <A href="/library/types/enums#lock-target">fields</A>, and the signed scale. Installing one past <code>Transforms::CAPACITY</code> is <A href="/library/types/errors#errors"><code>Error::TransformTableFull</code></A>.</td></tr>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The operation, the source and destination <A href="/library/types/enums#lock-target">fields</A>, and the signed scale. Installing one past <code>Transforms::CAPACITY</code> is <A href="/library/types/errors#errors"><code>Error::TransformTableFull</code></A>, and one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
             An entry is keyed by its{' '}
             <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; setting one
-            whose key exists overwrites it in place. An entry the box refuses is absent from{' '}
-            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
+            whose key exists overwrites it in place, keeping its position. Entries apply in
+            installation order, so two that write the same field do not commute.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Transform};
@@ -142,6 +144,18 @@ println!("{} transforms{}", table.entries.len(), if table.table_full { " (full)"
 for t in &table.entries {
     println!("  {:?} {:?} -> {:?} x{}", t.op, t.source, t.dest, t.scale);
 }`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="op" data-search-target>
+        <Card>
+          <CardHeader title="TransformOp" subtitle="Remap, swap, or scale, and the pairs each takes" />
+          <p>
+            The op decides how a transform's source and destination relate: remap moves one field into
+            another, swap exchanges two axes, scale weighs one. Which pairs each op admits, and the
+            wire byte each is, are on{' '}
+            <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>.
+          </p>
         </Card>
       </div>
 

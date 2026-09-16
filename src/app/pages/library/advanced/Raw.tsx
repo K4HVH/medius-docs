@@ -102,7 +102,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           </p>
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th></th><th><A href="/library/inject"><code>inject</code></A> / <A href="/library/move"><code>move_rel</code></A></th><th><code>raw</code></th></tr></thead>
+              <thead><tr><th>Aspect</th><th><A href="/library/inject"><code>inject</code></A> / <A href="/library/move"><code>move_rel</code></A></th><th><code>raw</code></th></tr></thead>
               <tbody>
                 <tr><td>Addresses</td><td>An axis or usage, by <A href="/library/types/enums#axis">semantic</A> id</td><td>An endpoint, by number and direction</td></tr>
                 <tr><td>On the wire</td><td>Merged into the native report, clamped to the field width, paced to the native rate</td><td>The bytes as given, one report</td></tr>
@@ -129,7 +129,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
             the box silently drops.
           </p>
           <table class="api-params">
-            <thead><tr><th>Error</th><th>When</th></tr></thead>
+            <thead><tr><th>Error</th><th>Returned on</th></tr></thead>
             <tbody>
               <tr><td><A href="/library/types/errors#errors"><code>ImperfectRequired</code></A></td><td>The box reports the opt-in off. Turn it on with <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.</td></tr>
             </tbody>

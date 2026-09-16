@@ -20,6 +20,7 @@ import {
   CatchClass,
   Direction,
   REWRITE_CLASSES,
+  REWRITE_MATCH_MAX,
   REWRITE_TAB_MAX,
   RewriteAction,
   rewriteActionName,
@@ -244,8 +245,8 @@ const DeviceRewrite = () => {
               </div>
             </div>
             <p style={{ ...muted, 'margin-top': '4px' }}>
-              Match and mask are the same length, 16 bytes at most. Blank matches every packet on that
-              address.
+              Match and mask are the same length, {REWRITE_MATCH_MAX} bytes at most. Blank matches
+              every packet on that address.
             </p>
 
             <Show when={carriesPayload(action())}>
