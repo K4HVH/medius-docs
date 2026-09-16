@@ -150,17 +150,6 @@ for i in 0..set.entries.len() as u8 {
         </Card>
       </div>
 
-      <div id="section" data-search-target>
-        <Card>
-          <CardHeader title="PatchSection" subtitle="Which descriptor a patch overwrites" />
-          <p>
-            A patch names one descriptor and a byte offset inside it: the device descriptor, a
-            configuration, an interface's report descriptor, a string, or the BOS. Which section takes a{' '}
-            <code>cfg</code> and which takes an <code>index</code> is on{' '}
-            <A href="/library/types/enums#patch-section"><code>PatchSection</code></A>.
-          </p>
-        </Card>
-      </div>
 
       <div id="async" data-search-target>
         <Card>
