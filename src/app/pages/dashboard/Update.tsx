@@ -16,31 +16,6 @@ const parseTag = (tag?: string) => {
   const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
   return m ? { major: +m[1], minor: +m[2], patch: +m[3] } : null;
 };
-type Ver = { major: number; minor: number; patch: number };
-const before = (a: Ver, b: Ver) =>
-  a.major !== b.major ? a.major < b.major : a.minor !== b.minor ? a.minor < b.minor : a.patch < b.patch;
-// A main chip from 3.4.0 runs the inter-chip link at a rate only a mouse-side chip from 3.4.0 goes looking for.
-const LINK_WALK = { major: 3, minor: 4, patch: 0 };
-
-const NO_UPDATE = "There's no update available right now. Try again in a few minutes.";
-const HOST_MISSING =
-  "The mouse-side chip isn't answering. Unplug the box, plug it back in, then connect. If it still isn't answering, open Set up.";
-type Choice = 'both' | 'main' | 'mouse';
-type Gate = { da: boolean; ha: boolean; hostMissing: boolean; mainAlone: boolean; hostFirst: boolean };
-const LABEL: Record<Choice, string> = { both: 'Update both chips', main: 'Main only', mouse: 'Mouse-side only' };
-const allowed = (c: Choice, g: Gate) =>
-  c === 'main' ? g.da && !g.mainAlone : g.ha && !g.hostFirst && !g.hostMissing && (c === 'mouse' || g.da);
-// Point at the other choice only when it would go through, so two refusals never send someone in a circle.
-function refusal(c: Choice, g: Gate): string {
-  // Nothing this page offers reaches a mouse-side chip that is not on the link.
-  if (g.hostMissing && (c !== 'main' || g.mainAlone)) return HOST_MISSING;
-  const offer = (other: Choice, why: string) =>
-    allowed(other, g) ? `${why} Press Back and choose ${LABEL[other]}.` : NO_UPDATE;
-  if (c !== 'mouse' && !g.da) return offer('mouse', 'This release has nothing for the main chip.');
-  if (c !== 'main' && !g.ha) return offer('main', 'This release has nothing for the mouse-side chip.');
-  if (c === 'main') return offer('both', 'The mouse-side chip needs this update too.');
-  return offer('main', 'Update the main chip first.');
-}
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Update = () => {
@@ -65,23 +40,8 @@ const Update = () => {
     onCleanup(() => window.removeEventListener('beforeunload', handler));
   });
 
-  // Re-read until the mouse-side chip reports: after a reconnect it can be seconds behind the main chip,
-  // and a missing one is read below as a chip that is not answering.
-  const [checking, setChecking] = createSignal(false);
   createEffect(() => {
-    if (dash.status() !== 'connected') return;
-    let live = true;
-    onCleanup(() => {
-      live = false;
-    });
-    setChecking(true);
-    void (async () => {
-      for (let i = 0; i < 12 && live; i++) {
-        if ((await dash.readFirmwareInfo())?.host) break;
-        await new Promise((r) => setTimeout(r, 500));
-      }
-      if (live) setChecking(false);
-    })();
+    if (dash.status() === 'connected') void dash.readFirmwareInfo();
   });
 
   // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
@@ -120,28 +80,23 @@ const Update = () => {
 
   // The one place either ending says what happened. Both used to claim it separately, and the
   // sent arm was still signing a reverted box off as finished after the done arm stopped.
-  const hostSilent = () => dash.firmwareInfo()?.host == null;
   const Landed = () => (
-    <Switch>
-      <Match when={hostSilent() && checking()}>{null}</Match>
-      <Match when={hostSilent()}>
-        <div class="callout callout--warning">{HOST_MISSING}</div>
-      </Match>
-      <Match when={landed()}>
-        <div class="callout callout--info">
-          Updated and verified.{' '}
-          <Show when={dash.version()}>
-            {(v) => <>Your box is on <strong>v{versionString(v())}</strong>.</>}
-          </Show>
-        </div>
-      </Match>
-      <Match when={!landed()}>
+    <Show
+      when={landed()}
+      fallback={
         <div class="callout callout--warning">
           The box came back, but not on the version that was sent. It reverts anything that will not
           run, so it is still working. Try the update again.
         </div>
-      </Match>
-    </Switch>
+      }
+    >
+      <div class="callout callout--info">
+        Updated and verified.{' '}
+        <Show when={dash.version()}>
+          {(v) => <>Your box is on <strong>v{versionString(v())}</strong>.</>}
+        </Show>
+      </div>
+    </Show>
   );
 
   const choose = (mode: 'both' | 'main' | 'mouse') => {
@@ -164,34 +119,19 @@ const Update = () => {
     try {
       const da = deviceAsset();
       const ha = hostAsset();
-      const rel = lv();
-      if (!latest() || !rel || (!da && !ha)) {
-        setErr(NO_UPDATE);
+      // Three different situations, and only the first is fixed by waiting. Point at the other
+      // choice only when it would actually work, and name where that choice lives: it is on the
+      // previous screen, not this one.
+      if (!latest() || (!da && !ha)) {
+        setErr("There's no update available right now. Try again in a few minutes.");
         return;
       }
-      // Read fresh, and give a mouse-side chip that is still coming up a moment to answer: the read taken
-      // on connect can predate it.
-      let info = await dash.readFirmwareInfo();
-      for (let i = 0; i < 4 && !info?.host; i++) {
-        await new Promise((r) => setTimeout(r, 500));
-        info = await dash.readFirmwareInfo();
+      if (wantDevice && !da) {
+        setErr('This release has nothing for the main chip. Press Back and choose Mouse-side only.');
+        return;
       }
-      const v = dash.version();
-      const deviceOld =
-        v !== null && before({ major: v.fwMajor, minor: v.fwMinor, patch: v.fwPatch }, LINK_WALK);
-      const releaseOld = before(rel, LINK_WALK);
-      const hostOld = !info?.host || before(info.host, LINK_WALK);
-      const gate = {
-        da: !!da,
-        ha: !!ha,
-        hostMissing: !info?.host,
-        // Onto 3.4.0 the main chip alone leaves an older mouse-side chip unable to find the link.
-        mainAlone: !releaseOld && deviceOld && hostOld,
-        // Back below it the mouse-side chip is committed first, while the main chip still runs 3.4.0.
-        hostFirst: releaseOld && v !== null && !deviceOld,
-      };
-      if (!allowed(which(), gate)) {
-        setErr(refusal(which(), gate));
+      if (wantHost && !ha) {
+        setErr('This release has nothing for the mouse-side chip. Press Back and choose Main only.');
         return;
       }
       const images: { device?: Uint8Array; host?: Uint8Array } = {};
