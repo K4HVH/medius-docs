@@ -5,8 +5,10 @@
 // list below could already render them when another client set them.
 //
 // Blocking and passing are the two ends of one scale. The buttons are shortcuts to those two named
-// constants, which the slider's own range reaches as well. The two bearing-relative directions mean
-// nothing without a bearing, so they are offered on axes alone.
+// constants, which the slider's own range reaches as well. The percent is signed, so the same slider
+// reaches a reversal: the sign is what inverts an axis, and it is why a transform has no weighing of
+// its own. The two bearing-relative directions mean nothing without a bearing, so they are offered on
+// axes alone, and a reversal only on axes at all: one bit has nothing to reverse.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -24,6 +26,7 @@ import {
   LOCK_ID_ALL,
   LOCK_SCALE_BLOCK,
   LOCK_SCALE_MAX,
+  LOCK_SCALE_MIN,
   LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
@@ -118,7 +121,12 @@ const DeviceLock = () => {
       const head = dn ? `${targetName(e.cls, e.id)} ${dn}` : targetName(e.cls, e.id);
       return {
         key: `${e.cls}:${e.id}:${e.direction}`,
-        text: e.scale === LOCK_SCALE_BLOCK ? head : `${head} at ${e.scale}%`,
+        text:
+          e.scale === LOCK_SCALE_BLOCK
+            ? head
+            : e.scale < 0
+              ? `${head} reversed at ${e.scale}%`
+              : `${head} at ${e.scale}%`,
         blocked: e.scale === LOCK_SCALE_BLOCK,
       };
     }),
@@ -188,10 +196,12 @@ const DeviceLock = () => {
 
           <Show when={isAxis()}>
             <div style={section}>
-              <div style={label}>Keep {scale()}% of the real movement</div>
+              <div style={label}>
+                Keep {scale()}% of the real movement{scale() < 0 ? ', the other way round' : ''}
+              </div>
               <Slider
                 value={scale()}
-                min={LOCK_SCALE_BLOCK}
+                min={LOCK_SCALE_MIN}
                 max={LOCK_SCALE_MAX}
                 step={5}
                 onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
@@ -203,6 +213,13 @@ const DeviceLock = () => {
             <div class="callout callout--info" style={section}>
               Both means the same whether or not the box is injecting, and a Both at 100% clears every
               direction.
+            </div>
+          </Show>
+
+          <Show when={isAxis() && scale() < 0}>
+            <div class="callout callout--info" style={section}>
+              A negative percent reverses what it keeps, so -100% inverts the axis. The direction is
+              read before the weigh, so a reversal on one sign leaves the other alone.
             </div>
           </Show>
 

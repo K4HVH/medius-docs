@@ -13,7 +13,8 @@ const Lock: Component = () => {
           while host <A href="/native/injection">injection</A> still drives that same input at full
           strength. Blocking and passing are its two ends.
         </p>
-        <pre class="diagram">{`  scale 0     physical  --X   blocked
+        <pre class="diagram">{`  scale -100  physical  <--   inverted
+  scale 0     physical  --X   blocked
   scale 40    physical  -.->  40% gets through
   scale 100   physical  -->   untouched
   scale 200   physical  ==>   doubled
@@ -21,10 +22,10 @@ const Lock: Component = () => {
   injection always -->  unweighed, whatever the scale`}</pre>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Weigh a...</th><th>Any percentage</th><th>Block</th><th>Release</th></tr></thead>
+            <thead><tr><th>Weigh a...</th><th>Any percentage, signed</th><th>Block</th><th>Release</th></tr></thead>
             <tbody>
               <tr><td>relative axis (X / Y / wheel)</td><td><A href="/library/lock#scale"><code>scale</code></A> / <A href="/library/lock#lock-axis"><code>scale_axis</code></A></td><td><A href="/library/lock#lock"><code>lock</code></A> / <A href="/library/lock#lock-axis"><code>lock_axis</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A> / <A href="/library/lock#lock-axis"><code>unlock_axis</code></A></td></tr>
-              <tr><td>button, key, or media usage</td><td>truncates to a lock</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
+              <tr><td>button, key, or media usage</td><td>truncates to a lock; a negative is refused</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
               <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>scale_all</code></A></td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><A href="/library/lock#lock-all"><code>unlock_all</code></A></td></tr>
             </tbody>
           </table>
@@ -38,7 +39,7 @@ const Lock: Component = () => {
       <div id="scale" data-search-target>
         <Card>
           <CardHeader title="scale" subtitle="Keep a percentage of a physical input" />
-          <pre class="api-signature">fn scale(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction, scale: u8) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn scale(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction, scale: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <table class="api-params">
             <thead>
@@ -47,7 +48,7 @@ const Lock: Component = () => {
             <tbody>
               <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> measured against the bearing. Only an axis has a bearing, so a relative direction anywhere else is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. A media usage has no edges, so an edge on one goes out as <code>Both</code>.</td></tr>
-              <tr><td><code>scale</code></td><td><code>u8</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies, and down to <code>LOCK_SCALE_MIN</code> (-255) reverses. Outside that is <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -55,6 +56,22 @@ const Lock: Component = () => {
             <A href="/library/options#set-bearing"><code>set_bearing</code></A>. A momentary usage
             carries one bit, so any scale under 100 locks it.
           </p>
+          <div class="callout callout--info">
+            <p>
+              <strong>The sign is the inversion.</strong> A negative percent weighs the physical value
+              and reverses what it keeps, so <code>-100</code> on an axis flips it exactly and{' '}
+              <code>-50</code> keeps half of it the other way round. This is the only path that weighs
+              a field: a <A href="/library/transform"><code>transform</code></A> moves one and never
+              weighs it.
+            </p>
+            <p>
+              The slot is picked from the sign of the delta <em>before</em> the weigh, so a directional
+              negative is well defined: <code>-100</code> on <code>Positive</code> sends rightward
+              motion left and leaves leftward motion alone. One bit has nothing to reverse, so a
+              negative on a button, key or media usage is{' '}
+              <A href="/library/types/errors#errors"><code>Error::LockScaleUsage</code></A>.
+            </p>
+          </div>
           <div class="callout callout--info">
             <p>
               <code>Direction::Both</code> writes the scale to the two fixed signs and a full pass to
@@ -68,7 +85,8 @@ const Lock: Component = () => {
 let device = Device::find()?;
 device.scale(Axis::X, Direction::Against, 40)?;  // 40% of movement opposing the injection
 device.scale(Axis::X, Direction::With, 130)?;    // 130% of movement along it
-device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, always`}</code></pre>
+device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, always
+device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted`}</code></pre>
         </Card>
       </div>
 
@@ -135,7 +153,7 @@ device.unlock(Axis::X, Direction::Both)?;   // X passes untouched again`}</code>
           <CardHeader title="lock_axis / unlock_axis / scale_axis" subtitle="Weigh a relative axis by sign" />
           <pre class="api-signature">fn lock_axis(&self, axis: Axis, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <pre class="api-signature">fn unlock_axis(&self, axis: Axis, direction: Direction) -&gt; Result&lt;()&gt;</pre>
-          <pre class="api-signature">fn scale_axis(&self, axis: Axis, direction: Direction, scale: u8) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn scale_axis(&self, axis: Axis, direction: Direction, scale: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Convenience for <A href="/library/lock#lock"><code>lock</code></A> /{' '}
@@ -157,7 +175,7 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
           <CardHeader title="lock_all / unlock_all / scale_all" subtitle="Weigh a whole class at once" />
           <pre class="api-signature">fn lock_all(&self, what: Blanket, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <pre class="api-signature">fn unlock_all(&self, what: Blanket, direction: Direction) -&gt; Result&lt;()&gt;</pre>
-          <pre class="api-signature">fn scale_all(&self, what: Blanket, direction: Direction, scale: u8) -&gt; Result&lt;()&gt;</pre>
+          <pre class="api-signature">fn scale_all(&self, what: Blanket, direction: Direction, scale: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Weigh an entire input group at once with a{' '}

@@ -492,7 +492,7 @@ const Requests: Component = () => {
             <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per direction that is not
             passing untouched. An empty list (<code>n = 0</code>) means everything passes.
           </p>
-          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 5n bytes</pre>
+          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 6n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -501,11 +501,11 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 96</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 85</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the weighed field's id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
               <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>which direction of it, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
-              <tr><td>+</td><td><code>scale</code></td><td><code>u8</code></td><td>percent of the physical value kept, <code>0-255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies</td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies, negative reverses</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>
@@ -524,7 +524,8 @@ const Requests: Component = () => {
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent.</td></tr>
+              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent, and never a negative.</td></tr>
+              <tr><td>A reversed axis</td><td>Its negative scale, sign and all. A reader that takes the field as a <code>u8</code> sees <code>156</code> where the box holds <code>-100</code> and reads an amplification as a reversal.</td></tr>
               <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
             </tbody>
           </table>
@@ -534,16 +535,18 @@ const Requests: Component = () => {
               <tr><th>Order</th><th>Source</th><th>Most it spends</th></tr>
             </thead>
             <tbody>
-              <tr><td>1</td><td>Mouse axes and buttons</td><td>22: 3 axes x 4 directions, plus 5 buttons x 2 edges. A button has no relative pair, so 10 of the table's 32 slots are out of reach.</td></tr>
+              <tr><td>1</td><td>Mouse axes and buttons</td><td>48: 4 axes x 4 directions, plus 16 buttons x 2 edges. A button has no relative pair, so its other two slots are out of reach.</td></tr>
               <tr><td>2</td><td>The blanket key lock</td><td>2, one per blocked edge</td></tr>
               <tr><td>3</td><td>The blanket media lock</td><td>1</td></tr>
               <tr><td>4</td><td>Specific media usages</td><td>8, the whole media-lock table</td></tr>
-              <tr><td>5</td><td>Specific keys</td><td>the rest of the 96, so at least 63, one per blocked edge</td></tr>
+              <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so at least 26, one per blocked edge</td></tr>
             </tbody>
           </table>
           <p>
-            Rows 1 to 4 are capped by the box's own tables and spend 33 between them, so they are always
-            in the reply. A keyboard usage is the one unbounded class: 252 of them, two edges each.
+            The cap is the frame, not a table: <code>2 + 85 x 6</code> is the 512-byte payload exactly.
+            Rows 1 to 4 are capped by the box's own tables and spend 59 between them at worst, so they
+            are always in the reply. A keyboard usage is the one unbounded class: 252 of them, two
+            edges each.
           </p>
           <div class="callout callout--warning">
             <p>
@@ -559,7 +562,7 @@ const Requests: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <p>One entry: the wheel's negative (scroll-down) sign blocked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>direction = 2</code>, <code>scale = 0</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 07 00  | 06     | 01     | 03     | 02 00  | 02     | 00     | lo hi  |
+| A5     | 06     | 00     | 08 00  | 06     | 01     | 03     | 02 00  | 02     | 00 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dir    | scale  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
@@ -1014,9 +1017,9 @@ const Requests: Component = () => {
             The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
             <code>what = 16</code>: the installed{' '}
             <A href="/native/commands/transform"><code>TRANSFORM</code></A> table. A three-byte
-            header, then nine bytes per entry, in the order the entries were installed.
+            header, then seven bytes per entry, in the order the entries were installed.
           </p>
-          <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 9n bytes</pre>
+          <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 7n bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -1027,12 +1030,11 @@ const Requests: Component = () => {
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x10</td></tr>
               <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
               <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 32</td></tr>
-              <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap, 2 scale (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
+              <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
               <tr><td>+</td><td><code>sclass</code></td><td><code>u8</code></td><td>per entry: source class, 0=button 1=key 2=media 3=axis</td></tr>
               <tr><td>+</td><td><code>sid</code></td><td><code>u16</code></td><td>the source id within the class, little-endian</td></tr>
               <tr><td>+</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
               <tr><td>+</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
-              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>the signed percent the entry carries, little-endian (as <A href="/native/commands/transform#scale"><code>TRANSFORM</code></A>)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>
@@ -1046,11 +1048,11 @@ const Requests: Component = () => {
               <tr><th>State</th><th>Reports as</th></tr>
             </thead>
             <tbody>
-              <tr><td>An installed entry</td><td>One 9-byte line, under its own <code>(source, dest)</code> key.</td></tr>
+              <tr><td>An installed entry</td><td>One 7-byte line, under its own <code>(source, dest)</code> key.</td></tr>
               <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only way to see that an entry landed.</td></tr>
               <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 set to say the table was the reason.</td></tr>
               <tr><td>An entry whose destination this configuration does not declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
-              <tr><td>A negation</td><td>A scale of <code>-100</code>. There is no invert op to report.</td></tr>
+              <tr><td>A weighed field</td><td>Nothing here. A transform moves a field and never weighs one, so a percent is <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>'s to report.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -1076,20 +1078,20 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            One entry, Y negated (<code>op = 2</code> scale, source and dest{' '}
-            <code>(axis 3, id 1)</code>, <code>scale = -100</code>), with the table not full:
+            One entry, X and Y swapped (<code>op = 1</code>, source <code>(axis 3, id 0)</code>, dest{' '}
+            <code>(axis 3, id 1)</code>), with the table not full:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0C 00  | 10     | 00     | 01     |
+| A5     | 06     | 00     | 0A 00  | 10     | 00     | 01     |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
 +--------+--------+--------+--------+--------+--------+--------+
 
-+--------+--------+--------+--------+--------+--------+--------+
-| 02     | 03     | 01 00  | 03     | 01 00  | 9C FF  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| op     | sclass | sid    | dclass | did    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
++--------+--------+--------+--------+--------+--------+
+| 01     | 03     | 00 00  | 03     | 01 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| op     | sclass | sid    | dclass | did    | CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

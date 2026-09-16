@@ -229,7 +229,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every weighed direction, one entry each, across specific targets and whole-class blankets.</td></tr>
-              <tr><td><code>scale_of(target, dir)</code></td><td><code>u8</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>scale_of(target, dir)</code></td><td><code>i16</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest, a reversing (negative) one being lower than any pass. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
@@ -240,7 +240,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>Both</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>Both</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction under <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>96 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
+              <tr><td>85 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -260,7 +260,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
       <div id="lock-entry" data-search-target>
         <Card>
           <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
-          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: u8 {'}'}</pre>
+          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: i16 {'}'}</pre>
           <p>
             One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
             list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
@@ -271,7 +271,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             <tbody>
               <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which direction of it this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>u8</code></td><td>Percent of the physical value kept. A momentary usage carries one bit, so the box stores the block or pass it renders and this never reads between them.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept, signed: a negative one reverses what it keeps. A momentary usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative.</td></tr>
             </tbody>
           </table>
           <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
@@ -831,8 +831,8 @@ for ev in input.by_ref().take(20) {
 
       <div id="transform" data-search-target>
         <Card>
-          <CardHeader title="Transform" subtitle="One field operation and its signed scale" />
-          <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget, scale: i16 {'}'}</pre>
+          <CardHeader title="Transform" subtitle="One field operation and the two fields it moves between" />
+          <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget {'}'}</pre>
           <p>
             One entry in the table you hand to{' '}
             <A href="/library/transform#transform"><code>transform</code></A>. The named constructors
@@ -841,12 +841,9 @@ for ev in input.by_ref().take(20) {
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Transform::new(op, source, dest, scale)</code></td><td><code>Transform</code></td><td>Any <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>, from an explicit source, destination and signed scale.</td></tr>
-              <tr><td><code>Transform::invert(axis)</code></td><td><code>Transform</code></td><td>A <code>Scale</code> of <code>-100</code>: see <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>.</td></tr>
-              <tr><td><code>Transform::scale_axis(axis, percent)</code></td><td><code>Transform</code></td><td>A <code>Scale</code> on one axis.</td></tr>
-              <tr><td><code>Transform::swap(a, b)</code></td><td><code>Transform</code></td><td>A <code>Swap</code> of two axes, at a full pass.</td></tr>
-              <tr><td><code>Transform::remap(source, dest)</code></td><td><code>Transform</code></td><td>A <code>Remap</code>, at a full pass. Any <A href="/library/types/enums#axis"><code>Axis</code></A>, <code>Button</code>, <code>Key</code>, <code>MediaKey</code> or <A href="/library/types/structs#usage"><code>Usage</code></A> converts into the <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> it takes.</td></tr>
-              <tr><td><code>.with_scale(scale)</code></td><td><code>Transform</code></td><td>The same transform at another signed scale: a weighed swap or axis remap.</td></tr>
+              <tr><td><code>Transform::new(op, source, dest)</code></td><td><code>Transform</code></td><td>Any <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>, from an explicit source and destination.</td></tr>
+              <tr><td><code>Transform::swap(a, b)</code></td><td><code>Transform</code></td><td>A <code>Swap</code> of two axes.</td></tr>
+              <tr><td><code>Transform::remap(source, dest)</code></td><td><code>Transform</code></td><td>A <code>Remap</code>. Any <A href="/library/types/enums#axis"><code>Axis</code></A>, <code>Button</code>, <code>Key</code>, <code>MediaKey</code> or <A href="/library/types/structs#usage"><code>Usage</code></A> converts into the <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> it takes.</td></tr>
               <tr><td><code>.key()</code></td><td><A href="/library/types/structs#transform-key"><code>TransformKey</code></A></td><td>The <code>(source, dest)</code> this entry is filed under.</td></tr>
             </tbody>
           </table>
@@ -855,22 +852,22 @@ for ev in input.by_ref().take(20) {
             <tbody>
               <tr><td><code>op</code></td><td><A href="/library/types/enums#transform-op"><code>TransformOp</code></A></td><td>What the transform does. An op that cannot address this source and destination pair is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>.</td></tr>
               <tr><td><code>source</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform reads: an axis, or a button. A key or media field can only be a destination, so naming one here is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. One the clone's descriptor does not declare is refused box-side, and absent from the readback.</td></tr>
-              <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes; the same as <code>source</code> for a scale. A cross-class remap with no destination collection is refused box-side.</td></tr>
-              <tr><td><code>scale</code></td><td><code>i16</code></td><td>A percent carrying a sign: <code>-100</code> negates, <code>100</code> is identity, <code>200</code> doubles, <code>-50</code> halves and flips, <code>0</code> blocks the source. A <code>0</code> on an axis remap still zeroes the source and leaves the destination as the device sent it. A magnitude past <code>LOCK_SCALE_MAX</code> (255) is <A href="/library/types/errors#errors"><code>Error::TransformScaleRange</code></A>. A button source carries one bit rather than a magnitude, so it takes only the full pass of <code>100</code>; anything else is <A href="/library/types/errors#errors"><code>Error::TransformUsageScale</code></A>.</td></tr>
+              <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes. Naming the same field as <code>source</code> is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>: both ops move a value, so there would be nowhere to move it to. A cross-class remap with no destination collection is refused box-side.</td></tr>
             </tbody>
           </table>
           <p>
-            The written value is clamped to the destination field's declared range.
+            The written value is clamped to the destination field's declared range. There is no scale
+            field: a transform says where a value lands, and how much of it survives is{' '}
+            <A href="/library/lock#scale"><code>scale</code></A>'s, which runs first.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Axis, Button, Key, Transform, TransformOp};
 
-let flip = Transform::invert(Axis::Y);
-assert_eq!((flip.op, flip.scale), (TransformOp::Scale, -100));
+let swap = Transform::swap(Axis::X, Axis::Y);
+assert_eq!(swap.op, TransformOp::Swap);
 
-let fast_wheel = Transform::scale_axis(Axis::Wheel, 200);         // double the detents
-let half_swap = Transform::swap(Axis::X, Axis::Y).with_scale(50); // exchanged, and halved
-let side_key = Transform::remap(Button::new(4), Key::A);          // the fifth button types 'A'`}</code></pre>
+let wheel_drives_y = Transform::remap(Axis::Wheel, Axis::Y); // the wheel moves the cursor
+let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button types 'A'`}</code></pre>
         </Card>
       </div>
       <div id="transform-key" data-search-target>
@@ -880,8 +877,8 @@ let side_key = Transform::remap(Button::new(4), Key::A);          // the fifth b
           <p>
             What <A href="/library/types/structs#transform"><code>Transform::key</code></A> returns, and
             what <A href="/library/transform#untransform"><code>untransform</code></A> drops by. Two
-            transforms sharing a key are one entry: setting the second overwrites the first's op and
-            scale in place, keeping its position in the table.
+            transforms sharing a key are one entry: setting the second overwrites the first's op in
+            place, keeping its position in the table.
           </p>
         </Card>
       </div>

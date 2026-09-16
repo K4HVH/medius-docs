@@ -280,7 +280,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_LOCKS: {
-      // [what][n u8] then n × [class u8][id u16 LE][dir u8][scale u8], one entry per direction not
+      // [what][n u8] then n × [class u8][id u16 LE][dir u8][scale i16 LE], one entry per direction not
       // passing untouched. A target absent from the list is passing on every direction.
       if (payload.length < 2) return null;
       const n = payload[1];
@@ -299,7 +299,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           cls,
           id: u16le(payload, off + 1),
           direction,
-          scale: payload[off + 4],
+          scale: i16le(payload, off + 4),
         });
       }
       return { kind: 'locks', locks: { entries } };
@@ -477,8 +477,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
       }
     }
     case Q_TRANSFORMS: {
-      // [what][flags][n] then n × [op][sclass][sid u16 LE][dclass][did u16 LE][scale i16 LE]. No
-      // per-entry state byte: a read-back entry is always a live one. The scale is signed.
+      // [what][flags][n] then n × [op][sclass][sid u16 LE][dclass][did u16 LE]. No per-entry state
+      // byte: a read-back entry is always a live one. No scale either: a transform only moves a field.
       if (payload.length < RESP_TRANSFORMS_HDR) return null;
       const n = payload[2];
       if (n > TRANSFORM_MAX_ENTRIES) return null;
@@ -488,14 +488,12 @@ export function parseResp(payload: Uint8Array): Resp | null {
         const off = RESP_TRANSFORMS_HDR + TRANSFORMS_ENTRY_LEN * i;
         const op = transformOpFromU8(payload[off]);
         if (op === null) continue; // an op a newer box added; skip this entry, read the rest
-        const raw = u16le(payload, off + 7);
         entries.push({
           op,
           sclass: payload[off + 1],
           sid: u16le(payload, off + 2),
           dclass: payload[off + 4],
           did: u16le(payload, off + 5),
-          scale: raw >= 0x8000 ? raw - 0x10000 : raw,
         });
       }
       return { kind: 'transforms', transforms: { tableFull: (payload[1] & TF_F_FULL) !== 0, entries } };

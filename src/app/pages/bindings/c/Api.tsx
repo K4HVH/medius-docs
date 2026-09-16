@@ -138,8 +138,8 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, uint8_t dir, uint8_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0), <code>_PASS</code> (100), up to <code>_MAX</code> (255).</td></tr>
-              <tr><td><code>medius_device_scale_all(MediusDevice *dev, uint8_t what, uint8_t dir, uint8_t scale)</code></td><td>The same over a whole class (aim, wheel, buttons, keys, or media).</td></tr>
+              <tr><td><code>medius_device_scale(MediusDevice *dev, MediusLockTarget target, uint8_t dir, int16_t scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage on one direction: <code>MEDIUS_LOCK_SCALE_BLOCK</code> (0), <code>_PASS</code> (100), up to <code>_MAX</code> (255), and down to <code>_MIN</code> (-255), which reverses what it keeps. Axes only for a negative.</td></tr>
+              <tr><td><code>medius_device_scale_all(MediusDevice *dev, uint8_t what, uint8_t dir, int16_t scale)</code></td><td>The same over a whole class (aim, wheel, buttons, keys, or media).</td></tr>
               <tr><td><code>medius_device_lock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Block an axis or usage on a direction: scale 0.</td></tr>
               <tr><td><code>medius_device_unlock(MediusDevice *dev, MediusLockTarget target, uint8_t dir)</code></td><td>Back to passing untouched: scale 100.</td></tr>
               <tr><td><code>medius_device_lock_all(MediusDevice *dev, uint8_t what, uint8_t dir)</code></td><td>Blanket block a whole class.</td></tr>
@@ -147,6 +147,7 @@ medius_device_free(dev);`}</code></pre>
             </tbody>
           </table>
           <div class="callout callout--warning">
+            <p>The percent is signed, and the sign is the inversion: <code>-100</code> on an axis flips it exactly, and the slot comes from the delta's sign before the weigh, so a directional negative leaves the other direction alone. One bit has nothing to reverse, so a negative on a button, key or media usage is <code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code>, and a magnitude outside the range is <code>..._ERR_LOCK_SCALE_RANGE</code>.</p>
             <p>A scale auto-clears; it isn't permanent. The <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you. <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> need a live bearing, set with <code>medius_device_set_bearing</code>; the refusal rules for them are on <A href="/bindings/c/types#direction"><code>MediusDirection</code></A>.</p>
           </div>
         </Card>
@@ -404,16 +405,14 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
 
       <div id="transforms" data-search-target>
         <Card>
-          <CardHeader title="Transforms" subtitle="Negate, scale, swap, or remap a field on the wire" />
-          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s so it can move a button onto a key or media usage.</p>
+          <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
+          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s so it can move a button onto a key or media usage. A transform only moves a field: to weigh or invert one, use <code>medius_device_scale</code>, whose percent is signed.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius_device_transform(MediusDevice *dev, const MediusTransform *transform)</code></td><td>Install or overwrite one <A href="/bindings/c/types#transform"><code>transform</code></A>.</td></tr>
               <tr><td><code>medius_device_untransform(MediusDevice *dev, const MediusTransform *transform)</code></td><td>Drop the transform with this one's (source, dest) key.</td></tr>
               <tr><td><code>medius_device_clear_transforms(MediusDevice *dev)</code></td><td>Drop the whole transform table.</td></tr>
-              <tr><td><code>medius_device_transform_invert(MediusDevice *dev, uint8_t axis)</code></td><td>Negate an axis.</td></tr>
-              <tr><td><code>medius_device_transform_scale(MediusDevice *dev, uint8_t axis, int16_t percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
               <tr><td><code>medius_device_transform_swap(MediusDevice *dev, uint8_t a, uint8_t b)</code></td><td>Exchange two axes.</td></tr>
               <tr><td><code>medius_device_transform_remap(MediusDevice *dev, MediusLockTarget source, MediusLockTarget dest)</code></td><td>Move a source field into a destination.</td></tr>
               <tr><td><code>medius_device_query_transforms(MediusDevice *dev, MediusTransforms *out)</code></td><td>Read the active table, in the order the box applies it.</td></tr>
@@ -449,7 +448,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_scale_of(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>uint8_t</code>: percent of the physical value kept there, 100 when nothing weighs it. See <A href="/library/lock">Lock</A>.</td></tr>
+              <tr><td><code>medius_locks_scale_of(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>int16_t</code>: percent of the physical value kept there, 100 when nothing weighs it and negative where one reverses it. See <A href="/library/lock">Lock</A>.</td></tr>
               <tr><td><code>medius_locks_is_locked(const MediusLocks *locks, MediusLockTarget target, uint8_t dir)</code></td><td><code>bool</code>: is that target/direction blocked outright (<code>Both</code> needs both fixed signs). A direction merely weighed is not locked.</td></tr>
               <tr><td><code>medius_rate_native_hz(MediusRate rate, float *out_hz)</code></td><td><code>bool</code>: writes the native rate in Hz; <code>false</code> when there is no continuous cadence.</td></tr>
               <tr><td><code>medius_usage_event_is_held(const MediusUsageEvent *event, MediusUsage usage)</code></td><td><code>bool</code>: is that usage (button, key, or media) held in the snapshot.</td></tr>

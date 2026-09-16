@@ -118,6 +118,22 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>LockScaleRange {'{'} scale, min, max {'}'}</code></td>
+                <td>
+                  A <A href="/library/lock#scale">lock scale</A> outside <code>min</code> to{' '}
+                  <code>max</code>. The percent is signed, so the range runs from a full reversal to a
+                  full amplification.
+                </td>
+              </tr>
+              <tr>
+                <td><code>LockScaleUsage {'{'} scale, class {'}'}</code></td>
+                <td>
+                  A negative (reversing) <A href="/library/lock#scale">lock scale</A> on a button, key
+                  or media usage. One bit has nothing to reverse: use <code>0</code> to block it or{' '}
+                  <code>100</code> to pass it.
+                </td>
+              </tr>
+              <tr>
                 <td><code>ImperfectRequired</code></td>
                 <td>
                   An <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
@@ -166,22 +182,9 @@ const Errors: Component = () => {
                 <td>
                   A <A href="/library/types/structs#transform">transform</A>'s{' '}
                   <A href="/library/types/enums#transform-op"><code>op</code></A> does not fit its
-                  source and destination fields.
-                </td>
-              </tr>
-              <tr>
-                <td><code>TransformScaleRange {'{'} scale, max {'}'}</code></td>
-                <td>
-                  A transform <code>scale</code> whose magnitude is past <code>max</code>, the widest
-                  the box applies.
-                </td>
-              </tr>
-              <tr>
-                <td><code>TransformUsageScale {'{'} src, scale, pass {'}'}</code></td>
-                <td>
-                  A percentage on a button source, which carries one bit rather than a magnitude.
-                  Only the full <code>pass</code> fits; a key or media field can only be a
-                  destination, so naming one as a source is <code>TransformOpFields</code>.
+                  source and destination fields, or names one field as both: each op moves a value,
+                  so there would be nowhere to move it to. To weigh a field in place, use{' '}
+                  <A href="/library/lock#scale"><code>scale</code></A>.
                 </td>
               </tr>
               <tr>
