@@ -702,10 +702,8 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             </table>
           </div>
           <p>
-            Neither op takes a field onto itself: both move a value, and there is nowhere to move it
-            to, so <code>admits</code> refuses a pair whose source and destination are the same field.
-            There is no scale op and no invert op either. Weighing a field, in either direction, is{' '}
-            <A href="/library/lock#scale"><code>scale</code></A>'s, whose percent is signed.
+            <code>admits</code> refuses a pair whose source and destination are the same field. To
+            weigh a field, or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>.
           </p>
         </Card>
       </div>

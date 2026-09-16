@@ -182,9 +182,8 @@ const Errors: Component = () => {
                 <td>
                   A <A href="/library/types/structs#transform">transform</A>'s{' '}
                   <A href="/library/types/enums#transform-op"><code>op</code></A> does not fit its
-                  source and destination fields, or names one field as both: each op moves a value,
-                  so there would be nowhere to move it to. To weigh a field in place, use{' '}
-                  <A href="/library/lock#scale"><code>scale</code></A>.
+                  source and destination fields, or names one field as both. To weigh a field in
+                  place, use <A href="/library/lock#scale"><code>scale</code></A>.
                 </td>
               </tr>
               <tr>

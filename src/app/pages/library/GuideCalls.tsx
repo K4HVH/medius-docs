@@ -100,7 +100,7 @@ println!("{v}");`}</code></pre>
           <CardHeader title="Smooth motion" subtitle="Subdivide the delta, pace the steps" />
           <p>
             <A href="/library/move#move-rel"><code>move_rel</code></A> applies one delta at once. To spread it over time, subdivide the move and pace the steps yourself, roughly one per
-            millisecond. There's no <code>move_smooth</code>.
+            millisecond.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::thread::sleep;

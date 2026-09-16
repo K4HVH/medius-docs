@@ -9,21 +9,14 @@ const Transform: Component = () => {
       <Card>
         <CardHeader title="Transform" subtitle="Swap or remap a field on the wire" />
         <p>
-          A transform moves a field the clone's descriptor declares into another one: exchange two
-          axes, or move a field into another. It needs no{' '}
+          A transform moves a field the clone's descriptor declares into another one. It needs no{' '}
           <A href="/library/options#allow-imperfect-clones">imperfect-clone opt-in</A>, unlike the{' '}
           <A href="/library/advanced/raw">advanced control layer</A>.
         </p>
         <p>
-          It is structural: how much of a field survives is{' '}
-          <A href="/library/lock#scale"><code>scale</code></A>'s, which runs first.
-        </p>
-        <p>
-          Transforms run before rendering, so <A href="/library/inject">injection</A>, riding, and
-          rendering see the transformed field. They are session state, re-asserted on reconnect like a{' '}
-          <A href="/library/lock"><code>lock</code></A>, and cleared on control-PC silence, on{' '}
-          <A href="/library/admin#reset"><code>reset</code></A>, on inter-chip link loss, on a device
-          detach, and on a re-clone.
+          Transforms run before rendering, so <A href="/library/inject">injection</A>, riding and
+          rendering see the transformed field. They are session state on the same lifecycle as a{' '}
+          <A href="/library/lock"><code>lock</code></A>.
         </p>
         <pre class="diagram">{`  native report        the box's semantic path                          the wire
 
@@ -90,14 +83,6 @@ device.transform(&Transform::remap(Axis::Wheel, Axis::Y))?; // the wheel drives 
             matching constructor builds, and refuses on the same terms as{' '}
             <A href="/library/transform#transform"><code>transform</code></A>.
           </p>
-          <div class="callout callout--info">
-            <p>
-              There is no <code>transform_invert</code> or <code>transform_scale</code>. Weighing a
-              field, in either direction, is <A href="/library/lock#scale"><code>scale</code></A>'s:
-              its percent is signed, so <code>-100</code> inverts an axis and <code>0</code> blocks it,
-              and there is one path that weighs a field rather than two.
-            </p>
-          </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Button, Direction, Key};
 
@@ -105,7 +90,7 @@ let device = Device::find()?;
 device.transform_swap(Axis::X, Axis::Y)?;        // exchange the two axes
 device.transform_remap(Axis::Wheel, Axis::Y)?;   // the wheel drives vertical motion
 device.transform_remap(Button::new(4), Key::A)?; // the fifth button emits 'A' on the keyboard interface
-device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted, which is the lock's`}</code></pre>
+device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted`}</code></pre>
         </Card>
       </div>
 
