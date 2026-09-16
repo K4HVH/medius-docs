@@ -15,10 +15,8 @@ const Transform: Component = () => {
           <A href="/library/advanced/raw">advanced control layer</A>.
         </p>
         <p>
-          A transform is structural. How much of a field survives is{' '}
-          <A href="/library/lock#scale"><code>scale</code></A>'s, whose percent is signed, so a{' '}
-          <code>-100</code> there inverts an axis and a <code>0</code> blocks it. The weigh runs first
-          and a transform carries what it left.
+          It is structural: how much of a field survives is{' '}
+          <A href="/library/lock#scale"><code>scale</code></A>'s, which runs first.
         </p>
         <p>
           Transforms run before rendering, so <A href="/library/inject">injection</A>, riding, and

@@ -24,7 +24,7 @@ const Lock: Component = () => {
           <table class="api-params">
             <thead><tr><th>Weigh a...</th><th>Any percentage, signed</th><th>Block</th><th>Release</th></tr></thead>
             <tbody>
-              <tr><td>relative axis (X / Y / wheel)</td><td><A href="/library/lock#scale"><code>scale</code></A> / <A href="/library/lock#lock-axis"><code>scale_axis</code></A></td><td><A href="/library/lock#lock"><code>lock</code></A> / <A href="/library/lock#lock-axis"><code>lock_axis</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A> / <A href="/library/lock#lock-axis"><code>unlock_axis</code></A></td></tr>
+              <tr><td>relative axis (X / Y / wheel / pan)</td><td><A href="/library/lock#scale"><code>scale</code></A> / <A href="/library/lock#lock-axis"><code>scale_axis</code></A></td><td><A href="/library/lock#lock"><code>lock</code></A> / <A href="/library/lock#lock-axis"><code>lock_axis</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A> / <A href="/library/lock#lock-axis"><code>unlock_axis</code></A></td></tr>
               <tr><td>button, key, or media usage</td><td>truncates to a lock; a negative is refused</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
               <tr><td>a whole class (blanket)</td><td><A href="/library/lock#lock-all"><code>scale_all</code></A></td><td><A href="/library/lock#lock-all"><code>lock_all</code></A></td><td><A href="/library/lock#lock-all"><code>unlock_all</code></A></td></tr>
             </tbody>
@@ -54,24 +54,14 @@ const Lock: Component = () => {
           <p>
             A delta picks up one fixed-direction scale and one relative one, multiplied, so a block in either zeroes the product. <code>With</code> and <code>Against</code> need a live bearing; see{' '}
             <A href="/library/options#set-bearing"><code>set_bearing</code></A>. A momentary usage
-            carries one bit, so any scale under 100 locks it.
+            carries one bit, so any scale under 100 locks it and a negative on one is{' '}
+            <A href="/library/types/errors#errors"><code>Error::LockScaleUsage</code></A>.
           </p>
-          <div class="callout callout--info">
-            <p>
-              <strong>The sign is the inversion.</strong> A negative percent weighs the physical value
-              and reverses what it keeps, so <code>-100</code> on an axis flips it exactly and{' '}
-              <code>-50</code> keeps half of it the other way round. This is the only path that weighs
-              a field: a <A href="/library/transform"><code>transform</code></A> moves one and never
-              weighs it.
-            </p>
-            <p>
-              The slot is picked from the sign of the delta <em>before</em> the weigh, so a directional
-              negative is well defined: <code>-100</code> on <code>Positive</code> sends rightward
-              motion left and leaves leftward motion alone. One bit has nothing to reverse, so a
-              negative on a button, key or media usage is{' '}
-              <A href="/library/types/errors#errors"><code>Error::LockScaleUsage</code></A>.
-            </p>
-          </div>
+          <p>
+            The slot comes from the delta's sign before the weigh, so a <code>Positive</code> of{' '}
+            <code>-100</code> turns what arrived rightward into leftward and leaves the other sign
+            alone.
+          </p>
           <div class="callout callout--info">
             <p>
               <code>Direction::Both</code> writes the scale to the two fixed signs and a full pass to
@@ -83,9 +73,9 @@ const Lock: Component = () => {
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
-device.scale(Axis::X, Direction::Against, 40)?;  // 40% of movement opposing the injection
-device.scale(Axis::X, Direction::With, 130)?;    // 130% of movement along it
-device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, always
+device.scale(Axis::X, Direction::Against, 40)?;  // 40% of physical motion opposing the injection
+device.scale(Axis::X, Direction::With, 130)?;    // 130% of it along the injection
+device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward motion, always
 device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted`}</code></pre>
         </Card>
       </div>

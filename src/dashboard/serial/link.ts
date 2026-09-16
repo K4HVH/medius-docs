@@ -884,14 +884,14 @@ export class SerialLink {
     return resp.patch;
   }
 
-  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new op or
-  // scale overwrites. Transforms are faithful and ungated. Fire-and-forget; read the table back with
+  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new op
+  // overwrites. Transforms are faithful and ungated. Fire-and-forget; read the table back with
   // `queryTransforms` to see that it landed rather than being refused by a full or undeclared field.
   setTransform(t: Transform): Promise<void> {
     return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 1)));
   }
 
-  // Remove one transform, matched on its (source, dest) key; the op and scale are ignored.
+  // Remove one transform, matched on its (source, dest) key; the op is ignored.
   removeTransform(t: Transform): Promise<void> {
     return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 0)));
   }
