@@ -348,9 +348,9 @@ export function queryEntryPayload(what: number, index: number): Uint8Array {
 }
 
 // TRANSFORM (§3.15): [op u8][sclass u8][sid u16 LE][dclass u8][did u16 LE][scale i16 LE][state u8].
-// state 1 adds or overwrites, 0 removes; an entry is keyed by (source, dest). Invert and Scale act on one
-// axis (source == dest), Swap on two axes, Remap moves the source field into the destination. The scale
-// is a signed percent, clamped by the box to the destination field's declared range.
+// state 1 adds or overwrites, 0 removes; an entry is keyed by (source, dest). Scale acts on one axis
+// (source == dest), Swap on two different axes, Remap moves the source field into the destination. The
+// scale is a signed percent, clamped by the box to the destination field's declared range.
 export function transformPayload(t: Transform, state: number): Uint8Array {
   const out = new Uint8Array(10);
   const dv = new DataView(out.buffer);

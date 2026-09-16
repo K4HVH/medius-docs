@@ -96,7 +96,7 @@ const DevicePatch = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="descriptor-patches" data-search-target>
         <Card>
-          <CardHeader title="Descriptor patches" subtitle="Overwrite the bytes the clone presents" />
+          <CardHeader title="Descriptor patches" subtitle="Change how the clone introduces itself" />
 
           <div style={label}>Descriptor</div>
           <RadioGroup
@@ -196,7 +196,7 @@ const DevicePatch = () => {
             </div>
             <Show
               when={entries().length > 0}
-              fallback={<p>No patches. The clone presents the native descriptors.</p>}
+              fallback={<p>Nothing patched.</p>}
             >
               <div style={chips}>
                 <For each={entries()}>

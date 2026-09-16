@@ -45,7 +45,7 @@ const DeviceRaw = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="raw-report" data-search-target>
         <Card>
-          <CardHeader title="Raw report" subtitle="Put bytes on a cloned endpoint" />
+          <CardHeader title="Raw report" subtitle="Send a report exactly as you type it" />
 
           <Show
             when={allowed()}

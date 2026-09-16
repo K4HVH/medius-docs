@@ -143,7 +143,8 @@ const Errors: Component = () => {
                 <td><code>RewriteActionClass {'{'} action, class {'}'}</code></td>
                 <td>
                   A rewrite rule's{' '}
-                  <A href="/library/advanced/rewrite#action">action does not fit its class</A>.
+                  <A href="/library/types/enums#rewrite-action"><code>action</code></A> does not fit its{' '}
+                  <A href="/library/types/enums#rewrite-class"><code>class</code></A>.
                 </td>
               </tr>
               <tr>
@@ -154,17 +155,39 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
-                <td><code>TransformOpFields {'{'} op, src, dst {'}'}</code></td>
+                <td><code>RewriteTableFull {'{'} limit {'}'}</code></td>
                 <td>
-                  A <A href="/library/transform">transform</A>'s op does not fit its source and
-                  destination fields.
+                  A further <A href="/library/advanced/rewrite">rewrite rule</A> with all{' '}
+                  <code>limit</code> already in use. Remove one first.
                 </td>
               </tr>
               <tr>
-                <td><code>TransformInvertZeroScale</code></td>
+                <td><code>TransformOpFields {'{'} op, src, dst {'}'}</code></td>
                 <td>
-                  An <A href="/library/transform">invert</A> with a <code>scale</code> of{' '}
-                  <code>0</code>, which it would ignore.
+                  A <A href="/library/types/structs#transform">transform</A>'s{' '}
+                  <A href="/library/types/enums#transform-op"><code>op</code></A> does not fit its
+                  source and destination fields.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformScaleRange {'{'} scale, max {'}'}</code></td>
+                <td>
+                  A transform <code>scale</code> whose magnitude is past <code>max</code>, the widest
+                  the box applies.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformUsageScale {'{'} src, scale, pass {'}'}</code></td>
+                <td>
+                  A percentage on a button, key, or media source, which carries one bit rather than a
+                  magnitude. Only the full <code>pass</code> fits.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransformTableFull {'{'} limit {'}'}</code></td>
+                <td>
+                  A further <A href="/library/transform">transform</A> with all <code>limit</code>{' '}
+                  already in use. Remove one first.
                 </td>
               </tr>
               <tr>

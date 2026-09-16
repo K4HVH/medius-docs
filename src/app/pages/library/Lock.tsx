@@ -104,7 +104,7 @@ device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward movement, alwa
 
 let device = Device::find()?;
 device.lock(Axis::X, Direction::Both)?;           // freeze horizontal motion
-device.lock(Button::Left, Direction::Positive)?;  // block left-click press
+device.lock(Button::LEFT, Direction::Positive)?;  // block left-click press
 device.lock(Key::LEFT_GUI, Direction::Both)?;     // block the GUI/Windows key
 device.lock(MediaKey::PLAY_PAUSE, Direction::Both)?; // media has no edges
 device.move_rel(50, 0)?;                          // injection still moves X`}</code></pre>

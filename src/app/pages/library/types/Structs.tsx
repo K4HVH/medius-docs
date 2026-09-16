@@ -250,7 +250,7 @@ let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Positive) {
     // physical +X is zeroed
 }
-if locks.is_locked(Button::Left, Direction::Negative) {
+if locks.is_locked(Button::LEFT, Direction::Negative) {
     // a left-click is latched down: the release edge is blocked
 }
 // how much of a delta opposing the injection survives
@@ -427,7 +427,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
 
 let stream = device.catch_events([CatchFilter::watch_class(Class::Button)])?;
 if let CatchEvent::Usages(s) = stream.recv()? {
-    if s.is_held(Button::Left) {
+    if s.is_held(Button::LEFT) {
         println!("left button held");
     }
 }`}</code></pre>
@@ -544,7 +544,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, Class, Key, Usage};
 
-let from_button: Usage = Button::Left.into();      // Class::Button, id 0
+let from_button: Usage = Button::LEFT.into();      // Class::Button, id 0
 let from_key: Usage = Key::A.into();               // Class::Key, id 0x04
 let by_hand = Usage::new(Class::Media, 0x00E9);    // volume up
 device.press(from_button)?;                         // press takes any impl Into<Usage>`}</code></pre>
@@ -791,6 +791,89 @@ for ev in input.by_ref().take(20) {
         </Card>
       </div>
 
+      <div id="transform" data-search-target>
+        <Card>
+          <CardHeader title="Transform" subtitle="One field operation and its signed scale" />
+          <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget, scale: i16 {'}'}</pre>
+          <p>
+            One entry in the table you hand to{' '}
+            <A href="/library/transform#transform"><code>transform</code></A>. The named constructors
+            cover the common cases; <code>new</code> is the general form.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Constructor</th><th>Builds</th></tr></thead>
+            <tbody>
+              <tr><td><code>Transform::new(op, source, dest, scale)</code></td><td>Any <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>, from an explicit source, destination and signed scale.</td></tr>
+              <tr><td><code>Transform::invert(axis)</code></td><td>A <code>Scale</code> of <code>-100</code>: see <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>.</td></tr>
+              <tr><td><code>Transform::scale_axis(axis, percent)</code></td><td>A <code>Scale</code> on one axis.</td></tr>
+              <tr><td><code>Transform::swap(a, b)</code></td><td>A <code>Swap</code> of two axes, at a full pass.</td></tr>
+              <tr><td><code>Transform::remap(source, dest)</code></td><td>A <code>Remap</code>, at a full pass. Any <A href="/library/types/enums#axis"><code>Axis</code></A>, <code>Button</code>, <code>Key</code>, <code>MediaKey</code> or <A href="/library/types/structs#usage"><code>Usage</code></A> converts into the <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> it takes.</td></tr>
+              <tr><td><code>.with_scale(scale)</code></td><td>The same transform at another signed scale: a weighed swap or axis remap.</td></tr>
+              <tr><td><code>.key()</code></td><td>The <A href="/library/types/structs#transform-key"><code>TransformKey</code></A> this entry is filed under.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>op</code></td><td><A href="/library/types/enums#transform-op"><code>TransformOp</code></A></td><td>What the transform does. An op that cannot address this source and destination pair is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>.</td></tr>
+              <tr><td><code>source</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform reads. One the clone's descriptor does not declare is refused box-side, and absent from the readback.</td></tr>
+              <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes; the same as <code>source</code> for a scale. A cross-class remap with no destination collection is refused box-side.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>A percent carrying a sign: <code>-100</code> negates, <code>100</code> is identity, <code>200</code> doubles, <code>-50</code> halves and flips, <code>0</code> blocks the source. A magnitude past <code>LOCK_SCALE_MAX</code> (255) is <A href="/library/types/errors#errors"><code>Error::TransformScaleRange</code></A>. A button, key or media source carries one bit rather than a magnitude, so it takes only the full pass of <code>100</code>; anything else is <A href="/library/types/errors#errors"><code>Error::TransformUsageScale</code></A>.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The written value is clamped to the destination field's declared range.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Axis, Button, Key, Transform, TransformOp};
+
+let flip = Transform::invert(Axis::Y);
+assert_eq!((flip.op, flip.scale), (TransformOp::Scale, -100));
+
+let fast_wheel = Transform::scale_axis(Axis::Wheel, 200);         // double the detents
+let half_swap = Transform::swap(Axis::X, Axis::Y).with_scale(50); // exchanged, and halved
+let side_key = Transform::remap(Button::new(4), Key::A);          // the fifth button types 'A'`}</code></pre>
+        </Card>
+      </div>
+      <div id="transform-key" data-search-target>
+        <Card>
+          <CardHeader title="TransformKey" subtitle="The (source, dest) pair an entry is filed under" />
+          <pre class="api-signature">struct TransformKey {'{'} source: LockTarget, dest: LockTarget {'}'}</pre>
+          <p>
+            What <A href="/library/types/structs#transform"><code>Transform::key</code></A> returns, and
+            what <A href="/library/transform#untransform"><code>untransform</code></A> drops by. Two
+            transforms sharing a key are one entry: setting the second overwrites the first's op and
+            scale in place, keeping its position in the table.
+          </p>
+        </Card>
+      </div>
+      <div id="transforms" data-search-target>
+        <Card>
+          <CardHeader title="Transforms" subtitle="The transform table, read back" />
+          <pre class="api-signature">struct Transforms {'{'} table_full: bool, entries: Vec&lt;Transform&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/transform#query-transforms"><code>query_transforms</code></A>{' '}
+            returns: the held entries, as the commands that rebuild them. There is no generation
+            counter and no per-entry state, because the table is re-asserted wholesale on reconnect and
+            every entry read back is a live one.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>table_full</code></td><td><code>bool</code></td><td>A further entry was, or would be, refused past <code>Transforms::CAPACITY</code>, the 32 the box holds.</td></tr>
+              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#transform">Transform</A>&gt;</code></td><td>One per installed transform, in installation order, which is the order the box applies them. Two that write the same field do not commute, so that order is part of the state.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Transforms;
+
+let table = device.query_transforms()?;
+println!("{}/{} transforms", table.entries.len(), Transforms::CAPACITY);
+for t in &table.entries {
+    println!("  {:?} {:?} -> {:?} x{}", t.op, t.source, t.dest, t.scale);
+}`}</code></pre>
+        </Card>
+      </div>
       <div id="imperfect-status" data-search-target>
         <Card>
           <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />
@@ -1008,7 +1091,7 @@ if cfg.loop_ && cfg.finalized {
           <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
 
 // Toggle the clip on a Side1 press, and suppress that press.
-let trig = ClipTrigger::new(Button::Side1, Edge::Press, ClipAction::Toggle).consume();
+let trig = ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle).consume();
 handle.bind(trig)?;`}</code></pre>
         </Card>
       </div>
@@ -1101,6 +1184,197 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>percent()</code></td><td><code>u8</code></td><td><code>sent</code> as a percentage of <code>total</code>; <code>100</code> when <code>total</code> is <code>0</code>.</td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+      <div id="setup" data-search-target>
+        <Card>
+          <CardHeader title="Setup" subtitle="The eight-byte USB setup packet" />
+          <pre class="api-signature">struct Setup {'{'} request_type: u8, request: u8, value: u16, index: u16, length: u16 {'}'}</pre>
+          <p>
+            What a <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries. It
+            is the <a href="https://www.usb.org/document-library/usb-20-specification" target="_blank" rel="noreferrer">USB §9.3</a>{' '}
+            setup packet: <code>bmRequestType</code>, <code>bRequest</code>, <code>wValue</code>,{' '}
+            <code>wIndex</code>, <code>wLength</code>, little-endian on the wire.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>request_type</code></td><td><code>u8</code></td><td><code>bmRequestType</code>: direction in bit 7 (set is device-to-host / IN), then type and recipient.</td></tr>
+              <tr><td><code>request</code></td><td><code>u8</code></td><td><code>bRequest</code>: the request code.</td></tr>
+              <tr><td><code>value</code></td><td><code>u16</code></td><td><code>wValue</code>: request-specific.</td></tr>
+              <tr><td><code>index</code></td><td><code>u16</code></td><td><code>wIndex</code>: request-specific, often an interface or endpoint.</td></tr>
+              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the device may return fewer); for an OUT request, the length of the data you pass.</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`  byte   0            1          2   3         4   5         6   7
+        +------------+----------+---------+---------+---------+
+        |request_type| request  |  value  |  index  | length  |
+        | bmRequest  | bRequest  | wValue  | wIndex  | wLength |
+        +------------+----------+---------+---------+---------+
+                                  <-- LE -> <-- LE -> <-- LE ->`}</pre>
+          <p>
+            <code>Setup::new</code> builds one from its five fields; <code>is_in</code> reads the
+            direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
+            little-endian). It is what a{' '}
+            <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::Setup;
+
+// GET_DESCRIPTOR(Device): standard device-to-host request for the 18-byte device descriptor.
+let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
+assert!(setup.is_in());
+assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
+        </Card>
+      </div>
+      <div id="transfer-outcome" data-search-target>
+        <Card>
+          <CardHeader title="TransferOutcome" subtitle="The device's answer: status and any IN data" />
+          <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
+            non-<code>Ok</code> <A href="/library/types/enums#transfer-status"><code>status</code></A>{' '}
+            carries no data.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Member</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>status</code></td><td><A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
+              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
+              <tr><td><code>.is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
+              <tr><td><code>.data()</code></td><td><code>&amp;[u8]</code></td><td>The returned data.</td></tr>
+              <tr><td><code>.ok_data()</code></td><td><code>Option&lt;Vec&lt;u8&gt;&gt;</code></td><td>The data if the transfer completed, else <code>None</code>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="rewrite-rule" data-search-target>
+        <Card>
+          <CardHeader title="RewriteRule" subtitle="The rewrite rule you install" />
+          <pre class="api-signature">fn new(class: RewriteClass, id: u16, direction: Direction, action: RewriteAction) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+          <p>
+            One entry in the table you hand to{' '}
+            <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
+            chaining onto <code>new</code>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>class</code></td><td><A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A></td><td>The traffic class the rule addresses.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The address within the class: an interface number or an endpoint number.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code> (IN) or <code>Negative</code> (OUT). <code>With</code> and <code>Against</code> resolve at emit time, after a rule is addressed, so either is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet. One that does not fit the class is <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, or the rule is <A href="/library/types/errors#errors"><code>Error::RewriteMaskLength</code></A>; empty matches every packet on the address.</td></tr>
+              <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="rewrite-table" data-search-target>
+        <Card>
+          <CardHeader title="RewriteTable and RewriteEntry" subtitle="The rewrite table, read back" />
+          <pre class="api-signature">struct RewriteTable {'{'} table_full: bool, generation: u8, entries: Vec&lt;RewriteEntry&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>{' '}
+            returns: a summary row per rule, without its match, mask, or payload bytes. Read one rule in
+            full with{' '}
+            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>RewriteTable</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>table_full</code></td><td><code>bool</code></td><td>A further rule was, or would be, refused past the 32 the box holds (<code>REWRITE_MAX_ENTRIES</code>).</td></tr>
+              <tr><td><code>generation</code></td><td><code>u8</code></td><td>Bumps only on a change that alters the table, so a host holding a last-seen value re-sends only when the box's diverges. The crate does this for you.</td></tr>
+              <tr><td><code>entries</code></td><td><code>Vec&lt;RewriteEntry&gt;</code></td><td>One row per rule, in installation order, not the most-specific-first order the box selects a match by.</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead>
+              <tr><th>RewriteEntry</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>class</code>, <code>id</code>, <code>direction</code>, <code>action</code></td><td>as set</td><td>The rule's address and action.</td></tr>
+              <tr><td><code>match_len</code></td><td><code>u8</code></td><td>How many match and mask bytes the rule compares.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The write offset for a patching action.</td></tr>
+              <tr><td><code>payload_len</code></td><td><code>u16</code></td><td>How many payload bytes the rule carries.</td></tr>
+              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the rule has matched since it was installed, saturating.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <A href="/library/requests#health"><code>query_health</code></A> reports a non-empty table in
+            its <A href="/library/types/structs#health"><code>rewrite_on</code></A> flag.
+          </p>
+        </Card>
+      </div>
+      <div id="patch" data-search-target>
+        <Card>
+          <CardHeader title="Patch" subtitle="The descriptor overwrite you store" />
+          <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <pre class="api-signature">fn in_string(index: u8, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+          <p>
+            One entry in the set you hand to{' '}
+            <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A>, with a constructor
+            per section.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>section</code></td><td><A href="/library/types/enums#patch-section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
+              <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>.</td></tr>
+              <tr><td><code>index</code></td><td><code>u8</code></td><td>The interface or string index, for <code>Report</code> / <code>String</code>.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The overwrite bytes; empty removes the patch at this key.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="patch-set" data-search-target>
+        <Card>
+          <CardHeader title="PatchSet and PatchEntry" subtitle="The stored patch set and its apply state" />
+          <pre class="api-signature">struct PatchSet {'{'} applied: bool, pending: bool, refused: bool, table_full: bool, entries: Vec&lt;PatchEntry&gt; {'}'}</pre>
+          <p>
+            What <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>{' '}
+            returns. An entry carries a patch's key and length but not its bytes; read a full patch with{' '}
+            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>PatchSet flag</th><th>Set when</th></tr></thead>
+            <tbody>
+              <tr><td><code>applied</code></td><td>The stored set is applied to the live clone.</td></tr>
+              <tr><td><code>pending</code></td><td>A stored change has not been applied yet; an <code>apply_patch</code> would re-present with it.</td></tr>
+              <tr><td><code>refused</code></td><td>The last apply was refused: a patched descriptor's advertised length no longer matched what it serves. The box logged why.</td></tr>
+              <tr><td><code>table_full</code></td><td>The store is full: a further patch was, or would be, refused past the 16 it holds (<code>PATCH_MAX_ENTRIES</code>).</td></tr>
+            </tbody>
+          </table>
+          <table class="api-params">
+            <thead><tr><th>PatchEntry</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>section</code>, <code>cfg</code>, <code>index</code>, <code>offset</code></td><td>as set</td><td>The patch's key.</td></tr>
+              <tr><td><code>len</code></td><td><code>u16</code></td><td>How many bytes the patch overwrites.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <A href="/library/requests#health"><code>query_health</code></A> reports an applied set in its{' '}
+            <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
+          </p>
+          <pre class="diagram">{`  set_patch        --> stored          (survives reconnect; NVS, per VID:PID)
+     |                     |
+     | apply_patch         v
+     +-------------> pending -> applied  (one replug; the clone re-presents patched)
+                            \\
+                             +-> refused (a patched length diverged; logged)`}</pre>
         </Card>
       </div>
 

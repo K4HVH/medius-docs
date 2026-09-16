@@ -43,7 +43,7 @@ const CLASS_BLURB: Record<number, string> = {
   [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
   [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
   [CatchClass.Control]: 'Setup packets on a control endpoint.',
-  [CatchClass.Emit]: 'What the clone puts on the wire, injection included.',
+  [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
 };
 
 const ACTION_BLURB: Record<number, string> = {
@@ -176,7 +176,7 @@ const DeviceRewrite = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="rewrite-rules" data-search-target>
         <Card>
-          <CardHeader title="Rewrite rules" subtitle="Rewrite a matched packet in flight" />
+          <CardHeader title="Rewrite rules" subtitle="Change the traffic the box carries" />
 
           <Show
             when={allowed()}
@@ -287,7 +287,7 @@ const DeviceRewrite = () => {
               </div>
               <Show
                 when={entries().length > 0}
-                fallback={<p>No rules. Every packet passes through as the device sends it.</p>}
+                fallback={<p>Nothing rewritten.</p>}
               >
                 <div style={chips}>
                   <For each={entries()}>

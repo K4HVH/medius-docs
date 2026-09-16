@@ -280,7 +280,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
 
           <p>
             A <A href="/library/types/frames"><code>DecodedFrame</code></A> from a{' '}
-            <A href="/library/inject"><code>press(Button::Left)</code></A> is a{' '}
+            <A href="/library/inject"><code>press(Button::LEFT)</code></A> is a{' '}
             <A href="/library/types/frames"><code>FrameType::Inject</code></A> frame with payload{' '}
             <code>[0, 0, 0, 1]</code> (class <code>0</code> = button, id <code>0</code>, action{' '}
             <code>1</code>).
@@ -292,7 +292,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
 
-device.press(Button::Left)?;
+device.press(Button::LEFT)?;
 
 let frames = mock.recorded_frames();
 let inject = frames

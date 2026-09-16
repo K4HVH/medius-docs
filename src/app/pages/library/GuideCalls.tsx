@@ -132,9 +132,9 @@ for _ in 0..200 {
           <pre><code class="language-rust">{`use std::{thread, time::Duration};
 use medius::Button;
 
-device.press(Button::Left)?;
+device.press(Button::LEFT)?;
 thread::sleep(Duration::from_millis(20));
-device.release(Button::Left)?;`}</code></pre>
+device.release(Button::LEFT)?;`}</code></pre>
           <p>
             <A href="/library/admin#reset"><code>reset</code></A> drops every override at once; a held
             press is re-asserted on reconnect via{' '}

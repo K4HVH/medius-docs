@@ -98,7 +98,7 @@ const DeviceTransfer = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="control-transfer" data-search-target>
         <Card>
-          <CardHeader title="Control transfer" subtitle="Run one control request against the device" />
+          <CardHeader title="Control transfer" subtitle="Ask the real device and read its answer" />
 
           <Show
             when={allowed()}

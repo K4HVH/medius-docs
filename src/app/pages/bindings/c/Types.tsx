@@ -1784,14 +1784,14 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="MediusTransform" subtitle="One field transform" />
-          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s (equal for invert and scale). See <A href="/library/transform">Transform</A>.</p>
+          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, equal to each other for a scale. See <A href="/library/transform">Transform</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFORM_OP_*</code> value: <code>_REMAP</code> 0, <code>_SWAP</code> 1, <code>_INVERT</code> 2, <code>_SCALE</code> 3.</td></tr>
+              <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFORM_OP_*</code> value: <code>_REMAP</code> 0, <code>_SWAP</code> 1, <code>_SCALE</code> 2.</td></tr>
               <tr><td><code>source</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field the transform reads.</td></tr>
               <tr><td><code>dest</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field it writes.</td></tr>
-              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Signed percent (-100 inverts, 100 identity, 200 doubles); ignored by <code>_INVERT</code>.</td></tr>
+              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>MEDIUS_LOCK_SCALE_MAX</code>; a button, key or media source takes only 100.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1849,9 +1849,12 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>21</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>22</code></td><td>A rewrite action that is not valid for its class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>23</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>24</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_INVERT_ZERO_SCALE</code></td><td><code>25</code></td><td>A scale of 0 on an invert, which ignores its scale.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>26</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_TABLE_FULL</code></td><td><code>24</code></td><td>A rewrite rule added to a table that already holds <code>MEDIUS_MAX_REWRITE_ENTRIES</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>25</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_SCALE_RANGE</code></td><td><code>26</code></td><td>A transform scale whose magnitude is past <code>MEDIUS_LOCK_SCALE_MAX</code>, the widest the box weighs.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_USAGE_SCALE</code></td><td><code>27</code></td><td>A transform percentage on a button, key or media source, which carries one bit.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td><td>A transform added to a table that already holds <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
             </tbody>
           </table>
           <table class="api-params">

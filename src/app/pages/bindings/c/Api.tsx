@@ -412,11 +412,11 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
               <tr><td><code>medius_device_transform(MediusDevice *dev, const MediusTransform *transform)</code></td><td>Install or overwrite one <A href="/bindings/c/types#transform"><code>transform</code></A>.</td></tr>
               <tr><td><code>medius_device_untransform(MediusDevice *dev, const MediusTransform *transform)</code></td><td>Drop the transform with this one's (source, dest) key.</td></tr>
               <tr><td><code>medius_device_clear_transforms(MediusDevice *dev)</code></td><td>Drop the whole transform table.</td></tr>
-              <tr><td><code>medius_device_invert(MediusDevice *dev, uint8_t axis)</code></td><td>Negate an axis.</td></tr>
-              <tr><td><code>medius_device_scale_transform(MediusDevice *dev, uint8_t axis, int16_t percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
-              <tr><td><code>medius_device_swap(MediusDevice *dev, uint8_t a, uint8_t b)</code></td><td>Exchange two axes.</td></tr>
-              <tr><td><code>medius_device_remap(MediusDevice *dev, MediusLockTarget source, MediusLockTarget dest)</code></td><td>Move a source field into a destination.</td></tr>
-              <tr><td><code>medius_device_query_transforms(MediusDevice *dev, MediusTransforms *out)</code></td><td>Read the active table (up to eight entries).</td></tr>
+              <tr><td><code>medius_device_transform_invert(MediusDevice *dev, uint8_t axis)</code></td><td>Negate an axis.</td></tr>
+              <tr><td><code>medius_device_transform_scale(MediusDevice *dev, uint8_t axis, int16_t percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
+              <tr><td><code>medius_device_transform_swap(MediusDevice *dev, uint8_t a, uint8_t b)</code></td><td>Exchange two axes.</td></tr>
+              <tr><td><code>medius_device_transform_remap(MediusDevice *dev, MediusLockTarget source, MediusLockTarget dest)</code></td><td>Move a source field into a destination.</td></tr>
+              <tr><td><code>medius_device_query_transforms(MediusDevice *dev, MediusTransforms *out)</code></td><td>Read the active table, in the order the box applies it.</td></tr>
             </tbody>
           </table>
         </Card>

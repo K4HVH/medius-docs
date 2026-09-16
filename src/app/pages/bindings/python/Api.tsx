@@ -319,11 +319,11 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
               <tr><td><code>dev.transform(t)</code></td><td>Install or overwrite one <A href="/bindings/python/types#transform"><code>Transform</code></A>.</td></tr>
               <tr><td><code>dev.untransform(t)</code></td><td>Drop the transform with this one's (source, dest) key.</td></tr>
               <tr><td><code>dev.clear_transforms()</code></td><td>Drop the whole transform table.</td></tr>
-              <tr><td><code>dev.invert(axis)</code></td><td>Negate an axis.</td></tr>
-              <tr><td><code>dev.scale_transform(axis, percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
-              <tr><td><code>dev.swap(a, b)</code></td><td>Exchange two axes.</td></tr>
-              <tr><td><code>dev.remap(source, dest)</code></td><td>Move a source field into a destination.</td></tr>
-              <tr><td><code>dev.query_transforms()</code></td><td>The <A href="/bindings/python/types#transforms"><code>Transforms</code></A> table (up to eight entries).</td></tr>
+              <tr><td><code>dev.transform_invert(axis)</code></td><td>Negate an axis (a scale of -100).</td></tr>
+              <tr><td><code>dev.transform_scale(axis, percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
+              <tr><td><code>dev.transform_swap(a, b)</code></td><td>Exchange two different axes.</td></tr>
+              <tr><td><code>dev.transform_remap(source, dest)</code></td><td>Move a source field into a destination.</td></tr>
+              <tr><td><code>dev.query_transforms()</code></td><td>The <A href="/bindings/python/types#transforms"><code>Transforms</code></A> table, in the order the box applies it.</td></tr>
             </tbody>
           </table>
         </Card>
