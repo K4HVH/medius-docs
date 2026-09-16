@@ -380,8 +380,9 @@ export interface Locks {
 }
 
 // The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
-// weighs it. Both reports the lowest across every direction, so the worst case a delta could meet.
-// Where several entries cover the same direction the lowest is reported, matching the box multiplying them.
+// weighs it. Both reports the least that survives across every direction, so the worst case a delta
+// could meet, ranked by magnitude so a block outranks a reversal of any size. Where several entries
+// cover the same direction the least is reported, matching the box multiplying them.
 export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
   // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
   // target it never names. Matching on the exact id alone under-reported one, which is how a blanket
@@ -395,7 +396,12 @@ export function scaleOf(locks: Locks, target: LockTarget, direction: Direction):
         x.direction === Direction.Both ||
         x.direction === direction),
   );
-  return covering.length ? Math.min(...covering.map((x) => x.scale)) : LOCK_SCALE_PASS;
+  // By magnitude, not by value: a signed minimum ranks -50 below 0 and would report a reversal over a
+  // block, when the block is what the delta actually meets.
+  if (!covering.length) return LOCK_SCALE_PASS;
+  return covering
+    .map((x) => x.scale)
+    .reduce((a, b) => (Math.abs(b) < Math.abs(a) || (Math.abs(b) === Math.abs(a) && b < a) ? b : a));
 }
 
 // True when the target is blocked outright on that direction. A direction merely weighed is not

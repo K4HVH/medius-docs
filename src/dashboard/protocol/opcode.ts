@@ -356,7 +356,7 @@ export enum FrameType {
   TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (its own opcode, SEQ-correlated)
   Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
   Patch = 0x1d, // [section][cfg][index][offset u16][bytes..] a descriptor patch
-  Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][scale i16][state] a field transform
+  Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][state] a field transform
 }
 
 // Byte width of the ts_us field every catch event frame leads with (§4.10).

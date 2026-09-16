@@ -32,9 +32,8 @@ const Transform: Component = () => {
           </tbody>
         </table>
         <p>
-          Both ops move a value. How much of it there is to move is{' '}
-          <A href="/native/commands/lock#scale"><code>LOCK</code></A>'s, whose percent is signed, so
-          a <code>-100</code> there inverts an axis and a <code>0</code> blocks it. An{' '}
+          Both ops move a value; weighing one is{' '}
+          <A href="/native/commands/lock#scale"><code>LOCK</code></A>'s, whose percent is signed. An{' '}
           <code>op</code> above <code>1</code> is refused.
         </p>
         <p>
@@ -77,28 +76,14 @@ const Transform: Component = () => {
           <div id="weighing" data-search-target>
             <div class="api-response-label">WEIGHING IS THE LOCK'S</div>
             <p>
-              A transform says where a value lands, never how much of it survives. There is one
-              command that weighs a field and one that moves it, and the weigh runs first:
+              A transform says where a value lands, never how much of it survives. The weigh runs
+              first, and its rounding remainder is banked once, per axis and sign, by the{' '}
+              <A href="/native/commands/lock#scale">lock</A>.
             </p>
-            <pre class="diagram">{`  LOCK(X, both, -50)      keep half of X, the other way round
+            <pre class="diagram">{`  LOCK(X, both, -50)      keep half of X, reversed
   TRANSFORM(swap, X, Y)   and put what is left on Y
 
   physical X = +10  ->  weighed -5  ->  emitted on Y`}</pre>
-            <table class="api-params">
-              <thead>
-                <tr><th>Want</th><th>Send</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>invert an axis</td><td><A href="/native/commands/lock#scale"><code>LOCK</code></A> at <code>-100</code>, which the box applies exactly</td></tr>
-                <tr><td>weigh an axis</td><td><code>LOCK</code> at that percent: <code>200</code> doubles, <code>-50</code> halves and flips</td></tr>
-                <tr><td>block an axis</td><td><code>LOCK</code> at <code>0</code></td></tr>
-                <tr><td>move a field</td><td><code>TRANSFORM</code>, which carries whatever the weigh left</td></tr>
-              </tbody>
-            </table>
-            <p>
-              One ledger follows from that: the fraction an integer weigh drops is banked once, by the
-              lock, per axis and sign.
-            </p>
           </div>
 
           <div class="api-response-label">REFUSALS</div>
@@ -109,7 +94,7 @@ const Transform: Component = () => {
             <tbody>
               <tr><td><code>op</code> is above <code>1</code></td><td>remap and swap are the whole set</td></tr>
               <tr><td>the op does not admit that <A href="/native/commands/transform#pairs">class pair</A></td><td>each op names the shapes it can read and write</td></tr>
-              <tr><td>the source and the destination are the same field</td><td>both ops move a value, so there would be nowhere to move it to; weighing one in place is the <A href="/native/commands/lock#scale">lock</A>'s</td></tr>
+              <tr><td>the source and the destination are the same field</td><td>both ops move a value; weighing one in place is the <A href="/native/commands/lock#scale">lock</A>'s</td></tr>
               <tr><td>a field this clone does not declare</td><td>the box will not store an address it cannot reach; re-send the entry after a re-clone</td></tr>
               <tr><td>the table already holds 32 entries</td><td>nothing is evicted; the readback's full flag says an entry was turned away</td></tr>
             </tbody>
@@ -192,13 +177,6 @@ const Transform: Component = () => {
             picks up the source's on top. Only the source is zeroed. The sum is clamped to the
             destination's declared range like any other result.
           </p>
-          <div class="api-response-label">WEIGHING THE PAIR</div>
-          <p>
-            Both fields carry whatever their own{' '}
-            <A href="/native/commands/lock#scale">scales</A> left, since the weigh runs first. A swap
-            of two axes weighed <code>-100</code> and <code>100</code> exchanges an inverted one with
-            an untouched one, which is two commands rather than an operation of its own.
-          </p>
         </Card>
       </div>
 
@@ -253,8 +231,7 @@ const Transform: Component = () => {
           <p>
             The keycode is a <A href="/native/commands/usage#keycodes">HID keyboard usage</A>; a
             media destination takes a 16-bit{' '}
-            <A href="/native/commands/usage#consumer">Consumer usage</A>. A key or media field is a
-            single bit, so there is nothing to weigh on either end of a cross-class remap.
+            <A href="/native/commands/usage#consumer">Consumer usage</A>.
           </p>
         </Card>
       </div>

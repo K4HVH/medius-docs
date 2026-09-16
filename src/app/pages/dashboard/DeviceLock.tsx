@@ -5,10 +5,9 @@
 // list below could already render them when another client set them.
 //
 // Blocking and passing are the two ends of one scale. The buttons are shortcuts to those two named
-// constants, which the slider's own range reaches as well. The percent is signed, so the same slider
-// reaches a reversal: the sign is what inverts an axis, and it is why a transform has no weighing of
-// its own. The two bearing-relative directions mean nothing without a bearing, so they are offered on
-// axes alone, and a reversal only on axes at all: one bit has nothing to reverse.
+// constants, which the slider's own range reaches as well, and the range is signed because the sign is
+// what inverts an axis. The two bearing-relative directions mean nothing without a bearing, so they
+// are offered on axes alone, and a reversal only on axes at all: one bit has nothing to reverse.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -197,7 +196,9 @@ const DeviceLock = () => {
           <Show when={isAxis()}>
             <div style={section}>
               <div style={label}>
-                Keep {scale()}% of the real movement{scale() < 0 ? ', the other way round' : ''}
+                {scale() < 0
+                  ? `Reverse the real motion, keeping ${Math.abs(scale())}%`
+                  : `Keep ${scale()}% of the real motion`}
               </div>
               <Slider
                 value={scale()}
@@ -216,12 +217,6 @@ const DeviceLock = () => {
             </div>
           </Show>
 
-          <Show when={isAxis() && scale() < 0}>
-            <div class="callout callout--info" style={section}>
-              A negative percent reverses what it keeps, so -100% inverts the axis. The direction is
-              read before the weigh, so a reversal on one sign leaves the other alone.
-            </div>
-          </Show>
 
           <Show when={isAxis() && isRelativeDirection(dir())}>
             <div class="callout callout--info" style={section}>

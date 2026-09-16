@@ -746,6 +746,27 @@ describe('LOCK command (§3.8)', () => {
     expect(scaleOf(locks, lockAxis(LockAxis.X), Direction.Positive)).toBe(60);
   });
 
+  it('scaleOf ranks a block above a reversal, since a block is what a delta meets', () => {
+    // A signed minimum calls -50 the lowest and reports a reversal over a block. Both is the least
+    // that SURVIVES, which is a magnitude.
+    const mixed = {
+      entries: [
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Positive, scale: 0 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: -50 },
+      ],
+    };
+    expect(scaleOf(mixed, lockAxis(LockAxis.X), Direction.Both)).toBe(LOCK_SCALE_BLOCK);
+    expect(scaleOf(mixed, lockAxis(LockAxis.X), Direction.Against)).toBe(-50);
+    // and with nothing blocked, the reversal is still the least that survives against a wider pass
+    const weighed = {
+      entries: [
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Positive, scale: 130 },
+        { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: -100 },
+      ],
+    };
+    expect(scaleOf(weighed, lockAxis(LockAxis.X), Direction.Both)).toBe(-100);
+  });
+
   it('returns null for a truncated RESP(LOCKS) payload', () => {
     expect(parseResp(new Uint8Array([6]))).toBeNull(); // needs the n byte
     expect(parseResp(new Uint8Array([6, 1, 3, 2, 0, 2]))).toBeNull(); // n=1 but only 4 entry bytes

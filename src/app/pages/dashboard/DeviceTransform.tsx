@@ -1,8 +1,7 @@
-// Move what a field the real device drives into another field before the clone emits it.
+// Move the value of one field the real device drives into another, before the clone emits it.
 //
 // The picker is the shared one, so a remap reaches a key or a media usage and not only another axis.
-// A transform is structural: it says where a value lands, never how much of it survives, which is the
-// lock panel's and is where the signed percent lives.
+// There is no percent here: weighing a field is the lock panel's, whose scale is signed.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -131,7 +130,7 @@ const DeviceTransform = () => {
 
   const apply = () => {
     // Both operations MOVE a value, so a field named as both ends is not an operation at all and the
-    // box refuses it. Say so here rather than sending a frame that silently does nothing.
+    // box refuses it. Say so here rather than sending a frame the box drops with no reply.
     const s = source();
     const d = dest();
     if (s.cls === d.cls && s.id === d.id) {
@@ -190,11 +189,6 @@ const DeviceTransform = () => {
           <Show when={buttonSource()}>
             <p>A button carries one bit, so it arrives whole or not at all.</p>
           </Show>
-
-          <p>
-            A transform says where an input lands, not how much of it arrives. To weigh one, or to flip
-            its direction, set its input scale below: a negative percent reverses the axis.
-          </p>
 
           <div style={{ ...section, ...row }}>
             <Button variant="primary" disabled={cmd.busy()} onClick={apply}>

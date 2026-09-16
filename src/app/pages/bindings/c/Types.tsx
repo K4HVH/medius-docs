@@ -1845,14 +1845,14 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td><code>18</code></td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>20</code></td><td>An advanced control layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>21</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>22</code></td><td>A rewrite action that is not valid for its class.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>23</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_TABLE_FULL</code></td><td><code>24</code></td><td>A rewrite rule added to a table that already holds <code>MEDIUS_MAX_REWRITE_ENTRIES</code>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>25</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_SCALE_RANGE</code></td><td><code>26</code></td><td>A transform scale whose magnitude is past <code>MEDIUS_LOCK_SCALE_MAX</code>, the widest the box weighs.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_USAGE_SCALE</code></td><td><code>27</code></td><td>A transform percentage on a button source, which carries one bit.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_RANGE</code></td><td><code>20</code></td><td>A lock scale outside <code>MEDIUS_LOCK_SCALE_MIN</code> to <code>MEDIUS_LOCK_SCALE_MAX</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code></td><td><code>21</code></td><td>A negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td>An advanced control layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td>A rewrite action that is not valid for its class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td>A rewrite rule added to a table that already holds <code>MEDIUS_MAX_REWRITE_ENTRIES</code>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>27</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair, or one field named as both.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td><td>A transform added to a table that already holds <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
             </tbody>

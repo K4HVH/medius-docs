@@ -217,10 +217,8 @@ detach      the real device goes away`}</pre>
 | SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
-            Invert X on both signs: <code>scale = -100</code>, which is <code>0xFF9C</code>
-            little-endian. There is no separate invert command, and no{' '}
-            <A href="/native/commands/transform">transform</A> op for it either: weighing a field,
-            in either direction, is this one number.
+            Invert X on both signs: <code>scale = -100</code>, which is <code>0xFF9C</code>{' '}
+            little-endian.
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 0A     | 02     | 06 00  | 03     | 00 00  | 00     | 9C FF  | lo hi  |

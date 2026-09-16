@@ -905,7 +905,7 @@ let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button
 let table = device.query_transforms()?;
 println!("{}/{} transforms", table.entries.len(), Transforms::CAPACITY);
 for t in &table.entries {
-    println!("  {:?} {:?} -> {:?} x{}", t.op, t.source, t.dest, t.scale);
+    println!("  {:?} {:?} -> {:?}", t.op, t.source, t.dest);
 }`}</code></pre>
         </Card>
       </div>
