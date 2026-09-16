@@ -384,12 +384,14 @@ const Option: Component = () => {
             <p>
               A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
               paced path instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each ask
-              for exact timing, which is what the renderer decides. With <code>full</code> on the
-              rendered stream also ignores{' '}
-              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot drops a
-              hoard that goes unridden, and under <code>full</code> that hoard holds native motion.{' '}
-              <A href="/native/commands/clip">Clip</A> cursor motion is rendered like a <code>MOVE</code>{' '}
-              with no flag, and <code>MOVE_RIDE</code> treats that stream the same way.
+              for exact timing, which is what the renderer decides.{' '}
+              <A href="/native/commands/clip">Clip</A> cursor motion renders like a <code>MOVE</code>{' '}
+              with no flag.
+            </p>
+            <p>
+              Under <code>full</code> the rendered stream ignores{' '}
+              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot then
+              holds native motion it never rides out. A clip's stream is treated the same way.
             </p>
             <p>
               The profile is built from the live mouse and never persisted, so every boot starts without

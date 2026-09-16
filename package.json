@@ -9,10 +9,11 @@
     "prerender": "tsx scripts/prerender.ts",
     "build:full": "vite build && tsx scripts/prerender.ts",
     "serve": "vite preview",
-    "test": "./scripts/typecheck.sh && vitest run",
+    "test": "./scripts/typecheck.sh && npm run conformance && vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "typecheck": "./scripts/typecheck.sh"
+    "typecheck": "./scripts/typecheck.sh",
+    "conformance": "tsx scripts/conformance.ts"
   },
   "license": "MIT",
   "devDependencies": {

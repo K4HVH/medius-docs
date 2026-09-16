@@ -292,3 +292,23 @@ CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on 
 3. Add a tab entry in the right array in `DocsLayout.tsx` (with a `solid-icons/bs` icon).
 4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).
 5. Follow the command/method template and the consistency rules above. Link to canonical tables; never duplicate them.
+
+## Conformance gate
+
+`npm run conformance` (and `npm test`, and CI) checks that every page is shaped like its siblings. It
+exists because the prose checks and the correctness checks between them could not see a card built
+unlike every other card, which is the drift that kept reaching the user.
+
+Every rule is **derived, not asserted**. A structural rule fires only where the corpus already agrees at
+85% or better, and a punctuation rule is measured against the page's **own** majority, since a page that
+is consistently one way is consistent and two stragglers on a page that is otherwise the other way are
+the drift. Each rule prints the rate it was derived from, so changing the corpus changes the rule.
+
+That discipline is the point. Writing this checker against CLAUDE.md alone produced 466 "findings", of
+which 183 were one page's internally consistent style and 116 were type cards measured as if they were
+method sections. Measure first; a rule that fires on the majority is a wrong rule.
+
+When it reports something you believe is correct, the question is which of the two is wrong. If the page
+is right, the rule needs the distinction the page is making (a dispatch card whose variants carry the
+examples, a byte grid against a topology diagram), and teaching it that is the fix. Do not widen a
+threshold until the report goes quiet.

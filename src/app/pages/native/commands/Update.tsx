@@ -54,7 +54,7 @@ const Update: Component = () => {
             <A href="/native/frame#opcodes">Opcode</A> <code>0x17</code>.
           </p>
           <pre class="api-signature">UPDATE  0x17  ·  payload 2..508 bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns UPDATE_RESP</span></p>
+          <p><span class="api-badge api-badge--responded">Reply</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
             <thead>
