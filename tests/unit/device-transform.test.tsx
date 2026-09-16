@@ -51,18 +51,17 @@ const openOptions = async (container: HTMLElement, which: number): Promise<strin
 };
 
 describe('DeviceTransform', () => {
-  it('weighs one axis with itself as the destination', async () => {
+  it('swaps the two axes, which is what the card opens on', async () => {
     const { getByText } = render(() => <DeviceTransform />);
     fireEvent.click(getByText('Apply'));
     await settle();
     expect(mock.sent).toEqual([
       {
-        op: TransformOp.Scale,
+        op: TransformOp.Swap,
         sclass: LockClass.Axis,
         sid: LockAxis.X,
         dclass: LockClass.Axis,
-        did: LockAxis.X,
-        scale: 150,
+        did: LockAxis.Y,
       },
     ]);
   });
@@ -85,26 +84,23 @@ describe('DeviceTransform', () => {
     expect(mock.sent[0].op).toBe(TransformOp.Remap);
     expect(mock.sent[0].sclass).toBe(LockClass.Button);
     expect(mock.sent[0].dclass).toBe(LockClass.Key);
-    // A button carries one bit, so it goes out at a full pass whatever the slider last held.
-    expect(mock.sent[0].scale).toBe(100);
+    // A transform carries no percent at all: weighing a field is the lock card's.
+    expect('scale' in mock.sent[0]).toBe(false);
   });
 
-  it('carries the scale on a swap, which the box takes and the card used to force to 100', async () => {
+  it('sends a remap with both fields, so the destination is not the source', async () => {
     const { getByText } = render(() => <DeviceTransform />);
-    fireEvent.click(getByText('Swap'));
+    fireEvent.click(getByText('Remap'));
     await settle();
     fireEvent.click(getByText('Apply'));
     await settle();
     expect(mock.sent).toHaveLength(1);
-    expect(mock.sent[0].op).toBe(TransformOp.Swap);
-    expect(mock.sent[0].scale).toBe(150);
+    expect(mock.sent[0].op).toBe(TransformOp.Remap);
     expect(mock.sent[0].sid).not.toBe(mock.sent[0].did);
   });
 
-  it('refuses a swap of one axis with itself before it reaches the wire', async () => {
+  it('refuses a field named as both ends before it reaches the wire', async () => {
     const { getByText, container, findByRole } = render(() => <DeviceTransform />);
-    fireEvent.click(getByText('Swap'));
-    await settle();
     const options = await openOptions(container as HTMLElement, 1);
     const same = options.findIndex((o) => /left\/right/i.test(o));
     expect(same).toBeGreaterThanOrEqual(0);
@@ -116,13 +112,27 @@ describe('DeviceTransform', () => {
     expect((await findByRole('alert')).textContent).toMatch(/two different axes/i);
   });
 
-  it('names a read-back entry by its fields, with the negation as the scale it is', async () => {
+  it('points a remap of a field onto itself at the input scale instead', async () => {
+    const { getByText, container, findByRole } = render(() => <DeviceTransform />);
+    fireEvent.click(getByText('Remap'));
+    await settle();
+    const options = await openOptions(container as HTMLElement, 1);
+    const same = options.findIndex((o) => /left\/right/i.test(o));
+    fireEvent.click(document.querySelectorAll('[role="option"]')[same] as HTMLElement);
+    await settle();
+    fireEvent.click(getByText('Apply'));
+    await settle();
+    expect(mock.sent).toHaveLength(0);
+    expect((await findByRole('alert')).textContent).toMatch(/input scale/i);
+  });
+
+  it('names a read-back entry by its fields', async () => {
     mock.entries = [
-      { op: TransformOp.Scale, sclass: 3, sid: 1, dclass: 3, did: 1, scale: -100 },
-      { op: TransformOp.Remap, sclass: 0, sid: 3, dclass: 1, did: 4, scale: 100 },
+      { op: TransformOp.Swap, sclass: 3, sid: 0, dclass: 3, did: 1 },
+      { op: TransformOp.Remap, sclass: 0, sid: 3, dclass: 1, did: 4 },
     ];
     const { findByText } = render(() => <DeviceTransform />);
-    expect(await findByText(/Move up\/down \(Y\) at -100%/)).toBeTruthy();
+    expect(await findByText(/Swap Move left\/right \(X\) and Move up\/down \(Y\)/)).toBeTruthy();
     expect(await findByText(/Side 1 to A/)).toBeTruthy();
   });
 });

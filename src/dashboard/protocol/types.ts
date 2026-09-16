@@ -314,11 +314,13 @@ export const LOCK_ID_ALL = 0xffff;
 
 // LOCK scale (§3.8): the percent of the physical value the box keeps on that direction. Blocking and
 // passing are the two ends of one number, so a lock is Block and an unlock is Pass; above Pass it
-// amplifies. A momentary usage carries one bit, so anything under Pass locks it and there is nothing
-// in between.
+// amplifies. The percent is signed: a negative one reverses what it keeps, so Min is a 2.55x
+// reversal and -100 a plain inversion. A momentary usage carries one bit, so anything under Pass locks
+// it, there is nothing in between, and a negative is refused outright.
 export const LOCK_SCALE_BLOCK = 0;
 export const LOCK_SCALE_PASS = 100;
 export const LOCK_SCALE_MAX = 255;
+export const LOCK_SCALE_MIN = -255;
 
 // OPTION(BEARING) geometry (§3.12): how the box compares physical motion against its own injection
 // its own injection.
@@ -952,17 +954,15 @@ export interface PatchEntry {
 }
 
 // A field transform in full, the shape RESP(TRANSFORMS) returns and the TRANSFORM command takes (§3.15).
-// Scale acts on one axis (source == dest); Swap exchanges two different axes; Remap moves the source
-// field into the destination. `scale` is a signed percent: -100 negates, 100 identity, 200 doubles,
-// 0 blocks the source. The magnitude may not exceed LOCK_SCALE_MAX, and a source that carries one
-// bit (a button) takes LOCK_SCALE_PASS alone.
+// Swap exchanges two axes; Remap moves the source field into the destination. It is structural only:
+// how much of the value survives the move is the lock's, which runs first and whose percent is signed.
+// Neither op takes a field onto itself, since there would be nowhere to move the value to.
 export interface Transform {
   op: TransformOp;
   sclass: number;
   sid: number;
   dclass: number;
   did: number;
-  scale: number;
 }
 
 // The decoded RESP(TRANSFORMS) table (§4.18): the full flag and one entry per transform. There is no

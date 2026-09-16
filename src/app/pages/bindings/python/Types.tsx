@@ -981,7 +981,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per weighed direction</td></tr>
-                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction, which is not the figure a delta meets (it picks up one from each pair, multiplied)</td></tr>
+                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction, a reversing (negative) one being lower than any pass, which is not the figure a delta meets (it picks up one from each pair, multiplied)</td></tr>
                 <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it. <code>BOTH</code> asks about the two fixed signs only, so name <code>WITH</code> or <code>AGAINST</code> to ask about one of those</td></tr>
               </tbody>
             </table>
@@ -991,7 +991,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td>a blanket key lock</td><td>one entry per blocked edge, never <code>BOTH</code></td></tr>
                 <tr><td>a media lock, blanket or specific</td><td><code>BOTH</code>, always</td></tr>
                 <tr><td>a relative direction under <A href="/bindings/python/types#bearing-mode"><code>BearingMode.VECTOR</code></A></td><td>the effective scale, the lower of X's and Y's, on both axes</td></tr>
-                <tr><td>96 entries reached</td><td>the rest is absent, with nothing marking it; see the native <A href="/native/commands/requests#locks">LOCKS</A> budget</td></tr>
+                <tr><td>85 entries reached</td><td>the rest is absent, with nothing marking it; see the native <A href="/native/commands/requests#locks">LOCKS</A> budget</td></tr>
               </tbody>
             </table>
           </div>
@@ -1004,6 +1004,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>keep none of the physical value</td></tr>
                 <tr><td><code>LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>keep all of it, untouched</td></tr>
                 <tr><td><code>LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling</td></tr>
+                <tr><td><code>LOCK_SCALE_MIN</code></td><td><code>-255</code></td><td>2.55x reversed, the floor; a negative reverses what it keeps, so -100 inverts an axis. Axes only</td></tr>
               </tbody>
             </table>
           </div>
@@ -1016,7 +1017,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is weighed (an axis or a usage)</td></tr>
                 <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class entry, where <code>target</code> names only the class</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>which direction of the target this entry weighs</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept; a usage carries one bit, so the box stores the block or pass it renders and this never reads between them</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept, signed: a negative one reverses what it keeps. A usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative</td></tr>
                 <tr><td><code>is_block</code></td><td><code>bool</code></td><td><code>scale == 0</code>: blocked outright rather than weighed</td></tr>
               </tbody>
             </table>
@@ -1456,20 +1457,17 @@ LockTarget.media(media)   -> LockTarget`}</pre>
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="Transform types" subtitle="Transform · Transforms" />
-          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table.</p>
+          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. A transform moves a field and never weighs one, so there is no percent here: that is <A href="/bindings/python/api#locks"><code>dev.scale</code></A>'s, and its own is signed.</p>
           <div id="transforms">
-            <pre class="api-signature">{`Transform.invert(axis)            -> Transform
-Transform.scale_axis(axis, pct)   -> Transform
-Transform.swap(a, b)              -> Transform
+            <pre class="api-signature">{`Transform.swap(a, b)              -> Transform
 Transform.remap(source, dest)     -> Transform
-Transform(op, source, dest, scale).with_scale(pct)`}</pre>
+Transform(op, source, dest)`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1, <code>SCALE</code> 2.</td></tr>
+                <tr><td><code>op</code></td><td><code>TransformOp</code></td><td><code>REMAP</code> 0, <code>SWAP</code> 1.</td></tr>
                 <tr><td><code>source</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field the transform reads.</td></tr>
-                <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes, equal to <code>source</code> for a scale.</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>LOCK_SCALE_MAX</code>; a button source takes only 100, and a key or media field can only be a destination. On an axis remap a 0 still zeroes the source.</td></tr>
+                <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes. Naming the same field as <code>source</code> raises <code>TransformOpFieldsError</code>: both ops move a value.</td></tr>
               </tbody>
             </table>
             <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>, in the order the box applies them).</p>
@@ -1529,14 +1527,14 @@ except MediusError as e:     # any other failure
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td></tr>
                 <tr><td><code>ReservedIdError</code></td><td><code>ERR_RESERVED_ID</code></td></tr>
                 <tr><td><code>RelativeDirectionError</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td></tr>
+                <tr><td><code>LockScaleRangeError</code></td><td><code>ERR_LOCK_SCALE_RANGE</code></td></tr>
+                <tr><td><code>LockScaleUsageError</code></td><td><code>ERR_LOCK_SCALE_USAGE</code></td></tr>
                 <tr><td><code>ImperfectRequiredError</code></td><td><code>ERR_IMPERFECT_REQUIRED</code></td></tr>
                 <tr><td><code>RewriteMaskLengthError</code></td><td><code>ERR_REWRITE_MASK_LENGTH</code></td></tr>
                 <tr><td><code>RewriteActionClassError</code></td><td><code>ERR_REWRITE_ACTION_CLASS</code></td></tr>
                 <tr><td><code>RewritePayloadTooLargeError</code></td><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td></tr>
                 <tr><td><code>RewriteTableFullError</code></td><td><code>ERR_REWRITE_TABLE_FULL</code></td></tr>
                 <tr><td><code>TransformOpFieldsError</code></td><td><code>ERR_TRANSFORM_OP_FIELDS</code></td></tr>
-                <tr><td><code>TransformScaleRangeError</code></td><td><code>ERR_TRANSFORM_SCALE_RANGE</code></td></tr>
-                <tr><td><code>TransformUsageScaleError</code></td><td><code>ERR_TRANSFORM_USAGE_SCALE</code></td></tr>
                 <tr><td><code>TransformTableFullError</code></td><td><code>ERR_TRANSFORM_TABLE_FULL</code></td></tr>
                 <tr><td><code>RawDirectionError</code></td><td><code>ERR_RAW_DIRECTION</code></td></tr>
               </tbody>
@@ -1555,14 +1553,14 @@ except MediusError as e:     # any other failure
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge, which cannot be decoded into press and release</td></tr>
                 <tr><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel, which would address the whole class instead</td></tr>
                 <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
+                <tr><td><code>LockScaleRangeError</code></td><td>a lock scale outside <code>LOCK_SCALE_MIN</code> to <code>LOCK_SCALE_MAX</code></td></tr>
+                <tr><td><code>LockScaleUsageError</code></td><td>a negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse</td></tr>
                 <tr><td><code>ImperfectRequiredError</code></td><td>an advanced control layer call with the imperfect-clone opt-in off</td></tr>
                 <tr><td><code>RewriteMaskLengthError</code></td><td>a rewrite rule whose <code>match</code> and <code>mask</code> are different lengths</td></tr>
                 <tr><td><code>RewriteActionClassError</code></td><td>a rewrite action that its rule's class does not accept</td></tr>
                 <tr><td><code>RewritePayloadTooLargeError</code></td><td>a rewrite payload past the head the box holds for its class</td></tr>
-                <tr><td><code>TransformOpFieldsError</code></td><td>a transform op that cannot address its source and destination fields</td></tr>
+                <tr><td><code>TransformOpFieldsError</code></td><td>a transform op that cannot address its source and destination fields, or one field named as both</td></tr>
                 <tr><td><code>RewriteTableFullError</code></td><td>a rewrite rule past the table's capacity</td></tr>
-                <tr><td><code>TransformScaleRangeError</code></td><td>a transform scale past the widest magnitude the box weighs</td></tr>
-                <tr><td><code>TransformUsageScaleError</code></td><td>a transform percentage on a source that carries one bit</td></tr>
                 <tr><td><code>TransformTableFullError</code></td><td>a transform past the table's capacity</td></tr>
                 <tr><td><code>RawDirectionError</code></td><td>a raw injection direction other than <code>Direction.IN</code> or <code>Direction.OUT</code></td></tr>
               </tbody>

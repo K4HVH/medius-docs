@@ -1051,7 +1051,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Asked with <code>MEDIUS_DIRECTION_BOTH</code></th><th>Answers about</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_locks_scale_of</code></td><td>The lowest scale across every direction, relative pair included. Not the figure a delta meets: a delta picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>medius_locks_scale_of</code></td><td>The lowest scale across every direction, relative pair included, where a reversing (negative) one is lower than any pass. Not the figure a delta meets: a delta picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>medius_locks_is_locked</code></td><td>The two fixed signs only. Name <code>_WITH</code> or <code>_AGAINST</code> to ask about one of those.</td></tr>
             </tbody>
           </table>
@@ -1069,6 +1069,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>Keep none of the physical value.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>Keep all of it, untouched.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_SCALE_MIN</code></td><td><code>-255</code></td><td>2.55x reversed, the floor. A negative reverses what it keeps, so -100 inverts an axis; axes only.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">MEDIUSLOCKENTRY</div>
@@ -1078,7 +1079,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The weighed axis or usage.</td></tr>
               <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The entry covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>Which direction of the target this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>uint8_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked. A momentary usage carries one bit, so the box stores the block or pass it renders and this never reads between them.</td></tr>
+              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked and a negative reverses what it keeps. A momentary usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>
@@ -1088,7 +1089,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>MEDIUS_DIRECTION_BOTH</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td><code>MEDIUS_DIRECTION_BOTH</code>, always.</td></tr>
               <tr><td>A relative direction under <code>MEDIUS_BEARING_MODE_VECTOR</code></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>The wire cap</td><td>One reply carries 96 entries, well under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
+              <tr><td>The wire cap</td><td>One reply carries 85 entries, well under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
               <tr><td>A <code>direction</code> byte no constant names</td><td>The entry is dropped rather than trusted, and <code>n</code> moves with the drop.</td></tr>
             </tbody>
           </table>
@@ -1784,14 +1785,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="MediusTransform" subtitle="One field transform" />
-          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, equal to each other for a scale. See <A href="/library/transform">Transform</A>.</p>
+          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, and they may not name the same field: both ops move a value. A transform carries no percent of its own, so weighing one is <code>medius_device_scale</code>'s. See <A href="/library/transform">Transform</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFORM_OP_*</code> value: <code>_REMAP</code> 0, <code>_SWAP</code> 1, <code>_SCALE</code> 2.</td></tr>
+              <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFORM_OP_*</code> value: <code>_REMAP</code> 0, <code>_SWAP</code> 1.</td></tr>
               <tr><td><code>source</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field the transform reads.</td></tr>
               <tr><td><code>dest</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The field it writes.</td></tr>
-              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Signed percent: -100 negates, 100 identity, 200 doubles, 0 blocks. Magnitude bounded by <code>MEDIUS_LOCK_SCALE_MAX</code>; a button source takes only 100, and a key or media field can only be a destination. On an axis remap a 0 still zeroes the source.</td></tr>
             </tbody>
           </table>
         </Card>

@@ -45,6 +45,7 @@ import {
   isRelativeDirection,
   LOCK_SCALE_BLOCK,
   LOCK_SCALE_MAX,
+  LOCK_SCALE_MIN,
   LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
@@ -484,41 +485,55 @@ describe('LED command (§3.7)', () => {
 });
 
 describe('LOCK command (§3.8)', () => {
-  it('lockPayload packs [class][id u16 LE][direction][scale]', () => {
+  it('lockPayload packs [class][id u16 LE][direction][scale i16 LE]', () => {
     // Block the wheel axis's negative (scroll-down) direction: class axis = 3, id = wheel = 2.
     expect(
       Array.from(lockPayload(LockClass.Axis, LockAxis.Wheel, Direction.Negative, LOCK_SCALE_BLOCK)),
-    ).toEqual([3, 2, 0, 2, 0]);
+    ).toEqual([3, 2, 0, 2, 0, 0]);
     // Unlock the X axis, every direction: a full pass, not a zero.
     expect(
       Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, LOCK_SCALE_PASS)),
-    ).toEqual([3, 0, 0, 0, 100]);
+    ).toEqual([3, 0, 0, 0, 100, 0]);
     // A button locks as class button (0), id = button id, with no +3 offset.
     expect(
       Array.from(lockPayload(LockClass.Button, 4, Direction.Positive, LOCK_SCALE_BLOCK)),
-    ).toEqual([0, 4, 0, 1, 0]);
+    ).toEqual([0, 4, 0, 1, 0, 0]);
     // A media-class lock keeps its 16-bit usage.
     expect(
       Array.from(lockPayload(LockClass.Media, 0x00e9, Direction.Both, LOCK_SCALE_BLOCK)),
-    ).toEqual([2, 0xe9, 0x00, 0, 0]);
+    ).toEqual([2, 0xe9, 0x00, 0, 0, 0]);
     // The id sentinel 0xFFFF blanket-locks the whole class.
     expect(
       Array.from(lockPayload(LockClass.Key, LOCK_ID_ALL, Direction.Both, LOCK_SCALE_BLOCK)),
-    ).toEqual([1, 0xff, 0xff, 0, 0]);
-    // A partial scale and a gain both ride the same byte.
+    ).toEqual([1, 0xff, 0xff, 0, 0, 0]);
+    // A partial scale and a gain both ride the same field.
     expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Against, 40))).toEqual([
-      3, 0, 0, 4, 40,
+      3, 0, 0, 4, 40, 0,
     ]);
     expect(Array.from(lockPayload(LockClass.Axis, LockAxis.Y, Direction.With, 130))).toEqual([
-      3, 1, 0, 3, 130,
+      3, 1, 0, 3, 130, 0,
     ]);
   });
 
-  it('lockPayload clamps a scale to the byte the wire carries', () => {
-    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, 999))[4]).toBe(
-      LOCK_SCALE_MAX,
-    );
-    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, -5))[4]).toBe(0);
+  it('lockPayload writes a reversal as a two-s-complement i16', () => {
+    // The sign is the whole point of the field being two bytes: a u8 write turns -100 into 156 and
+    // the axis amplifies instead of reversing.
+    expect(Array.from(lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, -100))).toEqual([
+      3, 0, 0, 0, 0x9c, 0xff,
+    ]);
+    expect(
+      Array.from(lockPayload(LockClass.Axis, LockAxis.Y, Direction.Positive, LOCK_SCALE_MIN)),
+    ).toEqual([3, 1, 0, 1, 0x01, 0xff]);
+  });
+
+  it('lockPayload clamps a scale to the range the wire carries', () => {
+    const at = (v: number) => {
+      const p = lockPayload(LockClass.Axis, LockAxis.X, Direction.Both, v);
+      return (p[4] | (p[5] << 8)) << 16 >> 16;
+    };
+    expect(at(999)).toBe(LOCK_SCALE_MAX);
+    expect(at(-999)).toBe(LOCK_SCALE_MIN);
+    expect(at(-5)).toBe(-5);
   });
 
   it('LockClass wire values match ctrl_proto.h', () => {
@@ -547,7 +562,9 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('LOCK scale constants match ctrl_proto.h', () => {
-    expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX]).toEqual([0, 100, 255]);
+    expect([LOCK_SCALE_BLOCK, LOCK_SCALE_PASS, LOCK_SCALE_MAX, LOCK_SCALE_MIN]).toEqual([
+      0, 100, 255, -255,
+    ]);
   });
 
   it('still opens the wire one-click update arrived on', () => {
@@ -573,9 +590,9 @@ describe('LOCK command (§3.8)', () => {
     const resp = parseResp(
       new Uint8Array([
         6, 3,
-        1, 0xff, 0xff, Direction.Positive, 0,
-        1, 0xff, 0xff, Direction.Negative, 0,
-        2, 0xe9, 0x00, Direction.Both, 0,
+        1, 0xff, 0xff, Direction.Positive, 0, 0,
+        1, 0xff, 0xff, Direction.Negative, 0, 0,
+        2, 0xe9, 0x00, Direction.Both, 0, 0,
       ]),
     );
     expect(resp).toEqual({
@@ -592,7 +609,7 @@ describe('LOCK command (§3.8)', () => {
 
   it('parses a RESP(LOCKS) entry list', () => {
     // what = 6, n = 2: axis wheel blocked negative, then axis X weighed 40% against the bearing.
-    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 2, 0, 3, 0, 0, 4, 40]));
+    const resp = parseResp(new Uint8Array([6, 2, 3, 2, 0, 2, 0, 0, 3, 0, 0, 4, 40, 0]));
     expect(resp).toEqual({
       kind: 'locks',
       locks: {
@@ -600,6 +617,18 @@ describe('LOCK command (§3.8)', () => {
           { cls: LockClass.Axis, id: LockAxis.Wheel, direction: Direction.Negative, scale: 0 },
           { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Against, scale: 40 },
         ],
+      },
+    });
+  });
+
+  it('decodes a reversed axis with its sign, not as an amplification', () => {
+    // 0xff9c read as a u8 pair is 156: a reader that drops the high byte turns an inversion into a
+    // 1.56x gain, which is the opposite motion at the wrong magnitude.
+    const resp = parseResp(new Uint8Array([6, 1, 3, 0, 0, Direction.Both, 0x9c, 0xff]));
+    expect(resp).toEqual({
+      kind: 'locks',
+      locks: {
+        entries: [{ cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Both, scale: -100 }],
       },
     });
   });
@@ -614,10 +643,10 @@ describe('LOCK command (§3.8)', () => {
     const resp = parseResp(
       new Uint8Array([
         6, 4,
-        3, 2, 0, Direction.Negative, 0,
-        127, 0, 0, Direction.Both, 0,
-        3, 0, 0, 99, 40,
-        1, 0x04, 0x00, Direction.Positive, 0,
+        3, 2, 0, Direction.Negative, 0, 0,
+        127, 0, 0, Direction.Both, 0, 0,
+        3, 0, 0, 99, 40, 0,
+        1, 0x04, 0x00, Direction.Positive, 0, 0,
       ]),
     );
     expect(resp).toEqual({
@@ -632,14 +661,14 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('refuses a RESP(LOCKS) count past the wire cap', () => {
-    // The 512-byte payload ceiling admits 102 entries, but the box fills 96 and stops, so a larger
-    // count is a malformed reply rather than a longer table.
+    // 2 + 85 x 6 is the 512-byte payload exactly, so the box fills 85 and stops: a larger count is
+    // a malformed reply rather than a longer table.
     const over = [6, LOCKS_MAX + 1];
-    for (let i = 0; i <= LOCKS_MAX; i++) over.push(3, 0, 0, Direction.Positive, 40);
+    for (let i = 0; i <= LOCKS_MAX; i++) over.push(3, 0, 0, Direction.Positive, 40, 0);
     expect(parseResp(new Uint8Array(over))).toBeNull();
     // and the cap itself still decodes
     const at = [6, LOCKS_MAX];
-    for (let i = 0; i < LOCKS_MAX; i++) at.push(3, 0, 0, Direction.Positive, 40);
+    for (let i = 0; i < LOCKS_MAX; i++) at.push(3, 0, 0, Direction.Positive, 40, 0);
     const resp = parseResp(new Uint8Array(at));
     expect(resp?.kind).toBe('locks');
     expect(resp?.kind === 'locks' && resp.locks.entries.length).toBe(LOCKS_MAX);
@@ -1771,52 +1800,52 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
 });
 
 describe('transforms (§3.15 / §4.18)', () => {
-  it('TRANSFORM is [op][sclass][sid u16][dclass][did u16][scale i16][state]', () => {
-    // negate Y: there is no invert op, so it is a scale of -100 (0xff9c) on one axis (3, id 1).
-    const neg = { op: TransformOp.Scale, sclass: 3, sid: 1, dclass: 3, did: 1, scale: -100 };
-    expect(toHex(transformPayload(neg, 1))).toBe('02 03 01 00 03 01 00 9c ff 01');
-    // scale the wheel x2: op=2, (axis 3, id 2), scale 200 (0x00c8).
-    const sc = { op: TransformOp.Scale, sclass: 3, sid: 2, dclass: 3, did: 2, scale: 200 };
-    expect(toHex(transformPayload(sc, 1))).toBe('02 03 02 00 03 02 00 c8 00 01');
-    // a negative scale is a two's-complement i16: -50 = 0xffce.
-    const half = { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 };
-    expect(toHex(transformPayload(half, 1))).toBe('02 03 00 00 03 00 00 ce ff 01');
-    // a cross-class remap: op=0, button 3 (class 0) onto a key (class 1) usage 0x04, full pass.
-    const remap = { op: TransformOp.Remap, sclass: 0, sid: 3, dclass: 1, did: 4, scale: 100 };
-    expect(toHex(transformPayload(remap, 1))).toBe('00 00 03 00 01 04 00 64 00 01');
-    // state 0 removes; op and scale are ignored on the box but carried as given.
-    expect(toHex(transformPayload(neg, 0))).toBe('02 03 01 00 03 01 00 9c ff 00');
+  it('TRANSFORM is [op][sclass][sid u16][dclass][did u16][state], with no scale', () => {
+    // swap X and Y: op=1, both axes (class 3), ids 0 and 1.
+    const swap = { op: TransformOp.Swap, sclass: 3, sid: 0, dclass: 3, did: 1 };
+    expect(toHex(transformPayload(swap, 1))).toBe('01 03 00 00 03 01 00 01');
+    // an axis remap: the wheel (3, id 2) drives Y (3, id 1).
+    const wheel = { op: TransformOp.Remap, sclass: 3, sid: 2, dclass: 3, did: 1 };
+    expect(toHex(transformPayload(wheel, 1))).toBe('00 03 02 00 03 01 00 01');
+    // a cross-class remap: op=0, button 3 (class 0) onto a key (class 1) usage 0x04. A did past a
+    // byte must survive: 0x0233 in the consumer class is '33 02', not '33'.
+    const remap = { op: TransformOp.Remap, sclass: 0, sid: 3, dclass: 1, did: 4 };
+    expect(toHex(transformPayload(remap, 1))).toBe('00 00 03 00 01 04 00 01');
+    const media = { op: TransformOp.Remap, sclass: 0, sid: 6, dclass: 2, did: 0x0233 };
+    expect(toHex(transformPayload(media, 1))).toBe('00 00 06 00 02 33 02 01');
+    // state 0 removes; the op is ignored on the box but carried as given.
+    expect(toHex(transformPayload(swap, 0))).toBe('01 03 00 00 03 01 00 00');
   });
 
   it('the TRANSFORM clear is the any-class, any-id, state-0 sentinel', () => {
-    expect(toHex(clearTransformPayload())).toBe('00 ff ff ff ff ff ff 00 00 00');
+    expect(toHex(clearTransformPayload())).toBe('00 ff ff ff ff ff ff 00');
   });
 
-  it('decodes RESP(TRANSFORMS): the full flag and the entry list, scale signed', () => {
-    // [16][flags=01][n=2] then swap X and Y at a full pass (scale 0064) and scale X by -50 (ffce).
-    // No state byte.
-    const payload = fromHex('10 01 02 01 03 00 00 03 01 00 64 00 02 03 00 00 03 00 00 ce ff');
+  it('decodes RESP(TRANSFORMS): the full flag and the entry list', () => {
+    // [16][flags=01][n=2] then swap X and Y, and remap the wheel onto X. Seven bytes each: no state
+    // byte, and no scale either.
+    const payload = fromHex('10 01 02 01 03 00 00 03 01 00 00 03 02 00 03 00 00');
     const r = parseResp(payload);
     if (r?.kind !== 'transforms') throw new Error('expected transforms');
     expect(r.transforms.tableFull).toBe(true);
     expect(r.transforms.entries).toEqual([
-      { op: TransformOp.Swap, sclass: 3, sid: 0, dclass: 3, did: 1, scale: 100 },
-      { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 },
+      { op: TransformOp.Swap, sclass: 3, sid: 0, dclass: 3, did: 1 },
+      { op: TransformOp.Remap, sclass: 3, sid: 2, dclass: 3, did: 0 },
     ]);
   });
 
   it('drops an entry whose op byte no constant names, and keeps the rest', () => {
-    // A newer box adding an op must not blank the whole readback: 0x7f is unknown, the scale after
+    // A newer box adding an op must not blank the whole readback: 0x7f is unknown, the entry after
     // it is not.
-    const payload = fromHex('10 00 02 7f 03 01 00 03 01 00 64 00 02 03 00 00 03 00 00 ce ff');
+    const payload = fromHex('10 00 02 7f 03 01 00 03 01 00 00 03 02 00 03 00 00');
     const r = parseResp(payload);
     if (r?.kind !== 'transforms') throw new Error('expected transforms');
     expect(r.transforms.entries).toEqual([
-      { op: TransformOp.Scale, sclass: 3, sid: 0, dclass: 3, did: 0, scale: -50 },
+      { op: TransformOp.Remap, sclass: 3, sid: 2, dclass: 3, did: 0 },
     ]);
   });
 
   it('rejects a RESP(TRANSFORMS) that claims more entries than it carries', () => {
-    expect(parseResp(fromHex('10 00 03 02 03 01 00 03 01 00 64 00'))).toBeNull();
+    expect(parseResp(fromHex('10 00 03 01 03 00 00 03 01 00'))).toBeNull();
   });
 });

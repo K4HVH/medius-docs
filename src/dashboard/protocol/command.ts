@@ -34,6 +34,7 @@ import {
   Direction,
   LedMode,
   LOCK_SCALE_MAX,
+  LOCK_SCALE_MIN,
   LedTarget,
   LockClass,
   RebootTarget,
@@ -89,10 +90,15 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
   return new Uint8Array([target, mode, level & 0xff]);
 }
 
-// LOCK (§3.8): [class u8][id u16 LE][direction u8][scale u8]. scale is the percent of the physical
+// LOCK (§3.8): [class u8][id u16 LE][direction u8][scale i16 LE]. scale is the percent of the physical
 // value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
 // amplifies to LOCK_SCALE_MAX (2.55x). Locking and unlocking are its two ends. id is class-specific
 // (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
+//
+// The percent is signed down to LOCK_SCALE_MIN: a negative one reverses what it keeps, so -100 on an
+// axis is a plain inversion. The slot comes from the sign of the delta before the weigh, so a
+// directional negative is well defined. Only an axis takes one; the box refuses a reversal on a
+// momentary usage, which carries one bit and has nothing to reverse.
 //
 // A delta picks up at most two scales, its absolute direction's and its bearing-relative one's, and
 // they multiply, so a block in either zeroes the delta. Direction.With / .Against need a live bearing (§3.12).
@@ -105,8 +111,8 @@ export function lockPayload(
   direction: Direction,
   scale: number,
 ): Uint8Array {
-  const s = Math.max(0, Math.min(LOCK_SCALE_MAX, Math.round(scale)));
-  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, s]);
+  const s = Math.max(LOCK_SCALE_MIN, Math.min(LOCK_SCALE_MAX, Math.round(scale)));
+  return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, direction, s & 0xff, (s >> 8) & 0xff]);
 }
 
 // CATCH (§3.9): [class u8][id u16 LE][dir u8][state u8][capture u8]. One table entry, addressed the
@@ -347,27 +353,26 @@ export function queryEntryPayload(what: number, index: number): Uint8Array {
   return new Uint8Array([what, index & 0xff]);
 }
 
-// TRANSFORM (§3.15): [op u8][sclass u8][sid u16 LE][dclass u8][did u16 LE][scale i16 LE][state u8].
-// state 1 adds or overwrites, 0 removes; an entry is keyed by (source, dest). Scale acts on one axis
-// (source == dest), Swap on two different axes, Remap moves the source field into the destination. The
-// scale is a signed percent, clamped by the box to the destination field's declared range.
+// TRANSFORM (§3.15): [op u8][sclass u8][sid u16 LE][dclass u8][did u16 LE][state u8]. state 1 adds or
+// overwrites, 0 removes; an entry is keyed by (source, dest). Swap exchanges two axes, Remap moves the
+// source field into the destination. Every result is clamped by the box to the destination field's
+// declared range. There is no scale here: weighing a field is the lock's (§3.8).
 export function transformPayload(t: Transform, state: number): Uint8Array {
-  const out = new Uint8Array(10);
+  const out = new Uint8Array(8);
   const dv = new DataView(out.buffer);
   out[0] = t.op & 0xff;
   out[1] = t.sclass & 0xff;
   dv.setUint16(2, t.sid & 0xffff, true);
   out[4] = t.dclass & 0xff;
   dv.setUint16(5, t.did & 0xffff, true);
-  dv.setInt16(7, t.scale, true);
-  out[9] = state & 0xff;
+  out[7] = state & 0xff;
   return out;
 }
 
 // TRANSFORM clear (§3.15): the any-class, any-id, state-0 sentinel drops the whole table in one frame.
 export function clearTransformPayload(): Uint8Array {
   return transformPayload(
-    { op: TransformOp.Remap, sclass: 0xff, sid: CATCH_ID_ANY, dclass: 0xff, did: CATCH_ID_ANY, scale: 0 },
+    { op: TransformOp.Remap, sclass: 0xff, sid: CATCH_ID_ANY, dclass: 0xff, did: CATCH_ID_ANY },
     0,
   );
 }

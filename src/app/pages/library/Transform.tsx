@@ -7,12 +7,18 @@ const Transform: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Transform" subtitle="Weigh, swap, or remap a field on the wire" />
+        <CardHeader title="Transform" subtitle="Swap or remap a field on the wire" />
         <p>
-          A transform rewrites a field the clone's descriptor declares: weigh one axis, exchange two,
-          or move a field into another. It needs no{' '}
+          A transform moves a field the clone's descriptor declares into another one: exchange two
+          axes, or move a field into another. It needs no{' '}
           <A href="/library/options#allow-imperfect-clones">imperfect-clone opt-in</A>, unlike the{' '}
           <A href="/library/advanced/raw">advanced control layer</A>.
+        </p>
+        <p>
+          A transform is structural. How much of a field survives is{' '}
+          <A href="/library/lock#scale"><code>scale</code></A>'s, whose percent is signed, so a{' '}
+          <code>-100</code> there inverts an axis and a <code>0</code> blocks it. The weigh runs first
+          and a transform carries what it left.
         </p>
         <p>
           Transforms run before rendering, so <A href="/library/inject">injection</A>, riding, and
@@ -23,18 +29,18 @@ const Transform: Component = () => {
         </p>
         <pre class="diagram">{`  native report        the box's semantic path                          the wire
 
-  X Y wheel pan  --> parse --> [ field transform ] --> lock --> render --> emit
-  buttons/keys                  scale  swap
-                                remap (X->Y, btn->btn, same report)
-                                          |
-                                          +-- btn->key / btn->media --> that interface's report`}</pre>
+  X Y wheel pan  --> parse --> lock --> [ field transform ] --> render --> emit
+  buttons/keys                 weigh     swap
+                                         remap (X->Y, btn->btn, same report)
+                                                   |
+                                                   +-- btn->key / btn->media --> that interface's report`}</pre>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Transform a...</th><th>Negate or weigh it</th><th>Exchange it with another</th><th>Move it into another field</th></tr></thead>
+            <thead><tr><th>Transform a...</th><th>Exchange it with another</th><th>Move it into another field</th><th>Weigh or invert it</th></tr></thead>
             <tbody>
-              <tr><td>relative axis (X / Y / wheel / pan)</td><td><A href="/library/transform#helpers"><code>transform_invert</code></A> / <A href="/library/transform#helpers"><code>transform_scale</code></A></td><td><A href="/library/transform#helpers"><code>transform_swap</code></A></td><td><A href="/library/transform#helpers"><code>transform_remap</code></A></td></tr>
-              <tr><td>button</td><td>a full pass only</td><td>axes only</td><td><A href="/library/transform#helpers"><code>transform_remap</code></A>, into a button, key, or media</td></tr>
-              <tr><td>key or media usage</td><td>not a source</td><td>not a source</td><td>destination only, from a button</td></tr>
+              <tr><td>relative axis (X / Y / wheel / pan)</td><td><A href="/library/transform#helpers"><code>transform_swap</code></A></td><td><A href="/library/transform#helpers"><code>transform_remap</code></A></td><td><A href="/library/lock#scale"><code>scale</code></A>, at a signed percent</td></tr>
+              <tr><td>button</td><td>axes only</td><td><A href="/library/transform#helpers"><code>transform_remap</code></A>, into a button, key, or media</td><td>one bit: <A href="/library/lock#lock"><code>lock</code></A> or <A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
+              <tr><td>key or media usage</td><td>not a source</td><td>destination only, from a button</td><td>one bit, as a button</td></tr>
             </tbody>
           </table>
         </div>
@@ -57,7 +63,7 @@ const Transform: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The operation, the source and destination <A href="/library/types/enums#lock-target">fields</A>, and the signed scale. Installing one past <code>Transforms::CAPACITY</code> is <A href="/library/types/errors#errors"><code>Error::TransformTableFull</code></A>, and one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The operation and the source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -70,16 +76,14 @@ const Transform: Component = () => {
           <pre><code class="language-rust">{`use medius::{Device, Axis, Transform};
 
 let device = Device::find()?;
-device.transform(&Transform::invert(Axis::Y))?;              // flip vertical motion on the wire
-device.transform(&Transform::scale_axis(Axis::Wheel, 200))?; // double the wheel's detents`}</code></pre>
+device.transform(&Transform::swap(Axis::X, Axis::Y))?;      // the mouse's two axes, exchanged
+device.transform(&Transform::remap(Axis::Wheel, Axis::Y))?; // the wheel drives vertical motion`}</code></pre>
         </Card>
       </div>
 
       <div id="helpers" data-search-target>
         <Card>
-          <CardHeader title="transform_invert / transform_scale / transform_swap / transform_remap" subtitle="The common transforms, one call each" />
-          <pre class="api-signature">fn transform_invert(&self, axis: Axis) -&gt; Result&lt;()&gt;</pre>
-          <pre class="api-signature">fn transform_scale(&self, axis: Axis, percent: i16) -&gt; Result&lt;()&gt;</pre>
+          <CardHeader title="transform_swap / transform_remap" subtitle="The two transforms, one call each" />
           <pre class="api-signature">fn transform_swap(&self, a: Axis, b: Axis) -&gt; Result&lt;()&gt;</pre>
           <pre class="api-signature">fn transform_remap(&self, source: impl Into&lt;LockTarget&gt;, dest: impl Into&lt;LockTarget&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -90,21 +94,20 @@ device.transform(&Transform::scale_axis(Axis::Wheel, 200))?; // double the wheel
           </p>
           <div class="callout callout--info">
             <p>
-              The names carry the <code>transform_</code> prefix because{' '}
-              <A href="/library/lock#scale"><code>scale</code></A> and{' '}
-              <A href="/library/lock#lock-axis"><code>scale_axis</code></A> are the{' '}
-              <A href="/library/lock"><code>lock</code></A> weigh. A transform's scale is signed and
-              rewrites the field.
+              There is no <code>transform_invert</code> or <code>transform_scale</code>. Weighing a
+              field, in either direction, is <A href="/library/lock#scale"><code>scale</code></A>'s:
+              its percent is signed, so <code>-100</code> inverts an axis and <code>0</code> blocks it,
+              and there is one path that weighs a field rather than two.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, Button, Key};
+          <pre><code class="language-rust">{`use medius::{Device, Axis, Button, Direction, Key};
 
 let device = Device::find()?;
-device.transform_invert(Axis::Y)?;             // flip Y
-device.transform_scale(Axis::X, 150)?;         // 1.5x horizontal
-device.transform_swap(Axis::X, Axis::Y)?;      // exchange the two axes
-device.transform_remap(Button::new(4), Key::A)?; // the fifth button emits 'A' on the keyboard interface`}</code></pre>
+device.transform_swap(Axis::X, Axis::Y)?;        // exchange the two axes
+device.transform_remap(Axis::Wheel, Axis::Y)?;   // the wheel drives vertical motion
+device.transform_remap(Button::new(4), Key::A)?; // the fifth button emits 'A' on the keyboard interface
+device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted, which is the lock's`}</code></pre>
         </Card>
       </div>
 
@@ -116,13 +119,13 @@ device.transform_remap(Button::new(4), Key::A)?; // the fifth button emits 'A' o
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             <code>untransform</code> drops the entry keyed by this transform's{' '}
-            <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; its op and
-            scale are ignored. <code>clear_transforms</code> drops the whole table.
+            <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; its op is
+            ignored. <code>clear_transforms</code> drops the whole table.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let flip = Transform::invert(Axis::Y);
-device.transform(&flip)?;
-device.untransform(&flip)?;   // the same key, dropped
+          <pre><code class="language-rust">{`let swap = Transform::swap(Axis::X, Axis::Y);
+device.transform(&swap)?;
+device.untransform(&swap)?;   // the same key, dropped
 device.clear_transforms()?;   // or drop everything`}</code></pre>
         </Card>
       </div>
@@ -142,18 +145,18 @@ device.clear_transforms()?;   // or drop everything`}</code></pre>
           <pre><code class="language-rust">{`let table = device.query_transforms()?;
 println!("{} transforms{}", table.entries.len(), if table.table_full { " (full)" } else { "" });
 for t in &table.entries {
-    println!("  {:?} {:?} -> {:?} x{}", t.op, t.source, t.dest, t.scale);
+    println!("  {:?} {:?} -> {:?}", t.op, t.source, t.dest);
 }`}</code></pre>
         </Card>
       </div>
 
       <div id="op" data-search-target>
         <Card>
-          <CardHeader title="TransformOp" subtitle="Remap, swap, or scale, and the pairs each takes" />
+          <CardHeader title="TransformOp" subtitle="Remap or swap, and the pairs each takes" />
           <p>
             The op decides how a transform's source and destination relate: remap moves one field into
-            another, swap exchanges two axes, scale weighs one. Which pairs each op admits, and the
-            wire byte each is, are on{' '}
+            another, swap exchanges two axes. Neither takes a field onto itself, since both move a
+            value. Which pairs each op admits, and the wire byte each is, are on{' '}
             <A href="/library/types/enums#transform-op"><code>TransformOp</code></A>.
           </p>
         </Card>
@@ -171,7 +174,7 @@ for t in &table.entries {
 use medius::{AsyncDevice, Axis};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
-device.transform_invert(Axis::Y)?;                   // sync
+device.transform_swap(Axis::X, Axis::Y)?;            // sync
 let table = block_on(device.query_transforms())?;    // query awaits`}</code></pre>
         </Card>
       </div>

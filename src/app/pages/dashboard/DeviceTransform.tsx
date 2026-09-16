@@ -1,22 +1,18 @@
-// Change what a field the real device drives does before the clone emits it.
+// Move what a field the real device drives into another field before the clone emits it.
 //
 // The picker is the shared one, so a remap reaches a key or a media usage and not only another axis.
-// A button carries one bit rather than a magnitude, so a button source goes out at a full pass and
-// the scale is withheld; a swap and an axis remap both take one, which is why the slider is not tied
-// to the scale operation alone.
+// A transform is structural: it says where a value lands, never how much of it survives, which is the
+// lock panel's and is where the signed percent lives.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { Slider } from '../../../components/inputs/Slider';
 import {
   type NamedUsage,
   type Transform,
   KEYS,
-  LOCK_SCALE_MAX,
-  LOCK_SCALE_PASS,
   LockAxis,
   LockClass,
   MEDIA,
@@ -38,7 +34,6 @@ const AXES: NamedUsage[] = [
 ];
 
 const OP_LABELS = [
-  { value: String(TransformOp.Scale), label: 'Scale' },
   { value: String(TransformOp.Swap), label: 'Swap' },
   { value: String(TransformOp.Remap), label: 'Remap' },
 ];
@@ -48,39 +43,26 @@ const OP_LABELS = [
 const fieldName = (cls: number, id: number): string =>
   cls === LockClass.Axis ? (AXES.find((a) => a.id === id)?.name ?? `axis ${id}`) : usageName(cls, id);
 
-// A read-back entry names itself. A chip is capped at 250px and ellipsises past it, so the percent
-// is dropped when it is the identity and the entry reads as the plain move.
+// A read-back entry names itself. A chip is capped at 250px and ellipsises past it, so each reads as
+// the plain move it is.
 const describe = (t: Transform): string => {
   const src = fieldName(t.sclass, t.sid);
   const dst = fieldName(t.dclass, t.did);
-  const at = t.scale === LOCK_SCALE_PASS ? '' : ` at ${t.scale}%`;
-  switch (t.op) {
-    case TransformOp.Scale:
-      return `${src} at ${t.scale}%`;
-    case TransformOp.Swap:
-      return `Swap ${src} and ${dst}${at}`;
-    case TransformOp.Remap:
-      return `${src} to ${dst}${at}`;
-    default:
-      return `${src} to ${dst}`;
-  }
+  return t.op === TransformOp.Swap ? `Swap ${src} and ${dst}` : `${src} to ${dst}`;
 };
 
 const DeviceTransform = () => {
   const dash = useDashboard();
   const caps = dash.poll('caps');
-  const [op, setOp] = createSignal(String(TransformOp.Scale));
+  const [op, setOp] = createSignal(String(TransformOp.Swap));
   const [source, setSource] = createSignal<UsageValue>({ cls: LockClass.Axis, id: LockAxis.X });
   const [dest, setDest] = createSignal<UsageValue>({ cls: LockClass.Axis, id: LockAxis.Y });
-  const [scale, setScale] = createSignal(150);
   const table = dash.poll('transforms');
   const cmd = createCommand(() => dash.refreshPoll('transforms'));
 
   const curOp = (): TransformOp => Number(op()) as TransformOp;
   const remapping = () => curOp() === TransformOp.Remap;
-  const twoFields = () => curOp() !== TransformOp.Scale;
   const buttonSource = () => source().cls === LockClass.Button;
-  const scaled = () => !buttonSource();
 
   // The five named buttons plus a numbered entry for each button the mouse declares past them
   // (RESP(CAPS) n_buttons), so a remap can start from any button the cloned device carries.
@@ -97,7 +79,7 @@ const DeviceTransform = () => {
     table: buttons(),
   });
 
-  // Scale and swap are axis work; a remap is the one operation that can start from a button.
+  // A swap is axis work; a remap is the one operation that can start from a button.
   const sourceClasses = (): PickerClass[] => (remapping() ? [axisClass(), buttonClass()] : [axisClass()]);
 
   // An axis writes an axis. A button writes another button, or a key or media usage on the clone's
@@ -113,10 +95,9 @@ const DeviceTransform = () => {
 
   const firstAxisOtherThan = (id: number) => (id === LockAxis.X ? LockAxis.Y : LockAxis.X);
 
-  // Both pickers are one class deep on a scale and a swap, so the class radio that would tell them
-  // apart is not rendered. The field label carries the distinction instead.
-  const srcLabel = () =>
-    curOp() === TransformOp.Scale ? 'Which axis' : remapping() ? 'Move this input' : 'Swap this axis';
+  // Both pickers are one class deep on a swap, so the class radio that would tell them apart is not
+  // rendered. The field label carries the distinction instead.
+  const srcLabel = () => (remapping() ? 'Move this input' : 'Swap this axis');
   const dstLabel = () => (remapping() ? 'Into this input' : 'With this axis');
 
   // Leaving Remap strands a button source on an operation that only takes axes, and a radio with no
@@ -142,24 +123,27 @@ const DeviceTransform = () => {
     );
   };
 
-  // A scale reads and writes the same field, so its destination is its source. A button source
-  // carries one bit, so it goes out at a full pass whatever the slider last held.
   const build = (): Transform => {
     const s = source();
-    const d = twoFields() ? dest() : s;
-    return {
-      op: curOp(),
-      sclass: s.cls,
-      sid: s.id,
-      dclass: d.cls,
-      did: d.id,
-      scale: scaled() ? scale() : LOCK_SCALE_PASS,
-    };
+    const d = dest();
+    return { op: curOp(), sclass: s.cls, sid: s.id, dclass: d.cls, did: d.id };
   };
 
   const apply = () => {
-    if (curOp() === TransformOp.Swap && source().id === dest().id) {
-      cmd.run(() => Promise.reject(new Error('A swap needs two different axes.')));
+    // Both operations MOVE a value, so a field named as both ends is not an operation at all and the
+    // box refuses it. Say so here rather than sending a frame that silently does nothing.
+    const s = source();
+    const d = dest();
+    if (s.cls === d.cls && s.id === d.id) {
+      cmd.run(() =>
+        Promise.reject(
+          new Error(
+            remapping()
+              ? 'A remap needs two different fields. To weigh one in place, use the input scale.'
+              : 'A swap needs two different axes.',
+          ),
+        ),
+      );
       return;
     }
     cmd.run(() => dash.link()!.setTransform(build()));
@@ -174,7 +158,7 @@ const DeviceTransform = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="transforms" data-search-target>
         <Card>
-          <CardHeader title="Transforms" subtitle="Reshape the real device's inputs" />
+          <CardHeader title="Transforms" subtitle="Move the real device's inputs between fields" />
 
           <div style={section}>
             <div style={label}>Operation</div>
@@ -192,35 +176,25 @@ const DeviceTransform = () => {
             />
           </div>
 
-          <Show when={twoFields()}>
-            <div style={section}>
-              <UsagePicker
-                classes={destClasses()}
-                name="transform-dest"
-                value={dest()}
-                onChange={(v) => setDest(v)}
-                classLabel="To"
-                usageLabel={dstLabel()}
-              />
-            </div>
-          </Show>
+          <div style={section}>
+            <UsagePicker
+              classes={destClasses()}
+              name="transform-dest"
+              value={dest()}
+              onChange={(v) => setDest(v)}
+              classLabel="To"
+              usageLabel={dstLabel()}
+            />
+          </div>
 
           <Show when={buttonSource()}>
             <p>A button carries one bit, so it arrives whole or not at all.</p>
           </Show>
 
-          <Show when={scaled()}>
-            <div style={section}>
-              <div style={label}>Keep {scale()}% (a negative flips the direction)</div>
-              <Slider
-                value={scale()}
-                min={-LOCK_SCALE_MAX}
-                max={LOCK_SCALE_MAX}
-                step={5}
-                onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
-              />
-            </div>
-          </Show>
+          <p>
+            A transform says where an input lands, not how much of it arrives. To weigh one, or to flip
+            its direction, set its input scale below: a negative percent reverses the axis.
+          </p>
 
           <div style={{ ...section, ...row }}>
             <Button variant="primary" disabled={cmd.busy()} onClick={apply}>

@@ -685,7 +685,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
       <div id="transform-op" data-search-target>
         <Card>
           <CardHeader title="TransformOp" subtitle="What a transform does to its fields" />
-          <pre class="api-signature">enum TransformOp {'{'} Remap, Swap, Scale {'}'}</pre>
+          <pre class="api-signature">enum TransformOp {'{'} Remap, Swap {'}'}</pre>
           <p>
             How a <A href="/library/types/structs#transform"><code>Transform</code></A>'s source and
             destination relate. <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte,
@@ -696,16 +696,16 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             <table class="api-params">
               <thead><tr><th>Variant</th><th>Byte</th><th>Fields it admits</th><th>Effect</th></tr></thead>
               <tbody>
-                <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's contribution into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
-                <tr><td><code>Swap</code></td><td><code>1</code></td><td>two different axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
-                <tr><td><code>Scale</code></td><td><code>2</code></td><td>one axis, source and destination the same</td><td>Weigh the axis by the signed scale.</td></tr>
+                <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's value into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
+                <tr><td><code>Swap</code></td><td><code>1</code></td><td>two axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
               </tbody>
             </table>
           </div>
           <p>
-            There is no invert op: negation is a <code>Scale</code> of <code>-100</code>, which the box
-            applies exactly, and <A href="/library/types/structs#transform"><code>Transform::invert</code></A>{' '}
-            builds it.
+            Neither op takes a field onto itself: both move a value, and there is nowhere to move it
+            to, so <code>admits</code> refuses a pair whose source and destination are the same field.
+            There is no scale op and no invert op either. Weighing a field, in either direction, is{' '}
+            <A href="/library/lock#scale"><code>scale</code></A>'s, whose percent is signed.
           </p>
         </Card>
       </div>

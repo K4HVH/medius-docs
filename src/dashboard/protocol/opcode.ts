@@ -32,11 +32,12 @@ export const Q_CAPS = 3; // unified: mouse + keyboard + per-class change_driven
 export const Q_RATE = 4;
 export const Q_STATS = 5;
 export const Q_LOCKS = 6;
-// RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale u8].
-export const LOCK_ENTRY_LEN = 5;
-// The most entries one RESP(LOCKS) carries (§4.8). The box fills them in a fixed order and truncates
-// the granular key list with nothing marking the cut, so a larger count is a malformed reply rather than a longer table.
-export const LOCKS_MAX = 96;
+// RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale i16 LE].
+export const LOCK_ENTRY_LEN = 6;
+// The most entries one RESP(LOCKS) carries (§4.8): 2 + 85 × 6 is the frame's payload exactly, so this
+// is what fits rather than a table size. The box fills them in a fixed order and truncates the granular
+// key list with nothing marking the cut, so a larger count is a malformed reply rather than a longer table.
+export const LOCKS_MAX = 85;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
 export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> RESP [Q_OPTIONS][id][value..]
@@ -264,18 +265,17 @@ export const PATCH_APPLY = 0xfe; // re-present the clone with the stored set
 export const PATCH_CLEAR = 0xff; // drop every patch for this device, re-present
 
 // TRANSFORM op (§3.15): what a field transform does. Remap moves a source field into a destination,
-// Swap exchanges two different axes, Scale weighs one axis (source == dest). There is no invert op:
-// a negation is a Scale of -100, which the box applies exactly.
+// Swap exchanges two axes. Both MOVE a value, and neither weighs one: how much of a field survives is
+// the lock's (§3.8), whose percent is signed, so -100 there is the inversion and 0 the block.
 export enum TransformOp {
   Remap = 0,
   Swap = 1,
-  Scale = 2,
 }
-export const TF_OP_COUNT = 3;
+export const TF_OP_COUNT = 2;
 export const TRANSFORM_MAX_ENTRIES = 32; // the box's table size; a further entry is refused
 export const TF_F_FULL = 0x01; // RESP(TRANSFORMS).flags bit 0: the table is full
 export const RESP_TRANSFORMS_HDR = 3; // [what][flags u8][n u8]
-export const TRANSFORMS_ENTRY_LEN = 9; // [op][sclass][sid u16][dclass][did u16][scale i16], no state byte
+export const TRANSFORMS_ENTRY_LEN = 7; // [op][sclass][sid u16][dclass][did u16], no state byte
 
 export function transformOpFromU8(v: number): TransformOp | null {
   return v >= 0 && v < TF_OP_COUNT ? (v as TransformOp) : null;

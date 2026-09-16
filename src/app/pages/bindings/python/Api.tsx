@@ -113,7 +113,7 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.scale(target, direction, scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage (e.g. <code>LockTarget.x()</code>, <code>LockTarget.key(Key.W)</code>).</td></tr>
+              <tr><td><code>dev.scale(target, direction, scale)</code></td><td>Keep <code>scale</code> percent of an axis or usage (e.g. <code>LockTarget.x()</code>, <code>LockTarget.key(Key.W)</code>). Signed: a negative reverses what it keeps, so -100 inverts an axis. Axes only for a negative.</td></tr>
               <tr><td><code>dev.scale_all(what, direction, scale)</code></td><td>The same over a <A href="/bindings/python/types#blanket"><code>Blanket</code></A> class (buttons, keys, media, aim, wheel).</td></tr>
               <tr><td><code>dev.lock(target, direction)</code></td><td>Block an axis or usage: scale 0.</td></tr>
               <tr><td><code>dev.unlock(target, direction)</code></td><td>Back to passing untouched: scale 100.</td></tr>
@@ -311,17 +311,15 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
 
       <div id="transforms" data-search-target>
         <Card>
-          <CardHeader title="Transforms" subtitle="Negate, scale, swap, or remap a field on the wire" />
-          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>) so it can move a button onto a key or media usage.</p>
+          <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
+          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>) so it can move a button onto a key or media usage. A transform only moves a field: to weigh or invert one, use <code>dev.scale</code>, whose percent is signed.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>dev.transform(t)</code></td><td>Install or overwrite one <A href="/bindings/python/types#transform"><code>Transform</code></A>.</td></tr>
               <tr><td><code>dev.untransform(t)</code></td><td>Drop the transform with this one's (source, dest) key.</td></tr>
               <tr><td><code>dev.clear_transforms()</code></td><td>Drop the whole transform table.</td></tr>
-              <tr><td><code>dev.transform_invert(axis)</code></td><td>Negate an axis (a scale of -100).</td></tr>
-              <tr><td><code>dev.transform_scale(axis, percent)</code></td><td>Weigh an axis by a signed percent (200 doubles, -50 halves and flips).</td></tr>
-              <tr><td><code>dev.transform_swap(a, b)</code></td><td>Exchange two different axes.</td></tr>
+              <tr><td><code>dev.transform_swap(a, b)</code></td><td>Exchange two axes.</td></tr>
               <tr><td><code>dev.transform_remap(source, dest)</code></td><td>Move a source field into a destination.</td></tr>
               <tr><td><code>dev.query_transforms()</code></td><td>The <A href="/bindings/python/types#transforms"><code>Transforms</code></A> table, in the order the box applies it.</td></tr>
             </tbody>
