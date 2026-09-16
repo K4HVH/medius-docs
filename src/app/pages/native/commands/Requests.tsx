@@ -1052,7 +1052,6 @@ const Requests: Component = () => {
               <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only way to see that an entry landed.</td></tr>
               <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 set to say the table was the reason.</td></tr>
               <tr><td>An entry whose destination this configuration does not declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
-              <tr><td>A weighed field</td><td>Nothing here. A transform moves a field and never weighs one, so a percent is <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>'s to report.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>

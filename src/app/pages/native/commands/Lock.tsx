@@ -134,9 +134,9 @@ const Lock: Component = () => {
               <code>4</code> on all three momentary classes rather than depend on the class.
             </p>
             <p>
-              On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to
-              the relative pair: written to all four it would land at 50% with no bearing and 25% with
-              one. An unlock clears all four.
+              On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to the
+              relative pair, so a <code>both</code> of 50 means 50% whether or not a bearing is live.
+              An unlock clears all four.
             </p>
           </div>
 

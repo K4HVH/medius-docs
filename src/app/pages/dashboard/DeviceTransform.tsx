@@ -1,7 +1,7 @@
 // Move the value of one field the real device drives into another, before the clone emits it.
 //
 // The picker is the shared one, so a remap reaches a key or a media usage and not only another axis.
-// There is no percent here: weighing a field is the lock panel's, whose scale is signed.
+// Weighing a field is the lock panel's, whose scale is signed; this card only moves them.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -138,7 +138,7 @@ const DeviceTransform = () => {
         Promise.reject(
           new Error(
             remapping()
-              ? 'A remap needs two different fields. To weigh one in place, use the input scale.'
+              ? 'A remap needs two different fields. To weigh one in place, use Input locks.'
               : 'A swap needs two different axes.',
           ),
         ),

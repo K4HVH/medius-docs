@@ -1785,7 +1785,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="MediusTransform" subtitle="One field transform" />
-          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, and they may not name the same field: both ops move a value. A transform carries no percent of its own, so weighing one is <code>medius_device_scale</code>'s. See <A href="/library/transform">Transform</A>.</p>
+          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, and may not name the same field. To weigh a field, or reverse it, use <code>medius_device_scale</code>, whose percent is signed. See <A href="/library/transform">Transform</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>

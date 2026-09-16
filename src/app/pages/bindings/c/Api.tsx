@@ -406,7 +406,7 @@ medius_clip_builder_frame(b, 10, -4, 0, inputs, actions, 1);`}</code></pre>
       <div id="transforms" data-search-target>
         <Card>
           <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
-          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s so it can move a button onto a key or media usage. A transform only moves a field: to weigh or invert one, use <code>medius_device_scale</code>, whose percent is signed.</p>
+          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s so it can move a button onto a key or media usage. To weigh a field, or reverse it, use <code>medius_device_scale</code>, whose percent is signed.</p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>

@@ -1457,7 +1457,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="Transform types" subtitle="Transform · Transforms" />
-          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. A transform moves a field and never weighs one, so there is no percent here: that is <A href="/bindings/python/api#lock"><code>dev.scale</code></A>'s, and its own is signed.</p>
+          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. To weigh a field, or reverse it, use <A href="/bindings/python/api#lock"><code>dev.scale</code></A>, whose percent is signed.</p>
           <div id="transforms">
             <pre class="api-signature">{`Transform.swap(a, b)              -> Transform
 Transform.remap(source, dest)     -> Transform

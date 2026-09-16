@@ -112,7 +112,7 @@ describe('DeviceTransform', () => {
     expect((await findByRole('alert')).textContent).toMatch(/two different axes/i);
   });
 
-  it('points a remap of a field onto itself at the input scale instead', async () => {
+  it('points a remap of a field onto itself at the lock card instead', async () => {
     const { getByText, container, findByRole } = render(() => <DeviceTransform />);
     fireEvent.click(getByText('Remap'));
     await settle();
@@ -123,7 +123,7 @@ describe('DeviceTransform', () => {
     fireEvent.click(getByText('Apply'));
     await settle();
     expect(mock.sent).toHaveLength(0);
-    expect((await findByRole('alert')).textContent).toMatch(/input scale/i);
+    expect((await findByRole('alert')).textContent).toMatch(/Input locks/i);
   });
 
   it('names a read-back entry by its fields', async () => {

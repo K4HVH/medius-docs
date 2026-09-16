@@ -852,13 +852,12 @@ for ev in input.by_ref().take(20) {
             <tbody>
               <tr><td><code>op</code></td><td><A href="/library/types/enums#transform-op"><code>TransformOp</code></A></td><td>What the transform does. An op that cannot address this source and destination pair is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>.</td></tr>
               <tr><td><code>source</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform reads: an axis, or a button. A key or media field can only be a destination, so naming one here is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. One the clone's descriptor does not declare is refused box-side, and absent from the readback.</td></tr>
-              <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes. Naming the same field as <code>source</code> is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>: both ops move a value, so there would be nowhere to move it to. A cross-class remap with no destination collection is refused box-side.</td></tr>
+              <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes. The same field as <code>source</code> is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. A cross-class remap with no destination collection is refused box-side.</td></tr>
             </tbody>
           </table>
           <p>
-            The written value is clamped to the destination field's declared range. There is no scale
-            field: a transform says where a value lands, and how much of it survives is{' '}
-            <A href="/library/lock#scale"><code>scale</code></A>'s, which runs first.
+            The written value is clamped to the destination field's declared range. To weigh a field,
+            or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>, which runs first.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Axis, Button, Key, Transform, TransformOp};
@@ -888,9 +887,8 @@ let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button
           <pre class="api-signature">struct Transforms {'{'} table_full: bool, entries: Vec&lt;Transform&gt; {'}'}</pre>
           <p>
             What <A href="/library/transform#query-transforms"><code>query_transforms</code></A>{' '}
-            returns: the held entries, as the commands that rebuild them. There is no generation
-            counter and no per-entry state, because the table is re-asserted wholesale on reconnect and
-            every entry read back is a live one.
+            returns: the held entries, as the commands that rebuild them. Every entry read back is a
+            live one, and the table is re-asserted wholesale on reconnect.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>

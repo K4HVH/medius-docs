@@ -312,7 +312,7 @@ b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
       <div id="transforms" data-search-target>
         <Card>
           <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
-          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>) so it can move a button onto a key or media usage. A transform only moves a field: to weigh or invert one, use <code>dev.scale</code>, whose percent is signed.</p>
+          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>) so it can move a button onto a key or media usage. To weigh a field, or reverse it, use <code>dev.scale</code>, whose percent is signed.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>

@@ -32,8 +32,8 @@ const Transform: Component = () => {
           </tbody>
         </table>
         <p>
-          Both ops move a value; weighing one is{' '}
-          <A href="/native/commands/lock#scale"><code>LOCK</code></A>'s, whose percent is signed. An{' '}
+          To weigh a field, or reverse it, use{' '}
+          <A href="/native/commands/lock#scale"><code>LOCK</code></A>, whose percent is signed. An{' '}
           <code>op</code> above <code>1</code> is refused.
         </p>
         <p>
@@ -74,11 +74,10 @@ const Transform: Component = () => {
           </table>
 
           <div id="weighing" data-search-target>
-            <div class="api-response-label">WEIGHING IS THE LOCK'S</div>
+            <div class="api-response-label">WITH A SCALE</div>
             <p>
-              A transform says where a value lands, never how much of it survives. The weigh runs
-              first, and its rounding remainder is banked once, per axis and sign, by the{' '}
-              <A href="/native/commands/lock#scale">lock</A>.
+              The <A href="/native/commands/lock#scale">weigh</A> runs first and the transform moves
+              what it kept. The rounding remainder is banked once, per axis and sign, by the lock.
             </p>
             <pre class="diagram">{`  LOCK(X, both, -50)      keep half of X, reversed
   TRANSFORM(swap, X, Y)   and put what is left on Y
@@ -94,7 +93,7 @@ const Transform: Component = () => {
             <tbody>
               <tr><td><code>op</code> is above <code>1</code></td><td>remap and swap are the whole set</td></tr>
               <tr><td>the op does not admit that <A href="/native/commands/transform#pairs">class pair</A></td><td>each op names the shapes it can read and write</td></tr>
-              <tr><td>the source and the destination are the same field</td><td>both ops move a value; weighing one in place is the <A href="/native/commands/lock#scale">lock</A>'s</td></tr>
+              <tr><td>the source and the destination are the same field</td><td>a move needs two; to weigh a field in place, use the <A href="/native/commands/lock#scale">lock</A></td></tr>
               <tr><td>a field this clone does not declare</td><td>the box will not store an address it cannot reach; re-send the entry after a re-clone</td></tr>
               <tr><td>the table already holds 32 entries</td><td>nothing is evicted; the readback's full flag says an entry was turned away</td></tr>
             </tbody>
@@ -161,7 +160,7 @@ const Transform: Component = () => {
           button i  ---------->  key         the keyboard collection
           button i  ---------->  media       the consumer collection
 
-  neither op takes a field onto itself: both MOVE a value`}</pre>
+  every pair is two different fields`}</pre>
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>What the box does</th></tr>
