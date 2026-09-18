@@ -402,10 +402,24 @@ const Types: Component = () => {
                 <tr><td><code>state</code></td><td><A href="/bindings/python/types#clipstate"><code>ClipState</code></A></td><td>the lifecycle state</td></tr>
                 <tr><td><code>free</code> / <code>total</code></td><td><code>int</code></td><td>ring bytes free (pace top-ups off this) / retained clip size in bytes (streaming: buffered-but-undrained)</td></tr>
                 <tr><td><code>played</code></td><td><code>int</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
-                <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames emitted since the last start (gap runs excluded)</td></tr>
+                <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames played since the box booted (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
+                <tr><td><code>xfers</code></td><td><code>int</code></td><td>clip transfers the device completed</td></tr>
+                <tr><td><code>xfer_errs</code></td><td><code>int</code></td><td>clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer</td></tr>
+                <tr><td><code>gated</code></td><td><code>int</code></td><td>raw reports and transfers the box discarded because the imperfect-clone opt-in was off</td></tr>
                 <tr><td><code>held</code></td><td><code>List[Usage]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
                 <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test one <A href="/bindings/python/types#input"><code>Usage</code></A> in <code>held</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="clip-constants" data-search-target>
+            <div class="api-response-label">CLIP CONSTANTS</div>
+            <table class="api-params">
+              <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>CLIP_EDGES_MAX</code></td><td><code>8</code></td><td>the most edges one clip frame carries</td></tr>
+                <tr><td><code>CLIP_RAW_MAX</code></td><td><code>8</code></td><td>the most raw reports one clip frame carries</td></tr>
+                <tr><td><code>CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>the most bytes one clip frame encodes to: one <code>CLIP_APPEND</code> payload</td></tr>
               </tbody>
             </table>
           </div>
@@ -439,6 +453,7 @@ const Types: Component = () => {
                 <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
                 <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>the bus lifecycle</td></tr>
+                <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/bindings/python/api#clip">clip</A>'s transfer ran on</td><td>every control endpoint</td></tr>
               </tbody>
             </table>
             <p>
@@ -455,7 +470,7 @@ const Types: Component = () => {
           <div id="trafficclass" data-search-target>
             <div class="api-response-label">TrafficClass</div>
             <p>
-              The byte-oriented half of the address space, values <code>4</code> to <code>10</code>{' '}
+              The byte-oriented half of the address space, values <code>4</code> to <code>11</code>{' '}
               under the same names as <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>.
             </p>
             <table class="api-params">
@@ -464,6 +479,7 @@ const Types: Component = () => {
                 <tr><td><code>HID_IN</code> <code>HID_OUT</code></td><td><code>4</code>, <code>5</code></td></tr>
                 <tr><td><code>VENDOR_INTERRUPT</code> <code>VENDOR_BULK</code></td><td><code>6</code>, <code>7</code></td></tr>
                 <tr><td><code>CONTROL</code> <code>EMIT</code> <code>BUS</code></td><td><code>8</code>, <code>9</code>, <code>10</code></td></tr>
+                <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td></tr>
               </tbody>
             </table>
             <p>
@@ -570,7 +586,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <tbody>
                 <tr><td><code>MOTION</code></td><td><code>0</code></td><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>CatchClass.AXIS</code></td></tr>
                 <tr><td><code>USAGES</code></td><td><code>1</code></td><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>BUTTON / KEY / MEDIA</code></td></tr>
-                <tr><td><code>TRAFFIC</code></td><td><code>2</code></td><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td>every class from <code>HID_IN</code> to <code>BUS</code></td></tr>
+                <tr><td><code>TRAFFIC</code></td><td><code>2</code></td><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td>every class from <code>HID_IN</code> to <code>CLIP_TRANSFER</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -587,7 +603,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <thead><tr><th>Member</th><th>Value</th><th>Stamped</th><th>Covers</th></tr></thead>
               <tbody>
                 <tr><td><code>HOST_CHIP</code></td><td><code>0</code></td><td>in USB interrupt context, when the real device's transfer completed</td><td>motion, usages, <code>HID_IN</code>, and IN transfers on <code>VENDOR_INTERRUPT / VENDOR_BULK</code></td></tr>
-                <tr><td><code>DEVICE_CHIP</code></td><td><code>1</code></td><td>at the tap on the clone side</td><td><code>HID_OUT</code>, every OUT transfer, and <code>CONTROL / EMIT / BUS</code></td></tr>
+                <tr><td><code>DEVICE_CHIP</code></td><td><code>1</code></td><td>at the tap on the clone side</td><td><code>HID_OUT</code>, every OUT transfer, and <code>CONTROL / EMIT / BUS / CLIP_TRANSFER</code></td></tr>
               </tbody>
             </table>
             <p>
@@ -1265,8 +1281,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <div class="api-response-label">TrafficEvent</div>
             <p>
               The payload for every byte-oriented <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
-              from <code>HID_IN</code> to <code>BUS</code>: one packet, one control transaction, or one
-              bus event, with whatever the entry's <code>capture</code> let through.
+              from <code>HID_IN</code> to <code>CLIP_TRANSFER</code>: one packet, one control
+              transaction, or one bus event, with whatever the entry's <code>capture</code> let through.
             </p>
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1278,9 +1294,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>true_len</code></td><td><code>int</code></td><td>the packet's length <em>before</em> capture truncation</td></tr>
                 <tr><td><code>bytes</code></td><td><code>bytes</code></td><td>the captured bytes, at most 180 of them</td></tr>
                 <tr><td><code>truncated()</code></td><td><code>bool</code></td><td><code>len(bytes) &lt; true_len</code>: bytes were cut</td></tr>
-                <tr><td><code>setup()</code></td><td><code>Optional[bytes]</code></td><td>the 8-byte setup packet of a <code>CONTROL</code> event; <code>None</code> for another class or a shorter capture</td></tr>
-                <tr><td><code>data()</code></td><td><code>bytes</code></td><td>the data stage of a <code>CONTROL</code> event, the whole packet for any other class</td></tr>
+                <tr><td><code>setup()</code></td><td><code>Optional[bytes]</code></td><td>the 8-byte setup packet of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event; <code>None</code> for another class or a shorter capture</td></tr>
+                <tr><td><code>data()</code></td><td><code>bytes</code></td><td>the data stage of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event, the whole packet for any other class</td></tr>
                 <tr><td><code>control_status()</code></td><td><code>Optional[<A href="/bindings/python/types#controlstatus">ControlStatus</A>]</code></td><td>what the real device answered; <code>None</code> for any class but <code>CONTROL</code></td></tr>
+                <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NAK</code> when no answer came) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
                 <tr><td><code>bus_event()</code></td><td><code>Optional[<A href="/bindings/python/types#busevent">BusEvent</A>]</code></td><td>the decoded lifecycle event; <code>None</code> for any class but <code>BUS</code> or an unknown kind</td></tr>
                 <tr><td><code>bulk_end_of_transfer()</code> / <code>bulk_zlp()</code></td><td><code>bool</code></td><td>the two <code>VENDOR_BULK</code> framing bits, read off <code>flags</code></td></tr>
               </tbody>
@@ -1291,14 +1308,16 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <tbody>
                 <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet</td><td><code>bulk_end_of_transfer()</code>, <code>bulk_zlp()</code></td></tr>
                 <tr><td><code>CONTROL</code></td><td>the real device's answer: <code>0</code> OK, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout</td><td><code>control_status()</code></td></tr>
+                <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>0xFE</code> when no answer came</td><td><code>transfer_status()</code></td></tr>
                 <tr><td><code>BUS</code></td><td>the <A href="/bindings/python/types#busevent"><code>BusEventKind</code></A>; the bytes hold its arguments</td><td><code>bus_event()</code></td></tr>
                 <tr><td>everything else</td><td><code>0</code></td><td>-</td></tr>
               </tbody>
             </table>
             <p>
-              A <code>CONTROL</code> event is one <em>completed transaction</em>, not one stage:{' '}
-              <code>bytes</code> is <code>[setup 8][data…]</code> and <code>direction</code> says which
-              way the data stage went. Requests the box serves from its own descriptor cache still
+              A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one{' '}
+              <em>completed transaction</em>: <code>bytes</code> is <code>[setup 8][data...]</code>{' '}
+              (IN data only on <code>CLIP_TRANSFER</code>) and <code>direction</code> says which way
+              the data stage went. Requests the box serves from its own descriptor cache still
               produce an event.
             </p>
           </div>
@@ -1392,7 +1411,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
 
       <div id="advanced-types" data-search-target>
         <Card>
-          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
+          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · ClipVerb · Patch" />
           <p>The value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
 
           <div id="setup">
@@ -1424,15 +1443,31 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <div id="rewrite-rule">
             <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
             <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
+            <pre class="api-signature">{`RewriteRule.clip(rewrite_class, id, direction, verb, match_bytes=b"", mask=b"",
+                 drop=False, on_edge=None)   -> RewriteRule`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>rewrite_class</code></td><td><code>RewriteClass</code></td><td><code>HID_IN</code> 4, <code>HID_OUT</code> 5, <code>VENDOR_INTERRUPT</code> 6, <code>VENDOR_BULK</code> 7, <code>CONTROL</code> 8, <code>EMIT</code> 9, <code>ANY</code> 0xFF.</td></tr>
                 <tr><td><code>id</code></td><td><code>int</code></td><td>Interface number or endpoint number.</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>BOTH</code> / <code>POSITIVE</code> / <code>NEGATIVE</code>.</td></tr>
-                <tr><td><code>action</code></td><td><code>RewriteAction</code></td><td><code>PASS</code> 0, <code>DROP</code> 1, <code>PATCH</code> 2, <code>REPLACE</code> 3, <code>ANSWER</code> 4, <code>STALL</code> 5, <code>NAK</code> 6, <code>REPLY_PATCH</code> 7, <code>REPLY_REPLACE</code> 8.</td></tr>
+                <tr><td><code>action</code></td><td><code>RewriteAction</code></td><td><code>PASS</code> 0, <code>DROP</code> 1, <code>PATCH</code> 2, <code>REPLACE</code> 3, <code>ANSWER</code> 4, <code>STALL</code> 5, <code>NAK</code> 6, <code>REPLY_PATCH</code> 7, <code>REPLY_REPLACE</code> 8, <code>CLIP</code> 9.</td></tr>
                 <tr><td><code>offset</code></td><td><code>int</code></td><td>Where a patching action writes.</td></tr>
                 <tr><td><code>match_bytes</code>, <code>mask</code>, <code>payload</code></td><td><code>bytes</code></td><td>The head compare (equal length) and the action's payload.</td></tr>
+                <tr><td><code>clip_verb()</code></td><td><code>Optional[<A href="/bindings/python/types#clip-verb">ClipVerb</A>]</code></td><td>What a <A href="/library/advanced/rewrite#clip">clip rule</A> does; <code>None</code> for any other rule.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="clip-verb">
+            <div class="api-response-label">ClipVerb (RewriteRule.clip_verb())</div>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>The clip verb the rule runs, on the box's next tick for every packet it wins.</td></tr>
+                <tr><td><code>drop</code></td><td><code>bool</code></td><td>Every packet the rule wins is dropped (<code>REWRITE_CLIP_DROP</code>, <code>0x01</code>).</td></tr>
+                <tr><td><code>edge</code></td><td><code>bool</code></td><td>The verb runs on the first packet of a run of matching ones (<code>REWRITE_CLIP_EDGE</code>, <code>0x02</code>). <code>RewriteRule.clip</code> sets it when <code>on_edge</code> is a selector length.</td></tr>
+                <tr><td><code>selector_len</code></td><td><code>int</code></td><td>How many leading match bytes pick the run's stream: the <code>on_edge</code> value.</td></tr>
               </tbody>
             </table>
           </div>
@@ -1537,10 +1572,15 @@ except MediusError as e:     # any other failure
                 <tr><td><code>TransformOpFieldsError</code></td><td><code>ERR_TRANSFORM_OP_FIELDS</code></td></tr>
                 <tr><td><code>TransformTableFullError</code></td><td><code>ERR_TRANSFORM_TABLE_FULL</code></td></tr>
                 <tr><td><code>RawDirectionError</code></td><td><code>ERR_RAW_DIRECTION</code></td></tr>
+                <tr><td><code>ClipFrameCountError</code></td><td><code>ERR_CLIP_FRAME_COUNT</code></td></tr>
+                <tr><td><code>ClipFrameTooLongError</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td></tr>
+                <tr><td><code>ClipTransferDataError</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td></tr>
+                <tr><td><code>RewriteClipRuleError</code></td><td><code>ERR_REWRITE_CLIP_RULE</code></td></tr>
+                <tr><td><code>RewriteMatchTooLongError</code></td><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td></tr>
               </tbody>
             </table>
             <p>
-              The last eighteen are argument refusals, raised before a frame reaches the box.
+              The last twenty-three are argument refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
@@ -1563,6 +1603,11 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RewriteTableFullError</code></td><td>a rewrite rule past the table's capacity</td></tr>
                 <tr><td><code>TransformTableFullError</code></td><td>a transform past the table's capacity</td></tr>
                 <tr><td><code>RawDirectionError</code></td><td>a raw injection direction other than <code>Direction.IN</code> or <code>Direction.OUT</code></td></tr>
+                <tr><td><code>ClipFrameCountError</code></td><td>a clip frame with more than <A href="/bindings/python/types#clip-constants"><code>CLIP_EDGES_MAX</code></A> edges or <code>CLIP_RAW_MAX</code> raw reports</td></tr>
+                <tr><td><code>ClipFrameTooLongError</code></td><td>a clip frame that encodes to more than <code>CLIP_ENTRY_MAX</code> bytes</td></tr>
+                <tr><td><code>ClipTransferDataError</code></td><td>a clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one</td></tr>
+                <tr><td><code>RewriteClipRuleError</code></td><td>a <code>CLIP</code> rule the box would refuse; the message says why</td></tr>
+                <tr><td><code>RewriteMatchTooLongError</code></td><td>a rewrite rule with more than 16 match bytes</td></tr>
               </tbody>
             </table>
             <div class="callout callout--info">
@@ -1590,6 +1635,14 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ERR_EMPTY_SUBSCRIPTION</code></td><td><code>13</code></td><td><code>ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td></tr>
                 <tr><td><code>ERR_CAPTURE_NOT_APPLICABLE</code></td><td><code>14</code></td><td><code>ERR_RESERVED_ID</code></td><td><code>18</code></td></tr>
                 <tr><td><code>ERR_NOT_AN_INPUT_FILTER</code></td><td><code>15</code></td><td><code>ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td></tr>
+                <tr><td><code>ERR_LOCK_SCALE_RANGE</code></td><td><code>20</code></td><td><code>ERR_TRANSFORM_OP_FIELDS</code></td><td><code>27</code></td></tr>
+                <tr><td><code>ERR_LOCK_SCALE_USAGE</code></td><td><code>21</code></td><td><code>ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td></tr>
+                <tr><td><code>ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td><code>ERR_RAW_DIRECTION</code></td><td><code>29</code></td></tr>
+                <tr><td><code>ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td><code>ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td></tr>
+                <tr><td><code>ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td></tr>
+                <tr><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td></tr>
+                <tr><td><code>ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td><code>ERR_REWRITE_CLIP_RULE</code></td><td><code>33</code></td></tr>
+                <tr><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td></td><td></td></tr>
               </tbody>
             </table>
           </div>

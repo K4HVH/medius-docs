@@ -291,7 +291,7 @@ if let Some(age) = c.clock.age {
             Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
             <code>state</code> (including{' '}
             <A href="/library/types/enums#clip-state"><code>Faulted</code></A>), ring <code>free</code>,
-            retained <code>played</code>/<code>total</code>, the drain counters, and the{' '}
+            retained <code>played</code>/<code>total</code>, the playback counters, and the{' '}
             <code>held</code> usages. Backs{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
           </p>
