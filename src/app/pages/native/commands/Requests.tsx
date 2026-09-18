@@ -174,9 +174,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.4.0</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.1</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 07     | 03     | 04     | 00     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 07     | 03     | 04     | 01     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -987,7 +987,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.4.0</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.1</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
