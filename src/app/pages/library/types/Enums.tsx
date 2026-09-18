@@ -925,8 +925,8 @@ match reply.status {
               <thead><tr><th>Variant</th><th>Byte</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
               <tbody>
                 <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
-                <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index</td></tr>
-                <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is the configuration, <code>index</code> the interface number</td></tr>
+                <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index, counting from 0</td></tr>
+                <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is that index, <code>index</code> the interface number</td></tr>
                 <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor (the whole string is replaced).</td><td><code>index</code> is the string index</td></tr>
                 <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
               </tbody>

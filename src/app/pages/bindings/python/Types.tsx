@@ -1444,7 +1444,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>section</code></td><td><code>PatchSection</code></td><td><code>DEVICE</code> 0, <code>CONFIG</code> 1, <code>REPORT</code> 2, <code>STRING</code> 3, <code>BOS</code> 4.</td></tr>
-                <tr><td><code>cfg</code></td><td><code>int</code></td><td>Configuration index, for <code>CONFIG</code>/<code>REPORT</code>.</td></tr>
+                <tr><td><code>cfg</code></td><td><code>int</code></td><td>Configuration index, for <code>CONFIG</code>/<code>REPORT</code>. <code>0</code> is the first configuration, not <code>bConfigurationValue</code>.</td></tr>
                 <tr><td><code>index</code></td><td><code>int</code></td><td>Interface or string index, for <code>REPORT</code>/<code>STRING</code>.</td></tr>
                 <tr><td><code>offset</code></td><td><code>int</code></td><td>Byte offset within the descriptor.</td></tr>
                 <tr><td><code>bytes</code></td><td><code>bytes</code></td><td>The overwrite bytes; empty removes the patch.</td></tr>
@@ -1555,7 +1555,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
                 <tr><td><code>LockScaleRangeError</code></td><td>a lock scale outside <code>LOCK_SCALE_MIN</code> to <code>LOCK_SCALE_MAX</code></td></tr>
                 <tr><td><code>LockScaleUsageError</code></td><td>a negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse</td></tr>
-                <tr><td><code>ImperfectRequiredError</code></td><td>an advanced control layer call with the imperfect-clone opt-in off</td></tr>
+                <tr><td><code>ImperfectRequiredError</code></td><td><code>set_rewrite</code> or <code>apply_patch</code> with the imperfect-clone opt-in off</td></tr>
                 <tr><td><code>RewriteMaskLengthError</code></td><td>a rewrite rule whose <code>match</code> and <code>mask</code> are different lengths</td></tr>
                 <tr><td><code>RewriteActionClassError</code></td><td>a rewrite action that its rule's class does not accept</td></tr>
                 <tr><td><code>RewritePayloadTooLargeError</code></td><td>a rewrite payload past the head the box holds for its class</td></tr>
