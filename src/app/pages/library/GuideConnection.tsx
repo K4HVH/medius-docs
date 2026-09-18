@@ -93,7 +93,8 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
             </thead>
             <tbody>
               <tr><td>Override held</td><td>Keepalive thread runs; the health reply is dropped.</td></tr>
-              <tr><td>Idle</td><td>No override held, so the thread sends nothing.</td></tr>
+              <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger is bound.</td></tr>
+              <tr><td>Idle</td><td>Nothing held, so the thread sends nothing.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

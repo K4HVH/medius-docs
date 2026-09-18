@@ -145,8 +145,30 @@ const Errors: Component = () => {
               <tr>
                 <td><code>RawDirection {'{'} direction {'}'}</code></td>
                 <td>
-                  A <A href="/library/advanced/raw"><code>raw</code></A> call's direction was not{' '}
+                  A <A href="/library/advanced/raw"><code>raw</code></A> call's direction, or a{' '}
+                  <A href="/library/clip#frame"><code>ClipFrame</code></A> raw report's, was not{' '}
                   <code>IN</code> or <code>OUT</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipFrameCount {'{'} what, count, limit {'}'}</code></td>
+                <td>
+                  A <A href="/library/clip#frame"><code>ClipFrame</code></A> has <code>count</code> of{' '}
+                  <code>what</code> (edges or raw reports) and carries at most <code>limit</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipFrameTooLong {'{'} len {'}'}</code></td>
+                <td>
+                  A <code>ClipFrame</code> encodes to <code>len</code> bytes and one append carries at
+                  most 512 (<code>CLIP_ENTRY_MAX</code>). Split it across frames.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipTransferData {'{'} want, got {'}'}</code></td>
+                <td>
+                  A clip transfer has <code>got</code> data bytes where its setup packet announces{' '}
+                  <code>want</code>: <code>wLength</code> for an OUT request, none for an IN one.
                 </td>
               </tr>
               <tr>
@@ -154,6 +176,13 @@ const Errors: Component = () => {
                 <td>
                   A <A href="/library/advanced/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
                   <code>mask</code> were not the same length.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteMatchTooLong {'{'} len, limit {'}'}</code></td>
+                <td>
+                  A rewrite rule has <code>len</code> match bytes and the box compares at most{' '}
+                  <code>limit</code> (<code>REWRITE_MATCH_MAX</code>, 16).
                 </td>
               </tr>
               <tr>
@@ -176,6 +205,16 @@ const Errors: Component = () => {
                 <td>
                   A further <A href="/library/advanced/rewrite">rewrite rule</A> with all{' '}
                   <code>limit</code> already in use. Remove one first.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteClipRule {'{'} reason {'}'}</code></td>
+                <td>
+                  A <A href="/library/advanced/rewrite#clip">clip rule</A> in a shape the box refuses,
+                  such as <code>dropping</code> on <code>Control</code> or <code>Any</code>, or{' '}
+                  <code>on_edge</code> without a report class, a concrete <code>id</code>,{' '}
+                  <code>IN</code> or <code>OUT</code>, and match bytes past the selector;{' '}
+                  <code>reason</code> says which.
                 </td>
               </tr>
               <tr>

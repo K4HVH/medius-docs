@@ -9,10 +9,10 @@ const Rewrite: Component = () => {
       <Card>
         <CardHeader title="Rewrite rules" subtitle="Rewrite a matched packet in flight" />
         <p>
-          The box holds a table of rules that match traffic and rewrite, answer, refuse, or drop it. A
-          rule is addressed in the same <code>(class, id, direction)</code> space{' '}
-          <A href="/library/catch">catch</A> reads, in the write direction, narrowed by a masked head
-          compare.
+          The box holds a table of rules that match traffic and rewrite, answer, refuse, or drop it, or
+          run a <A href="/library/advanced/rewrite#clip">clip verb</A>. A rule is addressed in the same{' '}
+          <code>(class, id, direction)</code> space <A href="/library/catch">catch</A> reads, in the
+          write direction, narrowed by a masked head compare.
         </p>
         <p>
           Rules are session state: re-asserted on reconnect like a{' '}
@@ -79,6 +79,51 @@ device.set_rewrite(
         .at_offset(2)
         .with_payload([0x00]),
 )?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip" data-search-target>
+        <Card>
+          <CardHeader title="Clip rules" subtitle="Run a clip verb on a matched packet" />
+          <pre class="api-signature">fn clip(class: RewriteClass, id: u16, direction: Direction, verb: ClipAction) -&gt; RewriteRule</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p>
+            The rule runs one <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> on
+            the box's next tick for every packet it wins. A shape the box refuses is{' '}
+            <A href="/library/types/errors#errors"><code>Error::RewriteClipRule</code></A>.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>clip(class, id, direction, verb)</code></td><td>Build the rule, on any <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A>. The packet passes untouched, and a verb that starts the clip plays its first entry on that tick.</td></tr>
+              <tr><td><code>.dropping()</code></td><td>Drop every packet the rule wins, on a class that takes <code>Drop</code>.</td></tr>
+              <tr><td><code>.on_edge(selector_len)</code></td><td>Run the verb on the first packet of a run of matching ones, so a state a device repeats every poll fires once per hold. The first <code>selector_len</code> match bytes pick the stream, such as a report ID.</td></tr>
+              <tr><td><code>.clip_verb()</code></td><td>The payload decoded into a <A href="/library/types/structs#clip-verb"><code>ClipVerb</code></A>, or <code>None</code> for any other rule.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--info">
+            <p>
+              A packet outside the selected stream leaves the run as it was. An identical re-send of a
+              rule keeps its run; an overwrite or a bus reset starts it again.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{ClipAction, Device, Direction, RewriteClass, RewriteRule};
+
+let device = Device::find()?;
+device.allow_imperfect_clones(true)?;
+
+// Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Hold it to play.
+let held = RewriteRule::clip(RewriteClass::HidIn, 2, Direction::IN, ClipAction::Start)
+    .matching([0x07, 0x20], [0xFF, 0x20])
+    .on_edge(1);
+let let_go = RewriteRule::clip(RewriteClass::HidIn, 2, Direction::IN, ClipAction::Stop)
+    .matching([0x07, 0x00], [0xFF, 0x20])
+    .on_edge(1);
+device.set_rewrite(&held)?;
+device.set_rewrite(&let_go)?;`}</code></pre>
         </Card>
       </div>
 

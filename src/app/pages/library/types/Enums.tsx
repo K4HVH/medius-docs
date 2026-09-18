@@ -90,7 +90,7 @@ const Enums: Component = () => {
       <div id="catch-class" data-search-target>
         <Card>
           <CardHeader title="CatchClass" subtitle="What a catch subscription addresses" />
-          <pre class="api-signature">enum CatchClass {'{'} Button, Key, Media, Axis, HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus {'}'}</pre>
+          <pre class="api-signature">enum CatchClass {'{'} Button, Key, Media, Axis, HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
           <p>
             The address space a{' '}
             <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> picks from, and
@@ -101,7 +101,7 @@ const Enums: Component = () => {
           </p>
           <p>
             The first four are <A href="/native/commands/lock"><code>LOCK</code></A>'s own classes at
-            the same byte values. The other seven address USB traffic and have no lock counterpart;{' '}
+            the same byte values. The other eight address USB traffic and have no lock counterpart;{' '}
             <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half on
             its own.
           </p>
@@ -119,13 +119,14 @@ const Enums: Component = () => {
               <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0).</td><td>every control endpoint.</td></tr>
               <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
               <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
+              <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
             </tbody>
           </table>
           <p>
             A blanket is one table entry, not an expansion into one per id. The wire sentinels never
             appear in Rust: <code>CatchFilter::watch_class(c)</code> and <code>traffic_class(c)</code>{' '}
             are the per-class blankets, and <code>CatchFilter::everything()</code> is the wildcard
-            over all eleven, not a <code>CatchClass</code> variant.
+            over all twelve, not a <code>CatchClass</code> variant.
           </p>
           <p>
             The input classes are captured at the emission merge point, <em>before</em>{' '}
@@ -162,9 +163,9 @@ let trace = device.catch_events([
       <div id="traffic-class" data-search-target>
         <Card>
           <CardHeader title="TrafficClass" subtitle="The byte-oriented half of the address space" />
-          <pre class="api-signature">enum TrafficClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus {'}'}</pre>
+          <pre class="api-signature">enum TrafficClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
           <p>
-            The seven classes that carry packets, at the same byte values as their{' '}
+            The eight classes that carry packets, at the same byte values as their{' '}
             <A href="/library/types/enums#catch-class"><code>CatchClass</code></A> counterparts. A
             separate enum so <code>CatchFilter::traffic</code> cannot be handed an input class.{' '}
             <code>TrafficClass::ALL</code> lists them; <code>From</code> and <code>TryFrom</code>{' '}
@@ -600,7 +601,7 @@ match stream.recv()? {
             <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
             <tbody>
               <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and the IN direction of the vendor classes.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, and <code>Control / Emit / Bus</code>.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -753,8 +754,9 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <pre class="api-signature">enum ClipAction {'{'} Start, Stop, Pause, Resume, Restart, Toggle {'}'}</pre>
           <p>
             What a bound{' '}
-            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> does to the clip
-            when its edge fires. The discriminant doubles as the{' '}
+            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> or a{' '}
+            <A href="/library/advanced/rewrite#clip">clip rule</A> does to the clip when it fires. The
+            discriminant doubles as the{' '}
             <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op byte for the same
             action.
           </p>
@@ -813,7 +815,8 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <pre class="api-signature">enum TransferStatus {'{'} Ok, Refused, Stall, Nak, NoDevice, Other(u8) {'}'}</pre>
           <p>
             The status byte of a{' '}
-            <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>. The
+            <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>, and of a{' '}
+            <code>ClipTransfer</code> event through <code>TrafficEvent::transfer_status()</code>. The
             codes sit at the top of the byte range so they never collide with a length; an unknown byte
             is carried through as <code>Other</code>.
           </p>
@@ -884,7 +887,7 @@ match reply.status {
       <div id="rewrite-action" data-search-target>
         <Card>
           <CardHeader title="RewriteAction" subtitle="What the winning rewrite rule does" />
-          <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
+          <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace, Clip {'}'}</pre>
           <p>
             The winning rule's action decides a matched packet's fate. The class column is which{' '}
             <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
@@ -906,6 +909,7 @@ match reply.status {
                 <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>NAK to a timeout.</td></tr>
                 <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the device's reply at <code>offset</code>.</td></tr>
                 <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the device's reply with the payload.</td></tr>
+                <tr><td><code>Clip</code></td><td><code>9</code></td><td>any</td><td>yes</td><td>Run a clip verb. <A href="/library/advanced/rewrite#clip"><code>RewriteRule::clip</code></A> writes the payload, <code>[op][flags][slen]</code>.</td></tr>
               </tbody>
             </table>
           </div>

@@ -248,29 +248,35 @@ const Api: Component = () => {
             <thead><tr><th>Call</th><th>Appends</th></tr></thead>
             <tbody>
               <tr><td><code>ClipBuilder() / .clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
+              <tr><td><code>.byte_len()</code></td><td>The ring bytes the entries take, to hold against <A href="/bindings/python/types#clipstatus"><code>ClipStatus.free</code></A> before an append.</td></tr>
               <tr><td><code>.gap(frames)</code></td><td>A gap run (0 = no-op).</td></tr>
-              <tr><td><code>.move(dx, dy) / .wheel(dz)</code></td><td>A cursor / wheel motion frame.</td></tr>
+              <tr><td><code>.move(dx, dy) / .wheel(dz) / .pan(dpan)</code></td><td>A cursor / wheel / pan (horizontal scroll) motion frame.</td></tr>
               <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
               <tr><td><code>.edge(usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an explicit <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
-              <tr><td><code>.frame(dx, dy, wheel, edges)</code></td><td>A motion delta plus up to 8 <A href="/bindings/python/types#input"><code>Usage</code></A> / <A href="/bindings/python/types#action"><code>Action</code></A> edges on one frame.</td></tr>
+              <tr><td><code>.raw(ep, direction, data)</code></td><td>A frame carrying one raw report, as <A href="/bindings/python/api#advanced"><code>dev.raw</code></A> sends one; played only with the imperfect-clone opt-in on.</td></tr>
+              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The answer arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
+              <tr><td><code>.frame(dx=0, dy=0, wheel=0, pan=0, edges=(), raw=(), transfers=())</code></td><td>One frame carrying the motion deltas plus <code>(usage, action)</code> edges, <code>(ep, direction, data)</code> raw reports, and <code>(ep, setup, out)</code> transfers, within the <A href="/bindings/python/types#clip-constants">clip constants</A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Usage
+          <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Setup, Usage
 
 b = ClipBuilder()
 
 # move (+10, -4) AND press Left on the same frame
-b.frame(10, -4, 0, [(Usage.button(Button.LEFT), Action.PRESS)])`}</code></pre>
+b.frame(dx=10, dy=-4, edges=[(Usage.button(Button.LEFT), Action.PRESS)])
+
+# the next tick queues a SET_REPORT to the real device
+b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pre>
           <div class="api-response-label">CLIPHANDLE</div>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>dev.clip()</code></td><td>A <code>ClipHandle</code> (owns the append-seq counter).</td></tr>
-              <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring.</td></tr>
+              <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring. Every entry is checked first, so a refusal sends nothing: <A href="/bindings/python/types#subclasses"><code>ClipFrameCountError</code></A>, <code>ClipFrameTooLongError</code>, <code>ClipTransferDataError</code>, <code>RawDirectionError</code>, or <code>RelativeDirectionError</code>.</td></tr>
               <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
-              <tr><td><code>clip.set_ride(on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default). Only its wheel while rendering is on with a profile armed.</td></tr>
+              <tr><td><code>clip.set_ride(on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default). Only its wheel and pan while rendering is on with a profile armed.</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>

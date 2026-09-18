@@ -25,8 +25,12 @@ const Clip: Component = () => {
           <A href="/native/commands/option#emit">the emit rate</A>.
         </p>
         <p>
-          A clip needs a cloned mouse, whose native report tick is the box's frame clock. Read the ring
-          depth, playback state, and settings back with{' '}
+          A clip plays on any clone. One tick is the cloned mouse's native frame; with no mouse, the
+          rate <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> fixes, else
+          1&nbsp;ms. A field for a class the clone has no interface for is discarded.
+        </p>
+        <p>
+          Read the ring depth, playback state, and settings back with{' '}
           <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
         </p>
         <div class="api-response-label">TWO MODES</div>
@@ -74,7 +78,7 @@ const Clip: Component = () => {
           <tbody>
             <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>append a batch of entries to the ring</td></tr>
             <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>drive the playback engine (start, stop, pause, ...)</td></tr>
-            <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>set a clip setting (auto-lock, loop, retain)</td></tr>
+            <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>set a clip setting (auto-lock, loop, retain, ride)</td></tr>
             <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>bind a physical edge to an engine verb</td></tr>
           </tbody>
         </table>
@@ -86,38 +90,48 @@ const Clip: Component = () => {
           <p>
             A clip is a byte stream of variable-length entries, little-endian. The first byte of each entry is
             a tag: <code>0x00</code> is a <code>gap run</code>, any other value is a{' '}
-            <code>content tick</code>'s flags. One entry is one native frame.
+            <code>content tick</code>'s flags.
           </p>
           <div class="api-response-label">GAP RUN</div>
-          <p>
-            Emit nothing for <code>count</code> frames. The endpoint NAKs, byte-identical to an idle mouse.
-          </p>
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
               <tr><td>0</td><td><code>tag</code></td><td><code>u8</code></td><td><code>0x00</code></td></tr>
-              <tr><td>1</td><td><code>count</code></td><td><code>u16</code></td><td>frames to NAK, little-endian</td></tr>
+              <tr><td>1</td><td><code>count</code></td><td><code>u16</code></td><td>frames the endpoint NAKs, byte-identical to an idle mouse; little-endian</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONTENT TICK</div>
           <p>
-            A motion delta and/or a list of edges applied on one frame. The <code>flags</code> byte
-            selects which fields follow, and is nonzero so it can't be mistaken for a gap tag.
+            Motion, edges, raw reports and control transfers applied on one frame; <code>flags</code>{' '}
+            selects which fields follow.
           </p>
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Present when</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>flags</code></td><td><code>u8</code></td><td>always; OR of the bits below</td></tr>
-              <tr><td>+</td><td><code>dx</code>, <code>dy</code></td><td><code>i16 x 2</code></td><td><code>flags &amp; XY (0x01)</code>, cursor delta</td></tr>
-              <tr><td>+</td><td><code>wheel</code></td><td><code>i16</code></td><td><code>flags &amp; WHEEL (0x02)</code></td></tr>
-              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; EDGES (0x04)</code>, edge count (max 8)</td></tr>
+              <tr><td>0</td><td><code>flags</code></td><td><code>u8</code></td><td>always; OR of the bits below, <code>0x40</code> and <code>0x80</code> reserved</td></tr>
+              <tr><td>+</td><td><code>dx</code>, <code>dy</code></td><td><code>i16 x 2</code></td><td><code>flags &amp; XY (0x01)</code>, per-frame cursor delta</td></tr>
+              <tr><td>+</td><td><code>wheel</code></td><td><code>i16</code></td><td><code>flags &amp; WHEEL (0x02)</code>, per-frame delta</td></tr>
+              <tr><td>+</td><td><code>pan</code></td><td><code>i16</code></td><td><code>flags &amp; PAN (0x08)</code>, per-frame delta</td></tr>
+              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; EDGES (0x04)</code>, edge count (1 to 8)</td></tr>
               <tr><td>+</td><td><code>edges</code></td><td><code>n x 4 bytes</code></td><td>each edge is <code>[class u8][id u16][action u8]</code></td></tr>
+              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; RAW (0x10)</code>, raw item count (1 to 8)</td></tr>
+              <tr><td>+</td><td><code>raw</code></td><td><code>n items</code></td><td>each a <A href="/native/commands/clip#items">raw item</A></td></tr>
+              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; XFER (0x20)</code>, transfer item count (1 or more)</td></tr>
+              <tr><td>+</td><td><code>xfer</code></td><td><code>n items</code></td><td>each a <A href="/native/commands/clip#items">transfer item</A></td></tr>
             </tbody>
           </table>
+          <p>
+            The fields follow in the table's order, and an entry is at most 512 bytes, one{' '}
+            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> payload.
+          </p>
+          <p>
+            An entry that can never be valid (a reserved bit, a count out of range, a length past 512
+            bytes) faults the clip as soon as playback reaches it.
+          </p>
           <div class="api-response-label">EDGES</div>
           <p>
             An edge reuses <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s tuple, so
@@ -146,15 +160,15 @@ const Clip: Component = () => {
           </table>
           <p>
             An edge is a level: it sticks until a later tick changes it, and the box NAKs while it is held
-            still. Motion (<code>dx</code>/<code>dy</code>/<code>wheel</code>) is a per-frame delta.
+            still.
           </p>
           <div class="api-response-label">COMBINED TICK</div>
           <p>
-            Set several flag bits and the fields stack in a single tick, so a move and a press land on the
-            same frame and the clone emits one report.
+            Several flag bits stack their fields in one tick: a move, a pan and a press on the same
+            frame, in one report.
           </p>
-          <pre class="diagram">{`05 0A 00 FC FF 01 00 00 00 01
-   flags=XY|EDGES   dx=+10 dy=-4   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
+          <pre class="diagram">{`0D 0A 00 FC FF 02 00 01 00 00 00 01
+   flags=XY|PAN|EDGES   dx=+10 dy=-4   pan=+2   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
           <div class="api-response-label">PLAYBACK ORDER</div>
           <table class="api-params">
             <thead>
@@ -170,10 +184,88 @@ const Clip: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE ENTRIES</div>
-          <p>The bytes for three example entries: move up-right, press <code>A</code>, idle 5 frames.</p>
+          <p>Move up-right, press <code>A</code>, idle 5 frames.</p>
           <pre class="diagram">{`01 0A 00 F6 FF        flags=XY,   dx=+10  dy=-10
 04 01 01 04 00 01     flags=EDGES n=1  edge[class=1 key, id=0x04 'A', action=1 press]
 00 05 00              tag=gap,    count=5  (NAK 5 frames)`}</pre>
+        </Card>
+      </div>
+
+      <div id="items" data-search-target>
+        <Card>
+          <CardHeader title="Raw and transfer items" subtitle="Raw reports and control transfers on a content tick" />
+          <p>
+            A raw item is <A href="/library/advanced/raw"><code>RAW</code></A>'s payload with its length,
+            and a transfer item is{' '}
+            <A href="/library/advanced/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
+            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, read as the
+            tick plays: with it off the item is discarded and counted in{' '}
+            <A href="/native/commands/requests#clip"><code>gated</code></A>.
+          </p>
+          <div class="api-response-label">RAW ITEM</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>cloned endpoint number</td></tr>
+              <tr><td>1</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN, onto cloned IN endpoint <code>ep_num</code>; <code>2</code> = OUT, relayed to the real device</td></tr>
+              <tr><td>2</td><td><code>len</code></td><td><code>u16</code></td><td>length of <code>bytes</code>, little-endian</td></tr>
+              <tr><td>4</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the report, verbatim; sent in entry order, ahead of the tick's report</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">TRANSFER ITEM</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> = EP0, or a control endpoint the device declares</td></tr>
+              <tr><td>1</td><td><code>setup</code></td><td><code>u8[8]</code></td><td>the setup packet</td></tr>
+              <tr><td>9</td><td><code>data</code></td><td><code>u8[]</code></td><td>the OUT data: <code>wLength</code> bytes when bit 7 of the first setup byte (the request type) is clear, absent when it is set</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The box queues transfers (1&nbsp;KiB) and runs them one at a time. Each answer comes back as a{' '}
+            <A href="/native/commands/catch#traffic-event"><code>CLIP_XFER</code></A> event, in the order
+            the items drained.
+          </p>
+          <div class="api-response-label">TRANSFER QUEUE</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Event</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>PAUSE</code>, the natural end</td><td>still run</td></tr>
+              <tr><td><code>STOP</code>, <code>RESTART</code>, <code>CLEAR</code>, a fault, a <A href="/native/commands/clip#ctrl">hard stop</A></td><td>dropped</td></tr>
+              <tr><td>a <code>0xFE</code> (NAK to timeout) answer that took 250&nbsp;ms or longer</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
+              <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>dropped, each counted in <code>gated</code></td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">NATIVE STATE</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Report</th><th>What release does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a raw IN item on the mouse, keyboard or media report the box injects into</td><td>emitted once in its native state, if that differs from the raw bytes outside the relative fields</td></tr>
+              <tr><td>a raw IN item on any other report</td><td>stays as sent, as after a <code>RAW</code> command</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The clip releases its held input on <code>STOP</code>, its natural end, a loop wrap,{' '}
+            <code>RESTART</code>, <code>CLEAR</code>, a fault and a hard stop. A native report or a later
+            raw report that reaches the wire first replaces the raw bytes.
+          </p>
+          <div class="api-response-label">EXAMPLE ENTRIES</div>
+          <p>
+            One raw report OUT on endpoint 2, then a <code>SET_REPORT</code> with two bytes of OUT data
+            on EP0.
+          </p>
+          <pre class="diagram">{`10 01 02 02 03 00 A1 B2 C3
+   flags=RAW   n=1   item[ep_num=2, dir=2 OUT, len=3, bytes=A1 B2 C3]
+20 01 00 21 09 00 03 00 00 02 00 04 01
+   flags=XFER  n=1   item[ep=0, setup=21 09 00 03 00 00 02 00 (wLength=2), data=04 01]`}</pre>
         </Card>
       </div>
 
@@ -251,9 +343,9 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="CLIP_CTRL" subtitle="Drive the playback engine" />
           <p>
-            One byte of <code>op</code> selects an engine verb. <A href="/native/frame#opcodes">Opcode</A>{' '}
-            <code>0x13</code>. There are no args; settings live on{' '}
-            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.
+            One byte of <code>op</code> selects an engine verb; settings live on{' '}
+            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.{' '}
+            <A href="/native/frame#opcodes">Opcode</A> <code>0x13</code>.
           </p>
           <pre class="api-signature">CLIP_CTRL  0x13  ·  payload [op u8]</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -288,7 +380,7 @@ const Clip: Component = () => {
               <tr><td><code>0</code></td><td><code>idle</code></td><td>not playing; ring may hold a retained clip</td></tr>
               <tr><td><code>1</code></td><td><code>playing</code></td><td>draining one entry per frame</td></tr>
               <tr><td><code>2</code></td><td><code>paused</code></td><td>frozen mid-clip by <code>PAUSE</code>, holding its levels</td></tr>
-              <tr><td><code>3</code></td><td><code>faulted</code></td><td>a <code>SEQ</code> gap or overflow desynced the stream; <code>CLEAR</code> and rebuild</td></tr>
+              <tr><td><code>3</code></td><td><code>faulted</code></td><td>a <code>SEQ</code> gap, an overflow or an <A href="/native/commands/clip#entries">invalid entry</A> broke the stream; <code>CLEAR</code> and rebuild</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">UNDERRUN</div>
@@ -305,24 +397,14 @@ const Clip: Component = () => {
           <pre class="diagram">{`STOP        an explicit STOP or CLEAR op
 silence     a full 1 s of control-PC silence
 RESET       a RESET command
-detach      the cloned mouse unplugs
+detach      the cloned device unplugs
 link loss   the inter-chip link drops`}</pre>
           <p>
             Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss) also flushes the
-            ring. The <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> reaches a clip like any
+            <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss) also clears the
+            ring, the settings and the trigger set, and a host reloads the clip and its config. The{' '}
+            <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> reaches a clip like any
             other injection.
-          </p>
-          <p>
-            A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
-            default, so it plays on its own timeline; <code>CLIP_SET(ride)</code> puts it back on the
-            ride, additive to the user's own movement and dropped while they hold still.
-          </p>
-          <p>
-            While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
-            clip's cursor motion is rendered like a <A href="/native/commands/move"><code>MOVE</code></A>{' '}
-            with no flag and rides the same way; <code>CLIP_SET(ride)</code> then moves only the wheel.
-            Edges stay on the clip tick, ahead of the rendered motion.
           </p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
@@ -340,7 +422,8 @@ link loss   the inter-chip link drops`}</pre>
           <CardHeader title="CLIP_SET" subtitle="Set a clip setting" />
           <p>
             Set one of the clip's settings, <A href="/native/commands/option">OPTION</A>-shaped. A setting
-            sticks until you change it or the clip is torn down; read them all back with{' '}
+            sticks until you change it or a <A href="/native/commands/clip#ctrl">hard stop</A> clears it;
+            read them all back with{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x14</code>.
           </p>
@@ -355,7 +438,7 @@ link loss   the inter-chip link drops`}</pre>
               <tr><td><code>0</code></td><td><code>autolock</code></td><td>class bitmask</td><td>the physical-input classes <code>START</code> locks while playing (below)</td></tr>
               <tr><td><code>1</code></td><td><code>loop</code></td><td><code>0</code> / <code>1</code></td><td>a finalized clip replays from the head instead of ending</td></tr>
               <tr><td><code>2</code></td><td><code>retain</code></td><td><code>0</code> / <code>1</code></td><td>keep entries after playing so <code>START</code> / <code>RESTART</code> can replay them</td></tr>
-              <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's own clock; only the wheel while rendering is on with a profile armed</td></tr>
+              <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's own clock (below)</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">AUTO-LOCK</div>
@@ -369,12 +452,24 @@ link loss   the inter-chip link drops`}</pre>
             <thead><tr><th>Bit</th><th>Mask</th><th>Locks</th></tr></thead>
             <tbody>
               <tr><td><code>b0</code></td><td><code>0x01</code></td><td>the X and Y cursor axes</td></tr>
-              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>the wheel</td></tr>
+              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>the wheel and pan</td></tr>
               <tr><td><code>b2</code></td><td><code>0x04</code></td><td>every mouse button</td></tr>
               <tr><td><code>b3</code></td><td><code>0x08</code></td><td>every keyboard key</td></tr>
               <tr><td><code>b4</code></td><td><code>0x10</code></td><td>every media usage</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">RIDE</div>
+          <p>
+            A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
+            default, so it plays on its own timeline; <code>ride</code> puts it back on the ride,
+            additive to physical motion and dropped while the user holds still.
+          </p>
+          <p>
+            While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
+            clip's cursor motion is rendered like a <A href="/native/commands/move"><code>MOVE</code></A>{' '}
+            with no flag and rides the same way; <code>ride</code> then applies to the wheel and pan
+            alone. Edges stay on the clip tick, ahead of the rendered motion.
+          </p>
           <p>
             Library binding: <A href="/library/clip#handle"><code>set_autolock</code></A>,{' '}
             <A href="/library/clip#handle"><code>set_loop</code></A>,{' '}
@@ -459,6 +554,10 @@ link loss   the inter-chip link drops`}</pre>
           <p>
             Preload the ring (and, for a replayable macro, mark it{' '}
             <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A>d) before you bind.
+          </p>
+          <p>
+            A <A href="/library/advanced/rewrite#clip">rewrite rule</A> fires the same verbs from a packet on
+            any rewritable class.
           </p>
           <p>
             Library binding: <A href="/library/clip#handle"><code>bind</code></A>,{' '}

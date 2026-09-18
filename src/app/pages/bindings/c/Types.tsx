@@ -65,6 +65,9 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_NAME</code></td><td><code>33</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion.name</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.triggers</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_EDGES_MAX</code></td><td><code>8</code></td><td>Edges in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_RAW_MAX</code></td><td><code>8</code></td><td>Raw reports in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>Encoded bytes of one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A>: one <code>CLIP_APPEND</code> payload</td></tr>
               <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState.entries</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_TRAFFIC_BYTES</code></td><td><code>180</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent.bytes</code></A></td></tr>
             </tbody>
@@ -448,7 +451,7 @@ const Types: Component = () => {
             <tbody>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>0</code></td><td><code>data.motion</code></td><td><code>AXIS</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>1</code></td><td><code>data.usages</code></td><td><code>BUTTON</code>, <code>KEY</code>, <code>MEDIA</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>2</code></td><td><code>data.traffic</code></td><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>VENDOR_BULK</code>, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>2</code></td><td><code>data.traffic</code></td><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>VENDOR_BULK</code>, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>, <code>CLIP_TRANSFER</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -471,7 +474,7 @@ const Types: Component = () => {
             <thead><tr><th>Enumerator</th><th>Value</th><th>Stamped</th><th>Carries</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code></td><td><code>0</code></td><td>In USB interrupt context on the host chip, when the real device's transfer completed.</td><td>Motion and usage events, <code>HID_IN</code>, and the IN direction of <code>VENDOR_INTERRUPT</code> / <code>VENDOR_BULK</code>.</td></tr>
-              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE_CHIP</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, and <code>BUS</code>.</td></tr>
+              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE_CHIP</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>, and <code>CLIP_TRANSFER</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -558,6 +561,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td><code>11</code></td><td>The control endpoint number (<code>0</code> is EP0) a <A href="/bindings/c/api#clip">clip</A>'s transfer ran on.</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>Nothing; must be <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every class at once.</td></tr>
             </tbody>
           </table>
@@ -566,7 +570,7 @@ const Types: Component = () => {
             <A href="/bindings/c/api#inspectors"><code>medius_catch_class_is_input</code></A> (the four
             parsed classes, which arrive decoded and carry no packet) or{' '}
             <A href="/bindings/c/api#inspectors"><code>medius_catch_class_is_traffic</code></A> (the
-            seven byte-oriented ones).
+            eight byte-oriented ones).
           </p>
           <p>
             Where each class is tapped, and why a locked input still reports, is on{' '}
@@ -1423,15 +1427,17 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <tbody>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet.</td><td><code>medius_traffic_event_bulk_end_of_transfer</code>, <code>medius_traffic_event_bulk_zlp</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>The real device's answer: <code>0</code> it completed, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout.</td><td><code>medius_traffic_event_control_status</code>, into a <code>MediusControlStatus</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>0xFE</code> when no answer came.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td>The bus event kind (table below).</td><td><code>medius_traffic_event_bus_event</code>, into a <code>MediusBusEvent</code></td></tr>
               <tr><td>every other class</td><td><code>0</code>.</td><td>-</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONTROL EVENTS</div>
           <p>
-            A <code>CONTROL</code> event covers a whole completed transaction, not one stage of one:{' '}
-            <code>bytes</code> is the 8-byte SETUP packet followed by the data stage, and{' '}
-            <code>direction</code> says which way that data went. Split them with{' '}
+            A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one completed
+            transaction: <code>bytes</code> is the 8-byte SETUP packet, then the data stage (IN data
+            only on <code>CLIP_TRANSFER</code>), and <code>direction</code> says which way that data
+            went. Split them with{' '}
             <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_setup</code></A> and{' '}
             <code>medius_traffic_event_data</code>.
           </p>
@@ -1643,10 +1649,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>free</code></td><td><code>uint32_t</code></td><td>Ring bytes free; pace top-ups off this.</td></tr>
               <tr><td><code>total</code></td><td><code>uint32_t</code></td><td>The retained clip size in bytes; streaming, the buffered-but-undrained bytes.</td></tr>
               <tr><td><code>played</code></td><td><code>uint32_t</code></td><td>Bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
-              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
+              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Content frames played since the box booted (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
+              <tr><td><code>xfers</code></td><td><code>uint16_t</code></td><td>Clip transfers the device completed.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>uint16_t</code></td><td>Clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer.</td></tr>
+              <tr><td><code>gated</code></td><td><code>uint16_t</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held_n</code></td><td><code>uint16_t</code></td><td>Held usages in <code>held</code>.</td></tr>
               <tr><td><code>held</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
             </tbody>
@@ -1657,7 +1666,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="setup" data-search-target>
         <Card>
           <CardHeader title="MediusSetup" subtitle="A USB control-transfer setup packet" />
-          <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
+          <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A> and <A href="/bindings/c/api#clip"><code>medius_clip_frame_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1725,9 +1734,19 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
                 <tr><td><code>_CONTROL</code></td><td><code>8</code></td><td><code>_ANSWER</code> (control)</td><td><code>4</code></td></tr>
                 <tr><td><code>_EMIT</code></td><td><code>9</code></td><td><code>_STALL</code> / <code>_NAK</code> (control)</td><td><code>5</code> / <code>6</code></td></tr>
                 <tr><td><code>_ANY</code></td><td><code>0xFF</code></td><td><code>_REPLY_PATCH</code> / <code>_REPLY_REPLACE</code> (control)</td><td><code>7</code> / <code>8</code></td></tr>
+                <tr><td></td><td></td><td><code>_CLIP</code> (any class)</td><td><code>9</code></td></tr>
               </tbody>
             </table>
           </div>
+          <div class="api-response-label">CLIP RULE FLAGS</div>
+          <p>Passed as <code>flags</code> to <A href="/bindings/c/api#advanced"><code>medius_rewrite_rule_clip</code></A>.</p>
+          <table class="api-params">
+            <thead><tr><th>Macro</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_REWRITE_CLIP_DROP</code></td><td><code>1</code></td><td>Every packet the rule wins is dropped.</td></tr>
+              <tr><td><code>MEDIUS_REWRITE_CLIP_EDGE</code></td><td><code>2</code></td><td>The verb runs on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes pick the run's stream.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
 
@@ -1855,6 +1874,11 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>27</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair, or one field named as both.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td><td>A transform added to a table that already holds <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td><td>A clip frame with more than <code>MEDIUS_CLIP_EDGES_MAX</code> edges or <code>MEDIUS_CLIP_RAW_MAX</code> raw reports.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td><td>A clip frame that encodes to more than <code>MEDIUS_CLIP_ENTRY_MAX</code> bytes.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td><td>A clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_CLIP_RULE</code></td><td><code>33</code></td><td>A <code>MEDIUS_REWRITE_ACTION_CLIP</code> rule the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td>A rewrite rule with more than <code>MEDIUS_MAX_REWRITE_MATCH</code> (16) match bytes.</td></tr>
             </tbody>
           </table>
           <table class="api-params">

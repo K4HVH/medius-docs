@@ -167,7 +167,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           <pre class="diagram">{`  Button Key Media Axis Bus    -->  [ queue 0 ]  --+
   HidIn HidOut                                     |
   VendorInterrupt Emit         -->  [ queue 1 ]  --+--->  control link, 6 Mbaud
-  Control                      -->  [ queue 2 ]  --+
+  Control ClipTransfer         -->  [ queue 2 ]  --+
   VendorBulk                   -->  [ queue 3 ]  --+
 
   each queue drains fully before the next`}</pre>
@@ -197,13 +197,14 @@ for event in &device.catch_events([filter])? {
 }`}</code></pre>
           <p>
             What <code>flags</code> carries per class is on{' '}
-            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>.
+            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>;{' '}
+            <code>control_status()</code>, <code>transfer_status()</code>, and{' '}
+            <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.
           </p>
           <p>
-            A <code>Control</code> event is one completed transaction, not one stage:{' '}
-            <code>bytes</code> is <code>[setup 8][data...]</code>, split by <code>setup()</code> and{' '}
-            <code>data()</code>. A <code>Bus</code> event carries a{' '}
-            <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind and its operands.
+            A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
+            <code>bytes</code> is <code>[setup 8][data...]</code>, split by{' '}
+            <code>setup()</code> and <code>data()</code>.
           </p>
         </Card>
       </div>
@@ -220,7 +221,7 @@ for event in &device.catch_events([filter])? {
             <thead><tr><th>Domain</th><th>Stamped</th><th>Covers</th></tr></thead>
             <tbody>
               <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, vendor IN</td></tr>
-              <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, <code>Control</code>, <code>Emit</code>, <code>Bus</code></td></tr>
+              <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, <code>Control</code>, <code>Emit</code>, <code>Bus</code>, <code>ClipTransfer</code></td></tr>
             </tbody>
           </table>
           <p>

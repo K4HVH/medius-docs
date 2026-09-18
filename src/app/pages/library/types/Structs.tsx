@@ -498,14 +498,16 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <tbody>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
               <tr><td><code>Control</code></td><td>How the proxied transfer ended; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>.</td></tr>
+              <tr><td><code>ClipTransfer</code></td><td>How the clip's transfer ended; read it with <code>transfer_status()</code>, see <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A>.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
             </tbody>
           </table>
           <p>
-            A <code>Control</code> event is one completed transaction: <code>bytes</code> is the
-            8-byte SETUP packet then the data stage, and <code>direction</code> says which way that
-            data went. Requests answered from the box's descriptor cache still raise events.
+            A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
+            <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
+            <code>direction</code> says which way that data went. Requests answered from the box's
+            descriptor cache still raise events.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
@@ -1144,10 +1146,13 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>free</code></td><td><code>u32</code></td><td>Free bytes in the ring, the headroom for the next append.</td></tr>
               <tr><td><code>total</code></td><td><code>u32</code></td><td>The retained clip size in bytes; while streaming, the buffered-but-undrained bytes.</td></tr>
               <tr><td><code>played</code></td><td><code>u32</code></td><td>Bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
-              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
+              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Content frames played since the box booted (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
+              <tr><td><code>xfers</code></td><td><code>u16</code></td><td>Clip <A href="/library/clip#frame">transfers</A> the device completed.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>u16</code></td><td>Clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer.</td></tr>
+              <tr><td><code>gated</code></td><td><code>u16</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
           </table>
@@ -1292,10 +1297,15 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn clip(class: RewriteClass, id: u16, direction: Direction, verb: ClipAction) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn dropping(self) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn on_edge(self, selector_len: u8) -&gt; RewriteRule</pre>
+          <pre class="api-signature">fn clip_verb(&self) -&gt; Option&lt;ClipVerb&gt;</pre>
           <p>
             One entry in the table you hand to{' '}
             <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
-            chaining onto <code>new</code>.
+            chaining onto <code>new</code>, or onto <code>clip</code> for a{' '}
+            <A href="/library/advanced/rewrite#clip">clip rule</A>.
           </p>
           <table class="api-params">
             <thead>
@@ -1307,8 +1317,30 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code> (IN) or <code>Negative</code> (OUT). <code>With</code> and <code>Against</code> resolve at emit time, after a rule is addressed, so either is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet. One that does not fit the class is <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
-              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, or the rule is <A href="/library/types/errors#errors"><code>Error::RewriteMaskLength</code></A>; empty matches every packet on the address.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address.</td></tr>
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+      <div id="clip-verb" data-search-target>
+        <Card>
+          <CardHeader title="ClipVerb" subtitle="What a clip rule does, decoded" />
+          <pre class="api-signature">struct ClipVerb {'{'} action: ClipAction, drop: bool, edge: bool, selector_len: u8 {'}'}</pre>
+          <p>
+            What <code>RewriteRule::clip_verb()</code> returns for a{' '}
+            <A href="/library/advanced/rewrite#clip">clip rule</A>: its{' '}
+            <code>[op][flags][slen]</code> payload, decoded.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The clip verb the rule runs.</td></tr>
+              <tr><td><code>drop</code></td><td><code>bool</code></td><td>Every packet the rule wins is dropped.</td></tr>
+              <tr><td><code>edge</code></td><td><code>bool</code></td><td>The verb runs on the first packet of a run of matching ones.</td></tr>
+              <tr><td><code>selector_len</code></td><td><code>u8</code></td><td>How many leading match bytes pick the run's stream.</td></tr>
             </tbody>
           </table>
         </Card>

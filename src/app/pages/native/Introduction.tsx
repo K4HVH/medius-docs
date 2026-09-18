@@ -182,7 +182,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all eleven selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all sixteen selectors" />
               </Card>
             </A>
             <A href="/native/commands/led" style={{ "text-decoration": "none" }}>

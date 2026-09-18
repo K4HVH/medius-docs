@@ -177,7 +177,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <p>
             <A href="/native/architecture">Host-chip</A> stamps cover motion, usages,{' '}
             <code>HID_IN</code> and IN traffic; device-chip stamps cover <code>HID_OUT</code>, OUT
-            traffic, <code>CONTROL</code>, <code>EMIT</code> and <code>BUS</code>. The two chips boot independently, so put both on your own clock with
+            traffic, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code> and <code>CLIP_TRANSFER</code>. The two chips boot independently, so put both on your own clock with
             a <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.
           </p>
           <div class="api-response-label">INSPECTORS</div>

@@ -18,7 +18,8 @@ const Clip: Component = () => {
         </p>
         <p>
           Playback is box-clocked, so it carries no host scheduling jitter. One clip covers mouse,
-          keyboard, and media. Backs the <A href="/native/commands/clip"><code>CLIP</code></A> commands.
+          keyboard, media, raw reports, and control transfers. Backs the{' '}
+          <A href="/native/commands/clip"><code>CLIP</code></A> commands.
         </p>
         <pre class="diagram">{`  1. build a clip with ClipBuilder
        clip.move_by(10, 0)
@@ -44,16 +45,14 @@ const Clip: Component = () => {
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
             Returns a <A href="/library/clip#handle"><code>ClipHandle</code></A> bound to this box. Keep one
-            handle per clip session and top it up through it: the handle owns the append-sequence counter
-            the box uses to spot a dropped append.
+            per clip session: it owns the append-sequence counter the box uses to spot a dropped append.
           </p>
           <div class="callout callout--info">
             <p>
-              A <A href="/library/admin#reboot">reboot</A> or{' '}
-              <A href="/library/lifecycle#reconnect">reconnect</A> drops the clip and its config (auto-lock,
-              loop, retain, ride, triggers); nothing is re-asserted, so re-preload and re-set after one. A clip
-              needs a cloned mouse: its frame clock is the mouse's report tick, which keyboard and media
-              edges ride.
+              A clip plays on any clone. The{' '}
+              <A href="/library/guides/connection#keepalive">keepalive</A> holds a loaded clip, its
+              settings, and its triggers past the silence window; a link down for longer clears them
+              on the box, so reload the clip and its config.
             </p>
           </div>
           <div class="callout callout--info">
@@ -84,16 +83,18 @@ const Clip: Component = () => {
               <tr><td><code>gap(frames)</code></td><td>N idle frames (0 is a no-op).</td></tr>
               <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
               <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
+              <tr><td><code>pan(dpan)</code></td><td>a pan (horizontal scroll) frame.</td></tr>
               <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
               <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/structs#usage"><code>Usage</code></A> with an explicit <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-              <tr><td><code>frame(dx, dy, wheel, edges)</code></td><td>a motion delta plus up to 8 <A href="/library/types/structs#usage"><code>Usage</code></A> / <A href="/library/types/enums#action"><code>Action</code></A> edges on one frame.</td></tr>
+              <tr><td><code>raw(ep, direction, bytes)</code></td><td>a frame carrying one raw report.</td></tr>
+              <tr><td><code>transfer(ep, setup, out)</code></td><td>a frame carrying one control transfer.</td></tr>
+              <tr><td><code>frame(frame)</code></td><td>one frame carrying whatever a <A href="/library/clip#frame"><code>ClipFrame</code></A> holds.</td></tr>
             </tbody>
           </table>
           <p>
             They take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, so chain them
-            or push in a loop; <code>clear()</code> reuses the allocation.{' '}
-            <code>press</code>/<code>release</code>/<code>force_release</code> wrap <code>edge</code>, which
-            wraps <code>frame</code>. Reach for <code>frame</code> only when motion and edges share one frame.
+            or push in a loop; <code>clear()</code> reuses the allocation, and <code>byte_len()</code> is
+            the ring space the entries take. Each one-field call wraps <code>frame</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{ClipBuilder, Button, Key};
@@ -111,17 +112,64 @@ clip.press(Key::A)                         // then type 'a'
             wire report.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Action, Button, ClipBuilder};
+          <pre><code class="language-rust">{`use medius::{Button, ClipBuilder, ClipFrame};
 
 let mut clip = ClipBuilder::new();
 
 // move (+10, -4) AND press Left on the same frame
-clip.frame(10, -4, 0, &[(Button::LEFT.into(), Action::Press)]);
+clip.frame(ClipFrame::new().move_by(10, -4).press(Button::LEFT));
 
 // press once, keep moving while held, then release
-clip.frame(8, -2, 0, &[(Button::LEFT.into(), Action::Press)]);
+clip.frame(ClipFrame::new().move_by(8, -2).press(Button::LEFT));
 for _ in 0..60 { clip.move_by(8, -2); }   // Left stays down (edges are sticky)
-clip.frame(0, 0, 0, &[(Button::LEFT.into(), Action::SoftRelease)]);`}</code></pre>
+clip.release(Button::LEFT);`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="frame" data-search-target>
+        <Card>
+          <CardHeader title="ClipFrame" subtitle="Build one multi-field frame" />
+          <pre class="api-signature">fn new() -&gt; ClipFrame</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <p>
+            One frame carries any mix of motion, edges, raw reports, and control transfers, up to 512
+            encoded bytes (<code>CLIP_ENTRY_MAX</code>). Each method takes <code>self</code> and returns
+            the frame.
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>move_by(dx, dy)</code></td><td>Set the cursor motion, a relative delta.</td></tr>
+              <tr><td><code>wheel(dz)</code> / <code>pan(dpan)</code></td><td>Set the wheel or the pan (horizontal scroll) motion.</td></tr>
+              <tr><td><code>press / release / force_release(usage)</code></td><td>Add a press, soft-release, or force-release edge of any <A href="/library/types/structs#usage"><code>Usage</code></A>.</td></tr>
+              <tr><td><code>edge(usage, action)</code></td><td>Add an edge with an explicit <A href="/library/types/enums#action"><code>Action</code></A>. A frame holds up to 8 (<code>CLIP_EDGES_MAX</code>).</td></tr>
+              <tr><td><code>raw(ep, direction, bytes)</code></td><td>Add a raw report, as <A href="/library/advanced/raw#raw"><code>Device::raw</code></A> sends one. A frame holds up to 8 (<code>CLIP_RAW_MAX</code>), sent in order ahead of the frame's report.</td></tr>
+              <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each answer is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
+              <tr><td><code>byte_len()</code></td><td>The ring bytes the frame takes, at most 512 for a frame <code>append</code> accepts.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              Raw reports and transfers need the imperfect-clone opt-in as the frame plays. With{' '}
+              <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
+              off, the box discards them and counts each in{' '}
+              <A href="/library/types/structs#clip-status"><code>ClipStatus::gated</code></A>.
+            </p>
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Button, ClipBuilder, ClipFrame, Direction, Setup};
+
+let mut clip = ClipBuilder::new();
+clip.frame(
+    ClipFrame::new()
+        .move_by(4, -2)
+        .press(Button::LEFT)
+        .raw(2, Direction::OUT, [0x10, 0xFF, 0x05])
+        .transfer(0, Setup::new(0x21, 0x09, 0x0300, 0, 2), [0x04, 0x01]),
+);
+device.clip().append(&clip)?;`}</code></pre>
         </Card>
       </div>
 
@@ -141,11 +189,11 @@ clip.frame(0, 0, 0, &[(Button::LEFT.into(), Action::SoftRelease)]);`}</code></pr
               <tr><th>Method</th><th>Does</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>append(clip: &amp;ClipBuilder)</code></td><td>Send a <A href="/library/clip#builder"><code>ClipBuilder</code></A>'s entries to the ring; splits a large clip into whole-entry frames with contiguous append seqs.</td></tr>
+              <tr><td><code>append(clip: &amp;ClipBuilder)</code></td><td>Send a <A href="/library/clip#builder"><code>ClipBuilder</code></A>'s entries to the ring; splits a large clip into whole-entry frames with contiguous append seqs. Every entry is checked first, so a <A href="/library/types/errors#errors">refusal</A> sends nothing.</td></tr>
               <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
               <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
               <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
-              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback. Only its wheel while rendering is on with a profile armed.</td></tr>
+              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback. Only its wheel and pan while rendering is on with a profile armed.</td></tr>
               <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
             </tbody>
           </table>
@@ -234,7 +282,7 @@ handle.start()?;
 loop {
     let s = handle.query_status()?;
     if s.state == ClipState::Idle { break; }           // done, or stopped
-    if s.free as usize > next_chunk.as_bytes().len() {
+    if s.free as usize > next_chunk.byte_len() {
         handle.append(&next_chunk)?;                   // stream more while there's room
     }
     std::thread::sleep(Duration::from_millis(5));
@@ -298,6 +346,29 @@ clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop))?;
 
 // Or one side-button that toggles play/stop:
 clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="vs-rule" data-search-target>
+        <Card>
+          <CardHeader title="Triggers against clip rules" subtitle="Two ways to fire a clip verb on the box" />
+          <p>
+            A <A href="/library/advanced/rewrite#clip"><code>RewriteRule::clip</code></A> rule runs the
+            same verbs on a matched packet: an input no usage describes, such as a vendor button.
+          </p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Aspect</th><th><A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A></th><th><code>RewriteRule::clip</code></th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Matches</td><td>a press or release edge of a button, key, or media usage</td><td>a packet on a rewritable class, by a masked head compare</td></tr>
+                <tr><td>Gate</td><td>always available</td><td>imperfect-clone opt-in</td></tr>
+                <tr><td>Hides the input</td><td><code>.consume()</code>, for the hold</td><td><code>.dropping()</code>, every packet the rule wins</td></tr>
+                <tr><td>After a reconnect</td><td>stands through a drop shorter than the silence window</td><td>sent again by the crate</td></tr>
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
 
