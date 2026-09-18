@@ -109,7 +109,7 @@ const DevicePatch = () => {
           <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
             <Show when={usesCfg(psection())}>
               <div style={{ 'max-width': '9rem' }}>
-                <NumberInput label="Configuration" value={pCfg()} min={0} max={255} onChange={(v) => setPCfg(v ?? 0)} />
+                <NumberInput label="Configuration index" value={pCfg()} min={0} max={255} onChange={(v) => setPCfg(v ?? 0)} />
               </div>
             </Show>
             <Show when={usesIndex(psection())}>

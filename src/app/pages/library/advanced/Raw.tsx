@@ -33,9 +33,8 @@ const Raw: Component = () => {
           <p>
             The whole advanced control layer is gated on the imperfect-clone opt-in. With{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
-            off, <code>raw</code> returns{' '}
-            <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A> rather
-            than sending a frame the box would drop.
+            off, the box drops a <code>raw</code> frame and says nothing, so the call still returns{' '}
+            <code>Ok</code>.
           </p>
         </div>
       </Card>
@@ -124,14 +123,15 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
         <Card>
           <CardHeader title="The imperfect-clone gate" subtitle="One opt-in admits the whole layer" />
           <p>
-            The box admits the advanced control layer under the imperfect-clone opt-in and nothing else. The
-            crate reads that state before it sends, so an off opt-in is a real error rather than a frame
-            the box silently drops.
+            The box admits the advanced control layer under the imperfect-clone opt-in and nothing else.
+            <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> and{' '}
+            <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> read that state before
+            they send. <code>raw</code> runs per report, so it sends without asking.
           </p>
           <table class="api-params">
             <thead><tr><th>Error</th><th>Returned on</th></tr></thead>
             <tbody>
-              <tr><td><A href="/library/types/errors#errors"><code>ImperfectRequired</code></A></td><td>The box reports the opt-in off. Turn it on with <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.</td></tr>
+              <tr><td><A href="/library/types/errors#errors"><code>ImperfectRequired</code></A></td><td><code>set_rewrite</code> or <code>apply_patch</code>, when the box reports the opt-in off. Turn it on with <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -145,10 +145,10 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
 
       <div id="async" data-search-target>
         <Card>
-          <CardHeader title="On AsyncDevice" subtitle="raw awaits the opt-in gate" />
+          <CardHeader title="On AsyncDevice" subtitle="raw is a future over the same send" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>raw</code> a
-            future: it awaits the imperfect-clone opt-in check, then the send itself is fire-and-forget.
+            future. The send is fire-and-forget, the same as the sync call.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;
@@ -156,7 +156,7 @@ use medius::{AsyncDevice, Direction};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.allow_imperfect_clones(true)?;
-block_on(device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00]))?;  // awaits the opt-in gate`}</code></pre>
+block_on(device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00]))?;`}</code></pre>
         </Card>
       </div>
     </>

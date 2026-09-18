@@ -1755,7 +1755,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>section</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_PATCH_SECTION_*</code> value: <code>_DEVICE</code> 0, <code>_CONFIG</code> 1, <code>_REPORT</code> 2, <code>_STRING</code> 3, <code>_BOS</code> 4.</td></tr>
-              <tr><td><code>cfg</code></td><td><code>uint8_t</code></td><td>Configuration index, for <code>Config</code>/<code>Report</code>.</td></tr>
+              <tr><td><code>cfg</code></td><td><code>uint8_t</code></td><td>Configuration index, for <code>Config</code>/<code>Report</code>. <code>0</code> is the first configuration, not <code>bConfigurationValue</code>.</td></tr>
               <tr><td><code>index</code></td><td><code>uint8_t</code></td><td>Interface or string index, for <code>Report</code>/<code>String</code>.</td></tr>
               <tr><td><code>offset</code></td><td><code>uint16_t</code></td><td>Byte offset within the descriptor.</td></tr>
               <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>bytes</code>; 0 removes the patch.</td></tr>
@@ -1847,7 +1847,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_RANGE</code></td><td><code>20</code></td><td>A lock scale outside <code>MEDIUS_LOCK_SCALE_MIN</code> to <code>MEDIUS_LOCK_SCALE_MAX</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code></td><td><code>21</code></td><td>A negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td>An advanced control layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td><code>medius_device_set_rewrite</code> or <code>medius_device_apply_patch</code> with the imperfect-clone opt-in off.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td>A rewrite action that is not valid for its class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>

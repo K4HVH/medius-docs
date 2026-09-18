@@ -136,8 +136,9 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ImperfectRequired</code></td>
                 <td>
-                  An <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
-                  opt-in is off. Turn it on with{' '}
+                  <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> or{' '}
+                  <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> while the
+                  imperfect-clone opt-in is off. Turn it on with{' '}
                   <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.
                 </td>
               </tr>
