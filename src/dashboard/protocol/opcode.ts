@@ -102,18 +102,24 @@ export const CLIP_CFG_F_FINALIZED = 0x04;
 export const CLIP_CFG_F_RIDE = 0x08;
 
 // Clip entry tags (§3.11). Tag 0 is a gap run; a content tick's tag is a nonzero field-flags byte,
-// which is why a fieldless content tick cannot be encoded: it would read back as a gap.
+// so a fieldless content tick cannot be encoded: it would read back as a gap. The fields follow the
+// tag in the order XY, WHEEL, PAN, EDGES, RAW, XFER, which is not the bit order.
 export const CLIP_TAG_GAP = 0x00;
 export const CLIP_F_XY = 0x01;
 export const CLIP_F_WHEEL = 0x02;
 export const CLIP_F_EDGES = 0x04;
+export const CLIP_F_PAN = 0x08;
+export const CLIP_F_RAW = 0x10; // [n] then n x [ep_num][dir][len u16][bytes]: RAW's payload, length explicit
+export const CLIP_F_XFER = 0x20; // [n] then n x [ep][setup 8][OUT data]: TRANSFER's payload
 export const CLIP_EDGES_MAX = 8;
-export const CLIP_ENTRY_MAX = 1 + 4 + 2 + 1 + CLIP_EDGES_MAX * 4;
+export const CLIP_RAW_MAX = 8;
+// An entry rides inside one CLIP_APPEND, so a frame's payload is the most it can be.
+export const CLIP_ENTRY_MAX = MAX_PAYLOAD;
 
-// Held usages in one RESP(CLIP) snapshot, the reply's fixed scalar prefix, and the width of one
-// trigger in its config section (§4.15).
+// Held usages in one RESP(CLIP) snapshot, the reply's fixed scalar prefix (held_n is its last byte),
+// and the width of one trigger in its config section (§4.15).
 export const CLIP_HELD_MAX = 40;
-export const RESP_CLIP_HDR = 25;
+export const RESP_CLIP_HDR = 31;
 export const CLIP_TRIG_LEN = 6;
 
 // A state byte this build does not know reads as Faulted rather than Idle: an unknown engine state
@@ -233,7 +239,8 @@ export const RATE_CHANGE_DRIVEN = 0x02;
 
 // REWRITE action (§3.14): what a matched rule does to the packet. A report class can Pass, Drop,
 // Patch, or Replace; the control class adds Answer, Stall, Nak, and the two Reply_* forms that rewrite
-// the device's own reply. The box validates the action against the class and refuses a mismatch.
+// the device's reply; Clip runs on every class. The box validates the action against the class and
+// refuses a mismatch.
 export enum RewriteAction {
   Pass = 0, // matched a broader rule but leaves the packet untouched
   Drop = 1, // report class: the packet is not delivered
@@ -244,8 +251,14 @@ export enum RewriteAction {
   Nak = 6, // control: NAK to a timeout
   ReplyPatch = 7, // control IN: overwrite the device's reply at the offset
   ReplyReplace = 8, // control IN: replace the device's reply with the payload
+  Clip = 9, // run a clip verb on the box's next tick; the payload is [op][flags][slen]
 }
-export const RW_ACTION_COUNT = 9;
+export const RW_ACTION_COUNT = 10;
+
+// A Clip rule's payload (§3.14): exactly [op u8][flags u8][slen u8], at offset 0.
+export const RW_CLIP_PLEN = 3;
+export const RW_CLIP_F_DROP = 0x01; // drop every packet the rule wins
+export const RW_CLIP_F_EDGE = 0x02; // run the verb on the first of a run of matching packets only
 
 export function rewriteActionFromU8(v: number): RewriteAction | null {
   return v >= 0 && v < RW_ACTION_COUNT ? (v as RewriteAction) : null;
@@ -427,6 +440,7 @@ export const UPD_NAMES: Record<number, string> = {
 };
 
 // TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.
+// Class CLIP_XFER carries a TransferStatus in the same byte.
 export const TRAFFIC_CONTROL_OK = 0x00;
 export const TRAFFIC_CONTROL_STALL = 0xfd;
 export const TRAFFIC_CONTROL_NAK = 0xfe;

@@ -82,6 +82,9 @@ import {
   parseResp,
   queryPayload,
   rebootPayload,
+  trafficData,
+  trafficSetup,
+  trafficTransferStatus,
   trafficTruncated,
   versionString,
   vidPid,
@@ -103,6 +106,11 @@ import {
   queryEntryPayload,
   parseTransferResp,
   RewriteAction,
+  RW_ACTION_COUNT,
+  ClipOp,
+  clipVerbOf,
+  clipVerbPayload,
+  rewriteActionName,
   PatchSection,
   TransformOp,
   TransferStatus,
@@ -887,7 +895,8 @@ describe('CATCH command (§3.9)', () => {
       CatchClass.Control,
       CatchClass.Emit,
       CatchClass.Bus,
-    ]).toEqual([4, 5, 6, 7, 8, 9, 10]);
+      CatchClass.ClipTransfer,
+    ]).toEqual([4, 5, 6, 7, 8, 9, 10, 11]);
     expect(CatchClass.Any).toBe(0xff);
     expect(CATCH_ID_ANY).toBe(LOCK_ID_ALL);
   });
@@ -1100,6 +1109,61 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     expect(ev?.id).toBe(0); // EP0
     expect(ev?.flags).toBe(0xfd);
     expect(ev?.bytes).toHaveLength(8); // setup only, no data stage arrived
+  });
+
+  it('splits a CONTROL transaction into its setup packet and its data stage', () => {
+    // GET_DESCRIPTOR(device) answered: setup 8, then the first bytes of the descriptor.
+    const ev = parseTrafficEvent(
+      fromHex('00 00 00 00 01 08 00 00 01 00 0c 00 80 06 00 01 00 00 12 00 12 01 00 02'),
+    )!;
+    expect(toHex(trafficSetup(ev)!)).toBe('80 06 00 01 00 00 12 00');
+    expect(toHex(trafficData(ev))).toBe('12 01 00 02');
+    // CONTROL's flags byte is the device's answer to the game PC, never a transfer status.
+    expect(trafficTransferStatus(ev)).toBeNull();
+  });
+
+  it('decodes a CLIP_XFER event: class 11, a transfer status in flags, setup then IN data', () => {
+    // A clip's GET_REPORT on EP0 that the device completed: device clock, IN, status 0, 3 bytes back.
+    const ev = parseTrafficEvent(
+      fromHex('10 27 00 00 01 0b 00 00 01 00 0b 00 a1 01 00 03 00 00 03 00 aa bb cc'),
+    )!;
+    expect(ev.cls).toBe(CatchClass.ClipTransfer);
+    expect(ev.clk).toBe(ClockDomain.Device);
+    expect(ev.id).toBe(0);
+    expect(ev.dir).toBe(In);
+    expect(trafficTransferStatus(ev)).toBe(TransferStatus.Ok);
+    expect(toHex(trafficSetup(ev)!)).toBe('a1 01 00 03 00 00 03 00');
+    expect(toHex(trafficData(ev))).toBe('aa bb cc');
+  });
+
+  it('reads every transfer status a CLIP_XFER event can carry', () => {
+    const withStatus = (status: string) =>
+      parseTrafficEvent(fromHex(`00 00 00 00 01 0b 00 00 02 ${status} 08 00 21 09 00 03 00 00 02 00`))!;
+    expect(trafficTransferStatus(withStatus('00'))).toBe(TransferStatus.Ok);
+    expect(trafficTransferStatus(withStatus('fd'))).toBe(TransferStatus.Stall);
+    expect(trafficTransferStatus(withStatus('fe'))).toBe(TransferStatus.Nak);
+    expect(trafficTransferStatus(withStatus('ff'))).toBe(TransferStatus.NoDevice);
+    expect(trafficTransferStatus(withStatus('fc'))).toBe(TransferStatus.Refused);
+    // An OUT transfer's event is the setup packet alone: the data stage went to the device.
+    expect(trafficData(withStatus('00'))).toHaveLength(0);
+  });
+
+  it('gives a CLIP_XFER event cut inside its setup packet no setup and no data', () => {
+    // The surviving bytes are the request. Handing them back as data would label a GET_DESCRIPTOR
+    // request as the descriptor it asked for.
+    const ev = parseTrafficEvent(fromHex('00 00 00 00 01 0b 00 00 01 00 1a 00 80 06 00 01'))!;
+    expect(trafficSetup(ev)).toBeNull();
+    expect(trafficData(ev)).toHaveLength(0);
+    expect(trafficTruncated(ev)).toBe(true);
+  });
+
+  it('leaves every other class whole: no setup, and the data is the packet', () => {
+    const ev = parseTrafficEvent(
+      fromHex('00 00 00 00 00 04 00 00 01 00 0a 00 01 02 03 04 05 06 07 08 09 0a'),
+    )!;
+    expect(trafficSetup(ev)).toBeNull();
+    expect(trafficData(ev)).toHaveLength(10);
+    expect(trafficTransferStatus(ev)).toBeNull();
   });
 
   it('accepts a header with no captured bytes, and returns null below the header', () => {
@@ -1754,6 +1818,53 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
     expect(toHex(r.rule.payload)).toBe('aa');
     // The readback replays byte-for-byte as the command that sets it (state pinned to 1).
     expect(toHex(rewritePayload(r.rule, 1))).toBe('08 00 00 00 01 02 02 00 02 21 09 ff ff aa');
+  });
+
+  it('a CLIP rule is [op][flags][slen] behind the match and mask, at offset 0', () => {
+    // HID_IN interface 2, IN: start the clip on the first report whose byte 1 is 0x10, in the stream
+    // report ID 1 selects, and drop it.
+    const rule = {
+      cls: CatchClass.HidIn,
+      id: 2,
+      dir: In,
+      action: RewriteAction.Clip,
+      off: 0,
+      match: fromHex('01 10'),
+      mask: fromHex('ff ff'),
+      payload: clipVerbPayload({ action: ClipOp.Start, drop: true, edge: true, selectorLen: 1 }),
+    };
+    expect(toHex(rule.payload)).toBe('00 03 01');
+    expect(toHex(rewritePayload(rule, 1))).toBe('04 02 00 01 01 09 00 00 02 01 10 ff ff 00 03 01');
+    // Each flag on its own bit, and no selector without the edge.
+    expect(toHex(clipVerbPayload({ action: ClipOp.Toggle, drop: true, edge: false, selectorLen: 0 }))).toBe('05 01 00');
+    expect(toHex(clipVerbPayload({ action: ClipOp.Stop, drop: false, edge: true, selectorLen: 2 }))).toBe('01 02 02');
+  });
+
+  it('reads a CLIP rule back as its verb and flags, from the summary and from the entry', () => {
+    expect(RW_ACTION_COUNT).toBe(10);
+    expect(rewriteActionName(RewriteAction.Clip)).toBe('clip');
+    // [12][flags][gen][n=1] then [cls=04][id=0002][dir=01][action=09][mlen=02][off=0000][plen=0003][hits=0001].
+    const table = parseResp(fromHex('0c 00 07 01 04 02 00 01 09 02 00 00 03 00 01 00'));
+    if (table?.kind !== 'rewrite') throw new Error('expected rewrite');
+    expect(table.rewrite.entries[0].action).toBe(RewriteAction.Clip);
+    expect(table.rewrite.entries[0].plen).toBe(3);
+
+    const entry = parseResp(fromHex('0d 00 04 02 00 01 01 09 00 00 02 01 10 ff ff 04 03 01'));
+    if (entry?.kind !== 'rewriteEntry') throw new Error('expected rewriteEntry');
+    expect(entry.rule.action).toBe(RewriteAction.Clip);
+    expect(clipVerbOf(entry.rule)).toEqual({ action: ClipOp.Restart, drop: true, edge: true, selectorLen: 1 });
+    // The readback replays byte-for-byte as the command that set it.
+    expect(toHex(rewritePayload(entry.rule, 1))).toBe('04 02 00 01 01 09 00 00 02 01 10 ff ff 04 03 01');
+  });
+
+  it('reads no clip verb out of any other rule, or out of a payload that is not one', () => {
+    const clip = (payload: string) => ({ action: RewriteAction.Clip, payload: fromHex(payload) });
+    expect(clipVerbOf({ action: RewriteAction.Replace, payload: fromHex('00 00 00') })).toBeNull();
+    expect(clipVerbOf(clip('00 00'))).toBeNull(); // one byte short
+    expect(clipVerbOf(clip('00 00 00 00'))).toBeNull(); // one byte long
+    expect(clipVerbOf(clip('06 00 00'))).toBeNull(); // Clear is not a verb a rule may run
+    expect(clipVerbOf(clip('00 04 00'))).toBeNull(); // a flag bit above EDGE
+    expect(clipVerbOf(clip('05 00 00'))).toEqual({ action: ClipOp.Toggle, drop: false, edge: false, selectorLen: 0 });
   });
 
   it('decodes RESP(PATCHES): the applied/pending/refused/full flags and the list, len as u16', () => {

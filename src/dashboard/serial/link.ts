@@ -676,18 +676,19 @@ export class SerialLink {
   // append. Appends count on their own.
   //
   // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
-  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply when
-  // no mouse is cloned, and after FINALIZE on a retained clip.
+  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply while
+  // no clone is up, and after FINALIZE on a retained clip.
   async clipAppend(entries: ClipEntry[]): Promise<void> {
     // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two
-    // appends misaligns everything after it rather than being rejected.
+    // appends misaligns everything after it rather than being rejected. Entries run from 3 bytes to a
+    // whole frame, so a frame closes as soon as the next entry would overflow it.
     const batches: ClipEntry[][] = [];
     let batch: ClipEntry[] = [];
     let size = 0;
     for (const e of entries) {
       const b = encodeClipEntry(e);
       if (!b) throw new Error('clip entries could not be encoded');
-      if (size + b.length > MAX_PAYLOAD) {
+      if (batch.length > 0 && size + b.length > MAX_PAYLOAD) {
         batches.push(batch);
         batch = [];
         size = 0;
@@ -707,8 +708,8 @@ export class SerialLink {
     }
   }
 
-  // Run one clip engine verb (§3.11). Ignored by the box when no mouse is cloned: the clip is
-  // clocked by native report tick, so without one it could never advance.
+  // Run one clip engine verb (§3.11). Ignored by the box while no clone is up: the clip is clocked by
+  // the clone's frame clock, so without one it could never advance.
   clipCtrl(op: ClipOp): Promise<void> {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }

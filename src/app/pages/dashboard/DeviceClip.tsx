@@ -1,8 +1,10 @@
 // Buffered clip playback: build a clip, load it into the box's ring, and drive the engine.
 //
-// The clip is clocked by the cloned mouse's report tick, so a tick here is one native report,
-// not a millisecond, and everything below is refused by the box when no mouse is cloned. The engine
-// is soft state on a 1 s dead-man switch, which the clip status poll doubles as the keepalive for.
+// A clip plays on any clone. With a mouse cloned a tick is one native frame, not a millisecond; with
+// none it is the emit rate OPTION(EMIT) fixes, else 1 ms. Everything below is refused by the box
+// while no clone is up. The engine is soft state on a 1 s dead-man switch, which the clip status poll
+// doubles as the keepalive for. Raw report and transfer ticks play only under imperfect clones, so
+// they are offered only while it is on.
 
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -11,8 +13,10 @@ import { Checkbox } from '../../../components/inputs/Checkbox';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
+import { TextField } from '../../../components/inputs/TextField';
 import {
   type ClipEntry,
+  type ClipEntryFault,
   type ClipStatus,
   type ClipTrigger,
   type ClipTriggerAction,
@@ -21,17 +25,21 @@ import {
   BUTTONS,
   CLIP_COND_ANY_CLASS,
   CLIP_COND_ANY_ID,
+  CLIP_EDGES_MAX,
+  CLIP_ENTRY_MAX,
   CLIP_LOCK_AIM,
   CLIP_LOCK_ALL,
   CLIP_LOCK_BUTTONS,
   CLIP_LOCK_KEYS,
   CLIP_LOCK_MEDIA,
   CLIP_LOCK_WHEEL,
+  CLIP_RAW_MAX,
   CLIP_SET_AUTOLOCK,
   CLIP_SET_LOOP,
   CLIP_SET_RETAIN,
   CLIP_SET_RIDE,
   CLIP_TRIG_MAX,
+  CLIP_VERBS,
   ClipOp,
   ClipState,
   Direction,
@@ -41,6 +49,8 @@ import {
   KEYS,
   MEDIA,
   RenderMode,
+  clipEntryFault,
+  clipOpName,
   clipStateLabel,
   encodeClipEntry,
   isTriggerAction,
@@ -52,6 +62,16 @@ import { createCommand } from './action';
 import { UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
 import { checkColumn, chips, label, muted, row, section } from './ui';
+import {
+  RAW_DIR_BLURB,
+  SETUP_DEFAULT,
+  SETUP_FIELDS,
+  decodeSetup,
+  displayName,
+  outDataBlurb,
+  parseHex,
+  parseNum,
+} from './hex';
 
 const CLASSES: PickerClass[] = [
   { value: INJ_BTN, label: 'Button', table: BUTTONS },
@@ -76,20 +96,16 @@ const TRIGGER_CLASSES: PickerClass[] = [
 
 const SCOPES: { bit: number; name: string }[] = [
   { bit: CLIP_LOCK_AIM, name: 'Aim (X and Y)' },
-  { bit: CLIP_LOCK_WHEEL, name: 'Wheel' },
+  { bit: CLIP_LOCK_WHEEL, name: 'Wheel and pan' },
   { bit: CLIP_LOCK_BUTTONS, name: 'Buttons' },
   { bit: CLIP_LOCK_KEYS, name: 'Keys' },
   { bit: CLIP_LOCK_MEDIA, name: 'Media' },
 ];
 
-const OPS: { op: ClipOp; name: string }[] = [
-  { op: ClipOp.Start, name: 'Start' },
-  { op: ClipOp.Stop, name: 'Stop' },
-  { op: ClipOp.Pause, name: 'Pause' },
-  { op: ClipOp.Resume, name: 'Resume' },
-  { op: ClipOp.Restart, name: 'Restart' },
-  { op: ClipOp.Toggle, name: 'Toggle' },
-];
+const OPS: { op: ClipOp; name: string }[] = CLIP_VERBS.map((op) => ({
+  op,
+  name: displayName(clipOpName(op)),
+}));
 
 const ACTIONS = [
   { value: String(Action.Press), label: 'Press' },
@@ -97,14 +113,37 @@ const ACTIONS = [
   { value: String(Action.ForceRelease), label: 'Mask' },
 ];
 
+const RAW_DIRS = [
+  { value: String(Direction.Positive), label: 'In' },
+  { value: String(Direction.Negative), label: 'Out' },
+];
+
+// What the codec refused an entry for, in the words of the fields on this card.
+const FAULT_TEXT: Record<ClipEntryFault, string> = {
+  gap: 'A wait must be 1 to 65535 ticks.',
+  edges: `A tick must carry at most ${CLIP_EDGES_MAX} buttons or keys.`,
+  'raw-count': `A tick must carry at most ${CLIP_RAW_MAX} raw reports.`,
+  empty: 'A tick must carry at least one field.',
+  'raw-direction': 'Direction must be In or Out.',
+  'transfer-data': 'Out data must be wLength bytes, and blank for a request that reads.',
+  'too-long': `A tick must encode to at most ${CLIP_ENTRY_MAX} bytes.`,
+};
+
 const entryText = (e: ClipEntry): string => {
   if (e.kind === 'gap') return `wait ${e.ticks}`;
   const parts: string[] = [];
   if (e.xy) parts.push(`move ${e.xy.dx},${e.xy.dy}`);
   if (e.wheel !== undefined) parts.push(`wheel ${e.wheel}`);
+  if (e.pan !== undefined) parts.push(`pan ${e.pan}`);
   for (const ed of e.edges ?? []) {
     const verb = ed.action === Action.Press ? 'press' : ed.action === Action.ForceRelease ? 'mask' : 'release';
     parts.push(`${verb} ${usageName(ed.cls, ed.id)}`);
+  }
+  for (const r of e.raw ?? []) {
+    parts.push(`raw ${r.dir === Direction.Negative ? 'out' : 'in'} ${r.ep}, ${r.bytes.length} B`);
+  }
+  for (const t of e.transfers ?? []) {
+    parts.push(`transfer ${t.setup.bmRequestType & 0x80 ? 'in' : 'out'} ${t.ep}, ${t.setup.wLength} B`);
   }
   return parts.join(' + ');
 };
@@ -133,16 +172,29 @@ const DeviceClip = () => {
   const health = () => dash.health();
   const moveRide = dash.poll('moveRide');
   const render = dash.poll('render');
+  const imperfect = dash.poll('imperfect');
   const ready = () => health()?.cloneConfigured === true;
+  const allowed = () => imperfect()?.allowed === true;
 
   const [draft, setDraft] = createSignal<ClipEntry[]>([]);
   const [kind, setKind] = createSignal('move');
   const [dx, setDx] = createSignal(10);
   const [dy, setDy] = createSignal(0);
   const [dz, setDz] = createSignal(1);
+  const [dpan, setDpan] = createSignal(1);
   const [gap, setGap] = createSignal(10);
   const [edgeUsage, setEdgeUsage] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [edgeAction, setEdgeAction] = createSignal(String(Action.Press));
+  const [rawEp, setRawEp] = createSignal(1);
+  const [rawDir, setRawDir] = createSignal(String(Direction.Positive));
+  const [rawBytes, setRawBytes] = createSignal('');
+  const [xferEp, setXferEp] = createSignal(0);
+  const [setup, setSetup] = createSignal<Record<string, string>>(SETUP_DEFAULT);
+  const [outData, setOutData] = createSignal('');
+  const setupType = () => parseNum(setup().type);
+  // The two gated kinds leave the picker with the opt-in, so a kind picked while it was on falls back.
+  const gated = (k: string) => k === 'raw' || k === 'transfer';
+  const kindNow = () => (gated(kind()) && !allowed() ? 'move' : kind());
 
   const [trigUsage, setTrigUsage] = createSignal<Usage>({
     cls: TRIGGER_CLASSES[0].value,
@@ -190,7 +242,8 @@ const DeviceClip = () => {
   const loopOn = () => flagEdit().loop ?? clip()?.loop === true;
   const retainOn = () => flagEdit().retain ?? clip()?.retain === true;
   const rideOn = () => flagEdit().ride ?? clip()?.ride === true;
-  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the wheel.
+  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the
+  // wheel and pan.
   const rendered = () =>
     render()?.ready === true && (render()?.mode ?? RenderMode.Off) !== RenderMode.Off;
   const riding = () => (moveRide() ?? 0) > 0;
@@ -219,18 +272,45 @@ const DeviceClip = () => {
       await dash.link()!.clipCtrl(op);
     });
 
-  const addEntry = () => {
-    const k = kind();
-    if (k === 'move') setDraft((d) => [...d, { kind: 'tick', xy: { dx: dx(), dy: dy() } }]);
-    else if (k === 'wheel') setDraft((d) => [...d, { kind: 'tick', wheel: dz() }]);
-    else if (k === 'gap') setDraft((d) => [...d, { kind: 'gap', ticks: gap() }]);
-    else {
-      const u = edgeUsage();
-      setDraft((d) => [
-        ...d,
-        { kind: 'tick', edges: [{ cls: u.cls, id: u.id, action: Number(edgeAction()) as Action }] },
-      ]);
+  // The entry the pickers describe, or what is wrong with them.
+  const pickedEntry = (): ClipEntry | string => {
+    const k = kindNow();
+    if (k === 'move') return { kind: 'tick', xy: { dx: dx(), dy: dy() } };
+    if (k === 'wheel') return { kind: 'tick', wheel: dz() };
+    if (k === 'pan') return { kind: 'tick', pan: dpan() };
+    if (k === 'gap') return { kind: 'gap', ticks: gap() };
+    if (k === 'raw') {
+      const bytes = parseHex(rawBytes());
+      if (bytes === null) return 'Bytes must be hex.';
+      if (bytes.length === 0) return 'Enter the bytes to put on the endpoint.';
+      return { kind: 'tick', raw: [{ ep: rawEp(), dir: Number(rawDir()) as Direction, bytes }] };
     }
+    if (k === 'transfer') {
+      const fields = SETUP_FIELDS.map((f) => parseNum(setup()[f.key]));
+      if (fields.some((f) => f === null)) return 'Every setup field must be a number.';
+      const out = parseHex(outData());
+      if (out === null) return 'Out data must be hex.';
+      const [bmRequestType, bRequest, wValue, wIndex, wLength] = fields as number[];
+      return {
+        kind: 'tick',
+        transfers: [{ ep: xferEp(), setup: { bmRequestType, bRequest, wValue, wIndex, wLength }, out }],
+      };
+    }
+    const u = edgeUsage();
+    return { kind: 'tick', edges: [{ cls: u.cls, id: u.id, action: Number(edgeAction()) as Action }] };
+  };
+
+  // Refused here, where the fields are, since the box faults the whole clip on an entry it cannot read.
+  const addEntry = () => {
+    const picked = pickedEntry();
+    const fault = typeof picked === 'string' ? null : clipEntryFault(picked);
+    const entry = fault ? FAULT_TEXT[fault] : picked;
+    if (typeof entry === 'string') {
+      cmd.run(() => Promise.reject(new Error(entry)));
+      return;
+    }
+    cmd.clear();
+    setDraft((d) => [...d, entry]);
   };
 
   const append = () =>
@@ -330,7 +410,7 @@ const DeviceClip = () => {
         <Card>
           <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
 
-          <Show when={ready()} fallback={<p style={muted}>Clips need a cloned mouse. Plug one into USB3.</p>}>
+          <Show when={ready()} fallback={<p style={muted}>Clips need a cloned device. Plug one into USB3.</p>}>
             <Show when={render() && (cursorRides() || wheelRides())}>
               <div class="callout callout--warning">
                 {cursorRides() && rendered()
@@ -340,7 +420,7 @@ const DeviceClip = () => {
                   ? 'clip motion is'
                   : cursorRides()
                     ? "the clip's cursor motion is"
-                    : "the clip's wheel motion is"}{' '}
+                    : "the clip's wheel and pan motion is"}{' '}
                 only emitted alongside a real mouse move. Button, key and media ticks still play.
               </div>
             </Show>
@@ -383,6 +463,15 @@ const DeviceClip = () => {
               </Show>
               <Show when={delta((s) => s.seqGaps) > 0}>
                 <Chip variant="error">{plural(delta((s) => s.seqGaps), 'lost append')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.xfers) > 0}>
+                <Chip variant="info">{plural(delta((s) => s.xfers), 'transfer')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.xferErrs) > 0}>
+                <Chip variant="error">{plural(delta((s) => s.xferErrs), 'failed transfer')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.gated) > 0}>
+                <Chip variant="warning">{plural(delta((s) => s.gated), 'discarded item')}</Chip>
               </Show>
             </div>
             <p style={{ ...muted, 'margin-top': '4px' }}>Counts are since this clip was loaded.</p>
@@ -447,7 +536,7 @@ const DeviceClip = () => {
             </div>
             <div style={checkColumn}>
               <Checkbox
-                label={rendered() ? 'Wheel motion rides a real report' : 'Motion rides a real report'}
+                label={rendered() ? 'Wheel and pan motion rides a real report' : 'Motion rides a real report'}
                 checked={rideOn()}
                 disabled={busy()}
                 onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
@@ -477,17 +566,29 @@ const DeviceClip = () => {
             <div style={label}>Add a tick</div>
             <RadioGroup
               name="clip-kind"
-              value={kind()}
+              value={kindNow()}
               onChange={setKind}
               options={[
                 { value: 'move', label: 'Move' },
                 { value: 'wheel', label: 'Wheel' },
+                { value: 'pan', label: 'Pan' },
                 { value: 'gap', label: 'Wait' },
                 { value: 'edge', label: 'Button or key' },
+                ...(allowed()
+                  ? [
+                      { value: 'raw', label: 'Raw report' },
+                      { value: 'transfer', label: 'Control transfer' },
+                    ]
+                  : []),
               ]}
             />
+            <Show when={!allowed()}>
+              <p style={{ ...muted, 'margin-top': '4px' }}>
+                Raw report and control transfer ticks need imperfect clones, on the Device tab.
+              </p>
+            </Show>
             <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-              <Show when={kind() === 'move'}>
+              <Show when={kindNow() === 'move'}>
                 <div style={{ 'max-width': '7rem' }}>
                   <NumberInput label="dx" value={dx()} min={-32768} max={32767} onChange={(v) => setDx(v ?? 0)} />
                 </div>
@@ -495,21 +596,96 @@ const DeviceClip = () => {
                   <NumberInput label="dy" value={dy()} min={-32768} max={32767} onChange={(v) => setDy(v ?? 0)} />
                 </div>
               </Show>
-              <Show when={kind() === 'wheel'}>
+              <Show when={kindNow() === 'wheel'}>
                 <div style={{ 'max-width': '7rem' }}>
                   <NumberInput label="Detents" value={dz()} min={-32768} max={32767} onChange={(v) => setDz(v ?? 0)} />
                 </div>
               </Show>
-              <Show when={kind() === 'gap'}>
+              <Show when={kindNow() === 'pan'}>
+                <div style={{ 'max-width': '7rem' }}>
+                  <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} onChange={(v) => setDpan(v ?? 0)} />
+                </div>
+              </Show>
+              <Show when={kindNow() === 'gap'}>
                 <div style={{ 'max-width': '9rem' }}>
                   <NumberInput label="Ticks" value={gap()} min={1} max={65535} onChange={(v) => setGap(v ?? 1)} />
                 </div>
+              </Show>
+              <Show when={kindNow() === 'raw'}>
+                <div style={{ 'max-width': '9rem' }}>
+                  <NumberInput
+                    name="clip-raw-ep"
+                    label="Endpoint number"
+                    value={rawEp()}
+                    min={0}
+                    max={15}
+                    onChange={(v) => setRawEp(v ?? 0)}
+                  />
+                </div>
+                <div style={{ flex: '1 1 240px' }}>
+                  <TextField
+                    name="clip-raw-bytes"
+                    label="Bytes (hex)"
+                    value={rawBytes()}
+                    onInput={setRawBytes}
+                    placeholder="e.g. 01 00 05 00"
+                  />
+                </div>
+              </Show>
+              <Show when={kindNow() === 'transfer'}>
+                <div style={{ 'max-width': '9rem' }}>
+                  <NumberInput
+                    name="clip-xfer-ep"
+                    label="Endpoint number"
+                    value={xferEp()}
+                    min={0}
+                    max={15}
+                    onChange={(v) => setXferEp(v ?? 0)}
+                  />
+                </div>
+                <For each={SETUP_FIELDS}>
+                  {(f) => (
+                    <div style={{ 'max-width': '9rem' }}>
+                      <TextField
+                        name={`clip-xfer-${f.key}`}
+                        label={f.label}
+                        value={setup()[f.key]}
+                        onInput={(v) => setSetup((prev) => ({ ...prev, [f.key]: v }))}
+                        placeholder={f.placeholder}
+                      />
+                    </div>
+                  )}
+                </For>
               </Show>
               <Button variant="secondary" onClick={addEntry}>
                 Add
               </Button>
             </div>
-            <Show when={kind() === 'edge'}>
+            <Show when={kindNow() === 'raw'}>
+              <div style={section}>
+                <div style={label}>Direction</div>
+                <RadioGroup name="clip-raw-dir" value={rawDir()} onChange={setRawDir} options={RAW_DIRS} />
+                <p style={{ ...muted, 'margin-top': '4px' }}>{RAW_DIR_BLURB[Number(rawDir())]}</p>
+              </div>
+            </Show>
+            <Show when={kindNow() === 'transfer'}>
+              <p style={{ ...muted, 'margin-top': '4px' }}>
+                <Show when={setupType() !== null} fallback="bmRequestType must be a number.">
+                  {decodeSetup(setupType()!, parseNum(setup().req))}
+                </Show>
+              </p>
+              <div style={section}>
+                <TextField
+                  name="clip-xfer-out"
+                  label="Out data (hex)"
+                  value={outData()}
+                  onInput={setOutData}
+                  placeholder="e.g. 00 01"
+                />
+                <p style={{ ...muted, 'margin-top': '4px' }}>{outDataBlurb(setupType())}</p>
+              </div>
+            </Show>
+            <Show when={kindNow() === 'edge'}>
               <UsagePicker name="clip-edge" classes={CLASSES} value={edgeUsage()} onChange={setEdgeUsage} />
               <div style={section}>
                 <div style={label}>Action</div>
