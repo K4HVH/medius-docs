@@ -1,5 +1,7 @@
-// Helpers the advanced-control cards share: the hex and number field parsers, and the casing that
-// turns the protocol's own names into option labels. Each card used to carry its own copy of both.
+// Helpers the advanced-control cards share: the hex and number field parsers, the setup packet's
+// fields, and the casing that turns the protocol's own names into option labels.
+
+import { Direction } from '../../../dashboard/protocol';
 
 // Bytes as spaced lowercase hex, the form every hex field on these cards reads and writes.
 export const toHex = (b: Uint8Array): string =>
@@ -23,6 +25,67 @@ export const parseNum = (s: string): number | null => {
   const v = /^0x/i.test(t) ? parseInt(t.slice(2), 16) : Number(t);
   return Number.isFinite(v) && v >= 0 ? Math.floor(v) : null;
 };
+
+// The five setup fields keep their specification names and stay text: bmRequestType and wValue are
+// read and written in hex wherever USB is documented, and a spinner showing 256 for 0x0100 would be
+// the wrong instrument for a setup packet.
+export const SETUP_FIELDS = [
+  { key: 'type', label: 'bmRequestType', placeholder: '0x80' },
+  { key: 'req', label: 'bRequest', placeholder: '6' },
+  { key: 'value', label: 'wValue', placeholder: '0x0100' },
+  { key: 'index', label: 'wIndex', placeholder: '0' },
+  { key: 'length', label: 'wLength', placeholder: '18' },
+] as const;
+
+// The setup packet every setup editor opens on: GET_DESCRIPTOR for the 18-byte device descriptor.
+export const SETUP_DEFAULT: Record<string, string> = {
+  type: '0x80',
+  req: '6',
+  value: '0x0100',
+  index: '0',
+  length: '18',
+};
+
+// bmRequestType is a bitmap, so the one field nobody reads at a glance is the one worth reading
+// back in words. Bit 7 is the direction, bits 6-5 the type, bits 4-0 the recipient.
+const TYPE_NAME = ['standard', 'class', 'vendor', 'reserved'];
+const RECIPIENT_NAME = ['the device', 'an interface', 'an endpoint', 'another target'];
+
+// The standard requests, which are the ones a bRequest number alone will not tell you.
+const STANDARD_REQUEST: Record<number, string> = {
+  0: 'GET_STATUS',
+  1: 'CLEAR_FEATURE',
+  3: 'SET_FEATURE',
+  5: 'SET_ADDRESS',
+  6: 'GET_DESCRIPTOR',
+  7: 'SET_DESCRIPTOR',
+  8: 'GET_CONFIGURATION',
+  9: 'SET_CONFIGURATION',
+  10: 'GET_INTERFACE',
+  11: 'SET_INTERFACE',
+  12: 'SYNCH_FRAME',
+};
+
+export const decodeSetup = (bm: number, req: number | null): string => {
+  const dir = bm & 0x80 ? 'Device to host' : 'Host to device';
+  const type = (bm >> 5) & 0x03;
+  const recipient = RECIPIENT_NAME[Math.min(bm & 0x1f, 3)];
+  const head = `${dir}, ${TYPE_NAME[type]}, to ${recipient}`;
+  const named = type === 0 && req !== null ? STANDARD_REQUEST[req] : undefined;
+  return named ? `${head}: ${named}.` : `${head}.`;
+};
+
+// Where a raw report's bytes land, which is the whole meaning of the direction sitting above it.
+export const RAW_DIR_BLURB: Record<number, string> = {
+  [Direction.Positive]: 'The report reaches the game PC.',
+  [Direction.Negative]: 'The report reaches the device.',
+};
+
+// What the Out data field is for, which bit 7 of bmRequestType decides.
+export const outDataBlurb = (bm: number | null): string =>
+  bm !== null && (bm & 0x80) === 0
+    ? 'The data stage this request carries to the device.'
+    : 'Unused: this request reads, it does not write.';
 
 // The protocol names things in lowercase wire vocabulary. Sentence case is what an option label wears
 // everywhere else on the dashboard, except where the wire name is an acronym or a hyphenated pair.

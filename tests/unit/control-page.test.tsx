@@ -47,6 +47,9 @@ const VALUES: Record<string, unknown> = {
     underruns: 1,
     overruns: 0,
     seqGaps: 0,
+    xfers: 0,
+    xferErrs: 0,
+    gated: 0,
     held: [{ cls: 0, id: 0 }],
     autolock: 0x05,
     loop: true,
@@ -223,7 +226,7 @@ describe('Control page', () => {
     const armed = { mode: RenderMode.Despiked, full: false, ready: true };
     const rendered = mount(stub({ moveRide: 20, render: armed }));
     expect((await rendered.findByText(/Movement riding is on/)).textContent).toMatch(/rendering motion/);
-    expect(rendered.container.textContent).toMatch(/Wheel motion rides a real report/);
+    expect(rendered.container.textContent).toMatch(/Wheel and pan motion rides a real report/);
     cleanup();
 
     // Full rendering takes the rendered stream off the ride, so an armed profile alone warns of nothing.

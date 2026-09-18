@@ -16,6 +16,7 @@ import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import {
   type CatchFilter,
   type CatchEntry,
+  type TrafficEvent,
   type UsageSnapshot,
   BusEventKind,
   CATCH_ID_ANY,
@@ -27,6 +28,10 @@ import {
   INJ_KEY,
   INJ_MEDIA,
   Out,
+  TRAFFIC_BULK_END,
+  TRAFFIC_BULK_ZLP,
+  TRAFFIC_CONTROL_NAK,
+  TRAFFIC_CONTROL_STALL,
   filterTraffic,
   filterTrafficClass,
   filterWatch,
@@ -34,7 +39,11 @@ import {
   filterWatchClass,
   sameFilter,
   snapshotClass,
+  trafficData,
+  trafficSetup,
+  trafficTransferStatus,
   trafficTruncated,
+  transferStatusName,
   usageHeld,
   usageName,
 } from '../../../dashboard/protocol';
@@ -60,6 +69,7 @@ const PRESETS: Record<string, CatchFilter[]> = {
     filterTrafficClass(CatchClass.HidOut, 16),
     filterTrafficClass(CatchClass.VendorInterrupt, 16),
     filterTrafficClass(CatchClass.Control, 16),
+    filterTrafficClass(CatchClass.ClipTransfer, 16),
   ],
   bus: [filterTrafficClass(CatchClass.Bus)],
 };
@@ -78,6 +88,7 @@ const CLASS_NAMES: Record<number, string> = {
   [CatchClass.Control]: 'control',
   [CatchClass.Emit]: 'emit',
   [CatchClass.Bus]: 'bus',
+  [CatchClass.ClipTransfer]: 'clip-transfer',
   [CatchClass.Any]: 'everything',
 };
 
@@ -102,6 +113,7 @@ const ID_MEANING: Record<number, string> = {
   [CatchClass.Control]: 'endpoint number (0 is EP0)',
   [CatchClass.Emit]: 'endpoint number',
   [CatchClass.Bus]: 'no id',
+  [CatchClass.ClipTransfer]: 'endpoint number (0 is EP0)',
   [CatchClass.Any]: 'no id',
 };
 
@@ -130,20 +142,31 @@ const hex = (bytes: Uint8Array): string =>
     .join(' ');
 
 // The flags byte is class-specific, so decode it per class: a STALLed control transaction reading
-// 0xfd tells you nothing without the table beside you.
-const trafficFlags = (cls: CatchClass, flags: number): string => {
-  if (cls === CatchClass.VendorBulk) {
+// 0xfd tells you nothing without the table beside you. A clip transfer's event is its answer, so its
+// status is always named, OK included.
+const trafficFlags = (t: TrafficEvent): string => {
+  if (t.cls === CatchClass.VendorBulk) {
     const bits: string[] = [];
-    if (flags & 0x01) bits.push('end');
-    if (flags & 0x02) bits.push('zlp');
+    if (t.flags & TRAFFIC_BULK_END) bits.push('end');
+    if (t.flags & TRAFFIC_BULK_ZLP) bits.push('zlp');
     return bits.length ? ` ${bits.join('+')}` : '';
   }
-  if (cls === CatchClass.Control) {
-    if (flags === 0xfd) return ' STALL';
-    if (flags === 0xfe) return ' NAK';
+  if (t.cls === CatchClass.Control) {
+    if (t.flags === TRAFFIC_CONTROL_STALL) return ' STALL';
+    if (t.flags === TRAFFIC_CONTROL_NAK) return ' NAK';
     return '';
   }
-  return '';
+  const status = trafficTransferStatus(t);
+  return status === null ? '' : ` ${transferStatusName(status).toUpperCase()}`;
+};
+
+// A control transaction and a clip's transfer carry the setup packet and then the data stage, which
+// read as two groups. A capture that cut the setup packet short has no split to show.
+const trafficBytes = (t: TrafficEvent): string => {
+  const setup = trafficSetup(t);
+  if (!setup) return `[${hex(t.bytes)}]`;
+  const data = trafficData(t);
+  return data.length ? `[${hex(setup)}] [${hex(data)}]` : `[${hex(setup)}]`;
 };
 
 // One log line per event kind. Every variant needs a branch: an unhandled one would fall through to
@@ -163,7 +186,7 @@ const eventBody = (e: InputEventEntry): string => {
     // bytes.length short of trueLen means the capture cut it, not that the packet was short.
     const cut = trafficTruncated(t) ? ` (+${t.trueLen - t.bytes.length} cut)` : '';
     const arrow = t.dir === Out ? 'out' : 'in';
-    return `${name} ${arrow} 0x${t.id.toString(16)}${trafficFlags(t.cls, t.flags)} [${hex(t.bytes)}]${cut}`;
+    return `${name} ${arrow} 0x${t.id.toString(16)}${trafficFlags(t)} ${trafficBytes(t)}${cut}`;
   }
   const snap = e.ev.snapshot;
   const cls = snapshotClass(snap);
