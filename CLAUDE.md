@@ -8,7 +8,7 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 
 | Section | What |
 |---|---|
-| Native API | The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x18`). |
+| Native API | The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x1E`). |
 | Rust Library | API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `tracing` features. |
 | Bindings | The C ABI and Python bindings over the same crate. |
 | Dashboard | The in-browser box dashboard: connect, view the box, update firmware, recover, read the device log. |

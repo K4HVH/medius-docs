@@ -146,7 +146,8 @@ let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0
           <p>
             Opening a box anchors <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> to that
             identity. An automatic reconnect re-finds the <em>same</em> physical box even if the ports
-            renumbered, and never adopts a different box that happens to be plugged in.
+            renumbered, and never adopts a different box that happens to be plugged in, or this box once it
+            answers on another protocol.
           </p>
         </Card>
       </div>

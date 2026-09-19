@@ -173,6 +173,7 @@ describe('encode (vs Rust-crate vectors)', () => {
     expect(toHex(encode(FrameType.Reset, 2, new Uint8Array()))).toBe(VEC.empty_reset);
   });
   it('multi-byte payload (RESP VERSION shape)', () => {
+    // Protocol 1, firmware 0.1.0: the shared frame vector, which pins bytes, not a release.
     expect(
       toHex(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc]))),
     ).toBe(VEC.resp_version);
@@ -190,6 +191,7 @@ describe('encode (vs Rust-crate vectors)', () => {
 
 describe('FrameDecoder', () => {
   it('decodes a RESP(VERSION) frame and parseResp yields the version', () => {
+    // The shared frame vector: protocol 1, firmware 0.1.0.
     const frames = decodeAll(new FrameDecoder(), fromHex(VEC.resp_version));
     expect(frames).toHaveLength(1);
     expect(frames[0].ty).toBe(FrameType.Resp);
@@ -316,7 +318,7 @@ describe('FrameDecoder', () => {
 describe('parseResp / parseLog', () => {
   it('returns null for short or empty RESP payloads', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
-    expect(parseResp(new Uint8Array([0, 1, 0, 1, 0]))).toBeNull(); // version needs 11 bytes (was 5, now carries the MAC)
+    expect(parseResp(new Uint8Array([0, 1, 0, 1, 0]))).toBeNull(); // version needs 11 bytes: the 5-byte reply of protocol 1 (0.1.0), before the MAC
     expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 3 bytes: what + u16 flags
     expect(parseResp(new Uint8Array([1, 0x0f]))).toBeNull(); // a single flags byte is the proto-6 width
     expect(parseResp(new Uint8Array([9]))).toBeNull(); // OPTIONS needs an id byte
@@ -324,7 +326,8 @@ describe('parseResp / parseLog', () => {
   });
 
   it('decodes the ASCII name tail after the RESP(VERSION) header', () => {
-    // Bytes past the 11-byte header are the box name (ASCII, LEN-delimited), not trailing garbage.
+    // Bytes past the 11-byte header are the box name (ASCII, LEN-delimited), not trailing garbage. The
+    // header is protocol 1, firmware 2.3.4: the decoder reads any version byte.
     expect(
       parseResp(
         new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x42, 0x6f, 0x78]),
@@ -473,6 +476,7 @@ describe('helpers', () => {
   });
 
   it('versionString formats major.minor.patch', () => {
+    // Protocol 1, firmware 0.1.0: the string reads only the firmware numbers.
     expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0, mac: [], name: '' })).toBe('0.1.0');
   });
 });
@@ -581,10 +585,11 @@ describe('LOCK command (§3.8)', () => {
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this RESP(CLIP), CLIP_TRIGGER and REWRITE', () => {
-    // v8 (firmware 3.4.1) widens RESP(CLIP)'s fixed prefix and appends its packet triggers, adds packet
-    // triggers to CLIP_TRIGGER and a clip action to REWRITE. A box on v7 answers RESP(CLIP) in the older
-    // layout and takes neither; left at 7 the handshake would hand it the Clip card and the rewrite editor.
+  it('PROTO_VER matches the firmware that speaks this RESP(CLIP) and CLIP_TRIGGER', () => {
+    // v8 (firmware 3.4.1) widens RESP(CLIP)'s fixed prefix to 31 bytes and appends its packet triggers,
+    // adds packet triggers to CLIP_TRIGGER, and matches a vendor interrupt OUT packet as VEND_INTR. A box
+    // on v7 answers RESP(CLIP) in the older layout and takes no packet trigger; left at 7 the handshake
+    // would hand it the Clip card.
     expect(PROTO_VER).toBe(8);
   });
 

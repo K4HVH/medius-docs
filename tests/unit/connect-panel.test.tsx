@@ -38,6 +38,7 @@ afterEach(() => {
   navigate.mockClear();
 });
 
+// A 3.1.0 box: protocol 4, below the oldest the page opens.
 const version = { protoVer: 4, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [0, 0, 0, 0, 0, 0], name: '' };
 
 describe('ConnectPanel', () => {
@@ -56,6 +57,7 @@ describe('ConnectPanel', () => {
   });
 
   it('a newer box is named and sent to a reload, never to the install', () => {
+    // 3.5.0 stands for a later release on the protocol after this page's.
     mock.verdict = { kind: 'new-firmware', version: { ...version, protoVer: 9, fwMinor: 5 } };
     const reload = vi.fn();
     const real = window.location;

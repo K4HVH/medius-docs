@@ -8,7 +8,7 @@ Built with [SolidJS](https://solidjs.com) and MidnightUI.
 
 | Section | What |
 |---|---|
-| Native API | The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x18`). |
+| Native API | The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x1E`). |
 | Rust Library | API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `tracing` features. |
 | Bindings | The C ABI and Python bindings over the same crate. |
 | Dashboard | The in-browser box dashboard: connect, view device info, update firmware, recover, and read the device log. |

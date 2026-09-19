@@ -125,7 +125,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p>
             The <A href="/library/types/structs">structs</A> they take live on the types page;{' '}
             <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
-            from the raw status byte.
+            from the raw <code>u16</code> flags word.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

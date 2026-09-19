@@ -63,8 +63,8 @@ println!("name {}", v.name);           // Loki`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eight booleans from one
-            status byte. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
+            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eleven booleans from
+            one <code>u16</code> flags word. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
             <code>clone_configured</code> must all be true before{' '}
             <A href="/native/injection">injection</A> is emitted at all.
           </p>

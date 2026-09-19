@@ -5,6 +5,7 @@ import { render, cleanup, waitFor } from '@solidjs/testing-library';
 // never ran, and losing the one instruction that fixes a box that did not come back) and every page
 // test stubs it. This drives the real one, with only the serial link faked.
 const mock = vi.hoisted(() => {
+  // A 3.2.0 box on protocol 5: the oldest the page opens, so every update below starts update-only.
   const VERSION = { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' };
   return {
     VERSION,
@@ -209,6 +210,7 @@ const DEVICE_TAG = 0xd0;
 const HOST_TAG = 0xa0;
 const img = (tag: number) => new Uint8Array([0xe9, tag, 2, 3]);
 
+// Each is the firmware named and the protocol it reports.
 const V3_3_4 = { protoVer: 6, fwMajor: 3, fwMinor: 3, fwPatch: 4, mac: [], name: '' };
 const V3_4_0 = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' };
 const V3_4_1 = { protoVer: 8, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' };

@@ -40,8 +40,10 @@ const Types: Component = () => {
           </p>
           <p>
             Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>8</code>, the
-            number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
+            it, never a pointer you own. The shapes on this page are ABI version <code>8</code>, which
+            the header declares as <code>MEDIUS_ABI_VERSION</code>; compare it with{' '}
+            <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> once at{' '}
+            <A href="/bindings/c#verify">start-up</A>.
           </p>
         </div>
       </Card>

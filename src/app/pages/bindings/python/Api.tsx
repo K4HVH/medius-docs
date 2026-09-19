@@ -141,7 +141,7 @@ const Api: Component = () => {
               <tr><td><code>dev.led(target, mode, level)</code></td><td>Drive the status LED. See <A href="/library/led">LED</A>.</td></tr>
               <tr><td><code>dev.reset()</code></td><td>Clear all overrides. See <A href="/library/admin">Admin</A>.</td></tr>
               <tr><td><code>dev.reapply()</code></td><td>Re-send the active settings.</td></tr>
-              <tr><td><code>dev.reconnect()</code></td><td>Force a reconnect to the mouse.</td></tr>
+              <tr><td><code>dev.reconnect()</code></td><td>Rescan, reopen this box, and re-apply held state (<A href="/library/lifecycle#reconnect">reconnect</A>). Raises <code>BadProtoVerError</code> when the box answers on another protocol; it stays disconnected.</td></tr>
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
               <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning over-capacity devices. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
