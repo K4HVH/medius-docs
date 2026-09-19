@@ -879,7 +879,7 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per packet trigger: the class's address, 0xFFFF=any, little-endian</td></tr>
               <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>per packet trigger: 0 both / 1 IN / 2 OUT</td></tr>
               <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per packet trigger: the <code>CLIP_CTRL</code> op 0..5</td></tr>
-              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b1 consume, b2 <code>RUN</code></td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b0 clear, b1 consume, b2 <code>RUN</code></td></tr>
               <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
               <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
               <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it won, saturating, little-endian</td></tr>
@@ -906,8 +906,8 @@ const Requests: Component = () => {
           <p>
             A packet trigger reads back as the{' '}
             <A href="/native/commands/clip#packet-triggers">command that set it</A> with{' '}
-            <code>hits</code> spliced in after <code>mlen</code>. The whole reply is at most 507
-            bytes, inside one frame.
+            <code>hits</code> spliced in after <code>mlen</code> and bit0 (present) clear, so a host
+            replays one by setting bit0. The whole reply is at most 507 bytes, inside one frame.
           </p>
           <p>
             Library bindings:{' '}

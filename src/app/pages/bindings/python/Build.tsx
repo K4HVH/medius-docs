@@ -33,7 +33,7 @@ const Build: Component = () => {
                 <td><code>--features mock</code></td>
                 <td><code>MockBox().open()</code> / <code>.with_device()</code></td>
                 <td><code>HAS_MOCK</code></td>
-                <td>A scriptable in-process fake box. See <A href="/library/features/mock">Mock box</A>.</td>
+                <td>A scriptable in-process fake box. See <A href="/bindings/python/api#mock">Mock box</A>.</td>
               </tr>
             </tbody>
           </table>

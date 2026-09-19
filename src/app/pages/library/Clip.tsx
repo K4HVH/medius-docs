@@ -210,8 +210,8 @@ device.clip().append(&clip)?;`}</code></pre>
             <tbody>
               <tr><td><code>bind(trigger: <A href="/library/types/structs#clip-trigger">ClipTrigger</A>)</code></td><td>Add or overwrite an <A href="/library/clip#input-triggers">input trigger</A>: a physical edge drives an action on the box, no host round-trip.</td></tr>
               <tr><td><code>unbind(usage, edge: <A href="/library/types/enums#edge">Edge</A>)</code></td><td>Remove the input trigger on that usage and edge.</td></tr>
-              <tr><td><code>bind_packet(trigger: &amp;<A href="/library/types/structs#clip-packet-trigger">ClipPacketTrigger</A>)</code></td><td>Add or overwrite a <A href="/library/clip#packet-triggers">packet trigger</A>: a matched packet drives an action on the box's next tick.</td></tr>
-              <tr><td><code>unbind_packet(trigger: &amp;ClipPacketTrigger)</code></td><td>Remove the packet trigger with that trigger's key; its action, <code>consume</code> and <code>once_per_run</code> are ignored. A key the box cannot hold is refused as <code>bind_packet</code> refuses it.</td></tr>
+              <tr><td><code>bind_packet(trigger: &amp;<A href="/library/types/structs#clip-packet-trigger">ClipPacketTrigger</A>)</code></td><td>Add or overwrite a <A href="/library/clip#packet-triggers">packet trigger</A>: a matched packet drives an action on the frame clock's next tick.</td></tr>
+              <tr><td><code>unbind_packet(trigger: &amp;ClipPacketTrigger)</code></td><td>Remove the packet trigger with that trigger's key; its action, <code>consume</code>, <code>once_per_run</code> and <code>selector_len</code> are ignored. A key the box cannot hold is refused as <code>bind_packet</code> refuses it.</td></tr>
               <tr><td><code>clear_triggers()</code></td><td>Remove every trigger of both kinds.</td></tr>
             </tbody>
           </table>
@@ -342,9 +342,9 @@ handle.stop()?;`}</code></pre>
           <div class="callout callout--info">
             <p>
               The <A href="/library/guides/connection#keepalive">keepalive</A> holds a bound trigger
-              of either kind past the silence window. A reconnect re-sends neither kind: a trigger
-              stands through a link drop shorter than that window, and a longer one clears the set on
-              the box.
+              of either kind past the silence window. A reconnect reads the set back from the box: a
+              drop shorter than that window leaves every trigger bound, and a longer one clears the
+              set.
             </p>
           </div>
 
@@ -402,9 +402,17 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           <div id="packet-triggers" data-search-target>
             <div class="api-response-label">PACKET TRIGGERS</div>
             <p>
-              The box reads a packet for its triggers as the packet arrived, ahead of the{' '}
-              <A href="/library/advanced/rewrite">rewrite table</A>, and the two are independent: one
-              packet can fire a trigger and win a rule. The box's rules are on{' '}
+              A packet trigger's only effect is a clip verb, so it is clip config: it shares the clip's
+              lifetime (held by the keepalive, cleared with the clip on a{' '}
+              <A href="/native/commands/clip#ctrl">hard stop</A>) and its read-back. It sits beside the{' '}
+              <A href="/library/advanced/rewrite">rewrite table</A> and independent of it, reading each
+              packet as it arrived, so one packet can fire a trigger and win a rule.
+            </p>
+            <p>
+              Find the address and the bytes to match with{' '}
+              <A href="/library/catch#catch-events"><code>catch_events</code></A>: a{' '}
+              <code>HidIn</code> event's <code>id</code> is the interface number and its{' '}
+              <code>bytes</code> are the report. The box's rules are on{' '}
               <A href="/native/commands/clip#packet-triggers"><code>CLIP_TRIGGER</code></A>.
             </p>
             <table class="api-params">
@@ -413,10 +421,19 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
               </thead>
               <tbody>
                 <tr><td>address</td><td>the <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>, the id within it (the interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ANY_ID</code>), and the <A href="/library/types/enums#direction"><code>Direction</code></A></td></tr>
-                <tr><td>action</td><td>the engine verb to run, on the box's next tick</td></tr>
+                <tr><td>action</td><td>the engine verb to run, on the frame clock's next tick: within one frame of the matching packet, 1&nbsp;ms at the default pace</td></tr>
                 <tr><td><code>.matching()</code></td><td>head bytes and their mask, one length, 16 at most; left out, every packet on the address matches</td></tr>
-                <tr><td><code>.consume()</code></td><td>drop every packet the trigger wins, whether or not the action runs on it</td></tr>
+                <tr><td><code>.consume()</code></td><td>drop every packet the trigger wins, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it reaches the PC with the next report</td></tr>
                 <tr><td><code>.once_per_run()</code></td><td>run the action on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes select the stream, such as a report ID, and the rest are the condition</td></tr>
+              </tbody>
+            </table>
+            <table class="api-params">
+              <thead>
+                <tr><th>What</th><th>Needs the opt-in</th><th>Why</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>a trigger that watches</td><td>no</td><td>It alters no byte the PC or the device sees.</td></tr>
+                <tr><td>a trigger that consumes</td><td>yes</td><td>It drops traffic, as a <code>Drop</code> rewrite rule does.</td></tr>
               </tbody>
             </table>
             <table class="api-params">
@@ -432,10 +449,30 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
             <div class="callout callout--info">
               <p>
                 A run starts on the first matching packet the trigger sees. A trigger whose condition
-                already holds when it is bound fires on the next packet, so on a device that reports
-                every poll, one matching the at-rest bytes fires once when it is bound.
+                already holds when it is bound fires on the next packet of its stream, so on a device
+                that reports every poll, a release trigger bound with the button up fires once. Bind
+                the press trigger first and the release trigger while the button is held, or accept the
+                one action.
               </p>
             </div>
+            <div class="api-response-label">WINNER</div>
+            <p>
+              One trigger wins a packet, the most specific: an exact <code>id</code> over{' '}
+              <code>ANY_ID</code>, more masked bits over fewer, <code>IN</code> or <code>OUT</code>{' '}
+              over <code>Both</code>, then the one bound earlier. <code>hits</code> counts only the
+              packets a trigger won, so an outranked trigger's <code>hits</code> stays still while it
+              keeps tracking its run.
+            </p>
+            <table class="api-params">
+              <thead>
+                <tr><th>Report</th><th>Won by</th><th>So</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report reaches the PC</td></tr>
+                <tr><td><code>07 00 ..</code></td><td>a consuming <code>[07]/[FF]</code>, 8 masked bits</td><td>its action runs and the report is dropped</td></tr>
+                <tr><td><code>08 20 ..</code></td><td>neither</td><td>the report reaches the PC</td></tr>
+              </tbody>
+            </table>
             <div class="api-response-label">REFUSED</div>
             <p>
               <code>bind_packet</code> returns{' '}
@@ -456,7 +493,6 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
                 <tr><td><code>.consume()</code> on <code>Control</code></td><td>A control transfer always runs to completion.</td></tr>
                 <tr><td><code>.once_per_run()</code> on <code>Control</code>, with <code>ANY_ID</code>, or with <code>Direction::Both</code></td><td>A run is over one stream.</td></tr>
                 <tr><td><code>.once_per_run()</code> with a selector at or past the match length, or condition bytes with no masked bit</td><td>The bytes past the selector are the condition, and one every packet meets never ends its run.</td></tr>
-                <tr><td>a selector length without <code>.once_per_run()</code></td><td>Only a run has a stream to select.</td></tr>
               </tbody>
             </table>
             </div>
@@ -465,43 +501,49 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
                 The box makes three checks <code>bind_packet</code> cannot: a consuming trigger needs{' '}
                 <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>,
                 the set holds 8 triggers (<code>CLIP_PKT_TRIG_MAX</code>), and their match bytes share
-                a pool of 112 (<code>CLIP_PKT_MATCH_POOL</code>). A trigger the box refused is absent
-                from <A href="/library/requests#clip-config"><code>query_config</code></A>, and turning
-                the opt-in off removes the consuming ones.
+                a pool of 112 (<code>CLIP_PKT_MATCH_POOL</code>). A bind the box refuses leaves the set
+                as it was: a new key is not held, and a key the box holds keeps its old trigger. Compare
+                what <A href="/library/requests#clip-config"><code>query_config</code></A> reads back
+                with what was bound. Turning the opt-in off removes the consuming triggers.
               </p>
             </div>
             <div class="api-response-label">EXAMPLE</div>
+            <p>
+              Turn the opt-in on before binding: with an over-capacity device attached it reboots the
+              box to re-clone, and a reboot clears every trigger.
+            </p>
             <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
 
+device.allow_imperfect_clones(true)?;   // first: it can reboot the box
 let clip = device.clip();
 
 // Interface 2 is a vendor-page HID interface. Report ID 7 carries a button in bit 5 of its
 // second byte, repeated every poll while held, so the report ID is the selector.
 let held = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start)
     .matching([0x07, 0x20], [0xFF, 0x20])
-    .once_per_run(1);
+    .once_per_run(1)
+    .consume();                   // the press never reaches the PC: needs the opt-in
 let let_go = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Stop)
     .matching([0x07, 0x00], [0xFF, 0x20])
     .once_per_run(1);
 clip.bind_packet(&held)?;
-clip.bind_packet(&let_go)?;
+clip.bind_packet(&let_go)?;       // bound with the button up: one Stop on the next report
 
-// A SET_REPORT on EP0 restarts the clip. These three only watch, so they hold with
-// the imperfect-clone opt-in off.
+// A SET_REPORT on EP0 restarts the clip. A trigger that only watches needs no opt-in.
 let set_report = ClipPacketTrigger::new(TrafficClass::Control, 0, Direction::OUT, ClipAction::Restart)
     .matching([0x21, 0x09], [0xFF, 0xFF]);
 clip.bind_packet(&set_report)?;
 
-// Consuming drops the report, so it needs the opt-in. Same key as held: it overwrites.
-device.allow_imperfect_clones(true)?;
-clip.bind_packet(&held.clone().consume())?;
-
-// The box makes checks bind_packet cannot, so read the set back.
-for e in clip.query_config()?.packet_triggers {
-    println!("{:?} id {} -> {:?}, {} hits", e.trigger.class, e.trigger.id, e.trigger.action, e.hits);
+// A refused bind leaves the set as it was, so compare what reads back with what was bound.
+let bound = clip.query_config()?.packet_triggers;
+for t in [&held, &let_go, &set_report] {
+    match bound.iter().find(|e| &e.trigger == t) {
+        Some(e) => println!("{:?} id {} -> {:?}, {} hits", t.class, t.id, t.action, e.hits),
+        None => println!("the box did not take {t:?}"),
+    }
 }
 
-clip.unbind_packet(&let_go)?;   // by key: action, consume and once_per_run are ignored
+clip.unbind_packet(&let_go)?;   // by key: action, consume, once_per_run and selector_len are ignored
 clip.clear_triggers()?;         // both kinds`}</code></pre>
           </div>
         </Card>
