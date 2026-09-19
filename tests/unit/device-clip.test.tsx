@@ -1203,3 +1203,71 @@ describe('DeviceClip clip status', () => {
     for (const empty of ['Idle', 'B free', 'No triggers bound.']) expect(container.textContent).not.toContain(empty);
   });
 });
+
+// A number field by its label, the nth one of that name inside `root`.
+const numberField = (root: ParentNode, label: string, nth = 0): HTMLInputElement => {
+  const labels = [...root.querySelectorAll('label.number-input__label')].filter((l) => l.textContent?.trim() === label);
+  const el = labels[nth]?.parentElement?.querySelector('input');
+  if (!el) throw new Error(`no number field labelled ${label}`);
+  return el as HTMLInputElement;
+};
+// Types a fraction and leaves the field, which is when a number field takes what was typed.
+const typeFraction = async (el: HTMLInputElement) => {
+  fireEvent.input(el, { target: { value: '2.5' } });
+  fireEvent.blur(el);
+  await settle();
+};
+
+describe('DeviceClip whole-number fields', () => {
+  it.each([
+    ['dx', { dx: 3, dy: 0 }],
+    ['dy', { dx: 10, dy: 3 }],
+  ])('keeps the move tick\'s %s to a whole number, and sends what it shows', async (field, xy) => {
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    const el = numberField(container, field);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(button(container, 'Add'));
+    await settle();
+    expect(await sent(container)).toEqual([{ kind: 'tick', xy }]);
+  });
+
+  it.each([
+    ['Wheel', 'Detents', { kind: 'tick', wheel: 3 }],
+    ['Pan', 'Detents', { kind: 'tick', pan: 3 }],
+    ['Wait', 'Ticks', { kind: 'gap', ticks: 3 }],
+  ])('keeps the %s tick\'s %s to a whole number, and sends what it shows', async (kind, field, entry) => {
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    fireEvent.click(radio(container, kind));
+    await settle();
+    const el = numberField(container, field);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(button(container, 'Add'));
+    await settle();
+    expect(await sent(container)).toEqual([entry]);
+  });
+
+  it.each([
+    ['Raw report', 'clip-raw-ep'],
+    ['Control transfer', 'clip-xfer-ep'],
+  ])('keeps the %s endpoint to a whole number, and sends what it shows', async (kind, name) => {
+    mock.setImperfect(true);
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    fireEvent.click(radio(container, kind));
+    await settle();
+    const el = container.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    if (kind === 'Raw report') {
+      fireEvent.input(container.querySelector('input[name="clip-raw-bytes"]')!, { target: { value: '01' } });
+    }
+    fireEvent.click(button(container, 'Add'));
+    await settle();
+    const [tick] = (await sent(container)) as { raw?: { ep: number }[]; transfers?: { ep: number }[] }[];
+    expect((tick.raw ?? tick.transfers)![0].ep).toBe(3);
+  });
+});

@@ -167,3 +167,42 @@ describe('DeviceEventCatch clip transfers', () => {
     expect(getByText('clip-transfer any first 16B')).toBeTruthy();
   });
 });
+
+// A number field by its label, the nth one of that name inside `root`.
+const numberField = (root: ParentNode, label: string, nth = 0): HTMLInputElement => {
+  const labels = [...root.querySelectorAll('label.number-input__label')].filter((l) => l.textContent?.trim() === label);
+  const el = labels[nth]?.parentElement?.querySelector('input');
+  if (!el) throw new Error(`no number field labelled ${label}`);
+  return el as HTMLInputElement;
+};
+// Types a fraction and leaves the field, which is when a number field takes what was typed.
+const typeFraction = async (el: HTMLInputElement) => {
+  fireEvent.input(el, { target: { value: '2.5' } });
+  fireEvent.blur(el);
+  await settle();
+};
+
+describe('DeviceEventCatch whole-number fields', () => {
+  const builder = async () => {
+    const view = render(() => <DeviceEventCatch />);
+    fireEvent.click(radio(view.container, 'Build a table'));
+    await settle();
+    fireEvent.click(radio(view.container, 'Just one'));
+    await settle();
+    return view;
+  };
+
+  it.each([
+    ['Id', '0x3'],
+    ['Bytes (0 = all)', 'first 3B'],
+  ])('keeps %s to a whole number, and the entry carries what it shows', async (field, shown) => {
+    const { container, getByText } = await builder();
+    const el = numberField(container, field);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(getByText('Add entry'));
+    await settle();
+    const chips = [...container.querySelectorAll('.chip__label')].map((c) => c.textContent ?? '');
+    expect(chips.some((c) => c.includes(shown))).toBe(true);
+  });
+});
