@@ -2,7 +2,9 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 7; // the advanced control layer (raw/transfer/rewrite/patch) and HEALTH widened to 16 bits
+// 8 is firmware 3.4.1: RESP(CLIP) has a 31-byte prefix and ends in the packet trigger list, CLIP_TRIGGER
+// takes packet triggers, and rules and triggers match a vendor interrupt OUT packet as VEND_INTR.
+export const PROTO_VER = 8;
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
 // and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
@@ -71,6 +73,13 @@ export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a nati
 export const CLIP_TRIG_MAX = 8;
 export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove
 export const CLIP_TRIG_F_CONSUME = 0x02; // suppress the trigger input from the game
+export const CLIP_TRIG_F_RUN = 0x04; // packet trigger: the verb runs on the first of a run of matching packets
+// A traffic class (4..9) in the class byte makes the binding a packet trigger, keyed by
+// (class, id, dir, mlen, match, mask). The match bytes of the whole set share one pool, which keeps
+// RESP(CLIP) inside one frame.
+export const CLIP_PKT_TRIG_MAX = 8;
+export const CLIP_PKT_MATCH_MAX = 16; // one masked head, as wide as a rewrite rule's
+export const CLIP_PKT_MATCH_POOL = 112;
 
 // Autolock scope (the CLIP_SET_AUTOLOCK value): which classes the clip blocks physical input on
 // while it plays, so physical input cannot add to what it plays.
@@ -102,19 +111,27 @@ export const CLIP_CFG_F_FINALIZED = 0x04;
 export const CLIP_CFG_F_RIDE = 0x08;
 
 // Clip entry tags (§3.11). Tag 0 is a gap run; a content tick's tag is a nonzero field-flags byte,
-// which is why a fieldless content tick cannot be encoded: it would read back as a gap.
+// so a fieldless content tick cannot be encoded: it would read back as a gap. The fields follow the
+// tag in the order XY, WHEEL, PAN, EDGES, RAW, XFER, which is not the bit order.
 export const CLIP_TAG_GAP = 0x00;
 export const CLIP_F_XY = 0x01;
 export const CLIP_F_WHEEL = 0x02;
 export const CLIP_F_EDGES = 0x04;
+export const CLIP_F_PAN = 0x08;
+export const CLIP_F_RAW = 0x10; // [n] then n x [ep_num][dir][len u16][bytes]: RAW's payload, length explicit
+export const CLIP_F_XFER = 0x20; // [n] then n x [ep][setup 8][OUT data]: TRANSFER's payload
 export const CLIP_EDGES_MAX = 8;
-export const CLIP_ENTRY_MAX = 1 + 4 + 2 + 1 + CLIP_EDGES_MAX * 4;
+export const CLIP_RAW_MAX = 8;
+// An entry rides inside one CLIP_APPEND, so a frame's payload is the most it can be.
+export const CLIP_ENTRY_MAX = MAX_PAYLOAD;
 
-// Held usages in one RESP(CLIP) snapshot, the reply's fixed scalar prefix, and the width of one
-// trigger in its config section (§4.15).
+// Held usages in one RESP(CLIP) snapshot, the reply's fixed scalar prefix (held_n is its last byte),
+// and the width of one trigger in its config section (§4.15).
 export const CLIP_HELD_MAX = 40;
-export const RESP_CLIP_HDR = 25;
+export const RESP_CLIP_HDR = 31;
 export const CLIP_TRIG_LEN = 6;
+// RESP(CLIP) bytes ahead of a packet trigger's match: the command's eight and hits u16.
+export const CLIP_PKT_TRIG_ENTRY = 10;
 
 // A state byte this build does not know reads as Faulted rather than Idle: an unknown engine state
 // is not one a UI should offer Start on.
@@ -233,7 +250,7 @@ export const RATE_CHANGE_DRIVEN = 0x02;
 
 // REWRITE action (§3.14): what a matched rule does to the packet. A report class can Pass, Drop,
 // Patch, or Replace; the control class adds Answer, Stall, Nak, and the two Reply_* forms that rewrite
-// the device's own reply. The box validates the action against the class and refuses a mismatch.
+// the device's reply. The box validates the action against the class and refuses a mismatch.
 export enum RewriteAction {
   Pass = 0, // matched a broader rule but leaves the packet untouched
   Drop = 1, // report class: the packet is not delivered
@@ -427,6 +444,7 @@ export const UPD_NAMES: Record<number, string> = {
 };
 
 // TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.
+// Class CLIP_XFER carries a TransferStatus in the same byte.
 export const TRAFFIC_CONTROL_OK = 0x00;
 export const TRAFFIC_CONTROL_STALL = 0xfd;
 export const TRAFFIC_CONTROL_NAK = 0xfe;

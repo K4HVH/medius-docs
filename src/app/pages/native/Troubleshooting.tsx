@@ -55,13 +55,13 @@ const Troubleshooting: Component = () => {
             <A href="/native/injection">Injection</A> is the input your program adds on top of the
             real mouse's passthrough (movement, buttons, scroll). If it has no effect, send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and read the{' '}
-            <code>flags</code> byte.
+            <code>flags</code> word (<code>u16</code>, little-endian).
           </p>
           <p>
             The box only merges injection once <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a
             mouse is on <A href="/native/hardware"><code>USB3</code></A>), and{' '}
             <code>CLONE_CONFIGURED</code> (the PC has enumerated the clone) are all set. The full
-            flags byte is on <A href="/native/commands/requests#health">HEALTH</A>.
+            flags word is on <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
       </div>

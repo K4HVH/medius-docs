@@ -175,6 +175,12 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
                 <td><code>medius_clip_builder_free</code></td>
               </tr>
               <tr>
+                <td><A href="/library/clip#frame"><code>MediusClipFrame</code></A></td>
+                <td><code>medius_clip_frame_new</code></td>
+                <td>-</td>
+                <td><code>medius_clip_frame_free</code></td>
+              </tr>
+              <tr>
                 <td><A href="/library/clip#handle"><code>MediusClip</code></A></td>
                 <td><code>medius_device_clip</code></td>
                 <td>-</td>

@@ -265,6 +265,7 @@ const DeviceInject = () => {
                   value={step()}
                   min={1}
                   max={32767}
+                  precision={0}
                   onChange={(v) => setStep(v ?? 1)}
                 />
               </div>
@@ -313,6 +314,7 @@ const DeviceInject = () => {
                   value={detents()}
                   min={1}
                   max={32767}
+                  precision={0}
                   onChange={(v) => setDetents(v ?? 1)}
                 />
               </div>
@@ -334,6 +336,7 @@ const DeviceInject = () => {
                   value={pans()}
                   min={1}
                   max={32767}
+                  precision={0}
                   onChange={(v) => setPans(v ?? 1)}
                 />
               </div>

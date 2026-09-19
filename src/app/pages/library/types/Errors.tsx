@@ -40,7 +40,10 @@ const Errors: Component = () => {
               </tr>
               <tr>
                 <td><code>NotFound</code></td>
-                <td>No device matched the expected VID/PID.</td>
+                <td>
+                  No port has the box's VID/PID, or no box matches the{' '}
+                  <A href="/library/discovery">discovery</A> id or predicate.
+                </td>
               </tr>
               <tr>
                 <td><code>NoReply</code></td>
@@ -53,9 +56,10 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>7</code>;{' '}
-                  <code>got</code> carries the reported value. See the{' '}
-                  <A href="/library/connection">handshake</A>.
+                  The box replied, but its <code>proto_ver</code> wasn't <code>8</code>;{' '}
+                  <code>got</code> carries the reported value. The{' '}
+                  <A href="/library/discovery">discovery</A> openers return it for a matched box on
+                  another protocol. See the <A href="/library/connection">handshake</A>.
                 </td>
               </tr>
               <tr>
@@ -136,16 +140,47 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ImperfectRequired</code></td>
                 <td>
-                  An <A href="/library/advanced/raw">advanced control layer</A> call while the imperfect-clone
-                  opt-in is off. Turn it on with{' '}
+                  <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> or{' '}
+                  <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> while the
+                  imperfect-clone opt-in is off. Turn it on with{' '}
                   <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.
                 </td>
               </tr>
               <tr>
                 <td><code>RawDirection {'{'} direction {'}'}</code></td>
                 <td>
-                  A <A href="/library/advanced/raw"><code>raw</code></A> call's direction was not{' '}
+                  A <A href="/library/advanced/raw"><code>raw</code></A> call's direction, or a{' '}
+                  <A href="/library/clip#frame"><code>ClipFrame</code></A> raw report's, was not{' '}
                   <code>IN</code> or <code>OUT</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipFrameCount {'{'} what, count, limit {'}'}</code></td>
+                <td>
+                  A <A href="/library/clip#frame"><code>ClipFrame</code></A> has <code>count</code> of{' '}
+                  <code>what</code> (edges or raw reports) and carries at most <code>limit</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipFrameTooLong {'{'} len {'}'}</code></td>
+                <td>
+                  A <code>ClipFrame</code> encodes to <code>len</code> bytes and one append carries at
+                  most 512 (<code>CLIP_ENTRY_MAX</code>). Split it across frames.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipTransferData {'{'} want, got {'}'}</code></td>
+                <td>
+                  A clip transfer has <code>got</code> data bytes where its setup packet announces{' '}
+                  <code>want</code>: <code>wLength</code> for an OUT request, none for an IN one.
+                </td>
+              </tr>
+              <tr>
+                <td><code>ClipPacketTrigger {'{'} reason {'}'}</code></td>
+                <td>
+                  A clip packet trigger in a shape the box refuses, caught before anything is sent;{' '}
+                  <code>reason</code> names which of the{' '}
+                  <A href="/library/clip#packet-triggers">refusals</A> it is.
                 </td>
               </tr>
               <tr>
@@ -153,6 +188,13 @@ const Errors: Component = () => {
                 <td>
                   A <A href="/library/advanced/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
                   <code>mask</code> were not the same length.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewriteMatchTooLong {'{'} len, limit {'}'}</code></td>
+                <td>
+                  A rewrite rule has <code>len</code> match bytes and the box compares at most{' '}
+                  <code>limit</code> (<code>REWRITE_MATCH_MAX</code>, 16).
                 </td>
               </tr>
               <tr>

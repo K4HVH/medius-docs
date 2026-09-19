@@ -43,8 +43,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.4.0
-println!("proto {}", v.proto_ver);     // proto 7
+println!("{v}");                       // fw 3.4.1
+println!("proto {}", v.proto_ver);     // proto 8
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -63,8 +63,8 @@ println!("name {}", v.name);           // Loki`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eight booleans from one
-            status byte. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
+            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eleven booleans from
+            one <code>u16</code> flags word. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
             <code>clone_configured</code> must all be true before{' '}
             <A href="/native/injection">injection</A> is emitted at all.
           </p>
@@ -291,7 +291,7 @@ if let Some(age) = c.clock.age {
             Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
             <code>state</code> (including{' '}
             <A href="/library/types/enums#clip-state"><code>Faulted</code></A>), ring <code>free</code>,
-            retained <code>played</code>/<code>total</code>, the drain counters, and the{' '}
+            retained <code>played</code>/<code>total</code>, the playback counters, and the{' '}
             <code>held</code> usages. Backs{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
           </p>
@@ -319,8 +319,9 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
             <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on the{' '}
             <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
             <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
-            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set. Every
-            setting round-trips.
+            loop, retain, finalized flag, and both kinds of{' '}
+            <A href="/library/clip#triggers">trigger</A> you set, each packet trigger with its{' '}
+            <code>hits</code>. Every setting round-trips.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -328,7 +329,8 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
 
 let device = Device::find()?;
 let cfg = device.clip().query_config()?;
-println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
+println!("{} input triggers, {} packet triggers, loop={}",
+    cfg.triggers.len(), cfg.packet_triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 

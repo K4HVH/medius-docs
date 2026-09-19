@@ -9,6 +9,8 @@ const mock = vi.hoisted(() => ({
   emit: { mode: 0, fixedHz: 0, resolvedHz: 0 } as { mode: number; fixedHz: number; resolvedHz: number },
   render: { mode: 2, full: false, ready: false } as { mode: number; full: boolean; ready: boolean },
   spread: { percent: 100, spanUs: 8000 } as { percent: number; spanUs: number },
+  // Every option write the card made, as [call, args].
+  sent: [] as [string, unknown[]][],
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -22,9 +24,15 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
       status: () => 'connected',
       updateOnly: () => false,
       link: () => ({
-        setBearing: async () => {},
-        setMovementRiding: async () => {},
-        setEmitPace: async () => {},
+        setBearing: async (...args: unknown[]) => {
+          mock.sent.push(['bearing', args]);
+        },
+        setMovementRiding: async (...args: unknown[]) => {
+          mock.sent.push(['riding', args]);
+        },
+        setEmitPace: async (...args: unknown[]) => {
+          mock.sent.push(['emit', args]);
+        },
         setRender: async () => {},
         setSpread: async () => {},
       }),
@@ -50,6 +58,7 @@ afterEach(() => {
   mock.emit = { mode: 0, fixedHz: 0, resolvedHz: 0 };
   mock.render = { mode: 2, full: false, ready: false };
   mock.spread = { percent: 100, spanUs: 8000 };
+  mock.sent = [];
 });
 
 describe('DeviceOptions', () => {
@@ -176,4 +185,60 @@ describe('DeviceOptions', () => {
 
   // window = 0 makes with/against inert without clearing them, so the readback still reports scales
   // that no longer weigh anything. It is a wire value, not a control.
+});
+
+// A number field by its label, the nth one of that name inside `root`.
+const numberField = (root: ParentNode, label: string, nth = 0): HTMLInputElement => {
+  const labels = [...root.querySelectorAll('label.number-input__label')].filter((l) => l.textContent?.trim() === label);
+  const el = labels[nth]?.parentElement?.querySelector('input');
+  if (!el) throw new Error(`no number field labelled ${label}`);
+  return el as HTMLInputElement;
+};
+// Types a fraction and leaves the field, which is when a number field takes what was typed.
+const typeFraction = async (el: HTMLInputElement) => {
+  fireEvent.input(el, { target: { value: '2.5' } });
+  fireEvent.blur(el);
+  await settle();
+};
+
+describe('DeviceOptions whole-number fields', () => {
+  // Emit fixed at 500 Hz with the wire rate forced, so both rate fields are on screen.
+  const forced = () => {
+    mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500, forceHz: 1000 } as typeof mock.emit;
+  };
+  // The button beside a field, in the same row of controls.
+  const beside = (el: HTMLElement, name: string) =>
+    [...(el.closest('[style*="flex"]')?.parentElement?.querySelectorAll('button') ?? [])].find(
+      (b) => b.textContent?.trim() === name,
+    ) as HTMLElement;
+
+  it.each([
+    ['movement riding window', 0, 'Turn on', 'riding', 0],
+    ['bearing window', 1, 'Apply', 'bearing', 0],
+  ] as const)('keeps the %s to a whole number, and sends what it shows', async (_what, nth, press, call, arg) => {
+    const { container } = render(() => <DeviceOptions />);
+    const el = numberField(container, 'Window (ms)', nth);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(beside(el, press));
+    await settle();
+    expect(mock.sent.filter(([c]) => c === call).map(([, a]) => a[arg])).toEqual([3]);
+  });
+
+  it.each([
+    ['Emit rate (Hz)', 1, 3],
+    ['Wire rate (Hz)', 2, 4],
+  ] as const)('keeps the %s to a whole number, and sends what it shows', async (field, arg, want) => {
+    forced();
+    const { container } = render(() => <DeviceOptions />);
+    const el = numberField(container, field);
+    // The wire rate floor is 4 Hz, so 2.5 would clamp to it whole; 4.4 is a fraction above it.
+    fireEvent.input(el, { target: { value: want === 4 ? '4.4' : '2.5' } });
+    fireEvent.blur(el);
+    await settle();
+    expect(el.value).toBe(String(want));
+    fireEvent.click(beside(el, 'Apply'));
+    await settle();
+    expect(mock.sent.filter(([c]) => c === 'emit').map(([, a]) => a[arg])).toEqual([want]);
+  });
 });

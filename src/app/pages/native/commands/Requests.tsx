@@ -158,7 +158,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 7</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 8</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -174,9 +174,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.4.0</code>, protocol <code>7</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.1</code>, protocol <code>8</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 07     | 03     | 04     | 00     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 08     | 03     | 04     | 01     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -843,12 +843,7 @@ const Requests: Component = () => {
             <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries), then the
             config tail.
           </p>
-          <p>
-            Read <code>free</code> before a{' '}
-            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> to avoid an overrun,
-            and <code>state</code> to see a fault or that playback finished.
-          </p>
-          <pre class="api-signature">QUERY  what = 10  ·  RESP 25-byte prefix + held usages + config</pre>
+          <pre class="api-signature">QUERY  what = 10  ·  RESP 31-byte prefix + held usages + config</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -858,24 +853,37 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>10</td></tr>
               <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (recover with <code>CLEAR</code>)</td></tr>
-              <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace top-ups off this, little-endian</td></tr>
+              <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> top-ups off this, little-endian</td></tr>
               <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>retained clip size in bytes (streaming: buffered-but-undrained bytes)</td></tr>
               <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
-              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks emitted since start (diagnostic)</td></tr>
+              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks played (diagnostic)</td></tr>
               <tr><td>18</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
               <tr><td>20</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
               <tr><td>22</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
-              <tr><td>24</td><td><code>held_n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>24</td><td><code>xfers</code></td><td><code>u16</code></td><td>clip transfers the device completed with status 0</td></tr>
+              <tr><td>26</td><td><code>xfer_errs</code></td><td><code>u16</code></td><td>clip transfers that completed with another status, got no answer, found no room in the queue, or were dropped behind a slow <code>0xFE</code></td></tr>
+              <tr><td>28</td><td><code>gated</code></td><td><code>u16</code></td><td>raw reports and transfers discarded because <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> was off</td></tr>
+              <tr><td>30</td><td><code>held_n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the held usage's id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
               <tr><td>+</td><td><code>autolock</code></td><td><code>u8</code></td><td>config: the <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> autolock bitmask (<code>CLIP_LOCK_*</code>)</td></tr>
               <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized, b3 ride</td></tr>
-              <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound triggers that follow</td></tr>
+              <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound <A href="/native/commands/clip#trigger">triggers</A> that follow</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per trigger: 0=button 1=key 2=media 0xFF=any</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
               <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
               <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
               <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = lock the trigger usage while it stays active</td></tr>
+              <tr><td>+</td><td><code>n_pkt</code></td><td><code>u8</code></td><td>config: number of <A href="/native/commands/clip#packet-triggers">packet triggers</A> that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per packet trigger: the traffic class, 4 to 9</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per packet trigger: the class's address, 0xFFFF=any, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>per packet trigger: 0 both / 1 IN / 2 OUT</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per packet trigger: the <code>CLIP_CTRL</code> op 0..5</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b0 clear, b1 consume, b2 <code>RUN</code></td></tr>
+              <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
+              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
+              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it won, saturating, little-endian</td></tr>
+              <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -893,9 +901,13 @@ const Requests: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             The held snapshot lists the usages the clip is currently forcing down, one class-tagged
-            entry each (3 bytes). The config tail mirrors what{' '}
-            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> and{' '}
-            <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> set.
+            entry each (3 bytes). <code>ticks</code> and the six counters count since boot and wrap.
+          </p>
+          <p>
+            A packet trigger reads back as the{' '}
+            <A href="/native/commands/clip#packet-triggers">command that set it</A> with{' '}
+            <code>hits</code> spliced in after <code>mlen</code> and bit0 (present) clear, so a host
+            replays one by setting bit0. The whole reply is at most 507 bytes, inside one frame.
           </p>
           <p>
             Library bindings:{' '}
@@ -905,22 +917,30 @@ const Requests: Component = () => {
             (<A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Idle, empty ring, no held usages, no autolock, no triggers (<code>state = 0</code>, <code>free = 1024</code>):</p>
+          <p>Idle, empty 64 KB ring, no held usages, no autolock, no triggers of either kind (<code>state = 0</code>, <code>free = 65536</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 1C 00  | 0A     | 00     | 00 04 00 00  |
+| A5     | 06     | 00     | 23 00  | 0A     | 00     | 00 00 01 00  |
 +--------+--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
 +--------+--------+--------+--------+--------+--------+--------------+
 
-| 00 04 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
+| 00 00 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
 +--------------+--------------+--------------+--------+--------+--------+
 | total        | played       | ticks        | undrun | ovrrun | seqgap |
 +--------------+--------------+--------------+--------+--------+--------+
 
-| 00     | 00     | 00     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+
-| held_n | autolk | flags  | n_trig | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+| 00 00  | 00 00  | 00 00  | 00     | 00     | 00     | 00     | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| xfers  |xfer_err| gated  | held_n | autolk | flags  | n_trig | n_pkt  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>
+            One packet trigger entry: <code>HID_IN</code> id <code>0x0102</code>, IN,{' '}
+            <code>TOGGLE</code>, consume and <code>RUN</code>, selector 1, <code>hits</code>{' '}
+            saturated.
+          </p>
+          <pre class="diagram">{`04 02 01 01 05 06 01 02 FF FF 07 20 FF 20
+   class=4 HID_IN   id=0x0102   dir=1 IN   action=5 TOGGLE   flags=0x06   slen=1   mlen=2
+   hits=65535   match=07 20   mask=FF 20`}</pre>
         </Card>
       </div>
 
@@ -987,7 +1007,7 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.4.0</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.1</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+

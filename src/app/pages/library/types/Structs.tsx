@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>7</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>8</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 7, fw_major: 3, fw_minor: 4, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.4.0"); // Display omits proto_ver
+let v = Version { proto_ver: 8, fw_major: 3, fw_minor: 4, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.1"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -498,14 +498,16 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <tbody>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
               <tr><td><code>Control</code></td><td>How the proxied transfer ended; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>.</td></tr>
+              <tr><td><code>ClipTransfer</code></td><td>How the clip's transfer ended; read it with <code>transfer_status()</code>, see <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A>.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
             </tbody>
           </table>
           <p>
-            A <code>Control</code> event is one completed transaction: <code>bytes</code> is the
-            8-byte SETUP packet then the data stage, and <code>direction</code> says which way that
-            data went. Requests answered from the box's descriptor cache still raise events.
+            A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
+            <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
+            <code>direction</code> says which way that data went. Requests answered from the box's
+            descriptor cache still raise events.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
@@ -1024,8 +1026,8 @@ for t in &table.entries {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>port</code></td><td><A href="/library/types/structs#port-info"><code>PortInfo</code></A></td><td>The control port (path and CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
-              <tr><td><code>device</code></td><td><A href="/library/types/structs#device-info"><code>DeviceInfo</code></A></td><td>The device it clones.</td></tr>
+              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version and control protocol, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
+              <tr><td><code>device</code></td><td><code>Option&lt;<A href="/library/types/structs#device-info">DeviceInfo</A>&gt;</code></td><td>The device it clones. <code>None</code> for a box whose <code>version.proto_ver</code> isn't <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>; opening that box returns <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -1076,8 +1078,8 @@ for t in &table.entries {
             A clip's configuration from{' '}
             <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>. You set
             these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
-            <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>);
-            this is the readback.
+            <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>,{' '}
+            <code>bind_packet</code>); this is the readback.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1088,12 +1090,16 @@ for t in &table.entries {
               <tr><td><code>finalized</code></td><td><code>bool</code></td><td>The clip is sealed: no more appends, ready to replay as a fixed sequence.</td></tr>
               <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's own clock.</td></tr>
               <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a physical edge.</td></tr>
+              <tr><td><code>packet_triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-packet-trigger-entry">ClipPacketTriggerEntry</A>&gt;</code></td><td>The bound packet triggers (up to 8), in the order the box holds them, each with its hit count.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let cfg = handle.query_config()?;
 if cfg.loop_ && cfg.finalized {
     println!("sealed looping clip, {} triggers", cfg.triggers.len());
+}
+for e in &cfg.packet_triggers {
+    println!("{:?} id {} -> {:?}, {} hits", e.trigger.class, e.trigger.id, e.trigger.action, e.hits);
 }`}</code></pre>
         </Card>
       </div>
@@ -1128,6 +1134,62 @@ handle.bind(trig)?;`}</code></pre>
         </Card>
       </div>
 
+      <div id="clip-packet-trigger" data-search-target>
+        <Card>
+          <CardHeader title="ClipPacketTrigger" subtitle="One packet binding that drives a clip" />
+          <pre class="api-signature">fn new(class: TrafficClass, id: u16, direction: Direction, action: ClipAction) -&gt; ClipPacketTrigger</pre>
+          <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; ClipPacketTrigger</pre>
+          <pre class="api-signature">fn consume(self) -&gt; ClipPacketTrigger</pre>
+          <pre class="api-signature">fn once_per_run(self, selector_len: u8) -&gt; ClipPacketTrigger</pre>
+          <p>
+            One packet binding for a clip, handed to{' '}
+            <A href="/library/clip#packet-triggers"><code>ClipHandle::bind_packet</code></A>. The box
+            keeps up to 8 (<code>CLIP_PKT_TRIG_MAX</code>), keyed by{' '}
+            <code>(class, id, direction, match_bytes, mask)</code>, with 112 match bytes between them
+            (<code>CLIP_PKT_MATCH_POOL</code>).
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class</code></td><td><A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A></td><td>The surface the packet crosses: <code>HidIn</code>, <code>HidOut</code>, <code>VendorInterrupt</code>, <code>VendorBulk</code>, <code>Control</code> or <code>Emit</code>.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ClipPacketTrigger::ANY_ID</code> (<code>0xFFFF</code>) for every id of the class.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the packet travels in: <code>IN</code>, <code>OUT</code> or <code>Both</code>. <code>With</code> and <code>Against</code> are <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run, on the frame clock's next tick.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, one length, 16 bytes at most (<code>PKT_MATCH_MAX</code>). A packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each; empty matches every packet on the address. <code>.matching()</code> sets both.</td></tr>
+              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Drop every packet the trigger wins, ahead of the rewrite table; a consumed <code>HidIn</code> report is the whole report. The box holds a consuming trigger only under the imperfect-clone opt-in; <code>.consume()</code> sets it true.</td></tr>
+              <tr><td><code>once_per_run</code></td><td><code>bool</code></td><td>Run the action on the first packet of a run of matching ones, where a plain trigger runs it on each; <code>.once_per_run(selector_len)</code> sets it true.</td></tr>
+              <tr><td><code>selector_len</code></td><td><code>u8</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition. <code>0</code> without.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
+
+// Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Start once per hold.
+let held = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start)
+    .matching([0x07, 0x20], [0xFF, 0x20])
+    .once_per_run(1);
+handle.bind_packet(&held)?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-packet-trigger-entry" data-search-target>
+        <Card>
+          <CardHeader title="ClipPacketTriggerEntry" subtitle="One packet trigger the box holds, read back" />
+          <pre class="api-signature">struct ClipPacketTriggerEntry {'{'} trigger: ClipPacketTrigger, hits: u16 {'}'}</pre>
+          <p>
+            One row of{' '}
+            <A href="/library/types/structs#clip-settings"><code>ClipSettings::packet_triggers</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>trigger</code></td><td><A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A></td><td>The trigger, in the shape <code>bind_packet</code> takes, so a read entry replays as a bind.</td></tr>
+              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. A <code>once_per_run</code> trigger wins every packet of a run and runs its action on the first.</td></tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="ClipStatus" subtitle="The buffered-clip ring and playback state" />
@@ -1144,10 +1206,13 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>free</code></td><td><code>u32</code></td><td>Free bytes in the ring, the headroom for the next append.</td></tr>
               <tr><td><code>total</code></td><td><code>u32</code></td><td>The retained clip size in bytes; while streaming, the buffered-but-undrained bytes.</td></tr>
               <tr><td><code>played</code></td><td><code>u32</code></td><td>Bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
-              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
+              <tr><td><code>ticks</code></td><td><code>u32</code></td><td>Content frames played since the box booted (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
+              <tr><td><code>xfers</code></td><td><code>u16</code></td><td>Clip <A href="/library/clip#frame">transfers</A> the device completed.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>u16</code></td><td>Clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer.</td></tr>
+              <tr><td><code>gated</code></td><td><code>u16</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
           </table>
@@ -1307,7 +1372,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code> (IN) or <code>Negative</code> (OUT). <code>With</code> and <code>Against</code> resolve at emit time, after a rule is addressed, so either is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet. One that does not fit the class is <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
-              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, or the rule is <A href="/library/types/errors#errors"><code>Error::RewriteMaskLength</code></A>; empty matches every packet on the address.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address.</td></tr>
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
             </tbody>
           </table>
@@ -1381,7 +1446,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             </thead>
             <tbody>
               <tr><td><code>section</code></td><td><A href="/library/types/enums#patch-section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
-              <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>.</td></tr>
+              <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>. <code>0</code> is the first configuration, not <code>bConfigurationValue</code>.</td></tr>
               <tr><td><code>index</code></td><td><code>u8</code></td><td>The interface or string index, for <code>Report</code> / <code>String</code>.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at.</td></tr>
               <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The overwrite bytes; empty removes the patch at this key.</td></tr>

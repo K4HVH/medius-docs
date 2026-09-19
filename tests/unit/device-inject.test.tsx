@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 
+const settle = () => new Promise((r) => setTimeout(r, 20));
+
 // Mutable mock state so each test can pose a different box.
 const mock = vi.hoisted(() => ({
   setHealth: (_v: unknown) => {},
@@ -262,5 +264,46 @@ describe('DeviceInject', () => {
     fireEvent.click(await findByText('Pan right'));
     fireEvent.click(await findByText('Pan left'));
     expect(mock.sent.filter((s) => s.kind === 'pan').map((s) => s.args)).toEqual([[1], [-1]]);
+  });
+});
+
+// A number field by its label, the nth one of that name inside `root`.
+const numberField = (root: ParentNode, label: string, nth = 0): HTMLInputElement => {
+  const labels = [...root.querySelectorAll('label.number-input__label')].filter((l) => l.textContent?.trim() === label);
+  const el = labels[nth]?.parentElement?.querySelector('input');
+  if (!el) throw new Error(`no number field labelled ${label}`);
+  return el as HTMLInputElement;
+};
+// Types a fraction and leaves the field, which is when a number field takes what was typed.
+const typeFraction = async (el: HTMLInputElement) => {
+  fireEvent.input(el, { target: { value: '2.5' } });
+  fireEvent.blur(el);
+  await settle();
+};
+
+describe('DeviceInject whole-number fields', () => {
+  it('keeps the cursor step to a whole number, and moves by what the field shows', async () => {
+    mock.setHealth(health());
+    const { container, findByText } = render(() => <DeviceInject />);
+    await findByText('Move right');
+    const el = numberField(container, 'Step');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(await findByText('Move right'));
+    expect(mock.sent.filter((s) => s.kind === 'move').map((s) => s.args)).toEqual([[3, 0]]);
+  });
+
+  it.each([
+    ['wheel', 0, 'Scroll up'],
+    ['pan', 1, 'Pan right'],
+  ])('keeps the %s detents to a whole number, and sends what the field shows', async (kind, nth, press) => {
+    mock.setHealth(health());
+    const { container, findByText } = render(() => <DeviceInject />);
+    await findByText(press);
+    const el = numberField(container, 'Detents', nth);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(await findByText(press));
+    expect(mock.sent.filter((s) => s.kind === kind).map((s) => s.args)).toEqual([[3]]);
   });
 });

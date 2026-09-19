@@ -82,6 +82,9 @@ import {
   parseResp,
   queryPayload,
   rebootPayload,
+  trafficData,
+  trafficSetup,
+  trafficTransferStatus,
   trafficTruncated,
   versionString,
   vidPid,
@@ -103,6 +106,8 @@ import {
   queryEntryPayload,
   parseTransferResp,
   RewriteAction,
+  RW_ACTION_COUNT,
+  rewriteActionName,
   PatchSection,
   TransformOp,
   TransferStatus,
@@ -168,6 +173,7 @@ describe('encode (vs Rust-crate vectors)', () => {
     expect(toHex(encode(FrameType.Reset, 2, new Uint8Array()))).toBe(VEC.empty_reset);
   });
   it('multi-byte payload (RESP VERSION shape)', () => {
+    // Protocol 1, firmware 0.1.0: the shared frame vector, which pins bytes, not a release.
     expect(
       toHex(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc]))),
     ).toBe(VEC.resp_version);
@@ -185,6 +191,7 @@ describe('encode (vs Rust-crate vectors)', () => {
 
 describe('FrameDecoder', () => {
   it('decodes a RESP(VERSION) frame and parseResp yields the version', () => {
+    // The shared frame vector: protocol 1, firmware 0.1.0.
     const frames = decodeAll(new FrameDecoder(), fromHex(VEC.resp_version));
     expect(frames).toHaveLength(1);
     expect(frames[0].ty).toBe(FrameType.Resp);
@@ -311,7 +318,7 @@ describe('FrameDecoder', () => {
 describe('parseResp / parseLog', () => {
   it('returns null for short or empty RESP payloads', () => {
     expect(parseResp(new Uint8Array())).toBeNull();
-    expect(parseResp(new Uint8Array([0, 1, 0, 1, 0]))).toBeNull(); // version needs 11 bytes (was 5, now carries the MAC)
+    expect(parseResp(new Uint8Array([0, 1, 0, 1, 0]))).toBeNull(); // version needs 11 bytes: the 5-byte reply of protocol 1 (0.1.0), before the MAC
     expect(parseResp(new Uint8Array([1]))).toBeNull(); // health needs 3 bytes: what + u16 flags
     expect(parseResp(new Uint8Array([1, 0x0f]))).toBeNull(); // a single flags byte is the proto-6 width
     expect(parseResp(new Uint8Array([9]))).toBeNull(); // OPTIONS needs an id byte
@@ -319,7 +326,8 @@ describe('parseResp / parseLog', () => {
   });
 
   it('decodes the ASCII name tail after the RESP(VERSION) header', () => {
-    // Bytes past the 11-byte header are the box name (ASCII, LEN-delimited), not trailing garbage.
+    // Bytes past the 11-byte header are the box name (ASCII, LEN-delimited), not trailing garbage. The
+    // header is protocol 1, firmware 2.3.4: the decoder reads any version byte.
     expect(
       parseResp(
         new Uint8Array([0, 1, 2, 3, 4, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x42, 0x6f, 0x78]),
@@ -468,6 +476,7 @@ describe('helpers', () => {
   });
 
   it('versionString formats major.minor.patch', () => {
+    // Protocol 1, firmware 0.1.0: the string reads only the firmware numbers.
     expect(versionString({ protoVer: 1, fwMajor: 0, fwMinor: 1, fwPatch: 0, mac: [], name: '' })).toBe('0.1.0');
   });
 });
@@ -576,11 +585,12 @@ describe('LOCK command (§3.8)', () => {
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // v7 opens the advanced control layer (raw/transfer/rewrite/patch) and widens HEALTH to a u16. A box on v6
-    // has no rewrite table, patch store or transfer opcode, and answers HEALTH in one byte; left at 6
-    // the handshake would accept it and the advanced control editor would find the missing wire by silence.
-    expect(PROTO_VER).toBe(7);
+  it('PROTO_VER matches the firmware that speaks this RESP(CLIP) and CLIP_TRIGGER', () => {
+    // v8 (firmware 3.4.1) widens RESP(CLIP)'s fixed prefix to 31 bytes and appends its packet triggers,
+    // adds packet triggers to CLIP_TRIGGER, and matches a vendor interrupt OUT packet as VEND_INTR. A box
+    // on v7 answers RESP(CLIP) in the older layout and takes no packet trigger; left at 7 the handshake
+    // would hand it the Clip card.
+    expect(PROTO_VER).toBe(8);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
@@ -887,7 +897,8 @@ describe('CATCH command (§3.9)', () => {
       CatchClass.Control,
       CatchClass.Emit,
       CatchClass.Bus,
-    ]).toEqual([4, 5, 6, 7, 8, 9, 10]);
+      CatchClass.ClipTransfer,
+    ]).toEqual([4, 5, 6, 7, 8, 9, 10, 11]);
     expect(CatchClass.Any).toBe(0xff);
     expect(CATCH_ID_ANY).toBe(LOCK_ID_ALL);
   });
@@ -1100,6 +1111,61 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     expect(ev?.id).toBe(0); // EP0
     expect(ev?.flags).toBe(0xfd);
     expect(ev?.bytes).toHaveLength(8); // setup only, no data stage arrived
+  });
+
+  it('splits a CONTROL transaction into its setup packet and its data stage', () => {
+    // GET_DESCRIPTOR(device) answered: setup 8, then the first bytes of the descriptor.
+    const ev = parseTrafficEvent(
+      fromHex('00 00 00 00 01 08 00 00 01 00 0c 00 80 06 00 01 00 00 12 00 12 01 00 02'),
+    )!;
+    expect(toHex(trafficSetup(ev)!)).toBe('80 06 00 01 00 00 12 00');
+    expect(toHex(trafficData(ev))).toBe('12 01 00 02');
+    // CONTROL's flags byte is the device's answer to the game PC, never a transfer status.
+    expect(trafficTransferStatus(ev)).toBeNull();
+  });
+
+  it('decodes a CLIP_XFER event: class 11, a transfer status in flags, setup then IN data', () => {
+    // A clip's GET_REPORT on EP0 that the device completed: device clock, IN, status 0, 3 bytes back.
+    const ev = parseTrafficEvent(
+      fromHex('10 27 00 00 01 0b 00 00 01 00 0b 00 a1 01 00 03 00 00 03 00 aa bb cc'),
+    )!;
+    expect(ev.cls).toBe(CatchClass.ClipTransfer);
+    expect(ev.clk).toBe(ClockDomain.Device);
+    expect(ev.id).toBe(0);
+    expect(ev.dir).toBe(In);
+    expect(trafficTransferStatus(ev)).toBe(TransferStatus.Ok);
+    expect(toHex(trafficSetup(ev)!)).toBe('a1 01 00 03 00 00 03 00');
+    expect(toHex(trafficData(ev))).toBe('aa bb cc');
+  });
+
+  it('reads every transfer status a CLIP_XFER event can carry', () => {
+    const withStatus = (status: string) =>
+      parseTrafficEvent(fromHex(`00 00 00 00 01 0b 00 00 02 ${status} 08 00 21 09 00 03 00 00 02 00`))!;
+    expect(trafficTransferStatus(withStatus('00'))).toBe(TransferStatus.Ok);
+    expect(trafficTransferStatus(withStatus('fd'))).toBe(TransferStatus.Stall);
+    expect(trafficTransferStatus(withStatus('fe'))).toBe(TransferStatus.Nak);
+    expect(trafficTransferStatus(withStatus('ff'))).toBe(TransferStatus.NoDevice);
+    expect(trafficTransferStatus(withStatus('fc'))).toBe(TransferStatus.Refused);
+    // An OUT transfer's event is the setup packet alone: the data stage went to the device.
+    expect(trafficData(withStatus('00'))).toHaveLength(0);
+  });
+
+  it('gives a CLIP_XFER event cut inside its setup packet no setup and no data', () => {
+    // The surviving bytes are the request. Handing them back as data would label a GET_DESCRIPTOR
+    // request as the descriptor it asked for.
+    const ev = parseTrafficEvent(fromHex('00 00 00 00 01 0b 00 00 01 00 1a 00 80 06 00 01'))!;
+    expect(trafficSetup(ev)).toBeNull();
+    expect(trafficData(ev)).toHaveLength(0);
+    expect(trafficTruncated(ev)).toBe(true);
+  });
+
+  it('leaves every other class whole: no setup, and the data is the packet', () => {
+    const ev = parseTrafficEvent(
+      fromHex('00 00 00 00 00 04 00 00 01 00 0a 00 01 02 03 04 05 06 07 08 09 0a'),
+    )!;
+    expect(trafficSetup(ev)).toBeNull();
+    expect(trafficData(ev)).toHaveLength(10);
+    expect(trafficTransferStatus(ev)).toBeNull();
   });
 
   it('accepts a header with no captured bytes, and returns null below the header', () => {
@@ -1754,6 +1820,16 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
     expect(toHex(r.rule.payload)).toBe('aa');
     // The readback replays byte-for-byte as the command that sets it (state pinned to 1).
     expect(toHex(rewritePayload(r.rule, 1))).toBe('08 00 00 00 01 02 02 00 02 21 09 ff ff aa');
+  });
+
+  it('knows nine rewrite actions, and reads a tenth as unknown', () => {
+    expect(RW_ACTION_COUNT).toBe(9);
+    // [12][flags][gen][n=1] then [cls=04][id=0002][dir=01][action=09][mlen=02][off=0000][plen=0003][hits=0001].
+    const table = parseResp(fromHex('0c 00 07 01 04 02 00 01 09 02 00 00 03 00 01 00'));
+    if (table?.kind !== 'rewrite') throw new Error('expected rewrite');
+    expect(table.rewrite.entries[0].action).toBeNull();
+    expect(rewriteActionName(table.rewrite.entries[0].action)).toBe('unknown');
+    expect(rewriteActionName(RewriteAction.ReplyReplace)).toBe('reply-replace');
   });
 
   it('decodes RESP(PATCHES): the applied/pending/refused/full flags and the list, len as u16', () => {

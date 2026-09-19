@@ -12,7 +12,8 @@ const Catch: Component = () => {
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> subscribes to what passes
           through the box: physical input, the vendor-interface endpoints, proxied control
           transactions, the raw bytes of HID interfaces the semantic model does not parse, what the
-          clone emitted, and the bus lifecycle.
+          clone emitted, the bus lifecycle, and the control transfers a{' '}
+          <A href="/native/commands/clip#items">clip</A> runs.
         </p>
         <p>
           A subscription is a <strong>table of <code>(class, id, dir)</code> entries</strong>,
@@ -35,7 +36,7 @@ const Catch: Component = () => {
                         | clk = 0, host chip    | clk = 1, device chip
                         |                       |
                         +- HID_IN               +- HID_OUT, every OUT direction
-                        +- VEND_INTR  IN        +- CONTROL
+                        +- VEND_INTR  IN        +- CONTROL, CLIP_XFER
                         +- VEND_BULK  IN        +- EMIT   (after inject + lock)
                         +- BTN KEY MEDIA AXIS   +- BUS
                            at the merge point,
@@ -90,13 +91,14 @@ const Catch: Component = () => {
               <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
               <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
               <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>must be <code>0xFFFF</code></td><td>every class</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">DIRECTION</div>
           <table class="api-params">
             <thead>
-              <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 10)</th></tr>
+              <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 11)</th></tr>
             </thead>
             <tbody>
               <tr><td><code>0</code> <code>BOTH</code></td><td>press and release</td><td>IN and OUT</td></tr>
@@ -229,7 +231,7 @@ const Catch: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
-              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
+              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
           <p>
@@ -382,9 +384,8 @@ const Catch: Component = () => {
         <Card>
           <CardHeader title="TRAFFIC_EVENT" subtitle="Bytes off any of the byte-oriented classes, box → PC" />
           <p>
-            One frame type carries <code>HID_IN</code>, <code>HID_OUT</code>,{' '}
-            <code>VEND_INTR</code>, <code>VEND_BULK</code>, <code>CONTROL</code>, <code>EMIT</code>{' '}
-            and <code>BUS</code>.{' '}
+            One frame type carries every{' '}
+            <A href="/native/commands/catch#catch">traffic class</A>, 4 to 11.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x16</code>.
           </p>
           <pre class="api-signature">TRAFFIC_EVENT  0x16  ·  payload 12 + n bytes</pre>
@@ -401,7 +402,7 @@ const Catch: Component = () => {
               <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint number or interface number, little-endian</td></tr>
               <tr><td>8</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN (device to PC), <code>2</code> = OUT (PC to device), <code>0</code> for <code>BUS</code>, which is not a transfer</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>class-specific (table below)</td></tr>
-              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>the packet's length <em>before</em> <code>snaplen</code> truncation, little-endian</td></tr>
+              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>the packet's length <em>before</em> truncation, by <code>snaplen</code> or by the 172-byte cap on a control data stage, little-endian</td></tr>
               <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> delimits how many arrived</td></tr>
             </tbody>
           </table>
@@ -421,15 +422,16 @@ const Catch: Component = () => {
             <tbody>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
               <tr><td><code>CONTROL</code></td><td>how the transaction completed: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> NAK to timeout</td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/library/advanced/transfer#transfer"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> NAK to timeout or no answer, <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
               <tr><td>every other class</td><td><code>0</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONTROL EVENTS</div>
           <p>
-            <code>CONTROL</code> carries one event per <em>completed transaction</em>, not one per
-            stage: <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> says which
-            way the data stage went.
+            <code>CONTROL</code> carries one event per <em>completed transaction</em>:{' '}
+            <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> says which way
+            the data stage went.
           </p>
           <p>
             A request served from the box's own value cache still produces an event.
@@ -437,11 +439,20 @@ const Catch: Component = () => {
           <pre class="diagram">{`  bytes = 80 06 00 01 00 00 12 00   12 01 00 02 00 00 00 40 ...
           '------ setup (8) ------'   '---- data stage -------'
           GET_DESCRIPTOR(device)      dir = 1 (IN), flags = 0 (completed OK)`}</pre>
+          <div class="api-response-label">CLIP_XFER EVENTS</div>
+          <p>
+            <code>CLIP_XFER</code> carries one event per control transfer a{' '}
+            <A href="/native/commands/clip#items">clip</A> sent to the real device, in{' '}
+            <code>CONTROL</code>'s shape: <code>bytes</code> is <code>[setup 8][IN data]</code>.
+          </p>
+          <p>
+            Only a transfer the box sent raises an event; the rest are counted in{' '}
+            <A href="/native/commands/requests#clip"><code>RESP(CLIP)</code></A>.
+          </p>
           <div class="api-response-label">BUS EVENT KINDS</div>
           <p>
             <code>BUS</code> carries <code>[a][b]</code> in <code>bytes</code> with the kind in{' '}
-            <code>flags</code>. A bus event is not a transfer, so its <code>dir</code> is <code>0</code>{' '}
-            and <code>true_len</code> is just the operand count.
+            <code>flags</code>, and <code>true_len</code> is the operand count.
           </p>
           <p>
             The same events drive <A href="/native/commands/requests#health">HEALTH</A> bits and{' '}
@@ -468,8 +479,8 @@ const Catch: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <p>
             A 64-byte vendor interrupt report arriving IN on endpoint <code>0x83</code>, captured
-            under a <code>snaplen = 16</code> entry (<code>class = 6</code>, <code>dir = 1</code>,{' '}
-            <code>true_len = 64</code>, 16 bytes present, so payload <code>LEN = 28</code>):
+            under a <code>snaplen = 16</code> entry (16 bytes present, so payload{' '}
+            <code>LEN = 28</code>):
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
 | A5     | 16     | 3C     | 1C 00  | 40 42 0F 00 | 00     | 06     | 83 00  | 01     |
@@ -483,9 +494,8 @@ const Catch: Component = () => {
 | flags  |true_len| bytes: 16 of 64, so the rest was cut  | CRC16  |
 +--------+--------+---------------------------------------+--------+`}</pre>
           <p>
-            A <code>SET_INTERFACE</code> bus event on interface 1, alternate setting 2 (
-            <code>class = 10</code>, <code>flags = 5</code>, two operand bytes, so payload{' '}
-            <code>LEN = 14</code>):
+            A <code>SET_INTERFACE</code> bus event on interface 1, alternate setting 2 (two operand
+            bytes, so payload <code>LEN = 14</code>):
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
 | A5     | 16     | 3D     | 0E 00  | 41 42 0F 00 | 01     | 0A     | 00 00  | 00     |
@@ -510,7 +520,7 @@ const Catch: Component = () => {
           <pre class="diagram">{`  BTN KEY MEDIA AXIS BUS    -->  [ queue 0 ]  --+
   HID_IN HID_OUT                                |
   VEND_INTR EMIT            -->  [ queue 1 ]  --+--->  control link, 6 Mbaud
-  CONTROL                   -->  [ queue 2 ]  --+
+  CONTROL CLIP_XFER         -->  [ queue 2 ]  --+
   VEND_BULK                 -->  [ queue 3 ]  --+
 
   strict priority: each queue drains fully before the next`}</pre>

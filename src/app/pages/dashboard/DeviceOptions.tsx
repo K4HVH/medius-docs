@@ -323,6 +323,7 @@ const DeviceOptions = () => {
                   value={rideWindow()}
                   min={1}
                   max={65535}
+                  precision={0}
                   onChange={(v) => setRideEdit(v ?? 1)}
                 />
               </div>
@@ -379,6 +380,7 @@ const DeviceOptions = () => {
                   value={bearWindow()}
                   min={1}
                   max={65535}
+                  precision={0}
                   onChange={(v) => setBearEdit(v ?? 1)}
                 />
               </div>
@@ -572,6 +574,7 @@ const DeviceOptions = () => {
                     value={hz()}
                     min={1}
                     max={1000}
+                    precision={0}
                     onChange={(v) => setHzEdit(v ?? 1)}
                   />
                 </div>
@@ -583,6 +586,7 @@ const DeviceOptions = () => {
                     value={forceHz()}
                     min={4}
                     max={1000}
+                    precision={0}
                     onChange={(v) => setForceEdit(v ?? 4)}
                   />
                 </div>

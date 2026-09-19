@@ -4,8 +4,15 @@ import {
   CLIP_EDGES_MAX,
   CLIP_ENTRY_MAX,
   CLIP_F_EDGES,
+  CLIP_F_PAN,
+  CLIP_F_RAW,
   CLIP_F_WHEEL,
+  CLIP_F_XFER,
   CLIP_F_XY,
+  CLIP_PKT_MATCH_MAX,
+  CLIP_PKT_MATCH_POOL,
+  CLIP_PKT_TRIG_MAX,
+  CLIP_RAW_MAX,
   CLIP_TAG_GAP,
   ClipOp,
   ClipState,
@@ -30,6 +37,7 @@ import {
   PatchSection,
   TransformOp,
   TransferStatus,
+  transferStatusFromU8,
 } from './opcode';
 
 export interface Version {
@@ -434,6 +442,7 @@ export enum CatchClass {
   Control = 8,
   Emit = 9,
   Bus = 10,
+  ClipTransfer = 11,
   Any = 0xff,
 }
 
@@ -598,19 +607,19 @@ export interface UsageSnapshot {
 
 // One byte-oriented event from the CATCH stream (a TRAFFIC_EVENT frame, §4.10): the HID interfaces
 // the semantic model does not parse, the vendor endpoints, proxied control transactions, what the
-// clone emitted, and the bus lifecycle.
+// clone emitted, the bus lifecycle, and the control transfers a clip ran.
 export interface TrafficEvent {
   tsUs: number;
   // Which chip stamped it. IN traffic and the input classes come from the host chip; OUT traffic,
-  // control, emit and bus are stamped on the device chip at the tap.
+  // control, clip transfers, emit and bus are stamped on the device chip at the tap.
   clk: ClockDomain;
   cls: CatchClass;
   // Endpoint address, interface number, or endpoint number, depending on the class.
   id: number;
   // In (device to PC) or Out (PC to device).
   dir: Direction;
-  // Class-specific: end-of-transfer / ZLP bits for VendorBulk, the device's answer for Control, the
-  // BusEventKind for Bus, 0 otherwise.
+  // Class-specific: end-of-transfer / ZLP bits for VendorBulk, the device's answer for Control, a
+  // TransferStatus for ClipTransfer, the BusEventKind for Bus, 0 otherwise.
   flags: number;
   // The packet's length before capture truncation. Without it a packet cut short by capture and a
   // genuinely short packet are indistinguishable.
@@ -622,6 +631,32 @@ export interface TrafficEvent {
 // True when this event's bytes were cut short by the entry's capture length.
 export function trafficTruncated(ev: TrafficEvent): boolean {
   return ev.bytes.length < ev.trueLen;
+}
+
+// The two classes whose bytes are [setup 8][data]: a proxied control transaction, and a control
+// transfer a clip ran.
+const controlShaped = (ev: TrafficEvent): boolean =>
+  ev.cls === CatchClass.Control || ev.cls === CatchClass.ClipTransfer;
+
+// The 8-byte setup packet of a Control or ClipTransfer event, or null for any other class and for a
+// capture that cut the setup packet itself short.
+export function trafficSetup(ev: TrafficEvent): Uint8Array | null {
+  return controlShaped(ev) && ev.bytes.length >= 8 ? ev.bytes.subarray(0, 8) : null;
+}
+
+// The data stage of a Control or ClipTransfer event; the whole packet for any other class. Empty when
+// the capture cut the setup packet short: the surviving bytes are the request, and returning them
+// would label a GET_DESCRIPTOR request as the descriptor.
+export function trafficData(ev: TrafficEvent): Uint8Array {
+  if (!controlShaped(ev)) return ev.bytes;
+  return ev.bytes.length >= 8 ? ev.bytes.subarray(8) : new Uint8Array(0);
+}
+
+// How a clip's control transfer ended, for a ClipTransfer event: the status a TRANSFER returns, Nak
+// when no answer came. Null for every other class, Control included, whose flags byte is the
+// device's answer to the game PC's request.
+export function trafficTransferStatus(ev: TrafficEvent): TransferStatus | null {
+  return ev.cls === CatchClass.ClipTransfer ? transferStatusFromU8(ev.flags) : null;
 }
 
 // True when the given usage is held in this snapshot.
@@ -685,36 +720,111 @@ export interface ClipEdge {
   action: Action;
 }
 
+// One raw report inside a clip tick: RAW's payload (§3.14) with its length. In puts the bytes on
+// cloned IN endpoint `ep`, Out relays them to the real device.
+export interface ClipRawItem {
+  ep: number;
+  dir: Direction;
+  bytes: Uint8Array;
+}
+
+// The five fields of a USB setup packet, under their specification names.
+export interface SetupPacket {
+  bmRequestType: number;
+  bRequest: number;
+  wValue: number;
+  wIndex: number;
+  wLength: number;
+}
+
+// One control transfer inside a clip tick: TRANSFER's payload (§3.14). `out` is wLength bytes when
+// bmRequestType bit 7 is clear and empty when it is set. The answer comes back as a ClipTransfer event.
+export interface ClipTransferItem {
+  ep: number;
+  setup: SetupPacket;
+  out: Uint8Array;
+}
+
 // One clip tick's content. A tick with no fields at all cannot be encoded: its flags byte would be
 // zero, which is the gap tag. Use a gap run to say "nothing happened for N ticks".
 export interface ClipTick {
   // Both cursor axes travel together, because the wire flag covers the pair.
   xy?: { dx: number; dy: number };
   wheel?: number;
+  pan?: number;
   edges?: ClipEdge[];
+  // Both ride OPTION(IMPERFECT), read as the tick plays: with it off the box discards the item and
+  // counts it in ClipStatus.gated.
+  raw?: ClipRawItem[];
+  transfers?: ClipTransferItem[];
 }
 
 export type ClipEntry = ({ kind: 'gap'; ticks: number } | ({ kind: 'tick' } & ClipTick));
 
-// Encode one clip entry (§3.11). Returns null for an entry the box would reject or misread, rather
-// than a nearest-legal guess: a clamped clip plays back as something the caller never
-// recorded.
-export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
+// Why an entry cannot be encoded (§3.11), in the order the checks run.
+export type ClipEntryFault =
+  | 'gap' // a gap run outside 1..65535 whole ticks
+  | 'edges' // more than CLIP_EDGES_MAX edges
+  | 'raw-count' // more than CLIP_RAW_MAX raw reports
+  | 'empty' // a content tick with no fields
+  | 'raw-direction' // a raw report going neither In nor Out
+  | 'transfer-data' // OUT data that is not wLength bytes, or any data on an IN request
+  | 'too-long'; // past CLIP_ENTRY_MAX bytes
+
+const CLIP_RAW_HDR = 4;
+const CLIP_XFER_HDR = 9;
+
+const transferOutLen = (s: SetupPacket): number => (s.bmRequestType & 0x80 ? 0 : s.wLength & 0xffff);
+
+// What is wrong with an entry, or null when it encodes. The box faults the clip on an entry that
+// can never be valid, so these are refused here before anything is sent.
+export function clipEntryFault(e: ClipEntry): ClipEntryFault | null {
   if (e.kind === 'gap') {
-    if (!Number.isInteger(e.ticks) || e.ticks < 1 || e.ticks > 0xffff) return null;
-    return new Uint8Array([CLIP_TAG_GAP, e.ticks & 0xff, (e.ticks >> 8) & 0xff]);
+    return Number.isInteger(e.ticks) && e.ticks >= 1 && e.ticks <= 0xffff ? null : 'gap';
   }
   const edges = e.edges ?? [];
-  if (edges.length > CLIP_EDGES_MAX) return null;
+  const raw = e.raw ?? [];
+  const transfers = e.transfers ?? [];
+  if (edges.length > CLIP_EDGES_MAX) return 'edges';
+  if (raw.length > CLIP_RAW_MAX) return 'raw-count';
+  if (clipTickFlags(e) === 0) return 'empty';
+  if (raw.some((r) => r.dir !== Direction.Positive && r.dir !== Direction.Negative)) return 'raw-direction';
+  if (transfers.some((t) => t.out.length !== transferOutLen(t.setup))) return 'transfer-data';
+  return clipTickSize(e) > CLIP_ENTRY_MAX ? 'too-long' : null;
+}
+
+function clipTickFlags(e: ClipTick): number {
   let flags = 0;
   if (e.xy) flags |= CLIP_F_XY;
   if (e.wheel !== undefined) flags |= CLIP_F_WHEEL;
-  if (edges.length > 0) flags |= CLIP_F_EDGES;
-  if (flags === 0) return null;
-  const out = new Uint8Array(CLIP_ENTRY_MAX);
-  const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+  if (e.pan !== undefined) flags |= CLIP_F_PAN;
+  if (e.edges?.length) flags |= CLIP_F_EDGES;
+  if (e.raw?.length) flags |= CLIP_F_RAW;
+  if (e.transfers?.length) flags |= CLIP_F_XFER;
+  return flags;
+}
+
+function clipTickSize(e: ClipTick): number {
+  let n = 1;
+  if (e.xy) n += 4;
+  if (e.wheel !== undefined) n += 2;
+  if (e.pan !== undefined) n += 2;
+  if (e.edges?.length) n += 1 + 4 * e.edges.length;
+  if (e.raw?.length) n += 1 + e.raw.reduce((sum, r) => sum + CLIP_RAW_HDR + r.bytes.length, 0);
+  if (e.transfers?.length) n += 1 + e.transfers.reduce((sum, t) => sum + CLIP_XFER_HDR + t.out.length, 0);
+  return n;
+}
+
+// Encode one clip entry (§3.11). Returns null for an entry the box would reject or misread, rather
+// than a nearest-legal guess: a clamped clip plays back as something the caller never
+// recorded. `clipEntryFault` says why.
+export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
+  if (clipEntryFault(e) !== null) return null;
+  if (e.kind === 'gap') return new Uint8Array([CLIP_TAG_GAP, e.ticks & 0xff, (e.ticks >> 8) & 0xff]);
+  const out = new Uint8Array(clipTickSize(e));
+  const view = new DataView(out.buffer);
   let off = 0;
-  out[off++] = flags;
+  out[off++] = clipTickFlags(e);
   if (e.xy) {
     view.setInt16(off, i16(e.xy.dx), true);
     view.setInt16(off + 2, i16(e.xy.dy), true);
@@ -724,16 +834,45 @@ export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
     view.setInt16(off, i16(e.wheel), true);
     off += 2;
   }
-  if (edges.length > 0) {
-    out[off++] = edges.length;
-    for (const ed of edges) {
+  if (e.pan !== undefined) {
+    view.setInt16(off, i16(e.pan), true);
+    off += 2;
+  }
+  if (e.edges?.length) {
+    out[off++] = e.edges.length;
+    for (const ed of e.edges) {
       out[off++] = ed.cls;
       view.setUint16(off, ed.id & 0xffff, true);
       off += 2;
       out[off++] = ed.action;
     }
   }
-  return out.subarray(0, off);
+  if (e.raw?.length) {
+    out[off++] = e.raw.length;
+    for (const r of e.raw) {
+      out[off++] = r.ep & 0x0f;
+      out[off++] = r.dir;
+      view.setUint16(off, r.bytes.length, true);
+      off += 2;
+      out.set(r.bytes, off);
+      off += r.bytes.length;
+    }
+  }
+  if (e.transfers?.length) {
+    out[off++] = e.transfers.length;
+    for (const t of e.transfers) {
+      out[off++] = t.ep & 0xff;
+      out[off++] = t.setup.bmRequestType & 0xff;
+      out[off++] = t.setup.bRequest & 0xff;
+      view.setUint16(off, t.setup.wValue & 0xffff, true);
+      view.setUint16(off + 2, t.setup.wIndex & 0xffff, true);
+      view.setUint16(off + 4, t.setup.wLength & 0xffff, true);
+      off += 6;
+      out.set(t.out, off);
+      off += t.out.length;
+    }
+  }
+  return out;
 }
 
 function i16(v: number): number {
@@ -753,6 +892,40 @@ export type ClipTriggerAction =
 
 export const isTriggerAction = (op: number): op is ClipTriggerAction => op >= ClipOp.Start && op <= ClipOp.Toggle;
 
+// The verbs a trigger may run, in wire order.
+export const CLIP_VERBS: ClipTriggerAction[] = [
+  ClipOp.Start,
+  ClipOp.Stop,
+  ClipOp.Pause,
+  ClipOp.Resume,
+  ClipOp.Restart,
+  ClipOp.Toggle,
+];
+
+// The engine verb's short name, for a trigger readout and the verb picker.
+export function clipOpName(op: ClipOp): string {
+  switch (op) {
+    case ClipOp.Start:
+      return 'start';
+    case ClipOp.Stop:
+      return 'stop';
+    case ClipOp.Pause:
+      return 'pause';
+    case ClipOp.Resume:
+      return 'resume';
+    case ClipOp.Restart:
+      return 'restart';
+    case ClipOp.Toggle:
+      return 'toggle';
+    case ClipOp.Clear:
+      return 'clear';
+    case ClipOp.Finalize:
+      return 'finalize';
+    default:
+      return 'unknown';
+  }
+}
+
 // One stored clip trigger (§3.11): an input edge that runs an engine verb. `consume` hides the
 // trigger input from the game, so the key that starts a clip does not also reach it.
 export interface ClipTrigger {
@@ -770,13 +943,19 @@ export interface ClipStatus {
   // Ring bytes free and used. `freeBytes` is the only flow-control signal an appending client has.
   freeBytes: number;
   totalBytes: number;
-  // Ticks played and ticks in the clip. Both reset on CLEAR.
+  // Bytes played from the clip start, and content ticks played since boot.
   played: number;
   ticks: number;
   // Ran out of buffered ticks mid-play; appended past the ring; append SEQ discontinuities.
   underruns: number;
   overruns: number;
   seqGaps: number;
+  // Clip transfers the device completed; ones that ended any other way (another status, no answer, no
+  // room in the box's queue, dropped behind a slow one); raw reports and transfers discarded because
+  // OPTION(IMPERFECT) was off. Like `ticks` and the three above, since boot and wrapping.
+  xfers: number;
+  xferErrs: number;
+  gated: number;
   // Usages the clip is holding down. A clip stopped mid-hold leaves these set until the engine
   // releases them, so this is how a UI shows what playback still owns.
   held: Usage[];
@@ -787,6 +966,7 @@ export interface ClipStatus {
   // Whether the clip's motion waits to ride a native report (CLIP_SET ride). Off = the box's own clock.
   ride: boolean;
   triggers: ClipTrigger[];
+  packetTriggers: ClipPacketTriggerEntry[];
 }
 
 export const clipStateLabel = (s: ClipState): string =>
@@ -802,6 +982,114 @@ export const clipStateLabel = (s: ClipState): string =>
 // under: setting one overwrites the other rather than adding a second binding.
 export const sameTrigger = (a: ClipTrigger, b: ClipTrigger): boolean =>
   a.cls === b.cls && a.id === b.id && a.edge === b.edge;
+
+// One packet trigger (§3.11): a packet on a traffic surface whose head matches under the mask runs an
+// engine verb on the box's next tick. `id` is the interface or endpoint number CATCH and REWRITE give
+// the class, or CATCH_ID_ANY. `consume` keeps the packet the trigger wins off the wire. With
+// `oncePerRun` the verb runs on the first of a run of matching packets: the first `selectorLen` match
+// bytes select the stream within its address (a report ID) and the rest are the condition.
+export interface ClipPacketTrigger {
+  cls: number;
+  id: number;
+  dir: Direction;
+  action: ClipTriggerAction;
+  consume: boolean;
+  oncePerRun: boolean;
+  selectorLen: number;
+  match: Uint8Array;
+  mask: Uint8Array;
+}
+
+// One packet trigger as RESP(CLIP) lists it (§4.15): the trigger, which replays as the command that
+// set it, and the packets it has won, saturating at 65535.
+export interface ClipPacketTriggerEntry extends ClipPacketTrigger {
+  hits: number;
+}
+
+// The surfaces a packet trigger can watch: the traffic classes, in wire order.
+export const CLIP_PKT_CLASSES: CatchClass[] = [
+  CatchClass.HidIn,
+  CatchClass.HidOut,
+  CatchClass.VendorInterrupt,
+  CatchClass.VendorBulk,
+  CatchClass.Control,
+  CatchClass.Emit,
+];
+
+const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
+
+// True when two packet triggers share the key the box stores them under, so setting one overwrites
+// the other: the address, and the match and mask bytes.
+export const samePacketTrigger = (a: ClipPacketTrigger, b: ClipPacketTrigger): boolean =>
+  a.cls === b.cls && a.id === b.id && a.dir === b.dir && sameBytes(a.match, b.match) && sameBytes(a.mask, b.mask);
+
+export type ClipPacketTriggerFault =
+  | 'class' // not one of the six traffic surfaces
+  | 'direction' // not Both, In or Out
+  | 'verb' // past Toggle
+  | 'mask-length' // match and mask differ in length
+  | 'match-length' // past CLIP_PKT_MATCH_MAX bytes
+  | 'class-direction' // a direction the class never carries: HID in or Emit with Out, HID out with In
+  | 'match-outside-mask' // a match bit outside its mask, which no packet can meet
+  | 'consume-control' // a drop has no meaning on a control request
+  | 'consume-opt-in' // consuming drops traffic, which needs OPTION(IMPERFECT)
+  | 'run-stream' // a run is over one stream: a class other than Control, one id, In or Out
+  | 'run-selector' // the match must run past the selector
+  | 'run-condition' // no masked bit past the selector, so the run would never end
+  | 'selector' // a selector without once per run
+  | 'full' // CLIP_PKT_TRIG_MAX held and this key is new
+  | 'pool'; // the set's match bytes would pass CLIP_PKT_MATCH_POOL
+
+// What the box holds that decides a set: the opt-in, and the packet triggers already stored.
+export interface ClipPacketTriggerBox {
+  imperfect: boolean;
+  held: readonly ClipPacketTrigger[];
+}
+
+// The directions a class carries: HID in and Emit travel In only, HID out travels Out only, and the
+// vendor and control classes travel both ways. Both is a wildcard, so every class takes it.
+export const clipPacketDirOk = (cls: number, dir: Direction): boolean => {
+  if (dir === Direction.Negative) return cls !== CatchClass.HidIn && cls !== CatchClass.Emit;
+  if (dir === Direction.Positive) return cls !== CatchClass.HidOut;
+  return true;
+};
+
+// Why the box would refuse this key, or null when it names a trigger: the checks a removal shares
+// with a set. A key no packet can match names nothing the box holds.
+export function clipPacketKeyFault(t: ClipPacketTrigger): ClipPacketTriggerFault | null {
+  if (!CLIP_PKT_CLASSES.includes(t.cls)) return 'class';
+  if (t.dir !== Direction.Both && t.dir !== Direction.Positive && t.dir !== Direction.Negative) return 'direction';
+  if (t.match.length !== t.mask.length) return 'mask-length';
+  if (t.match.length > CLIP_PKT_MATCH_MAX) return 'match-length';
+  if (!clipPacketDirOk(t.cls, t.dir)) return 'class-direction';
+  if (t.match.some((b, i) => (b & ~t.mask[i] & 0xff) !== 0)) return 'match-outside-mask';
+  return null;
+}
+
+// Why the box would refuse to set this trigger, or null when it stores it. CLIP_TRIGGER has no reply
+// and a refused frame is dropped whole, so this is the only place the reason exists. Without `box`
+// only the checks that need no box state run. An overwrite takes no slot and no pool bytes, since
+// the key carries the match.
+export function clipPacketTriggerFault(
+  t: ClipPacketTrigger,
+  box?: ClipPacketTriggerBox,
+): ClipPacketTriggerFault | null {
+  const key = clipPacketKeyFault(t);
+  if (key !== null) return key;
+  if (!isTriggerAction(t.action)) return 'verb';
+  if (t.consume && t.cls === CatchClass.Control) return 'consume-control';
+  if (t.consume && box && !box.imperfect) return 'consume-opt-in';
+  if (t.oncePerRun) {
+    if (t.cls === CatchClass.Control || t.id === CATCH_ID_ANY || t.dir === Direction.Both) return 'run-stream';
+    if (t.selectorLen >= t.match.length) return 'run-selector';
+    if (t.mask.subarray(t.selectorLen).every((b) => b === 0)) return 'run-condition';
+  } else if (t.selectorLen !== 0) return 'selector';
+  if (!box || box.held.some((h) => samePacketTrigger(h, t))) return null;
+  if (box.held.length >= CLIP_PKT_TRIG_MAX) return 'full';
+  const used = box.held.reduce((n, h) => n + h.match.length, 0);
+  return used + t.match.length > CLIP_PKT_MATCH_POOL ? 'pool' : null;
+}
 
 export enum LogLevel {
   Error = 0,

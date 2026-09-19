@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
+import { PROTO_VER } from '../../src/dashboard/protocol';
 
 // The stand-in is built on REAL signals. Plain-object accessors meant the page never observed a
 // state change the context made, so mutations that broke whole screens left every test green.
@@ -15,10 +16,10 @@ const st = vi.hoisted(() => ({
       fwPatch: number;
       mac: number[];
       name: string;
-    } | null>({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' });
+    } | null>(null);
     const [firmwareInfo, setFirmwareInfo] = createSignal<unknown>({
-      device: { major: 3, minor: 2, patch: 0, slot: 0, state: 1 },
-      host: { major: 3, minor: 2, patch: 0, slot: 0, state: 1 },
+      device: { major: 3, minor: 4, patch: 1, slot: 0, state: 1 },
+      host: { major: 3, minor: 4, patch: 1, slot: 0, state: 1 },
       slotSize: 1,
       deviceStaged: false,
       hostStaged: false,
@@ -85,7 +86,7 @@ vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.holdReleases) await new Promise(() => {});
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
-    return [{ tag: 'v3.2.0', assets: mock.assets }];
+    return [{ tag: 'v3.4.1', assets: mock.assets }];
   },
   downloadAsset: async () => new Uint8Array([1]),
 }));
@@ -95,8 +96,14 @@ vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
 import Update from '../../src/app/pages/dashboard/Update';
 
+// The box runs the release it is offered: 3.4.1 on the current wire. One that reverts lands on 3.4.0,
+// protocol 7.
+const ON_RELEASE = { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' };
+const REVERTED = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' };
+
 const mount = () => {
   mock.s = st.make();
+  mock.s.setVersion(ON_RELEASE);
   return render(() => <Update />);
 };
 
@@ -112,8 +119,8 @@ afterEach(() => {
 
 const dev = { name: 'medius_device.bin', size: 1, url: 'd' };
 const host = { name: 'medius_host.bin', size: 1, url: 'h' };
-const reverted = { major: 3, minor: 1, patch: 0, slot: 0, state: 1 };
-const onRelease = { major: 3, minor: 2, patch: 0, slot: 0, state: 1 };
+const reverted = { major: 3, minor: 4, patch: 0, slot: 0, state: 1 };
+const onRelease = { major: 3, minor: 4, patch: 1, slot: 0, state: 1 };
 const fw = (h: typeof reverted, d = onRelease) => ({
   device: d,
   host: h,
@@ -199,7 +206,7 @@ describe('Update', () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/updated and verified/i));
-    expect(r.container.textContent).toMatch(/3\.2\.0/);
+    expect(r.container.textContent).toMatch(/3\.4\.1/);
   });
 
   it('the mouse-side chip reverting is not verified, even though the main chip moved', async () => {
@@ -226,7 +233,7 @@ describe('Update', () => {
   it('a box that comes back on the old version is not called updated', async () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);
-    mock.s!.setVersion({ protoVer: 5, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [], name: '' });
+    mock.s!.setVersion(REVERTED);
     await waitFor(() =>
       expect(r.container.textContent).toMatch(/not on the version that was sent/i),
     );
@@ -243,13 +250,13 @@ describe('Update', () => {
   });
 
   it('reconnecting after a never-came-back update does not sign off a box that reverted', async () => {
-    // This arm used to say "Your box is back on v3.1.0" with a Finish button: the update having
-    // failed, presented as the end of the flow.
+    // "Your box is back on v3.4.0" with a Finish button here would present a failed update as the end
+    // of the flow.
     mock.assets = [dev, host];
     mock.outcome = 'sent';
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
-    mock.s!.setVersion({ protoVer: 5, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [], name: '' });
+    mock.s!.setVersion(REVERTED);
     r.getByRole('button', { name: /^connect$/i }).click();
     await waitFor(() =>
       expect(r.container.textContent).toMatch(/not on the version that was sent/i),

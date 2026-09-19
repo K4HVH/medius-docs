@@ -3,7 +3,7 @@ import { render, cleanup } from '@solidjs/testing-library';
 import { MemoryRouter, Route } from '@solidjs/router';
 import { DashboardContext, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
 import Control from '../../src/app/pages/dashboard/Control';
-import { ClipOp, ClipState, Direction, EmitMode, RenderMode } from '../../src/dashboard/protocol';
+import { ClipOp, ClipState, Direction, EmitMode, PROTO_VER, RenderMode } from '../../src/dashboard/protocol';
 
 // The Control page mounts five cards against one context. Each card has its own unit tests; this
 // covers what those cannot: that the whole page composes, that every card reaches the connected
@@ -22,7 +22,7 @@ const health = {
 
 const VALUES: Record<string, unknown> = {
   health,
-  version: { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
+  version: { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
   locks: {
     entries: [
       { cls: 3, id: 0, direction: 1, scale: 0 },
@@ -47,6 +47,9 @@ const VALUES: Record<string, unknown> = {
     underruns: 1,
     overruns: 0,
     seqGaps: 0,
+    xfers: 0,
+    xferErrs: 0,
+    gated: 0,
     held: [{ cls: 0, id: 0 }],
     autolock: 0x05,
     loop: true,
@@ -54,6 +57,7 @@ const VALUES: Record<string, unknown> = {
     finalized: true,
     ride: false,
     triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: true }],
+    packetTriggers: [],
   },
   imperfect: { allowed: false, overCapacity: false, cloneImperfect: false },
   moveRide: 0,
@@ -98,6 +102,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     inputEvents: () => [],
     clearInputEvents: () => {},
     poll: (key: string) => () => ({ ...VALUES, ...over })[key] ?? null,
+    pollUnreadable: () => () => false,
     refreshPoll: () => {},
     ...over,
   }) as unknown as DashboardContextValue;
@@ -223,7 +228,7 @@ describe('Control page', () => {
     const armed = { mode: RenderMode.Despiked, full: false, ready: true };
     const rendered = mount(stub({ moveRide: 20, render: armed }));
     expect((await rendered.findByText(/Movement riding is on/)).textContent).toMatch(/rendering motion/);
-    expect(rendered.container.textContent).toMatch(/Wheel motion rides a real report/);
+    expect(rendered.container.textContent).toMatch(/Wheel and pan motion rides a real report/);
     cleanup();
 
     // Full rendering takes the rendered stream off the ride, so an armed profile alone warns of nothing.

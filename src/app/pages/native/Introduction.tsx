@@ -33,11 +33,11 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>3.4.0</code></td>
+              <td><code>3.4.1</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>7</code></td>
+              <td><code>8</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -69,7 +69,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>7</code>. Confirm it during the{' '}
+                These pages describe version <code>8</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -182,7 +182,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all eleven selectors" />
+                <CardHeader title="Requests" subtitle="QUERY and its RESP, all sixteen selectors" />
               </Card>
             </A>
             <A href="/native/commands/led" style={{ "text-decoration": "none" }}>

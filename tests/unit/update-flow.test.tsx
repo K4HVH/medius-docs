@@ -5,6 +5,7 @@ import { render, cleanup, waitFor } from '@solidjs/testing-library';
 // never ran, and losing the one instruction that fixes a box that did not come back) and every page
 // test stubs it. This drives the real one, with only the serial link faked.
 const mock = vi.hoisted(() => {
+  // A 3.2.0 box on protocol 5: the oldest the page opens, so every update below starts update-only.
   const VERSION = { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' };
   return {
     VERSION,
@@ -209,9 +210,10 @@ const DEVICE_TAG = 0xd0;
 const HOST_TAG = 0xa0;
 const img = (tag: number) => new Uint8Array([0xe9, tag, 2, 3]);
 
+// Each is the firmware named and the protocol it reports.
 const V3_3_4 = { protoVer: 6, fwMajor: 3, fwMinor: 3, fwPatch: 4, mac: [], name: '' };
 const V3_4_0 = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' };
-const V3_4_1 = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' };
+const V3_4_1 = { protoVer: 8, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' };
 
 const connected = async () => {
   mountProvider();
@@ -414,6 +416,20 @@ describe('updateOverControl', () => {
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('verified');
     expect(api.version()).toEqual(V3_4_0);
+    expect(api.updateOnly()).toBe(true);
+  }, 20000);
+
+  it('a 3.4.0 box on protocol 7 connects for updating, and the 3.4.1 it updates to opens the rest', async () => {
+    mock.version = V3_4_0;
+    await connected();
+    expect(api.updateOnly()).toBe(true);
+    mock.after = { baud: 6_000_000, version: V3_4_1 };
+    mock.opens = [];
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    expect(outcome).toBe('verified');
+    expect(mock.opens).toEqual([6_000_000]);
+    expect(api.version()).toEqual(V3_4_1);
+    expect(api.updateOnly()).toBe(false);
   }, 20000);
 
   it('still reports what runs after a same-rate revert when the version replies are lost', async () => {
@@ -480,12 +496,12 @@ describe('control link rate', () => {
     mock.baud = 4_000_000;
     mock.version = V3_3_4;
     await connected();
-    mock.after = { baud: 6_000_000, version: V3_4_0 };
+    mock.after = { baud: 6_000_000, version: V3_4_1 };
     mock.opens = [];
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000]);
-    expect(api.version()).toEqual(V3_4_0);
+    expect(api.version()).toEqual(V3_4_1);
     expect(api.updateOnly()).toBe(false);
   }, 20000);
 
