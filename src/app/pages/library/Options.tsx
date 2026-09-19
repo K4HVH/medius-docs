@@ -303,8 +303,8 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           <div class="callout callout--warning">
             <p>
               Spreading costs half the interval in latency on average, about 4 ms on a 125 Hz loop.
-              The delivered total never changes, and a loop matched to the native report rate emits
-              exactly what that loop emitted before.
+              The delivered total never changes, and a loop at the native report rate keeps each
+              command whole, on a report of its own.
             </p>
             <p>
               Motion asking for exact timing is not spread:{' '}
