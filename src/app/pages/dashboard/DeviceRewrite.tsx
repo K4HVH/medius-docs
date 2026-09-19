@@ -19,7 +19,6 @@ import {
   CATCH_ID_ANY,
   CatchClass,
   Direction,
-  REWRITE_CLASSES,
   REWRITE_MATCH_MAX,
   REWRITE_TAB_MAX,
   RewriteAction,
@@ -29,24 +28,18 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { chips, label, muted, row, section } from './ui';
-import { displayName, parseHex } from './hex';
+import {
+  TRAFFIC_CLASS_BLURB,
+  TRAFFIC_CLASS_OPTIONS,
+  displayName,
+  parseHex,
+  parseMatchMask,
+  trafficDirWord,
+  trafficIdLabel,
+} from './hex';
 
-const CLASS_OPTIONS = REWRITE_CLASSES.map((c) => ({
-  value: String(c),
-  label: displayName(rewriteClassName(c)),
-}));
-
-// What the picked class carries, and what each action does to a packet that matches. Both read out
-// under their own control, the way the options card blurbs the render mode it is sitting on.
-const CLASS_BLURB: Record<number, string> = {
-  [CatchClass.HidIn]: 'Reports the device sends the game PC, by interface.',
-  [CatchClass.HidOut]: 'Reports the game PC sends the device, by endpoint.',
-  [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
-  [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
-  [CatchClass.Control]: 'Setup packets on a control endpoint.',
-  [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
-};
-
+// What each action does to a packet that matches. It reads out under its own control, the way the
+// class blurb does.
 const ACTION_BLURB: Record<number, string> = {
   [RewriteAction.Pass]: 'Leaves the packet untouched.',
   [RewriteAction.Drop]: 'The packet is not delivered.',
@@ -85,21 +78,11 @@ const carriesPayload = (a: RewriteAction): boolean =>
 const readsOffset = (a: RewriteAction): boolean =>
   a === RewriteAction.Patch || a === RewriteAction.ReplyPatch;
 
-// HID_IN addresses an interface; every other class keys on the endpoint number, HID_OUT included.
-// The catch card's id table says the same, and the box looks all of them up by EP_NUM.
-const idLabel = (cls: number): string => {
-  if (cls === CatchClass.HidIn) return 'Interface number';
-  return cls === CatchClass.Control ? 'Endpoint number (0 is EP0)' : 'Endpoint number';
-};
-
-const dirWord = (d: number): string =>
-  d === Direction.Positive ? 'in' : d === Direction.Negative ? 'out' : 'both';
-
 // A rule names itself the way a transform does: what it does, then what it addresses. A chip is
 // capped at 250px and ellipsises past it, so the match and payload lengths stay out of the name.
 const describe = (e: RewriteRuleInfo): string => {
   const where = e.id === CATCH_ID_ANY ? 'any' : e.id;
-  const head = `${displayName(rewriteActionName(e.action))} ${rewriteClassName(e.cls)} ${where} ${dirWord(e.dir)}`;
+  const head = `${displayName(rewriteActionName(e.action))} ${rewriteClassName(e.cls)} ${where} ${trafficDirWord(e.dir)}`;
   return e.hits ? `${head}, ${e.hits} ${e.hits === 1 ? 'hit' : 'hits'}` : head;
 };
 
@@ -138,20 +121,17 @@ const DeviceRewrite = () => {
   };
 
   const buildRule = (): RewriteRule | string => {
-    const match = parseHex(rwMatch());
-    const mask = parseHex(rwMask());
-    if (match === null || mask === null) return 'Match and mask must be hex.';
-    if (match.length !== mask.length) return 'Match and mask must be the same length.';
-    const payload = parseHex(rwPayload());
+    const head = parseMatchMask(rwMatch(), rwMask(), REWRITE_MATCH_MAX);
+    if (typeof head === 'string') return head;
+    const payload = carriesPayload(action()) ? parseHex(rwPayload()) : new Uint8Array(0);
     if (payload === null) return 'Payload must be hex.';
     return {
       cls: cls(),
       id: rwAnyId() === 'any' ? CATCH_ID_ANY : rwId(),
       dir: Number(rwDir()),
       action: action(),
-      off: rwOff(),
-      match,
-      mask,
+      off: readsOffset(action()) ? rwOff() : 0,
+      ...head,
       payload,
     };
   };
@@ -189,8 +169,8 @@ const DeviceRewrite = () => {
             }
           >
             <div style={label}>Class</div>
-            <RadioGroup name="rw-class" value={rwClass()} onChange={chooseClass} options={CLASS_OPTIONS} />
-            <p style={{ ...muted, 'margin-top': '4px' }}>{CLASS_BLURB[cls()]}</p>
+            <RadioGroup name="rw-class" value={rwClass()} onChange={chooseClass} options={TRAFFIC_CLASS_OPTIONS} />
+            <p style={{ ...muted, 'margin-top': '4px' }}>{TRAFFIC_CLASS_BLURB[cls()]}</p>
 
             <div style={section}>
               <div style={label}>Which id</div>
@@ -206,10 +186,11 @@ const DeviceRewrite = () => {
               <Show when={rwAnyId() === 'one'}>
                 <div style={{ ...section, 'max-width': '11rem' }}>
                   <NumberInput
-                    label={idLabel(cls())}
+                    label={trafficIdLabel(cls())}
                     value={rwId()}
                     min={0}
                     max={65534}
+                    precision={0}
                     onChange={(v) => setRwId(v ?? 0)}
                   />
                 </div>
@@ -253,7 +234,7 @@ const DeviceRewrite = () => {
               <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
                 <Show when={readsOffset(action())}>
                   <div style={{ 'max-width': '8rem' }}>
-                    <NumberInput label="Offset" value={rwOff()} min={0} max={65534} onChange={(v) => setRwOff(v ?? 0)} />
+                    <NumberInput label="Offset" value={rwOff()} min={0} max={65534} precision={0} onChange={(v) => setRwOff(v ?? 0)} />
                   </div>
                 </Show>
                 <div style={{ flex: '1 1 220px' }}>

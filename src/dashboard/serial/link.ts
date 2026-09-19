@@ -11,6 +11,7 @@ import {
   type CatchState,
   type ClipEntry,
   type ClipStatus,
+  type ClipPacketTrigger,
   type ClipTrigger,
   type DecodedFrame,
   type DeviceInfo,
@@ -70,6 +71,8 @@ import {
   clipAppendPayload,
   clipCtrlPayload,
   clipSetPayload,
+  clearClipTriggersPayload,
+  clipPacketTriggerPayload,
   clipTriggerPayload,
   emitPayload,
   renderPayload,
@@ -151,6 +154,16 @@ export class QueryTimeoutError extends Error {
   constructor() {
     super('no reply from the box before the query timed out');
     this.name = 'QueryTimeoutError';
+  }
+}
+
+// The box answered a query and the reply is in a layout this build does not decode: firmware that
+// lays the reply out another way. Retrying reads the same bytes again, so a caller shows it rather
+// than waiting for a value.
+export class UnreadableReplyError extends Error {
+  constructor(what: string) {
+    super(`the box's reply to ${what} is in a layout this page does not read`);
+    this.name = 'UnreadableReplyError';
   }
 }
 
@@ -546,7 +559,7 @@ export class SerialLink {
 
   // The box-wide safety clear (§3.4). Wider than its name: in one atomic release it drops every
   // injected usage, every lock, the whole CATCH subscription table, the loaded clip AND its
-  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it returns the
+  // configuration (autolock scope, loop, retain, and every trigger of both kinds), and it returns the
   // status LEDs back to the box. It is the recovery for a press whose release was lost, because it
   // does not depend on knowing what is held. Release known holds one at a time when that matters.
   reset(): Promise<void> {
@@ -662,7 +675,7 @@ export class SerialLink {
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).
   async queryClip(timeoutMs?: number): Promise<ClipStatus> {
     const resp = parseResp(await this.query(Q_CLIP, timeoutMs));
-    if (resp?.kind !== 'clip') throw new Error('unexpected reply to CLIP query');
+    if (resp?.kind !== 'clip') throw new UnreadableReplyError('the CLIP query');
     return resp.clip;
   }
 
@@ -676,18 +689,19 @@ export class SerialLink {
   // append. Appends count on their own.
   //
   // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
-  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply when
-  // no mouse is cloned, and after FINALIZE on a retained clip.
+  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply while
+  // no clone is up, and after FINALIZE on a retained clip.
   async clipAppend(entries: ClipEntry[]): Promise<void> {
     // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two
-    // appends misaligns everything after it rather than being rejected.
+    // appends misaligns everything after it rather than being rejected. Entries run from 3 bytes to a
+    // whole frame, so a frame closes as soon as the next entry would overflow it.
     const batches: ClipEntry[][] = [];
     let batch: ClipEntry[] = [];
     let size = 0;
     for (const e of entries) {
       const b = encodeClipEntry(e);
       if (!b) throw new Error('clip entries could not be encoded');
-      if (size + b.length > MAX_PAYLOAD) {
+      if (batch.length > 0 && size + b.length > MAX_PAYLOAD) {
         batches.push(batch);
         batch = [];
         size = 0;
@@ -707,8 +721,8 @@ export class SerialLink {
     }
   }
 
-  // Run one clip engine verb (§3.11). Ignored by the box when no mouse is cloned: the clip is
-  // clocked by native report tick, so without one it could never advance.
+  // Run one clip engine verb (§3.11). Ignored by the box while no clone is up: the clip is clocked by
+  // the clone's frame clock, so without one it could never advance.
   clipCtrl(op: ClipOp): Promise<void> {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }
@@ -736,6 +750,28 @@ export class SerialLink {
     return this.send(
       encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, false)),
     );
+  }
+
+  // Add or overwrite a packet trigger (§3.11): CLIP_TRIGGER with a traffic class. Keyed by the
+  // address and the match and mask bytes. The box drops a frame it refuses with no reply, so one it
+  // would refuse on its own bytes is refused here; `clipPacketTriggerFault` names the reason, and the
+  // refusals that turn on box state (the opt-in, the slots, the match pool) show in the read-back.
+  clipPacketTrigger(trigger: ClipPacketTrigger): Promise<void> {
+    const payload = clipPacketTriggerPayload(trigger, true);
+    if (!payload) return Promise.reject(new Error('the box would refuse that packet trigger'));
+    return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), payload));
+  }
+
+  // Remove a packet trigger. Only its key is read: class, id, direction, match and mask.
+  clipPacketUntrigger(trigger: ClipPacketTrigger): Promise<void> {
+    const payload = clipPacketTriggerPayload(trigger, false);
+    if (!payload) return Promise.reject(new Error('that key names no packet trigger'));
+    return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), payload));
+  }
+
+  // Clear the input bindings and the packet triggers in one frame (§3.11).
+  clipClearTriggers(): Promise<void> {
+    return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), clearClipTriggersPayload()));
   }
 
   // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.

@@ -40,6 +40,12 @@ import {
   CLIP_CFG_F_RETAIN,
   CLIP_CFG_F_RIDE,
   CLIP_HELD_MAX,
+  CLIP_PKT_MATCH_MAX,
+  CLIP_PKT_MATCH_POOL,
+  CLIP_PKT_TRIG_ENTRY,
+  CLIP_PKT_TRIG_MAX,
+  CLIP_TRIG_F_CONSUME,
+  CLIP_TRIG_F_RUN,
   CLIP_TRIG_LEN,
   CLIP_TRIG_MAX,
   CLK_AGE_NONE,
@@ -79,6 +85,7 @@ import {
   type Caps,
   type CatchEntry,
   type CatchState,
+  type ClipPacketTriggerEntry,
   type ClipStatus,
   type ClipTrigger,
   type ClipTriggerAction,
@@ -365,10 +372,13 @@ export function parseResp(payload: Uint8Array): Resp | null {
     }
     case Q_CLIP: {
       // [what][state][free u32][used u32][played u32][ticks u32][underruns u16][overruns u16]
-      // [seq_gaps u16][n_held u8] then n_held x [class][id u16 LE], then [autolock][flags][n_trig]
-      // then n_trig x [class][id u16 LE][edge][action][consume].
+      // [seq_gaps u16][xfers u16][xfer_errs u16][gated u16][n_held u8] then n_held x [class][id u16 LE],
+      // then [autolock][flags][n_trig] then n_trig x [class][id u16 LE][edge][action][consume], then
+      // [n_pkt] then n_pkt x [class][id u16 LE][dir][action][flags][slen][mlen][hits u16 LE][match][mask].
+      // The reply is exactly as long as its own counts say: a shorter one is truncated, and a longer
+      // one is a layout this build does not know.
       if (payload.length < RESP_CLIP_HDR) return null;
-      const nHeld = payload[24];
+      const nHeld = payload[RESP_CLIP_HDR - 1];
       if (nHeld > CLIP_HELD_MAX) return null;
       const cfgAt = RESP_CLIP_HDR + 3 * nHeld;
       // The config section is fixed-size and always present, so a reply that stops inside it is
@@ -393,6 +403,34 @@ export function parseResp(payload: Uint8Array): Resp | null {
           consume: payload[off + 5] !== 0,
         });
       }
+      let off = cfgAt + 3 + CLIP_TRIG_LEN * nTrig;
+      if (payload.length < off + 1) return null;
+      const nPkt = payload[off++];
+      if (nPkt > CLIP_PKT_TRIG_MAX) return null;
+      const packetTriggers: ClipPacketTriggerEntry[] = [];
+      let pool = 0;
+      for (let i = 0; i < nPkt; i++) {
+        if (payload.length < off + CLIP_PKT_TRIG_ENTRY) return null;
+        const mlen = payload[off + 7];
+        pool += mlen;
+        if (mlen > CLIP_PKT_MATCH_MAX || pool > CLIP_PKT_MATCH_POOL) return null;
+        const bytesAt = off + CLIP_PKT_TRIG_ENTRY;
+        const pf = payload[off + 5];
+        packetTriggers.push({
+          cls: payload[off],
+          id: u16le(payload, off + 1),
+          dir: payload[off + 3] as Direction,
+          action: payload[off + 4] as ClipTriggerAction,
+          consume: (pf & CLIP_TRIG_F_CONSUME) !== 0,
+          oncePerRun: (pf & CLIP_TRIG_F_RUN) !== 0,
+          selectorLen: payload[off + 6],
+          hits: u16le(payload, off + 8),
+          match: payload.slice(bytesAt, bytesAt + mlen),
+          mask: payload.slice(bytesAt + mlen, bytesAt + 2 * mlen),
+        });
+        off = bytesAt + 2 * mlen;
+      }
+      if (payload.length !== off) return null;
       const flags = payload[cfgAt + 1];
       return {
         kind: 'clip',
@@ -405,6 +443,9 @@ export function parseResp(payload: Uint8Array): Resp | null {
           underruns: u16le(payload, 18),
           overruns: u16le(payload, 20),
           seqGaps: u16le(payload, 22),
+          xfers: u16le(payload, 24),
+          xferErrs: u16le(payload, 26),
+          gated: u16le(payload, 28),
           held,
           autolock: payload[cfgAt],
           loop: (flags & CLIP_CFG_F_LOOP) !== 0,
@@ -412,6 +453,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           finalized: (flags & CLIP_CFG_F_FINALIZED) !== 0,
           ride: (flags & CLIP_CFG_F_RIDE) !== 0,
           triggers,
+          packetTriggers,
         },
       };
     }
@@ -653,6 +695,8 @@ export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
 // Parse a TRAFFIC_EVENT payload (§4.10): [ts_us u32][clk u8][class u8][id u16 LE][dir u8][flags u8]
 // [true_len u16 LE][bytes..]. The frame LEN delimits how many bytes arrived, which is at most the
 // entry's capture length; compare that against true_len to see whether the capture was cut short.
+// `flags` stays the raw byte because its meaning is the class's: trafficTransferStatus reads a
+// ClipTransfer event's, and trafficSetup / trafficData split that class's bytes and Control's.
 // Unsolicited.
 export function parseTrafficEvent(payload: Uint8Array): TrafficEvent | null {
   if (payload.length < TRAFFIC_HDR_LEN) return null;

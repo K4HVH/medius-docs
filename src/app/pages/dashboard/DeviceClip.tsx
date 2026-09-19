@@ -1,37 +1,54 @@
 // Buffered clip playback: build a clip, load it into the box's ring, and drive the engine.
 //
-// The clip is clocked by the cloned mouse's report tick, so a tick here is one native report,
-// not a millisecond, and everything below is refused by the box when no mouse is cloned. The engine
-// is soft state on a 1 s dead-man switch, which the clip status poll doubles as the keepalive for.
+// A clip plays on any clone. With a mouse cloned a tick is one native frame, not a millisecond; with
+// none it is the emit rate OPTION(EMIT) fixes, else 1 ms. Everything below is refused by the box
+// while no clone is up. The engine is soft state on a 1 s dead-man switch, which the clip status poll
+// doubles as the keepalive for. Raw report and transfer ticks play only under imperfect clones, so
+// they are offered only while it is on. A trigger is an input edge or a packet on a traffic surface;
+// only a packet trigger that consumes needs the opt-in, so one that watches binds without it.
 
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
+import { TextField } from '../../../components/inputs/TextField';
 import {
   type ClipEntry,
+  type ClipEntryFault,
+  type ClipPacketTrigger,
+  type ClipPacketTriggerFault,
   type ClipStatus,
   type ClipTrigger,
   type ClipTriggerAction,
   type Usage,
   Action,
   BUTTONS,
+  CATCH_ID_ANY,
   CLIP_COND_ANY_CLASS,
   CLIP_COND_ANY_ID,
+  CLIP_EDGES_MAX,
+  CLIP_ENTRY_MAX,
   CLIP_LOCK_AIM,
   CLIP_LOCK_ALL,
   CLIP_LOCK_BUTTONS,
   CLIP_LOCK_KEYS,
   CLIP_LOCK_MEDIA,
   CLIP_LOCK_WHEEL,
+  CLIP_PKT_MATCH_MAX,
+  CLIP_PKT_MATCH_POOL,
+  CLIP_PKT_TRIG_MAX,
+  CLIP_RAW_MAX,
   CLIP_SET_AUTOLOCK,
   CLIP_SET_LOOP,
   CLIP_SET_RETAIN,
   CLIP_SET_RIDE,
   CLIP_TRIG_MAX,
+  CLIP_VERBS,
+  CatchClass,
   ClipOp,
   ClipState,
   Direction,
@@ -41,9 +58,15 @@ import {
   KEYS,
   MEDIA,
   RenderMode,
+  clipEntryFault,
+  clipOpName,
+  clipPacketDirOk,
+  clipPacketTriggerFault,
   clipStateLabel,
   encodeClipEntry,
   isTriggerAction,
+  rewriteClassName,
+  samePacketTrigger,
   sameTrigger,
   usageName,
 } from '../../../dashboard/protocol';
@@ -51,7 +74,23 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
-import { checkColumn, chips, label, muted, row, section } from './ui';
+import { checkColumn, chips, label, muted, row, section, status } from './ui';
+import {
+  RAW_DIR_BLURB,
+  SETUP_DEFAULT,
+  SETUP_FIELDS,
+  TRAFFIC_CLASS_BLURB,
+  TRAFFIC_CLASS_OPTIONS,
+  decodeSetup,
+  displayName,
+  outDataBlurb,
+  parseHex,
+  parseMatchMask,
+  parseNum,
+  toHex,
+  trafficDirWord,
+  trafficIdLabel,
+} from './hex';
 
 const CLASSES: PickerClass[] = [
   { value: INJ_BTN, label: 'Button', table: BUTTONS },
@@ -76,20 +115,16 @@ const TRIGGER_CLASSES: PickerClass[] = [
 
 const SCOPES: { bit: number; name: string }[] = [
   { bit: CLIP_LOCK_AIM, name: 'Aim (X and Y)' },
-  { bit: CLIP_LOCK_WHEEL, name: 'Wheel' },
+  { bit: CLIP_LOCK_WHEEL, name: 'Wheel and pan' },
   { bit: CLIP_LOCK_BUTTONS, name: 'Buttons' },
   { bit: CLIP_LOCK_KEYS, name: 'Keys' },
   { bit: CLIP_LOCK_MEDIA, name: 'Media' },
 ];
 
-const OPS: { op: ClipOp; name: string }[] = [
-  { op: ClipOp.Start, name: 'Start' },
-  { op: ClipOp.Stop, name: 'Stop' },
-  { op: ClipOp.Pause, name: 'Pause' },
-  { op: ClipOp.Resume, name: 'Resume' },
-  { op: ClipOp.Restart, name: 'Restart' },
-  { op: ClipOp.Toggle, name: 'Toggle' },
-];
+const OPS: { op: ClipOp; name: string }[] = CLIP_VERBS.map((op) => ({
+  op,
+  name: displayName(clipOpName(op)),
+}));
 
 const ACTIONS = [
   { value: String(Action.Press), label: 'Press' },
@@ -97,14 +132,37 @@ const ACTIONS = [
   { value: String(Action.ForceRelease), label: 'Mask' },
 ];
 
+const RAW_DIRS = [
+  { value: String(Direction.Positive), label: 'In' },
+  { value: String(Direction.Negative), label: 'Out' },
+];
+
+// What the codec refused an entry for, in the words of the fields on this card.
+const FAULT_TEXT: Record<ClipEntryFault, string> = {
+  gap: 'A wait must be 1 to 65535 ticks.',
+  edges: `A tick must carry at most ${CLIP_EDGES_MAX} buttons or keys.`,
+  'raw-count': `A tick must carry at most ${CLIP_RAW_MAX} raw reports.`,
+  empty: 'A tick must carry at least one field.',
+  'raw-direction': 'Direction must be In or Out.',
+  'transfer-data': 'Out data must be wLength bytes, and blank for a request that reads.',
+  'too-long': `A tick must encode to at most ${CLIP_ENTRY_MAX} bytes.`,
+};
+
 const entryText = (e: ClipEntry): string => {
   if (e.kind === 'gap') return `wait ${e.ticks}`;
   const parts: string[] = [];
   if (e.xy) parts.push(`move ${e.xy.dx},${e.xy.dy}`);
   if (e.wheel !== undefined) parts.push(`wheel ${e.wheel}`);
+  if (e.pan !== undefined) parts.push(`pan ${e.pan}`);
   for (const ed of e.edges ?? []) {
     const verb = ed.action === Action.Press ? 'press' : ed.action === Action.ForceRelease ? 'mask' : 'release';
     parts.push(`${verb} ${usageName(ed.cls, ed.id)}`);
+  }
+  for (const r of e.raw ?? []) {
+    parts.push(`raw ${r.dir === Direction.Negative ? 'out' : 'in'} ${r.ep}, ${r.bytes.length} B`);
+  }
+  for (const t of e.transfers ?? []) {
+    parts.push(`transfer ${t.setup.bmRequestType & 0x80 ? 'in' : 'out'} ${t.ep}, ${t.setup.wLength} B`);
   }
   return parts.join(' + ');
 };
@@ -122,7 +180,83 @@ const triggerText = (t: ClipTrigger): string => {
   return `${who} ${edge} -> ${op}${locks ? ' (consume)' : ''}`;
 };
 
+// Why the box would refuse a packet trigger, in the words of the fields on this card.
+const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
+  class: 'Class must be one of the six traffic surfaces.',
+  direction: 'Direction must be Both, In or Out.',
+  verb: 'That verb cannot be bound to a trigger.',
+  'mask-length': 'Match and mask must be the same length.',
+  'match-length': `Match and mask must be at most ${CLIP_PKT_MATCH_MAX} bytes.`,
+  'class-direction': 'Direction must be one the class carries.',
+  'match-outside-mask': 'Every bit set in the match must be set in the mask too, or no packet can match.',
+  'consume-control': 'Consume needs a class other than Control.',
+  'consume-opt-in': 'Consume needs imperfect clones, on the Device tab.',
+  'run-stream': 'Once per run needs a class other than Control, one id, and In or Out.',
+  'run-selector': 'The match must be longer than the selector.',
+  'run-condition': 'The mask must keep at least one bit past the selector, or the run never ends.',
+  selector: 'A selector needs Once per run.',
+  full: `All ${CLIP_PKT_TRIG_MAX} packet trigger slots are used. Remove one first.`,
+  pool: `Packet triggers share ${CLIP_PKT_MATCH_POOL} match bytes. Remove one or shorten the match.`,
+};
+
+// A packet trigger's chip names what it runs, then the class and id it watches, the way a rewrite
+// rule's does. A chip is capped at 250px and ellipsises past it, so the direction and the match stay
+// out of the name and in the line below.
+const packetName = (t: ClipPacketTrigger): string => {
+  const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
+  return `${op} ${rewriteClassName(t.cls)} ${t.id === CATCH_ID_ANY ? 'any' : t.id}`;
+};
+
+// A packet trigger read back in words: where it watches, what it matches, then what it does.
+const packetText = (t: ClipPacketTrigger): string => {
+  const unit = t.cls === CatchClass.HidIn ? 'interface' : 'endpoint';
+  const where = t.id === CATCH_ID_ANY ? `every ${unit}` : `${unit} ${t.id}`;
+  const dir = t.dir === Direction.Both ? 'both directions' : trafficDirWord(t.dir);
+  const what = t.match.length > 0 ? `bytes ${toHex(t.match)} under ${toHex(t.mask)}` : 'every packet';
+  const does = [
+    clipOpName(t.action),
+    ...(t.oncePerRun ? [`once per run (selector ${t.selectorLen})`] : []),
+    ...(t.consume ? ['consumes the packet'] : []),
+  ];
+  return `${displayName(rewriteClassName(t.cls))}, ${where}, ${dir}, ${what}: ${does.join(', ')}`;
+};
+
+// The one way a report class travels, which takes the other direction off its picker.
+const DIR_WHY: Record<number, string> = {
+  [CatchClass.HidIn]: 'Every HID in report travels In.',
+  [CatchClass.HidOut]: 'Every HID out report travels Out.',
+  [CatchClass.Emit]: 'Every emitted report travels In.',
+};
+
+// Why the box did not take a packet trigger it was sent, read from the first status after the bind;
+// null when it holds that key with the verb and flags that went out. A key it already held takes no
+// slot and no pool bytes, so only the opt-in refuses an overwrite.
+const bindRefusal = (t: ClipPacketTrigger, c: ClipStatus): string | null => {
+  const held = c.packetTriggers.find((h) => samePacketTrigger(h, t));
+  if (
+    held &&
+    held.action === t.action &&
+    held.consume === t.consume &&
+    held.oncePerRun === t.oncePerRun &&
+    held.selectorLen === t.selectorLen
+  ) {
+    return null;
+  }
+  const room = clipPacketTriggerFault(t, { imperfect: true, held: c.packetTriggers });
+  const why =
+    room === 'full' || room === 'pool'
+      ? PKT_FAULT_TEXT[room]
+      : t.consume
+        ? 'It refuses a consuming trigger while imperfect clones are off.'
+        : null;
+  return why ? `The box did not take this trigger. ${why}` : 'The box did not take this trigger.';
+};
+
 const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
+
+// The box counts a packet trigger's hits in 16 bits and holds the count at the top.
+const HITS_MAX = 0xffff;
+const hitsText = (hits: number): string => (hits >= HITS_MAX ? `${HITS_MAX}+ hits` : plural(hits, 'hit'));
 
 const bytesOf = (entries: ClipEntry[]): number =>
   entries.reduce((n, e) => n + (encodeClipEntry(e)?.length ?? 0), 0);
@@ -130,19 +264,33 @@ const bytesOf = (entries: ClipEntry[]): number =>
 const DeviceClip = () => {
   const dash = useDashboard();
   const clip = dash.poll('clip');
+  const clipUnreadable = dash.pollUnreadable('clip');
   const health = () => dash.health();
   const moveRide = dash.poll('moveRide');
   const render = dash.poll('render');
+  const imperfect = dash.poll('imperfect');
   const ready = () => health()?.cloneConfigured === true;
+  const allowed = () => imperfect()?.allowed === true;
 
   const [draft, setDraft] = createSignal<ClipEntry[]>([]);
   const [kind, setKind] = createSignal('move');
   const [dx, setDx] = createSignal(10);
   const [dy, setDy] = createSignal(0);
   const [dz, setDz] = createSignal(1);
+  const [dpan, setDpan] = createSignal(1);
   const [gap, setGap] = createSignal(10);
   const [edgeUsage, setEdgeUsage] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [edgeAction, setEdgeAction] = createSignal(String(Action.Press));
+  const [rawEp, setRawEp] = createSignal(1);
+  const [rawDir, setRawDir] = createSignal(String(Direction.Positive));
+  const [rawBytes, setRawBytes] = createSignal('');
+  const [xferEp, setXferEp] = createSignal(0);
+  const [setup, setSetup] = createSignal<Record<string, string>>(SETUP_DEFAULT);
+  const [outData, setOutData] = createSignal('');
+  const setupType = () => parseNum(setup().type);
+  // The two gated kinds leave the picker with the opt-in, so a kind picked while it was on falls back.
+  const gated = (k: string) => k === 'raw' || k === 'transfer';
+  const kindNow = () => (gated(kind()) && !allowed() ? 'move' : kind());
 
   const [trigUsage, setTrigUsage] = createSignal<Usage>({
     cls: TRIGGER_CLASSES[0].value,
@@ -151,6 +299,47 @@ const DeviceClip = () => {
   const [trigEdge, setTrigEdge] = createSignal(String(Direction.Positive));
   const [trigOp, setTrigOp] = createSignal(String(ClipOp.Toggle));
   const [trigConsume, setTrigConsume] = createSignal(false);
+
+  const [trigKind, setTrigKind] = createSignal('input');
+  const [pktClass, setPktClass] = createSignal(TRAFFIC_CLASS_OPTIONS[0].value);
+  const [pktAnyId, setPktAnyId] = createSignal('one');
+  const [pktId, setPktId] = createSignal(0);
+  const [pktDir, setPktDir] = createSignal(String(Direction.Both));
+  const [pktMatch, setPktMatch] = createSignal('');
+  const [pktMask, setPktMask] = createSignal('');
+  const [pktConsume, setPktConsume] = createSignal(false);
+  const [pktOnce, setPktOnce] = createSignal(false);
+  const [pktSelector, setPktSelector] = createSignal(0);
+  const pktCls = () => Number(pktClass());
+  // Picking a class can strand a direction it never carries; fall back to Both, which every class
+  // takes, the way the rewrite editor falls back to Pass.
+  const choosePktClass = (v: string) => {
+    setPktClass(v);
+    if (!clipPacketDirOk(Number(v), Number(pktDir()) as Direction)) setPktDir(String(Direction.Both));
+  };
+  const pktDirOptions = () =>
+    [
+      { dir: Direction.Both, label: 'Both' },
+      { dir: Direction.Positive, label: 'In' },
+      { dir: Direction.Negative, label: 'Out' },
+    ].map((o) => ({ value: String(o.dir), label: o.label, disabled: !clipPacketDirOk(pktCls(), o.dir) }));
+  const packets = () => clip()?.packetTriggers ?? [];
+  // Consuming drops traffic, which needs the opt-in, and a drop has no meaning on a control request.
+  // A box ticked while it could apply falls back with whichever of the two took it away.
+  const consumeWhy = (): string | null => {
+    if (pktCls() === CatchClass.Control) return 'A control request always reaches the device, so there is nothing to consume.';
+    if (!allowed()) return 'Consuming a packet needs imperfect clones, on the Device tab. Watching one does not.';
+    return null;
+  };
+  const consumeNow = () => pktConsume() && consumeWhy() === null;
+  // When the verb runs and what becomes of the packet, as the two checkboxes are set.
+  const pktBlurb = () => {
+    const when = pktOnce()
+      ? 'The verb runs on the first of a run of matching packets. The selector is the leading match bytes that pick the stream, such as a report ID.'
+      : 'The verb runs on every matching packet.';
+    const packet = consumeNow() ? 'A matched packet is not delivered.' : 'A matched packet is left untouched.';
+    return `${when} ${packet}`;
+  };
 
   // The four counters are boot-lifetime and never reset by the box, so an absolute reading says
   // nothing about this clip. Baseline them and show the difference.
@@ -190,7 +379,8 @@ const DeviceClip = () => {
   const loopOn = () => flagEdit().loop ?? clip()?.loop === true;
   const retainOn = () => flagEdit().retain ?? clip()?.retain === true;
   const rideOn = () => flagEdit().ride ?? clip()?.ride === true;
-  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the wheel.
+  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the
+  // wheel and pan.
   const rendered = () =>
     render()?.ready === true && (render()?.mode ?? RenderMode.Off) !== RenderMode.Off;
   const riding = () => (moveRide() ?? 0) > 0;
@@ -219,18 +409,45 @@ const DeviceClip = () => {
       await dash.link()!.clipCtrl(op);
     });
 
-  const addEntry = () => {
-    const k = kind();
-    if (k === 'move') setDraft((d) => [...d, { kind: 'tick', xy: { dx: dx(), dy: dy() } }]);
-    else if (k === 'wheel') setDraft((d) => [...d, { kind: 'tick', wheel: dz() }]);
-    else if (k === 'gap') setDraft((d) => [...d, { kind: 'gap', ticks: gap() }]);
-    else {
-      const u = edgeUsage();
-      setDraft((d) => [
-        ...d,
-        { kind: 'tick', edges: [{ cls: u.cls, id: u.id, action: Number(edgeAction()) as Action }] },
-      ]);
+  // The entry the pickers describe, or what is wrong with them.
+  const pickedEntry = (): ClipEntry | string => {
+    const k = kindNow();
+    if (k === 'move') return { kind: 'tick', xy: { dx: dx(), dy: dy() } };
+    if (k === 'wheel') return { kind: 'tick', wheel: dz() };
+    if (k === 'pan') return { kind: 'tick', pan: dpan() };
+    if (k === 'gap') return { kind: 'gap', ticks: gap() };
+    if (k === 'raw') {
+      const bytes = parseHex(rawBytes());
+      if (bytes === null) return 'Bytes must be hex.';
+      if (bytes.length === 0) return 'Enter the bytes to put on the endpoint.';
+      return { kind: 'tick', raw: [{ ep: rawEp(), dir: Number(rawDir()) as Direction, bytes }] };
     }
+    if (k === 'transfer') {
+      const fields = SETUP_FIELDS.map((f) => parseNum(setup()[f.key]));
+      if (fields.some((f) => f === null)) return 'Every setup field must be a number.';
+      const out = parseHex(outData());
+      if (out === null) return 'Out data must be hex.';
+      const [bmRequestType, bRequest, wValue, wIndex, wLength] = fields as number[];
+      return {
+        kind: 'tick',
+        transfers: [{ ep: xferEp(), setup: { bmRequestType, bRequest, wValue, wIndex, wLength }, out }],
+      };
+    }
+    const u = edgeUsage();
+    return { kind: 'tick', edges: [{ cls: u.cls, id: u.id, action: Number(edgeAction()) as Action }] };
+  };
+
+  // Refused here, where the fields are, since the box faults the whole clip on an entry it cannot read.
+  const addEntry = () => {
+    const picked = pickedEntry();
+    const fault = typeof picked === 'string' ? null : clipEntryFault(picked);
+    const entry = fault ? FAULT_TEXT[fault] : picked;
+    if (typeof entry === 'string') {
+      cmd.run(() => Promise.reject(new Error(entry)));
+      return;
+    }
+    cmd.clear();
+    setDraft((d) => [...d, entry]);
   };
 
   const append = () =>
@@ -269,7 +486,8 @@ const DeviceClip = () => {
     });
   };
 
-  const addTrigger = () =>
+  const addTrigger = () => {
+    setSentPacket(null);
     cmd.run(async () => {
       const u = trigUsage();
       const action = Number(trigOp());
@@ -284,8 +502,76 @@ const DeviceClip = () => {
         consume: trigConsume(),
       });
     });
+  };
 
-  const removeTrigger = (t: ClipTrigger) => cmd.run(() => dash.link()!.clipUntrigger(t));
+  const removeTrigger = (t: ClipTrigger) => {
+    setSentPacket(null);
+    cmd.run(() => dash.link()!.clipUntrigger(t));
+  };
+
+  // The packet trigger the fields describe, or what is wrong with them.
+  const pickedPacket = (): ClipPacketTrigger | string => {
+    const head = parseMatchMask(pktMatch(), pktMask(), CLIP_PKT_MATCH_MAX);
+    if (typeof head === 'string') return head;
+    const action = Number(trigOp());
+    if (!isTriggerAction(action)) return PKT_FAULT_TEXT.verb;
+    return {
+      cls: pktCls(),
+      id: pktAnyId() === 'any' ? CATCH_ID_ANY : pktId(),
+      dir: Number(pktDir()) as Direction,
+      action,
+      consume: consumeNow(),
+      oncePerRun: pktOnce(),
+      selectorLen: pktOnce() ? pktSelector() : 0,
+      ...head,
+    };
+  };
+
+  // CLIP_TRIGGER has no reply, and the box drops a trigger on state this card reads late: the opt-in
+  // turned off elsewhere, or another client filling the slots or the match pool. So a bind is checked
+  // against the first status read after it went out. `before` is the status on screen at the send.
+  const [sentPacket, setSentPacket] = createSignal<{ trigger: ClipPacketTrigger; before: ClipStatus | null } | null>(
+    null,
+  );
+  createEffect(() => {
+    const c = clip();
+    const sent = sentPacket();
+    if (!sent || !c || c === sent.before) return;
+    setSentPacket(null);
+    const why = bindRefusal(sent.trigger, c);
+    if (why === null) return;
+    dash.refreshPoll('imperfect');
+    cmd.run(() => Promise.reject(new Error(why)));
+  });
+
+  // Refused here, where the fields are, for everything the fields decide.
+  const addPacket = () => {
+    setSentPacket(null);
+    const picked = pickedPacket();
+    const fault =
+      typeof picked === 'string' ? null : clipPacketTriggerFault(picked, { imperfect: allowed(), held: packets() });
+    const trigger = fault ? PKT_FAULT_TEXT[fault] : picked;
+    if (typeof trigger === 'string') {
+      cmd.run(() => Promise.reject(new Error(trigger)));
+      return;
+    }
+    cmd.run(async () => {
+      await dash.link()!.clipPacketTrigger(trigger);
+      // The refresh strands any read already in flight, so the next status was read after the bind.
+      dash.refreshPoll('clip');
+      setSentPacket({ trigger, before: clip() });
+    });
+  };
+
+  const removePacket = (t: ClipPacketTrigger) => {
+    setSentPacket(null);
+    cmd.run(() => dash.link()!.clipPacketUntrigger(t));
+  };
+
+  const clearTriggers = () => {
+    setSentPacket(null);
+    cmd.run(() => dash.link()!.clipClearTriggers());
+  };
 
   // The box keys a binding on (class, id, edge) and overwrites in place, so a full table still
   // accepts a rebind of an address it already holds.
@@ -303,6 +589,16 @@ const DeviceClip = () => {
   const trigFull = createMemo(
     () => (clip()?.triggers.length ?? 0) >= CLIP_TRIG_MAX && !replacing(),
   );
+
+  // A packet trigger's key carries its match and mask, so whether a bind replaces one is only known
+  // once the two hex fields parse.
+  const pktReplacing = createMemo(() => {
+    const picked = pickedPacket();
+    return typeof picked !== 'string' && packets().some((t) => samePacketTrigger(t, picked));
+  });
+  const pktFull = createMemo(() => packets().length >= CLIP_PKT_TRIG_MAX && !pktReplacing());
+  const pktBytes = createMemo(() => packets().reduce((n, t) => n + t.match.length, 0));
+  const onPacket = () => trigKind() === 'packet';
 
   const completeWhy = (): string | null => {
     if (finalized()) return 'Already marked complete.';
@@ -330,7 +626,17 @@ const DeviceClip = () => {
         <Card>
           <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
 
-          <Show when={ready()} fallback={<p style={muted}>Clips need a cloned mouse. Plug one into USB3.</p>}>
+          <Show when={ready()} fallback={<p style={muted}>Clips need a cloned device. Plug one into USB3.</p>}>
+          <Show
+            when={!clipUnreadable()}
+            fallback={
+              <p style={muted}>
+                This box's firmware sends clip status in an older layout than this dashboard reads.{' '}
+                <A href="/dashboard/update">Update the firmware</A> to use clip playback.
+              </p>
+            }
+          >
+          <Show when={clip()} fallback={<p style={status}>Reading status...</p>}>
             <Show when={render() && (cursorRides() || wheelRides())}>
               <div class="callout callout--warning">
                 {cursorRides() && rendered()
@@ -340,7 +646,7 @@ const DeviceClip = () => {
                   ? 'clip motion is'
                   : cursorRides()
                     ? "the clip's cursor motion is"
-                    : "the clip's wheel motion is"}{' '}
+                    : "the clip's wheel and pan motion is"}{' '}
                 only emitted alongside a real mouse move. Button, key and media ticks still play.
               </div>
             </Show>
@@ -383,6 +689,15 @@ const DeviceClip = () => {
               </Show>
               <Show when={delta((s) => s.seqGaps) > 0}>
                 <Chip variant="error">{plural(delta((s) => s.seqGaps), 'lost append')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.xfers) > 0}>
+                <Chip variant="info">{plural(delta((s) => s.xfers), 'transfer')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.xferErrs) > 0}>
+                <Chip variant="error">{plural(delta((s) => s.xferErrs), 'failed transfer')}</Chip>
+              </Show>
+              <Show when={delta((s) => s.gated) > 0}>
+                <Chip variant="warning">{plural(delta((s) => s.gated), 'discarded item')}</Chip>
               </Show>
             </div>
             <p style={{ ...muted, 'margin-top': '4px' }}>Counts are since this clip was loaded.</p>
@@ -447,7 +762,7 @@ const DeviceClip = () => {
             </div>
             <div style={checkColumn}>
               <Checkbox
-                label={rendered() ? 'Wheel motion rides a real report' : 'Motion rides a real report'}
+                label={rendered() ? 'Wheel and pan motion rides a real report' : 'Motion rides a real report'}
                 checked={rideOn()}
                 disabled={busy()}
                 onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
@@ -477,39 +792,128 @@ const DeviceClip = () => {
             <div style={label}>Add a tick</div>
             <RadioGroup
               name="clip-kind"
-              value={kind()}
+              value={kindNow()}
               onChange={setKind}
               options={[
                 { value: 'move', label: 'Move' },
                 { value: 'wheel', label: 'Wheel' },
+                { value: 'pan', label: 'Pan' },
                 { value: 'gap', label: 'Wait' },
                 { value: 'edge', label: 'Button or key' },
+                ...(allowed()
+                  ? [
+                      { value: 'raw', label: 'Raw report' },
+                      { value: 'transfer', label: 'Control transfer' },
+                    ]
+                  : []),
               ]}
             />
+            <Show when={!allowed()}>
+              <p style={{ ...muted, 'margin-top': '4px' }}>
+                Raw report and control transfer ticks need imperfect clones, on the Device tab.
+              </p>
+            </Show>
             <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-              <Show when={kind() === 'move'}>
+              <Show when={kindNow() === 'move'}>
                 <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="dx" value={dx()} min={-32768} max={32767} onChange={(v) => setDx(v ?? 0)} />
+                  <NumberInput label="dx" value={dx()} min={-32768} max={32767} precision={0} onChange={(v) => setDx(v ?? 0)} />
                 </div>
                 <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="dy" value={dy()} min={-32768} max={32767} onChange={(v) => setDy(v ?? 0)} />
-                </div>
-              </Show>
-              <Show when={kind() === 'wheel'}>
-                <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="Detents" value={dz()} min={-32768} max={32767} onChange={(v) => setDz(v ?? 0)} />
+                  <NumberInput label="dy" value={dy()} min={-32768} max={32767} precision={0} onChange={(v) => setDy(v ?? 0)} />
                 </div>
               </Show>
-              <Show when={kind() === 'gap'}>
+              <Show when={kindNow() === 'wheel'}>
+                <div style={{ 'max-width': '7rem' }}>
+                  <NumberInput label="Detents" value={dz()} min={-32768} max={32767} precision={0} onChange={(v) => setDz(v ?? 0)} />
+                </div>
+              </Show>
+              <Show when={kindNow() === 'pan'}>
+                <div style={{ 'max-width': '7rem' }}>
+                  <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} precision={0} onChange={(v) => setDpan(v ?? 0)} />
+                </div>
+              </Show>
+              <Show when={kindNow() === 'gap'}>
                 <div style={{ 'max-width': '9rem' }}>
-                  <NumberInput label="Ticks" value={gap()} min={1} max={65535} onChange={(v) => setGap(v ?? 1)} />
+                  <NumberInput label="Ticks" value={gap()} min={1} max={65535} precision={0} onChange={(v) => setGap(v ?? 1)} />
                 </div>
+              </Show>
+              <Show when={kindNow() === 'raw'}>
+                <div style={{ 'max-width': '9rem' }}>
+                  <NumberInput
+                    name="clip-raw-ep"
+                    label="Endpoint number"
+                    value={rawEp()}
+                    min={0}
+                    max={15}
+                    precision={0}
+                    onChange={(v) => setRawEp(v ?? 0)}
+                  />
+                </div>
+                <div style={{ flex: '1 1 240px' }}>
+                  <TextField
+                    name="clip-raw-bytes"
+                    label="Bytes (hex)"
+                    value={rawBytes()}
+                    onInput={setRawBytes}
+                    placeholder="e.g. 01 00 05 00"
+                  />
+                </div>
+              </Show>
+              <Show when={kindNow() === 'transfer'}>
+                <div style={{ 'max-width': '9rem' }}>
+                  <NumberInput
+                    name="clip-xfer-ep"
+                    label="Endpoint number"
+                    value={xferEp()}
+                    min={0}
+                    max={15}
+                    precision={0}
+                    onChange={(v) => setXferEp(v ?? 0)}
+                  />
+                </div>
+                <For each={SETUP_FIELDS}>
+                  {(f) => (
+                    <div style={{ 'max-width': '9rem' }}>
+                      <TextField
+                        name={`clip-xfer-${f.key}`}
+                        label={f.label}
+                        value={setup()[f.key]}
+                        onInput={(v) => setSetup((prev) => ({ ...prev, [f.key]: v }))}
+                        placeholder={f.placeholder}
+                      />
+                    </div>
+                  )}
+                </For>
               </Show>
               <Button variant="secondary" onClick={addEntry}>
                 Add
               </Button>
             </div>
-            <Show when={kind() === 'edge'}>
+            <Show when={kindNow() === 'raw'}>
+              <div style={section}>
+                <div style={label}>Direction</div>
+                <RadioGroup name="clip-raw-dir" value={rawDir()} onChange={setRawDir} options={RAW_DIRS} />
+                <p style={{ ...muted, 'margin-top': '4px' }}>{RAW_DIR_BLURB[Number(rawDir())]}</p>
+              </div>
+            </Show>
+            <Show when={kindNow() === 'transfer'}>
+              <p style={{ ...muted, 'margin-top': '4px' }}>
+                <Show when={setupType() !== null} fallback="bmRequestType must be a number.">
+                  {decodeSetup(setupType()!, parseNum(setup().req))}
+                </Show>
+              </p>
+              <div style={section}>
+                <TextField
+                  name="clip-xfer-out"
+                  label="Out data (hex)"
+                  value={outData()}
+                  onInput={setOutData}
+                  placeholder="e.g. 00 01"
+                />
+                <p style={{ ...muted, 'margin-top': '4px' }}>{outDataBlurb(setupType())}</p>
+              </div>
+            </Show>
+            <Show when={kindNow() === 'edge'}>
               <UsagePicker name="clip-edge" classes={CLASSES} value={edgeUsage()} onChange={setEdgeUsage} />
               <div style={section}>
                 <div style={label}>Action</div>
@@ -571,46 +975,150 @@ const DeviceClip = () => {
 
             <Section title="Triggers">
             <p style={muted}>
-              Up to {CLIP_TRIG_MAX} bindings.
+              Up to {CLIP_TRIG_MAX} input bindings and {CLIP_PKT_TRIG_MAX} packet triggers.
             </p>
-            <Show when={(clip()?.triggers.length ?? 0) > 0} fallback={<p>No triggers bound.</p>}>
-              <div style={chips}>
-                <For each={clip()?.triggers ?? []}>
-                  {(t) => (
-                    <Chip variant="info" onRemove={() => removeTrigger(t)}>
-                      {triggerText(t)}
-                    </Chip>
-                  )}
-                </For>
-              </div>
+            <Show
+              when={(clip()?.triggers.length ?? 0) + packets().length > 0}
+              fallback={<p>No triggers bound.</p>}
+            >
+              <Show when={(clip()?.triggers.length ?? 0) > 0}>
+                <div style={label}>
+                  Inputs ({clip()?.triggers.length ?? 0} of {CLIP_TRIG_MAX})
+                </div>
+                <div style={chips}>
+                  <For each={clip()?.triggers ?? []}>
+                    {(t) => (
+                      <Chip variant="info" onRemove={() => removeTrigger(t)}>
+                        {triggerText(t)}
+                      </Chip>
+                    )}
+                  </For>
+                </div>
+              </Show>
               <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
                 <p style={muted}>
-                  Removing the any-input binding clears every trigger: the box reads that exact address
-                  as its clear-all.
+                  Removing the any-input binding clears every trigger, packet triggers included: the
+                  box reads that exact address as its clear-all.
                 </p>
+              </Show>
+              <Show when={packets().length > 0}>
+                <div style={(clip()?.triggers.length ?? 0) > 0 ? { ...label, ...section } : label}>
+                  Packets ({packets().length} of {CLIP_PKT_TRIG_MAX}, {pktBytes()} of {CLIP_PKT_MATCH_POOL} match
+                  bytes)
+                </div>
+                <For each={packets()}>
+                  {(t, i) => (
+                    <div data-packet-trigger style={i() > 0 ? { 'margin-top': 'var(--g-spacing-sm)' } : undefined}>
+                      <div style={chips}>
+                        <Chip variant="info" onRemove={() => removePacket(t)}>
+                          {packetName(t)}
+                        </Chip>
+                        <Chip variant={t.hits > 0 ? 'info' : 'neutral'}>{hitsText(t.hits)}</Chip>
+                      </div>
+                      <p style={{ ...muted, 'margin-top': '4px', 'overflow-wrap': 'anywhere' }}>{packetText(t)}</p>
+                    </div>
+                  )}
+                </For>
               </Show>
             </Show>
 
             <div style={section}>
-              <UsagePicker
-                name="clip-trigger"
-                classes={TRIGGER_CLASSES}
-                value={trigUsage()}
-                onChange={setTrigUsage}
+              <div style={label}>Fires on</div>
+              <RadioGroup
+                name="clip-trig-kind"
+                value={trigKind()}
+                onChange={setTrigKind}
+                options={[
+                  { value: 'input', label: 'An input' },
+                  { value: 'packet', label: 'A packet' },
+                ]}
               />
-              <div style={section}>
-                <div style={label}>Edge</div>
-                <RadioGroup
-                  name="clip-trig-edge"
-                  value={trigEdge()}
-                  onChange={setTrigEdge}
-                  options={[
-                    { value: String(Direction.Positive), label: 'Press' },
-                    { value: String(Direction.Negative), label: 'Release' },
-                    { value: String(Direction.Both), label: 'Both' },
-                  ]}
-                />
-              </div>
+              <Show when={!onPacket()}>
+                <div style={section}>
+                  <UsagePicker
+                    name="clip-trigger"
+                    classes={TRIGGER_CLASSES}
+                    value={trigUsage()}
+                    onChange={setTrigUsage}
+                  />
+                </div>
+                <div style={section}>
+                  <div style={label}>Edge</div>
+                  <RadioGroup
+                    name="clip-trig-edge"
+                    value={trigEdge()}
+                    onChange={setTrigEdge}
+                    options={[
+                      { value: String(Direction.Positive), label: 'Press' },
+                      { value: String(Direction.Negative), label: 'Release' },
+                      { value: String(Direction.Both), label: 'Both' },
+                    ]}
+                  />
+                </div>
+              </Show>
+              <Show when={onPacket()}>
+                <div style={section}>
+                  <div style={label}>Class</div>
+                  <RadioGroup name="clip-pkt-class" value={pktClass()} onChange={choosePktClass} options={TRAFFIC_CLASS_OPTIONS} />
+                  <p style={{ ...muted, 'margin-top': '4px' }}>{TRAFFIC_CLASS_BLURB[pktCls()]}</p>
+                </div>
+                <div style={section}>
+                  <div style={label}>Which id</div>
+                  <RadioGroup
+                    name="clip-pkt-anyid"
+                    value={pktAnyId()}
+                    onChange={setPktAnyId}
+                    options={[
+                      { value: 'any', label: 'Every id' },
+                      { value: 'one', label: 'Just one' },
+                    ]}
+                  />
+                  <Show when={pktAnyId() === 'one'}>
+                    <div style={{ ...section, 'max-width': '11rem' }}>
+                      <NumberInput
+                        name="clip-pkt-id"
+                        label={trafficIdLabel(pktCls())}
+                        value={pktId()}
+                        min={0}
+                        max={65534}
+                        precision={0}
+                        onChange={(v) => setPktId(v ?? 0)}
+                      />
+                    </div>
+                  </Show>
+                </div>
+                <div style={section}>
+                  <div style={label}>Direction</div>
+                  <RadioGroup name="clip-pkt-dir" value={pktDir()} onChange={setPktDir} options={pktDirOptions()} />
+                  <Show when={DIR_WHY[pktCls()]}>
+                    <p style={{ ...muted, 'margin-top': '4px' }}>{DIR_WHY[pktCls()]}</p>
+                  </Show>
+                </div>
+                <div style={{ ...section, ...row }}>
+                  <div style={{ flex: '1 1 140px' }}>
+                    <TextField
+                      name="clip-pkt-match"
+                      label="Match (hex)"
+                      value={pktMatch()}
+                      onInput={setPktMatch}
+                      placeholder="e.g. 07 20"
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 140px' }}>
+                    <TextField
+                      name="clip-pkt-mask"
+                      label="Mask (hex)"
+                      value={pktMask()}
+                      onInput={setPktMask}
+                      placeholder="e.g. ff 20"
+                    />
+                  </div>
+                </div>
+                <p style={{ ...muted, 'margin-top': '4px' }}>
+                  Match and mask are the same length, {CLIP_PKT_MATCH_MAX} bytes at most. Blank matches
+                  every packet on that address.
+                </p>
+              </Show>
               <div style={section}>
                 <div style={label}>Runs</div>
                 <RadioGroup
@@ -620,24 +1128,77 @@ const DeviceClip = () => {
                   options={OPS.map((o) => ({ value: String(o.op), label: o.name }))}
                 />
               </div>
-              <div style={section}>
-                <Checkbox
-                  label="Consume the trigger"
-                  checked={trigConsume()}
-                  onChange={setTrigConsume}
-                />
-              </div>
+              <Show when={!onPacket()}>
+                <div style={section}>
+                  <Checkbox
+                    label="Consume the trigger"
+                    checked={trigConsume()}
+                    onChange={setTrigConsume}
+                  />
+                </div>
+              </Show>
+              <Show when={onPacket()}>
+                <div style={{ ...section, ...checkColumn }}>
+                  <Checkbox
+                    label="Consume the packet"
+                    checked={consumeNow()}
+                    disabled={consumeWhy() !== null}
+                    onChange={setPktConsume}
+                  />
+                  <Checkbox label="Once per run" checked={pktOnce()} onChange={setPktOnce} />
+                </div>
+                <Show when={pktOnce()}>
+                  <div style={{ ...section, 'max-width': '11rem' }}>
+                    <NumberInput
+                      name="clip-pkt-selector"
+                      label="Selector length"
+                      value={pktSelector()}
+                      min={0}
+                      max={CLIP_PKT_MATCH_MAX - 1}
+                      precision={0}
+                      onChange={(v) => setPktSelector(v ?? 0)}
+                    />
+                  </div>
+                </Show>
+                <Show when={consumeWhy()}>
+                  <p style={{ ...muted, 'margin-top': '4px' }}>{consumeWhy()}</p>
+                </Show>
+                <p style={{ ...muted, 'margin-top': '4px' }}>{pktBlurb()}</p>
+              </Show>
               <div style={{ ...section, ...row }}>
-                <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
-                  {replacing() ? 'Replace' : 'Bind'}
+                <Show
+                  when={onPacket()}
+                  fallback={
+                    <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
+                      {replacing() ? 'Replace' : 'Bind'}
+                    </Button>
+                  }
+                >
+                  <Button variant="secondary" disabled={busy() || pktFull()} onClick={addPacket}>
+                    {pktReplacing() ? 'Replace' : 'Bind'}
+                  </Button>
+                </Show>
+                <Button
+                  variant="danger"
+                  disabled={busy() || (clip()?.triggers.length ?? 0) + packets().length === 0}
+                  onClick={clearTriggers}
+                >
+                  Clear triggers
                 </Button>
               </div>
-              <Show when={trigFull()}>
-                <p style={muted}>All {CLIP_TRIG_MAX} slots are used. Remove one first.</p>
+              <Show when={onPacket() ? pktFull() : trigFull()}>
+                <p style={muted}>
+                  All {onPacket() ? CLIP_PKT_TRIG_MAX : CLIP_TRIG_MAX} slots are used. Remove one first.
+                </p>
               </Show>
-              <Show when={replacing()}>
+              <Show when={!onPacket() && replacing()}>
                 <p style={muted}>
                   Already bound; binding again replaces it and re-arms every trigger's edge detector.
+                </p>
+              </Show>
+              <Show when={onPacket() && pktReplacing()}>
+                <p style={muted}>
+                  Already bound; binding again replaces it, and a change starts its run and its hits again.
                 </p>
               </Show>
             </div>
@@ -645,10 +1206,12 @@ const DeviceClip = () => {
             </Section>
 
             <Show when={err()}>
-              <div class="callout callout--danger" role="alert">
+              <div class="callout callout--danger" role="alert" style={section}>
                 {err()}
               </div>
             </Show>
+          </Show>
+          </Show>
           </Show>
         </Card>
       </div>

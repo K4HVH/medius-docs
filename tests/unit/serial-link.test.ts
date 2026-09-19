@@ -5,6 +5,8 @@ import {
   QueryTimeoutError,
   SerialLink,
   attachLink,
+  classifyConnectError,
+  speaksCurrentWire,
 } from '../../src/dashboard/serial';
 import {
   CatchClass,
@@ -15,6 +17,7 @@ import {
   Direction,
   RewriteAction,
   PatchSection,
+  PROTO_VER,
   TransferStatus,
   encode,
 } from '../../src/dashboard/protocol';
@@ -66,9 +69,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto=6][major=0][minor=1][patch=0][mac 6B]
+        // [what=0][proto][major][minor][patch][mac 6B]: a 3.4.1 box on the current wire
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -76,10 +79,10 @@ describe('SerialLink', () => {
     await link.open();
     const version = await link.handshake();
     expect(version).toEqual({
-      protoVer: 6,
-      fwMajor: 0,
-      fwMinor: 1,
-      fwPatch: 0,
+      protoVer: PROTO_VER,
+      fwMajor: 3,
+      fwMinor: 4,
+      fwPatch: 1,
       mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
       name: '',
     });
@@ -94,14 +97,14 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, 6, 0, 1, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
     const version = await link.handshake();
-    expect(version.protoVer).toBe(6);
+    expect(version.protoVer).toBe(PROTO_VER);
     expect(gotFlush()).toBe(true); // the flush was sent before the successful handshake
     await link.close();
   });
@@ -190,7 +193,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('handshakes a box one protocol version behind, so it can still be updated', async () => {
+  it('handshakes a box on the oldest protocol one-click update runs on, so it can still be updated', async () => {
     // One-click update arrived with proto 5 (firmware 3.2.0) and nothing it uses has changed since:
     // QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP and LOG are all identical at 5 and 6. The
     // whole v5 to v6 delta is one new option id and its readback; OPTION(EMIT) is unchanged at 12
@@ -214,7 +217,8 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 8, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
+        // a later release on the protocol after this page's
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER + 1, 3, 5, 0, 1, 2, 3, 4, 5, 6])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -227,6 +231,40 @@ describe('SerialLink', () => {
     await link.close();
   });
 
+  // What each protocol byte a box can answer with gets from this page, each row the firmware that
+  // reports it. A 3.4.0 box has to connect, or the dashboard cannot update it to 3.4.1.
+  it.each([
+    [4, [3, 1, 0], 'refused as old firmware'],
+    [5, [3, 2, 0], 'update-only'],
+    [6, [3, 3, 4], 'update-only'],
+    [7, [3, 4, 0], 'update-only'],
+    [PROTO_VER, [3, 4, 1], 'full'],
+    [PROTO_VER + 1, [3, 5, 0], 'refused as new firmware'],
+  ])('a box on protocol %i (firmware %j) is %s', async (proto, fw, outcome) => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 0) {
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, proto, ...fw, 1, 2, 3, 4, 5, 6])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const got = await link.handshake().then(
+      (v) => (speaksCurrentWire(v) ? 'full' : 'update-only'),
+      (e: unknown) => {
+        expect(e).toBeInstanceOf(BadProtoVerError);
+        const verdict = classifyConnectError(e);
+        return verdict.kind === 'old-firmware'
+          ? 'refused as old firmware'
+          : verdict.kind === 'new-firmware'
+            ? 'refused as new firmware'
+            : verdict.kind;
+      },
+    );
+    expect(got).toBe(outcome);
+    await link.close();
+  });
+
   it('delivers the unsolicited VERSION boot hello (SEQ 0)', async () => {
     const mock = new MockSerialPort();
     let hello = null as null | { fwMajor: number };
@@ -236,6 +274,7 @@ describe('SerialLink', () => {
       },
     });
     await link.open();
+    // Protocol 1, firmware 0.1.0: the hello reaches the page before any protocol check.
     mock.push(
       encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06])),
     );
@@ -480,7 +519,7 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         // A stale VERSION reply on the same SEQ must be ignored; the HEALTH reply wins.
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0, 0, 0, 0, 0, 0])));
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x0f, 0x00])));
       }
     };
@@ -495,7 +534,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 1, 2, 3, 4, 0, 0, 0, 0, 0, 0])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0, 0, 0, 0, 0, 0])));
       }
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x01, 0x00])));
@@ -504,7 +543,7 @@ describe('SerialLink', () => {
     const link = new SerialLink(asPort(mock));
     await link.open();
     const [v, h] = await Promise.all([link.queryVersion(), link.queryHealth()]);
-    expect(v).toEqual({ protoVer: 1, fwMajor: 2, fwMinor: 3, fwPatch: 4, mac: [0, 0, 0, 0, 0, 0], name: '' });
+    expect(v).toEqual({ protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [0, 0, 0, 0, 0, 0], name: '' });
     expect(h.linkUp).toBe(true);
     await link.close();
   });
@@ -642,6 +681,10 @@ describe('SerialLink', () => {
   });
 });
 
+// The firmware each protocol this port answers with belongs to: 3.1.0 is protocol 4, 3.3.4 is 6 (on the
+// previous control rate), and 3.4.1 is the current wire.
+const RATED_FW: Record<number, number[]> = { 4: [3, 1, 0], 6: [3, 3, 4], [PROTO_VER]: [3, 4, 1] };
+
 // A port that behaves like Web Serial across a close: its streams exist only while it is open, and the
 // box behind it answers only at the rate its firmware runs the control link at.
 class RatedPort {
@@ -655,7 +698,7 @@ class RatedPort {
 
   constructor(
     private readonly boxBaud: number,
-    private readonly protoVer = 7,
+    private readonly protoVer = PROTO_VER,
     private readonly openError: Error | null = null,
   ) {}
 
@@ -713,7 +756,7 @@ class RatedPort {
   private answer(f: { ty: FrameType; seq: number; payload: Uint8Array }): void {
     if (this.baud !== this.boxBaud || f.ty !== FrameType.Query || f.payload[0] !== 0) return;
     this.controller?.enqueue(
-      encode(FrameType.Resp, f.seq, new Uint8Array([0, this.protoVer, 3, 4, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+      encode(FrameType.Resp, f.seq, new Uint8Array([0, this.protoVer, ...RATED_FW[this.protoVer], 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
     );
   }
 }
@@ -725,13 +768,14 @@ describe('attachLink', () => {
   it('stops at the current rate when the box answers there', async () => {
     const port = new RatedPort(6_000_000);
     const { link, version } = await attachLink(asSerial(port), make);
-    expect(version.protoVer).toBe(7);
+    expect(version.protoVer).toBe(PROTO_VER);
     expect(port.opens).toEqual([6_000_000]);
     expect(port.closes).toBe(0);
     await link.close();
   });
 
   it('reaches a box on the previous rate, closing the silent attempt before reopening', async () => {
+    // a 3.3.4 box: protocol 6, on the rate firmware before 3.4.0 runs
     const port = new RatedPort(4_000_000, 6);
     const { link, version } = await attachLink(asSerial(port), make);
     expect(version.protoVer).toBe(6);
@@ -749,14 +793,14 @@ describe('attachLink', () => {
   }, 10000);
 
   it('a box on a protocol this page cannot speak is not retried at another rate', async () => {
-    const port = new RatedPort(6_000_000, 4);
+    const port = new RatedPort(6_000_000, 4); // a 3.1.0 box: protocol 4
     await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(BadProtoVerError);
     expect(port.opens).toEqual([6_000_000]);
     expect(port.readable).toBeNull();
   });
 
   it('a port that will not open is not retried at another rate', async () => {
-    const port = new RatedPort(6_000_000, 7, new DOMException('Failed to open serial port.', 'NetworkError'));
+    const port = new RatedPort(6_000_000, PROTO_VER, new DOMException('Failed to open serial port.', 'NetworkError'));
     await expect(attachLink(asSerial(port), make)).rejects.toMatchObject({ name: 'NetworkError' });
     expect(port.opens).toEqual([6_000_000]);
   });

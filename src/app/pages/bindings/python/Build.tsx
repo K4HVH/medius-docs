@@ -33,7 +33,7 @@ const Build: Component = () => {
                 <td><code>--features mock</code></td>
                 <td><code>MockBox().open()</code> / <code>.with_device()</code></td>
                 <td><code>HAS_MOCK</code></td>
-                <td>A scriptable in-process fake box. See <A href="/library/features/mock">Mock box</A>.</td>
+                <td>A scriptable in-process fake box. See <A href="/bindings/python/api#mock">Mock box</A>.</td>
               </tr>
             </tbody>
           </table>
@@ -88,6 +88,10 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
               An <code><a href="https://docs.python.org/3/library/exceptions.html#OSError" target="_blank" rel="noreferrer">OSError</a></code> on import means every step failed: a bad <code>MEDIUS_LIB</code>{' '}
               path, or an unsupported platform where the install built from source without a{' '}
               <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>.
+            </p>
+            <p>
+              An <code>ImportError</code> naming two ABI numbers means the library it found comes from
+              another release: the package checks <code>medius_abi_version()</code> before any call.
             </p>
           </div>
         </Card>

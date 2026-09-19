@@ -9,8 +9,8 @@ const Rewrite: Component = () => {
       <Card>
         <CardHeader title="Rewrite rules" subtitle="Rewrite a matched packet in flight" />
         <p>
-          The box holds a table of rules that match traffic and rewrite, answer, refuse, or drop it. A
-          rule is addressed in the same <code>(class, id, direction)</code> space{' '}
+          The box holds a table of rules that match traffic and rewrite, answer, refuse, or drop it.
+          A rule is addressed in the same <code>(class, id, direction)</code> space{' '}
           <A href="/library/catch">catch</A> reads, in the write direction, narrowed by a masked head
           compare.
         </p>
@@ -29,6 +29,11 @@ const Rewrite: Component = () => {
                           ^ id = endpoint number
 
               a rule acts at any [ bracketed ] stage`}</pre>
+        <p>
+          A packet reaches the clip's{' '}
+          <A href="/library/clip#packet-triggers">packet triggers</A> ahead of the table, and one a
+          trigger consumes reaches no rule.
+        </p>
         <div class="callout callout--warning">
           <p>
             The advanced control layer is gated on the imperfect-clone opt-in. With{' '}

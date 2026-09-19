@@ -46,6 +46,27 @@ const Options: Component = () => {
               <tr><td><code>allow</code></td><td><code>bool</code></td><td>Clone an over-capacity device anyway, or stay faithful-only.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">GATES</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>What</th><th>With the opt-in off</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>an over-capacity device</td><td>Refused: no clone appears.</td></tr>
+              <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
+              <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>, and turning the opt-in off clears the table.</td></tr>
+              <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
+              <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Answered <code>Refused</code>.</td></tr>
+              <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box.</td></tr>
+              <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box, and turning the opt-in off removes the ones it holds.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout callout--warning">
+            <p>
+              A change that reboots the box clears its soft state, every clip trigger included, so set
+              the opt-in before binding triggers.
+            </p>
+          </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
@@ -303,8 +324,8 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           <div class="callout callout--warning">
             <p>
               Spreading costs half the interval in latency on average, about 4 ms on a 125 Hz loop.
-              The delivered total never changes, and a loop matched to the native report rate emits
-              exactly what that loop emitted before.
+              The delivered total never changes, and a loop at the native report rate keeps each
+              command whole, on a report of its own.
             </p>
             <p>
               Motion asking for exact timing is not spread:{' '}

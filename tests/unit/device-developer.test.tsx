@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import {
+  type RewriteRule,
   CATCH_ID_ANY,
   CatchClass,
   Direction,
@@ -14,12 +15,18 @@ const settle = () => new Promise((r) => setTimeout(r, 20));
 // One recording fake for the whole page: the link calls it records, and the poll values it reads.
 const mock = vi.hoisted(() => ({
   rewrites: [] as { cls: number; id: number; dir: number; action: number; state: number }[],
+  // What RESP(REWRITE_ENTRY) answers for each list index, and which indices were asked for.
+  entries: {} as Record<number, unknown>,
+  entryReads: [] as number[],
   patches: [] as { section: number; cfg: number; index: number; offset: number; len: number }[],
   transfers: [] as number[][],
+  raws: [] as unknown[][],
   applied: 0,
   cleared: 0,
   transferReply: { ep: 0, status: 0, data: new Uint8Array() },
   poll: {} as Record<string, unknown>,
+  // Tells the card the polled values moved, as a fresh poll reply would.
+  polled: () => {},
 }));
 
 vi.mock('@solidjs/router', () => ({
@@ -27,7 +34,10 @@ vi.mock('@solidjs/router', () => ({
   useNavigate: () => () => {},
 }));
 
-vi.mock('../../src/app/pages/dashboard/context', () => {
+vi.mock('../../src/app/pages/dashboard/context', async () => {
+  const { createSignal } = await import('solid-js');
+  const [polls, setPolls] = createSignal(0);
+  mock.polled = () => setPolls((n) => n + 1);
   const link = {
     setRewrite: async (r: { cls: number; id: number; dir: number; action: number }) => {
       mock.rewrites.push({ ...r, state: 1 });
@@ -46,7 +56,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
       mock.applied++;
     },
     clearPatch: async () => {},
-    raw: async () => {},
+    raw: async (...args: unknown[]) => {
+      mock.raws.push(args);
+    },
     transfer: async (
       ep: number,
       bmRequestType: number,
@@ -58,20 +70,27 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
       mock.transfers.push([ep, bmRequestType, bRequest, wValue, wIndex, wLength]);
       return mock.transferReply;
     },
-    queryRewriteEntry: async () => ({}),
+    queryRewriteEntry: async (index: number) => {
+      mock.entryReads.push(index);
+      return mock.entries[index] ?? {};
+    },
   };
   return {
     useDashboard: () => ({
       status: () => 'connected',
       updateOnly: () => false,
       link: () => link,
-      poll: (key: string) => () => mock.poll[key],
+      poll: (key: string) => () => {
+        polls();
+        return mock.poll[key];
+      },
       refreshPoll: () => {},
     }),
   };
 });
 
 import DeviceDeveloper from '../../src/app/pages/dashboard/DeviceDeveloper';
+import { trafficIdLabel } from '../../src/app/pages/dashboard/hex';
 
 const on = () => {
   mock.poll = {
@@ -84,8 +103,11 @@ const on = () => {
 afterEach(() => {
   cleanup();
   mock.rewrites = [];
+  mock.entries = {};
+  mock.entryReads = [];
   mock.patches = [];
   mock.transfers = [];
+  mock.raws = [];
   mock.applied = 0;
   mock.cleared = 0;
   mock.transferReply = { ep: 0, status: 0, data: new Uint8Array() };
@@ -314,5 +336,261 @@ describe('DeviceDeveloper', () => {
     expect(mock.transfers[0]).toEqual([0, 0x80, 6, 0x0100, 0, 18]);
     expect(getByText('OK')).toBeTruthy();
     expect(getByText('2 B in')).toBeTruthy();
+  });
+});
+
+// Which actions a class offers, what each one carries, and what the editor refuses.
+describe('DeviceRewrite actions and payloads', () => {
+  const radio = (container: HTMLElement, name: string): HTMLInputElement => {
+    const el = [...container.querySelectorAll('input[type=radio]')].find(
+      (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
+    );
+    if (!el) throw new Error(`no radio labelled ${name}`);
+    return el as HTMLInputElement;
+  };
+  const field = (container: HTMLElement, name: string): HTMLInputElement | undefined => {
+    const label = [...container.querySelectorAll('label')].find((l) => l.textContent?.trim() === name);
+    return (label?.parentElement?.querySelector('input') ?? undefined) as HTMLInputElement | undefined;
+  };
+
+  const actionOptions = async (card: HTMLElement): Promise<Element[]> => {
+    const box = card.querySelector('[role="combobox"]') as HTMLElement;
+    fireEvent.click(box);
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await settle();
+    return [...document.querySelectorAll('[role="option"]')];
+  };
+  const pickAction = async (card: HTMLElement, name: string) => {
+    const option = (await actionOptions(card)).find((o) => o.textContent?.trim() === name);
+    if (!option) throw new Error(`no action named ${name}`);
+    fireEvent.click(option);
+    await settle();
+  };
+
+  const mount = async () => {
+    on();
+    const view = render(() => <DeviceDeveloper />);
+    const card = view.container.querySelector('#rewrite-rules') as HTMLElement;
+    return { ...view, card };
+  };
+  const sentRule = () => mock.rewrites[0] as unknown as RewriteRule & { state: number };
+
+  it('offers the control actions on Control and the report actions on a report class', async () => {
+    const { card } = await mount();
+    expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toEqual([
+      'Pass', 'Patch', 'Replace', 'Answer', 'Stall', 'NAK', 'Reply patch', 'Reply replace',
+    ]);
+    fireEvent.keyDown(card.querySelector('[role="combobox"]') as HTMLElement, { key: 'Escape' });
+    fireEvent.click(radio(card, 'HID in'));
+    await settle();
+    expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toEqual([
+      'Pass', 'Drop', 'Patch', 'Replace',
+    ]);
+  });
+
+  it('shows the hex payload for the actions that carry bytes, and only for them', async () => {
+    const { card } = await mount();
+    expect(field(card, 'Payload (hex)')).toBeUndefined();
+    await pickAction(card, 'Replace');
+    expect(field(card, 'Payload (hex)')).toBeTruthy();
+    expect(field(card, 'Offset')).toBeUndefined();
+    await pickAction(card, 'Patch');
+    expect(field(card, 'Offset')).toBeTruthy();
+    // Every rule is an address, an action and bytes: the card has no checkbox and no verb picker.
+    expect(card.querySelectorAll('input[type=checkbox]')).toHaveLength(0);
+    expect(card.querySelectorAll('input[name="rw-verb"]')).toHaveLength(0);
+  });
+
+  it('refuses a match longer than the box compares', async () => {
+    const { card, getByText, findByText } = await mount();
+    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: 'aa'.repeat(17) } });
+    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff'.repeat(17) } });
+    fireEvent.click(getByText('Add rule'));
+    await findByText('Match and mask must be at most 16 bytes.');
+    expect(mock.rewrites).toEqual([]);
+    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: 'aa'.repeat(16) } });
+    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff'.repeat(16) } });
+    fireEvent.click(getByText('Add rule'));
+    await settle();
+    expect(mock.rewrites.length).toBe(1);
+  });
+
+  it('refuses a match that is not hex, or unlike its mask in length', async () => {
+    const { card, getByText, findByText } = await mount();
+    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '0g' } });
+    fireEvent.click(getByText('Add rule'));
+    await findByText('Match and mask must be hex.');
+    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '21 09' } });
+    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff' } });
+    fireEvent.click(getByText('Add rule'));
+    await findByText('Match and mask must be the same length.');
+    expect(mock.rewrites).toEqual([]);
+  });
+
+  it('sends no bytes left over in a field its action does not show', async () => {
+    const { card, getByText } = await mount();
+    await pickAction(card, 'Patch');
+    fireEvent.input(field(card, 'Payload (hex)')!, { target: { value: 'aa bb' } });
+    fireEvent.input(field(card, 'Offset')!, { target: { value: '4' } });
+    fireEvent.blur(field(card, 'Offset')!);
+    await settle();
+    await pickAction(card, 'Stall');
+    fireEvent.click(getByText('Add rule'));
+    await settle();
+    expect(sentRule().action).toBe(RewriteAction.Stall);
+    expect(sentRule().off).toBe(0);
+    expect(Array.from(sentRule().payload)).toEqual([]);
+  });
+
+  it('removes a rule by the key it reads back in full', async () => {
+    const at = { cls: CatchClass.HidIn, id: 2, dir: Direction.Positive, action: RewriteAction.Drop, mlen: 2, off: 0, plen: 0, hits: 0 };
+    mock.poll = {
+      imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
+      rewrite: { tableFull: false, gen: 1, entries: [at] },
+      patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
+    };
+    mock.entries[0] = {
+      cls: CatchClass.HidIn,
+      id: 2,
+      dir: Direction.Positive,
+      action: RewriteAction.Drop,
+      off: 0,
+      match: new Uint8Array([0x01, 0x10]),
+      mask: new Uint8Array([0xff, 0xff]),
+      payload: new Uint8Array(0),
+    };
+    const { container } = render(() => <DeviceDeveloper />);
+    const card = container.querySelector('#rewrite-rules') as HTMLElement;
+    // Listing a rule reads nothing in full; removing it does, since the key carries the match.
+    await settle();
+    expect(mock.entryReads).toEqual([]);
+    fireEvent.click(card.querySelector('.chip__remove') as HTMLElement);
+    await settle();
+    expect(mock.entryReads).toEqual([0]);
+    expect(sentRule().state).toBe(0);
+    expect(Array.from(sentRule().match)).toEqual([0x01, 0x10]);
+  });
+});
+
+describe('traffic address labels', () => {
+  it('names the id each class is addressed by', () => {
+    expect(
+      [
+        CatchClass.HidIn,
+        CatchClass.HidOut,
+        CatchClass.VendorInterrupt,
+        CatchClass.VendorBulk,
+        CatchClass.Control,
+        CatchClass.Emit,
+      ].map(trafficIdLabel),
+    ).toEqual([
+      'Interface number',
+      'Endpoint number',
+      'Endpoint number',
+      'Endpoint number',
+      'Endpoint number (0 is EP0)',
+      'Endpoint number',
+    ]);
+  });
+});
+
+// A number field by its label, the nth one of that name inside `root`.
+const numberField = (root: ParentNode, label: string, nth = 0): HTMLInputElement => {
+  const labels = [...root.querySelectorAll('label.number-input__label')].filter((l) => l.textContent?.trim() === label);
+  const el = labels[nth]?.parentElement?.querySelector('input');
+  if (!el) throw new Error(`no number field labelled ${label}`);
+  return el as HTMLInputElement;
+};
+// Types a fraction and leaves the field, which is when a number field takes what was typed.
+const typeFraction = async (el: HTMLInputElement) => {
+  fireEvent.input(el, { target: { value: '2.5' } });
+  fireEvent.blur(el);
+  await settle();
+};
+
+describe('whole-number fields on the advanced control cards', () => {
+  const pick = (root: ParentNode, name: string) => {
+    const el = [...root.querySelectorAll('input[type=radio]')].find(
+      (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
+    );
+    if (!el) throw new Error(`no radio labelled ${name}`);
+    fireEvent.click(el);
+  };
+  const text = (root: ParentNode, label: string, value: string) => {
+    const l = [...root.querySelectorAll('label')].find((e) => e.textContent?.trim() === label);
+    const el = l?.parentElement?.querySelector('input') as HTMLInputElement;
+    fireEvent.input(el, { target: { value } });
+  };
+  const button = (root: ParentNode, name: string) =>
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === name) as HTMLElement;
+  const card = (id: string) => {
+    on();
+    const view = render(() => <DeviceDeveloper />);
+    return view.container.querySelector(`#${id}`) as HTMLElement;
+  };
+
+  it('keeps the raw report endpoint to a whole number, and sends what it shows', async () => {
+    const root = card('raw-report');
+    const el = numberField(root, 'Endpoint number');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    text(root, 'Bytes (hex)', '01');
+    fireEvent.click(button(root, 'Send'));
+    await settle();
+    expect(mock.raws.map((r) => r[0])).toEqual([3]);
+  });
+
+  it('keeps the control transfer endpoint to a whole number, and sends what it shows', async () => {
+    const root = card('control-transfer');
+    const el = numberField(root, 'Endpoint number');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(button(root, 'Run'));
+    await settle();
+    expect(mock.transfers.map((t) => t[0])).toEqual([3]);
+  });
+
+  it.each([
+    ['Configuration index', 'cfg'],
+    ['Interface', 'index'],
+    ['Offset', 'offset'],
+  ] as const)('keeps the patch %s to a whole number, and sends what it shows', async (field, key) => {
+    const root = card('descriptor-patches');
+    pick(root, 'Report descriptor');
+    await settle();
+    const el = numberField(root, field);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    text(root, 'Bytes (hex)', '04');
+    fireEvent.click(button(root, 'Set patch'));
+    await settle();
+    expect(mock.patches.map((p) => p[key])).toEqual([3]);
+  });
+
+  it('keeps the rewrite id to a whole number, and sends what it shows', async () => {
+    const root = card('rewrite-rules');
+    const el = numberField(root, 'Endpoint number (0 is EP0)');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(button(root, 'Add rule'));
+    await settle();
+    expect(mock.rewrites.map((r) => r.id)).toEqual([3]);
+  });
+
+  it('keeps the rewrite offset to a whole number, and sends what it shows', async () => {
+    const root = card('rewrite-rules');
+    const box = root.querySelector('[role="combobox"]') as HTMLElement;
+    fireEvent.click(box);
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await settle();
+    fireEvent.click([...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.trim() === 'Patch')!);
+    await settle();
+    const el = numberField(root, 'Offset');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    text(root, 'Payload (hex)', 'aa');
+    fireEvent.click(button(root, 'Add rule'));
+    await settle();
+    expect(mock.rewrites.map((r) => (r as unknown as { off: number }).off)).toEqual([3]);
   });
 });

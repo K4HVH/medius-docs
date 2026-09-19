@@ -13,13 +13,8 @@ import { Direction } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { label, muted, row, section } from './ui';
-import { parseHex } from './hex';
+import { RAW_DIR_BLURB, parseHex } from './hex';
 
-// Where the bytes land, which is the whole meaning of the direction sitting above it.
-const DIR_BLURB: Record<number, string> = {
-  [Direction.Positive]: 'The report reaches the game PC.',
-  [Direction.Negative]: 'The report reaches the device.',
-};
 
 const DeviceRaw = () => {
   const dash = useDashboard();
@@ -61,6 +56,7 @@ const DeviceRaw = () => {
                   value={ep()}
                   min={0}
                   max={15}
+                  precision={0}
                   onChange={(v) => setEp(v ?? 0)}
                 />
               </div>
@@ -80,7 +76,7 @@ const DeviceRaw = () => {
                   { value: String(Direction.Negative), label: 'Out' },
                 ]}
               />
-              <p style={{ ...muted, 'margin-top': '4px' }}>{DIR_BLURB[Number(dir())]}</p>
+              <p style={{ ...muted, 'margin-top': '4px' }}>{RAW_DIR_BLURB[Number(dir())]}</p>
             </div>
 
             <div style={{ ...section, ...row }}>

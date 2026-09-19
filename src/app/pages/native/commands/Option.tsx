@@ -461,10 +461,10 @@ const Option: Component = () => {
             </tbody>
           </table>
           <p>
-            A loop matched to the native report rate learns an interval of one report period, so its
-            first share is the whole delta and the emitted stream is what it was. A delta smaller than
-            the number of reports in the interval cannot be divided into one count per report either:
-            it goes out once, part way through, rather than at the start.
+            A loop at the native report rate keeps each command whole: it waits in a short queue and
+            leaves on a report of its own, no later than the first report after its interval ends. A
+            delta smaller than the number of reports in its interval cannot be divided into one count
+            per report: it goes out once, part way through.
           </p>
           <div class="callout callout--info">
             <p>

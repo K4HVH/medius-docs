@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
 import type { ConnectVerdict } from '../../src/dashboard/serial';
+import { PROTO_VER } from '../../src/dashboard/protocol';
 
 // The dashboard's landing page had no test file, so its browser-support wording could drift from
 // every other page's without anything noticing.
@@ -21,7 +22,11 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     updateOnly: () => mock.updateOnly,
     verdict: () => mock.verdict,
     error: () => mock.error,
-    version: () => ({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }),
+    // Update-only is a 3.2.0 box on protocol 5; the full page is a 3.4.1 box on the current wire.
+    version: () =>
+      mock.updateOnly
+        ? { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }
+        : { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' },
     health: () => null,
     connect: async () => {},
     disconnect: async () => {},

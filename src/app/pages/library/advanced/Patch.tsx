@@ -59,6 +59,7 @@ const Patch: Component = () => {
             A patch is keyed by <code>(section, cfg, index, offset)</code>; setting one whose key exists
             overwrites it, and empty <code>bytes</code> removes it. Storing is not gated and does not
             re-present the clone; <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> does.
+            The set belongs to the attached device, so a patch stored with none attached is dropped.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Patch, PatchSection};

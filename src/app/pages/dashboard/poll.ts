@@ -26,7 +26,7 @@ import type {
   Stats,
   Version,
 } from '../../../dashboard/protocol';
-import type { SerialLink } from '../../../dashboard/serial';
+import { type SerialLink, UnreadableReplyError } from '../../../dashboard/serial';
 
 export interface PollValues {
   health: Health;
@@ -113,6 +113,10 @@ const MIN_MS = 100;
 interface Slot {
   read: Accessor<unknown>;
   write: (v: unknown) => void;
+  // Whether the box's last answer was in a layout this build does not decode. A decoded value
+  // clears it; a miss says nothing about the layout, so it leaves it as it was.
+  unreadable: Accessor<boolean>;
+  setUnreadable: (v: boolean) => void;
   // Token to requested interval. The slot runs at the smallest interval anyone asked for, so one
   // card wanting a fast readout speeds the shared query up rather than starting a second one.
   subs: Map<symbol, number>;
@@ -125,6 +129,9 @@ interface Slot {
 export interface Poller {
   // Subscribe for the lifetime of the calling component. Returns null until the first reply lands.
   subscribe<K extends PollKey>(key: K, everyMs?: number): Accessor<PollValues[K] | null>;
+  // Whether the box answers this query in a layout this build cannot decode, so the value stays null
+  // however long the card waits.
+  unreadable(key: PollKey): Accessor<boolean>;
   // Re-read now, without waiting for the next tick. Call it after a write so the readout reflects
   // what was just set instead of showing the old value for up to one interval.
   refresh(key: PollKey): void;
@@ -140,7 +147,8 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     let s = slots.get(key);
     if (!s) {
       const [read, write] = createSignal<unknown>(null);
-      s = { read, write: (v) => write(() => v), subs: new Map(), timer: null, gen: 0 };
+      const [unreadable, setUnreadable] = createSignal(false);
+      s = { read, write: (v) => write(() => v), unreadable, setUnreadable, subs: new Map(), timer: null, gen: 0 };
       slots.set(key, s);
     }
     return s;
@@ -170,8 +178,10 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
         // value belongs to a box we are no longer talking to.
         if (s.gen !== gen || link() !== l) return;
         s.write(v);
-      } catch {
+        s.setUnreadable(false);
+      } catch (e) {
         // A transient miss is fine; the next tick tries again. A real drop closes the link.
+        if (e instanceof UnreadableReplyError && s.gen === gen && link() === l) s.setUnreadable(true);
       }
     }
     // The check at the top of the tick is what actually stops a stale loop; this one only avoids
@@ -220,6 +230,7 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
   const reset = (): void => {
     for (const [key, s] of slots) {
       s.write(null);
+      s.setUnreadable(false);
       restart(key);
     }
   };
@@ -238,5 +249,7 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     onCleanup(() => document.removeEventListener('visibilitychange', onVisible));
   }
 
-  return { subscribe, refresh, reset };
+  const unreadable = (key: PollKey): Accessor<boolean> => slotFor(key).unreadable;
+
+  return { subscribe, unreadable, refresh, reset };
 }

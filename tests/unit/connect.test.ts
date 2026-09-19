@@ -6,13 +6,20 @@ import {
   attemptConnect,
   classifyConnectError,
 } from '../../src/dashboard/serial';
-import type { Version } from '../../src/dashboard/protocol';
+import { PROTO_VER, type Version } from '../../src/dashboard/protocol';
 
+// Each protocol with the firmware that reports it: 3.1.0 is protocol 4, 3.4.1 is the current wire,
+// and 3.5.0 stands for a later release on the protocol after it.
+const FW: Record<number, [number, number, number]> = {
+  4: [3, 1, 0],
+  [PROTO_VER]: [3, 4, 1],
+  [PROTO_VER + 1]: [3, 5, 0],
+};
 const version = (protoVer: number): Version => ({
   protoVer,
-  fwMajor: 3,
-  fwMinor: 1,
-  fwPatch: 0,
+  fwMajor: FW[protoVer][0],
+  fwMinor: FW[protoVer][1],
+  fwPatch: FW[protoVer][2],
   mac: [0x58, 0x8c, 0x81, 0xdf, 0x1e, 0x28],
   name: 'Medius-1E28',
 });
@@ -37,6 +44,13 @@ describe('classifyConnectError', () => {
     expect(classifyConnectError(new BadProtoVerError(version(4)))).toEqual({
       kind: 'old-firmware',
       version: version(4),
+    });
+  });
+
+  it('a refused protocol above the page is new firmware, not old', () => {
+    expect(classifyConnectError(new BadProtoVerError(version(PROTO_VER + 1)))).toEqual({
+      kind: 'new-firmware',
+      version: version(PROTO_VER + 1),
     });
   });
 
@@ -119,10 +133,10 @@ describe('attemptConnect', () => {
       deps({
         granted: async () => [p],
         choose,
-        attach: async () => ({ link: 'L', version: version(5) }),
+        attach: async () => ({ link: 'L', version: version(PROTO_VER) }),
       }),
     );
-    expect(r).toEqual({ ok: true, port: p, link: 'L', version: version(5) });
+    expect(r).toEqual({ ok: true, port: p, link: 'L', version: version(PROTO_VER) });
     expect(choose).not.toHaveBeenCalled();
   });
 
@@ -135,11 +149,11 @@ describe('attemptConnect', () => {
         choose: async () => picked,
         attach: async (p) => {
           if (p === stale) throw new Error('Failed to open serial port.');
-          return { link: 'L', version: version(5) };
+          return { link: 'L', version: version(PROTO_VER) };
         },
       }),
     );
-    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(5) });
+    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(PROTO_VER) });
   });
 
   it('a granted port that opens and stays silent is the answer, not a reason to ask again', async () => {
@@ -165,11 +179,11 @@ describe('attemptConnect', () => {
         granted: async () => [a, b],
         attach: async (p) => {
           if (p === a) throw new Error('Failed to open serial port.');
-          return { link: 'L', version: version(5) };
+          return { link: 'L', version: version(PROTO_VER) };
         },
       }),
     );
-    expect(r).toEqual({ ok: true, port: b, link: 'L', version: version(5) });
+    expect(r).toEqual({ ok: true, port: b, link: 'L', version: version(PROTO_VER) });
   });
 
   it('an empty chooser is no-port', async () => {
@@ -188,6 +202,21 @@ describe('attemptConnect', () => {
     expect(r).toEqual({ ok: false, verdict: { kind: 'old-firmware', version: version(4) } });
   });
 
+  it('a granted box on a newer protocol answers for itself, without the chooser', async () => {
+    const choose = vi.fn();
+    const r = await attemptConnect(
+      deps({
+        granted: async () => [port('p')],
+        choose,
+        attach: async () => {
+          throw new BadProtoVerError(version(PROTO_VER + 1));
+        },
+      }),
+    );
+    expect(r).toEqual({ ok: false, verdict: { kind: 'new-firmware', version: version(PROTO_VER + 1) } });
+    expect(choose).not.toHaveBeenCalled();
+  });
+
   it('keeps looking past a granted port that is the wrong box', async () => {
     const wrong = port('wrong');
     const right = port('right');
@@ -198,11 +227,11 @@ describe('attemptConnect', () => {
         choose,
         attach: async (p) => {
           if (p === wrong) throw new NoReplyError();
-          return { link: 'L', version: version(5) };
+          return { link: 'L', version: version(PROTO_VER) };
         },
       }),
     );
-    expect(r).toEqual({ ok: true, port: right, link: 'L', version: version(5) });
+    expect(r).toEqual({ ok: true, port: right, link: 'L', version: version(PROTO_VER) });
     expect(choose).not.toHaveBeenCalled();
   });
 
@@ -216,12 +245,12 @@ describe('attemptConnect', () => {
         choose: async () => picked,
         attach: async (p) => {
           if (p === remembered) throw new NoReplyError();
-          return { link: 'L', version: version(5) };
+          return { link: 'L', version: version(PROTO_VER) };
         },
       }),
       { skipGranted: true },
     );
-    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(5) });
+    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(PROTO_VER) });
     expect(granted).not.toHaveBeenCalled();
   });
 
@@ -244,9 +273,9 @@ describe('attemptConnect', () => {
           throw new Error('the document is not fully active');
         },
         choose: async () => port('p'),
-        attach: async () => ({ link: 'L', version: version(5) }),
+        attach: async () => ({ link: 'L', version: version(PROTO_VER) }),
       }),
     );
-    expect(r).toEqual({ ok: true, port: port('p'), link: 'L', version: version(5) });
+    expect(r).toEqual({ ok: true, port: port('p'), link: 'L', version: version(PROTO_VER) });
   });
 });

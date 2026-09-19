@@ -1,8 +1,4 @@
 // Run one control request against the real device and show what it answered.
-//
-// The five setup fields keep their specification names and stay text: bmRequestType and wValue are
-// read and written in hex wherever USB is documented, and a spinner showing 256 for 0x0100 would be
-// the wrong instrument for the one card whose whole subject is the setup packet.
 
 import { For, Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -14,44 +10,7 @@ import { type TransferResult, TransferStatus, transferStatusName } from '../../.
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { chips, muted, row, section } from './ui';
-import { displayName, parseHex, parseNum, toHex } from './hex';
-
-const SETUP = [
-  { key: 'type', label: 'bmRequestType', placeholder: '0x80' },
-  { key: 'req', label: 'bRequest', placeholder: '6' },
-  { key: 'value', label: 'wValue', placeholder: '0x0100' },
-  { key: 'index', label: 'wIndex', placeholder: '0' },
-  { key: 'length', label: 'wLength', placeholder: '18' },
-] as const;
-
-// bmRequestType is a bitmap, so the one field nobody reads at a glance is the one worth reading
-// back in words. Bit 7 is the direction, bits 6-5 the type, bits 4-0 the recipient.
-const TYPE_NAME = ['standard', 'class', 'vendor', 'reserved'];
-const RECIPIENT_NAME = ['the device', 'an interface', 'an endpoint', 'another target'];
-
-// The standard requests, which are the ones a bRequest number alone will not tell you.
-const STANDARD_REQUEST: Record<number, string> = {
-  0: 'GET_STATUS',
-  1: 'CLEAR_FEATURE',
-  3: 'SET_FEATURE',
-  5: 'SET_ADDRESS',
-  6: 'GET_DESCRIPTOR',
-  7: 'SET_DESCRIPTOR',
-  8: 'GET_CONFIGURATION',
-  9: 'SET_CONFIGURATION',
-  10: 'GET_INTERFACE',
-  11: 'SET_INTERFACE',
-  12: 'SYNCH_FRAME',
-};
-
-const decodeSetup = (bm: number, req: number | null): string => {
-  const dir = bm & 0x80 ? 'Device to host' : 'Host to device';
-  const type = (bm >> 5) & 0x03;
-  const recipient = RECIPIENT_NAME[Math.min(bm & 0x1f, 3)];
-  const head = `${dir}, ${TYPE_NAME[type]}, to ${recipient}`;
-  const named = type === 0 && req !== null ? STANDARD_REQUEST[req] : undefined;
-  return named ? `${head}: ${named}.` : `${head}.`;
-};
+import { SETUP_DEFAULT, SETUP_FIELDS, decodeSetup, displayName, outDataBlurb, parseHex, parseNum, toHex } from './hex';
 
 const statusVariant = (s: TransferStatus): 'success' | 'warning' | 'error' =>
   s === TransferStatus.Ok ? 'success' : s === TransferStatus.Refused ? 'warning' : 'error';
@@ -62,13 +21,7 @@ const DeviceTransfer = () => {
   const allowed = () => imperfect()?.allowed === true;
 
   const [ep, setEp] = createSignal(0);
-  const [setup, setSetup] = createSignal<Record<string, string>>({
-    type: '0x80',
-    req: '6',
-    value: '0x0100',
-    index: '0',
-    length: '18',
-  });
+  const [setup, setSetup] = createSignal<Record<string, string>>(SETUP_DEFAULT);
   const [out, setOut] = createSignal('');
   const [result, setResult] = createSignal<TransferResult | null>(null);
   const cmd = createCommand();
@@ -76,7 +29,7 @@ const DeviceTransfer = () => {
 
   const run = () => {
     const s = setup();
-    const fields = SETUP.map((f) => parseNum(s[f.key]));
+    const fields = SETUP_FIELDS.map((f) => parseNum(s[f.key]));
     if (fields.some((f) => f === null)) {
       cmd.run(() => Promise.reject(new Error('Every setup field must be a number.')));
       return;
@@ -114,10 +67,11 @@ const DeviceTransfer = () => {
                   value={ep()}
                   min={0}
                   max={15}
+                  precision={0}
                   onChange={(v) => setEp(v ?? 0)}
                 />
               </div>
-              <For each={SETUP}>
+              <For each={SETUP_FIELDS}>
                 {(f) => (
                   <div style={{ 'max-width': '9rem' }}>
                     <TextField
@@ -140,9 +94,7 @@ const DeviceTransfer = () => {
             <div style={section}>
               <TextField label="Out data (hex)" value={out()} onInput={setOut} placeholder="e.g. 00 01" />
               <p style={{ ...muted, 'margin-top': '4px' }}>
-                {bm() !== null && (bm()! & 0x80) === 0
-                  ? 'The data stage this request carries to the device.'
-                  : 'Unused: this request reads, it does not write.'}
+                {outDataBlurb(bm())}
               </p>
             </div>
 

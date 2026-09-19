@@ -125,14 +125,14 @@ device.move_rel(5, 5)?;`}</code></pre>
           <p>
             The <A href="/library/types/structs">structs</A> they take live on the types page;{' '}
             <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
-            from the raw status byte.
+            from the raw <code>u16</code> flags word.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 6, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 8, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -303,6 +303,75 @@ assert_eq!(inject.payload, vec![0, 0, 0, 1]);
 assert!(mock.saw(FrameType::Inject));
 
 mock.clear_recorded(); // next assertions start from an empty record`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-packet" data-search-target>
+        <Card>
+          <CardHeader title="Clips and packet triggers" subtitle="What the mock answers for a clip, and clip_packet" />
+          <pre class="api-signature">fn with_clip_settings(self, settings: ClipSettings) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn set_clip_settings(&self, settings: ClipSettings)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">{`fn clip_packet(&self, class: TrafficClass, id: u16, direction: Direction, head: &[u8])
+    -> (Option<ClipAction>, bool)`}</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Returns</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
+                <td><code>MockBox</code>, nothing</td>
+                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> answered to <code>query_config</code>. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when they are scripted, so script the opt-in first for a consuming one.</td>
+              </tr>
+              <tr>
+                <td><code>clip_packet</code></td>
+                <td><code>(Option&lt;ClipAction&gt;, bool)</code></td>
+                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific match wins it and counts it in its <code>hits</code>. The action is <code>None</code> when no trigger wins, and when a <code>once_per_run</code> winner sees the packet continue a run; the bool is whether the winner consumes the packet.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">WHAT THE MOCK HOLDS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Call</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>query_status</code></td><td>Answers the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
+              <tr><td><code>query_config</code></td><td>Answers the scripted settings plus the packet triggers bound on the mock, each with its <code>hits</code>.</td></tr>
+              <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, through the box's checks, the 112-byte pool and the opt-in included, in the box's order.</td></tr>
+              <tr><td><code>clear_triggers</code></td><td>Clears both kinds; <code>reset</code> clears the whole clip config.</td></tr>
+              <tr><td><code>set_imperfect_status</code>, <code>with_imperfect</code>, <code>allow_imperfect_clones</code></td><td>With the opt-in off, the mock drops its consuming packet triggers, as the box does.</td></tr>
+              <tr><td><code>set_retain</code>, <code>finalize</code>, <code>bind</code>, <code>append</code>, the engine verbs</td><td>Recorded frames. The <code>query_config</code> and <code>query_status</code> replies stay as scripted.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Device, Direction, MockBox, TrafficClass};
+
+let mock = MockBox::new();
+let device = Device::with_mock(mock.clone());
+
+let held = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start)
+    .matching([0x07, 0x20], [0xFF, 0x20])
+    .once_per_run(1);
+device.clip().bind_packet(&held)?;
+
+// The first report of the hold runs the action; the repeats continue the run.
+let down = [0x07, 0x20, 0x00];
+assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (Some(ClipAction::Start), false));
+assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (None, false));
+
+// Both packets were won, so both count.
+assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></pre>
         </Card>
       </div>
 

@@ -57,8 +57,8 @@ export interface DashboardContextValue {
   secure: boolean;
   status: Accessor<ConnectionStatus>;
   version: Accessor<Version | null>;
-  // A box a protocol version behind connects for one thing: being updated. Everything else on this
-  // page speaks the current wire, so it is not offered while this is true.
+  // A box on an older protocol connects for one thing: being updated. Everything else on this page
+  // speaks the current wire, so it is not offered while this is true.
   updateOnly: Accessor<boolean>;
   health: Accessor<Health | null>;
   error: Accessor<string | null>;
@@ -73,6 +73,8 @@ export interface DashboardContextValue {
   // Subscribe a card to one box readback for as long as it is mounted. The poller owns the timer
   // and shares one query across every card that wants the same value.
   poll: Poller['subscribe'];
+  // Whether the box answers a readback in a layout this build cannot decode.
+  pollUnreadable: Poller['unreadable'];
   // Re-read a value now. Call it straight after writing that value, so the readout shows what was
   // just set instead of the previous value until the next tick.
   refreshPoll: Poller['refresh'];
@@ -490,6 +492,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     connect,
     disconnect,
     poll: poller.subscribe,
+    pollUnreadable: poller.unreadable,
     refreshPoll: poller.refresh,
     flashProgress,
     flashLog,

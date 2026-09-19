@@ -18,6 +18,13 @@ const Update: Component = () => {
           into ROM download and no second port is involved; the wire is{' '}
           <A href="/native/commands/update"><code>UPDATE</code></A>.
         </p>
+        <div class="callout callout--info">
+          <p>
+            These calls need a box the library can open. A box it refuses, such as a 3.4.0 box on
+            protocol 7 (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>), is updated
+            from the dashboard's <A href="/dashboard/update">Update page</A>.
+          </p>
+        </div>
         <table class="api-params">
           <thead>
             <tr><th>Update a...</th><th>Write it</th><th>Write and commit it</th></tr>

@@ -40,8 +40,10 @@ const Types: Component = () => {
           </p>
           <p>
             Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>7</code>, the
-            number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
+            it, never a pointer you own. The shapes on this page are ABI version <code>8</code>, which
+            the header declares as <code>MEDIUS_ABI_VERSION</code>; compare it with{' '}
+            <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> once at{' '}
+            <A href="/bindings/c#verify">start-up</A>.
           </p>
         </div>
       </Card>
@@ -65,6 +67,12 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_NAME</code></td><td><code>33</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion.name</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.triggers</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_PKT_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.packet_triggers</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_PKT_MATCH_POOL</code></td><td><code>112</code></td><td>Match bytes the box holds across every <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_PKT_MATCH</code></td><td><code>16</code></td><td><A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger.match_bytes</code></A> and <code>.mask</code></td></tr>
+              <tr><td><code>MEDIUS_CLIP_EDGES_MAX</code></td><td><code>8</code></td><td>Edges in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_RAW_MAX</code></td><td><code>8</code></td><td>Raw reports in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>Encoded bytes of one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A>: one <code>CLIP_APPEND</code> payload</td></tr>
               <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState.entries</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_TRAFFIC_BYTES</code></td><td><code>180</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent.bytes</code></A></td></tr>
             </tbody>
@@ -307,8 +315,9 @@ const Types: Component = () => {
           <CardHeader title="MediusClipAction" subtitle="The engine action a clip trigger drives" />
           <pre class="api-signature">{`enum MediusClipAction : uint8_t`}</pre>
           <p>
-            What a bound <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A> does to
-            the clip on its edge; the same verbs as the <A href="/bindings/c/api#clip"><code>medius_clip_start/_stop/...</code></A> calls. See <A href="/library/clip">Clip</A>.
+            What a bound <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A> or{' '}
+            <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> does to
+            the clip when it fires; the same verbs as the <A href="/bindings/c/api#clip"><code>medius_clip_start/_stop/...</code></A> calls. See <A href="/library/clip">Clip</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -448,7 +457,7 @@ const Types: Component = () => {
             <tbody>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>0</code></td><td><code>data.motion</code></td><td><code>AXIS</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>1</code></td><td><code>data.usages</code></td><td><code>BUTTON</code>, <code>KEY</code>, <code>MEDIA</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>2</code></td><td><code>data.traffic</code></td><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>VENDOR_BULK</code>, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>2</code></td><td><code>data.traffic</code></td><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>VENDOR_BULK</code>, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>, <code>CLIP_TRANSFER</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -471,7 +480,7 @@ const Types: Component = () => {
             <thead><tr><th>Enumerator</th><th>Value</th><th>Stamped</th><th>Carries</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code></td><td><code>0</code></td><td>In USB interrupt context on the host chip, when the real device's transfer completed.</td><td>Motion and usage events, <code>HID_IN</code>, and the IN direction of <code>VENDOR_INTERRUPT</code> / <code>VENDOR_BULK</code>.</td></tr>
-              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE_CHIP</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, and <code>BUS</code>.</td></tr>
+              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE_CHIP</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>, and <code>CLIP_TRANSFER</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -558,6 +567,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td><code>11</code></td><td>The control endpoint number (<code>0</code> is EP0) a <A href="/bindings/c/api#clip">clip</A>'s transfer ran on.</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>0xFF</code></td><td>Nothing; must be <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every class at once.</td></tr>
             </tbody>
           </table>
@@ -566,7 +576,7 @@ const Types: Component = () => {
             <A href="/bindings/c/api#inspectors"><code>medius_catch_class_is_input</code></A> (the four
             parsed classes, which arrive decoded and carry no packet) or{' '}
             <A href="/bindings/c/api#inspectors"><code>medius_catch_class_is_traffic</code></A> (the
-            seven byte-oriented ones).
+            eight byte-oriented ones).
           </p>
           <p>
             Where each class is tapped, and why a locked input still reports, is on{' '}
@@ -1296,16 +1306,28 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusBoxInfo" subtitle="One discovered box: port, version, and cloned device" />
           <p>
             Filled by <A href="/bindings/c/api#discovery"><code>medius_list</code></A>: one entry per
-            connected box, each opened and handshaked in turn. See <A href="/library/types/structs#box-info"><code>BoxInfo</code></A>.
+            connected box, each read in turn. See <A href="/library/types/structs#box-info"><code>BoxInfo</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>port</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A></td><td>The box's control port (path + CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version, with the box MAC and name.</td></tr>
-              <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones.</td></tr>
+              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version and control protocol, with the box MAC and name.</td></tr>
+              <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones; zeroed when <code>has_device</code> is 0.</td></tr>
+              <tr><td><code>has_device</code></td><td><code>uint8_t</code></td><td>0 for a box whose <code>version.proto_ver</code> isn't the library's protocol; opening it answers <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`MediusBoxInfo boxes[8];
+uintptr_t total = 0;
+uintptr_t n = medius_list(boxes, 8, &total);
+for (uintptr_t i = 0; i < n; i++) {
+    const MediusBoxInfo *b = &boxes[i];
+    if (b->has_device)
+        printf("%s  %04x:%04x %s\\n", b->port.path, b->device.vid, b->device.pid, b->device.product);
+    else
+        printf("%s  protocol %u: update its firmware\\n", b->port.path, b->version.proto_ver);
+}`}</code></pre>
         </Card>
       </div>
 
@@ -1423,15 +1445,17 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <tbody>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet.</td><td><code>medius_traffic_event_bulk_end_of_transfer</code>, <code>medius_traffic_event_bulk_zlp</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>The real device's answer: <code>0</code> it completed, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout.</td><td><code>medius_traffic_event_control_status</code>, into a <code>MediusControlStatus</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>0xFE</code> when no answer came.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td>The bus event kind (table below).</td><td><code>medius_traffic_event_bus_event</code>, into a <code>MediusBusEvent</code></td></tr>
               <tr><td>every other class</td><td><code>0</code>.</td><td>-</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONTROL EVENTS</div>
           <p>
-            A <code>CONTROL</code> event covers a whole completed transaction, not one stage of one:{' '}
-            <code>bytes</code> is the 8-byte SETUP packet followed by the data stage, and{' '}
-            <code>direction</code> says which way that data went. Split them with{' '}
+            A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one completed
+            transaction: <code>bytes</code> is the 8-byte SETUP packet, then the data stage (IN data
+            only on <code>CLIP_TRANSFER</code>), and <code>direction</code> says which way that data
+            went. Split them with{' '}
             <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_setup</code></A> and{' '}
             <code>medius_traffic_event_data</code>.
           </p>
@@ -1602,10 +1626,58 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </Card>
       </div>
 
+      <div id="clip-packet-trigger" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipPacketTrigger" subtitle="One packet binding that drives the clip" />
+          <p>
+            A managed binding you add with <A href="/bindings/c/api#clip"><code>medius_clip_bind_packet</code></A>, keyed by{' '}
+            <code>(class_, id, direction, match_bytes, mask)</code>: a packet on a traffic surface whose
+            head matches under the mask runs <code>action</code> on the frame clock's next tick.{' '}
+            <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A> reads back the same
+            shape, so a read trigger replays as a bind. Concept on{' '}
+            <A href="/library/clip#packet-triggers">Clip</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><code>uint8_t</code></td><td>The surface the packet crosses: <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_HID_IN</code></A>, <code>_HID_OUT</code>, <code>_VENDOR_INTERRUPT</code>, <code>_VENDOR_BULK</code>, <code>_CONTROL</code> or <code>_EMIT</code>.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The interface number for <code>HID_IN</code>, the endpoint number for the rest, or <code>MEDIUS_CATCH_ID_ANY</code>.</td></tr>
+              <tr><td><code>direction</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_DIRECTION_*</code> value: <code>POSITIVE</code> (IN), <code>NEGATIVE</code> (OUT) or <code>BOTH</code>.</td></tr>
+              <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>A <A href="/bindings/c/types#clip-action"><code>MEDIUS_CLIP_ACTION_*</code></A> value.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to drop every packet the trigger wins, ahead of the rewrite table. The box holds a consuming trigger only under <code>medius_device_allow_imperfect_clones</code>, on any class but <code>CONTROL</code>.</td></tr>
+              <tr><td><code>once_per_run</code></td><td><code>uint8_t</code></td><td>1 to run <code>action</code> on the first packet of a run of matching ones; 0 runs it on each. A run is over one stream: a class other than <code>CONTROL</code>, a concrete <code>id</code>, and <code>POSITIVE</code> or <code>NEGATIVE</code>.</td></tr>
+              <tr><td><code>selector_len</code></td><td><code>uint8_t</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition, so it is below <code>match_len</code>. 0 without.</td></tr>
+              <tr><td><code>match_len</code>, <code>mask_len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>match_bytes</code> / <code>mask</code> (equal). 0 takes every packet on the address.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>uint8_t[MEDIUS_MAX_PKT_MATCH]</code></td><td>The head compare: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte.</td></tr>
+              <tr><td><code>hits</code></td><td><code>uint16_t</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. Filled by <code>medius_clip_query_config</code> and read by <code>medius_mock_set_clip_settings</code>; <code>medius_clip_bind_packet</code> sends the trigger without it.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`/* Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Start once per hold. */
+MediusClipPacketTrigger held = {
+    .class_ = MEDIUS_CATCH_CLASS_HID_IN, .id = 2,
+    .direction = MEDIUS_DIRECTION_POSITIVE,
+    .action = MEDIUS_CLIP_ACTION_START,
+    .once_per_run = 1, .selector_len = 1,
+    .match_len = 2, .mask_len = 2,
+    .match_bytes = { 0x07, 0x20 }, .mask = { 0xFF, 0x20 },
+};
+MediusStatus st = medius_clip_bind_packet(clip, &held);
+if (st == MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER) { /* medius_last_error_message() says why */ }
+
+MediusClipSettings cfg;
+medius_clip_query_config(clip, &cfg);
+for (uint8_t i = 0; i < cfg.packet_n; i++)
+    printf("action %u, %u hits\\n", cfg.packet_triggers[i].action, cfg.packet_triggers[i].hits);
+
+medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
+        </Card>
+      </div>
+
       <div id="clip-settings" data-search-target>
         <Card>
           <CardHeader title="MediusClipSettings" subtitle="The clip configuration read back from the box" />
-          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>: the auto-lock scope, the loop/retain/finalize scalars, and the live trigger set. Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>: the auto-lock scope, the loop/retain/finalize scalars, and both kinds of trigger. Concept on <A href="/library/clip">Clip</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1614,8 +1686,10 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>retain</code></td><td><code>uint8_t</code></td><td>The loaded clip is retained so it can rewind and replay (0 = streaming).</td></tr>
               <tr><td><code>finalized</code></td><td><code>uint8_t</code></td><td>A retained clip's end is fixed, so it can replay and loop.</td></tr>
               <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
-              <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound triggers, <code>triggers[0..n]</code>.</td></tr>
+              <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound input triggers, <code>triggers[0..n]</code>.</td></tr>
               <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>triggers</code>.</td></tr>
+              <tr><td><code>packet_triggers</code></td><td><A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A><code>[MEDIUS_CLIP_PKT_TRIG_MAX]</code></td><td>The bound packet triggers, <code>packet_triggers[0..packet_n]</code>, in the order the box holds them, each with its <code>hits</code>.</td></tr>
+              <tr><td><code>packet_n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>packet_triggers</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1643,10 +1717,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>free</code></td><td><code>uint32_t</code></td><td>Ring bytes free; pace top-ups off this.</td></tr>
               <tr><td><code>total</code></td><td><code>uint32_t</code></td><td>The retained clip size in bytes; streaming, the buffered-but-undrained bytes.</td></tr>
               <tr><td><code>played</code></td><td><code>uint32_t</code></td><td>Bytes played from the clip start (retained progress; ~0 while streaming).</td></tr>
-              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Content frames drained since the last start (gap runs are not counted).</td></tr>
+              <tr><td><code>ticks</code></td><td><code>uint32_t</code></td><td>Content frames played since the box booted (gap runs are not counted).</td></tr>
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
+              <tr><td><code>xfers</code></td><td><code>uint16_t</code></td><td>Clip transfers the device completed.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>uint16_t</code></td><td>Clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer.</td></tr>
+              <tr><td><code>gated</code></td><td><code>uint16_t</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held_n</code></td><td><code>uint16_t</code></td><td>Held usages in <code>held</code>.</td></tr>
               <tr><td><code>held</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
             </tbody>
@@ -1657,7 +1734,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="setup" data-search-target>
         <Card>
           <CardHeader title="MediusSetup" subtitle="A USB control-transfer setup packet" />
-          <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
+          <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A> and <A href="/bindings/c/api#clip"><code>medius_clip_frame_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1755,7 +1832,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>section</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_PATCH_SECTION_*</code> value: <code>_DEVICE</code> 0, <code>_CONFIG</code> 1, <code>_REPORT</code> 2, <code>_STRING</code> 3, <code>_BOS</code> 4.</td></tr>
-              <tr><td><code>cfg</code></td><td><code>uint8_t</code></td><td>Configuration index, for <code>Config</code>/<code>Report</code>.</td></tr>
+              <tr><td><code>cfg</code></td><td><code>uint8_t</code></td><td>Configuration index, for <code>Config</code>/<code>Report</code>. <code>0</code> is the first configuration, not <code>bConfigurationValue</code>.</td></tr>
               <tr><td><code>index</code></td><td><code>uint8_t</code></td><td>Interface or string index, for <code>Report</code>/<code>String</code>.</td></tr>
               <tr><td><code>offset</code></td><td><code>uint16_t</code></td><td>Byte offset within the descriptor.</td></tr>
               <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>bytes</code>; 0 removes the patch.</td></tr>
@@ -1827,9 +1904,9 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <tbody>
               <tr><td><code>MEDIUS_STATUS_OK</code></td><td><code>0</code></td><td>Success.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td><code>1</code></td><td>An underlying serial or OS error.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No device matched the expected VID/PID.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No port has the box's VID/PID, or no box matches the <A href="/bindings/c/api#discovery">discovery</A> id or kind.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td><code>3</code></td><td>The box never answered the version query during the <A href="/native/connection#handshake">handshake</A>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>), including a box the <A href="/bindings/c/api#discovery">discovery</A> openers matched.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td>A query waited past its timeout with no reply.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td><code>6</code></td><td>The link dropped (also returned by a stream when it closes).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td><td>An outbound frame exceeded the wire limit.</td></tr>
@@ -1847,7 +1924,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_RANGE</code></td><td><code>20</code></td><td>A lock scale outside <code>MEDIUS_LOCK_SCALE_MIN</code> to <code>MEDIUS_LOCK_SCALE_MAX</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code></td><td><code>21</code></td><td>A negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td>An advanced control layer call with the imperfect-clone opt-in off, which gates the whole layer.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td><code>medius_device_set_rewrite</code> or <code>medius_device_apply_patch</code> with the imperfect-clone opt-in off.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td>A rewrite rule whose <code>match</code> and <code>mask</code> are different lengths.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td>A rewrite action that is not valid for its class.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td>A rewrite payload larger than the head the box holds for its class.</td></tr>
@@ -1855,6 +1932,11 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_OP_FIELDS</code></td><td><code>27</code></td><td>A transform op that cannot address its <code>source</code>/<code>dest</code> pair, or one field named as both.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFORM_TABLE_FULL</code></td><td><code>28</code></td><td>A transform added to a table that already holds <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td><td>A clip frame with more than <code>MEDIUS_CLIP_EDGES_MAX</code> edges or <code>MEDIUS_CLIP_RAW_MAX</code> raw reports.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td><td>A clip frame that encodes to more than <code>MEDIUS_CLIP_ENTRY_MAX</code> bytes.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td><td>A clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td><td>A <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td>A rewrite rule with more than <code>MEDIUS_MAX_REWRITE_MATCH</code> (16) match bytes.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
