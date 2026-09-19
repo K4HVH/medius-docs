@@ -19,6 +19,10 @@ const mock = vi.hoisted(() => ({
   setClip: (_v: unknown) => {},
   setImperfect: (_on: boolean) => {},
   setHealth: (_over: Record<string, boolean>) => {},
+  setUnreadable: (_on: boolean) => {},
+  // Which poll values the card asked to re-read, in order, and a hook that runs on each.
+  refreshed: [] as string[],
+  onRefresh: null as ((key: string) => void) | null,
   sets: [] as { id: number; value: number }[],
   appended: [] as unknown[][],
   // Every CLIP_TRIGGER call the card made, in order.
@@ -31,6 +35,8 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   mock.setClip = setClip;
   const [imperfect, setImperfect] = createSignal(false);
   mock.setImperfect = setImperfect;
+  const [unreadable, setUnreadable] = createSignal(false);
+  mock.setUnreadable = setUnreadable;
   const base = {
     linkUp: true,
     mouseAttached: true,
@@ -79,10 +85,23 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       health,
       link: () => link,
       poll: (key: string) => () => values[key]?.() ?? null,
-      refreshPoll: () => {},
+      pollUnreadable: (key: string) => () => key === 'clip' && unreadable(),
+      refreshPoll: (key: string) => {
+        mock.refreshed.push(key);
+        mock.onRefresh?.(key);
+      },
     }),
   };
 });
+
+vi.mock('@solidjs/router', () => ({
+  A: (p: { href: string; children: unknown }) => {
+    const a = document.createElement('a');
+    a.href = p.href;
+    a.textContent = String(p.children);
+    return a;
+  },
+}));
 
 import DeviceClip from '../../src/app/pages/dashboard/DeviceClip';
 
@@ -123,7 +142,10 @@ afterEach(() => {
   mock.sets = [];
   mock.appended = [];
   mock.triggerCalls = [];
+  mock.refreshed = [];
+  mock.onRefresh = null;
   mock.setImperfect(false);
+  mock.setUnreadable(false);
   mock.setHealth({});
 });
 
@@ -678,7 +700,7 @@ describe('DeviceClip packet triggers', () => {
     expect(queryByText(why)).toBeNull();
   });
 
-  it('says when the verb runs and what becomes of the packet, as the boxes stand', async () => {
+  it('says when the verb runs and what becomes of the packet, as the two boxes are set', async () => {
     mock.setImperfect(true);
     const { container, queryByText, queryByLabelText } = await mount();
     expect(queryByText('The verb runs on every matching packet. A matched packet is left untouched.')).toBeTruthy();
@@ -994,11 +1016,190 @@ describe('DeviceClip packet triggers', () => {
     expect(button(container, 'Clear triggers').disabled).toBe(false);
   });
 
+  it('keeps the id and selector fields to whole numbers, and sends what they show', async () => {
+    mock.setImperfect(true);
+    const { container } = await mount();
+    await fillVector(container);
+    type(container, 'clip-pkt-match', '07 20 01');
+    type(container, 'clip-pkt-mask', 'ff 20 ff');
+    type(container, 'clip-pkt-id', '2.5');
+    type(container, 'clip-pkt-selector', '1.5');
+    await settle();
+    expect(named(container, 'clip-pkt-id').value).toBe('3');
+    expect(named(container, 'clip-pkt-selector').value).toBe('2');
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => [t.id, t.selectorLen])).toEqual([[3, 2]]);
+  });
+
   it('says the any-input binding takes the packet triggers with it', async () => {
     mock.setClip(
       status({ triggers: [{ cls: 0xff, id: 0xffff, edge: Direction.Both, action: ClipOp.Stop, consume: false }] }),
     );
     const { queryByText } = render(() => <DeviceClip />);
     expect(queryByText(/clears every trigger, packet triggers included/)).toBeTruthy();
+  });
+});
+
+describe('DeviceClip bind verification', () => {
+  const named = (container: HTMLElement, name: string): HTMLInputElement =>
+    container.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+  const type = (container: HTMLElement, name: string, value: string) => {
+    fireEvent.input(named(container, name), { target: { value } });
+    fireEvent.blur(named(container, name));
+  };
+  const alert = (container: HTMLElement) => container.querySelector('[role=alert]')?.textContent ?? null;
+  const optIn = 'The box did not take this trigger. It refuses a consuming trigger while imperfect clones are off.';
+  const sentOf = () => mock.triggerCalls.filter((c) => c.call === 'bindPacket').map((c) => c.trigger as ClipPacketTrigger);
+  const other = (i: number, len = 1) =>
+    packet({ id: 10 + i, consume: false, oncePerRun: false, selectorLen: 0, match: new Uint8Array(len).fill(i), mask: new Uint8Array(len).fill(0xff) });
+  // Binds the consuming once-per-run vector trigger with `held` on screen, and returns what went out.
+  const bindVector = async (held: ClipPacketTriggerEntry[] = [], consume = true) => {
+    mock.setImperfect(true);
+    mock.setClip(status({ packetTriggers: held }));
+    const view = render(() => <DeviceClip />);
+    const { container } = view;
+    fireEvent.click(radio(container, 'A packet'));
+    await settle();
+    type(container, 'clip-pkt-id', '2');
+    fireEvent.click(radio(container, 'In'));
+    type(container, 'clip-pkt-match', '07 20');
+    type(container, 'clip-pkt-mask', 'ff 20');
+    fireEvent.click(radio(container, 'Start'));
+    if (consume) fireEvent.click(box(container, 'Consume the packet'));
+    fireEvent.click(box(container, 'Once per run'));
+    await settle();
+    type(container, 'clip-pkt-selector', '1');
+    await settle();
+    const bindButton = [...container.querySelectorAll('button')].find((b) => /^(Bind|Replace)$/.test(b.textContent?.trim() ?? ''));
+    fireEvent.click(bindButton as HTMLElement);
+    await settle();
+    const sent = sentOf();
+    expect(sent).toHaveLength(1);
+    return { ...view, sent: sent[0] };
+  };
+  // The next RESP(CLIP) the card receives.
+  const reply = async (packets: ClipPacketTriggerEntry[]) => {
+    mock.setClip(status({ packetTriggers: packets }));
+    await settle();
+  };
+
+  it('re-reads the status once the bind is out, and waits for that read', async () => {
+    const { container } = await bindVector();
+    expect(mock.refreshed).toContain('clip');
+    // The status on screen at the send predates the bind, so it is no answer.
+    await settle();
+    expect(alert(container)).toBeNull();
+  });
+
+  it('does not take a status read before the bind went out as its answer', async () => {
+    // A poll already in flight answers with the pre-bind list. The card re-reads before it starts
+    // waiting, so that answer lands before the wait and is not taken for the box's reply.
+    let stale = true;
+    mock.onRefresh = (key) => {
+      if (key !== 'clip' || !stale) return;
+      stale = false;
+      mock.setClip(status({ packetTriggers: [] }));
+    };
+    const { container, sent } = await bindVector();
+    expect(stale).toBe(false);
+    expect(alert(container)).toBeNull();
+    await reply([{ ...sent, hits: 0 }]);
+    expect(alert(container)).toBeNull();
+  });
+
+  it('shows nothing when the next status holds the trigger as it was sent', async () => {
+    const { container, sent } = await bindVector();
+    await reply([{ ...sent, hits: 0 }]);
+    expect(alert(container)).toBeNull();
+    // One status answers one bind: a later one without it says nothing about that bind.
+    await reply([]);
+    expect(alert(container)).toBeNull();
+  });
+
+  it('says the box did not take a consuming trigger the next status leaves out', async () => {
+    const { container } = await bindVector();
+    mock.refreshed = [];
+    await reply([]);
+    expect(alert(container)).toBe(optIn);
+    // The opt-in is read again, so Consume stands down if the box has it off.
+    expect(mock.refreshed).toContain('imperfect');
+  });
+
+  it('says so when the box keeps a trigger under that key with other flags', async () => {
+    // The replace went out consuming; the box kept the watching one it held.
+    const held = packet({ consume: false, hits: 4 });
+    const { container, sent } = await bindVector([held]);
+    expect(sent.consume).toBe(true);
+    await reply([held]);
+    expect(alert(container)).toBe(optIn);
+  });
+
+  it('names a table that filled before the bind landed', async () => {
+    const { container } = await bindVector(Array.from({ length: 7 }, (_, i) => other(i)));
+    await reply(Array.from({ length: 8 }, (_, i) => other(i)));
+    expect(alert(container)).toBe(
+      'The box did not take this trigger. All 8 packet trigger slots are used. Remove one first.',
+    );
+  });
+
+  it('names a match pool that filled before the bind landed', async () => {
+    const { container } = await bindVector([other(0)]);
+    await reply(Array.from({ length: 7 }, (_, i) => other(i, 16)));
+    expect(alert(container)).toBe(
+      'The box did not take this trigger. Packet triggers share 112 match bytes. Remove one or shorten the match.',
+    );
+  });
+
+  it('says only that the box did not take a watching trigger it had room for', async () => {
+    const { container, sent } = await bindVector([], false);
+    expect(sent.consume).toBe(false);
+    await reply([]);
+    expect(alert(container)).toBe('The box did not take this trigger.');
+  });
+
+  it('drops the check when the triggers change from here before the next status', async () => {
+    const { container } = await bindVector([other(0)]);
+    fireEvent.click(button(container, 'Clear triggers'));
+    await settle();
+    expect(mock.triggerCalls.at(-1)).toEqual({ call: 'clear' });
+    await reply([]);
+    expect(alert(container)).toBeNull();
+  });
+});
+
+describe('DeviceClip clip status', () => {
+  it('stands down on a status it cannot read, and names the update that fixes it', async () => {
+    mock.setClip(null);
+    mock.setUnreadable(true);
+    const { container, queryByText } = render(() => <DeviceClip />);
+    const text = container.textContent ?? '';
+    expect(text).toContain('This box\'s firmware sends clip status in an older layout than this dashboard reads.');
+    expect(text).toContain('Update the firmware to use clip playback.');
+    expect(container.querySelector('a')?.getAttribute('href')).toBe('/dashboard/update');
+    for (const empty of ['Idle', 'B free', 'B loaded', 'No triggers bound.', 'Reading status...']) {
+      expect(text).not.toContain(empty);
+    }
+    expect(queryByText('Clear')).toBeNull();
+    expect(queryByText('Clear triggers')).toBeNull();
+    expect(queryByText('Send to box')).toBeNull();
+  });
+
+  it('shows the card again once a status decodes', async () => {
+    mock.setClip(null);
+    mock.setUnreadable(true);
+    const { container, queryByText } = render(() => <DeviceClip />);
+    mock.setUnreadable(false);
+    mock.setClip(status({ state: ClipState.Playing }));
+    await settle();
+    expect(container.textContent).not.toContain('older layout');
+    expect(queryByText('Playing')).toBeTruthy();
+  });
+
+  it('reads Reading status, not an idle empty clip, before the first status lands', async () => {
+    mock.setClip(null);
+    const { container, queryByText } = render(() => <DeviceClip />);
+    expect(queryByText('Reading status...')).toBeTruthy();
+    for (const empty of ['Idle', 'B free', 'No triggers bound.']) expect(container.textContent).not.toContain(empty);
   });
 });

@@ -8,6 +8,7 @@
 // only a packet trigger that consumes needs the opt-in, so one that watches binds without it.
 
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
@@ -73,7 +74,7 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
-import { checkColumn, chips, label, muted, row, section } from './ui';
+import { checkColumn, chips, label, muted, row, section, status } from './ui';
 import {
   RAW_DIR_BLURB,
   SETUP_DEFAULT,
@@ -227,6 +228,30 @@ const DIR_WHY: Record<number, string> = {
   [CatchClass.Emit]: 'Every emitted report travels In.',
 };
 
+// Why the box did not take a packet trigger it was sent, read from the first status after the bind;
+// null when it holds that key with the verb and flags that went out. A key it already held takes no
+// slot and no pool bytes, so only the opt-in refuses an overwrite.
+const bindRefusal = (t: ClipPacketTrigger, c: ClipStatus): string | null => {
+  const held = c.packetTriggers.find((h) => samePacketTrigger(h, t));
+  if (
+    held &&
+    held.action === t.action &&
+    held.consume === t.consume &&
+    held.oncePerRun === t.oncePerRun &&
+    held.selectorLen === t.selectorLen
+  ) {
+    return null;
+  }
+  const room = clipPacketTriggerFault(t, { imperfect: true, held: c.packetTriggers });
+  const why =
+    room === 'full' || room === 'pool'
+      ? PKT_FAULT_TEXT[room]
+      : t.consume
+        ? 'It refuses a consuming trigger while imperfect clones are off.'
+        : null;
+  return why ? `The box did not take this trigger. ${why}` : 'The box did not take this trigger.';
+};
+
 const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
 
 // The box counts a packet trigger's hits in 16 bits and holds the count at the top.
@@ -239,6 +264,7 @@ const bytesOf = (entries: ClipEntry[]): number =>
 const DeviceClip = () => {
   const dash = useDashboard();
   const clip = dash.poll('clip');
+  const clipUnreadable = dash.pollUnreadable('clip');
   const health = () => dash.health();
   const moveRide = dash.poll('moveRide');
   const render = dash.poll('render');
@@ -298,7 +324,7 @@ const DeviceClip = () => {
       { dir: Direction.Negative, label: 'Out' },
     ].map((o) => ({ value: String(o.dir), label: o.label, disabled: !clipPacketDirOk(pktCls(), o.dir) }));
   const packets = () => clip()?.packetTriggers ?? [];
-  // Consuming drops traffic, which rides the opt-in, and a drop has no meaning on a control request.
+  // Consuming drops traffic, which needs the opt-in, and a drop has no meaning on a control request.
   // A box ticked while it could apply falls back with whichever of the two took it away.
   const consumeWhy = (): string | null => {
     if (pktCls() === CatchClass.Control) return 'A control request always reaches the device, so there is nothing to consume.';
@@ -306,7 +332,7 @@ const DeviceClip = () => {
     return null;
   };
   const consumeNow = () => pktConsume() && consumeWhy() === null;
-  // When the verb runs and what becomes of the packet, as the two checkboxes stand now.
+  // When the verb runs and what becomes of the packet, as the two checkboxes are set.
   const pktBlurb = () => {
     const when = pktOnce()
       ? 'The verb runs on the first of a run of matching packets. The selector is the leading match bytes that pick the stream, such as a report ID.'
@@ -460,7 +486,8 @@ const DeviceClip = () => {
     });
   };
 
-  const addTrigger = () =>
+  const addTrigger = () => {
+    setSentPacket(null);
     cmd.run(async () => {
       const u = trigUsage();
       const action = Number(trigOp());
@@ -475,8 +502,12 @@ const DeviceClip = () => {
         consume: trigConsume(),
       });
     });
+  };
 
-  const removeTrigger = (t: ClipTrigger) => cmd.run(() => dash.link()!.clipUntrigger(t));
+  const removeTrigger = (t: ClipTrigger) => {
+    setSentPacket(null);
+    cmd.run(() => dash.link()!.clipUntrigger(t));
+  };
 
   // The packet trigger the fields describe, or what is wrong with them.
   const pickedPacket = (): ClipPacketTrigger | string => {
@@ -496,9 +527,26 @@ const DeviceClip = () => {
     };
   };
 
-  // Refused here, where the fields are: CLIP_TRIGGER has no reply, so a trigger the box drops would
-  // only show as a list that never gained it.
+  // CLIP_TRIGGER has no reply, and the box drops a trigger on state this card reads late: the opt-in
+  // turned off elsewhere, or another client filling the slots or the match pool. So a bind is checked
+  // against the first status read after it went out. `before` is the status on screen at the send.
+  const [sentPacket, setSentPacket] = createSignal<{ trigger: ClipPacketTrigger; before: ClipStatus | null } | null>(
+    null,
+  );
+  createEffect(() => {
+    const c = clip();
+    const sent = sentPacket();
+    if (!sent || !c || c === sent.before) return;
+    setSentPacket(null);
+    const why = bindRefusal(sent.trigger, c);
+    if (why === null) return;
+    dash.refreshPoll('imperfect');
+    cmd.run(() => Promise.reject(new Error(why)));
+  });
+
+  // Refused here, where the fields are, for everything the fields decide.
   const addPacket = () => {
+    setSentPacket(null);
     const picked = pickedPacket();
     const fault =
       typeof picked === 'string' ? null : clipPacketTriggerFault(picked, { imperfect: allowed(), held: packets() });
@@ -507,12 +555,23 @@ const DeviceClip = () => {
       cmd.run(() => Promise.reject(new Error(trigger)));
       return;
     }
-    cmd.run(() => dash.link()!.clipPacketTrigger(trigger));
+    cmd.run(async () => {
+      await dash.link()!.clipPacketTrigger(trigger);
+      // The refresh strands any read already in flight, so the next status was read after the bind.
+      dash.refreshPoll('clip');
+      setSentPacket({ trigger, before: clip() });
+    });
   };
 
-  const removePacket = (t: ClipPacketTrigger) => cmd.run(() => dash.link()!.clipPacketUntrigger(t));
+  const removePacket = (t: ClipPacketTrigger) => {
+    setSentPacket(null);
+    cmd.run(() => dash.link()!.clipPacketUntrigger(t));
+  };
 
-  const clearTriggers = () => cmd.run(() => dash.link()!.clipClearTriggers());
+  const clearTriggers = () => {
+    setSentPacket(null);
+    cmd.run(() => dash.link()!.clipClearTriggers());
+  };
 
   // The box keys a binding on (class, id, edge) and overwrites in place, so a full table still
   // accepts a rebind of an address it already holds.
@@ -568,6 +627,16 @@ const DeviceClip = () => {
           <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
 
           <Show when={ready()} fallback={<p style={muted}>Clips need a cloned device. Plug one into USB3.</p>}>
+          <Show
+            when={!clipUnreadable()}
+            fallback={
+              <p style={muted}>
+                This box's firmware sends clip status in an older layout than this dashboard reads.{' '}
+                <A href="/dashboard/update">Update the firmware</A> to use clip playback.
+              </p>
+            }
+          >
+          <Show when={clip()} fallback={<p style={status}>Reading status...</p>}>
             <Show when={render() && (cursorRides() || wheelRides())}>
               <div class="callout callout--warning">
                 {cursorRides() && rendered()
@@ -1010,6 +1079,7 @@ const DeviceClip = () => {
                         value={pktId()}
                         min={0}
                         max={65534}
+                        precision={0}
                         onChange={(v) => setPktId(v ?? 0)}
                       />
                     </div>
@@ -1083,6 +1153,7 @@ const DeviceClip = () => {
                       value={pktSelector()}
                       min={0}
                       max={CLIP_PKT_MATCH_MAX - 1}
+                      precision={0}
                       onChange={(v) => setPktSelector(v ?? 0)}
                     />
                   </div>
@@ -1137,6 +1208,8 @@ const DeviceClip = () => {
                 {err()}
               </div>
             </Show>
+          </Show>
+          </Show>
           </Show>
         </Card>
       </div>

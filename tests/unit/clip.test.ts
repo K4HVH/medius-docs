@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   type ClipEntry,
   type ClipPacketTrigger,
@@ -45,7 +45,9 @@ import {
   sameTrigger,
   transferPayload,
 } from '../../src/dashboard/protocol';
-import { SerialLink } from '../../src/dashboard/serial';
+import { SerialLink, UnreadableReplyError } from '../../src/dashboard/serial';
+import { createRoot } from 'solid-js';
+import { createPoller } from '../../src/app/pages/dashboard/poll';
 
 const bytes = (e: ClipEntry) => Array.from(encodeClipEntry(e) ?? []);
 
@@ -1069,6 +1071,72 @@ describe('clipAppend on the link', () => {
     await expect(link.clipPacketTrigger({ ...vectorTrigger, cls: CatchClass.Control })).rejects.toThrow();
     await expect(link.clipPacketUntrigger({ ...vectorTrigger, mask: hex('FF') })).rejects.toThrow();
     expect(mock.frames.filter((f) => f.ty === FrameType.ClipTrigger)).toHaveLength(0);
+    await link.close();
+  });
+});
+
+// RESP(CLIP) as 3.4.0 lays it out: the 25-byte prefix ends at held_n, with no transfer counters,
+// then the config and one input binding, and no packet trigger list. Playing, replayable.
+const CLIP_340 = new Uint8Array([
+  Q_CLIP, ClipState.Playing,
+  0x00, 0x00, 0x01, 0x00, // free
+  0x40, 0x00, 0x00, 0x00, // used
+  0x20, 0x00, 0x00, 0x00, // played
+  0x05, 0x00, 0x00, 0x00, // ticks
+  0, 0, 0, 0, 0, 0, // underruns, overruns, seq gaps
+  0, // held_n
+  0, 0x02, 1, // autolock, flags, n_trig
+  1, 0x3a, 0x00, Direction.Positive, ClipOp.Toggle, 1,
+]);
+
+describe('a clip status in the 3.4.0 layout', () => {
+  const answering = (payload: Uint8Array) => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === Q_CLIP) mock.push(encode(FrameType.Resp, f.seq, payload));
+    };
+    return new SerialLink(asPort(mock));
+  };
+
+  it('does not decode', () => {
+    expect(CLIP_340.length).toBe(25 + 3 + 6);
+    expect(parseResp(CLIP_340)).toBeNull();
+  });
+
+  it('is an unreadable reply on the link, not a missing one', async () => {
+    const link = answering(CLIP_340);
+    await link.open();
+    await expect(link.queryClip()).rejects.toBeInstanceOf(UnreadableReplyError);
+    await link.close();
+  });
+
+  it('marks the clip readback unreadable in the poller, and a decoded status clears it', async () => {
+    let payload = CLIP_340;
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === Q_CLIP) mock.push(encode(FrameType.Resp, f.seq, payload));
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await createRoot(async (dispose) => {
+      const poller = createPoller(() => link);
+      const clip = poller.subscribe('clip');
+      const unreadable = poller.unreadable('clip');
+      await vi.waitFor(() => expect(unreadable()).toBe(true));
+      expect(clip()).toBeNull();
+
+      payload = new Uint8Array([Q_CLIP, 0, 0, 0, 1, 0, ...new Array(25).fill(0), 0, 0, 0, 0]);
+      poller.refresh('clip');
+      await vi.waitFor(() => expect(unreadable()).toBe(false));
+      expect(clip()?.freeBytes).toBe(65536);
+
+      payload = CLIP_340;
+      poller.refresh('clip');
+      await vi.waitFor(() => expect(unreadable()).toBe(true));
+      poller.reset();
+      expect(unreadable()).toBe(false);
+      dispose();
+    });
     await link.close();
   });
 });

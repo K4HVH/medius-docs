@@ -102,6 +102,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     inputEvents: () => [],
     clearInputEvents: () => {},
     poll: (key: string) => () => ({ ...VALUES, ...over })[key] ?? null,
+    pollUnreadable: () => () => false,
     refreshPoll: () => {},
     ...over,
   }) as unknown as DashboardContextValue;

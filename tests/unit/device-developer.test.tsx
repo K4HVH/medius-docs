@@ -87,6 +87,7 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
 });
 
 import DeviceDeveloper from '../../src/app/pages/dashboard/DeviceDeveloper';
+import { trafficIdLabel } from '../../src/app/pages/dashboard/hex';
 
 const on = () => {
   mock.poll = {
@@ -464,5 +465,27 @@ describe('DeviceRewrite actions and payloads', () => {
     expect(mock.entryReads).toEqual([0]);
     expect(sentRule().state).toBe(0);
     expect(Array.from(sentRule().match)).toEqual([0x01, 0x10]);
+  });
+});
+
+describe('traffic address labels', () => {
+  it('names the id each class is addressed by', () => {
+    expect(
+      [
+        CatchClass.HidIn,
+        CatchClass.HidOut,
+        CatchClass.VendorInterrupt,
+        CatchClass.VendorBulk,
+        CatchClass.Control,
+        CatchClass.Emit,
+      ].map(trafficIdLabel),
+    ).toEqual([
+      'Interface number',
+      'Endpoint number',
+      'Endpoint number',
+      'Endpoint number',
+      'Endpoint number (0 is EP0)',
+      'Endpoint number',
+    ]);
   });
 });
