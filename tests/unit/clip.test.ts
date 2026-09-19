@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
   type ClipEntry,
+  type ClipPacketTrigger,
+  type ClipPacketTriggerBox,
   type ClipTrigger,
   Action,
+  CATCH_ID_ANY,
+  CLIP_PKT_CLASSES,
+  CLIP_PKT_MATCH_MAX,
+  CLIP_PKT_MATCH_POOL,
+  CLIP_PKT_TRIG_MAX,
   CLIP_COND_ANY_CLASS,
   CLIP_COND_ANY_ID,
   CLIP_EDGES_MAX,
@@ -13,20 +20,28 @@ import {
   CLIP_SET_RETAIN,
   CLIP_TRIG_F_CONSUME,
   CLIP_TRIG_F_PRESENT,
+  CLIP_TRIG_F_RUN,
+  CatchClass,
   ClipOp,
   ClipState,
   Direction,
   FrameDecoder,
   FrameType,
   Q_CLIP,
+  REWRITE_CLASSES,
+  clearClipTriggersPayload,
   clipAppendPayload,
   clipCtrlPayload,
   clipEntryFault,
+  clipPacketKeyFault,
+  clipPacketTriggerFault,
+  clipPacketTriggerPayload,
   clipSetPayload,
   clipTriggerPayload,
   encode,
   encodeClipEntry,
   parseResp,
+  samePacketTrigger,
   sameTrigger,
   transferPayload,
 } from '../../src/dashboard/protocol';
@@ -86,6 +101,18 @@ describe('clip caps', () => {
     expect(CLIP_EDGES_MAX).toBe(8);
     expect(CLIP_RAW_MAX).toBe(8);
     expect(CLIP_ENTRY_MAX).toBe(512);
+  });
+
+  it('match the firmware for packet triggers', () => {
+    expect(CLIP_PKT_TRIG_MAX).toBe(8);
+    expect(CLIP_PKT_MATCH_MAX).toBe(16);
+    expect(CLIP_PKT_MATCH_POOL).toBe(112);
+    expect([CLIP_TRIG_F_PRESENT, CLIP_TRIG_F_CONSUME, CLIP_TRIG_F_RUN]).toEqual([0x01, 0x02, 0x04]);
+  });
+
+  it('watch the six surfaces a rewrite rule addresses', () => {
+    expect(CLIP_PKT_CLASSES).toEqual([4, 5, 6, 7, 8, 9]);
+    expect(CLIP_PKT_CLASSES).toEqual(REWRITE_CLASSES);
   });
 
   it('keep a raw endpoint to its number', () => {
@@ -380,6 +407,252 @@ describe('clip command payloads (§3.11)', () => {
   });
 });
 
+const hex = (s: string) => new Uint8Array(s.split(' ').map((b) => parseInt(b, 16)));
+
+// The trigger the firmware's wire vectors describe: HID in, interface 2, IN, start, consume and once
+// per run, selector 1, match 07 20 under FF 20.
+const vectorTrigger: ClipPacketTrigger = {
+  cls: CatchClass.HidIn,
+  id: 2,
+  dir: Direction.Positive,
+  action: ClipOp.Start,
+  consume: true,
+  oncePerRun: true,
+  selectorLen: 1,
+  match: hex('07 20'),
+  mask: hex('FF 20'),
+};
+
+// A trigger that only watches: every packet on the address, nothing consumed.
+const watching: ClipPacketTrigger = {
+  cls: CatchClass.VendorInterrupt,
+  id: CATCH_ID_ANY,
+  dir: Direction.Both,
+  action: ClipOp.Toggle,
+  consume: false,
+  oncePerRun: false,
+  selectorLen: 0,
+  match: new Uint8Array(0),
+  mask: new Uint8Array(0),
+};
+
+describe('packet trigger payloads against the firmware vectors (§3.11)', () => {
+  it('binds with the match behind the six bytes every binding has', () => {
+    expect(Array.from(clipPacketTriggerPayload(vectorTrigger, true)!)).toEqual(
+      Array.from(hex('04 02 00 01 00 07 01 02 07 20 FF 20')),
+    );
+  });
+
+  it('removes by key, with the action, flags and selector zero', () => {
+    const toggling = { ...vectorTrigger, action: ClipOp.Toggle as const };
+    expect(Array.from(clipPacketTriggerPayload(toggling, false)!)).toEqual(
+      Array.from(hex('04 02 00 01 00 00 00 02 07 20 FF 20')),
+    );
+  });
+
+  it('carries the id little-endian', () => {
+    const t = { ...vectorTrigger, id: 0x0102 };
+    expect(Array.from(clipPacketTriggerPayload(t, true)!).slice(0, 3)).toEqual([4, 0x02, 0x01]);
+  });
+
+  it('sets consume and once per run as separate bits over present', () => {
+    const flagsOf = (over: Partial<ClipPacketTrigger>) =>
+      clipPacketTriggerPayload({ ...vectorTrigger, ...over }, true)![5];
+    expect(flagsOf({ consume: false })).toBe(0x05);
+    expect(flagsOf({ oncePerRun: false, selectorLen: 0 })).toBe(0x03);
+    expect(flagsOf({ consume: false, oncePerRun: false, selectorLen: 0 })).toBe(0x01);
+  });
+
+  it('writes a trigger with no match as the eight header bytes', () => {
+    expect(Array.from(clipPacketTriggerPayload(watching, true)!)).toEqual([6, 0xff, 0xff, 0, 5, 0x01, 0, 0]);
+  });
+
+  it('clears both kinds of trigger with the one sentinel frame', () => {
+    expect(Array.from(clearClipTriggersPayload())).toEqual([0xff, 0xff, 0xff, 0, 0, 0]);
+  });
+
+  it('keys a packet trigger on its address, match and mask', () => {
+    const other = { ...vectorTrigger, action: ClipOp.Stop as const, consume: false, oncePerRun: false, selectorLen: 0 };
+    expect(samePacketTrigger(vectorTrigger, other)).toBe(true);
+    expect(samePacketTrigger(vectorTrigger, { ...vectorTrigger, dir: Direction.Negative })).toBe(false);
+    expect(samePacketTrigger(vectorTrigger, { ...vectorTrigger, id: 3 })).toBe(false);
+    expect(samePacketTrigger(vectorTrigger, { ...vectorTrigger, cls: CatchClass.Emit })).toBe(false);
+    expect(samePacketTrigger(vectorTrigger, { ...vectorTrigger, match: hex('07 21') })).toBe(false);
+    expect(samePacketTrigger(vectorTrigger, { ...vectorTrigger, mask: hex('FF FF') })).toBe(false);
+    expect(samePacketTrigger(vectorTrigger, { ...vectorTrigger, match: hex('07'), mask: hex('FF') })).toBe(false);
+  });
+});
+
+describe('packet trigger refusals (§3.11)', () => {
+  const on: ClipPacketTriggerBox = { imperfect: true, held: [] };
+  const off: ClipPacketTriggerBox = { imperfect: false, held: [] };
+  const fault = (over: Partial<ClipPacketTrigger>, box?: ClipPacketTriggerBox) =>
+    clipPacketTriggerFault({ ...vectorTrigger, ...over }, box);
+  // `n` held triggers of `len` match bytes each, every key distinct.
+  const heldSet = (n: number, len: number): ClipPacketTrigger[] =>
+    Array.from({ length: n }, (_, i) => ({
+      ...watching,
+      id: i,
+      match: new Uint8Array(len).fill(i),
+      mask: new Uint8Array(len).fill(0xff),
+    }));
+
+  it('takes the vector trigger and a watching one', () => {
+    expect(fault({}, on)).toBeNull();
+    expect(clipPacketTriggerFault(watching, on)).toBeNull();
+  });
+
+  it('refuses a class that is no traffic surface', () => {
+    for (const cls of [CatchClass.Button, CatchClass.Axis, CatchClass.Bus, CatchClass.ClipTransfer, CatchClass.Any]) {
+      expect(fault({ cls })).toBe('class');
+    }
+    for (const cls of [4, 6, 7, 9]) expect(fault({ cls })).toBeNull();
+    expect(fault({ cls: 5, dir: Direction.Negative })).toBeNull();
+  });
+
+  it('refuses a direction past Out', () => {
+    expect(fault({ dir: Direction.With })).toBe('direction');
+    expect(fault({ cls: CatchClass.VendorBulk, dir: Direction.Negative })).toBeNull();
+  });
+
+  it('refuses a direction its class never carries, on a set and on a removal', () => {
+    const plain = { oncePerRun: false, selectorLen: 0 };
+    expect(fault({ ...plain, cls: CatchClass.HidIn, dir: Direction.Negative })).toBe('class-direction');
+    expect(fault({ ...plain, cls: CatchClass.Emit, dir: Direction.Negative })).toBe('class-direction');
+    expect(fault({ ...plain, cls: CatchClass.HidOut, dir: Direction.Positive })).toBe('class-direction');
+    expect(clipPacketKeyFault({ ...vectorTrigger, dir: Direction.Negative })).toBe('class-direction');
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, dir: Direction.Negative }, false)).toBeNull();
+    // Both is a wildcard every class takes, and the vendor and control classes travel both ways.
+    for (const cls of CLIP_PKT_CLASSES) expect(fault({ ...plain, cls, consume: false, dir: Direction.Both })).toBeNull();
+    for (const cls of [CatchClass.VendorInterrupt, CatchClass.VendorBulk, CatchClass.Control]) {
+      expect(fault({ ...plain, cls, consume: false, dir: Direction.Positive })).toBeNull();
+      expect(fault({ ...plain, cls, consume: false, dir: Direction.Negative })).toBeNull();
+    }
+    expect(fault({ ...plain, cls: CatchClass.HidOut, dir: Direction.Negative })).toBeNull();
+    expect(fault({ ...plain, cls: CatchClass.Emit, dir: Direction.Positive })).toBeNull();
+  });
+
+  it('refuses a match bit outside its mask, on a set and on a removal', () => {
+    // 0x21 under 0x20 asks for bit 0, which the mask throws away: no packet can meet it.
+    const stray = { match: hex('07 21'), mask: hex('FF 20') };
+    expect(fault(stray)).toBe('match-outside-mask');
+    expect(clipPacketKeyFault({ ...vectorTrigger, ...stray })).toBe('match-outside-mask');
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, ...stray }, true)).toBeNull();
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, ...stray }, false)).toBeNull();
+    // The stray bit in the last byte alone, and in the first alone.
+    expect(fault({ match: hex('07 20 80'), mask: hex('FF 20 7F') })).toBe('match-outside-mask');
+    expect(fault({ match: hex('17 20'), mask: hex('0F 20') })).toBe('match-outside-mask');
+    expect(fault({ match: hex('07 20'), mask: hex('FF 20') })).toBeNull();
+    expect(fault({ match: hex('00 00'), mask: hex('FF 20') })).toBeNull();
+  });
+
+  it('refuses once per run whose condition has no masked bit', () => {
+    // Selector 1 leaves byte 1 as the condition, and a zero mask there is met by every packet.
+    expect(fault({ match: hex('07 00'), mask: hex('FF 00') }, on)).toBe('run-condition');
+    expect(fault({ match: hex('07 00 00'), mask: hex('FF 00 00') }, on)).toBe('run-condition');
+    expect(fault({ match: hex('07 00 00'), mask: hex('FF 00 01') }, on)).toBeNull();
+    // With no selector the first byte is condition too.
+    expect(fault({ selectorLen: 0, match: hex('00 00'), mask: hex('00 00') }, on)).toBe('run-condition');
+    expect(fault({ selectorLen: 0, match: hex('07 00'), mask: hex('FF 00') }, on)).toBeNull();
+    // Without once per run a trigger that matches every packet is a legal one.
+    expect(fault({ oncePerRun: false, selectorLen: 0, match: hex('07 00'), mask: hex('FF 00') }, on)).toBeNull();
+  });
+
+  it('names the first refusal in the order the box checks them', () => {
+    const stray = { match: hex('07 21'), mask: hex('FF 20') };
+    expect(fault({ ...stray, dir: Direction.Negative })).toBe('class-direction');
+    expect(fault({ ...stray, mask: hex('FF') })).toBe('mask-length');
+    expect(fault({ ...stray, action: ClipOp.Clear as never })).toBe('match-outside-mask');
+    expect(fault({ match: hex('00'), mask: hex('00'), selectorLen: 1 }, on)).toBe('run-selector');
+    expect(fault({ match: hex('07 00'), mask: hex('FF 00'), id: CATCH_ID_ANY }, on)).toBe('run-stream');
+  });
+
+  it('refuses a verb past Toggle', () => {
+    expect(fault({ action: ClipOp.Clear as never })).toBe('verb');
+    expect(fault({ action: ClipOp.Toggle })).toBeNull();
+  });
+
+  it('refuses a mask unlike its match in length', () => {
+    expect(fault({ mask: hex('FF') })).toBe('mask-length');
+    expect(fault({ mask: hex('FF 20 00') })).toBe('mask-length');
+  });
+
+  it('refuses a seventeenth match byte, and takes the sixteenth', () => {
+    const wide = (n: number) => ({ match: new Uint8Array(n), mask: new Uint8Array(n).fill(0xff) });
+    expect(fault(wide(17))).toBe('match-length');
+    expect(fault(wide(16))).toBeNull();
+  });
+
+  it('refuses consume on control, opt-in or not', () => {
+    const control = { cls: CatchClass.Control, oncePerRun: false, selectorLen: 0 };
+    expect(fault(control, on)).toBe('consume-control');
+    expect(fault(control)).toBe('consume-control');
+    expect(fault({ ...control, consume: false }, on)).toBeNull();
+  });
+
+  it('refuses consume while imperfect clones are off, and takes a watching trigger then', () => {
+    expect(fault({}, off)).toBe('consume-opt-in');
+    expect(fault({ consume: false }, off)).toBeNull();
+    expect(clipPacketTriggerFault(watching, off)).toBeNull();
+    // Without the box state the opt-in is unknown, so it is the read-back that shows this refusal.
+    expect(fault({})).toBeNull();
+  });
+
+  it('refuses once per run over anything wider than one stream', () => {
+    expect(fault({ cls: CatchClass.Control, consume: false }, on)).toBe('run-stream');
+    expect(fault({ id: CATCH_ID_ANY }, on)).toBe('run-stream');
+    expect(fault({ dir: Direction.Both }, on)).toBe('run-stream');
+    expect(fault({ cls: CatchClass.Emit }, on)).toBeNull();
+  });
+
+  it('refuses a selector that leaves no condition byte', () => {
+    expect(fault({ selectorLen: 2 }, on)).toBe('run-selector');
+    expect(fault({ selectorLen: 3 }, on)).toBe('run-selector');
+    expect(fault({ selectorLen: 0 }, on)).toBeNull();
+    expect(fault({ selectorLen: 0, match: new Uint8Array(0), mask: new Uint8Array(0) }, on)).toBe('run-selector');
+  });
+
+  it('refuses a selector without once per run', () => {
+    expect(fault({ oncePerRun: false, selectorLen: 1 }, on)).toBe('selector');
+    expect(fault({ oncePerRun: false, selectorLen: 0 }, on)).toBeNull();
+  });
+
+  it('refuses a ninth packet trigger, takes the eighth, and overwrites on a full set', () => {
+    expect(fault({}, { imperfect: true, held: heldSet(7, 2) })).toBeNull();
+    const full = heldSet(8, 2);
+    expect(fault({}, { imperfect: true, held: full })).toBe('full');
+    expect(clipPacketTriggerFault({ ...full[3], action: ClipOp.Stop }, { imperfect: true, held: full })).toBeNull();
+  });
+
+  it('refuses the match byte past the pool of 112, and takes the 112th', () => {
+    const held = heldSet(7, 16); // 112 bytes
+    expect(held.reduce((n, h) => n + h.match.length, 0)).toBe(112);
+    expect(fault({ match: hex('07'), mask: hex('FF'), selectorLen: 0 }, { imperfect: true, held })).toBe('pool');
+    expect(clipPacketTriggerFault(watching, { imperfect: true, held: heldSet(7, 16) })).toBeNull();
+    const room = [...heldSet(6, 16), { ...watching, id: 6, match: new Uint8Array(14), mask: new Uint8Array(14) }];
+    expect(fault({}, { imperfect: true, held: room })).toBeNull();
+    expect(fault({ match: hex('07 20 01'), mask: hex('FF 20 FF') }, { imperfect: true, held: room })).toBe('pool');
+    // An overwrite brings no new match bytes.
+    expect(clipPacketTriggerFault({ ...held[0], action: ClipOp.Stop }, { imperfect: true, held })).toBeNull();
+  });
+
+  it('encodes nothing for a trigger the box would refuse on its own bytes', () => {
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, cls: CatchClass.Control }, true)).toBeNull();
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, selectorLen: 2 }, true)).toBeNull();
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, mask: hex('FF') }, true)).toBeNull();
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, mask: hex('FF') }, false)).toBeNull();
+    expect(clipPacketTriggerPayload({ ...vectorTrigger, cls: CatchClass.Bus }, false)).toBeNull();
+  });
+
+  it('reads only the key on a removal', () => {
+    const stale = { ...vectorTrigger, cls: CatchClass.Control, selectorLen: 9, action: ClipOp.Clear as never };
+    expect(clipPacketKeyFault(stale)).toBeNull();
+    expect(Array.from(clipPacketTriggerPayload(stale, false)!)).toEqual(
+      Array.from(hex('08 02 00 01 00 00 00 02 07 20 FF 20')),
+    );
+  });
+});
+
 describe('RESP(CLIP) decoding (§4.15)', () => {
   const header = (state: number, nHeld: number) => [
     Q_CLIP,
@@ -404,6 +677,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
       0x0b, // loop + retain + ride
       1, // one trigger
       1, 0x3a, 0x00, Direction.Positive, ClipOp.Toggle, 1,
+      0, // no packet triggers
     ]);
     const r = parseResp(payload);
     expect(r?.kind).toBe('clip');
@@ -428,6 +702,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
       triggers: [
         { cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: true },
       ],
+      packetTriggers: [],
     });
   });
 
@@ -439,6 +714,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
       0, 0x01, 0x00,
       2, 0xe9, 0x00,
       0x02, 0x01, 0,
+      0,
     ]);
     const r = parseResp(payload);
     if (r?.kind !== 'clip') throw new Error('expected clip');
@@ -461,6 +737,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
       0x04, // autolock: buttons
       0x04, // finalized
       0,
+      0,
     ]);
     const r = parseResp(payload);
     expect(r!.kind === 'clip' && r.clip.held).toEqual([
@@ -481,6 +758,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
       0, 0, 2,
       CLIP_COND_ANY_CLASS, 0xff, 0xff, Direction.Both, ClipOp.Start, 0,
       1, 0x05, 0x00, Direction.Negative, ClipOp.Stop, 1,
+      0,
     ]);
     const r = parseResp(payload);
     const trig = r!.kind === 'clip' ? r.clip.triggers : [];
@@ -503,20 +781,19 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
   });
 
   it('rejects counts the box cannot have produced', () => {
-    // Padded past what the count implies, so the length checks pass and the bound is what rejects
-    // these. Without the padding both are caught by the length check instead and the bounds could
-    // be deleted without a test noticing.
-    const overHeld = [...header(ClipState.Idle, 41), ...new Array(3 * 41 + 3).fill(0)];
-    expect(overHeld.length).toBeGreaterThan(31 + 3 * 41);
+    // Each reply is exactly as long as its count implies, so the length checks pass and the bound is
+    // what rejects it. At any other length the length check catches it and the bounds could be
+    // deleted without a test noticing.
+    const overHeld = [...header(ClipState.Idle, 41), ...new Array(3 * 41).fill(0), 0, 0, 0, 0];
     expect(parseResp(new Uint8Array(overHeld))).toBeNull();
 
-    const overTrig = [...header(ClipState.Idle, 0), 0, 0, 9, ...new Array(6 * 9).fill(0)];
+    const overTrig = [...header(ClipState.Idle, 0), 0, 0, 9, ...new Array(6 * 9).fill(0), 0];
     expect(parseResp(new Uint8Array(overTrig))).toBeNull();
 
     // The limits themselves are legal.
-    const atHeld = [...header(ClipState.Idle, 40), ...new Array(3 * 40).fill(0), 0, 0, 0];
+    const atHeld = [...header(ClipState.Idle, 40), ...new Array(3 * 40).fill(0), 0, 0, 0, 0];
     expect(parseResp(new Uint8Array(atHeld))?.kind).toBe('clip');
-    const atTrig = [...header(ClipState.Idle, 0), 0, 0, 8, ...new Array(6 * 8).fill(0)];
+    const atTrig = [...header(ClipState.Idle, 0), 0, 0, 8, ...new Array(6 * 8).fill(0), 0];
     expect(parseResp(new Uint8Array(atTrig))?.kind).toBe('clip');
   });
 
@@ -524,9 +801,114 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
     expect(parseResp(new Uint8Array(header(ClipState.Idle, 0).slice(0, 30)))).toBeNull();
   });
 
+  // One RESP(CLIP) packet trigger entry. The flag bits are written as numbers, not the constants.
+  const pktEntry = (t: ClipPacketTrigger, hits: number) => [
+    t.cls, t.id & 0xff, t.id >> 8, t.dir, t.action,
+    (t.consume ? 0x02 : 0) | (t.oncePerRun ? 0x04 : 0),
+    t.selectorLen, t.match.length, hits & 0xff, hits >> 8,
+    ...t.match, ...t.mask,
+  ];
+  // Two held usages and two input bindings ahead of the packet triggers.
+  const front = [
+    ...header(ClipState.Playing, 2),
+    0, 0x01, 0x00,
+    1, 0x04, 0x00,
+    0x04, 0x02, 2,
+    1, 0x3a, 0x00, Direction.Positive, ClipOp.Toggle, 1,
+    0, 0x02, 0x00, Direction.Both, ClipOp.Stop, 0,
+  ];
+  const packetTriggersOf = (payload: number[]) => {
+    const r = parseResp(new Uint8Array(payload));
+    if (r?.kind !== 'clip') throw new Error('expected clip');
+    expect(r.clip.held).toHaveLength(2);
+    expect(r.clip.triggers).toHaveLength(2);
+    return r.clip.packetTriggers;
+  };
+
+  it('decodes the firmware vector entry, hits saturated', () => {
+    const entry = Array.from(hex('04 02 01 01 05 06 01 02 FF FF 07 20 FF 20'));
+    expect(packetTriggersOf([...front, 1, ...entry])).toEqual([
+      {
+        cls: CatchClass.HidIn,
+        id: 0x0102,
+        dir: Direction.Positive,
+        action: ClipOp.Toggle,
+        consume: true,
+        oncePerRun: true,
+        selectorLen: 1,
+        hits: 65535,
+        match: hex('07 20'),
+        mask: hex('FF 20'),
+      },
+    ]);
+  });
+
+  it('decodes no packet triggers behind a held list and input bindings', () => {
+    expect(packetTriggersOf([...front, 0])).toEqual([]);
+  });
+
+  it('reads consume and once per run from their own bits', () => {
+    const consuming = { ...vectorTrigger, oncePerRun: false, selectorLen: 0 };
+    const running = { ...vectorTrigger, consume: false };
+    const got = packetTriggersOf([...front, 2, ...pktEntry(consuming, 3), ...pktEntry(running, 0x0201)]);
+    expect([got[0].consume, got[0].oncePerRun, got[0].hits]).toEqual([true, false, 3]);
+    expect([got[1].consume, got[1].oncePerRun, got[1].hits]).toEqual([false, true, 0x0201]);
+  });
+
+  it('decodes eight packet triggers of unlike lengths, the match pool full', () => {
+    const set: ClipPacketTrigger[] = Array.from({ length: 8 }, (_, i) => {
+      const len = i === 0 ? 0 : 16; // 0 + 7 x 16 = 112
+      return { ...watching, id: i, match: new Uint8Array(len).fill(i), mask: new Uint8Array(len).fill(0xf0 | i) };
+    });
+    const payload = [...front, 8, ...set.flatMap((t, i) => pktEntry(t, i))];
+    expect(payload.length).toBeLessThanOrEqual(512);
+    const got = packetTriggersOf(payload);
+    expect(got).toHaveLength(8);
+    got.forEach((g, i) => expect(g).toEqual({ ...set[i], hits: i }));
+  });
+
+  it('decodes an entry that replays as the command that set it', () => {
+    const [got] = packetTriggersOf([...front, 1, ...pktEntry(vectorTrigger, 9)]);
+    expect(clipPacketTriggerPayload(got, true)).toEqual(clipPacketTriggerPayload(vectorTrigger, true));
+  });
+
+  it('rejects a reply that stops before the packet trigger count', () => {
+    expect(parseResp(new Uint8Array(front))).toBeNull();
+  });
+
+  it('rejects a reply truncated inside a packet trigger', () => {
+    const whole = [...front, 1, ...pktEntry(vectorTrigger, 1)];
+    expect(parseResp(new Uint8Array(whole))?.kind).toBe('clip');
+    // Inside the mask, inside the match, and inside the ten bytes ahead of them.
+    for (const cut of [1, 3, 5, 13]) expect(parseResp(new Uint8Array(whole.slice(0, -cut)))).toBeNull();
+    // One whole entry short of the count.
+    expect(parseResp(new Uint8Array([...front, 2, ...pktEntry(vectorTrigger, 1)]))).toBeNull();
+  });
+
+  it('rejects a byte past the last packet trigger', () => {
+    expect(parseResp(new Uint8Array([...front, 0, 0]))).toBeNull();
+    expect(parseResp(new Uint8Array([...front, 1, ...pktEntry(vectorTrigger, 1), 0]))).toBeNull();
+  });
+
+  it('rejects packet trigger counts the box cannot have produced', () => {
+    // Each reply is exactly as long as its counts imply, so the bound is what rejects it.
+    const nine = Array.from({ length: 9 }, (_, i) => pktEntry({ ...watching, id: i }, 0)).flat();
+    expect(parseResp(new Uint8Array([...front, 9, ...nine]))).toBeNull();
+    expect(parseResp(new Uint8Array([...front, 8, ...nine.slice(0, 8 * 10)]))?.kind).toBe('clip');
+
+    const wide = { ...watching, match: new Uint8Array(17), mask: new Uint8Array(17) };
+    expect(parseResp(new Uint8Array([...front, 1, ...pktEntry(wide, 0)]))).toBeNull();
+
+    // Eight entries of 15 bytes is 120, past the pool of 112, with every entry legal on its own.
+    const over = Array.from({ length: 8 }, (_, i) =>
+      pktEntry({ ...watching, id: i, match: new Uint8Array(15), mask: new Uint8Array(15) }, 0),
+    ).flat();
+    expect(parseResp(new Uint8Array([...front, 8, ...over]))).toBeNull();
+  });
+
   it('reads an unknown state as faulted, not as idle', () => {
     // Idle is the one state a UI offers Start on, so an unrecognised state must not land there.
-    const r = parseResp(new Uint8Array([...header(9, 0), 0, 0, 0]));
+    const r = parseResp(new Uint8Array([...header(9, 0), 0, 0, 0, 0]));
     expect(r!.kind === 'clip' && r.clip.state).toBe(ClipState.Faulted);
   });
 });
@@ -543,8 +925,8 @@ describe('clipAppend on the link', () => {
           encode(
             FrameType.Resp,
             f.seq,
-            // The 31-byte prefix with nothing held, then the three config bytes.
-            new Uint8Array([Q_CLIP, 0, 0, 0, 1, 0, ...new Array(25).fill(0), 0, 0, 0]),
+            // The 31-byte prefix with nothing held, the three config bytes, and the packet trigger count.
+            new Uint8Array([Q_CLIP, 0, 0, 0, 1, 0, ...new Array(25).fill(0), 0, 0, 0, 0]),
           ),
         );
       }
@@ -661,6 +1043,32 @@ describe('clipAppend on the link', () => {
     expect(sent).toHaveLength(2);
     expect(sent[0].payload[5] & CLIP_TRIG_F_PRESENT).toBe(CLIP_TRIG_F_PRESENT);
     expect(sent[1].payload[5] & CLIP_TRIG_F_PRESENT).toBe(0);
+    await link.close();
+  });
+
+  it('sends CLIP_TRIGGER for a packet bind, a packet unbind and the clear', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await link.clipPacketTrigger(vectorTrigger);
+    await link.clipPacketUntrigger(vectorTrigger);
+    await link.clipClearTriggers();
+    const sent = mock.frames.filter((f) => f.ty === FrameType.ClipTrigger).map((f) => Array.from(f.payload));
+    expect(sent).toEqual([
+      Array.from(hex('04 02 00 01 00 07 01 02 07 20 FF 20')),
+      Array.from(hex('04 02 00 01 00 00 00 02 07 20 FF 20')),
+      Array.from(hex('FF FF FF 00 00 00')),
+    ]);
+    await link.close();
+  });
+
+  it('sends nothing for a packet trigger the box would refuse', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await expect(link.clipPacketTrigger({ ...vectorTrigger, cls: CatchClass.Control })).rejects.toThrow();
+    await expect(link.clipPacketUntrigger({ ...vectorTrigger, mask: hex('FF') })).rejects.toThrow();
+    expect(mock.frames.filter((f) => f.ty === FrameType.ClipTrigger)).toHaveLength(0);
     await link.close();
   });
 });

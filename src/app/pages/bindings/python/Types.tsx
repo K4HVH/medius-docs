@@ -301,7 +301,7 @@ const Types: Component = () => {
 
       <div id="clip-status" data-search-target>
         <Card>
-          <CardHeader title="Clip" subtitle="ClipState · Edge · ClipAction · ClipTrigger · ClipSettings · ClipStatus" />
+          <CardHeader title="Clip" subtitle="ClipState · Edge · ClipAction · ClipTrigger · ClipPacketTrigger · ClipSettings · ClipStatus" />
           <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
           <div id="clipstate" data-search-target>
             <div class="api-response-label">ClipState</div>
@@ -364,7 +364,7 @@ const Types: Component = () => {
                 <tr><td><code>TOGGLE</code></td><td><code>5</code></td><td>play if idle/paused, stop if playing</td></tr>
               </tbody>
             </table>
-            <p>The action a bound trigger runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
+            <p>The action a bound trigger of either kind runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
           </div>
           <div id="cliptrigger" data-search-target>
             <div class="api-response-label">ClipTrigger</div>
@@ -380,6 +380,46 @@ const Types: Component = () => {
             </table>
             <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
           </div>
+          <div id="clippackettrigger" data-search-target>
+            <div class="api-response-label">ClipPacketTrigger</div>
+            <p>A dataclass binding a matched packet to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind_packet()</code></A> and read back by <code>clip.query_config()</code>. It is keyed by <code>(traffic_class, id, direction, match_bytes, mask)</code>. Concept on <A href="/library/clip#packet-triggers">Clip</A>.</p>
+            <table class="api-params">
+              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>traffic_class</code></td><td><A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A></td><td>the surface the packet crosses: any member but <code>BUS</code> and <code>CLIP_TRANSFER</code></td></tr>
+                <tr><td><code>id</code></td><td><code>int</code></td><td>the interface number for <code>HID_IN</code>, the endpoint number for the rest, or <code>ClipPacketTrigger.ANY_ID</code> (<code>0xFFFF</code>)</td></tr>
+                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>IN</code>, <code>OUT</code> or <code>BOTH</code></td></tr>
+                <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs, on its next tick</td></tr>
+                <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>bytes</code></td><td>the head compare, one length, at most <code>PKT_MATCH_MAX</code>: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte (default <code>b""</code>, every packet on the address)</td></tr>
+                <tr><td><code>consume</code></td><td><code>bool</code></td><td>drop every packet the trigger wins, ahead of the rewrite table; the box holds one only under <code>allow_imperfect_clones</code>, on any class but <code>CONTROL</code> (default <code>False</code>)</td></tr>
+                <tr><td><code>once_per_run</code></td><td><code>bool</code></td><td>run the action on the first packet of a run of matching ones; needs a class other than <code>CONTROL</code>, a concrete <code>id</code>, and <code>IN</code> or <code>OUT</code> (default <code>False</code>)</td></tr>
+                <tr><td><code>selector_len</code></td><td><code>int</code></td><td>with <code>once_per_run</code>, how many leading match bytes select the run's stream, such as a report ID; the rest are the condition (default <code>0</code>)</td></tr>
+                <tr><td><code>hits</code></td><td><code>int</code></td><td>packets the trigger has won since it was bound or overwritten, saturating; read back by <code>query_config()</code> and ignored by <code>bind_packet()</code></td></tr>
+              </tbody>
+            </table>
+            <div class="api-response-label">EXAMPLE</div>
+            <pre><code class="language-python">{`from medius import ClipAction, ClipPacketTrigger, ClipPacketTriggerError, Direction, TrafficClass
+
+clip = dev.clip()
+
+# Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Start once per hold.
+held = ClipPacketTrigger(TrafficClass.HID_IN, 2, Direction.IN, ClipAction.START,
+                         match_bytes=b"\\x07\\x20", mask=b"\\xFF\\x20",
+                         once_per_run=True, selector_len=1)
+clip.bind_packet(held)
+
+try:
+    clip.bind_packet(ClipPacketTrigger(TrafficClass.CONTROL, 0, Direction.OUT,
+                                       ClipAction.STOP, consume=True))
+except ClipPacketTriggerError as e:
+    print(e)                      # consume on CONTROL; nothing was sent
+
+for t in clip.query_config().packet_triggers:
+    print(t.traffic_class, t.id, t.action, t.hits)
+
+clip.unbind_packet(held)          # by key
+clip.clear_triggers()             # both kinds`}</code></pre>
+          </div>
           <div id="clipsettings" data-search-target>
             <div class="api-response-label">ClipSettings (clip.query_config())</div>
             <table class="api-params">
@@ -390,7 +430,8 @@ const Types: Component = () => {
                 <tr><td><code>retain</code></td><td><code>bool</code></td><td>the loaded clip is retained so it can rewind and replay</td></tr>
                 <tr><td><code>finalized</code></td><td><code>bool</code></td><td>a retained clip's end is fixed, ready to replay and loop</td></tr>
                 <tr><td><code>ride</code></td><td><code>bool</code></td><td>the clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A></td></tr>
-                <tr><td><code>triggers</code></td><td><code>List[<A href="/bindings/python/types#cliptrigger">ClipTrigger</A>]</code></td><td>the bound trigger set (up to 8)</td></tr>
+                <tr><td><code>triggers</code></td><td><code>List[<A href="/bindings/python/types#cliptrigger">ClipTrigger</A>]</code></td><td>the bound input triggers (up to 8)</td></tr>
+                <tr><td><code>packet_triggers</code></td><td><code>List[<A href="/bindings/python/types#clippackettrigger">ClipPacketTrigger</A>]</code></td><td>the bound packet triggers (up to 8), in the order the box holds them, each with its <code>hits</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -420,6 +461,9 @@ const Types: Component = () => {
                 <tr><td><code>CLIP_EDGES_MAX</code></td><td><code>8</code></td><td>the most edges one clip frame carries</td></tr>
                 <tr><td><code>CLIP_RAW_MAX</code></td><td><code>8</code></td><td>the most raw reports one clip frame carries</td></tr>
                 <tr><td><code>CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>the most bytes one clip frame encodes to: one <code>CLIP_APPEND</code> payload</td></tr>
+                <tr><td><code>CLIP_PKT_TRIG_MAX</code></td><td><code>8</code></td><td>the most packet triggers the box holds, beside its input triggers</td></tr>
+                <tr><td><code>CLIP_PKT_MATCH_POOL</code></td><td><code>112</code></td><td>the match bytes the box holds across every packet trigger</td></tr>
+                <tr><td><code>PKT_MATCH_MAX</code></td><td><code>16</code></td><td>the most match bytes one packet trigger compares</td></tr>
               </tbody>
             </table>
           </div>
@@ -1411,7 +1455,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
 
       <div id="advanced-types" data-search-target>
         <Card>
-          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · ClipVerb · Patch" />
+          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
           <p>The value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
 
           <div id="setup">
@@ -1443,31 +1487,15 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <div id="rewrite-rule">
             <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
             <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
-            <pre class="api-signature">{`RewriteRule.clip(rewrite_class, id, direction, verb, match_bytes=b"", mask=b"",
-                 drop=False, on_edge=None)   -> RewriteRule`}</pre>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>rewrite_class</code></td><td><code>RewriteClass</code></td><td><code>HID_IN</code> 4, <code>HID_OUT</code> 5, <code>VENDOR_INTERRUPT</code> 6, <code>VENDOR_BULK</code> 7, <code>CONTROL</code> 8, <code>EMIT</code> 9, <code>ANY</code> 0xFF.</td></tr>
                 <tr><td><code>id</code></td><td><code>int</code></td><td>Interface number or endpoint number.</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>BOTH</code> / <code>POSITIVE</code> / <code>NEGATIVE</code>.</td></tr>
-                <tr><td><code>action</code></td><td><code>RewriteAction</code></td><td><code>PASS</code> 0, <code>DROP</code> 1, <code>PATCH</code> 2, <code>REPLACE</code> 3, <code>ANSWER</code> 4, <code>STALL</code> 5, <code>NAK</code> 6, <code>REPLY_PATCH</code> 7, <code>REPLY_REPLACE</code> 8, <code>CLIP</code> 9.</td></tr>
+                <tr><td><code>action</code></td><td><code>RewriteAction</code></td><td><code>PASS</code> 0, <code>DROP</code> 1, <code>PATCH</code> 2, <code>REPLACE</code> 3, <code>ANSWER</code> 4, <code>STALL</code> 5, <code>NAK</code> 6, <code>REPLY_PATCH</code> 7, <code>REPLY_REPLACE</code> 8.</td></tr>
                 <tr><td><code>offset</code></td><td><code>int</code></td><td>Where a patching action writes.</td></tr>
                 <tr><td><code>match_bytes</code>, <code>mask</code>, <code>payload</code></td><td><code>bytes</code></td><td>The head compare (equal length) and the action's payload.</td></tr>
-                <tr><td><code>clip_verb()</code></td><td><code>Optional[<A href="/bindings/python/types#clip-verb">ClipVerb</A>]</code></td><td>What a <A href="/library/advanced/rewrite#clip">clip rule</A> does; <code>None</code> for any other rule.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div id="clip-verb">
-            <div class="api-response-label">ClipVerb (RewriteRule.clip_verb())</div>
-            <table class="api-params">
-              <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
-              <tbody>
-                <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>The clip verb the rule runs, on the box's next tick for every packet it wins.</td></tr>
-                <tr><td><code>drop</code></td><td><code>bool</code></td><td>Every packet the rule wins is dropped (<code>REWRITE_CLIP_DROP</code>, <code>0x01</code>).</td></tr>
-                <tr><td><code>edge</code></td><td><code>bool</code></td><td>The verb runs on the first packet of a run of matching ones (<code>REWRITE_CLIP_EDGE</code>, <code>0x02</code>). <code>RewriteRule.clip</code> sets it when <code>on_edge</code> is a selector length.</td></tr>
-                <tr><td><code>selector_len</code></td><td><code>int</code></td><td>How many leading match bytes pick the run's stream: the <code>on_edge</code> value.</td></tr>
               </tbody>
             </table>
           </div>
@@ -1575,7 +1603,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ClipFrameCountError</code></td><td><code>ERR_CLIP_FRAME_COUNT</code></td></tr>
                 <tr><td><code>ClipFrameTooLongError</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td></tr>
                 <tr><td><code>ClipTransferDataError</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td></tr>
-                <tr><td><code>RewriteClipRuleError</code></td><td><code>ERR_REWRITE_CLIP_RULE</code></td></tr>
+                <tr><td><code>ClipPacketTriggerError</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td></tr>
               </tbody>
             </table>
@@ -1606,7 +1634,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ClipFrameCountError</code></td><td>a clip frame with more than <A href="/bindings/python/types#clip-constants"><code>CLIP_EDGES_MAX</code></A> edges or <code>CLIP_RAW_MAX</code> raw reports</td></tr>
                 <tr><td><code>ClipFrameTooLongError</code></td><td>a clip frame that encodes to more than <code>CLIP_ENTRY_MAX</code> bytes</td></tr>
                 <tr><td><code>ClipTransferDataError</code></td><td>a clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one</td></tr>
-                <tr><td><code>RewriteClipRuleError</code></td><td>a <code>CLIP</code> rule the box would refuse; the message says why</td></tr>
+                <tr><td><code>ClipPacketTriggerError</code></td><td>a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A> the box would refuse; the message says why</td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td>a rewrite rule with more than 16 match bytes</td></tr>
               </tbody>
             </table>
@@ -1641,7 +1669,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td><code>ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td></tr>
                 <tr><td><code>ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td></tr>
                 <tr><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td></tr>
-                <tr><td><code>ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td><code>ERR_REWRITE_CLIP_RULE</code></td><td><code>33</code></td></tr>
+                <tr><td><code>ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td></tr>
                 <tr><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td></td><td></td></tr>
               </tbody>
             </table>

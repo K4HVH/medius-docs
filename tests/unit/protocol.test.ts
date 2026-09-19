@@ -107,9 +107,6 @@ import {
   parseTransferResp,
   RewriteAction,
   RW_ACTION_COUNT,
-  ClipOp,
-  clipVerbOf,
-  clipVerbPayload,
   rewriteActionName,
   PatchSection,
   TransformOp,
@@ -1820,51 +1817,14 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
     expect(toHex(rewritePayload(r.rule, 1))).toBe('08 00 00 00 01 02 02 00 02 21 09 ff ff aa');
   });
 
-  it('a CLIP rule is [op][flags][slen] behind the match and mask, at offset 0', () => {
-    // HID_IN interface 2, IN: start the clip on the first report whose byte 1 is 0x10, in the stream
-    // report ID 1 selects, and drop it.
-    const rule = {
-      cls: CatchClass.HidIn,
-      id: 2,
-      dir: In,
-      action: RewriteAction.Clip,
-      off: 0,
-      match: fromHex('01 10'),
-      mask: fromHex('ff ff'),
-      payload: clipVerbPayload({ action: ClipOp.Start, drop: true, edge: true, selectorLen: 1 }),
-    };
-    expect(toHex(rule.payload)).toBe('00 03 01');
-    expect(toHex(rewritePayload(rule, 1))).toBe('04 02 00 01 01 09 00 00 02 01 10 ff ff 00 03 01');
-    // Each flag on its own bit, and no selector without the edge.
-    expect(toHex(clipVerbPayload({ action: ClipOp.Toggle, drop: true, edge: false, selectorLen: 0 }))).toBe('05 01 00');
-    expect(toHex(clipVerbPayload({ action: ClipOp.Stop, drop: false, edge: true, selectorLen: 2 }))).toBe('01 02 02');
-  });
-
-  it('reads a CLIP rule back as its verb and flags, from the summary and from the entry', () => {
-    expect(RW_ACTION_COUNT).toBe(10);
-    expect(rewriteActionName(RewriteAction.Clip)).toBe('clip');
+  it('knows nine rewrite actions, and reads a tenth as unknown', () => {
+    expect(RW_ACTION_COUNT).toBe(9);
     // [12][flags][gen][n=1] then [cls=04][id=0002][dir=01][action=09][mlen=02][off=0000][plen=0003][hits=0001].
     const table = parseResp(fromHex('0c 00 07 01 04 02 00 01 09 02 00 00 03 00 01 00'));
     if (table?.kind !== 'rewrite') throw new Error('expected rewrite');
-    expect(table.rewrite.entries[0].action).toBe(RewriteAction.Clip);
-    expect(table.rewrite.entries[0].plen).toBe(3);
-
-    const entry = parseResp(fromHex('0d 00 04 02 00 01 01 09 00 00 02 01 10 ff ff 04 03 01'));
-    if (entry?.kind !== 'rewriteEntry') throw new Error('expected rewriteEntry');
-    expect(entry.rule.action).toBe(RewriteAction.Clip);
-    expect(clipVerbOf(entry.rule)).toEqual({ action: ClipOp.Restart, drop: true, edge: true, selectorLen: 1 });
-    // The readback replays byte-for-byte as the command that set it.
-    expect(toHex(rewritePayload(entry.rule, 1))).toBe('04 02 00 01 01 09 00 00 02 01 10 ff ff 04 03 01');
-  });
-
-  it('reads no clip verb out of any other rule, or out of a payload that is not one', () => {
-    const clip = (payload: string) => ({ action: RewriteAction.Clip, payload: fromHex(payload) });
-    expect(clipVerbOf({ action: RewriteAction.Replace, payload: fromHex('00 00 00') })).toBeNull();
-    expect(clipVerbOf(clip('00 00'))).toBeNull(); // one byte short
-    expect(clipVerbOf(clip('00 00 00 00'))).toBeNull(); // one byte long
-    expect(clipVerbOf(clip('06 00 00'))).toBeNull(); // Clear is not a verb a rule may run
-    expect(clipVerbOf(clip('00 04 00'))).toBeNull(); // a flag bit above EDGE
-    expect(clipVerbOf(clip('05 00 00'))).toEqual({ action: ClipOp.Toggle, drop: false, edge: false, selectorLen: 0 });
+    expect(table.rewrite.entries[0].action).toBeNull();
+    expect(rewriteActionName(table.rewrite.entries[0].action)).toBe('unknown');
+    expect(rewriteActionName(RewriteAction.ReplyReplace)).toBe('reply-replace');
   });
 
   it('decodes RESP(PATCHES): the applied/pending/refused/full flags and the list, len as u16', () => {

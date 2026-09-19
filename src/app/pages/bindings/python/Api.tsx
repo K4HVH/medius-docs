@@ -279,13 +279,24 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>clip.set_ride(on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's own clock, the default). Only its wheel and pan while rendering is on with a profile armed.</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
-              <tr><td><code>clip.unbind(usage, edge) / clip.clear_triggers()</code></td><td>Remove one bound trigger by usage + edge; drop all triggers.</td></tr>
+              <tr><td><code>clip.unbind(usage, edge)</code></td><td>Remove one input trigger by usage + edge.</td></tr>
+              <tr><td><code>clip.bind_packet(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A>: a packet it matches runs its <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> on the box's next tick. One the box would refuse raises <A href="/bindings/python/types#subclasses"><code>ClipPacketTriggerError</code></A> before anything is sent; the <A href="/library/clip#packet-triggers">refusals</A> are the crate's.</td></tr>
+              <tr><td><code>clip.unbind_packet(trigger)</code></td><td>Remove the packet trigger with that trigger's <code>(traffic_class, id, direction, match_bytes, mask)</code>; its other fields are ignored, and a key the box cannot hold is refused as <code>bind_packet()</code> refuses it.</td></tr>
+              <tr><td><code>clip.clear_triggers()</code></td><td>Remove every trigger of both kinds.</td></tr>
               <tr><td><code>clip.start() / clip.stop()</code></td><td>Begin playback; stop and flush the ring, releasing the auto-lock.</td></tr>
               <tr><td><code>clip.pause() / clip.resume()</code></td><td>Halt playback in place; carry on from where it paused.</td></tr>
               <tr><td><code>clip.restart() / clip.toggle()</code></td><td>Replay from the first frame; start if idle else stop.</td></tr>
               <tr><td><code>clip.clear()</code></td><td>Drop the ring's entries.</td></tr>
               <tr><td><code>clip.query_status()</code></td><td><A href="/bindings/python/types#clip-status"><code>ClipStatus</code></A>: ring depth, playback state, held usages, counters.</td></tr>
-              <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, bound triggers.</td></tr>
+              <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, and both kinds of trigger, each packet trigger with its <code>hits</code>.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">MOCK</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <code>ClipSettings</code> a <A href="/library/features/mock"><code>MockBox</code></A> answers to <code>clip.query_config()</code>. Its packet triggers become the set <code>clip.bind_packet()</code> adds to, under the bounds the box holds it to.</td></tr>
+              <tr><td><code>mock.clip_packet(traffic_class, id, direction, head)</code></td><td><code>Tuple[Optional[ClipAction], bool]</code>: run one packet through the mock's packet triggers, as the box does. The most specific match wins it and counts it in its <code>hits</code>. The action is <code>None</code> when no trigger wins, and when a <code>once_per_run</code> winner sees the packet continue a run; the bool is whether the winner consumes the packet.</td></tr>
             </tbody>
           </table>
         </Card>

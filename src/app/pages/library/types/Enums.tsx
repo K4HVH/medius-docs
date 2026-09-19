@@ -754,9 +754,9 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <pre class="api-signature">enum ClipAction {'{'} Start, Stop, Pause, Resume, Restart, Toggle {'}'}</pre>
           <p>
             What a bound{' '}
-            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> or a{' '}
-            <A href="/library/advanced/rewrite#clip">clip rule</A> does to the clip when it fires. The
-            discriminant doubles as the{' '}
+            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> or{' '}
+            <A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A>{' '}
+            does to the clip when it fires. The discriminant doubles as the{' '}
             <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op byte for the same
             action.
           </p>
@@ -887,7 +887,7 @@ match reply.status {
       <div id="rewrite-action" data-search-target>
         <Card>
           <CardHeader title="RewriteAction" subtitle="What the winning rewrite rule does" />
-          <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace, Clip {'}'}</pre>
+          <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
           <p>
             The winning rule's action decides a matched packet's fate. The class column is which{' '}
             <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
@@ -909,7 +909,6 @@ match reply.status {
                 <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>NAK to a timeout.</td></tr>
                 <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the device's reply at <code>offset</code>.</td></tr>
                 <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the device's reply with the payload.</td></tr>
-                <tr><td><code>Clip</code></td><td><code>9</code></td><td>any</td><td>yes</td><td>Run a clip verb. <A href="/library/advanced/rewrite#clip"><code>RewriteRule::clip</code></A> writes the payload, <code>[op][flags][slen]</code>.</td></tr>
               </tbody>
             </table>
           </div>

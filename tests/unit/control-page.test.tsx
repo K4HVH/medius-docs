@@ -57,6 +57,7 @@ const VALUES: Record<string, unknown> = {
     finalized: true,
     ride: false,
     triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: true }],
+    packetTriggers: [],
   },
   imperfect: { allowed: false, overCapacity: false, cloneImperfect: false },
   moveRide: 0,

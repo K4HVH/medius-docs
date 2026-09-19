@@ -1,8 +1,11 @@
 // Command payload builders (PC -> box).
 
 import {
+  CLIP_COND_ANY_CLASS,
+  CLIP_COND_ANY_ID,
   CLIP_TRIG_F_CONSUME,
   CLIP_TRIG_F_PRESENT,
+  CLIP_TRIG_F_RUN,
   ClipOp,
   EmitMode,
   RenderMode,
@@ -25,6 +28,7 @@ import {
 } from './opcode';
 import {
   type ClipEntry,
+  type ClipPacketTrigger,
   type ClipTrigger,
   type RewriteRule,
   type Transform,
@@ -38,6 +42,8 @@ import {
   LedTarget,
   LockClass,
   RebootTarget,
+  clipPacketKeyFault,
+  clipPacketTriggerFault,
   encodeClipEntry,
 } from './types';
 
@@ -242,6 +248,36 @@ export function clipSetPayload(id: number, value: number): Uint8Array {
 export function clipTriggerPayload(t: ClipTrigger, present: boolean): Uint8Array {
   const flags = (present ? CLIP_TRIG_F_PRESENT : 0) | (t.consume ? CLIP_TRIG_F_CONSUME : 0);
   return new Uint8Array([t.cls, t.id & 0xff, (t.id >> 8) & 0xff, t.edge, t.action, flags]);
+}
+
+// CLIP_TRIGGER with a traffic class (§3.11), a packet trigger: [class u8][id u16 LE][dir u8][action u8]
+// [flags u8][slen u8][mlen u8][match mlen][mask mlen]. Keyed by (class, id, dir, mlen, match, mask); a
+// removal carries that key with action, flags and slen zero. Null for a trigger the box would refuse
+// on its own bytes (`clipPacketTriggerFault` says why), since a refused frame is dropped with no reply.
+export function clipPacketTriggerPayload(t: ClipPacketTrigger, present: boolean): Uint8Array | null {
+  if ((present ? clipPacketTriggerFault(t) : clipPacketKeyFault(t)) !== null) return null;
+  const mlen = t.match.length;
+  const flags = present
+    ? CLIP_TRIG_F_PRESENT | (t.consume ? CLIP_TRIG_F_CONSUME : 0) | (t.oncePerRun ? CLIP_TRIG_F_RUN : 0)
+    : 0;
+  const out = new Uint8Array(8 + 2 * mlen);
+  out[0] = t.cls;
+  out[1] = t.id & 0xff;
+  out[2] = (t.id >> 8) & 0xff;
+  out[3] = t.dir;
+  out[4] = present ? t.action : 0;
+  out[5] = flags;
+  out[6] = present ? t.selectorLen : 0;
+  out[7] = mlen;
+  out.set(t.match, 8);
+  out.set(t.mask, 8 + mlen);
+  return out;
+}
+
+// CLIP_TRIGGER clear (§3.11): the any-class, any-id, both-edges, flags-0 sentinel clears the input
+// bindings and the packet triggers in one frame.
+export function clearClipTriggersPayload(): Uint8Array {
+  return new Uint8Array([CLIP_COND_ANY_CLASS, CLIP_COND_ANY_ID & 0xff, CLIP_COND_ANY_ID >> 8, Direction.Both, 0, 0]);
 }
 
 // RAW (§3.14): [ep_num u8][dir u8][bytes...]. Put bytes verbatim on a cloned endpoint, named by number

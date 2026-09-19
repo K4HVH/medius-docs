@@ -11,6 +11,7 @@ import {
   type CatchState,
   type ClipEntry,
   type ClipStatus,
+  type ClipPacketTrigger,
   type ClipTrigger,
   type DecodedFrame,
   type DeviceInfo,
@@ -70,6 +71,8 @@ import {
   clipAppendPayload,
   clipCtrlPayload,
   clipSetPayload,
+  clearClipTriggersPayload,
+  clipPacketTriggerPayload,
   clipTriggerPayload,
   emitPayload,
   renderPayload,
@@ -546,7 +549,7 @@ export class SerialLink {
 
   // The box-wide safety clear (§3.4). Wider than its name: in one atomic release it drops every
   // injected usage, every lock, the whole CATCH subscription table, the loaded clip AND its
-  // configuration (autolock scope, loop, retain, and all eight trigger bindings), and it returns the
+  // configuration (autolock scope, loop, retain, and every trigger of both kinds), and it returns the
   // status LEDs back to the box. It is the recovery for a press whose release was lost, because it
   // does not depend on knowing what is held. Release known holds one at a time when that matters.
   reset(): Promise<void> {
@@ -737,6 +740,28 @@ export class SerialLink {
     return this.send(
       encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, false)),
     );
+  }
+
+  // Add or overwrite a packet trigger (§3.11): CLIP_TRIGGER with a traffic class. Keyed by the
+  // address and the match and mask bytes. The box drops a frame it refuses with no reply, so one it
+  // would refuse on its own bytes is refused here; `clipPacketTriggerFault` names the reason, and the
+  // refusals that turn on box state (the opt-in, the slots, the match pool) show in the read-back.
+  clipPacketTrigger(trigger: ClipPacketTrigger): Promise<void> {
+    const payload = clipPacketTriggerPayload(trigger, true);
+    if (!payload) return Promise.reject(new Error('the box would refuse that packet trigger'));
+    return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), payload));
+  }
+
+  // Remove a packet trigger. Only its key is read: class, id, direction, match and mask.
+  clipPacketUntrigger(trigger: ClipPacketTrigger): Promise<void> {
+    const payload = clipPacketTriggerPayload(trigger, false);
+    if (!payload) return Promise.reject(new Error('that key names no packet trigger'));
+    return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), payload));
+  }
+
+  // Clear the input bindings and the packet triggers in one frame (§3.11).
+  clipClearTriggers(): Promise<void> {
+    return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), clearClipTriggersPayload()));
   }
 
   // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.

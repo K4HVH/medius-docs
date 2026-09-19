@@ -874,6 +874,16 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
               <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
               <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = lock the trigger usage while it stays active</td></tr>
+              <tr><td>+</td><td><code>n_pkt</code></td><td><code>u8</code></td><td>config: number of <A href="/native/commands/clip#packet-triggers">packet triggers</A> that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per packet trigger: the traffic class, 4 to 9</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per packet trigger: the class's address, 0xFFFF=any, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>per packet trigger: 0 both / 1 IN / 2 OUT</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per packet trigger: the <code>CLIP_CTRL</code> op 0..5</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b1 consume, b2 <code>RUN</code></td></tr>
+              <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
+              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
+              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it won, saturating, little-endian</td></tr>
+              <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -894,6 +904,12 @@ const Requests: Component = () => {
             entry each (3 bytes). <code>ticks</code> and the six counters count since boot and wrap.
           </p>
           <p>
+            A packet trigger reads back as the{' '}
+            <A href="/native/commands/clip#packet-triggers">command that set it</A> with{' '}
+            <code>hits</code> spliced in after <code>mlen</code>. The whole reply is at most 507
+            bytes, inside one frame.
+          </p>
+          <p>
             Library bindings:{' '}
             <A href="/library/requests#clip-status"><code>query_status</code></A>{' '}
             (<A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>) and{' '}
@@ -901,9 +917,9 @@ const Requests: Component = () => {
             (<A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Idle, empty 64 KB ring, no held usages, no autolock, no triggers (<code>state = 0</code>, <code>free = 65536</code>):</p>
+          <p>Idle, empty 64 KB ring, no held usages, no autolock, no triggers of either kind (<code>state = 0</code>, <code>free = 65536</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 22 00  | 0A     | 00     | 00 00 01 00  |
+| A5     | 06     | 00     | 23 00  | 0A     | 00     | 00 00 01 00  |
 +--------+--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
 +--------+--------+--------+--------+--------+--------+--------------+
@@ -913,10 +929,18 @@ const Requests: Component = () => {
 | total        | played       | ticks        | undrun | ovrrun | seqgap |
 +--------------+--------------+--------------+--------+--------+--------+
 
-| 00 00  | 00 00  | 00 00  | 00     | 00     | 00     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| xfers  |xfer_err| gated  | held_n | autolk | flags  | n_trig | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+| 00 00  | 00 00  | 00 00  | 00     | 00     | 00     | 00     | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+| xfers  |xfer_err| gated  | held_n | autolk | flags  | n_trig | n_pkt  | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+          <p>
+            One packet trigger entry: <code>HID_IN</code> id <code>0x0102</code>, IN,{' '}
+            <code>TOGGLE</code>, consume and <code>RUN</code>, selector 1, <code>hits</code>{' '}
+            saturated.
+          </p>
+          <pre class="diagram">{`04 02 01 01 05 06 01 02 FF FF 07 20 FF 20
+   class=4 HID_IN   id=0x0102   dir=1 IN   action=5 TOGGLE   flags=0x06   slen=1   mlen=2
+   hits=65535   match=07 20   mask=FF 20`}</pre>
         </Card>
       </div>
 
