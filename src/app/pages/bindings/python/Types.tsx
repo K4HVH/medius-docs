@@ -1248,13 +1248,20 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>port</code></td><td><A href="/bindings/python/types#portinfo"><code>PortInfo</code></A></td><td>the box's control port</td></tr>
-                <tr><td><code>version</code></td><td><A href="/bindings/python/types#version"><code>Version</code></A></td><td>its firmware version, with the box MAC and name</td></tr>
-                <tr><td><code>device</code></td><td><A href="/bindings/python/types#deviceinfo"><code>DeviceInfo</code></A></td><td>the device it clones</td></tr>
+                <tr><td><code>version</code></td><td><A href="/bindings/python/types#version"><code>Version</code></A></td><td>its firmware version and control protocol, with the box MAC and name</td></tr>
+                <tr><td><code>device</code></td><td><code>Optional[<A href="/bindings/python/types#deviceinfo">DeviceInfo</A>]</code></td><td>the device it clones; <code>None</code> for a box on another control protocol, which raises <code>BadProtoVerError</code> when opened</td></tr>
                 <tr><td><code>id</code></td><td><code>str</code></td><td>the box identity (the MAC hex)</td></tr>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>
               </tbody>
             </table>
             <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/types/structs#box-info">BoxInfo</A>.</p>
+            <pre><code class="language-python">{`import medius
+
+for b in medius.list_boxes():
+    if b.device is None:
+        print(f"{b.id} speaks protocol {b.version.proto_ver}: update its firmware")
+    else:
+        print(b.id, b.device.kind.name, b.device.product)`}</code></pre>
           </div>
         </Card>
       </div>

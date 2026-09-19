@@ -29,17 +29,24 @@ const Discovery: Component = () => {
           <pre class="api-signature">fn list() -&gt; Vec&lt;BoxInfo&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Opens each connected box in turn, handshakes, reads its{' '}
-            <A href="/library/types/structs#version"><code>Version</code></A> (with the box MAC and name) and cloned{' '}
-            <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, then closes it,
-            returning one <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> per box.
+            Reads each connected box's{' '}
+            <A href="/library/types/structs#version"><code>Version</code></A> (with its protocol, MAC and
+            name) and, on a box that speaks{' '}
+            <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>, its cloned{' '}
+            <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, returning one{' '}
+            <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> per box. A box on another
+            protocol is listed with <code>device</code> <code>None</code>, so a box that needs a{' '}
+            <A href="/dashboard/update">firmware update</A> still shows up.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
 for b in Device::list() {
-    // id() is the box MAC hex; name() is its readable label; b.device displays as "VVVV:PPPP product".
-    println!("{}  {}  {}  {}", b.id(), b.name(), b.device, b.port.path);
+    // id() is the box MAC hex; name() is its readable label; a DeviceInfo displays as "VVVV:PPPP product".
+    match &b.device {
+        Some(d) => println!("{}  {}  {}  {}", b.id(), b.name(), d, b.port.path),
+        None => println!("{}  {}  protocol {}: update its firmware", b.id(), b.name(), b.version.proto_ver),
+    }
 }`}</code></pre>
         </Card>
       </div>
@@ -53,14 +60,19 @@ for b in Device::list() {
             Opens the box whose identity matches <code>id</code>: either the device MAC hex (from{' '}
             <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) or the CH343{' '}
             <A href="/library/types/structs#port-info">serial</A>. Returns{' '}
-            <A href="/library/types/errors"><code>Error::NotFound</code></A> when no connected box
-            matches.
+            <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> when that box speaks
+            another protocol, and <A href="/library/types/errors"><code>Error::NotFound</code></A> when
+            no connected box matches.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+          <pre><code class="language-rust">{`use medius::{Device, Error};
 
 // the MAC hex printed by Device::list(), stable across replugs:
-let device = Device::open_by_id("123456789abc")?;`}</code></pre>
+match Device::open_by_id("123456789abc") {
+    Ok(device) => device.move_rel(10, 0)?,
+    Err(Error::BadProtoVer { got }) => println!("that box speaks protocol {got}: update its firmware"),
+    Err(e) => return Err(e),
+}`}</code></pre>
         </Card>
       </div>
 
@@ -71,8 +83,10 @@ let device = Device::open_by_id("123456789abc")?;`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Opens the first box whose clone's{' '}
-            <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. Returns{' '}
-            <A href="/library/types/errors"><code>Error::NotFound</code></A> if no connected box matches.
+            <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. With none,
+            a connected box on another protocol answers{' '}
+            <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>, since its clone is
+            unread; otherwise it's <A href="/library/types/errors"><code>Error::NotFound</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -90,7 +104,7 @@ mouse_box.move_rel(10, 0)?;`}</code></pre>
           <p>
             The keyboard counterpart of{' '}
             <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A>: opens the first
-            box whose clone is a keyboard.
+            box whose clone is a keyboard, with the same errors.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Key};
@@ -107,15 +121,16 @@ kbd_box.press(Key::A)?;`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             The general form the <code>find_*_box</code> helpers build on: opens the first box whose{' '}
-            <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>.
-            Match on any field. Returns{' '}
-            <A href="/library/types/errors"><code>Error::NotFound</code></A> when none match.
+            <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>,
+            preferring a box that speaks <code>PROTO_VER</code>. A matching box on another protocol
+            answers <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>, and no match is{' '}
+            <A href="/library/types/errors"><code>Error::NotFound</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
-// the box cloning a Logitech device:
-let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
+// the box cloning a Logitech device (device is None on a box on another protocol):
+let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0x046D))?;`}</code></pre>
         </Card>
       </div>
 
@@ -146,7 +161,7 @@ let device = Device::find_where(|b| b.device.vid == 0x046D)?;`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> mirrors the discovery
-            constructors; they block on the per-box handshake, like their{' '}
+            constructors; they block on reading each box and on the handshake, like their{' '}
             <A href="/library/connection#async"><code>Device</code></A> counterparts. The reply-reading{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A> query is the awaitable
             part.

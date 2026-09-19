@@ -40,6 +40,13 @@ describe('classifyConnectError', () => {
     });
   });
 
+  it('a refused protocol above the page is new firmware, not old', () => {
+    expect(classifyConnectError(new BadProtoVerError(version(9)))).toEqual({
+      kind: 'new-firmware',
+      version: version(9),
+    });
+  });
+
   it('an unanswered handshake is silent', () => {
     expect(classifyConnectError(new NoReplyError())).toEqual({ kind: 'silent' });
   });
@@ -186,6 +193,21 @@ describe('attemptConnect', () => {
       }),
     );
     expect(r).toEqual({ ok: false, verdict: { kind: 'old-firmware', version: version(4) } });
+  });
+
+  it('a granted box on a newer protocol answers for itself, without the chooser', async () => {
+    const choose = vi.fn();
+    const r = await attemptConnect(
+      deps({
+        granted: async () => [port('p')],
+        choose,
+        attach: async () => {
+          throw new BadProtoVerError(version(9));
+        },
+      }),
+    );
+    expect(r).toEqual({ ok: false, verdict: { kind: 'new-firmware', version: version(9) } });
+    expect(choose).not.toHaveBeenCalled();
   });
 
   it('keeps looking past a granted port that is the wrong box', async () => {

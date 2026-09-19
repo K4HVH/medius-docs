@@ -74,10 +74,10 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_list(MediusBoxInfo *out, uintptr_t cap, uintptr_t *out_total)</code></td><td>Enumerate every connected box into <code>out</code> (up to <code>cap</code>): opens, handshakes, and reads each one's version + cloned-device info. Writes the total to <code>*out_total</code>, returns the number written. See <A href="/bindings/c/types#box-info"><code>MediusBoxInfo</code></A>.</td></tr>
-              <tr><td><code>medius_device_open_by_id(const char *id, MediusDevice **out)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake.</td></tr>
-              <tr><td><code>medius_device_find_mouse_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a mouse.</td></tr>
-              <tr><td><code>medius_device_find_keyboard_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a keyboard.</td></tr>
+              <tr><td><code>medius_list(MediusBoxInfo *out, uintptr_t cap, uintptr_t *out_total)</code></td><td>Enumerate every connected box into <code>out</code> (up to <code>cap</code>): reads each one's version and, on a box this library speaks to, its cloned-device info; a box on another protocol has <code>has_device</code> 0. Writes the total to <code>*out_total</code>, returns the number written. See <A href="/bindings/c/types#box-info"><code>MediusBoxInfo</code></A>.</td></tr>
+              <tr><td><code>medius_device_open_by_id(const char *id, MediusDevice **out)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code> when that box speaks another protocol, <code>MEDIUS_STATUS_ERR_NOT_FOUND</code> when no box matches.</td></tr>
+              <tr><td><code>medius_device_find_mouse_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a mouse. With none, a connected box on another protocol answers <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>, since its clone is unread.</td></tr>
+              <tr><td><code>medius_device_find_keyboard_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -512,7 +512,7 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_transfer_timeout_ms()</code></td><td>The default control-transfer reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>7</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version, bumped on any breaking header change; currently <code>8</code>. Check it at start-up when you load the library dynamically, since a mismatched header and library agree on symbol names but not on struct layout.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
             </tbody>
           </table>

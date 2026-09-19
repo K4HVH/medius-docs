@@ -3,7 +3,7 @@
 // from a test: the caller supplies how to list, choose and attach to a port, and an attach that fails
 // closes whatever it opened.
 
-import type { Version } from '../protocol';
+import { PROTO_VER, type Version } from '../protocol';
 import { BadProtoVerError, NoReplyError } from './link';
 
 export type ConnectVerdict =
@@ -14,6 +14,7 @@ export type ConnectVerdict =
   | { kind: 'silent' }
   | { kind: 'needs-click' }
   | { kind: 'old-firmware'; version: Version }
+  | { kind: 'new-firmware'; version: Version }
   | { kind: 'other'; message: string };
 
 export interface ConnectDeps<L> {
@@ -32,6 +33,7 @@ export type ConnectOutcome<L> =
 // or not at all, is talking about this device. One that would not open says nothing about it.
 const TELLS_US: Record<ConnectVerdict['kind'], number> = {
   'old-firmware': 4,
+  'new-firmware': 4,
   silent: 3,
   'needs-click': 2,
   busy: 2,
@@ -55,7 +57,10 @@ export function classifyConnectError(e: unknown): ConnectVerdict {
 }
 
 function classify(e: unknown): ConnectVerdict {
-  if (e instanceof BadProtoVerError) return { kind: 'old-firmware', version: e.version };
+  if (e instanceof BadProtoVerError) {
+    const kind = e.version.protoVer > PROTO_VER ? 'new-firmware' : 'old-firmware';
+    return { kind, version: e.version };
+  }
   if (e instanceof NoReplyError) return { kind: 'silent' };
   // Keyed on `name`, not on `instanceof DOMException`: a DOMException inherits from Error in a
   // browser, so its message is the bare text and the name is the only thing that survives.
@@ -105,7 +110,7 @@ export async function attemptConnect<L>(
     }
     // A port that opened has answered about this box. Report that rather than making someone who
     // has one box pick it out of a dialog again.
-    if (best && (best.kind === 'old-firmware' || best.kind === 'silent')) {
+    if (best && (best.kind === 'old-firmware' || best.kind === 'new-firmware' || best.kind === 'silent')) {
       return { ok: false, verdict: best };
     }
   }

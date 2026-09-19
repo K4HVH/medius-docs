@@ -2,7 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-export const PROTO_VER = 7; // the advanced control layer (raw/transfer/rewrite/patch) and HEALTH widened to 16 bits
+export const PROTO_VER = 8; // firmware 3.4.1: RESP(CLIP), CLIP_TRIGGER and REWRITE reshaped (clip transfer counters, packet triggers, the clip rule action)
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
 // and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been

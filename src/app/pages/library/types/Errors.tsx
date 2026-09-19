@@ -40,7 +40,10 @@ const Errors: Component = () => {
               </tr>
               <tr>
                 <td><code>NotFound</code></td>
-                <td>No device matched the expected VID/PID.</td>
+                <td>
+                  No port has the box's VID/PID, or no box matches the{' '}
+                  <A href="/library/discovery">discovery</A> id or predicate.
+                </td>
               </tr>
               <tr>
                 <td><code>NoReply</code></td>
@@ -53,9 +56,10 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>7</code>;{' '}
-                  <code>got</code> carries the reported value. See the{' '}
-                  <A href="/library/connection">handshake</A>.
+                  The box replied, but its <code>proto_ver</code> wasn't <code>8</code>;{' '}
+                  <code>got</code> carries the reported value. The{' '}
+                  <A href="/library/discovery">discovery</A> openers return it for a matched box on
+                  another protocol. See the <A href="/library/connection">handshake</A>.
                 </td>
               </tr>
               <tr>
