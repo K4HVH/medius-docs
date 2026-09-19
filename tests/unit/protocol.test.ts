@@ -581,11 +581,11 @@ describe('LOCK command (§3.8)', () => {
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this LOCK payload', () => {
-    // v7 opens the advanced control layer (raw/transfer/rewrite/patch) and widens HEALTH to a u16. A box on v6
-    // has no rewrite table, patch store or transfer opcode, and answers HEALTH in one byte; left at 6
-    // the handshake would accept it and the advanced control editor would find the missing wire by silence.
-    expect(PROTO_VER).toBe(7);
+  it('PROTO_VER matches the firmware that speaks this RESP(CLIP), CLIP_TRIGGER and REWRITE', () => {
+    // v8 (firmware 3.4.1) widens RESP(CLIP)'s fixed prefix and appends its packet triggers, adds packet
+    // triggers to CLIP_TRIGGER and a clip action to REWRITE. A box on v7 answers RESP(CLIP) in the older
+    // layout and takes neither; left at 7 the handshake would hand it the Clip card and the rewrite editor.
+    expect(PROTO_VER).toBe(8);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {

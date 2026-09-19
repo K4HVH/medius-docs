@@ -40,7 +40,7 @@ const Types: Component = () => {
           </p>
           <p>
             Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>7</code>, the
+            it, never a pointer you own. The shapes on this page are ABI version <code>8</code>, the
             number <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> returns.
           </p>
         </div>
@@ -1304,16 +1304,28 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusBoxInfo" subtitle="One discovered box: port, version, and cloned device" />
           <p>
             Filled by <A href="/bindings/c/api#discovery"><code>medius_list</code></A>: one entry per
-            connected box, each opened and handshaked in turn. See <A href="/library/types/structs#box-info"><code>BoxInfo</code></A>.
+            connected box, each read in turn. See <A href="/library/types/structs#box-info"><code>BoxInfo</code></A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>port</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A></td><td>The box's control port (path + CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version, with the box MAC and name.</td></tr>
-              <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones.</td></tr>
+              <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version and control protocol, with the box MAC and name.</td></tr>
+              <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones; zeroed when <code>has_device</code> is 0.</td></tr>
+              <tr><td><code>has_device</code></td><td><code>uint8_t</code></td><td>0 for a box whose <code>version.proto_ver</code> isn't the library's protocol; opening it answers <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>.</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`MediusBoxInfo boxes[8];
+uintptr_t total = 0;
+uintptr_t n = medius_list(boxes, 8, &total);
+for (uintptr_t i = 0; i < n; i++) {
+    const MediusBoxInfo *b = &boxes[i];
+    if (b->has_device)
+        printf("%s  %04x:%04x %s\\n", b->port.path, b->device.vid, b->device.pid, b->device.product);
+    else
+        printf("%s  protocol %u: update its firmware\\n", b->port.path, b->version.proto_ver);
+}`}</code></pre>
         </Card>
       </div>
 
@@ -1890,9 +1902,9 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
             <tbody>
               <tr><td><code>MEDIUS_STATUS_OK</code></td><td><code>0</code></td><td>Success.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td><code>1</code></td><td>An underlying serial or OS error.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No device matched the expected VID/PID.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No port has the box's VID/PID, or no box matches the <A href="/bindings/c/api#discovery">discovery</A> id or kind.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td><code>3</code></td><td>The box never answered the version query during the <A href="/native/connection#handshake">handshake</A>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>).</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>), including a box the <A href="/bindings/c/api#discovery">discovery</A> openers matched.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td>A query waited past its timeout with no reply.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td><code>6</code></td><td>The link dropped (also returned by a stream when it closes).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td><td>An outbound frame exceeded the wire limit.</td></tr>

@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>7</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>8</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,7 +42,7 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 7, fw_major: 3, fw_minor: 4, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+let v = Version { proto_ver: 8, fw_major: 3, fw_minor: 4, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
 assert_eq!(v.to_string(), "fw 3.4.1"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
@@ -1026,8 +1026,8 @@ for t in &table.entries {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>port</code></td><td><A href="/library/types/structs#port-info"><code>PortInfo</code></A></td><td>The control port (path and CH343 serial).</td></tr>
-              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
-              <tr><td><code>device</code></td><td><A href="/library/types/structs#device-info"><code>DeviceInfo</code></A></td><td>The device it clones.</td></tr>
+              <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version and control protocol, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
+              <tr><td><code>device</code></td><td><code>Option&lt;<A href="/library/types/structs#device-info">DeviceInfo</A>&gt;</code></td><td>The device it clones. <code>None</code> for a box whose <code>version.proto_ver</code> isn't <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>; opening that box returns <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.</td></tr>
             </tbody>
           </table>
           <table class="api-params">

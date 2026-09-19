@@ -89,6 +89,10 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
               path, or an unsupported platform where the install built from source without a{' '}
               <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>.
             </p>
+            <p>
+              An <code>ImportError</code> naming two ABI numbers means the library it found comes from
+              another release: the package checks <code>medius_abi_version()</code> before any call.
+            </p>
           </div>
         </Card>
       </div>

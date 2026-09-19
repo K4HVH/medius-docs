@@ -57,8 +57,8 @@ export interface DashboardContextValue {
   secure: boolean;
   status: Accessor<ConnectionStatus>;
   version: Accessor<Version | null>;
-  // A box a protocol version behind connects for one thing: being updated. Everything else on this
-  // page speaks the current wire, so it is not offered while this is true.
+  // A box on an older protocol connects for one thing: being updated. Everything else on this page
+  // speaks the current wire, so it is not offered while this is true.
   updateOnly: Accessor<boolean>;
   health: Accessor<Health | null>;
   error: Accessor<string | null>;

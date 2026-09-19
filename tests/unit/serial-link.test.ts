@@ -5,6 +5,8 @@ import {
   QueryTimeoutError,
   SerialLink,
   attachLink,
+  classifyConnectError,
+  speaksCurrentWire,
 } from '../../src/dashboard/serial';
 import {
   CatchClass,
@@ -190,7 +192,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('handshakes a box one protocol version behind, so it can still be updated', async () => {
+  it('handshakes a box on the oldest protocol one-click update runs on, so it can still be updated', async () => {
     // One-click update arrived with proto 5 (firmware 3.2.0) and nothing it uses has changed since:
     // QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP and LOG are all identical at 5 and 6. The
     // whole v5 to v6 delta is one new option id and its readback; OPTION(EMIT) is unchanged at 12
@@ -214,7 +216,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 8, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, 9, 9, 0, 0, 1, 2, 3, 4, 5, 6])));
       }
     };
     const link = new SerialLink(asPort(mock));
@@ -224,6 +226,40 @@ describe('SerialLink', () => {
       (e: unknown) => e,
     );
     expect(err).toBeInstanceOf(BadProtoVerError);
+    await link.close();
+  });
+
+  // What each protocol byte a box can answer with gets from this page. Firmware 3.4.0 speaks 7 and
+  // 3.4.1 speaks 8: a 3.4.0 box has to connect, or the dashboard cannot update it to 3.4.1.
+  it.each([
+    [4, 'refused as old firmware'],
+    [5, 'update-only'],
+    [6, 'update-only'],
+    [7, 'update-only'],
+    [8, 'full'],
+    [9, 'refused as new firmware'],
+  ])('a box on protocol %i is %s', async (proto, outcome) => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === 0) {
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, proto, 3, 4, 0, 1, 2, 3, 4, 5, 6])));
+      }
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const got = await link.handshake().then(
+      (v) => (speaksCurrentWire(v) ? 'full' : 'update-only'),
+      (e: unknown) => {
+        expect(e).toBeInstanceOf(BadProtoVerError);
+        const verdict = classifyConnectError(e);
+        return verdict.kind === 'old-firmware'
+          ? 'refused as old firmware'
+          : verdict.kind === 'new-firmware'
+            ? 'refused as new firmware'
+            : verdict.kind;
+      },
+    );
+    expect(got).toBe(outcome);
     await link.close();
   });
 
@@ -655,7 +691,7 @@ class RatedPort {
 
   constructor(
     private readonly boxBaud: number,
-    private readonly protoVer = 7,
+    private readonly protoVer = 8,
     private readonly openError: Error | null = null,
   ) {}
 
@@ -713,7 +749,7 @@ class RatedPort {
   private answer(f: { ty: FrameType; seq: number; payload: Uint8Array }): void {
     if (this.baud !== this.boxBaud || f.ty !== FrameType.Query || f.payload[0] !== 0) return;
     this.controller?.enqueue(
-      encode(FrameType.Resp, f.seq, new Uint8Array([0, this.protoVer, 3, 4, 0, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+      encode(FrameType.Resp, f.seq, new Uint8Array([0, this.protoVer, 3, 4, 1, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
     );
   }
 }
@@ -725,7 +761,7 @@ describe('attachLink', () => {
   it('stops at the current rate when the box answers there', async () => {
     const port = new RatedPort(6_000_000);
     const { link, version } = await attachLink(asSerial(port), make);
-    expect(version.protoVer).toBe(7);
+    expect(version.protoVer).toBe(8);
     expect(port.opens).toEqual([6_000_000]);
     expect(port.closes).toBe(0);
     await link.close();
@@ -756,7 +792,7 @@ describe('attachLink', () => {
   });
 
   it('a port that will not open is not retried at another rate', async () => {
-    const port = new RatedPort(6_000_000, 7, new DOMException('Failed to open serial port.', 'NetworkError'));
+    const port = new RatedPort(6_000_000, 8, new DOMException('Failed to open serial port.', 'NetworkError'));
     await expect(attachLink(asSerial(port), make)).rejects.toMatchObject({ name: 'NetworkError' });
     expect(port.opens).toEqual([6_000_000]);
   });

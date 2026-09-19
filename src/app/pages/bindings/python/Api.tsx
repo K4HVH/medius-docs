@@ -46,10 +46,10 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A> (opens, handshakes, and reads each one's version + device info).</td></tr>
-              <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake.</td></tr>
-              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse.</td></tr>
-              <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard.</td></tr>
+              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>, reading each one's version and, on a box this package speaks to, its device info; <code>device</code> is <code>None</code> for a box on another protocol.</td></tr>
+              <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches.</td></tr>
+              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. With none, a connected box on another protocol raises <code>BadProtoVerError</code>, since its clone is unread.</td></tr>
+              <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -423,7 +423,7 @@ with MockBox() as mock:
               <tr><td><code>medius.default_query_timeout_ms()</code></td><td>The default query reply wait (1000 ms).</td></tr>
               <tr><td><code>medius.default_transfer_timeout_ms()</code></td><td>The default control-transfer reply wait (1500 ms).</td></tr>
               <tr><td><code>medius.default_keepalive_cadence_ms()</code></td><td>The default keepalive interval (500 ms).</td></tr>
-              <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes.</td></tr>
+              <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes. <code>import medius</code> raises <code>ImportError</code> when it isn't the ABI the package was built for.</td></tr>
               <tr><td><code>medius.version_string()</code></td><td>The library version string.</td></tr>
             </tbody>
           </table>
