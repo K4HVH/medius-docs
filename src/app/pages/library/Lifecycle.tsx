@@ -75,7 +75,11 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
               Rescans for the box by its USB identity, vendor ID <code>0x1A86</code> and product ID{' '}
               <code>0x55D3</code> (see <A href="/native/transport">Transport</A>).
             </li>
-            <li>Reopens the port.</li>
+            <li>
+              Reopens the port. A box that answers on another protocol, as after a reflash, is{' '}
+              <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> and stays
+              disconnected.
+            </li>
             <li>
               Re-applies the held overrides, the same work as{' '}
               <A href="/library/lifecycle#reapply"><code>reapply</code></A>.

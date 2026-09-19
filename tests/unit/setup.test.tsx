@@ -35,6 +35,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     status: () => mock.s!.status(),
     verdict: () => null,
     error: () => mock.s!.error(),
+    // A 3.2.0 box on protocol 5, the release the stand-in offers below.
     version: () => ({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }),
     flashProgress: () => null,
     connect: async () => mock.s!.setStatus('connected'),

@@ -104,13 +104,20 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
           <p>
             <A href="/bindings/c/api#module"><code>medius_version_string</code></A> and{' '}
             <A href="/bindings/c/api#module"><code>medius_abi_version</code></A> are pure library
-            calls. A printed version means the header and library are wired in.
+            calls. A printed version means the header and library are wired in; a mismatched{' '}
+            <code>MEDIUS_ABI_VERSION</code> means call nothing else and rebuild against the header that
+            ships with the library.
           </p>
           <pre><code class="language-c">{`// app.c
 #include <stdio.h>
 #include <medius.h>
 
 int main(void) {
+    if (medius_abi_version() != MEDIUS_ABI_VERSION) {       /* structs laid out differently */
+        fprintf(stderr, "library is abi %u, medius.h is abi %u\\n",
+                medius_abi_version(), (unsigned)MEDIUS_ABI_VERSION);
+        return 1;
+    }
     printf("%s, abi %u\\n", medius_version_string(), medius_abi_version());
     return 0;
 }`}</code></pre>

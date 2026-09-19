@@ -3,7 +3,7 @@ import { render, cleanup } from '@solidjs/testing-library';
 import { MemoryRouter, Route } from '@solidjs/router';
 import { DashboardContext, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
 import Control from '../../src/app/pages/dashboard/Control';
-import { ClipOp, ClipState, Direction, EmitMode, RenderMode } from '../../src/dashboard/protocol';
+import { ClipOp, ClipState, Direction, EmitMode, PROTO_VER, RenderMode } from '../../src/dashboard/protocol';
 
 // The Control page mounts five cards against one context. Each card has its own unit tests; this
 // covers what those cannot: that the whole page composes, that every card reaches the connected
@@ -22,7 +22,7 @@ const health = {
 
 const VALUES: Record<string, unknown> = {
   health,
-  version: { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
+  version: { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [1, 2, 3, 4, 5, 6], name: 'Medius-1A2B' },
   locks: {
     entries: [
       { cls: 3, id: 0, direction: 1, scale: 0 },
