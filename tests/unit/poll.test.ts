@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createRoot, createSignal } from 'solid-js';
 import { KEEPALIVE_MS, SILENCE_CLEAR_MS, createPoller } from '../../src/app/pages/dashboard/poll';
-import type { SerialLink } from '../../src/dashboard/serial';
+import { type SerialLink, UnreadableReplyError } from '../../src/dashboard/serial';
 
 // A link stub that counts calls per query and resolves on demand, so a test can drive the poller's
 // scheduling without a serial port.
@@ -223,6 +223,33 @@ describe('dashboard poller', () => {
       await settle();
       expect(calls).toBe(1);
       outer();
+    });
+  });
+
+  it('leaves the unreadable flag as it was across a reply that never came', async () => {
+    let fail: Error = new Error('no reply from the box before the query timed out');
+    const link = {
+      queryHealth: async () => ({ linkUp: true }) as never,
+      queryClip: async () => {
+        throw fail;
+      },
+    } as unknown as SerialLink;
+    await createRoot(async (dispose) => {
+      const poller = createPoller(() => link);
+      poller.subscribe('clip', 1000);
+      const unreadable = poller.unreadable('clip');
+      await settle();
+      // A timeout says nothing about the layout, before an unreadable reply or after one.
+      expect(unreadable()).toBe(false);
+      fail = new UnreadableReplyError('the CLIP query');
+      vi.advanceTimersByTime(1000);
+      await settle();
+      expect(unreadable()).toBe(true);
+      fail = new Error('no reply from the box before the query timed out');
+      vi.advanceTimersByTime(1000);
+      await settle();
+      expect(unreadable()).toBe(true);
+      dispose();
     });
   });
 

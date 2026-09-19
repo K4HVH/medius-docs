@@ -157,6 +157,16 @@ export class QueryTimeoutError extends Error {
   }
 }
 
+// The box answered a query and the reply is in a layout this build does not decode: firmware that
+// lays the reply out another way. Retrying reads the same bytes again, so a caller shows it rather
+// than waiting for a value.
+export class UnreadableReplyError extends Error {
+  constructor(what: string) {
+    super(`the box's reply to ${what} is in a layout this page does not read`);
+    this.name = 'UnreadableReplyError';
+  }
+}
+
 export class NoReplyError extends Error {
   constructor(what = 'the version handshake') {
     super(`no reply to ${what}`);
@@ -665,7 +675,7 @@ export class SerialLink {
   // The clip engine's state, ring accounting, held usages, and stored configuration (§4.15).
   async queryClip(timeoutMs?: number): Promise<ClipStatus> {
     const resp = parseResp(await this.query(Q_CLIP, timeoutMs));
-    if (resp?.kind !== 'clip') throw new Error('unexpected reply to CLIP query');
+    if (resp?.kind !== 'clip') throw new UnreadableReplyError('the CLIP query');
     return resp.clip;
   }
 
