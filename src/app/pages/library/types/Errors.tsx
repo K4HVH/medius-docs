@@ -172,6 +172,14 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>ClipPacketTrigger {'{'} reason {'}'}</code></td>
+                <td>
+                  A clip packet trigger in a shape the box refuses, caught before anything is sent;{' '}
+                  <code>reason</code> names which of the{' '}
+                  <A href="/library/clip#packet-triggers">refusals</A> it is.
+                </td>
+              </tr>
+              <tr>
                 <td><code>RewriteMaskLength {'{'} match_len, mask_len {'}'}</code></td>
                 <td>
                   A <A href="/library/advanced/rewrite">rewrite rule</A>'s <code>match</code> and{' '}
@@ -205,16 +213,6 @@ const Errors: Component = () => {
                 <td>
                   A further <A href="/library/advanced/rewrite">rewrite rule</A> with all{' '}
                   <code>limit</code> already in use. Remove one first.
-                </td>
-              </tr>
-              <tr>
-                <td><code>RewriteClipRule {'{'} reason {'}'}</code></td>
-                <td>
-                  A <A href="/library/advanced/rewrite#clip">clip rule</A> in a shape the box refuses,
-                  such as <code>dropping</code> on <code>Control</code> or <code>Any</code>, or{' '}
-                  <code>on_edge</code> without a report class, a concrete <code>id</code>,{' '}
-                  <code>IN</code> or <code>OUT</code>, and match bytes past the selector;{' '}
-                  <code>reason</code> says which.
                 </td>
               </tr>
               <tr>

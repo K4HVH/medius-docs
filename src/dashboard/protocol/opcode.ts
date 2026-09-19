@@ -71,6 +71,13 @@ export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a nati
 export const CLIP_TRIG_MAX = 8;
 export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove
 export const CLIP_TRIG_F_CONSUME = 0x02; // suppress the trigger input from the game
+export const CLIP_TRIG_F_RUN = 0x04; // packet trigger: the verb runs on the first of a run of matching packets
+// A traffic class (4..9) in the class byte makes the binding a packet trigger, keyed by
+// (class, id, dir, mlen, match, mask). The match bytes of the whole set share one pool, which keeps
+// RESP(CLIP) inside one frame.
+export const CLIP_PKT_TRIG_MAX = 8;
+export const CLIP_PKT_MATCH_MAX = 16; // one masked head, as wide as a rewrite rule's
+export const CLIP_PKT_MATCH_POOL = 112;
 
 // Autolock scope (the CLIP_SET_AUTOLOCK value): which classes the clip blocks physical input on
 // while it plays, so physical input cannot add to what it plays.
@@ -121,6 +128,8 @@ export const CLIP_ENTRY_MAX = MAX_PAYLOAD;
 export const CLIP_HELD_MAX = 40;
 export const RESP_CLIP_HDR = 31;
 export const CLIP_TRIG_LEN = 6;
+// RESP(CLIP) bytes ahead of a packet trigger's match: the command's eight and hits u16.
+export const CLIP_PKT_TRIG_ENTRY = 10;
 
 // A state byte this build does not know reads as Faulted rather than Idle: an unknown engine state
 // is not one a UI should offer Start on.
@@ -239,8 +248,7 @@ export const RATE_CHANGE_DRIVEN = 0x02;
 
 // REWRITE action (§3.14): what a matched rule does to the packet. A report class can Pass, Drop,
 // Patch, or Replace; the control class adds Answer, Stall, Nak, and the two Reply_* forms that rewrite
-// the device's reply; Clip runs on every class. The box validates the action against the class and
-// refuses a mismatch.
+// the device's reply. The box validates the action against the class and refuses a mismatch.
 export enum RewriteAction {
   Pass = 0, // matched a broader rule but leaves the packet untouched
   Drop = 1, // report class: the packet is not delivered
@@ -251,14 +259,8 @@ export enum RewriteAction {
   Nak = 6, // control: NAK to a timeout
   ReplyPatch = 7, // control IN: overwrite the device's reply at the offset
   ReplyReplace = 8, // control IN: replace the device's reply with the payload
-  Clip = 9, // run a clip verb on the box's next tick; the payload is [op][flags][slen]
 }
-export const RW_ACTION_COUNT = 10;
-
-// A Clip rule's payload (§3.14): exactly [op u8][flags u8][slen u8], at offset 0.
-export const RW_CLIP_PLEN = 3;
-export const RW_CLIP_F_DROP = 0x01; // drop every packet the rule wins
-export const RW_CLIP_F_EDGE = 0x02; // run the verb on the first of a run of matching packets only
+export const RW_ACTION_COUNT = 9;
 
 export function rewriteActionFromU8(v: number): RewriteAction | null {
   return v >= 0 && v < RW_ACTION_COUNT ? (v as RewriteAction) : null;

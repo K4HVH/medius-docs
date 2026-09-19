@@ -9,6 +9,9 @@ import {
   CLIP_F_WHEEL,
   CLIP_F_XFER,
   CLIP_F_XY,
+  CLIP_PKT_MATCH_MAX,
+  CLIP_PKT_MATCH_POOL,
+  CLIP_PKT_TRIG_MAX,
   CLIP_RAW_MAX,
   CLIP_TAG_GAP,
   ClipOp,
@@ -30,9 +33,6 @@ import {
   KBC_NKRO,
   KBC_REPORT_ID,
   KBC_SYSTEM,
-  RW_CLIP_F_DROP,
-  RW_CLIP_F_EDGE,
-  RW_CLIP_PLEN,
   RewriteAction,
   PatchSection,
   TransformOp,
@@ -892,7 +892,7 @@ export type ClipTriggerAction =
 
 export const isTriggerAction = (op: number): op is ClipTriggerAction => op >= ClipOp.Start && op <= ClipOp.Toggle;
 
-// The verbs a trigger or a Clip rewrite rule may run, in wire order.
+// The verbs a trigger may run, in wire order.
 export const CLIP_VERBS: ClipTriggerAction[] = [
   ClipOp.Start,
   ClipOp.Stop,
@@ -902,7 +902,7 @@ export const CLIP_VERBS: ClipTriggerAction[] = [
   ClipOp.Toggle,
 ];
 
-// The engine verb's short name, for a trigger or rule readout and the verb pickers.
+// The engine verb's short name, for a trigger readout and the verb picker.
 export function clipOpName(op: ClipOp): string {
   switch (op) {
     case ClipOp.Start:
@@ -966,6 +966,7 @@ export interface ClipStatus {
   // Whether the clip's motion waits to ride a native report (CLIP_SET ride). Off = the box's own clock.
   ride: boolean;
   triggers: ClipTrigger[];
+  packetTriggers: ClipPacketTriggerEntry[];
 }
 
 export const clipStateLabel = (s: ClipState): string =>
@@ -981,6 +982,114 @@ export const clipStateLabel = (s: ClipState): string =>
 // under: setting one overwrites the other rather than adding a second binding.
 export const sameTrigger = (a: ClipTrigger, b: ClipTrigger): boolean =>
   a.cls === b.cls && a.id === b.id && a.edge === b.edge;
+
+// One packet trigger (§3.11): a packet on a traffic surface whose head matches under the mask runs an
+// engine verb on the box's next tick. `id` is the interface or endpoint number CATCH and REWRITE give
+// the class, or CATCH_ID_ANY. `consume` keeps the packet the trigger wins off the wire. With
+// `oncePerRun` the verb runs on the first of a run of matching packets: the first `selectorLen` match
+// bytes select the stream within its address (a report ID) and the rest are the condition.
+export interface ClipPacketTrigger {
+  cls: number;
+  id: number;
+  dir: Direction;
+  action: ClipTriggerAction;
+  consume: boolean;
+  oncePerRun: boolean;
+  selectorLen: number;
+  match: Uint8Array;
+  mask: Uint8Array;
+}
+
+// One packet trigger as RESP(CLIP) lists it (§4.15): the trigger, which replays as the command that
+// set it, and the packets it has won, saturating at 65535.
+export interface ClipPacketTriggerEntry extends ClipPacketTrigger {
+  hits: number;
+}
+
+// The surfaces a packet trigger can watch: the traffic classes, in wire order.
+export const CLIP_PKT_CLASSES: CatchClass[] = [
+  CatchClass.HidIn,
+  CatchClass.HidOut,
+  CatchClass.VendorInterrupt,
+  CatchClass.VendorBulk,
+  CatchClass.Control,
+  CatchClass.Emit,
+];
+
+const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
+
+// True when two packet triggers share the key the box stores them under, so setting one overwrites
+// the other: the address, and the match and mask bytes.
+export const samePacketTrigger = (a: ClipPacketTrigger, b: ClipPacketTrigger): boolean =>
+  a.cls === b.cls && a.id === b.id && a.dir === b.dir && sameBytes(a.match, b.match) && sameBytes(a.mask, b.mask);
+
+export type ClipPacketTriggerFault =
+  | 'class' // not one of the six traffic surfaces
+  | 'direction' // not Both, In or Out
+  | 'verb' // past Toggle
+  | 'mask-length' // match and mask differ in length
+  | 'match-length' // past CLIP_PKT_MATCH_MAX bytes
+  | 'class-direction' // a direction the class never carries: HID in or Emit with Out, HID out with In
+  | 'match-outside-mask' // a match bit outside its mask, which no packet can meet
+  | 'consume-control' // a drop has no meaning on a control request
+  | 'consume-opt-in' // consuming drops traffic, which needs OPTION(IMPERFECT)
+  | 'run-stream' // a run is over one stream: a class other than Control, one id, In or Out
+  | 'run-selector' // the match must run past the selector
+  | 'run-condition' // no masked bit past the selector, so the run would never end
+  | 'selector' // a selector without once per run
+  | 'full' // CLIP_PKT_TRIG_MAX held and this key is new
+  | 'pool'; // the set's match bytes would pass CLIP_PKT_MATCH_POOL
+
+// What the box holds that decides a set: the opt-in, and the packet triggers already stored.
+export interface ClipPacketTriggerBox {
+  imperfect: boolean;
+  held: readonly ClipPacketTrigger[];
+}
+
+// The directions a class carries: HID in and Emit travel In only, HID out travels Out only, and the
+// vendor and control classes travel both ways. Both is a wildcard, so every class takes it.
+export const clipPacketDirOk = (cls: number, dir: Direction): boolean => {
+  if (dir === Direction.Negative) return cls !== CatchClass.HidIn && cls !== CatchClass.Emit;
+  if (dir === Direction.Positive) return cls !== CatchClass.HidOut;
+  return true;
+};
+
+// Why the box would refuse this key, or null when it names a trigger: the checks a removal shares
+// with a set. A key no packet can match names nothing the box holds.
+export function clipPacketKeyFault(t: ClipPacketTrigger): ClipPacketTriggerFault | null {
+  if (!CLIP_PKT_CLASSES.includes(t.cls)) return 'class';
+  if (t.dir !== Direction.Both && t.dir !== Direction.Positive && t.dir !== Direction.Negative) return 'direction';
+  if (t.match.length !== t.mask.length) return 'mask-length';
+  if (t.match.length > CLIP_PKT_MATCH_MAX) return 'match-length';
+  if (!clipPacketDirOk(t.cls, t.dir)) return 'class-direction';
+  if (t.match.some((b, i) => (b & ~t.mask[i] & 0xff) !== 0)) return 'match-outside-mask';
+  return null;
+}
+
+// Why the box would refuse to set this trigger, or null when it stores it. CLIP_TRIGGER has no reply
+// and a refused frame is dropped whole, so this is the only place the reason exists. Without `box`
+// only the checks that need no box state run. An overwrite takes no slot and no pool bytes, since
+// the key carries the match.
+export function clipPacketTriggerFault(
+  t: ClipPacketTrigger,
+  box?: ClipPacketTriggerBox,
+): ClipPacketTriggerFault | null {
+  const key = clipPacketKeyFault(t);
+  if (key !== null) return key;
+  if (!isTriggerAction(t.action)) return 'verb';
+  if (t.consume && t.cls === CatchClass.Control) return 'consume-control';
+  if (t.consume && box && !box.imperfect) return 'consume-opt-in';
+  if (t.oncePerRun) {
+    if (t.cls === CatchClass.Control || t.id === CATCH_ID_ANY || t.dir === Direction.Both) return 'run-stream';
+    if (t.selectorLen >= t.match.length) return 'run-selector';
+    if (t.mask.subarray(t.selectorLen).every((b) => b === 0)) return 'run-condition';
+  } else if (t.selectorLen !== 0) return 'selector';
+  if (!box || box.held.some((h) => samePacketTrigger(h, t))) return null;
+  if (box.held.length >= CLIP_PKT_TRIG_MAX) return 'full';
+  const used = box.held.reduce((n, h) => n + h.match.length, 0);
+  return used + t.match.length > CLIP_PKT_MATCH_POOL ? 'pool' : null;
+}
 
 export enum LogLevel {
   Error = 0,
@@ -1108,37 +1217,6 @@ export interface RewriteRule {
   payload: Uint8Array;
 }
 
-// What a Clip rule does (§3.14): the verb it runs on the box's next tick, whether it drops every
-// packet it wins, and whether the verb runs only on the first of a run of matching packets. With
-// `edge`, the first `selectorLen` match bytes select the stream within its address (a report ID) and
-// the rest are the condition; without it `selectorLen` is 0.
-export interface ClipVerb {
-  action: ClipTriggerAction;
-  drop: boolean;
-  edge: boolean;
-  selectorLen: number;
-}
-
-// A Clip rule's payload: [op u8][flags u8][slen u8].
-export function clipVerbPayload(v: ClipVerb): Uint8Array {
-  const flags = (v.drop ? RW_CLIP_F_DROP : 0) | (v.edge ? RW_CLIP_F_EDGE : 0);
-  return new Uint8Array([v.action, flags, v.selectorLen & 0xff]);
-}
-
-// What a Clip rule does, decoded from its payload. Null for any other rule, and for a payload that is
-// not a clip rule's: another length, a verb past Toggle, or a flag bit this build does not know.
-export function clipVerbOf(rule: Pick<RewriteRule, 'action' | 'payload'>): ClipVerb | null {
-  if (rule.action !== RewriteAction.Clip || rule.payload.length !== RW_CLIP_PLEN) return null;
-  const [op, flags, selectorLen] = rule.payload;
-  if (!isTriggerAction(op) || (flags & ~(RW_CLIP_F_DROP | RW_CLIP_F_EDGE)) !== 0) return null;
-  return {
-    action: op,
-    drop: (flags & RW_CLIP_F_DROP) !== 0,
-    edge: (flags & RW_CLIP_F_EDGE) !== 0,
-    selectorLen,
-  };
-}
-
 // One descriptor patch as RESP(PATCHES) summarises it (§4.17): which served descriptor it overwrites,
 // where, and how many bytes. The bytes themselves come from RESP(PATCH_ENTRY).
 export interface PatchInfo {
@@ -1216,8 +1294,6 @@ export function rewriteActionName(action: RewriteAction | null): string {
       return 'reply-patch';
     case RewriteAction.ReplyReplace:
       return 'reply-replace';
-    case RewriteAction.Clip:
-      return 'clip';
     default:
       return 'unknown';
   }

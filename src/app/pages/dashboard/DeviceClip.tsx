@@ -4,7 +4,8 @@
 // none it is the emit rate OPTION(EMIT) fixes, else 1 ms. Everything below is refused by the box
 // while no clone is up. The engine is soft state on a 1 s dead-man switch, which the clip status poll
 // doubles as the keepalive for. Raw report and transfer ticks play only under imperfect clones, so
-// they are offered only while it is on.
+// they are offered only while it is on. A trigger is an input edge or a packet on a traffic surface;
+// only a packet trigger that consumes needs the opt-in, so one that watches binds without it.
 
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -17,12 +18,15 @@ import { TextField } from '../../../components/inputs/TextField';
 import {
   type ClipEntry,
   type ClipEntryFault,
+  type ClipPacketTrigger,
+  type ClipPacketTriggerFault,
   type ClipStatus,
   type ClipTrigger,
   type ClipTriggerAction,
   type Usage,
   Action,
   BUTTONS,
+  CATCH_ID_ANY,
   CLIP_COND_ANY_CLASS,
   CLIP_COND_ANY_ID,
   CLIP_EDGES_MAX,
@@ -33,6 +37,9 @@ import {
   CLIP_LOCK_KEYS,
   CLIP_LOCK_MEDIA,
   CLIP_LOCK_WHEEL,
+  CLIP_PKT_MATCH_MAX,
+  CLIP_PKT_MATCH_POOL,
+  CLIP_PKT_TRIG_MAX,
   CLIP_RAW_MAX,
   CLIP_SET_AUTOLOCK,
   CLIP_SET_LOOP,
@@ -40,6 +47,7 @@ import {
   CLIP_SET_RIDE,
   CLIP_TRIG_MAX,
   CLIP_VERBS,
+  CatchClass,
   ClipOp,
   ClipState,
   Direction,
@@ -51,9 +59,13 @@ import {
   RenderMode,
   clipEntryFault,
   clipOpName,
+  clipPacketDirOk,
+  clipPacketTriggerFault,
   clipStateLabel,
   encodeClipEntry,
   isTriggerAction,
+  rewriteClassName,
+  samePacketTrigger,
   sameTrigger,
   usageName,
 } from '../../../dashboard/protocol';
@@ -66,11 +78,17 @@ import {
   RAW_DIR_BLURB,
   SETUP_DEFAULT,
   SETUP_FIELDS,
+  TRAFFIC_CLASS_BLURB,
+  TRAFFIC_CLASS_OPTIONS,
   decodeSetup,
   displayName,
   outDataBlurb,
   parseHex,
+  parseMatchMask,
   parseNum,
+  toHex,
+  trafficDirWord,
+  trafficIdLabel,
 } from './hex';
 
 const CLASSES: PickerClass[] = [
@@ -161,7 +179,59 @@ const triggerText = (t: ClipTrigger): string => {
   return `${who} ${edge} -> ${op}${locks ? ' (consume)' : ''}`;
 };
 
+// Why the box would refuse a packet trigger, in the words of the fields on this card.
+const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
+  class: 'Class must be one of the six traffic surfaces.',
+  direction: 'Direction must be Both, In or Out.',
+  verb: 'That verb cannot be bound to a trigger.',
+  'mask-length': 'Match and mask must be the same length.',
+  'match-length': `Match and mask must be at most ${CLIP_PKT_MATCH_MAX} bytes.`,
+  'class-direction': 'Direction must be one the class carries.',
+  'match-outside-mask': 'Every bit set in the match must be set in the mask too, or no packet can match.',
+  'consume-control': 'Consume needs a class other than Control.',
+  'consume-opt-in': 'Consume needs imperfect clones, on the Device tab.',
+  'run-stream': 'Once per run needs a class other than Control, one id, and In or Out.',
+  'run-selector': 'The match must be longer than the selector.',
+  'run-condition': 'The mask must keep at least one bit past the selector, or the run never ends.',
+  selector: 'A selector needs Once per run.',
+  full: `All ${CLIP_PKT_TRIG_MAX} packet trigger slots are used. Remove one first.`,
+  pool: `Packet triggers share ${CLIP_PKT_MATCH_POOL} match bytes. Remove one or shorten the match.`,
+};
+
+// A packet trigger's chip names what it runs, then the class and id it watches, the way a rewrite
+// rule's does. A chip is capped at 250px and ellipsises past it, so the direction and the match stay
+// out of the name and in the line below.
+const packetName = (t: ClipPacketTrigger): string => {
+  const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
+  return `${op} ${rewriteClassName(t.cls)} ${t.id === CATCH_ID_ANY ? 'any' : t.id}`;
+};
+
+// A packet trigger read back in words: where it watches, what it matches, then what it does.
+const packetText = (t: ClipPacketTrigger): string => {
+  const unit = t.cls === CatchClass.HidIn ? 'interface' : 'endpoint';
+  const where = t.id === CATCH_ID_ANY ? `every ${unit}` : `${unit} ${t.id}`;
+  const dir = t.dir === Direction.Both ? 'both directions' : trafficDirWord(t.dir);
+  const what = t.match.length > 0 ? `bytes ${toHex(t.match)} under ${toHex(t.mask)}` : 'every packet';
+  const does = [
+    clipOpName(t.action),
+    ...(t.oncePerRun ? [`once per run (selector ${t.selectorLen})`] : []),
+    ...(t.consume ? ['consumes the packet'] : []),
+  ];
+  return `${displayName(rewriteClassName(t.cls))}, ${where}, ${dir}, ${what}: ${does.join(', ')}`;
+};
+
+// The one way a report class travels, which takes the other direction off its picker.
+const DIR_WHY: Record<number, string> = {
+  [CatchClass.HidIn]: 'Every HID in report travels In.',
+  [CatchClass.HidOut]: 'Every HID out report travels Out.',
+  [CatchClass.Emit]: 'Every emitted report travels In.',
+};
+
 const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
+
+// The box counts a packet trigger's hits in 16 bits and holds the count at the top.
+const HITS_MAX = 0xffff;
+const hitsText = (hits: number): string => (hits >= HITS_MAX ? `${HITS_MAX}+ hits` : plural(hits, 'hit'));
 
 const bytesOf = (entries: ClipEntry[]): number =>
   entries.reduce((n, e) => n + (encodeClipEntry(e)?.length ?? 0), 0);
@@ -203,6 +273,47 @@ const DeviceClip = () => {
   const [trigEdge, setTrigEdge] = createSignal(String(Direction.Positive));
   const [trigOp, setTrigOp] = createSignal(String(ClipOp.Toggle));
   const [trigConsume, setTrigConsume] = createSignal(false);
+
+  const [trigKind, setTrigKind] = createSignal('input');
+  const [pktClass, setPktClass] = createSignal(TRAFFIC_CLASS_OPTIONS[0].value);
+  const [pktAnyId, setPktAnyId] = createSignal('one');
+  const [pktId, setPktId] = createSignal(0);
+  const [pktDir, setPktDir] = createSignal(String(Direction.Both));
+  const [pktMatch, setPktMatch] = createSignal('');
+  const [pktMask, setPktMask] = createSignal('');
+  const [pktConsume, setPktConsume] = createSignal(false);
+  const [pktOnce, setPktOnce] = createSignal(false);
+  const [pktSelector, setPktSelector] = createSignal(0);
+  const pktCls = () => Number(pktClass());
+  // Picking a class can strand a direction it never carries; fall back to Both, which every class
+  // takes, the way the rewrite editor falls back to Pass.
+  const choosePktClass = (v: string) => {
+    setPktClass(v);
+    if (!clipPacketDirOk(Number(v), Number(pktDir()) as Direction)) setPktDir(String(Direction.Both));
+  };
+  const pktDirOptions = () =>
+    [
+      { dir: Direction.Both, label: 'Both' },
+      { dir: Direction.Positive, label: 'In' },
+      { dir: Direction.Negative, label: 'Out' },
+    ].map((o) => ({ value: String(o.dir), label: o.label, disabled: !clipPacketDirOk(pktCls(), o.dir) }));
+  const packets = () => clip()?.packetTriggers ?? [];
+  // Consuming drops traffic, which rides the opt-in, and a drop has no meaning on a control request.
+  // A box ticked while it could apply falls back with whichever of the two took it away.
+  const consumeWhy = (): string | null => {
+    if (pktCls() === CatchClass.Control) return 'A control request always reaches the device, so there is nothing to consume.';
+    if (!allowed()) return 'Consuming a packet needs imperfect clones, on the Device tab. Watching one does not.';
+    return null;
+  };
+  const consumeNow = () => pktConsume() && consumeWhy() === null;
+  // When the verb runs and what becomes of the packet, as the two checkboxes stand now.
+  const pktBlurb = () => {
+    const when = pktOnce()
+      ? 'The verb runs on the first of a run of matching packets. The selector is the leading match bytes that pick the stream, such as a report ID.'
+      : 'The verb runs on every matching packet.';
+    const packet = consumeNow() ? 'A matched packet is not delivered.' : 'A matched packet is left untouched.';
+    return `${when} ${packet}`;
+  };
 
   // The four counters are boot-lifetime and never reset by the box, so an absolute reading says
   // nothing about this clip. Baseline them and show the difference.
@@ -367,6 +478,42 @@ const DeviceClip = () => {
 
   const removeTrigger = (t: ClipTrigger) => cmd.run(() => dash.link()!.clipUntrigger(t));
 
+  // The packet trigger the fields describe, or what is wrong with them.
+  const pickedPacket = (): ClipPacketTrigger | string => {
+    const head = parseMatchMask(pktMatch(), pktMask(), CLIP_PKT_MATCH_MAX);
+    if (typeof head === 'string') return head;
+    const action = Number(trigOp());
+    if (!isTriggerAction(action)) return PKT_FAULT_TEXT.verb;
+    return {
+      cls: pktCls(),
+      id: pktAnyId() === 'any' ? CATCH_ID_ANY : pktId(),
+      dir: Number(pktDir()) as Direction,
+      action,
+      consume: consumeNow(),
+      oncePerRun: pktOnce(),
+      selectorLen: pktOnce() ? pktSelector() : 0,
+      ...head,
+    };
+  };
+
+  // Refused here, where the fields are: CLIP_TRIGGER has no reply, so a trigger the box drops would
+  // only show as a list that never gained it.
+  const addPacket = () => {
+    const picked = pickedPacket();
+    const fault =
+      typeof picked === 'string' ? null : clipPacketTriggerFault(picked, { imperfect: allowed(), held: packets() });
+    const trigger = fault ? PKT_FAULT_TEXT[fault] : picked;
+    if (typeof trigger === 'string') {
+      cmd.run(() => Promise.reject(new Error(trigger)));
+      return;
+    }
+    cmd.run(() => dash.link()!.clipPacketTrigger(trigger));
+  };
+
+  const removePacket = (t: ClipPacketTrigger) => cmd.run(() => dash.link()!.clipPacketUntrigger(t));
+
+  const clearTriggers = () => cmd.run(() => dash.link()!.clipClearTriggers());
+
   // The box keys a binding on (class, id, edge) and overwrites in place, so a full table still
   // accepts a rebind of an address it already holds.
   const replacing = createMemo(() => {
@@ -383,6 +530,16 @@ const DeviceClip = () => {
   const trigFull = createMemo(
     () => (clip()?.triggers.length ?? 0) >= CLIP_TRIG_MAX && !replacing(),
   );
+
+  // A packet trigger's key carries its match and mask, so whether a bind replaces one is only known
+  // once the two hex fields parse.
+  const pktReplacing = createMemo(() => {
+    const picked = pickedPacket();
+    return typeof picked !== 'string' && packets().some((t) => samePacketTrigger(t, picked));
+  });
+  const pktFull = createMemo(() => packets().length >= CLIP_PKT_TRIG_MAX && !pktReplacing());
+  const pktBytes = createMemo(() => packets().reduce((n, t) => n + t.match.length, 0));
+  const onPacket = () => trigKind() === 'packet';
 
   const completeWhy = (): string | null => {
     if (finalized()) return 'Already marked complete.';
@@ -747,46 +904,149 @@ const DeviceClip = () => {
 
             <Section title="Triggers">
             <p style={muted}>
-              Up to {CLIP_TRIG_MAX} bindings.
+              Up to {CLIP_TRIG_MAX} input bindings and {CLIP_PKT_TRIG_MAX} packet triggers.
             </p>
-            <Show when={(clip()?.triggers.length ?? 0) > 0} fallback={<p>No triggers bound.</p>}>
-              <div style={chips}>
-                <For each={clip()?.triggers ?? []}>
-                  {(t) => (
-                    <Chip variant="info" onRemove={() => removeTrigger(t)}>
-                      {triggerText(t)}
-                    </Chip>
-                  )}
-                </For>
-              </div>
+            <Show
+              when={(clip()?.triggers.length ?? 0) + packets().length > 0}
+              fallback={<p>No triggers bound.</p>}
+            >
+              <Show when={(clip()?.triggers.length ?? 0) > 0}>
+                <div style={label}>
+                  Inputs ({clip()?.triggers.length ?? 0} of {CLIP_TRIG_MAX})
+                </div>
+                <div style={chips}>
+                  <For each={clip()?.triggers ?? []}>
+                    {(t) => (
+                      <Chip variant="info" onRemove={() => removeTrigger(t)}>
+                        {triggerText(t)}
+                      </Chip>
+                    )}
+                  </For>
+                </div>
+              </Show>
               <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
                 <p style={muted}>
-                  Removing the any-input binding clears every trigger: the box reads that exact address
-                  as its clear-all.
+                  Removing the any-input binding clears every trigger, packet triggers included: the
+                  box reads that exact address as its clear-all.
                 </p>
+              </Show>
+              <Show when={packets().length > 0}>
+                <div style={(clip()?.triggers.length ?? 0) > 0 ? { ...label, ...section } : label}>
+                  Packets ({packets().length} of {CLIP_PKT_TRIG_MAX}, {pktBytes()} of {CLIP_PKT_MATCH_POOL} match
+                  bytes)
+                </div>
+                <For each={packets()}>
+                  {(t, i) => (
+                    <div data-packet-trigger style={i() > 0 ? { 'margin-top': 'var(--g-spacing-sm)' } : undefined}>
+                      <div style={chips}>
+                        <Chip variant="info" onRemove={() => removePacket(t)}>
+                          {packetName(t)}
+                        </Chip>
+                        <Chip variant={t.hits > 0 ? 'info' : 'neutral'}>{hitsText(t.hits)}</Chip>
+                      </div>
+                      <p style={{ ...muted, 'margin-top': '4px', 'overflow-wrap': 'anywhere' }}>{packetText(t)}</p>
+                    </div>
+                  )}
+                </For>
               </Show>
             </Show>
 
             <div style={section}>
-              <UsagePicker
-                name="clip-trigger"
-                classes={TRIGGER_CLASSES}
-                value={trigUsage()}
-                onChange={setTrigUsage}
+              <div style={label}>Fires on</div>
+              <RadioGroup
+                name="clip-trig-kind"
+                value={trigKind()}
+                onChange={setTrigKind}
+                options={[
+                  { value: 'input', label: 'An input' },
+                  { value: 'packet', label: 'A packet' },
+                ]}
               />
-              <div style={section}>
-                <div style={label}>Edge</div>
-                <RadioGroup
-                  name="clip-trig-edge"
-                  value={trigEdge()}
-                  onChange={setTrigEdge}
-                  options={[
-                    { value: String(Direction.Positive), label: 'Press' },
-                    { value: String(Direction.Negative), label: 'Release' },
-                    { value: String(Direction.Both), label: 'Both' },
-                  ]}
-                />
-              </div>
+              <Show when={!onPacket()}>
+                <div style={section}>
+                  <UsagePicker
+                    name="clip-trigger"
+                    classes={TRIGGER_CLASSES}
+                    value={trigUsage()}
+                    onChange={setTrigUsage}
+                  />
+                </div>
+                <div style={section}>
+                  <div style={label}>Edge</div>
+                  <RadioGroup
+                    name="clip-trig-edge"
+                    value={trigEdge()}
+                    onChange={setTrigEdge}
+                    options={[
+                      { value: String(Direction.Positive), label: 'Press' },
+                      { value: String(Direction.Negative), label: 'Release' },
+                      { value: String(Direction.Both), label: 'Both' },
+                    ]}
+                  />
+                </div>
+              </Show>
+              <Show when={onPacket()}>
+                <div style={section}>
+                  <div style={label}>Class</div>
+                  <RadioGroup name="clip-pkt-class" value={pktClass()} onChange={choosePktClass} options={TRAFFIC_CLASS_OPTIONS} />
+                  <p style={{ ...muted, 'margin-top': '4px' }}>{TRAFFIC_CLASS_BLURB[pktCls()]}</p>
+                </div>
+                <div style={section}>
+                  <div style={label}>Which id</div>
+                  <RadioGroup
+                    name="clip-pkt-anyid"
+                    value={pktAnyId()}
+                    onChange={setPktAnyId}
+                    options={[
+                      { value: 'any', label: 'Every id' },
+                      { value: 'one', label: 'Just one' },
+                    ]}
+                  />
+                  <Show when={pktAnyId() === 'one'}>
+                    <div style={{ ...section, 'max-width': '11rem' }}>
+                      <NumberInput
+                        name="clip-pkt-id"
+                        label={trafficIdLabel(pktCls())}
+                        value={pktId()}
+                        min={0}
+                        max={65534}
+                        onChange={(v) => setPktId(v ?? 0)}
+                      />
+                    </div>
+                  </Show>
+                </div>
+                <div style={section}>
+                  <div style={label}>Direction</div>
+                  <RadioGroup name="clip-pkt-dir" value={pktDir()} onChange={setPktDir} options={pktDirOptions()} />
+                  <Show when={DIR_WHY[pktCls()]}>
+                    <p style={{ ...muted, 'margin-top': '4px' }}>{DIR_WHY[pktCls()]}</p>
+                  </Show>
+                </div>
+                <div style={{ ...section, ...row }}>
+                  <div style={{ flex: '1 1 140px' }}>
+                    <TextField
+                      name="clip-pkt-match"
+                      label="Match (hex)"
+                      value={pktMatch()}
+                      onInput={setPktMatch}
+                      placeholder="e.g. 07 20"
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 140px' }}>
+                    <TextField
+                      name="clip-pkt-mask"
+                      label="Mask (hex)"
+                      value={pktMask()}
+                      onInput={setPktMask}
+                      placeholder="e.g. ff 20"
+                    />
+                  </div>
+                </div>
+                <p style={{ ...muted, 'margin-top': '4px' }}>
+                  Match and mask are the same length, {CLIP_PKT_MATCH_MAX} bytes at most. Blank matches
+                  every packet on that address.
+                </p>
+              </Show>
               <div style={section}>
                 <div style={label}>Runs</div>
                 <RadioGroup
@@ -796,24 +1056,76 @@ const DeviceClip = () => {
                   options={OPS.map((o) => ({ value: String(o.op), label: o.name }))}
                 />
               </div>
-              <div style={section}>
-                <Checkbox
-                  label="Consume the trigger"
-                  checked={trigConsume()}
-                  onChange={setTrigConsume}
-                />
-              </div>
+              <Show when={!onPacket()}>
+                <div style={section}>
+                  <Checkbox
+                    label="Consume the trigger"
+                    checked={trigConsume()}
+                    onChange={setTrigConsume}
+                  />
+                </div>
+              </Show>
+              <Show when={onPacket()}>
+                <div style={{ ...section, ...checkColumn }}>
+                  <Checkbox
+                    label="Consume the packet"
+                    checked={consumeNow()}
+                    disabled={consumeWhy() !== null}
+                    onChange={setPktConsume}
+                  />
+                  <Checkbox label="Once per run" checked={pktOnce()} onChange={setPktOnce} />
+                </div>
+                <Show when={pktOnce()}>
+                  <div style={{ ...section, 'max-width': '11rem' }}>
+                    <NumberInput
+                      name="clip-pkt-selector"
+                      label="Selector length"
+                      value={pktSelector()}
+                      min={0}
+                      max={CLIP_PKT_MATCH_MAX - 1}
+                      onChange={(v) => setPktSelector(v ?? 0)}
+                    />
+                  </div>
+                </Show>
+                <Show when={consumeWhy()}>
+                  <p style={{ ...muted, 'margin-top': '4px' }}>{consumeWhy()}</p>
+                </Show>
+                <p style={{ ...muted, 'margin-top': '4px' }}>{pktBlurb()}</p>
+              </Show>
               <div style={{ ...section, ...row }}>
-                <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
-                  {replacing() ? 'Replace' : 'Bind'}
+                <Show
+                  when={onPacket()}
+                  fallback={
+                    <Button variant="secondary" disabled={busy() || trigFull()} onClick={addTrigger}>
+                      {replacing() ? 'Replace' : 'Bind'}
+                    </Button>
+                  }
+                >
+                  <Button variant="secondary" disabled={busy() || pktFull()} onClick={addPacket}>
+                    {pktReplacing() ? 'Replace' : 'Bind'}
+                  </Button>
+                </Show>
+                <Button
+                  variant="danger"
+                  disabled={busy() || (clip()?.triggers.length ?? 0) + packets().length === 0}
+                  onClick={clearTriggers}
+                >
+                  Clear triggers
                 </Button>
               </div>
-              <Show when={trigFull()}>
-                <p style={muted}>All {CLIP_TRIG_MAX} slots are used. Remove one first.</p>
+              <Show when={onPacket() ? pktFull() : trigFull()}>
+                <p style={muted}>
+                  All {onPacket() ? CLIP_PKT_TRIG_MAX : CLIP_TRIG_MAX} slots are used. Remove one first.
+                </p>
               </Show>
-              <Show when={replacing()}>
+              <Show when={!onPacket() && replacing()}>
                 <p style={muted}>
                   Already bound; binding again replaces it and re-arms every trigger's edge detector.
+                </p>
+              </Show>
+              <Show when={onPacket() && pktReplacing()}>
+                <p style={muted}>
+                  Already bound; binding again replaces it, and a change starts its run and its hits again.
                 </p>
               </Show>
             </div>
@@ -821,7 +1133,7 @@ const DeviceClip = () => {
             </Section>
 
             <Show when={err()}>
-              <div class="callout callout--danger" role="alert">
+              <div class="callout callout--danger" role="alert" style={section}>
                 {err()}
               </div>
             </Show>

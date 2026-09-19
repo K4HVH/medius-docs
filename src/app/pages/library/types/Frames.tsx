@@ -107,7 +107,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipTrigger</code></td>
                 <td><code>0x15</code></td>
-                <td>Bind a physical edge to a clip engine verb (PC to box).</td>
+                <td>Bind a physical edge or a matched packet to a clip engine verb (PC to box).</td>
               </tr>
               <tr>
                 <td><code>TrafficEvent</code></td>

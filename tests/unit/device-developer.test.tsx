@@ -4,7 +4,6 @@ import {
   type RewriteRule,
   CATCH_ID_ANY,
   CatchClass,
-  ClipOp,
   Direction,
   PatchSection,
   RewriteAction,
@@ -336,7 +335,7 @@ describe('DeviceDeveloper', () => {
 });
 
 // The Clip action's payload is a verb and two flags, not bytes, so it has an editor of its own.
-describe('DeviceRewrite clip rules', () => {
+describe('DeviceRewrite actions and payloads', () => {
   const radio = (container: HTMLElement, name: string): HTMLInputElement => {
     const el = [...container.querySelectorAll('input[type=radio]')].find(
       (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
@@ -344,10 +343,6 @@ describe('DeviceRewrite clip rules', () => {
     if (!el) throw new Error(`no radio labelled ${name}`);
     return el as HTMLInputElement;
   };
-  const checkbox = (container: HTMLElement, name: string): HTMLInputElement | undefined =>
-    [...container.querySelectorAll('input[type=checkbox]')].find(
-      (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
-    ) as HTMLInputElement | undefined;
   const field = (container: HTMLElement, name: string): HTMLInputElement | undefined => {
     const label = [...container.querySelectorAll('label')].find((l) => l.textContent?.trim() === name);
     return (label?.parentElement?.querySelector('input') ?? undefined) as HTMLInputElement | undefined;
@@ -375,113 +370,30 @@ describe('DeviceRewrite clip rules', () => {
   };
   const sentRule = () => mock.rewrites[0] as unknown as RewriteRule & { state: number };
 
-  it('offers Clip on the control class and on a report class', async () => {
+  it('offers the control actions on Control and the report actions on a report class', async () => {
     const { card } = await mount();
-    expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toContain('Clip');
+    expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toEqual([
+      'Pass', 'Patch', 'Replace', 'Answer', 'Stall', 'NAK', 'Reply patch', 'Reply replace',
+    ]);
     fireEvent.keyDown(card.querySelector('[role="combobox"]') as HTMLElement, { key: 'Escape' });
     fireEvent.click(radio(card, 'HID in'));
     await settle();
-    expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toContain('Clip');
+    expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toEqual([
+      'Pass', 'Drop', 'Patch', 'Replace',
+    ]);
   });
 
-  it('shows a verb and two flags for Clip, and no hex payload', async () => {
-    const { card, findByText } = await mount();
-    fireEvent.click(radio(card, 'HID in'));
-    await pickAction(card, 'Clip');
-    await findByText('Runs a clip verb.');
-    for (const verb of ['Start', 'Stop', 'Pause', 'Resume', 'Restart', 'Toggle']) {
-      expect(radio(card, verb)).toBeTruthy();
-    }
-    expect(checkbox(card, 'Drop the packet')).toBeTruthy();
-    expect(checkbox(card, 'On edge')).toBeTruthy();
-    expect(field(card, 'Payload (hex)')).toBeUndefined();
-    expect(field(card, 'Offset')).toBeUndefined();
-    // The selector belongs to On edge, so it arrives with it.
-    expect(field(card, 'Selector length')).toBeUndefined();
-    fireEvent.click(checkbox(card, 'On edge')!);
-    await settle();
-    expect(field(card, 'Selector length')).toBeTruthy();
-  });
-
-  it('says when the verb runs and what becomes of the packet, as the flags stand', async () => {
-    const { card, queryByText } = await mount();
-    const every = 'The verb runs on every packet the rule matches.';
-    const first = /^The verb runs on the first of a run of matching packets\./;
-    fireEvent.click(radio(card, 'HID in'));
-    await pickAction(card, 'Clip');
-    await settle();
-    expect(queryByText(`${every} A matched packet is left untouched.`)).toBeTruthy();
-    fireEvent.click(checkbox(card, 'Drop the packet')!);
-    await settle();
-    expect(queryByText(`${every} A matched packet is not delivered.`)).toBeTruthy();
-    expect(queryByText(`${every} A matched packet is left untouched.`)).toBeNull();
-    fireEvent.click(checkbox(card, 'On edge')!);
-    await settle();
-    expect(queryByText(first)).toBeTruthy();
-    expect(queryByText(new RegExp(every))).toBeNull();
-    // Control has no Drop, so a tick left over from another class says nothing here.
-    fireEvent.click(radio(card, 'Control'));
-    await settle();
-    expect(queryByText(/A matched packet is not delivered/)).toBeNull();
-  });
-
-  it('keeps the hex payload for the actions that carry bytes', async () => {
+  it('shows the hex payload for the actions that carry bytes, and only for them', async () => {
     const { card } = await mount();
+    expect(field(card, 'Payload (hex)')).toBeUndefined();
     await pickAction(card, 'Replace');
     expect(field(card, 'Payload (hex)')).toBeTruthy();
-    expect(checkbox(card, 'On edge')).toBeUndefined();
-  });
-
-  it('offers Drop the packet only where the Drop action is offered', async () => {
-    const { card } = await mount();
-    await pickAction(card, 'Clip');
-    // The form opens on the control class, which has no Drop.
-    expect(checkbox(card, 'Drop the packet')).toBeUndefined();
-    fireEvent.click(radio(card, 'Emit'));
-    await settle();
-    expect(checkbox(card, 'Drop the packet')).toBeTruthy();
-  });
-
-  it('sends the verb and flags as the rule payload, at offset 0', async () => {
-    const { card, getByText } = await mount();
-    fireEvent.click(radio(card, 'HID in'));
-    fireEvent.click(radio(card, 'In'));
-    await pickAction(card, 'Clip');
-    fireEvent.click(radio(card, 'Restart'));
-    fireEvent.click(checkbox(card, 'Drop the packet')!);
-    fireEvent.click(checkbox(card, 'On edge')!);
-    await settle();
-    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '01 10' } });
-    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff ff' } });
-    fireEvent.input(field(card, 'Selector length')!, { target: { value: '1' } });
-    fireEvent.blur(field(card, 'Selector length')!);
-    await settle();
-    fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect(sentRule()).toMatchObject({
-      cls: CatchClass.HidIn,
-      id: 0,
-      dir: Direction.Positive,
-      action: RewriteAction.Clip,
-      off: 0,
-      state: 1,
-    });
-    expect(Array.from(sentRule().payload)).toEqual([ClipOp.Restart, 0x03, 1]);
-  });
-
-  it('sends no selector once On edge is unticked', async () => {
-    const { card, getByText } = await mount();
-    fireEvent.click(radio(card, 'HID in'));
-    await pickAction(card, 'Clip');
-    fireEvent.click(checkbox(card, 'On edge')!);
-    await settle();
-    fireEvent.input(field(card, 'Selector length')!, { target: { value: '2' } });
-    fireEvent.blur(field(card, 'Selector length')!);
-    fireEvent.click(checkbox(card, 'On edge')!);
-    await settle();
-    fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect(Array.from(sentRule().payload)).toEqual([ClipOp.Start, 0x00, 0]);
+    expect(field(card, 'Offset')).toBeUndefined();
+    await pickAction(card, 'Patch');
+    expect(field(card, 'Offset')).toBeTruthy();
+    // Every rule is an address, an action and bytes: the card has no checkbox and no verb picker.
+    expect(card.querySelectorAll('input[type=checkbox]')).toHaveLength(0);
+    expect(card.querySelectorAll('input[name="rw-verb"]')).toHaveLength(0);
   });
 
   it('refuses a match longer than the box compares', async () => {
@@ -498,17 +410,16 @@ describe('DeviceRewrite clip rules', () => {
     expect(mock.rewrites.length).toBe(1);
   });
 
-  it('never sends a drop the class cannot take, even if it was ticked on another class', async () => {
-    const { card, getByText } = await mount();
-    fireEvent.click(radio(card, 'HID in'));
-    await pickAction(card, 'Clip');
-    fireEvent.click(checkbox(card, 'Drop the packet')!);
-    fireEvent.click(radio(card, 'Control'));
-    await settle();
+  it('refuses a match that is not hex, or unlike its mask in length', async () => {
+    const { card, getByText, findByText } = await mount();
+    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '0g' } });
     fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect(sentRule().cls).toBe(CatchClass.Control);
-    expect(Array.from(sentRule().payload)).toEqual([ClipOp.Start, 0x00, 0]);
+    await findByText('Match and mask must be hex.');
+    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '21 09' } });
+    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff' } });
+    fireEvent.click(getByText('Add rule'));
+    await findByText('Match and mask must be the same length.');
+    expect(mock.rewrites).toEqual([]);
   });
 
   it('sends no bytes left over in a field its action does not show', async () => {
@@ -518,165 +429,40 @@ describe('DeviceRewrite clip rules', () => {
     fireEvent.input(field(card, 'Offset')!, { target: { value: '4' } });
     fireEvent.blur(field(card, 'Offset')!);
     await settle();
-    await pickAction(card, 'Clip');
+    await pickAction(card, 'Stall');
     fireEvent.click(getByText('Add rule'));
     await settle();
-    // The box refuses a clip rule with an offset, and reads a longer payload as no clip rule at all.
+    expect(sentRule().action).toBe(RewriteAction.Stall);
     expect(sentRule().off).toBe(0);
-    expect(Array.from(sentRule().payload)).toEqual([ClipOp.Start, 0x00, 0]);
+    expect(Array.from(sentRule().payload)).toEqual([]);
   });
 
-  it('refuses On edge without one stream to have a run over', async () => {
-    const { card, getByText, findByRole } = await mount();
-    const needs = 'On edge needs a class other than Control, one id, and In or Out.';
-    await pickAction(card, 'Clip');
-    fireEvent.click(checkbox(card, 'On edge')!);
-    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '01 10' } });
-    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff ff' } });
-
-    // The control class, with one id and In.
-    fireEvent.click(radio(card, 'In'));
-    fireEvent.click(getByText('Add rule'));
-    expect((await findByRole('alert')).textContent).toBe(needs);
-
-    // A report class, one id, but both directions.
-    fireEvent.click(radio(card, 'HID in'));
-    fireEvent.click(radio(card, 'Both'));
-    fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect((await findByRole('alert')).textContent).toBe(needs);
-
-    // One direction, but every id.
-    fireEvent.click(radio(card, 'Out'));
-    fireEvent.click(radio(card, 'Every id'));
-    fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect((await findByRole('alert')).textContent).toBe(needs);
-    expect(mock.rewrites).toHaveLength(0);
-
-    // All three, and it goes.
-    fireEvent.click(radio(card, 'Just one'));
-    fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect(mock.rewrites).toHaveLength(1);
-    expect(Array.from(sentRule().payload)).toEqual([ClipOp.Start, 0x02, 0]);
-  });
-
-  it('refuses a selector that leaves no match bytes for the condition', async () => {
-    const { card, getByText, findByRole } = await mount();
-    fireEvent.click(radio(card, 'HID in'));
-    fireEvent.click(radio(card, 'In'));
-    await pickAction(card, 'Clip');
-    fireEvent.click(checkbox(card, 'On edge')!);
-    await settle();
-    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '01' } });
-    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff' } });
-    fireEvent.input(field(card, 'Selector length')!, { target: { value: '1' } });
-    fireEvent.blur(field(card, 'Selector length')!);
-    await settle();
-    fireEvent.click(getByText('Add rule'));
-    expect((await findByRole('alert')).textContent).toBe('The match must be longer than the selector.');
-    expect(mock.rewrites).toHaveLength(0);
-
-    // A blank match with On edge is the same refusal: a selector of 0 is not below a length of 0.
-    fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '' } });
-    fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: '' } });
-    fireEvent.input(field(card, 'Selector length')!, { target: { value: '0' } });
-    fireEvent.blur(field(card, 'Selector length')!);
-    await settle();
-    fireEvent.click(getByText('Add rule'));
-    await settle();
-    expect((await findByRole('alert')).textContent).toBe('The match must be longer than the selector.');
-    expect(mock.rewrites).toHaveLength(0);
-  });
-
-  it('names a clip rule read back from the box by its verb and flags', async () => {
-    const summary = (action: RewriteAction, plen: number, hits: number) => ({
-      cls: CatchClass.HidIn, id: 2, dir: Direction.Positive, action, mlen: 2, off: 0, plen, hits,
-    });
+  it('removes a rule by the key it reads back in full', async () => {
+    const at = { cls: CatchClass.HidIn, id: 2, dir: Direction.Positive, action: RewriteAction.Drop, mlen: 2, off: 0, plen: 0, hits: 0 };
     mock.poll = {
       imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
-      rewrite: {
-        tableFull: false,
-        gen: 3,
-        entries: [summary(RewriteAction.Replace, 4, 0), summary(RewriteAction.Clip, 3, 3)],
-      },
-      patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
-    };
-    mock.entries[1] = {
-      cls: CatchClass.HidIn,
-      id: 2,
-      dir: Direction.Positive,
-      action: RewriteAction.Clip,
-      off: 0,
-      match: new Uint8Array([0x01, 0x10]),
-      mask: new Uint8Array([0xff, 0xff]),
-      payload: new Uint8Array([ClipOp.Restart, 0x03, 1]),
-    };
-    const { findByText, getByText } = render(() => <DeviceDeveloper />);
-    await findByText('Clip restart HID in 2 in, drop, on edge, selector 1, 3 hits');
-    // Only the clip rule is read in full; the other names itself from the summary.
-    expect(mock.entryReads).toEqual([1]);
-    expect(getByText('Replace HID in 2 in')).toBeTruthy();
-  });
-
-  it('reads a clip rule again when the table generation moves', async () => {
-    const at = { cls: CatchClass.HidIn, id: 2, dir: Direction.Positive, action: RewriteAction.Clip, mlen: 0, off: 0, plen: 3, hits: 0 };
-    const rule = (op: number) => ({
-      cls: CatchClass.HidIn,
-      id: 2,
-      dir: Direction.Positive,
-      action: RewriteAction.Clip,
-      off: 0,
-      match: new Uint8Array(0),
-      mask: new Uint8Array(0),
-      payload: new Uint8Array([op, 0, 0]),
-    });
-    const table = (gen: number) => ({
-      imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
-      rewrite: { tableFull: false, gen, entries: [at] },
-      patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
-    });
-    mock.poll = table(3);
-    mock.entries[0] = rule(ClipOp.Restart);
-    const { findByText } = render(() => <DeviceDeveloper />);
-    await findByText('Clip restart HID in 2 in');
-    // The same address at the same index, overwritten with another verb: only the generation says so.
-    mock.entries[0] = rule(ClipOp.Stop);
-    mock.poll = table(4);
-    mock.polled();
-    await findByText('Clip stop HID in 2 in');
-    expect(mock.entryReads).toEqual([0, 0]);
-  });
-
-  it('does not put one rule\'s verb on another that took its place in the list', async () => {
-    // The entry at the index answers for a different address than the summary lists there, which is
-    // what a table that changed between the two reads looks like.
-    mock.poll = {
-      imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
-      rewrite: {
-        tableFull: false,
-        gen: 9,
-        entries: [
-          { cls: CatchClass.Emit, id: 1, dir: Direction.Positive, action: RewriteAction.Clip, mlen: 0, off: 0, plen: 3, hits: 0 },
-        ],
-      },
+      rewrite: { tableFull: false, gen: 1, entries: [at] },
       patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [] },
     };
     mock.entries[0] = {
       cls: CatchClass.HidIn,
       id: 2,
       dir: Direction.Positive,
-      action: RewriteAction.Clip,
+      action: RewriteAction.Drop,
       off: 0,
-      match: new Uint8Array(0),
-      mask: new Uint8Array(0),
-      payload: new Uint8Array([ClipOp.Stop, 0x01, 0]),
+      match: new Uint8Array([0x01, 0x10]),
+      mask: new Uint8Array([0xff, 0xff]),
+      payload: new Uint8Array(0),
     };
-    const { findByText, queryByText } = render(() => <DeviceDeveloper />);
-    await findByText('Clip emit 1 in');
+    const { container } = render(() => <DeviceDeveloper />);
+    const card = container.querySelector('#rewrite-rules') as HTMLElement;
+    // Listing a rule reads nothing in full; removing it does, since the key carries the match.
+    await settle();
+    expect(mock.entryReads).toEqual([]);
+    fireEvent.click(card.querySelector('.chip__remove') as HTMLElement);
     await settle();
     expect(mock.entryReads).toEqual([0]);
-    expect(queryByText(/Clip stop/)).toBeNull();
+    expect(sentRule().state).toBe(0);
+    expect(Array.from(sentRule().match)).toEqual([0x01, 0x10]);
   });
 });

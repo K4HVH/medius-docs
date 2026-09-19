@@ -1,7 +1,8 @@
 // Helpers the advanced-control cards share: the hex and number field parsers, the setup packet's
-// fields, and the casing that turns the protocol's own names into option labels.
+// fields, the traffic address a rewrite rule and a packet trigger both name, and the casing that
+// turns the protocol's own names into option labels.
 
-import { Direction } from '../../../dashboard/protocol';
+import { CatchClass, Direction, REWRITE_CLASSES, rewriteClassName } from '../../../dashboard/protocol';
 
 // Bytes as spaced lowercase hex, the form every hex field on these cards reads and writes.
 export const toHex = (b: Uint8Array): string =>
@@ -16,6 +17,21 @@ export const parseHex = (s: string): Uint8Array | null => {
   const out = new Uint8Array(clean.length / 2);
   for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
   return out;
+};
+
+// A match and its mask from their two hex fields, or what is wrong with them. The box compares a
+// packet's head byte for byte under the mask, so the two are one length, `max` bytes at most.
+export const parseMatchMask = (
+  match: string,
+  mask: string,
+  max: number,
+): { match: Uint8Array; mask: Uint8Array } | string => {
+  const m = parseHex(match);
+  const k = parseHex(mask);
+  if (m === null || k === null) return 'Match and mask must be hex.';
+  if (m.length !== k.length) return 'Match and mask must be the same length.';
+  if (m.length > max) return `Match and mask must be at most ${max} bytes.`;
+  return { match: m, mask: k };
 };
 
 // A small integer from a decimal or 0x-prefixed field; null on anything else.
@@ -97,3 +113,29 @@ const SPECIAL: Record<string, string> = {
 };
 
 export const displayName = (t: string): string => SPECIAL[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
+
+// The six traffic surfaces, and what each one carries. It reads out under the class picker, the way
+// the options card blurbs the render mode it is sitting on.
+export const TRAFFIC_CLASS_OPTIONS = REWRITE_CLASSES.map((c) => ({
+  value: String(c),
+  label: displayName(rewriteClassName(c)),
+}));
+
+export const TRAFFIC_CLASS_BLURB: Record<number, string> = {
+  [CatchClass.HidIn]: 'Reports the device sends the game PC, by interface.',
+  [CatchClass.HidOut]: 'Reports the game PC sends the device, by endpoint.',
+  [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
+  [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
+  [CatchClass.Control]: 'Setup packets on a control endpoint.',
+  [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
+};
+
+// HID_IN addresses an interface; every other class keys on the endpoint number, HID_OUT included.
+// The catch card's id table says the same, and the box looks all of them up by EP_NUM.
+export const trafficIdLabel = (cls: number): string => {
+  if (cls === CatchClass.HidIn) return 'Interface number';
+  return cls === CatchClass.Control ? 'Endpoint number (0 is EP0)' : 'Endpoint number';
+};
+
+export const trafficDirWord = (d: number): string =>
+  d === Direction.Positive ? 'in' : d === Direction.Negative ? 'out' : 'both';

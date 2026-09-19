@@ -65,6 +65,9 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_MAX_SERIAL</code></td><td><code>128</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo.serial</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_NAME</code></td><td><code>33</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion.name</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.triggers</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_PKT_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.packet_triggers</code></A></td></tr>
+              <tr><td><code>MEDIUS_CLIP_PKT_MATCH_POOL</code></td><td><code>112</code></td><td>Match bytes the box holds across every <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_PKT_MATCH</code></td><td><code>16</code></td><td><A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger.match_bytes</code></A> and <code>.mask</code></td></tr>
               <tr><td><code>MEDIUS_CLIP_EDGES_MAX</code></td><td><code>8</code></td><td>Edges in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_RAW_MAX</code></td><td><code>8</code></td><td>Raw reports in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>Encoded bytes of one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A>: one <code>CLIP_APPEND</code> payload</td></tr>
@@ -310,8 +313,9 @@ const Types: Component = () => {
           <CardHeader title="MediusClipAction" subtitle="The engine action a clip trigger drives" />
           <pre class="api-signature">{`enum MediusClipAction : uint8_t`}</pre>
           <p>
-            What a bound <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A> does to
-            the clip on its edge; the same verbs as the <A href="/bindings/c/api#clip"><code>medius_clip_start/_stop/...</code></A> calls. See <A href="/library/clip">Clip</A>.
+            What a bound <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A> or{' '}
+            <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> does to
+            the clip when it fires; the same verbs as the <A href="/bindings/c/api#clip"><code>medius_clip_start/_stop/...</code></A> calls. See <A href="/library/clip">Clip</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -1608,10 +1612,58 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </Card>
       </div>
 
+      <div id="clip-packet-trigger" data-search-target>
+        <Card>
+          <CardHeader title="MediusClipPacketTrigger" subtitle="One packet binding that drives the clip" />
+          <p>
+            A managed binding you add with <A href="/bindings/c/api#clip"><code>medius_clip_bind_packet</code></A>, keyed by{' '}
+            <code>(class_, id, direction, match_bytes, mask)</code>: a packet on a traffic surface whose
+            head matches under the mask runs <code>action</code> on the box's next tick.{' '}
+            <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A> reads back the same
+            shape, so a read trigger replays as a bind. Concept on{' '}
+            <A href="/library/clip#packet-triggers">Clip</A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class_</code></td><td><code>uint8_t</code></td><td>The surface the packet crosses: <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_HID_IN</code></A>, <code>_HID_OUT</code>, <code>_VENDOR_INTERRUPT</code>, <code>_VENDOR_BULK</code>, <code>_CONTROL</code> or <code>_EMIT</code>.</td></tr>
+              <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The interface number for <code>HID_IN</code>, the endpoint number for the rest, or <code>MEDIUS_CATCH_ID_ANY</code>.</td></tr>
+              <tr><td><code>direction</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_DIRECTION_*</code> value: <code>POSITIVE</code> (IN), <code>NEGATIVE</code> (OUT) or <code>BOTH</code>.</td></tr>
+              <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>A <A href="/bindings/c/types#clip-action"><code>MEDIUS_CLIP_ACTION_*</code></A> value.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to drop every packet the trigger wins, ahead of the rewrite table. The box holds a consuming trigger only under <code>medius_device_allow_imperfect_clones</code>, on any class but <code>CONTROL</code>.</td></tr>
+              <tr><td><code>once_per_run</code></td><td><code>uint8_t</code></td><td>1 to run <code>action</code> on the first packet of a run of matching ones; 0 runs it on each. A run is over one stream: a class other than <code>CONTROL</code>, a concrete <code>id</code>, and <code>POSITIVE</code> or <code>NEGATIVE</code>.</td></tr>
+              <tr><td><code>selector_len</code></td><td><code>uint8_t</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition, so it is below <code>match_len</code>. 0 without.</td></tr>
+              <tr><td><code>match_len</code>, <code>mask_len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>match_bytes</code> / <code>mask</code> (equal). 0 takes every packet on the address.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>uint8_t[MEDIUS_MAX_PKT_MATCH]</code></td><td>The head compare: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte.</td></tr>
+              <tr><td><code>hits</code></td><td><code>uint16_t</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. Filled by <code>medius_clip_query_config</code>; <code>medius_clip_bind_packet</code> ignores it.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-c">{`/* Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Start once per hold. */
+MediusClipPacketTrigger held = {
+    .class_ = MEDIUS_CATCH_CLASS_HID_IN, .id = 2,
+    .direction = MEDIUS_DIRECTION_POSITIVE,
+    .action = MEDIUS_CLIP_ACTION_START,
+    .once_per_run = 1, .selector_len = 1,
+    .match_len = 2, .mask_len = 2,
+    .match_bytes = { 0x07, 0x20 }, .mask = { 0xFF, 0x20 },
+};
+MediusStatus st = medius_clip_bind_packet(clip, &held);
+if (st == MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER) { /* medius_last_error_message() says why */ }
+
+MediusClipSettings cfg;
+medius_clip_query_config(clip, &cfg);
+for (uint8_t i = 0; i < cfg.packet_n; i++)
+    printf("action %u, %u hits\\n", cfg.packet_triggers[i].action, cfg.packet_triggers[i].hits);
+
+medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
+        </Card>
+      </div>
+
       <div id="clip-settings" data-search-target>
         <Card>
           <CardHeader title="MediusClipSettings" subtitle="The clip configuration read back from the box" />
-          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>: the auto-lock scope, the loop/retain/finalize scalars, and the live trigger set. Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>: the auto-lock scope, the loop/retain/finalize scalars, and both kinds of trigger. Concept on <A href="/library/clip">Clip</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1620,8 +1672,10 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>retain</code></td><td><code>uint8_t</code></td><td>The loaded clip is retained so it can rewind and replay (0 = streaming).</td></tr>
               <tr><td><code>finalized</code></td><td><code>uint8_t</code></td><td>A retained clip's end is fixed, so it can replay and loop.</td></tr>
               <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
-              <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound triggers, <code>triggers[0..n]</code>.</td></tr>
+              <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound input triggers, <code>triggers[0..n]</code>.</td></tr>
               <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>triggers</code>.</td></tr>
+              <tr><td><code>packet_triggers</code></td><td><A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A><code>[MEDIUS_CLIP_PKT_TRIG_MAX]</code></td><td>The bound packet triggers, <code>packet_triggers[0..packet_n]</code>, in the order the box holds them, each with its <code>hits</code>.</td></tr>
+              <tr><td><code>packet_n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>packet_triggers</code>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1734,19 +1788,9 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
                 <tr><td><code>_CONTROL</code></td><td><code>8</code></td><td><code>_ANSWER</code> (control)</td><td><code>4</code></td></tr>
                 <tr><td><code>_EMIT</code></td><td><code>9</code></td><td><code>_STALL</code> / <code>_NAK</code> (control)</td><td><code>5</code> / <code>6</code></td></tr>
                 <tr><td><code>_ANY</code></td><td><code>0xFF</code></td><td><code>_REPLY_PATCH</code> / <code>_REPLY_REPLACE</code> (control)</td><td><code>7</code> / <code>8</code></td></tr>
-                <tr><td></td><td></td><td><code>_CLIP</code> (any class)</td><td><code>9</code></td></tr>
               </tbody>
             </table>
           </div>
-          <div class="api-response-label">CLIP RULE FLAGS</div>
-          <p>Passed as <code>flags</code> to <A href="/bindings/c/api#advanced"><code>medius_rewrite_rule_clip</code></A>.</p>
-          <table class="api-params">
-            <thead><tr><th>Macro</th><th>Value</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>MEDIUS_REWRITE_CLIP_DROP</code></td><td><code>1</code></td><td>Every packet the rule wins is dropped.</td></tr>
-              <tr><td><code>MEDIUS_REWRITE_CLIP_EDGE</code></td><td><code>2</code></td><td>The verb runs on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes pick the run's stream.</td></tr>
-            </tbody>
-          </table>
         </Card>
       </div>
 
@@ -1877,7 +1921,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td><td>A clip frame with more than <code>MEDIUS_CLIP_EDGES_MAX</code> edges or <code>MEDIUS_CLIP_RAW_MAX</code> raw reports.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td><td>A clip frame that encodes to more than <code>MEDIUS_CLIP_ENTRY_MAX</code> bytes.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td><td>A clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_CLIP_RULE</code></td><td><code>33</code></td><td>A <code>MEDIUS_REWRITE_ACTION_CLIP</code> rule the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td><td>A <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td>A rewrite rule with more than <code>MEDIUS_MAX_REWRITE_MATCH</code> (16) match bytes.</td></tr>
             </tbody>
           </table>

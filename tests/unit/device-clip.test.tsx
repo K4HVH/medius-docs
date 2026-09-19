@@ -2,10 +2,15 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import {
   type ClipEntry,
+  type ClipPacketTrigger,
+  type ClipPacketTriggerEntry,
+  CATCH_ID_ANY,
   CLIP_SET_AUTOLOCK,
   CLIP_SET_LOOP,
   CLIP_SET_RETAIN,
   CLIP_SET_RIDE,
+  CatchClass,
+  ClipOp,
   ClipState,
   Direction,
 } from '../../src/dashboard/protocol';
@@ -16,6 +21,8 @@ const mock = vi.hoisted(() => ({
   setHealth: (_over: Record<string, boolean>) => {},
   sets: [] as { id: number; value: number }[],
   appended: [] as unknown[][],
+  // Every CLIP_TRIGGER call the card made, in order.
+  triggerCalls: [] as { call: string; trigger?: unknown }[],
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
@@ -44,8 +51,21 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
     clipAppend: async (entries: unknown[]) => {
       mock.appended.push(entries);
     },
-    clipTrigger: async () => {},
-    clipUntrigger: async () => {},
+    clipTrigger: async (trigger: unknown) => {
+      mock.triggerCalls.push({ call: 'bind', trigger });
+    },
+    clipUntrigger: async (trigger: unknown) => {
+      mock.triggerCalls.push({ call: 'unbind', trigger });
+    },
+    clipPacketTrigger: async (trigger: unknown) => {
+      mock.triggerCalls.push({ call: 'bindPacket', trigger });
+    },
+    clipPacketUntrigger: async (trigger: unknown) => {
+      mock.triggerCalls.push({ call: 'unbindPacket', trigger });
+    },
+    clipClearTriggers: async () => {
+      mock.triggerCalls.push({ call: 'clear' });
+    },
   };
   const values: Record<string, () => unknown> = {
     clip,
@@ -84,6 +104,7 @@ const status = (over: Record<string, unknown> = {}) => ({
   retain: false,
   finalized: false,
   triggers: [],
+  packetTriggers: [],
   ...over,
 });
 
@@ -101,6 +122,7 @@ afterEach(() => {
   cleanup();
   mock.sets = [];
   mock.appended = [];
+  mock.triggerCalls = [];
   mock.setImperfect(false);
   mock.setHealth({});
 });
@@ -510,5 +532,473 @@ describe('DeviceClip transfer counters', () => {
     mock.setClip(status({ xfers: 1, xferErrs: 3, gated: 4 }));
     await settle();
     expect(draftChips(container)).toContain('2 failed transfers');
+  });
+});
+
+const hex = (s: string) => new Uint8Array(s.split(' ').map((b) => parseInt(b, 16)));
+
+const packet = (over: Partial<ClipPacketTriggerEntry> = {}): ClipPacketTriggerEntry => ({
+  cls: CatchClass.HidIn,
+  id: 2,
+  dir: Direction.Positive,
+  action: ClipOp.Start,
+  consume: true,
+  oncePerRun: true,
+  selectorLen: 1,
+  match: hex('07 20'),
+  mask: hex('ff 20'),
+  hits: 0,
+  ...over,
+});
+
+describe('DeviceClip packet triggers', () => {
+  const named = (container: HTMLElement, name: string): HTMLInputElement => {
+    const el = container.querySelector(`input[name="${name}"]`);
+    if (!el) throw new Error(`no input named ${name}`);
+    return el as HTMLInputElement;
+  };
+  const type = (container: HTMLElement, name: string, value: string) => {
+    fireEvent.input(named(container, name), { target: { value } });
+    fireEvent.blur(named(container, name));
+  };
+  // The card with the packet editor open.
+  const mount = async (clip: Record<string, unknown> = {}) => {
+    mock.setClip(status(clip));
+    const view = render(() => <DeviceClip />);
+    fireEvent.click(radio(view.container, 'A packet'));
+    await settle();
+    return view;
+  };
+  const bound = () => mock.triggerCalls.filter((c) => c.call === 'bindPacket').map((c) => c.trigger as ClipPacketTrigger);
+  const alert = (container: HTMLElement) => container.querySelector('[role=alert]')?.textContent ?? null;
+  const bind = async (container: HTMLElement) => {
+    fireEvent.click(button(container, 'Bind'));
+    await settle();
+  };
+  // The consuming once-per-run trigger of the firmware's wire vector, typed into the fields.
+  const fillVector = async (container: HTMLElement) => {
+    type(container, 'clip-pkt-id', '2');
+    fireEvent.click(radio(container, 'In'));
+    type(container, 'clip-pkt-match', '07 20');
+    type(container, 'clip-pkt-mask', 'ff 20');
+    fireEvent.click(radio(container, 'Start'));
+    fireEvent.click(box(container, 'Consume the packet'));
+    fireEvent.click(box(container, 'Once per run'));
+    await settle();
+    type(container, 'clip-pkt-selector', '1');
+    await settle();
+  };
+
+  it('opens on an input, and swaps the input fields for the packet fields', async () => {
+    mock.setClip(status());
+    const { container, queryByLabelText } = render(() => <DeviceClip />);
+    expect(radio(container, 'An input').checked).toBe(true);
+    expect(hasRadio(container, 'Press')).toBe(true);
+    expect(queryByLabelText('Match (hex)')).toBeNull();
+    fireEvent.click(radio(container, 'A packet'));
+    await settle();
+    expect(hasRadio(container, 'Press')).toBe(false);
+    expect(queryByLabelText('Match (hex)')).toBeTruthy();
+    expect(['HID in', 'HID out', 'Vendor interrupt', 'Vendor bulk', 'Control', 'Emit'].every((c) => hasRadio(container, c))).toBe(true);
+    expect(radio(container, 'HID in').checked).toBe(true);
+  });
+
+  it('binds a watching trigger while imperfect clones are off', async () => {
+    const { container } = await mount();
+    fireEvent.click(radio(container, 'Every id'));
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound()).toEqual([
+      {
+        cls: CatchClass.HidIn,
+        id: CATCH_ID_ANY,
+        dir: Direction.Both,
+        action: ClipOp.Toggle,
+        consume: false,
+        oncePerRun: false,
+        selectorLen: 0,
+        match: new Uint8Array(0),
+        mask: new Uint8Array(0),
+      },
+    ]);
+  });
+
+  it('binds a consuming once-per-run trigger from the fields', async () => {
+    mock.setImperfect(true);
+    const { container } = await mount();
+    await fillVector(container);
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    const { hits: _hits, ...vector } = packet();
+    expect(bound()).toEqual([vector]);
+  });
+
+  it('disables Consume the packet while imperfect clones are off, and says why', async () => {
+    const why = 'Consuming a packet needs imperfect clones, on the Device tab. Watching one does not.';
+    const { container, queryByText } = await mount();
+    expect(box(container, 'Consume the packet').disabled).toBe(true);
+    expect(queryByText(why)).toBeTruthy();
+    mock.setImperfect(true);
+    await settle();
+    expect(box(container, 'Consume the packet').disabled).toBe(false);
+    expect(queryByText(why)).toBeNull();
+  });
+
+  it('takes consume back when imperfect clones turn off under a ticked box', async () => {
+    // Left ticked, the bind would carry a flag the box refuses, and the list would never gain it.
+    mock.setImperfect(true);
+    const { container, queryByText } = await mount();
+    fireEvent.click(box(container, 'Consume the packet'));
+    await settle();
+    expect(queryByText(/A matched packet is not delivered\./)).toBeTruthy();
+    mock.setImperfect(false);
+    await settle();
+    expect(box(container, 'Consume the packet').checked).toBe(false);
+    expect(queryByText(/A matched packet is left untouched\./)).toBeTruthy();
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => t.consume)).toEqual([false]);
+  });
+
+  it('disables Consume the packet on Control, and says why', async () => {
+    mock.setImperfect(true);
+    const why = 'A control request always reaches the device, so there is nothing to consume.';
+    const { container, queryByText } = await mount();
+    fireEvent.click(box(container, 'Consume the packet'));
+    fireEvent.click(radio(container, 'Control'));
+    await settle();
+    expect(box(container, 'Consume the packet').disabled).toBe(true);
+    expect(box(container, 'Consume the packet').checked).toBe(false);
+    expect(queryByText(why)).toBeTruthy();
+    await bind(container);
+    expect(bound().map((t) => [t.cls, t.consume])).toEqual([[CatchClass.Control, false]]);
+    fireEvent.click(radio(container, 'Emit'));
+    await settle();
+    expect(box(container, 'Consume the packet').disabled).toBe(false);
+    expect(queryByText(why)).toBeNull();
+  });
+
+  it('says when the verb runs and what becomes of the packet, as the boxes stand', async () => {
+    mock.setImperfect(true);
+    const { container, queryByText, queryByLabelText } = await mount();
+    expect(queryByText('The verb runs on every matching packet. A matched packet is left untouched.')).toBeTruthy();
+    expect(queryByLabelText('Selector length')).toBeNull();
+    fireEvent.click(box(container, 'Once per run'));
+    fireEvent.click(box(container, 'Consume the packet'));
+    await settle();
+    expect(queryByLabelText('Selector length')).toBeTruthy();
+    expect(queryByText(/first of a run of matching packets.*A matched packet is not delivered\./)).toBeTruthy();
+  });
+
+  it('follows the class with its blurb and its id label', async () => {
+    const { container, queryByText, queryByLabelText } = await mount();
+    expect(queryByText('Reports the device sends the game PC, by interface.')).toBeTruthy();
+    expect(queryByLabelText('Interface number')).toBeTruthy();
+    fireEvent.click(radio(container, 'Control'));
+    await settle();
+    expect(queryByText('Setup packets on a control endpoint.')).toBeTruthy();
+    expect(queryByLabelText('Endpoint number (0 is EP0)')).toBeTruthy();
+  });
+
+  it('refuses a match that is not hex, unlike its mask in length, or past 16 bytes', async () => {
+    const { container } = await mount();
+    type(container, 'clip-pkt-match', '0g');
+    await bind(container);
+    expect(alert(container)).toBe('Match and mask must be hex.');
+    type(container, 'clip-pkt-match', '07 20');
+    type(container, 'clip-pkt-mask', 'ff');
+    await bind(container);
+    expect(alert(container)).toBe('Match and mask must be the same length.');
+    type(container, 'clip-pkt-match', 'aa'.repeat(17));
+    type(container, 'clip-pkt-mask', 'ff'.repeat(17));
+    await bind(container);
+    expect(alert(container)).toBe('Match and mask must be at most 16 bytes.');
+    expect(bound()).toEqual([]);
+    type(container, 'clip-pkt-match', 'aa'.repeat(16));
+    type(container, 'clip-pkt-mask', 'ff'.repeat(16));
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound()).toHaveLength(1);
+  });
+
+  it('refuses once per run over anything wider than one stream', async () => {
+    const stream = 'Once per run needs a class other than Control, one id, and In or Out.';
+    mock.setImperfect(true);
+    const { container } = await mount();
+    await fillVector(container);
+
+    fireEvent.click(radio(container, 'Both'));
+    await bind(container);
+    expect(alert(container)).toBe(stream);
+
+    fireEvent.click(radio(container, 'In'));
+    fireEvent.click(radio(container, 'Every id'));
+    await bind(container);
+    expect(alert(container)).toBe(stream);
+
+    fireEvent.click(radio(container, 'Just one'));
+    fireEvent.click(radio(container, 'Control'));
+    await bind(container);
+    expect(alert(container)).toBe(stream);
+    expect(bound()).toEqual([]);
+
+    fireEvent.click(radio(container, 'Vendor bulk'));
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => [t.cls, t.dir, t.oncePerRun])).toEqual([[CatchClass.VendorBulk, Direction.Positive, true]]);
+  });
+
+  it('takes the direction a class never carries off its picker, and says which way it travels', async () => {
+    const { container, queryByText } = await mount();
+    const dirs = () => ['Both', 'In', 'Out'].map((d) => radio(container, d).disabled);
+    expect(dirs()).toEqual([false, false, true]);
+    expect(queryByText('Every HID in report travels In.')).toBeTruthy();
+    fireEvent.click(radio(container, 'HID out'));
+    await settle();
+    expect(dirs()).toEqual([false, true, false]);
+    expect(queryByText('Every HID out report travels Out.')).toBeTruthy();
+    expect(queryByText('Every HID in report travels In.')).toBeNull();
+    fireEvent.click(radio(container, 'Emit'));
+    await settle();
+    expect(dirs()).toEqual([false, false, true]);
+    expect(queryByText('Every emitted report travels In.')).toBeTruthy();
+    for (const cls of ['Vendor interrupt', 'Vendor bulk', 'Control']) {
+      fireEvent.click(radio(container, cls));
+      await settle();
+      expect(dirs()).toEqual([false, false, false]);
+      expect(queryByText(/ travels (In|Out)\.$/)).toBeNull();
+    }
+  });
+
+  it('falls back to Both when the class changes under a direction it never carries', async () => {
+    const { container } = await mount();
+    fireEvent.click(radio(container, 'Vendor bulk'));
+    fireEvent.click(radio(container, 'Out'));
+    await settle();
+    fireEvent.click(radio(container, 'HID in'));
+    await settle();
+    expect(radio(container, 'Both').checked).toBe(true);
+    expect(radio(container, 'Out').checked).toBe(false);
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => [t.cls, t.dir])).toEqual([[CatchClass.HidIn, Direction.Both]]);
+    // A direction the new class carries stays where it was.
+    fireEvent.click(radio(container, 'In'));
+    fireEvent.click(radio(container, 'Emit'));
+    await settle();
+    expect(radio(container, 'In').checked).toBe(true);
+    fireEvent.click(radio(container, 'HID out'));
+    await settle();
+    expect(radio(container, 'Both').checked).toBe(true);
+  });
+
+  it('refuses a match bit outside its mask, and leaves the typed bytes as they are', async () => {
+    const { container } = await mount();
+    type(container, 'clip-pkt-match', '07 21');
+    type(container, 'clip-pkt-mask', 'ff 20');
+    await bind(container);
+    expect(alert(container)).toBe('Every bit set in the match must be set in the mask too, or no packet can match.');
+    expect(bound()).toEqual([]);
+    expect(named(container, 'clip-pkt-match').value).toBe('07 21');
+    expect(named(container, 'clip-pkt-mask').value).toBe('ff 20');
+    type(container, 'clip-pkt-mask', 'ff 21');
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => [Array.from(t.match), Array.from(t.mask)])).toEqual([[[0x07, 0x21], [0xff, 0x21]]]);
+  });
+
+  it('refuses once per run whose mask keeps no bit past the selector', async () => {
+    mock.setImperfect(true);
+    const { container } = await mount();
+    await fillVector(container);
+    type(container, 'clip-pkt-match', '07 00');
+    type(container, 'clip-pkt-mask', 'ff 00');
+    await bind(container);
+    expect(alert(container)).toBe('The mask must keep at least one bit past the selector, or the run never ends.');
+    expect(bound()).toEqual([]);
+    // The same bytes bind without once per run: a trigger on every packet of a stream is a legal one.
+    fireEvent.click(box(container, 'Once per run'));
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => t.oncePerRun)).toEqual([false]);
+  });
+
+  it('refuses a selector that leaves no match byte for the condition', async () => {
+    mock.setImperfect(true);
+    const { container } = await mount();
+    await fillVector(container);
+    type(container, 'clip-pkt-selector', '2');
+    await bind(container);
+    expect(alert(container)).toBe('The match must be longer than the selector.');
+    expect(bound()).toEqual([]);
+    type(container, 'clip-pkt-selector', '1');
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => t.selectorLen)).toEqual([1]);
+  });
+
+  it('sends no selector once Once per run is unticked', async () => {
+    mock.setImperfect(true);
+    const { container } = await mount();
+    await fillVector(container);
+    fireEvent.click(box(container, 'Once per run'));
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound().map((t) => [t.oncePerRun, t.selectorLen])).toEqual([[false, 0]]);
+  });
+
+  it('refuses a match the shared pool has no bytes for', async () => {
+    // Seven held triggers of 16 bytes fill the pool of 112 with one slot still free.
+    const held = Array.from({ length: 7 }, (_, i) =>
+      packet({ id: i, consume: false, match: new Uint8Array(16).fill(i), mask: new Uint8Array(16).fill(0xff) }),
+    );
+    const { container, queryByText } = await mount({ packetTriggers: held });
+    expect(queryByText(/Packets \(7 of 8, 112 of 112 match\s+bytes\)/)).toBeTruthy();
+    type(container, 'clip-pkt-match', '07');
+    type(container, 'clip-pkt-mask', 'ff');
+    await bind(container);
+    expect(alert(container)).toBe('Packet triggers share 112 match bytes. Remove one or shorten the match.');
+    expect(bound()).toEqual([]);
+    // A trigger with no match needs none of the pool.
+    type(container, 'clip-pkt-match', '');
+    type(container, 'clip-pkt-mask', '');
+    await bind(container);
+    expect(alert(container)).toBeNull();
+    expect(bound()).toHaveLength(1);
+  });
+
+  it('stops at eight packet triggers, and still replaces one it holds', async () => {
+    const held = Array.from({ length: 8 }, (_, i) =>
+      packet({ id: i, consume: false, oncePerRun: false, selectorLen: 0, match: hex('07'), mask: hex('ff') }),
+    );
+    const { container, queryByText } = await mount({ packetTriggers: held });
+    expect(button(container, 'Bind').disabled).toBe(true);
+    expect(queryByText('All 8 slots are used. Remove one first.')).toBeTruthy();
+    // The key carries the match, so the same address alone is a ninth trigger.
+    type(container, 'clip-pkt-id', '3');
+    await settle();
+    expect(button(container, 'Bind').disabled).toBe(true);
+    fireEvent.click(radio(container, 'In'));
+    type(container, 'clip-pkt-match', '07');
+    type(container, 'clip-pkt-mask', 'ff');
+    await settle();
+    expect(button(container, 'Replace').disabled).toBe(false);
+    expect(queryByText('All 8 slots are used. Remove one first.')).toBeNull();
+    expect(queryByText(/Already bound; binding again replaces it, and a change starts its run/)).toBeTruthy();
+    fireEvent.click(button(container, 'Replace'));
+    await settle();
+    expect(bound().map((t) => t.id)).toEqual([3]);
+  });
+
+  it('keeps the input slots and the packet slots apart', async () => {
+    const held = Array.from({ length: 8 }, (_, i) => packet({ id: i }));
+    mock.setClip(status({ packetTriggers: held }));
+    const { container } = render(() => <DeviceClip />);
+    // Eight packet triggers leave all eight input bindings free.
+    expect(button(container, 'Bind').disabled).toBe(false);
+  });
+
+  it('lists both kinds, each packet trigger with its hits and read back in words', async () => {
+    mock.setClip(
+      status({
+        triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: true }],
+        packetTriggers: [
+          packet({ hits: 3 }),
+          packet({
+            cls: CatchClass.VendorInterrupt,
+            id: CATCH_ID_ANY,
+            dir: Direction.Both,
+            action: ClipOp.Toggle,
+            consume: false,
+            oncePerRun: false,
+            selectorLen: 0,
+            match: new Uint8Array(0),
+            mask: new Uint8Array(0),
+            hits: 1,
+          }),
+          packet({ cls: CatchClass.Control, id: 0, dir: Direction.Negative, action: ClipOp.Stop, consume: false, oncePerRun: false, selectorLen: 0, hits: 0xffff }),
+        ],
+      }),
+    );
+    const { container, queryByText } = render(() => <DeviceClip />);
+    const chipText = [...container.querySelectorAll('.chip__label')].map((e) => e.textContent ?? '');
+    expect(chipText).toContain('F1 press -> Toggle (consume)');
+    expect(chipText).toContain('Start HID in 2');
+    expect(chipText).toContain('Toggle vendor interrupt any');
+    expect(chipText).toContain('Stop control 0');
+    expect(queryByText('Inputs (1 of 8)')).toBeTruthy();
+    expect(queryByText(/Packets \(3 of 8, 4 of 112 match\s+bytes\)/)).toBeTruthy();
+
+    const rows = [...container.querySelectorAll('[data-packet-trigger]')].map((r) => ({
+      chips: [...r.querySelectorAll('.chip__label')].map((e) => e.textContent),
+      words: r.querySelector('p')?.textContent,
+    }));
+    expect(rows).toEqual([
+      {
+        chips: ['Start HID in 2', '3 hits'],
+        words: 'HID in, interface 2, in, bytes 07 20 under ff 20: start, once per run (selector 1), consumes the packet',
+      },
+      {
+        chips: ['Toggle vendor interrupt any', '1 hit'],
+        words: 'Vendor interrupt, every endpoint, both directions, every packet: toggle',
+      },
+      {
+        chips: ['Stop control 0', '65535+ hits'],
+        words: 'Control, endpoint 0, out, bytes 07 20 under ff 20: stop',
+      },
+    ]);
+  });
+
+  it('says No triggers bound only while neither kind holds one', async () => {
+    mock.setClip(status());
+    const { queryByText } = render(() => <DeviceClip />);
+    expect(queryByText('No triggers bound.')).toBeTruthy();
+    mock.setClip(status({ packetTriggers: [packet()] }));
+    await settle();
+    expect(queryByText('No triggers bound.')).toBeNull();
+    expect(queryByText(/Inputs \(/)).toBeNull();
+  });
+
+  it('removes a packet trigger by the entry the box listed', async () => {
+    const held = [packet({ id: 1 }), packet({ id: 2, hits: 5 })];
+    mock.setClip(status({ packetTriggers: held }));
+    const { container } = render(() => <DeviceClip />);
+    const rows = [...container.querySelectorAll('[data-packet-trigger]')];
+    fireEvent.click(rows[1].querySelector('.chip__remove') as HTMLElement);
+    await settle();
+    expect(mock.triggerCalls).toEqual([{ call: 'unbindPacket', trigger: held[1] }]);
+  });
+
+  it('clears both kinds with one frame', async () => {
+    mock.setClip(
+      status({
+        triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: false }],
+        packetTriggers: [packet(), packet({ id: 3 })],
+      }),
+    );
+    const { container } = render(() => <DeviceClip />);
+    fireEvent.click(button(container, 'Clear triggers'));
+    await settle();
+    expect(mock.triggerCalls).toEqual([{ call: 'clear' }]);
+  });
+
+  it('offers Clear triggers while either kind holds one', async () => {
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    expect(button(container, 'Clear triggers').disabled).toBe(true);
+    mock.setClip(status({ packetTriggers: [packet()] }));
+    await settle();
+    expect(button(container, 'Clear triggers').disabled).toBe(false);
+    mock.setClip(status({ triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: false }] }));
+    await settle();
+    expect(button(container, 'Clear triggers').disabled).toBe(false);
+  });
+
+  it('says the any-input binding takes the packet triggers with it', async () => {
+    mock.setClip(
+      status({ triggers: [{ cls: 0xff, id: 0xffff, edge: Direction.Both, action: ClipOp.Stop, consume: false }] }),
+    );
+    const { queryByText } = render(() => <DeviceClip />);
+    expect(queryByText(/clears every trigger, packet triggers included/)).toBeTruthy();
   });
 });

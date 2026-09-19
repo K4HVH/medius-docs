@@ -1078,8 +1078,8 @@ for t in &table.entries {
             A clip's configuration from{' '}
             <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>. You set
             these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
-            <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>);
-            this is the readback.
+            <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>,{' '}
+            <code>bind_packet</code>); this is the readback.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1090,12 +1090,16 @@ for t in &table.entries {
               <tr><td><code>finalized</code></td><td><code>bool</code></td><td>The clip is sealed: no more appends, ready to replay as a fixed sequence.</td></tr>
               <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's own clock.</td></tr>
               <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a physical edge.</td></tr>
+              <tr><td><code>packet_triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-packet-trigger-entry">ClipPacketTriggerEntry</A>&gt;</code></td><td>The bound packet triggers (up to 8), in the order the box holds them, each with its hit count.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let cfg = handle.query_config()?;
 if cfg.loop_ && cfg.finalized {
     println!("sealed looping clip, {} triggers", cfg.triggers.len());
+}
+for e in &cfg.packet_triggers {
+    println!("{:?} id {} -> {:?}, {} hits", e.trigger.class, e.trigger.id, e.trigger.action, e.hits);
 }`}</code></pre>
         </Card>
       </div>
@@ -1127,6 +1131,62 @@ if cfg.loop_ && cfg.finalized {
 // Toggle the clip on a Side1 press, and suppress that press.
 let trig = ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle).consume();
 handle.bind(trig)?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-packet-trigger" data-search-target>
+        <Card>
+          <CardHeader title="ClipPacketTrigger" subtitle="One packet binding that drives a clip" />
+          <pre class="api-signature">fn new(class: TrafficClass, id: u16, direction: Direction, action: ClipAction) -&gt; ClipPacketTrigger</pre>
+          <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; ClipPacketTrigger</pre>
+          <pre class="api-signature">fn consume(self) -&gt; ClipPacketTrigger</pre>
+          <pre class="api-signature">fn once_per_run(self, selector_len: u8) -&gt; ClipPacketTrigger</pre>
+          <p>
+            One packet binding for a clip, handed to{' '}
+            <A href="/library/clip#packet-triggers"><code>ClipHandle::bind_packet</code></A>. The box
+            keeps up to 8 (<code>CLIP_PKT_TRIG_MAX</code>), keyed by{' '}
+            <code>(class, id, direction, match_bytes, mask)</code>, with 112 match bytes between them
+            (<code>CLIP_PKT_MATCH_POOL</code>).
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>class</code></td><td><A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A></td><td>The surface the packet crosses: <code>HidIn</code>, <code>HidOut</code>, <code>VendorInterrupt</code>, <code>VendorBulk</code>, <code>Control</code> or <code>Emit</code>.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ClipPacketTrigger::ANY_ID</code> (<code>0xFFFF</code>) for every id of the class.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the packet travels in: <code>IN</code>, <code>OUT</code> or <code>Both</code>. <code>With</code> and <code>Against</code> are <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run, on the box's next tick.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, one length, 16 bytes at most (<code>PKT_MATCH_MAX</code>). A packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each; empty matches every packet on the address. <code>.matching()</code> sets both.</td></tr>
+              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Drop every packet the trigger wins, ahead of the rewrite table. The box holds a consuming trigger only under the imperfect-clone opt-in; <code>.consume()</code> sets it true.</td></tr>
+              <tr><td><code>once_per_run</code></td><td><code>bool</code></td><td>Run the action on the first packet of a run of matching ones, where a plain trigger runs it on each; <code>.once_per_run(selector_len)</code> sets it true.</td></tr>
+              <tr><td><code>selector_len</code></td><td><code>u8</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition. <code>0</code> without.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
+
+// Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Start once per hold.
+let held = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start)
+    .matching([0x07, 0x20], [0xFF, 0x20])
+    .once_per_run(1);
+handle.bind_packet(&held)?;`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="clip-packet-trigger-entry" data-search-target>
+        <Card>
+          <CardHeader title="ClipPacketTriggerEntry" subtitle="One packet trigger the box holds, read back" />
+          <pre class="api-signature">struct ClipPacketTriggerEntry {'{'} trigger: ClipPacketTrigger, hits: u16 {'}'}</pre>
+          <p>
+            One row of{' '}
+            <A href="/library/types/structs#clip-settings"><code>ClipSettings::packet_triggers</code></A>.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>trigger</code></td><td><A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A></td><td>The trigger, in the shape <code>bind_packet</code> takes, so a read entry replays as a bind.</td></tr>
+              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. A <code>once_per_run</code> trigger wins every packet of a run and runs its action on the first.</td></tr>
+            </tbody>
+          </table>
         </Card>
       </div>
 
@@ -1297,15 +1357,10 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn clip(class: RewriteClass, id: u16, direction: Direction, verb: ClipAction) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn dropping(self) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn on_edge(self, selector_len: u8) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn clip_verb(&self) -&gt; Option&lt;ClipVerb&gt;</pre>
           <p>
             One entry in the table you hand to{' '}
             <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
-            chaining onto <code>new</code>, or onto <code>clip</code> for a{' '}
-            <A href="/library/advanced/rewrite#clip">clip rule</A>.
+            chaining onto <code>new</code>.
           </p>
           <table class="api-params">
             <thead>
@@ -1319,28 +1374,6 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
               <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address.</td></tr>
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="clip-verb" data-search-target>
-        <Card>
-          <CardHeader title="ClipVerb" subtitle="What a clip rule does, decoded" />
-          <pre class="api-signature">struct ClipVerb {'{'} action: ClipAction, drop: bool, edge: bool, selector_len: u8 {'}'}</pre>
-          <p>
-            What <code>RewriteRule::clip_verb()</code> returns for a{' '}
-            <A href="/library/advanced/rewrite#clip">clip rule</A>: its{' '}
-            <code>[op][flags][slen]</code> payload, decoded.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The clip verb the rule runs.</td></tr>
-              <tr><td><code>drop</code></td><td><code>bool</code></td><td>Every packet the rule wins is dropped.</td></tr>
-              <tr><td><code>edge</code></td><td><code>bool</code></td><td>The verb runs on the first packet of a run of matching ones.</td></tr>
-              <tr><td><code>selector_len</code></td><td><code>u8</code></td><td>How many leading match bytes pick the run's stream.</td></tr>
             </tbody>
           </table>
         </Card>

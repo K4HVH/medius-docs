@@ -306,6 +306,64 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
         </Card>
       </div>
 
+      <div id="clip-packet" data-search-target>
+        <Card>
+          <CardHeader title="Firing packet triggers" subtitle="with_clip_settings, set_clip_settings, clip_packet" />
+          <pre class="api-signature">fn with_clip_settings(self, settings: ClipSettings) -&gt; MockBox</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn set_clip_settings(&self, settings: ClipSettings)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn clip_packet(&self, class: TrafficClass, id: u16, direction: Direction, head: &[u8]) -&gt; (Option&lt;ClipAction&gt;, bool)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Returns</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
+                <td><code>MockBox</code>, nothing</td>
+                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> answered to <code>query_config</code>. Its packet triggers become the set <code>bind_packet</code> adds to, under the bounds the box holds it to.</td>
+              </tr>
+              <tr>
+                <td><code>clip_packet</code></td>
+                <td><code>(Option&lt;ClipAction&gt;, bool)</code></td>
+                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific match wins it and counts it in its <code>hits</code>. The action is <code>None</code> when no trigger wins, and when a <code>once_per_run</code> winner sees the packet continue a run; the bool is whether the winner consumes the packet.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            The mock refuses what the box refuses, the 112-byte pool and the imperfect-clone opt-in
+            included, and orders candidates the same way.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Device, Direction, MockBox, TrafficClass};
+
+let mock = MockBox::new();
+let device = Device::with_mock(mock.clone());
+
+let held = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start)
+    .matching([0x07, 0x20], [0xFF, 0x20])
+    .once_per_run(1);
+device.clip().bind_packet(&held)?;
+
+// The first report of the hold runs the action; the repeats continue the run.
+let down = [0x07, 0x20, 0x00];
+assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (Some(ClipAction::Start), false));
+assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (None, false));
+
+// Both packets were won, so both count.
+assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></pre>
+        </Card>
+      </div>
+
       <div id="silent" data-search-target>
         <Card>
           <CardHeader title="Simulating a box that never replies" subtitle="silent, and the handshake failures" />

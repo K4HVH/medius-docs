@@ -319,8 +319,9 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
             <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on the{' '}
             <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
             <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> with the auto-lock,
-            loop, retain, finalized flag, and <A href="/library/clip#triggers">triggers</A> you set. Every
-            setting round-trips.
+            loop, retain, finalized flag, and both kinds of{' '}
+            <A href="/library/clip#triggers">trigger</A> you set, each packet trigger with its{' '}
+            <code>hits</code>. Every setting round-trips.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -328,7 +329,8 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
 
 let device = Device::find()?;
 let cfg = device.clip().query_config()?;
-println!("{} triggers, loop={}", cfg.triggers.len(), cfg.loop_);`}</code></pre>
+println!("{} input triggers, {} packet triggers, loop={}",
+    cfg.triggers.len(), cfg.packet_triggers.len(), cfg.loop_);`}</code></pre>
         </Card>
       </div>
 

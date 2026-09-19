@@ -15,7 +15,8 @@ const Raw: Component = () => {
         </p>
         <p>
           The write is stateless: the next native report overwrites it, and <code>raw</code> bypasses
-          the <A href="/library/advanced/rewrite">rewrite rules</A>.
+          the <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
+          <A href="/library/clip#packet-triggers">packet triggers</A>.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
@@ -106,7 +107,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
                 <tr><td>Addresses</td><td>An axis or usage, by <A href="/library/types/enums#axis">semantic</A> id</td><td>An endpoint, by number and direction</td></tr>
                 <tr><td>On the wire</td><td>Merged into the native report, clamped to the field width, paced to the native rate</td><td>The bytes as given, one report</td></tr>
                 <tr><td>State</td><td>Held until cleared; rides the native stream</td><td>Stateless; the next native report overwrites it</td></tr>
-                <tr><td>Rewrite rules</td><td>Apply</td><td>Bypassed</td></tr>
+                <tr><td>Rewrite rules, packet triggers</td><td>Apply</td><td>Bypassed</td></tr>
                 <tr><td>Gate</td><td>Always available</td><td>Imperfect-clone opt-in</td></tr>
               </tbody>
             </table>
