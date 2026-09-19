@@ -308,12 +308,13 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
 
       <div id="clip-packet" data-search-target>
         <Card>
-          <CardHeader title="Firing packet triggers" subtitle="with_clip_settings, set_clip_settings, clip_packet" />
+          <CardHeader title="Clips and packet triggers" subtitle="What the mock answers for a clip, and clip_packet" />
           <pre class="api-signature">fn with_clip_settings(self, settings: ClipSettings) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_clip_settings(&self, settings: ClipSettings)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn clip_packet(&self, class: TrafficClass, id: u16, direction: Direction, head: &[u8]) -&gt; (Option&lt;ClipAction&gt;, bool)</pre>
+          <pre class="api-signature">{`fn clip_packet(&self, class: TrafficClass, id: u16, direction: Direction, head: &[u8])
+    -> (Option<ClipAction>, bool)`}</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <div class="api-response-label">METHODS</div>
@@ -329,7 +330,7 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               <tr>
                 <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
                 <td><code>MockBox</code>, nothing</td>
-                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> answered to <code>query_config</code>. Its packet triggers become the set <code>bind_packet</code> adds to, under the bounds the box holds it to.</td>
+                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> answered to <code>query_config</code>. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when they are scripted, so script the opt-in first for a consuming one.</td>
               </tr>
               <tr>
                 <td><code>clip_packet</code></td>
@@ -338,10 +339,20 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               </tr>
             </tbody>
           </table>
-          <p>
-            The mock refuses what the box refuses, the 112-byte pool and the imperfect-clone opt-in
-            included, and orders candidates the same way.
-          </p>
+          <div class="api-response-label">WHAT THE MOCK HOLDS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Call</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>query_status</code></td><td>Answers the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
+              <tr><td><code>query_config</code></td><td>Answers the scripted settings plus the packet triggers bound on the mock, each with its <code>hits</code>.</td></tr>
+              <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, through the box's checks, the 112-byte pool and the opt-in included, in the box's order.</td></tr>
+              <tr><td><code>clear_triggers</code></td><td>Clears both kinds; <code>reset</code> clears the whole clip config.</td></tr>
+              <tr><td><code>set_imperfect_status</code>, <code>with_imperfect</code>, <code>allow_imperfect_clones</code></td><td>With the opt-in off, the mock drops its consuming packet triggers, as the box does.</td></tr>
+              <tr><td><code>set_retain</code>, <code>finalize</code>, <code>bind</code>, <code>append</code>, the engine verbs</td><td>Recorded frames. The <code>query_config</code> and <code>query_status</code> replies stay as scripted.</td></tr>
+            </tbody>
+          </table>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Device, Direction, MockBox, TrafficClass};

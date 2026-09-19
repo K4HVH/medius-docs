@@ -389,12 +389,12 @@ const Types: Component = () => {
                 <tr><td><code>traffic_class</code></td><td><A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A></td><td>the surface the packet crosses: any member but <code>BUS</code> and <code>CLIP_TRANSFER</code></td></tr>
                 <tr><td><code>id</code></td><td><code>int</code></td><td>the interface number for <code>HID_IN</code>, the endpoint number for the rest, or <code>ClipPacketTrigger.ANY_ID</code> (<code>0xFFFF</code>)</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>IN</code>, <code>OUT</code> or <code>BOTH</code></td></tr>
-                <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs, on its next tick</td></tr>
+                <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs, on the frame clock's next tick</td></tr>
                 <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>bytes</code></td><td>the head compare, one length, at most <code>PKT_MATCH_MAX</code>: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte (default <code>b""</code>, every packet on the address)</td></tr>
                 <tr><td><code>consume</code></td><td><code>bool</code></td><td>drop every packet the trigger wins, ahead of the rewrite table; the box holds one only under <code>allow_imperfect_clones</code>, on any class but <code>CONTROL</code> (default <code>False</code>)</td></tr>
                 <tr><td><code>once_per_run</code></td><td><code>bool</code></td><td>run the action on the first packet of a run of matching ones; needs a class other than <code>CONTROL</code>, a concrete <code>id</code>, and <code>IN</code> or <code>OUT</code> (default <code>False</code>)</td></tr>
                 <tr><td><code>selector_len</code></td><td><code>int</code></td><td>with <code>once_per_run</code>, how many leading match bytes select the run's stream, such as a report ID; the rest are the condition (default <code>0</code>)</td></tr>
-                <tr><td><code>hits</code></td><td><code>int</code></td><td>packets the trigger has won since it was bound or overwritten, saturating; read back by <code>query_config()</code> and ignored by <code>bind_packet()</code></td></tr>
+                <tr><td><code>hits</code></td><td><code>int</code></td><td>packets the trigger has won since it was bound or overwritten, saturating; read back by <code>query_config()</code>; <code>bind_packet()</code> does not send it and range-checks it to 0..65535 (<code>ValueError</code>)</td></tr>
               </tbody>
             </table>
             <div class="api-response-label">EXAMPLE</div>

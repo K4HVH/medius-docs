@@ -1618,7 +1618,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <p>
             A managed binding you add with <A href="/bindings/c/api#clip"><code>medius_clip_bind_packet</code></A>, keyed by{' '}
             <code>(class_, id, direction, match_bytes, mask)</code>: a packet on a traffic surface whose
-            head matches under the mask runs <code>action</code> on the box's next tick.{' '}
+            head matches under the mask runs <code>action</code> on the frame clock's next tick.{' '}
             <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A> reads back the same
             shape, so a read trigger replays as a bind. Concept on{' '}
             <A href="/library/clip#packet-triggers">Clip</A>.
@@ -1635,7 +1635,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>selector_len</code></td><td><code>uint8_t</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition, so it is below <code>match_len</code>. 0 without.</td></tr>
               <tr><td><code>match_len</code>, <code>mask_len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>match_bytes</code> / <code>mask</code> (equal). 0 takes every packet on the address.</td></tr>
               <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>uint8_t[MEDIUS_MAX_PKT_MATCH]</code></td><td>The head compare: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte.</td></tr>
-              <tr><td><code>hits</code></td><td><code>uint16_t</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. Filled by <code>medius_clip_query_config</code>; <code>medius_clip_bind_packet</code> ignores it.</td></tr>
+              <tr><td><code>hits</code></td><td><code>uint16_t</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. Filled by <code>medius_clip_query_config</code> and read by <code>medius_mock_set_clip_settings</code>; <code>medius_clip_bind_packet</code> sends the trigger without it.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

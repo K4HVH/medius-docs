@@ -655,7 +655,7 @@ link loss   the inter-chip link drops`}</pre>
         v
   [ packet triggers ]   read the bytes as they arrived; the most specific one wins
         |     |
-        |     +--> the winner's verb, run on the box's next tick
+        |     +--> the winner's verb, run on the frame clock's next tick
         |     +--> consume: the packet stops here
         v
   [ rewrite table ]     sees the packet next, and picks its own winner
@@ -670,19 +670,23 @@ link loss   the inter-chip link drops`}</pre>
             <tbody>
               <tr><td>surfaces</td><td>A trigger sees a packet at every surface a <A href="/library/advanced/rewrite">rewrite rule</A> does, ahead of it. The two are independent: one packet can run a verb and win a rule.</td></tr>
               <tr><td>winner</td><td>The most specific trigger wins the packet, in the rewrite table's order: an exact <code>id</code> over <code>0xFFFF</code>, more masked bits over fewer, a named <code>dir</code> over both, then the earlier one. One verb runs per packet.</td></tr>
-              <tr><td>tick</td><td>The verb runs on the box's next tick, and one that starts the clip plays its first entry on that tick.</td></tr>
+              <tr><td>tick</td><td>The verb runs on the frame clock's next tick, within one frame of the matching packet (1&nbsp;ms at the default pace), and one that starts the clip plays its first entry on that tick.</td></tr>
               <tr><td>consume</td><td>A consumed <code>HID_IN</code> report is the whole report, so a release edge in it reaches the PC with the next report. Consuming needs <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>: turning it off removes the consuming triggers. A trigger that only watches works with it off.</td></tr>
               <tr><td>catch</td><td><A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> reports a consumed <code>HID_IN</code> or OUT packet, whose taps sit ahead of the triggers. A consumed vendor IN packet or emitted report goes unreported.</td></tr>
               <tr><td>run</td><td>With <code>RUN</code>, a device that repeats a held state every poll fires once per hold; the release is a second trigger matching the released bytes. The first <code>slen</code> match bytes select the stream within the address (a report ID) and the rest are the condition. A packet that fails the selector leaves the run as it was.</td></tr>
               <tr><td>first packet</td><td>A run starts on the first matching packet the trigger sees. A trigger whose condition already holds when it is set fires on the next packet, so one matching the at-rest bytes of a device that reports every poll fires once when it is set.</td></tr>
               <tr><td>shadowed</td><td>A trigger a more specific one outranks still tracks its run, so removing that trigger mid-hold fires nothing.</td></tr>
               <tr><td>re-send</td><td>An identical re-send keeps the run and the count. An overwrite starts both again, and a bus reset or a configuration change starts every run again.</td></tr>
-              <tr><td>hits</td><td>Each trigger counts the packets it won, saturating at 65535, read back in <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.</td></tr>
+              <tr><td>hits</td><td>Each trigger counts the packets it won, saturating at 65535, read back in <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. An outranked trigger's count stays still while it tracks its run.</td></tr>
               <tr><td>lifetime</td><td>Packet triggers are clip config: soft state, cleared with the rest of it on a <A href="/native/commands/clip#ctrl">hard stop</A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">REFUSED</div>
-          <p>A refused frame is dropped whole, with no reply; confirm a set in <code>QUERY(CLIP)</code>.</p>
+          <p>
+            A refused frame is dropped whole, with no reply, and leaves the set as it was: a new key is
+            not held and an existing key keeps its trigger. Compare what{' '}
+            <code>QUERY(CLIP)</code> reads back with what was sent.
+          </p>
           <table class="api-params">
             <thead>
               <tr><th>Frame</th><th>Why</th></tr>

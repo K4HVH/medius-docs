@@ -110,7 +110,7 @@ except MediusError as e:
               <tr><td><code>Device.find()</code></td><td>First box found + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
               <tr><td><code>Device.open(path)</code></td><td>One serial path + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
               <tr><td><code>dev.clone()</code></td><td>Another handle to the <em>same</em> link; the connection is shared.</td></tr>
-              <tr><td><code>MockBox().open()</code></td><td>Open over an in-process <A href="/library/features/mock">mock box</A> (needs the mock feature).</td></tr>
+              <tr><td><code>MockBox().open()</code></td><td>Open over an in-process <A href="/bindings/python/api#mock">mock box</A> (needs the mock feature).</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`Device.find() ──┐

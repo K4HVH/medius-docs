@@ -280,7 +280,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge)</code></td><td>Remove one input trigger by usage + edge.</td></tr>
-              <tr><td><code>clip.bind_packet(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A>: a packet it matches runs its <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> on the box's next tick. One the box would refuse raises <A href="/bindings/python/types#subclasses"><code>ClipPacketTriggerError</code></A> before anything is sent; the <A href="/library/clip#packet-triggers">refusals</A> are the crate's.</td></tr>
+              <tr><td><code>clip.bind_packet(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A>: a packet it matches runs its <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> on the frame clock's next tick, and the <A href="/library/clip#packet-triggers">most specific trigger</A> wins a packet. One the box would refuse raises <A href="/bindings/python/types#subclasses"><code>ClipPacketTriggerError</code></A> before anything is sent: the <A href="/library/clip#packet-triggers">crate's refusals</A>, and a <code>selector_len</code> without <code>once_per_run</code>. A bind the box refuses leaves the set as it was, so compare what <code>clip.query_config()</code> reads back with what was bound.</td></tr>
               <tr><td><code>clip.unbind_packet(trigger)</code></td><td>Remove the packet trigger with that trigger's <code>(traffic_class, id, direction, match_bytes, mask)</code>; its other fields are ignored, and a key the box cannot hold is refused as <code>bind_packet()</code> refuses it.</td></tr>
               <tr><td><code>clip.clear_triggers()</code></td><td>Remove every trigger of both kinds.</td></tr>
               <tr><td><code>clip.start() / clip.stop()</code></td><td>Begin playback; stop and flush the ring, releasing the auto-lock.</td></tr>
@@ -291,14 +291,10 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, and both kinds of trigger, each packet trigger with its <code>hits</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MOCK</div>
-          <table class="api-params">
-            <thead><tr><th>Call</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <code>ClipSettings</code> a <A href="/library/features/mock"><code>MockBox</code></A> answers to <code>clip.query_config()</code>. Its packet triggers become the set <code>clip.bind_packet()</code> adds to, under the bounds the box holds it to.</td></tr>
-              <tr><td><code>mock.clip_packet(traffic_class, id, direction, head)</code></td><td><code>Tuple[Optional[ClipAction], bool]</code>: run one packet through the mock's packet triggers, as the box does. The most specific match wins it and counts it in its <code>hits</code>. The action is <code>None</code> when no trigger wins, and when a <code>once_per_run</code> winner sees the packet continue a run; the bool is whether the winner consumes the packet.</td></tr>
-            </tbody>
-          </table>
+          <p>
+            <A href="/bindings/python/api#mock"><code>MockBox</code></A> scripts the clip queries and
+            runs a packet through the packet triggers.
+          </p>
         </Card>
       </div>
 
@@ -341,6 +337,78 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>dev.query_transforms()</code></td><td>The <A href="/bindings/python/types#transforms"><code>Transforms</code></A> table, in the order the box applies it.</td></tr>
             </tbody>
           </table>
+        </Card>
+      </div>
+
+      <div id="mock" data-search-target>
+        <Card>
+          <CardHeader title="Mock box" subtitle="An in-process fake box for tests, feature-gated" />
+          <p>
+            <code>MockBox</code> needs a native library built with the <code>mock</code> feature, and
+            raises <code>RuntimeError</code> without it; check <code>medius.HAS_MOCK</code>. Building it
+            is on <A href="/bindings/python/build">Build &amp; features</A>, the concept on{' '}
+            <A href="/library/features/mock">Mock</A>.
+          </p>
+          <div class="api-response-label">OPEN</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>MockBox()</code></td><td>A fresh mock that records every frame and answers queries. A context manager: <code>with MockBox() as mock:</code> frees it on exit, as <code>mock.close()</code> does.</td></tr>
+              <tr><td><code>mock.open()</code></td><td>A <A href="/bindings/python/api#connect"><code>Device</code></A> over the mock, after the handshake.</td></tr>
+              <tr><td><code>mock.with_device()</code></td><td>A <code>Device</code> over the mock, with no handshake.</td></tr>
+              <tr><td><code>mock.clone()</code></td><td>Another handle to the same mock state.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">SCRIPT</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>mock.set_version</code>, <code>set_health</code>, <code>set_device_info</code>, <code>set_caps</code>, <code>set_mouse_caps</code>, <code>set_kbd_caps</code>, <code>set_rate</code>, <code>set_stats</code>, <code>set_locks</code>, <code>set_catch_state</code></td><td>Set what each query answers.</td></tr>
+              <tr><td><code>mock.set_imperfect_status(status)</code></td><td>Set the <A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A> <code>dev.query_imperfect()</code> answers. With <code>allowed</code> false the mock drops its consuming packet triggers, as the box does.</td></tr>
+              <tr><td><code>mock.set_transfer_reply(status, data=b"")</code></td><td>The status and IN data a transfer is answered with while the opt-in is on; with it off, <code>REFUSED</code>.</td></tr>
+              <tr><td><code>mock.set_movement_riding</code>, <code>set_bearing</code>, <code>set_emit_pace</code>, <code>set_spread_learned</code>, <code>set_render</code>, <code>set_advertised_hz</code></td><td>Set what the option queries answer.</td></tr>
+              <tr><td><code>mock.set_clip_status(status)</code></td><td>Set the <A href="/bindings/python/types#clipstatus"><code>ClipStatus</code></A> <code>clip.query_status()</code> answers.</td></tr>
+              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A> <code>clip.query_config()</code> answers. Its packet triggers are bound in order, as <code>clip.bind_packet()</code> binds them, under the opt-in <code>set_imperfect_status</code> scripted, so script it first for a consuming one. The reply is these settings plus the packet triggers bound on the mock; <code>set_retain</code>, <code>finalize</code>, input binds and playback go out as recorded frames that leave it as scripted.</td></tr>
+              <tr><td><code>mock.clip_packet(traffic_class, id,</code> <code>direction, head)</code></td><td><code>Tuple[Optional[ClipAction], bool]</code>: run one packet through the mock's packet triggers, as the box does; the winner counts it in its <code>hits</code>. The action is <code>None</code> when no trigger wins, and when a <code>once_per_run</code> winner sees the packet continue a run; the bool is whether the winner consumes the packet.</td></tr>
+              <tr><td><code>mock.silent()</code></td><td>Stop answering queries, for timeout tests. One-way; frames are still recorded.</td></tr>
+              <tr><td><code>mock.push_raw(data)</code>, <code>push_log(level, text)</code>, <code>push_motion</code>, <code>push_usages</code>, <code>push_traffic</code></td><td>Put bytes, a log line or a catch event on the inbound stream, as the box sends them.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">INSPECT</div>
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>mock.recorded()</code></td><td><code>int</code>: how many frames the host has sent.</td></tr>
+              <tr><td><code>mock.saw(frame_type)</code></td><td><code>bool</code>: at least one frame of that <A href="/bindings/python/types#frametype"><code>FrameType</code></A> was sent.</td></tr>
+              <tr><td><code>mock.recorded_frame(idx)</code></td><td><code>Optional[<A href="/bindings/python/types#recordedframe">RecordedFrame</A>]</code>: frame <code>idx</code>'s type, SEQ and payload; <code>None</code> past the end.</td></tr>
+              <tr><td><code>mock.clear_recorded()</code></td><td>Empty the record.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-python">{`from medius import (ClipAction, ClipPacketTrigger, Direction, FrameType, ImperfectStatus,
+                    MockBox, TrafficClass)
+
+with MockBox() as mock:
+    dev = mock.open()                 # a Device over the mock, after the handshake
+    mock.set_imperfect_status(ImperfectStatus(allowed=True, over_capacity=False,
+                                              clone_imperfect=False))
+    clip = dev.clip()
+    clip.bind_packet(ClipPacketTrigger(TrafficClass.HID_IN, 2, Direction.IN, ClipAction.START,
+                                       match_bytes=b"\\x07\\x20", mask=b"\\xFF\\x20",
+                                       once_per_run=True, selector_len=1, consume=True))
+
+    head = b"\\x07\\x20\\x00"
+    assert mock.clip_packet(TrafficClass.HID_IN, 2, Direction.IN, head) == (ClipAction.START, True)
+    assert mock.clip_packet(TrafficClass.HID_IN, 2, Direction.IN, head) == (None, True)  # same run
+
+    mock.set_imperfect_status(ImperfectStatus(allowed=False, over_capacity=False,
+                                              clone_imperfect=False))
+    assert clip.query_config().packet_triggers == []   # the consuming trigger went with the opt-in
+
+    assert mock.saw(FrameType.CLIP_TRIGGER)
+    frames = [mock.recorded_frame(i) for i in range(mock.recorded())]
+    bind = next(f for f in frames if f.type == FrameType.CLIP_TRIGGER)
+    print(bind.payload.hex(" "))      # 04 02 00 01 00 07 01 02 07 20 ff 20`}</code></pre>
         </Card>
       </div>
 
