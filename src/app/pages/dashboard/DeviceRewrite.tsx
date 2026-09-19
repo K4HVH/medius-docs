@@ -190,6 +190,7 @@ const DeviceRewrite = () => {
                     value={rwId()}
                     min={0}
                     max={65534}
+                    precision={0}
                     onChange={(v) => setRwId(v ?? 0)}
                   />
                 </div>
@@ -233,7 +234,7 @@ const DeviceRewrite = () => {
               <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
                 <Show when={readsOffset(action())}>
                   <div style={{ 'max-width': '8rem' }}>
-                    <NumberInput label="Offset" value={rwOff()} min={0} max={65534} onChange={(v) => setRwOff(v ?? 0)} />
+                    <NumberInput label="Offset" value={rwOff()} min={0} max={65534} precision={0} onChange={(v) => setRwOff(v ?? 0)} />
                   </div>
                 </Show>
                 <div style={{ flex: '1 1 220px' }}>

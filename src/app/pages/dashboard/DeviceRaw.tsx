@@ -56,6 +56,7 @@ const DeviceRaw = () => {
                   value={ep()}
                   min={0}
                   max={15}
+                  precision={0}
                   onChange={(v) => setEp(v ?? 0)}
                 />
               </div>

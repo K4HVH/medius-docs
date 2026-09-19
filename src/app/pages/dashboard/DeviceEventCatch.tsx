@@ -453,7 +453,7 @@ const DeviceEventCatch = () => {
                 />
                 <Show when={anyId() === 'one'}>
                   <div style={{ 'max-width': '9rem', 'margin-top': 'var(--g-spacing-sm)' }}>
-                    <NumberInput label="Id" value={id()} min={0} max={65534} onChange={(v) => setId(v ?? 0)} />
+                    <NumberInput label="Id" value={id()} min={0} max={65534} precision={0} onChange={(v) => setId(v ?? 0)} />
                   </div>
                 </Show>
               </div>
@@ -480,6 +480,7 @@ const DeviceEventCatch = () => {
                     value={capture()}
                     min={0}
                     max={255}
+                    precision={0}
                     onChange={(v) => setCapture(v ?? 0)}
                   />
                 </div>

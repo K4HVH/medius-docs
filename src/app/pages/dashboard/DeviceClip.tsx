@@ -816,25 +816,25 @@ const DeviceClip = () => {
             <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
               <Show when={kindNow() === 'move'}>
                 <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="dx" value={dx()} min={-32768} max={32767} onChange={(v) => setDx(v ?? 0)} />
+                  <NumberInput label="dx" value={dx()} min={-32768} max={32767} precision={0} onChange={(v) => setDx(v ?? 0)} />
                 </div>
                 <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="dy" value={dy()} min={-32768} max={32767} onChange={(v) => setDy(v ?? 0)} />
+                  <NumberInput label="dy" value={dy()} min={-32768} max={32767} precision={0} onChange={(v) => setDy(v ?? 0)} />
                 </div>
               </Show>
               <Show when={kindNow() === 'wheel'}>
                 <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="Detents" value={dz()} min={-32768} max={32767} onChange={(v) => setDz(v ?? 0)} />
+                  <NumberInput label="Detents" value={dz()} min={-32768} max={32767} precision={0} onChange={(v) => setDz(v ?? 0)} />
                 </div>
               </Show>
               <Show when={kindNow() === 'pan'}>
                 <div style={{ 'max-width': '7rem' }}>
-                  <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} onChange={(v) => setDpan(v ?? 0)} />
+                  <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} precision={0} onChange={(v) => setDpan(v ?? 0)} />
                 </div>
               </Show>
               <Show when={kindNow() === 'gap'}>
                 <div style={{ 'max-width': '9rem' }}>
-                  <NumberInput label="Ticks" value={gap()} min={1} max={65535} onChange={(v) => setGap(v ?? 1)} />
+                  <NumberInput label="Ticks" value={gap()} min={1} max={65535} precision={0} onChange={(v) => setGap(v ?? 1)} />
                 </div>
               </Show>
               <Show when={kindNow() === 'raw'}>
@@ -845,6 +845,7 @@ const DeviceClip = () => {
                     value={rawEp()}
                     min={0}
                     max={15}
+                    precision={0}
                     onChange={(v) => setRawEp(v ?? 0)}
                   />
                 </div>
@@ -866,6 +867,7 @@ const DeviceClip = () => {
                     value={xferEp()}
                     min={0}
                     max={15}
+                    precision={0}
                     onChange={(v) => setXferEp(v ?? 0)}
                   />
                 </div>

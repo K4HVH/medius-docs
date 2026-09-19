@@ -20,6 +20,7 @@ const mock = vi.hoisted(() => ({
   entryReads: [] as number[],
   patches: [] as { section: number; cfg: number; index: number; offset: number; len: number }[],
   transfers: [] as number[][],
+  raws: [] as unknown[][],
   applied: 0,
   cleared: 0,
   transferReply: { ep: 0, status: 0, data: new Uint8Array() },
@@ -55,7 +56,9 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       mock.applied++;
     },
     clearPatch: async () => {},
-    raw: async () => {},
+    raw: async (...args: unknown[]) => {
+      mock.raws.push(args);
+    },
     transfer: async (
       ep: number,
       bmRequestType: number,
@@ -104,6 +107,7 @@ afterEach(() => {
   mock.entryReads = [];
   mock.patches = [];
   mock.transfers = [];
+  mock.raws = [];
   mock.applied = 0;
   mock.cleared = 0;
   mock.transferReply = { ep: 0, status: 0, data: new Uint8Array() };
@@ -335,7 +339,7 @@ describe('DeviceDeveloper', () => {
   });
 });
 
-// The Clip action's payload is a verb and two flags, not bytes, so it has an editor of its own.
+// Which actions a class offers, what each one carries, and what the editor refuses.
 describe('DeviceRewrite actions and payloads', () => {
   const radio = (container: HTMLElement, name: string): HTMLInputElement => {
     const el = [...container.querySelectorAll('input[type=radio]')].find(
@@ -487,5 +491,106 @@ describe('traffic address labels', () => {
       'Endpoint number (0 is EP0)',
       'Endpoint number',
     ]);
+  });
+});
+
+// A number field by its label, the nth one of that name inside `root`.
+const numberField = (root: ParentNode, label: string, nth = 0): HTMLInputElement => {
+  const labels = [...root.querySelectorAll('label.number-input__label')].filter((l) => l.textContent?.trim() === label);
+  const el = labels[nth]?.parentElement?.querySelector('input');
+  if (!el) throw new Error(`no number field labelled ${label}`);
+  return el as HTMLInputElement;
+};
+// Types a fraction and leaves the field, which is when a number field takes what was typed.
+const typeFraction = async (el: HTMLInputElement) => {
+  fireEvent.input(el, { target: { value: '2.5' } });
+  fireEvent.blur(el);
+  await settle();
+};
+
+describe('whole-number fields on the advanced control cards', () => {
+  const pick = (root: ParentNode, name: string) => {
+    const el = [...root.querySelectorAll('input[type=radio]')].find(
+      (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
+    );
+    if (!el) throw new Error(`no radio labelled ${name}`);
+    fireEvent.click(el);
+  };
+  const text = (root: ParentNode, label: string, value: string) => {
+    const l = [...root.querySelectorAll('label')].find((e) => e.textContent?.trim() === label);
+    const el = l?.parentElement?.querySelector('input') as HTMLInputElement;
+    fireEvent.input(el, { target: { value } });
+  };
+  const button = (root: ParentNode, name: string) =>
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === name) as HTMLElement;
+  const card = (id: string) => {
+    on();
+    const view = render(() => <DeviceDeveloper />);
+    return view.container.querySelector(`#${id}`) as HTMLElement;
+  };
+
+  it('keeps the raw report endpoint to a whole number, and sends what it shows', async () => {
+    const root = card('raw-report');
+    const el = numberField(root, 'Endpoint number');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    text(root, 'Bytes (hex)', '01');
+    fireEvent.click(button(root, 'Send'));
+    await settle();
+    expect(mock.raws.map((r) => r[0])).toEqual([3]);
+  });
+
+  it('keeps the control transfer endpoint to a whole number, and sends what it shows', async () => {
+    const root = card('control-transfer');
+    const el = numberField(root, 'Endpoint number');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(button(root, 'Run'));
+    await settle();
+    expect(mock.transfers.map((t) => t[0])).toEqual([3]);
+  });
+
+  it.each([
+    ['Configuration index', 'cfg'],
+    ['Interface', 'index'],
+    ['Offset', 'offset'],
+  ] as const)('keeps the patch %s to a whole number, and sends what it shows', async (field, key) => {
+    const root = card('descriptor-patches');
+    pick(root, 'Report descriptor');
+    await settle();
+    const el = numberField(root, field);
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    text(root, 'Bytes (hex)', '04');
+    fireEvent.click(button(root, 'Set patch'));
+    await settle();
+    expect(mock.patches.map((p) => p[key])).toEqual([3]);
+  });
+
+  it('keeps the rewrite id to a whole number, and sends what it shows', async () => {
+    const root = card('rewrite-rules');
+    const el = numberField(root, 'Endpoint number (0 is EP0)');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    fireEvent.click(button(root, 'Add rule'));
+    await settle();
+    expect(mock.rewrites.map((r) => r.id)).toEqual([3]);
+  });
+
+  it('keeps the rewrite offset to a whole number, and sends what it shows', async () => {
+    const root = card('rewrite-rules');
+    const box = root.querySelector('[role="combobox"]') as HTMLElement;
+    fireEvent.click(box);
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await settle();
+    fireEvent.click([...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.trim() === 'Patch')!);
+    await settle();
+    const el = numberField(root, 'Offset');
+    await typeFraction(el);
+    expect(el.value).toBe('3');
+    text(root, 'Payload (hex)', 'aa');
+    fireEvent.click(button(root, 'Add rule'));
+    await settle();
+    expect(mock.rewrites.map((r) => (r as unknown as { off: number }).off)).toEqual([3]);
   });
 });
