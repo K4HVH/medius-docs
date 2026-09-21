@@ -272,8 +272,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
     }
     case Q_STATS: {
       // 29 bytes since protocol 9: the eight narrowed counters, then the three full-width drop
-      // counts, at payload offsets 17, 21 and 25. The firmware's own table numbers those 16, 20 and
-      // 24, counting from the byte after `what`.
+      // counts, at payload offsets 17, 21 and 25.
       if (payload.length < 29) return null;
       return {
         kind: 'stats',
@@ -355,8 +354,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
     }
     case Q_FIRMWARE: {
       // [what][dev maj][min][patch][slot][state][host_present][host maj][min][patch][slot][state]
-      // [slot_size u32 LE][staged bits]. The only place the host chip's version appears: RESP(VERSION)
-      // reports the device chip alone and its name tail is LEN-delimited, so nothing can follow it.
+      // [slot_size u32 LE][staged bits].
       if (payload.length < RESP_FIRMWARE_LEN) return null;
       const chip = (o: number) => ({
         major: payload[o],
@@ -547,9 +545,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
       return { kind: 'transforms', transforms: { tableFull: (payload[1] & TF_F_FULL) !== 0, entries } };
     }
     case Q_REWRITE: {
-      // [what][flags][gen][n] then n × [cls][id u16 LE][dir][action][mlen][off u16 LE][plen u16 LE][hits u16 LE].
-      // The summary order is [mlen][off], the opposite of the command; the full match/payload come from
-      // RESP(REWRITE_ENTRY).
+      // [what][flags][gen][n] then n × [cls][id u16 LE][dir][action][mlen][off u16 LE][plen u16
+      // LE][hits u16 LE].
       if (payload.length < RESP_REWRITE_HDR) return null;
       const n = payload[3];
       if (n > REWRITE_TAB_MAX) return null;
@@ -648,8 +645,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
 }
 
 // Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. Its own opcode, not a RESP
-// frame, correlated by the SEQ that echoes the TRANSFER. `status` reads through TransferStatus; a
-// too-short frame reads as a refusal with no data rather than throwing.
+// frame, correlated by the SEQ that echoes the TRANSFER.
 export function parseTransferResp(payload: Uint8Array): TransferResult {
   if (payload.length < 2) {
     return { ep: payload[0] ?? 0, status: transferStatusFromU8(0xfc), data: new Uint8Array(0) };
@@ -699,11 +695,7 @@ export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
 }
 
 // Parse a TRAFFIC_EVENT payload (§4.10): [ts_us u32][clk u8][class u8][id u16 LE][dir u8][flags u8]
-// [true_len u16 LE][bytes..]. The frame LEN delimits how many bytes arrived, which is at most the
-// entry's capture length; compare that against true_len to see whether the capture was cut short.
-// `flags` stays the raw byte because its meaning is the class's: trafficTransferStatus reads a
-// ClipTransfer event's, and trafficSetup / trafficData split that class's bytes and Control's.
-// Unsolicited.
+// [true_len u16 LE][bytes..].
 export function parseTrafficEvent(payload: Uint8Array): TrafficEvent | null {
   if (payload.length < TRAFFIC_HDR_LEN) return null;
   return {

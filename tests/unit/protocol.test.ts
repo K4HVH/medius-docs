@@ -578,24 +578,20 @@ describe('LOCK command (§3.8)', () => {
 
   it('still opens the wire one-click update arrived on', () => {
     // UPDATE/UPDATE_RESP and QUERY(FIRMWARE) shipped in firmware 3.2.0 at protocol 5 and have not
-    // changed since. Raising this floor past 5 strands every 3.2.x box on USB setup, because the
-    // handshake would refuse the connection that carries the update. Raise it only when the update
-    // path itself stops working against that wire.
+    // changed since.
     expect(MIN_PROTO_VER).toBe(5);
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
   it('PROTO_VER matches the firmware that speaks this RESP(STATS)', () => {
     // v9 (firmware 3.4.2) grows RESP(STATS) from 17 bytes to 29: the two inter-chip link drop
-    // counts, then relay_drops. Left at 8, the handshake refuses a 3.4.2 box outright, including
-    // the connection that would put it back on an older build.
+    // counts, then relay_drops.
     expect(PROTO_VER).toBe(9);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
     // A blanket key lock is one entry per blocked edge under id 0xFFFF, never a single Both entry,
-    // and a media usage has no edges at all so it always reports Both. Decoding either as the other
-    // would make the dashboard render a lock the box is not holding.
+    // and a media usage has no edges at all so it always reports Both.
     const resp = parseResp(
       new Uint8Array([
         6, 3,
@@ -1048,8 +1044,7 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
 
   it('decodes a HID_IN capture that arrived whole', () => {
     // ts = 0x00001000, HOST clock (an IN transfer off the real device), class HID_IN, interface 0,
-    // IN, flags 0, true_len 4, 4 bytes. §4.10 puts HID_IN in the host domain; a device-domain
-    // stamp here would be a wire-impossible combination.
+    // IN, flags 0, true_len 4, 4 bytes.
     const ev = parseTrafficEvent(
       new Uint8Array([
         0x00, 0x10, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x01, 0x00, 0x04, 0x00, 0x01, 0x02, 0x03,
@@ -1507,9 +1502,6 @@ describe('device-info RESP decoding (v1.4.0)', () => {
   it('STATS (§4.6) with saturated fields, a 32-bit count, both link drop counts and relay drops', () => {
     // The last twelve bytes are the three counters protocol 9 appends: they are full-width and do
     // not saturate, so a value past what the narrowed fields can hold has to survive the decode.
-    // relay_drops reads apart from tx_drops, which is the whole reason the field exists: a box
-    // shedding a saturating vendor stream used to report that as the player's own input going
-    // missing.
     const p = new Uint8Array([
       5, 0x04, 0x03, 0x02, 0x01, 0xff, 0xff, 0x0a, 0x00, 0xff, 0x02, 0xff, 0xff, 0x07, 0x00, 0x09,
       0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x70, 0x11, 0x01, 0x00,
@@ -1546,9 +1538,8 @@ describe('device-info RESP decoding (v1.4.0)', () => {
   });
 });
 
-// key/media inject (via the class-tagged INJECT) + the unified USAGE_EVENT catch stream + the keyboard
-// half of CAPS. Byte vectors mirror the firmware packers/decoders in ctrl_proto.h so the JS side is
-// pinned to the wire format.
+// key/media inject (via the class-tagged INJECT) + the unified USAGE_EVENT catch stream + the
+// keyboard half of CAPS.
 describe('keyboard + media (v2.0.0)', () => {
   it('injectPayload (key) packs [class][usage u16 LE][action] (§3.2)', () => {
     // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1). class key = 1.
@@ -1671,9 +1662,7 @@ describe('bearing mode decode', () => {
   });
 });
 
-// RESP(FIRMWARE) (§4.16). Byte vectors are read off the firmware's ota_proto.h and the protocol doc,
-// not written to match this decoder: a decoder checked against its own author's expectations is a
-// false green.
+// RESP(FIRMWARE) (§4.16).
 describe('RESP(FIRMWARE)', () => {
   const payload = (hostPresent: number, staged: number) =>
     new Uint8Array([
@@ -1749,9 +1738,8 @@ describe('RESP(FIRMWARE)', () => {
   });
 });
 
-// The v3.4.0 advanced control layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the four
-// readback decoders, and TRANSFER_RESP. Byte layouts are pinned to the firmware's ctrl_proto.h and
-// mirror tools/medius.py, so a transposed field fails here rather than on the wire.
+// The v3.4.0 advanced control layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the
+// four readback decoders, and TRANSFER_RESP.
 describe('advanced control layer (§3.14 / §4.17)', () => {
   it('RAW is [ep][bytes..]', () => {
     // interrupt-IN endpoint 1: [ep_num=01][dir=01 (Positive/IN)][bytes].

@@ -20,9 +20,8 @@ function fence(text: string, lang: string): string {
   return '\n\n```' + lang + '\n' + body + '\n```\n\n';
 }
 
-// Rewrite an internal router href (/x, /x#frag) to its .md twin, keeping the
-// hash. A path whose last segment has a file extension (a static asset) is left
-// as-is, since it has no .md twin.
+// Rewrite an internal router href (/x, /x#frag) to its .md twin, keeping the hash. A path whose
+// last segment has a file extension (a static asset) is left as-is, since it has no .md twin.
 function rewriteInternalHref(href: string): string {
   const hashIndex = href.indexOf('#');
   const path = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
@@ -43,9 +42,8 @@ function cellMarkdown(td: TurndownService, cell: any): string {
     .trim();
 }
 
-// Build a rectangular grid of cell text from an HTML table, expanding colspan
-// (repeat across columns) and rowspan (carry the value down). Markdown tables
-// have no spans, so repeating the value preserves both data and alignment.
+// Build a rectangular grid of cell text from an HTML table, expanding colspan (repeat across
+// columns) and rowspan (carry the value down).
 function tableGrid(td: TurndownService, table: any): string[][] {
   const rows = Array.from(table.querySelectorAll('tr')) as any[];
   const grid: string[][] = [];
@@ -192,8 +190,6 @@ export function createTurndown(): TurndownService {
   });
 
   // div.docs-grid nav tiles (an <a> wrapping a Card) -> a bullet list of links.
-  // A CardHeader is block-level and cannot nest inside a Markdown link, so build
-  // each item from the tile's title/subtitle instead of the link's inner markup.
   td.addRule('docsGrid', {
     filter: (node: any) => node.nodeName === 'DIV' && hasClass(node, 'docs-grid'),
     replacement: (_content, node: any) => {

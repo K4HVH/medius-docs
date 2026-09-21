@@ -216,15 +216,11 @@ export interface Stats {
   resetCount: number;
   configCount: number;
   // Frames an inter-chip link RX ring could not take, one counter per chip, counting only the ones
-  // whose loss is input loss: a native report, a motion delta, an injected command. A count here is
-  // input the game PC never saw. Full-width, so unlike the eight above they keep counting rather
-  // than clamping.
+  // whose loss is input loss: a native report, a motion delta, an injected command.
   linkRxDrops: number;
   hostRxDrops: number;
   // Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining,
-  // or an OUT packet past what the relay carries in one frame. Expected under load, so it is a
-  // reading rather than a fault. Before protocol 9 it landed in txDrops, where a saturating vendor
-  // load read as the player's own input going missing. Full-width like the two above.
+  // or an OUT packet past what the relay carries in one frame.
   relayDrops: number;
 }
 
@@ -290,11 +286,6 @@ export enum LockAxis {
 
 // The edge or sign a LOCK, CLIP or CATCH entry covers. One vocabulary across all three, so the
 // aliases below give each reading a name and no call site has to write the ambiguous member.
-// A media usage is the one class with no edges: the box suppresses it whole, ignores the byte on the
-// way in, and reports Both on the way out.
-// With and Against name a sign relative to the bearing, the direction the box is itself injecting
-// (§3.12), so the sign they select follows the injection, not the axis. Axes only, and LOCK only: a subscription or a
-// trigger is addressed before there is any injection to be with or against.
 export enum Direction {
   Both = 0,
   Positive = 1,
@@ -331,11 +322,7 @@ export const Out = Direction.Negative; // PC to device
 // The id sentinel that blanket-locks a whole class (§3.8), e.g. every button or every key.
 export const LOCK_ID_ALL = 0xffff;
 
-// LOCK scale (§3.8): the percent of the physical value the box keeps on that direction. Blocking and
-// passing are the two ends of one number, so a lock is Block and an unlock is Pass; above Pass it
-// amplifies. The percent is signed: a negative one reverses what it keeps, so Min is a 2.55x
-// reversal and -100 a plain inversion. A momentary usage carries one bit, so anything under Pass locks
-// it, there is nothing in between, and a negative is refused outright.
+// LOCK scale (§3.8): the percent of the physical value the box keeps on that direction.
 export const LOCK_SCALE_BLOCK = 0;
 export const LOCK_SCALE_PASS = 100;
 export const LOCK_SCALE_MAX = 255;
@@ -384,8 +371,7 @@ export const lockMedia = (usage: number): LockTarget => ({ cls: LockClass.Media,
 export const lockBlanket = (cls: LockClass): LockTarget => ({ cls, id: LOCK_ID_ALL });
 
 // One weighed direction (§4.8): a target, which direction of it, and how much of the physical value
-// survives. Entries mirror the LOCK frame field for field, so what comes back is what you would send
-// to reproduce it, one entry per direction rather than one per target.
+// survives.
 export interface LockEntry {
   cls: LockClass;
   id: number;
@@ -399,13 +385,10 @@ export interface Locks {
 }
 
 // The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
-// weighs it. Both reports the least that survives across every direction, so the worst case a delta
-// could meet, ranked by magnitude so a block outranks a reversal of any size. Where several entries
-// cover the same direction the least is reported, matching the box multiplying them.
+// weighs it.
 export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
   // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
-  // target it never names. Matching on the exact id alone under-reported one, which is how a blanket
-  // key lock set by another client read back as nothing at all.
+  // target it never names.
   const covers = (x: LockEntry) =>
     x.cls === target.cls && (x.id === target.id || x.id === LOCK_ID_ALL);
   const covering = locks.entries.filter(
@@ -424,8 +407,7 @@ export function scaleOf(locks: Locks, target: LockTarget, direction: Direction):
 }
 
 // True when the target is blocked outright on that direction. A direction merely weighed is not
-// locked. Both asks about the two fixed signs, the pair it has always named; ask for a relative one
-// by name, because a target can be blocked against the bearing while both fixed signs pass.
+// locked.
 export function isLocked(locks: Locks, target: LockTarget, direction: Direction): boolean {
   if (direction === Direction.Both) {
     return (
@@ -436,11 +418,7 @@ export function isLocked(locks: Locks, target: LockTarget, direction: Direction)
   return scaleOf(locks, target, direction) === LOCK_SCALE_BLOCK;
 }
 
-// CATCH address classes (§3.9): what a subscription entry points at. Classes 0-3 are LOCK's classes
-// unchanged, so one address vocabulary covers locking a field and catching it; 4 and up reach the
-// byte-oriented traffic the box carries. Addressing doubles as the filter because the control link
-// is 6 Mbaud and vendor bulk alone measures 250 KiB/s through the box, so a subscription has to be
-// able to name one endpoint rather than a whole class. Wire values match ctrl_proto.h.
+// CATCH address classes (§3.9): what a subscription entry points at.
 export enum CatchClass {
   Button = 0,
   Key = 1,
@@ -461,11 +439,7 @@ export enum CatchClass {
 export const CATCH_ID_ANY = 0xffff;
 
 // What one CATCH table entry addresses (§3.9): an address, a direction, and how much of each packet
-// to capture. capture is a byte count per entry, 0 meaning the whole packet, because the useful
-// value differs by orders of magnitude between classes - a 64-byte vendor interrupt report needs
-// all of it, a bulk pipe traced for framing needs 16. dir is the press/release edge for the input
-// classes and the transfer direction for the traffic classes; no class is both, so one byte carries
-// either reading unambiguously.
+// to capture.
 export interface CatchFilter {
   cls: CatchClass;
   id: number;
@@ -474,8 +448,6 @@ export interface CatchFilter {
 }
 
 // One entry as the box reports it back (§4.9): the filter it accepted, plus what that entry lost.
-// Kept separate from CatchFilter so a subscription request cannot carry a drop count that would
-// always read 0 and mean nothing.
 export interface CatchEntry extends CatchFilter {
   // Per entry, because under a saturating bulk trace the box-wide counter says you are losing
   // events but not which ones.
@@ -543,14 +515,11 @@ export const filterTraffic = (cls: CatchClass, id: number, capture = 0): CatchFi
 });
 
 // True when two filters address the same thing, which is how a caller reconciles the table it asked
-// for against the one RESP(CATCH) reports. Only a full-table flag marks a refusal; the other three
-// refusal reasons in §3.9 are visible solely as an entry's absence.
+// for against the one RESP(CATCH) reports.
 export const sameFilter = (a: CatchFilter, b: CatchFilter): boolean =>
   a.cls === b.cls && a.id === b.id && a.dir === b.dir;
 
-// Which chip's microsecond clock stamped an event (§4.10). The two ESP32-S3s boot independently, so
-// nothing relates their timers: compare stamps only within a domain, or apply RESP(CATCH)'s measured
-// offset and respect its error bound.
+// Which chip's microsecond clock stamped an event (§4.10).
 export enum ClockDomain {
   Host = 0,
   Device = 1,
@@ -577,9 +546,7 @@ export enum BusEventKind {
   CloneDown = 9,
 }
 
-// A momentary usage: a class plus its class-specific id. Buttons, keys, and media share one shape
-// (class = INJ_BTN / INJ_KEY / INJ_MEDIA; id = button id, HID keycode with 0xE0-0xE7 modifiers, or
-// a 16-bit Consumer usage).
+// A momentary usage: a class plus its class-specific id.
 export interface Usage {
   cls: number;
   id: number;
@@ -655,17 +622,14 @@ export function trafficSetup(ev: TrafficEvent): Uint8Array | null {
   return controlShaped(ev) && ev.bytes.length >= 8 ? ev.bytes.subarray(0, 8) : null;
 }
 
-// The data stage of a Control or ClipTransfer event; the whole packet for any other class. Empty when
-// the capture cut the setup packet short: the surviving bytes are the request, and returning them
-// would label a GET_DESCRIPTOR request as the descriptor.
+// The data stage of a Control or ClipTransfer event; the whole packet for any other class.
 export function trafficData(ev: TrafficEvent): Uint8Array {
   if (!controlShaped(ev)) return ev.bytes;
   return ev.bytes.length >= 8 ? ev.bytes.subarray(8) : new Uint8Array(0);
 }
 
 // How a clip's control transfer ended, for a ClipTransfer event: the status a TRANSFER returns, Nak
-// when no answer came. Null for every other class, Control included, whose flags byte is the
-// device's answer to the game PC's request.
+// when no answer came.
 export function trafficTransferStatus(ev: TrafficEvent): TransferStatus | null {
   return ev.cls === CatchClass.ClipTransfer ? transferStatusFromU8(ev.flags) : null;
 }
@@ -680,17 +644,13 @@ export function snapshotClass(snap: UsageSnapshot): number | null {
   return snap.usages.length > 0 ? snap.usages[0].cls : null;
 }
 
-// One decoded frame from the CATCH stream. A `motion` frame carries the relative axes; a `usages`
-// frame carries a class-tagged held-usage snapshot (buttons, keys, or media); a `traffic` frame
-// carries bytes off one of the byte-oriented classes.
+// One decoded frame from the CATCH stream.
 export type CatchEvent =
   | { kind: 'motion'; motion: MotionEvent }
   | { kind: 'usages'; snapshot: UsageSnapshot }
   | { kind: 'traffic'; traffic: TrafficEvent };
 
-// The cross-chip clock estimate carried in RESP(CATCH) (§4.9). The box measures it with a
-// four-timestamp exchange over the inter-chip link, stamped as each frame reaches the wire rather
-// than when it is queued, because queueing is the largest and most variable delay on that link.
+// The cross-chip clock estimate carried in RESP(CATCH) (§4.9).
 export interface ClockEstimate {
   // The host chip's clock minus the device chip's, in microseconds.
   offsetUs: number;
@@ -827,8 +787,7 @@ function clipTickSize(e: ClipTick): number {
 }
 
 // Encode one clip entry (§3.11). Returns null for an entry the box would reject or misread, rather
-// than a nearest-legal guess: a clamped clip plays back as something the caller never
-// recorded. `clipEntryFault` says why.
+// than a nearest-legal guess: a clamped clip plays back as something the caller never recorded.
 export function encodeClipEntry(e: ClipEntry): Uint8Array | null {
   if (clipEntryFault(e) !== null) return null;
   if (e.kind === 'gap') return new Uint8Array([CLIP_TAG_GAP, e.ticks & 0xff, (e.ticks >> 8) & 0xff]);
@@ -890,9 +849,7 @@ function i16(v: number): number {
   return Math.max(-32768, Math.min(32767, Math.round(v || 0)));
 }
 
-// The ops a trigger may carry. The box stores a binding only when its action is Toggle or lower,
-// and CLIP_TRIGGER has no reply, so binding Clear or Finalize puts a frame on the wire that is
-// discarded with no reply and never fires.
+// The ops a trigger may carry.
 export type ClipTriggerAction =
   | ClipOp.Start
   | ClipOp.Stop
@@ -994,11 +951,8 @@ export const clipStateLabel = (s: ClipState): string =>
 export const sameTrigger = (a: ClipTrigger, b: ClipTrigger): boolean =>
   a.cls === b.cls && a.id === b.id && a.edge === b.edge;
 
-// One packet trigger (§3.11): a packet on a traffic surface whose head matches under the mask runs an
-// engine verb on the box's next tick. `id` is the interface or endpoint number CATCH and REWRITE give
-// the class, or CATCH_ID_ANY. `consume` keeps the packet the trigger wins off the wire. With
-// `oncePerRun` the verb runs on the first of a run of matching packets: the first `selectorLen` match
-// bytes select the stream within its address (a report ID) and the rest are the condition.
+// One packet trigger (§3.11): a packet on a traffic surface whose head matches under the mask runs
+// an engine verb on the box's next tick.
 export interface ClipPacketTrigger {
   cls: number;
   id: number;
@@ -1078,10 +1032,8 @@ export function clipPacketKeyFault(t: ClipPacketTrigger): ClipPacketTriggerFault
   return null;
 }
 
-// Why the box would refuse to set this trigger, or null when it stores it. CLIP_TRIGGER has no reply
-// and a refused frame is dropped whole, so this is the only place the reason exists. Without `box`
-// only the checks that need no box state run. An overwrite takes no slot and no pool bytes, since
-// the key carries the match.
+// Why the box would refuse to set this trigger, or null when it stores it. CLIP_TRIGGER has no
+// reply and a refused frame is dropped whole, so this is the only place the reason exists.
 export function clipPacketTriggerFault(
   t: ClipPacketTrigger,
   box?: ClipPacketTriggerBox,
@@ -1238,9 +1190,7 @@ export interface PatchInfo {
   len: number;
 }
 
-// The decoded RESP(PATCHES) set (§4.17). A patch is stored whether or not the opt-in is on; `applied` is
-// whether the served clone carries it now, `pending` whether a stored patch is waiting for an apply, and
-// `refused` whether the last apply rejected one for falling outside the descriptor it targets.
+// The decoded RESP(PATCHES) set (§4.17).
 export interface PatchSet {
   applied: boolean;
   pending: boolean;
@@ -1258,10 +1208,8 @@ export interface PatchEntry {
   bytes: Uint8Array;
 }
 
-// A field transform in full, the shape RESP(TRANSFORMS) returns and the TRANSFORM command takes (§3.15).
-// Swap exchanges two axes; Remap moves the source field into the destination. It is structural only:
-// how much of the value survives the move is the lock's, which runs first and whose percent is signed.
-// Neither op takes a field onto itself, since there would be nowhere to move the value to.
+// A field transform in full, the shape RESP(TRANSFORMS) returns and the TRANSFORM command takes
+// (§3.15). Swap exchanges two axes; Remap moves the source field into the destination.
 export interface Transform {
   op: TransformOp;
   sclass: number;

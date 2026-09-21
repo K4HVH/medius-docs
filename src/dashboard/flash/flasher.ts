@@ -1,7 +1,5 @@
-// esptool-js flashing over a chip's native USB. Loaded lazily (dynamic import)
-// so esptool-js stays out of the main bundle. Both chips flash over their own
-// USB-Serial-JTAG: DTR/RTS over the CH343 do not reset this board, but the
-// USB-OTG reset does, so a native flash is the only path that reboots to run.
+// esptool-js flashing over a chip's native USB. Loaded lazily (dynamic import) so esptool-js stays
+// out of the main bundle.
 
 import { ESPLoader, type FlashOptions, type IEspLoaderTerminal, Transport } from 'esptool-js';
 import SparkMD5 from 'spark-md5';
@@ -58,9 +56,8 @@ async function runEsptool(
     };
     await loader.writeFlash(flashOptions);
     onProgress?.({ phase: 'done' });
-    // Reboot into the new firmware. esptool-js's own USB-OTG hard_reset only
-    // deasserts RTS (no edge); esptool.py pulses it. Replicate the pulse: assert
-    // RTS to reset, then release, with DTR held low so it boots to run.
+    // Reboot into the new firmware. esptool-js's own USB-OTG hard_reset only deasserts RTS (no
+    // edge); esptool.py pulses it.
     try {
       await port.setSignals({ dataTerminalReady: false, requestToSend: true });
       await sleep(200);
@@ -78,9 +75,7 @@ async function runEsptool(
   }
 }
 
-// Flash a chip already in ROM download on its native USB port. Used for the device chip (USB1) and
-// the host chip (USB3), each entered by holding the button beside that socket while plugging the
-// cable in, with the other cables out. Also the recovery path.
+// Flash a chip already in ROM download on its native USB port.
 export async function flashNativePort(params: FlashNativeParams): Promise<void> {
   const { port, image, kind, onProgress, onLog } = params;
   const invalid = validateImage(image, kind);

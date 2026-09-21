@@ -1,10 +1,5 @@
 // One poller for the whole dashboard. Cards ask for a value and get a signal; the poller owns the
 // timers, deduplicates subscribers, and stops a query the moment nothing is watching it.
-//
-// It exists because the control link is one 6 Mbaud pipe shared with the catch event stream. Four
-// cards each running their own interval put a steady round-trip load on that pipe whether or not
-// anyone was looking, and the persistent-option reads repeated four times a second for values that
-// only change when the dashboard changes them.
 
 import { type Accessor, createSignal, onCleanup } from 'solid-js';
 import type {
@@ -73,8 +68,7 @@ const RUN: { [K in PollKey]: (l: SerialLink) => Promise<PollValues[K]> } = {
 };
 
 // The box drops injection, locks, the catch table and the loaded clip after this long with no
-// inbound control frame, and any valid frame resets that timer. Everything the Control tab does
-// therefore depends on something being polled faster than this.
+// inbound control frame, and any valid frame resets that timer.
 export const SILENCE_CLEAR_MS = 1000;
 export const KEEPALIVE_MS = SILENCE_CLEAR_MS / 2;
 
@@ -88,9 +82,8 @@ const DEFAULT_MS: Record<PollKey, number> = {
   rate: 2000,
   stats: 2000,
   locks: 1000,
-  // Catch events and log lines arrive unsolicited, so this query is only the drop counts, the
-  // clock estimate and the accepted table. None of that needs keepalive cadence; the health poll
-  // is what holds the subscription alive.
+  // Catch events and log lines arrive unsolicited, so this query is only the drop counts, the clock
+  // estimate and the accepted table.
   catch: 2000,
   imperfect: 4000,
   moveRide: 4000,
@@ -166,11 +159,6 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     const l = link();
     // Skipped while there is no link, purely to avoid a thrown call per tick; the catch below would
     // swallow it either way, so this is cost, not correctness.
-    // Polled even while the tab is hidden. Nothing on screen needs it, but the box drops every
-    // injected hold, every lock, the catch table and the loaded clip after a second with no
-    // inbound frame, and this poll is what prevents that. Browsers clamp a hidden tab's timers to
-    // about a second, so this is best effort rather than a guarantee; the cards watch the health
-    // flags and report it when the box clears anyway.
     if (l) {
       try {
         const v = await RUN[key](l);
@@ -235,9 +223,7 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     }
   };
 
-  // The keepalive lives here rather than in a card. The box drops every injected hold, every lock,
-  // the catch table and the loaded clip after SILENCE_CLEAR_MS with no inbound frame, and any valid
-  // frame resets that timer. Owning it here means no card can take it away by not needing health.
+  // The keepalive lives here rather than in a card.
   subscribe('health', KEEPALIVE_MS);
 
   if (typeof document !== 'undefined') {

@@ -1,6 +1,5 @@
-// Prism syntax highlighting for the doc code blocks. Languages are imported in
-// dependency order (clike before c). Highlighting runs manually from the layout
-// via Prism.highlightAllUnder, so the DOMContentLoaded auto-run is disabled.
+// Prism syntax highlighting for the doc code blocks. Languages are imported in dependency order
+// (clike before c).
 import Prism from 'prismjs';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-c';

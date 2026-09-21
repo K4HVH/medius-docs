@@ -170,9 +170,7 @@ describe('clip entry encoding (§3.11)', () => {
   });
 
   it('sets the edges flag for a single edge, and carries its id little-endian', () => {
-    // With one edge the flag and the bytes are written by two separate checks. If they disagree,
-    // the edge payload lands with no flag to announce it, the box reads 4 bytes short, and every
-    // entry after it in the ring is misaligned with no framing to recover on.
+    // With one edge the flag and the bytes are written by two separate checks.
     expect(bytes({ kind: 'tick', edges: [{ cls: 1, id: 0x1234, action: Action.Press }] })).toEqual([
       0x04, 0x01, 0x01, 0x34, 0x12, 0x01,
     ]);
@@ -386,8 +384,7 @@ describe('clip command payloads (§3.11)', () => {
 
   it('CLIP_SET carries id then value', () => {
     // Not LOOP alone: its id is 1, so a payload with the two bytes swapped reads the same and the
-    // test cannot fail. AUTOLOCK is the one where a swap is silent and destructive, because the
-    // box drops an unknown id and the scope never engages.
+    // test cannot fail.
     expect(Array.from(clipSetPayload(CLIP_SET_AUTOLOCK, 0x1f))).toEqual([0x00, 0x1f]);
     expect(Array.from(clipSetPayload(CLIP_SET_RETAIN, 1))).toEqual([0x02, 0x01]);
     expect(Array.from(clipSetPayload(CLIP_SET_LOOP, 1))).toEqual([1, 1]);
@@ -783,9 +780,8 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
   });
 
   it('rejects counts the box cannot have produced', () => {
-    // Each reply is exactly as long as its count implies, so the length checks pass and the bound is
-    // what rejects it. At any other length the length check catches it and the bounds could be
-    // deleted without a test noticing.
+    // Each reply is exactly as long as its count implies, so the length checks pass and the bound
+    // is what rejects it.
     const overHeld = [...header(ClipState.Idle, 41), ...new Array(3 * 41).fill(0), 0, 0, 0, 0];
     expect(parseResp(new Uint8Array(overHeld))).toBeNull();
 
@@ -918,8 +914,6 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
 describe('clipAppend on the link', () => {
   it('numbers appends on their own sequence, not the shared command sequence', async () => {
     // The box faults the engine when an append's SEQ is not exactly one past the last append's.
-    // Any other frame in between advances the shared counter, so sharing it would fault the clip
-    // the first time anything else was sent.
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === Q_CLIP) {
