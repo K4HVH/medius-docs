@@ -215,11 +215,17 @@ export interface Stats {
   wakeups: number;
   resetCount: number;
   configCount: number;
-  // Frames an inter-chip link RX ring could not take, one counter per chip. A count here is a native
-  // report or an injected delta lost between the box's own two chips, which nothing downstream sees.
-  // Full-width, so unlike the eight above they keep counting rather than clamping.
+  // Frames an inter-chip link RX ring could not take, one counter per chip, counting only the ones
+  // whose loss is input loss: a native report, a motion delta, an injected command. A count here is
+  // input the game PC never saw. Full-width, so unlike the eight above they keep counting rather
+  // than clamping.
   linkRxDrops: number;
   hostRxDrops: number;
+  // Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining,
+  // or an OUT packet past what the relay carries in one frame. Expected under load, so it is a
+  // reading rather than a fault. Before protocol 9 it landed in txDrops, where a saturating vendor
+  // load read as the player's own input going missing. Full-width like the two above.
+  relayDrops: number;
 }
 
 // Injection override action, shared by INJECT across buttons, keys, and media (§3.2). Wire values

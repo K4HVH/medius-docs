@@ -197,24 +197,27 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <CardHeader title="Stats" subtitle="Delivery and telemetry counters" />
           <p>
             Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>.
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery to the PC
-            degraded under load, and a nonzero <code>link_rx_drops</code> or{' '}
-            <code>host_rx_drops</code> means input was lost between the box's two chips. The narrowed
-            fields saturate instead of wrapping; the two drop counts are full width.
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's own input
+            slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or{' '}
+            <code>host_rx_drops</code> means it was lost between the box's two chips;{' '}
+            <code>relay_drops</code> is back-pressure on a relayed stream, which is load rather than
+            lost input. The narrowed fields saturate instead of wrapping; the three drop counts are
+            full width.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Packets dropped on a full queue, in either direction (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the clone's IN queue could not hold, so the game PC never saw them (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
               <tr><td><code>wakeups</code></td><td><code>u16</code></td><td>Remote-wakeups issued.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
-              <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
+              <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
             </tbody>
           </table>
         </Card>

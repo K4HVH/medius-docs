@@ -441,13 +441,18 @@ const Requests: Component = () => {
             counters are the only delivery feedback there is.
           </p>
           <p>
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery to the PC
-            slipped under load; a nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code>{' '}
-            means a native report or an injected delta was lost between the box's own two chips. The
-            eight narrowed counters clamp at their max instead of wrapping; the two drop counts are
-            full width and keep counting.
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's own input
+            slipped on the way to the PC; a nonzero <code>link_rx_drops</code> or{' '}
+            <code>host_rx_drops</code> means a native report or an injected delta was lost between
+            the box's own two chips.
           </p>
-          <pre class="api-signature">QUERY  what = 5  ·  RESP 25 bytes</pre>
+          <p>
+            <code>relay_drops</code> is back-pressure on a relayed stream, expected under load, and
+            counting it apart is what keeps a busy vendor pipe from reading as lost input. The eight
+            narrowed counters clamp at their max instead of wrapping; the three drop counts are full
+            width and keep counting.
+          </p>
+          <pre class="api-signature">QUERY  what = 5  ·  RESP 29 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -457,15 +462,16 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
               <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
-              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>packets dropped on a full queue, in either direction; should stay 0</td></tr>
+              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports the clone's IN queue could not hold, so the game PC never saw them; should stay 0</td></tr>
               <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
               <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>deepest the TX queue has reached</td></tr>
               <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
               <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
               <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
-              <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>frames the device chip could not take off the link from the host chip; should stay 0</td></tr>
+              <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>input frames the device chip could not take off the link from the host chip; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -474,9 +480,9 @@ const Requests: Component = () => {
             <A href="/library/requests#query-stats"><code>query_stats</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>4096 emits, nothing dropped on either wire:</p>
+          <p>4096 emits, nothing dropped on any of the three wires:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 19 00  | 05     | 00 10 00 00  |
+| A5     | 06     | 00     | 1D 00  | 05     | 00 10 00 00  |
 +--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
 +--------+--------+--------+--------+--------+--------------+
@@ -486,10 +492,10 @@ const Requests: Component = () => {
 | drops  | merges | maxdep | wedges | wakeup | resets | config |
 +--------+--------+--------+--------+--------+--------+--------+
 
-| 00 00 00 00   | 00 00 00 00   | lo hi  |
-+---------------+---------------+--------+
-| link_rx_drops | host_rx_drops | CRC16  |
-+---------------+---------------+--------+`}</pre>
+| 00 00 00 00   | 00 00 00 00   | 00 00 00 00   | lo hi  |
++---------------+---------------+---------------+--------+
+| link_rx_drops | host_rx_drops | relay_drops   | CRC16  |
++---------------+---------------+---------------+--------+`}</pre>
         </Card>
       </div>
 

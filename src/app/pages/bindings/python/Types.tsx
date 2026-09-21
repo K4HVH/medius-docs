@@ -1024,15 +1024,16 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>inject_emits</code></td><td><code>int</code></td><td>injected reports emitted</td></tr>
-                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>dropped TX frames</td></tr>
+                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>reports the clone's IN queue could not hold</td></tr>
                 <tr><td><code>tx_merges</code></td><td><code>int</code></td><td>coalesced TX frames</td></tr>
                 <tr><td><code>tx_maxdepth</code></td><td><code>int</code></td><td>peak TX queue depth</td></tr>
                 <tr><td><code>tx_wedges</code></td><td><code>int</code></td><td>TX stalls</td></tr>
                 <tr><td><code>wakeups</code></td><td><code>int</code></td><td>scheduler wakeups</td></tr>
                 <tr><td><code>reset_count</code></td><td><code>int</code></td><td>resets seen</td></tr>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
-                <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>frames the device chip could not take off the link from the host chip</td></tr>
+                <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
                 <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
+                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>back-pressure on a relayed stream, either direction; load rather than lost input</td></tr>
               </tbody>
             </table>
           </div>

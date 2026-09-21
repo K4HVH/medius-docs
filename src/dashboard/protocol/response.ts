@@ -271,9 +271,10 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_STATS: {
-      // 25 bytes since protocol 9: the eight narrowed counters, then the two full-width inter-chip
-      // link drop counts at offsets 16 and 20.
-      if (payload.length < 25) return null;
+      // 29 bytes since protocol 9: the eight narrowed counters, then the three full-width drop
+      // counts, at payload offsets 17, 21 and 25. The firmware's own table numbers those 16, 20 and
+      // 24, counting from the byte after `what`.
+      if (payload.length < 29) return null;
       return {
         kind: 'stats',
         stats: {
@@ -287,6 +288,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           configCount: u16le(payload, 15),
           linkRxDrops: u32le(payload, 17),
           hostRxDrops: u32le(payload, 21),
+          relayDrops: u32le(payload, 25),
         },
       };
     }
