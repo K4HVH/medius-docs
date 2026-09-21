@@ -464,8 +464,8 @@ const Requests: Component = () => {
               <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
               <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
-              <tr><td>16</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>frames the device chip could not take off the link from the host chip; should stay 0</td></tr>
-              <tr><td>20</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
+              <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>frames the device chip could not take off the link from the host chip; should stay 0</td></tr>
+              <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
