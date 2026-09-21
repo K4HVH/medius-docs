@@ -172,18 +172,42 @@ const DeviceInfo = () => {
           </Show>
           <Show when={stats()}>
             {(s) => (
-              <Row label="Delivery">
+              <>
+                <Row label="Delivery to the PC">
+                  <Show
+                    when={s().txDrops === 0 && s().txWedges === 0}
+                    fallback={
+                      <Chip variant="warning">
+                        {s().txDrops} dropped, {s().txWedges} recovered
+                      </Chip>
+                    }
+                  >
+                    <Chip variant="success">Healthy</Chip>
+                  </Show>
+                </Row>
+                {/* The other half of delivery: input lost on the link between the box's own two
+                    chips, which the counters above never see. One count per direction, so a
+                    nonzero one splits into the rows that name the chip it belongs to. */}
                 <Show
-                  when={s().txDrops === 0 && s().txWedges === 0}
+                  when={s().linkRxDrops > 0 || s().hostRxDrops > 0}
                   fallback={
-                    <Chip variant="warning">
-                      {s().txDrops} dropped, {s().txWedges} recovered
-                    </Chip>
+                    <Row label="Inter-chip link">
+                      <Chip variant="success">Healthy</Chip>
+                    </Row>
                   }
                 >
-                  <Chip variant="success">Healthy</Chip>
+                  <Row label="Link to the device chip">
+                    <Chip variant={s().linkRxDrops > 0 ? 'warning' : 'success'}>
+                      {s().linkRxDrops} dropped
+                    </Chip>
+                  </Row>
+                  <Row label="Link to the host chip">
+                    <Chip variant={s().hostRxDrops > 0 ? 'warning' : 'success'}>
+                      {s().hostRxDrops} dropped
+                    </Chip>
+                  </Row>
                 </Show>
-              </Row>
+              </>
             )}
           </Show>
         </Card>

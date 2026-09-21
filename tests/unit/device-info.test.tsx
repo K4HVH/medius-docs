@@ -41,7 +41,10 @@ const health = (over: Partial<Record<string, boolean>> = {}) => ({
   rateConfident: false, lockOn: false, catchOn: false, kbdAttached: false, ...over,
 });
 const rate = { nativePeriodUs: 0, pollPeriodUs: 1000, confident: false, changeDriven: true };
-const stats = { injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges: 0, wakeups: 0, resetCount: 0, configCount: 0 };
+const stats = {
+  injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges: 0, wakeups: 0, resetCount: 0,
+  configCount: 0, linkRxDrops: 0, hostRxDrops: 0,
+};
 
 afterEach(cleanup);
 
@@ -99,5 +102,42 @@ describe('DeviceInfo: one Capabilities card', () => {
     await findByText('Full clone');
     await findByText('Yes');              // full-clone success chip
     expect(queryByText('Keyboard')).toBeNull();   // no keyboard section, and the kind isn't keyboard
+  });
+});
+
+describe('DeviceInfo: the Performance card', () => {
+  const mouse = () => {
+    mock.health = health({ mouseAttached: true });
+    mock.mouse = { vid: 0x046d, pid: 0xc08b, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: false, hasBos: false, kind: 2, product: 'G502 HERO' };
+    mock.caps = {
+      mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 1 },
+      keyboard: { nKeys: 0, nkro: false, hasConsumer: false, hasSystem: false, hasReportId: false },
+      mouseChangeDriven: false, kbdChangeDriven: false,
+    };
+    mock.rate = { ...rate, nativePeriodUs: 1000, changeDriven: false, confident: true };
+    mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
+  };
+
+  it('a box losing nothing reads healthy on both halves of delivery', async () => {
+    mouse();
+    mock.stats = stats;
+    const { findByText, container } = render(() => <DeviceInfo />);
+    await findByText('Delivery to the PC');
+    await findByText('Inter-chip link');
+    expect([...container.querySelectorAll('.chip__label')].filter((e) => e.textContent === 'Healthy')).toHaveLength(2);
+  });
+
+  it('link drops name the chip each count belongs to', async () => {
+    // A count here is a native report or an injected delta lost between the box's own two chips, so
+    // reading it as the PC-facing tx_drops would point at the wrong wire. The two counts are per
+    // direction, so one row each: a single chip carrying both truncates at the card's width.
+    mouse();
+    mock.stats = { ...stats, linkRxDrops: 4, hostRxDrops: 11 };
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText('Link to the device chip');
+    await findByText('4 dropped');
+    await findByText('Link to the host chip');
+    await findByText('11 dropped');
+    expect(queryByText('Inter-chip link')).toBeNull();
   });
 });

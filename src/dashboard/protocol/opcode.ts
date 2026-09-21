@@ -2,9 +2,10 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// 8 is firmware 3.4.1: RESP(CLIP) has a 31-byte prefix and ends in the packet trigger list, CLIP_TRIGGER
-// takes packet triggers, and rules and triggers match a vendor interrupt OUT packet as VEND_INTR.
-export const PROTO_VER = 8;
+// 9 is firmware 3.4.2: RESP(STATS) is 25 bytes, ending in link_rx_drops and host_rx_drops, one per
+// inter-chip link direction. 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in the packet trigger
+// list, CLIP_TRIGGER taking packet triggers, and a vendor interrupt OUT packet matched as VEND_INTR.
+export const PROTO_VER = 9;
 
 // The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
 // and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been

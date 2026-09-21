@@ -512,7 +512,7 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_transfer_timeout_ms()</code></td><td>The default control-transfer reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version of the loaded library, bumped on any breaking header change; currently <code>8</code>. Compare it with the header's <code>MEDIUS_ABI_VERSION</code> once at <A href="/bindings/c#verify">start-up</A>. On a mismatch, call nothing else: the header's structs are laid out differently from the library's, so rebuild against the header that ships with that library.</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version of the loaded library, bumped on any breaking header change; currently <code>9</code>. Compare it with the header's <code>MEDIUS_ABI_VERSION</code> once at <A href="/bindings/c#verify">start-up</A>. On a mismatch, call nothing else: the header's structs are laid out differently from the library's, so rebuild against the header that ships with that library.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
             </tbody>
           </table>

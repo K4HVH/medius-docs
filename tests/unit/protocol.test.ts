@@ -585,12 +585,11 @@ describe('LOCK command (§3.8)', () => {
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this RESP(CLIP) and CLIP_TRIGGER', () => {
-    // v8 (firmware 3.4.1) widens RESP(CLIP)'s fixed prefix to 31 bytes and appends its packet triggers,
-    // adds packet triggers to CLIP_TRIGGER, and matches a vendor interrupt OUT packet as VEND_INTR. A box
-    // on v7 answers RESP(CLIP) in the older layout and takes no packet trigger; left at 7 the handshake
-    // would hand it the Clip card.
-    expect(PROTO_VER).toBe(8);
+  it('PROTO_VER matches the firmware that speaks this RESP(STATS)', () => {
+    // v9 (firmware 3.4.2) grows RESP(STATS) from 17 bytes to 25, ending in the two inter-chip link
+    // drop counts. Left at 8, the handshake refuses a 3.4.2 box outright, including the connection
+    // that would put it back on an older build.
+    expect(PROTO_VER).toBe(9);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
@@ -1505,10 +1504,12 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(nativeHz(resp.rate)).toBeNull();
   });
 
-  it('STATS (§4.6) with saturated fields and a 32-bit count', () => {
+  it('STATS (§4.6) with saturated fields, a 32-bit count and both link drop counts', () => {
+    // The last eight bytes are the two counters protocol 9 appends: they are full-width and do not
+    // saturate, so a value past what the narrowed fields can hold has to survive the decode.
     const p = new Uint8Array([
       5, 0x04, 0x03, 0x02, 0x01, 0xff, 0xff, 0x0a, 0x00, 0xff, 0x02, 0xff, 0xff, 0x07, 0x00, 0x09,
-      0x00,
+      0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
     ]);
     expect(parseResp(p)).toEqual({
       kind: 'stats',
@@ -1521,6 +1522,8 @@ describe('device-info RESP decoding (v1.4.0)', () => {
         wakeups: 0xffff,
         resetCount: 7,
         configCount: 9,
+        linkRxDrops: 300,
+        hostRxDrops: 65536,
       },
     });
   });
@@ -1530,7 +1533,9 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(parseResp(new Uint8Array([2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // 10 bytes, one short of the header
     expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
     expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
-    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 17
+    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 25
+    // 17 bytes is the protocol-8 layout: enough for the eight counters, short of the two link counts.
+    expect(parseResp(new Uint8Array([5, ...new Array(16).fill(0)]))).toBeNull();
   });
 });
 

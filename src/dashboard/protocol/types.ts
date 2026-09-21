@@ -215,6 +215,11 @@ export interface Stats {
   wakeups: number;
   resetCount: number;
   configCount: number;
+  // Frames an inter-chip link RX ring could not take, one counter per chip. A count here is a native
+  // report or an injected delta lost between the box's own two chips, which nothing downstream sees.
+  // Full-width, so unlike the eight above they keep counting rather than clamping.
+  linkRxDrops: number;
+  hostRxDrops: number;
 }
 
 // Injection override action, shared by INJECT across buttons, keys, and media (§3.2). Wire values

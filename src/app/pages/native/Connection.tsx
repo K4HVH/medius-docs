@@ -36,7 +36,7 @@ const Connection: Component = () => {
               <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
             </li>
             <li>
-              Read <code>proto_ver</code> from that reply and check it equals <code>8</code>.
+              Read <code>proto_ver</code> from that reply and check it equals <code>9</code>.
             </li>
           </ol>
           <table class="api-params">
@@ -44,8 +44,8 @@ const Connection: Component = () => {
               <tr><th>Reply</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>proto_ver == 8</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 8</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
+              <tr><td><code>proto_ver == 9</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 9</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
               <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
             </tbody>
           </table>
@@ -56,7 +56,7 @@ const Connection: Component = () => {
               (<code>1</code> = lock, <code>0</code> = unlock) rather than a{' '}
               <A href="/native/commands/lock#scale">scale</A>.
             </p>
-            <pre class="diagram">{`a proto-8 host talking to a proto-4 box
+            <pre class="diagram">{`a proto-9 host talking to a proto-4 box
 
   scale = 100  (unlock)  ->  state = 100, non-zero  ->  LOCKS it
   scale =   0  (block)   ->  state = 0              ->  UNLOCKS it`}</pre>
@@ -71,7 +71,7 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>the selector byte, echoed back; <code>0x00</code> = <code>VERSION</code></td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>8</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>9</code></td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -110,7 +110,7 @@ const Connection: Component = () => {
               <A href="/library/connection#open"><code>open</code></A> and{' '}
               <A href="/library/connection#open"><code>find</code></A>: it sends{' '}
               <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retries a
-              few times, and checks <code>proto_ver == 8</code> before handing you a working
+              few times, and checks <code>proto_ver == 9</code> before handing you a working
               connection.
             </p>
           </div>

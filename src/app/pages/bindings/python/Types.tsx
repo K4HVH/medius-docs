@@ -1031,6 +1031,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>wakeups</code></td><td><code>int</code></td><td>scheduler wakeups</td></tr>
                 <tr><td><code>reset_count</code></td><td><code>int</code></td><td>resets seen</td></tr>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
+                <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>frames the device chip could not take off the link from the host chip</td></tr>
+                <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
               </tbody>
             </table>
           </div>
@@ -1209,7 +1211,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>percent</code></td><td><code>int</code></td><td>share of the command interval a delta is released across; 0 is the whole delta on the next report</td></tr>
-                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 until the box has learned the host's command period</td></tr>
+                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 whenever nothing is being released across an interval</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
