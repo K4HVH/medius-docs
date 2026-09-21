@@ -207,6 +207,24 @@ const DeviceInfo = () => {
                     </Chip>
                   </Row>
                 </Show>
+                {/* Back-pressure on a relayed vendor or OUT stream. It is load, not lost input, so
+                    it never reads as a fault: warning chips here would make a box carrying a busy
+                    vendor pipe look like one losing the player's reports, which is exactly what a
+                    single counter for both used to do. */}
+                <Row label="Relayed streams">
+                  <Show
+                    when={s().relayDrops > 0}
+                    fallback={<Chip variant="success">Keeping up</Chip>}
+                  >
+                    <Chip variant="info">{s().relayDrops} shed under load</Chip>
+                  </Show>
+                </Row>
+                <Show when={s().relayDrops > 0}>
+                  <p style={muted}>
+                    A vendor or OUT stream offered more than the relay carries. Lost input is the
+                    rows above.
+                  </p>
+                </Show>
               </>
             )}
           </Show>

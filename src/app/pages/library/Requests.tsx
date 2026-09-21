@@ -179,10 +179,12 @@ match r.native_hz() {
 
           <p>
             Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. A nonzero{' '}
-            <code>tx_drops</code> or <code>tx_wedges</code> is the signal that delivery to the PC
-            degraded under load; a nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code>{' '}
-            says input was lost between the box's two chips. The narrowed counters saturate, so a
-            maxed field clamps instead of wrapping; the two drop counts are full width.
+            <code>tx_drops</code> or <code>tx_wedges</code> is the signal that the player's own input
+            slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or{' '}
+            <code>host_rx_drops</code> says it was lost between the box's two chips;{' '}
+            <code>relay_drops</code> is back-pressure on a relayed stream, so it rises under load
+            without any input going missing. The narrowed counters saturate, so a maxed field clamps
+            instead of wrapping; the three drop counts are full width.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -197,6 +199,9 @@ if s.tx_drops > 0 || s.tx_wedges > 0 {
 if s.link_rx_drops > 0 || s.host_rx_drops > 0 {
     eprintln!("input lost on the inter-chip link: {} into the device chip, {} into the host chip",
               s.link_rx_drops, s.host_rx_drops);
+}
+if s.relay_drops > 0 {
+    println!("{} relayed packets shed under load", s.relay_drops);
 }`}</code></pre>
         </Card>
       </div>

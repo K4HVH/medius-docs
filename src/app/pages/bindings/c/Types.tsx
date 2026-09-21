@@ -1033,20 +1033,21 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="stats" data-search-target>
         <Card>
           <CardHeader title="MediusStats" subtitle="Box-side delivery / telemetry counters" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery to the PC degraded under load; a nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means input was lost between the box's two chips.</p>
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's own input slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between the box's two chips; <code>relay_drops</code> is back-pressure on a relayed stream, which is load rather than lost input.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>uint32_t</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports dropped on TX-queue overflow (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports the clone's IN queue could not hold, so the game PC never saw them (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
               <tr><td><code>wakeups</code></td><td><code>uint16_t</code></td><td>Remote-wakeups issued.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>uint16_t</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>uint16_t</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
-              <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
+              <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
             </tbody>
           </table>
         </Card>

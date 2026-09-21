@@ -586,9 +586,9 @@ describe('LOCK command (§3.8)', () => {
   });
 
   it('PROTO_VER matches the firmware that speaks this RESP(STATS)', () => {
-    // v9 (firmware 3.4.2) grows RESP(STATS) from 17 bytes to 25, ending in the two inter-chip link
-    // drop counts. Left at 8, the handshake refuses a 3.4.2 box outright, including the connection
-    // that would put it back on an older build.
+    // v9 (firmware 3.4.2) grows RESP(STATS) from 17 bytes to 29: the two inter-chip link drop
+    // counts, then relay_drops. Left at 8, the handshake refuses a 3.4.2 box outright, including
+    // the connection that would put it back on an older build.
     expect(PROTO_VER).toBe(9);
   });
 
@@ -1504,12 +1504,15 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(nativeHz(resp.rate)).toBeNull();
   });
 
-  it('STATS (§4.6) with saturated fields, a 32-bit count and both link drop counts', () => {
-    // The last eight bytes are the two counters protocol 9 appends: they are full-width and do not
-    // saturate, so a value past what the narrowed fields can hold has to survive the decode.
+  it('STATS (§4.6) with saturated fields, a 32-bit count, both link drop counts and relay drops', () => {
+    // The last twelve bytes are the three counters protocol 9 appends: they are full-width and do
+    // not saturate, so a value past what the narrowed fields can hold has to survive the decode.
+    // relay_drops reads apart from tx_drops, which is the whole reason the field exists: a box
+    // shedding a saturating vendor stream used to report that as the player's own input going
+    // missing.
     const p = new Uint8Array([
       5, 0x04, 0x03, 0x02, 0x01, 0xff, 0xff, 0x0a, 0x00, 0xff, 0x02, 0xff, 0xff, 0x07, 0x00, 0x09,
-      0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
+      0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x70, 0x11, 0x01, 0x00,
     ]);
     expect(parseResp(p)).toEqual({
       kind: 'stats',
@@ -1524,6 +1527,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
         configCount: 9,
         linkRxDrops: 300,
         hostRxDrops: 65536,
+        relayDrops: 70000,
       },
     });
   });
@@ -1533,9 +1537,12 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(parseResp(new Uint8Array([2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // 10 bytes, one short of the header
     expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
     expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
-    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 25
-    // 17 bytes is the protocol-8 layout: enough for the eight counters, short of the two link counts.
+    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 29
+    // 17 bytes is the protocol-8 layout: enough for the eight counters, short of the link counts.
     expect(parseResp(new Uint8Array([5, ...new Array(16).fill(0)]))).toBeNull();
+    // 25 is the layout before relay_drops was split out of tx_drops. Decoding it would leave
+    // relayDrops reading whatever followed the frame.
+    expect(parseResp(new Uint8Array([5, ...new Array(24).fill(0)]))).toBeNull();
   });
 });
 
