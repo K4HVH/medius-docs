@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 8, fw_major: 3, fw_minor: 4, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.4.1"); // Display omits proto_ver
+let v = Version { proto_ver: 9, fw_major: 3, fw_minor: 4, fw_patch: 2, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.2"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -197,8 +197,10 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <CardHeader title="Stats" subtitle="Delivery and telemetry counters" />
           <p>
             Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>.
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery degraded under
-            load. The narrowed fields saturate instead of wrapping.
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery to the PC
+            degraded under load, and a nonzero <code>link_rx_drops</code> or{' '}
+            <code>host_rx_drops</code> means input was lost between the box's two chips. The narrowed
+            fields saturate instead of wrapping; the two drop counts are full width.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -211,6 +213,8 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>wakeups</code></td><td><code>u16</code></td><td>Remote-wakeups issued.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
+              <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
+              <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
             </tbody>
           </table>
         </Card>

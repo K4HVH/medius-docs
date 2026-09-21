@@ -440,8 +440,9 @@ if bearing.is_live() {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
-            <code>ready</code> is false until a profile arms; until then motion is relayed and injection
-            takes the paced fill whatever <code>mode</code> says.
+            <code>ready</code> is false until a profile arms, and while the box's two chips have not
+            yet agreed which holds the motion; until then motion is relayed and injection takes the
+            paced fill whatever <code>mode</code> says.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -462,9 +463,9 @@ if !status.ready {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
-            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code> and
-            until the box has learned the host's command period. In both the whole delta goes out on
-            the next report.
+            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
+            the box has learned the host's command period, and while the box's two chips have not yet
+            agreed which holds the motion. In each the whole delta goes out on the next report.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;

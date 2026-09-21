@@ -158,7 +158,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 8</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 9</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -174,9 +174,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.4.1</code>, protocol <code>8</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.2</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 08     | 03     | 04     | 01     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 09     | 03     | 04     | 02     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -441,10 +441,13 @@ const Requests: Component = () => {
             counters are the only delivery feedback there is.
           </p>
           <p>
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery slipped under
-            load. Counters clamp at their max instead of wrapping around.
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery to the PC
+            slipped under load; a nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code>{' '}
+            means a native report or an injected delta was lost between the box's own two chips. The
+            eight narrowed counters clamp at their max instead of wrapping; the two drop counts are
+            full width and keep counting.
           </p>
-          <pre class="api-signature">QUERY  what = 5  ·  RESP 17 bytes</pre>
+          <pre class="api-signature">QUERY  what = 5  ·  RESP 25 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -461,6 +464,8 @@ const Requests: Component = () => {
               <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
               <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
+              <tr><td>16</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>frames the device chip could not take off the link from the host chip; should stay 0</td></tr>
+              <tr><td>20</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -469,17 +474,22 @@ const Requests: Component = () => {
             <A href="/library/requests#query-stats"><code>query_stats</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>4096 emits, no drops, no wedges:</p>
+          <p>4096 emits, nothing dropped on either wire:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 11 00  | 05     | 00 10 00 00  |
+| A5     | 06     | 00     | 19 00  | 05     | 00 10 00 00  |
 +--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
 +--------+--------+--------+--------+--------+--------------+
 
-| 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| drops  | merges | maxdep | wedges | wakeup | resets | config | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+| 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  |
++--------+--------+--------+--------+--------+--------+--------+
+| drops  | merges | maxdep | wedges | wakeup | resets | config |
++--------+--------+--------+--------+--------+--------+--------+
+
+| 00 00 00 00   | 00 00 00 00   | lo hi  |
++---------------+---------------+--------+
+| link_rx_drops | host_rx_drops | CRC16  |
++---------------+---------------+--------+`}</pre>
         </Card>
       </div>
 
@@ -793,7 +803,8 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <p>
-            Nothing is rendered while <code>ready</code> reads <code>0</code>: motion is relayed and
+            Nothing is rendered while <code>ready</code> reads <code>0</code>, which also covers a box
+            whose two chips have not yet agreed which holds the motion: motion is relayed and
             injection takes the paced fill whatever <code>mode</code> says.
           </p>
           <p>
@@ -815,9 +826,10 @@ const Requests: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code> and
-            while no command period has been learned. In both the whole delta goes out on the next
-            report the box emits.
+            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
+            while no command period has been learned, and while the box's two chips have not yet
+            agreed which holds the motion. In each the whole delta goes out on the next report the
+            box emits.
           </p>
           <p>
             Library binding:{' '}
@@ -1007,17 +1019,17 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.4.1</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.2</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03     | 03     | 04     |
+| A5     | 06     | 01     | 11 00  | 0B     | 03     | 04     | 02     |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | devmaj | devmin | devpat |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 
 +--------+--------+--------+--------+--------+--------+--------+--------+
-| 01     | 02     | 01     | 03     | 03     | 04     | 00     | 02     |
+| 01     | 02     | 01     | 03     | 04     | 02     | 00     | 02     |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | devslt | devsta | hostpr | hstmaj | hstmin | hstpat | hstslt | hststa |
 +--------+--------+--------+--------+--------+--------+--------+--------+

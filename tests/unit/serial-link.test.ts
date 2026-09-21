@@ -69,9 +69,9 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        // [what=0][proto][major][minor][patch][mac 6B]: a 3.4.1 box on the current wire
+        // [what=0][proto][major][minor][patch][mac 6B]: a 3.4.2 box on the current wire
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 2, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -82,7 +82,7 @@ describe('SerialLink', () => {
       protoVer: PROTO_VER,
       fwMajor: 3,
       fwMinor: 4,
-      fwPatch: 1,
+      fwPatch: 2,
       mac: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
       name: '',
     });
@@ -97,7 +97,7 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (gotFlush() && f.ty === FrameType.Query && f.payload[0] === 0) {
         mock.push(
-          encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
+          encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 2, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])),
         );
       }
     };
@@ -232,13 +232,13 @@ describe('SerialLink', () => {
   });
 
   // What each protocol byte a box can answer with gets from this page, each row the firmware that
-  // reports it. A 3.4.0 box has to connect, or the dashboard cannot update it to 3.4.1.
+  // reports it. A 3.4.0 box has to connect, or the dashboard cannot update it to 3.4.2.
   it.each([
     [4, [3, 1, 0], 'refused as old firmware'],
     [5, [3, 2, 0], 'update-only'],
     [6, [3, 3, 4], 'update-only'],
     [7, [3, 4, 0], 'update-only'],
-    [PROTO_VER, [3, 4, 1], 'full'],
+    [PROTO_VER, [3, 4, 2], 'full'],
     [PROTO_VER + 1, [3, 5, 0], 'refused as new firmware'],
   ])('a box on protocol %i (firmware %j) is %s', async (proto, fw, outcome) => {
     const mock = new MockSerialPort();
@@ -519,7 +519,7 @@ describe('SerialLink', () => {
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         // A stale VERSION reply on the same SEQ must be ignored; the HEALTH reply wins.
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0, 0, 0, 0, 0, 0])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 2, 0, 0, 0, 0, 0, 0])));
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x0f, 0x00])));
       }
     };
@@ -534,7 +534,7 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
-        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 1, 0, 0, 0, 0, 0, 0])));
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([0, PROTO_VER, 3, 4, 2, 0, 0, 0, 0, 0, 0])));
       }
       if (f.ty === FrameType.Query && f.payload[0] === 1) {
         mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([1, 0x01, 0x00])));
@@ -543,7 +543,7 @@ describe('SerialLink', () => {
     const link = new SerialLink(asPort(mock));
     await link.open();
     const [v, h] = await Promise.all([link.queryVersion(), link.queryHealth()]);
-    expect(v).toEqual({ protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [0, 0, 0, 0, 0, 0], name: '' });
+    expect(v).toEqual({ protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [0, 0, 0, 0, 0, 0], name: '' });
     expect(h.linkUp).toBe(true);
     await link.close();
   });
@@ -682,8 +682,8 @@ describe('SerialLink', () => {
 });
 
 // The firmware each protocol this port answers with belongs to: 3.1.0 is protocol 4, 3.3.4 is 6 (on the
-// previous control rate), and 3.4.1 is the current wire.
-const RATED_FW: Record<number, number[]> = { 4: [3, 1, 0], 6: [3, 3, 4], [PROTO_VER]: [3, 4, 1] };
+// previous control rate), and 3.4.2 is the current wire.
+const RATED_FW: Record<number, number[]> = { 4: [3, 1, 0], 6: [3, 3, 4], [PROTO_VER]: [3, 4, 2] };
 
 // A port that behaves like Web Serial across a close: its streams exist only while it is open, and the
 // box behind it answers only at the rate its firmware runs the control link at.

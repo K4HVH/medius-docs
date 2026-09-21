@@ -22,15 +22,25 @@ const Architecture: Component = () => {
             <tbody>
               <tr>
                 <td>Host chip</td>
-                <td>Reads the real mouse.</td>
+                <td>
+                  Reads the mouse on <code>USB3</code>, and decides its four relative axes: what an
+                  injected <A href="/native/commands/move">movement</A> comes to, and when it goes
+                  out.
+                </td>
               </tr>
               <tr>
                 <td>Device chip</td>
-                <td>Presents the clone to the PC and merges your input into what it reports.</td>
+                <td>
+                  Presents the clone to the PC, and merges the host chip's answer into the report it
+                  sends.
+                </td>
               </tr>
               <tr>
                 <td>Link</td>
-                <td>Passes data between the two chips.</td>
+                <td>
+                  Carries each report and the motion riding with it one way, and the PC's requests
+                  for the mouse the other.
+                </td>
               </tr>
             </tbody>
           </table>

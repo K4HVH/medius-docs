@@ -56,7 +56,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>8</code>;{' '}
+                  The box replied, but its <code>proto_ver</code> wasn't <code>9</code>;{' '}
                   <code>got</code> carries the reported value. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
                   another protocol. See the <A href="/library/connection">handshake</A>.

@@ -20,8 +20,8 @@ const Update: Component = () => {
         </p>
         <div class="callout callout--info">
           <p>
-            These calls need a box the library can open. A box it refuses, such as a 3.4.0 box on
-            protocol 7 (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>), is updated
+            These calls need a box the library can open. A box it refuses, such as a 3.4.1 box on
+            protocol 8 (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>), is updated
             from the dashboard's <A href="/dashboard/update">Update page</A>.
           </p>
         </div>

@@ -22,11 +22,11 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     updateOnly: () => mock.updateOnly,
     verdict: () => mock.verdict,
     error: () => mock.error,
-    // Update-only is a 3.2.0 box on protocol 5; the full page is a 3.4.1 box on the current wire.
+    // Update-only is a 3.2.0 box on protocol 5; the full page is a 3.4.2 box on the current wire.
     version: () =>
       mock.updateOnly
         ? { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }
-        : { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' },
+        : { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' },
     health: () => null,
     connect: async () => {},
     disconnect: async () => {},
