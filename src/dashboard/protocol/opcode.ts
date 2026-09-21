@@ -8,11 +8,7 @@ export const MAX_PAYLOAD = 512;
 // list, CLIP_TRIGGER taking packet triggers, and a vendor interrupt OUT packet matched as VEND_INTR.
 export const PROTO_VER = 9;
 
-// The oldest wire this page will still open. One-click update arrived with proto 5 (firmware 3.2.0)
-// and everything it uses (QUERY(VERSION), QUERY(FIRMWARE), UPDATE/UPDATE_RESP, LOG) has been
-// unchanged since; only the options moved, at 6. Refusing a proto-5 box outright would lock it out of
-// the one mechanism that brings it up to date. A box between this and PROTO_VER connects for updating
-// only: the rest of the dashboard speaks the current wire and is not offered.
+// The oldest wire this page will still open.
 export const MIN_PROTO_VER = 5;
 
 // INJECT class (the momentary-usage field kind) + MOVE motion (the relative-axis field kind).
@@ -38,9 +34,8 @@ export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 // RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale i16 LE].
 export const LOCK_ENTRY_LEN = 6;
-// The most entries one RESP(LOCKS) carries (§4.8): 2 + 85 × 6 is the frame's payload exactly, so this
-// is what fits rather than a table size. The box fills them in a fixed order and truncates the granular
-// key list with nothing marking the cut, so a larger count is a malformed reply rather than a longer table.
+// The most entries one RESP(LOCKS) carries (§4.8): 2 + 85 × 6 is the frame's payload exactly, so
+// this is what fits rather than a table size.
 export const LOCKS_MAX = 85;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
@@ -76,9 +71,8 @@ export const CLIP_TRIG_MAX = 8;
 export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove
 export const CLIP_TRIG_F_CONSUME = 0x02; // suppress the trigger input from the game
 export const CLIP_TRIG_F_RUN = 0x04; // packet trigger: the verb runs on the first of a run of matching packets
-// A traffic class (4..9) in the class byte makes the binding a packet trigger, keyed by
-// (class, id, dir, mlen, match, mask). The match bytes of the whole set share one pool, which keeps
-// RESP(CLIP) inside one frame.
+// A traffic class (4..9) in the class byte makes the binding a packet trigger, keyed by (class, id,
+// dir, mlen, match, mask).
 export const CLIP_PKT_TRIG_MAX = 8;
 export const CLIP_PKT_MATCH_MAX = 16; // one masked head, as wide as a rewrite rule's
 export const CLIP_PKT_MATCH_POOL = 112;
@@ -113,8 +107,7 @@ export const CLIP_CFG_F_FINALIZED = 0x04;
 export const CLIP_CFG_F_RIDE = 0x08;
 
 // Clip entry tags (§3.11). Tag 0 is a gap run; a content tick's tag is a nonzero field-flags byte,
-// so a fieldless content tick cannot be encoded: it would read back as a gap. The fields follow the
-// tag in the order XY, WHEEL, PAN, EDGES, RAW, XFER, which is not the bit order.
+// so a fieldless content tick cannot be encoded: it would read back as a gap.
 export const CLIP_TAG_GAP = 0x00;
 export const CLIP_F_XY = 0x01;
 export const CLIP_F_WHEEL = 0x02;
@@ -250,9 +243,7 @@ export const CAPS_CD_KBD = 0x02;
 export const RATE_CONFIDENT = 0x01;
 export const RATE_CHANGE_DRIVEN = 0x02;
 
-// REWRITE action (§3.14): what a matched rule does to the packet. A report class can Pass, Drop,
-// Patch, or Replace; the control class adds Answer, Stall, Nak, and the two Reply_* forms that rewrite
-// the device's reply. The box validates the action against the class and refuses a mismatch.
+// REWRITE action (§3.14): what a matched rule does to the packet.
 export enum RewriteAction {
   Pass = 0, // matched a broader rule but leaves the packet untouched
   Drop = 1, // report class: the packet is not delivered
@@ -284,8 +275,7 @@ export const PATCH_APPLY = 0xfe; // re-present the clone with the stored set
 export const PATCH_CLEAR = 0xff; // drop every patch for this device, re-present
 
 // TRANSFORM op (§3.15): what a field transform does. Remap moves a source field into a destination,
-// Swap exchanges two axes. Both MOVE a value, and neither weighs one: how much of a field survives is
-// the lock's (§3.8), whose percent is signed, so -100 there is the inversion and 0 the block.
+// Swap exchanges two axes.
 export enum TransformOp {
   Remap = 0,
   Swap = 1,
@@ -328,9 +318,7 @@ export function transferStatusFromU8(v: number): TransferStatus {
   }
 }
 
-// RESP(REWRITE) (§4.17): a 4-byte scalar header (what + flags + gen + n), then 12 bytes per rule. The
-// summary lays fields out as [cls][id u16][dir][action][mlen][off u16][plen u16][hits u16]; the REWRITE
-// command and RESP(REWRITE_ENTRY) carry [off][mlen] the other way round so a read entry replays as a set.
+// RESP(REWRITE) (§4.17): a 4-byte scalar header (what + flags + gen + n), then 12 bytes per rule.
 export const REWRITE_TAB_MAX = 32; // agrees with the box's REWRITE_TAB_MAX
 export const REWRITE_MATCH_MAX = 16; // the widest masked-match head a rule carries
 export const RESP_REWRITE_HDR = 4;
@@ -382,13 +370,10 @@ export enum FrameType {
 export const EVENT_TS_LEN = 4;
 
 // Byte width of the header every catch event frame shares: ts_us then the clk domain byte (§4.10).
-// The two chips boot independently, so a stamp only means something against another from the same
-// domain, and every event has to say which clock produced it.
 export const EVENT_HDR = EVENT_TS_LEN + 1;
 
 // The CATCH table's size (§3.9). A refused entry is visible by its absence from RESP(CATCH) plus
-// the table-full flag, because CATCH itself has no reply. The clk byte's two values live on the
-// ClockDomain enum rather than here, so there is one vocabulary for them rather than two.
+// the table-full flag, because CATCH itself has no reply.
 export const CATCH_TABLE_MAX = 32;
 
 // RESP(CATCH) flags (§4.9).

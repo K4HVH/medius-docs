@@ -1,6 +1,5 @@
-// Agent-facing serving: Markdown twins (/x.md and Accept: text/markdown on /x)
-// and prerendered HTML, all with Vary: Accept so caches split the variants.
-// Wired into serve.ts after handleFirmwareApi; returns null to fall through.
+// Agent-facing serving: Markdown twins (/x.md and Accept: text/markdown on /x) and prerendered
+// HTML, all with Vary: Accept so caches split the variants.
 import { existsSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 

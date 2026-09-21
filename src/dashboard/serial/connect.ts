@@ -1,7 +1,5 @@
 /// <reference types="w3c-web-serial" />
-// One connect attempt, one verdict. Free of the DOM and of SerialLink so every branch is reachable
-// from a test: the caller supplies how to list, choose and attach to a port, and an attach that fails
-// closes whatever it opened.
+// One connect attempt, one verdict.
 
 import { PROTO_VER, type Version } from '../protocol';
 import { BadProtoVerError, NoReplyError } from './link';
