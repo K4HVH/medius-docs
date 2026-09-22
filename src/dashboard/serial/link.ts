@@ -543,7 +543,7 @@ export class SerialLink {
 
   // The box-wide safety clear (§3.4).
   reset(): Promise<void> {
-    return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array(0)));
+    return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array([0])));
   }
 
   // The same release, and then the box erases its persistent store and reboots (§3.4). The link
