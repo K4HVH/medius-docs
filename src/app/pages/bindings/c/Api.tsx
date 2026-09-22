@@ -161,6 +161,7 @@ medius_device_free(dev);`}</code></pre>
             <tbody>
               <tr><td><code>medius_device_led(MediusDevice *dev, MediusLedTarget target, MediusLedMode mode, uint8_t level)</code></td><td>Drive the status LED. See <A href="/library/led">LED</A>.</td></tr>
               <tr><td><code>medius_device_reset(MediusDevice *dev)</code></td><td>Clear all overrides. See <A href="/library/admin">Admin</A>.</td></tr>
+              <tr><td><code>medius_device_factory_reset(MediusDevice *dev)</code></td><td>Clear all overrides, then the box erases its stored name, options and learned devices and reboots. See <A href="/library/admin#factory-reset">factory_reset</A>.</td></tr>
               <tr><td><code>medius_device_reapply(MediusDevice *dev)</code></td><td>Re-send the active settings.</td></tr>
               <tr><td><code>medius_device_reconnect(MediusDevice *dev)</code></td><td>Rescan, reopen this box, and re-apply held state (<A href="/library/lifecycle#reconnect">reconnect</A>). <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code> when the box answers on another protocol; it stays disconnected.</td></tr>
               <tr><td><code>medius_device_reboot(MediusDevice *dev, MediusRebootTarget target)</code></td><td>Reboot a chip to run or download mode.</td></tr>

@@ -335,6 +335,10 @@ export const PATCHES_F_PENDING = 0x02;
 export const PATCHES_F_REFUSED = 0x04; // the last apply refused a patch (out of range for the served descriptor)
 export const PATCHES_F_FULL = 0x08;
 
+// RESET flag: the box also erases its persistent store and reboots (§3.4). An empty RESET payload
+// is the release on its own, which is what the command has always been.
+export const RST_F_NVS = 0x01;
+
 export enum FrameType {
   Move = 0x01,
   Inject = 0x03,

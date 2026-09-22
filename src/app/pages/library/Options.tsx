@@ -11,7 +11,8 @@ const Options: Component = () => {
         <p>
           Seven box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
-          command for the wire contract.
+          command for the wire contract. To put every one of them back at its default, use{' '}
+          <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
         </p>
         <table class="api-params">
           <thead><tr><th>Option</th><th>Set</th><th>Read</th></tr></thead>
