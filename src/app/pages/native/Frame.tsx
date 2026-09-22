@@ -67,7 +67,7 @@ const Frame: Component = () => {
               <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>4 or 6 bytes</td><td>none</td></tr>
               <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
-              <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>0 or 1 bytes</td><td>none</td></tr>
+              <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 byte</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
               <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>

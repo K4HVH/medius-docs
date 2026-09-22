@@ -23,12 +23,11 @@ const Admin: Component = () => {
             <code>RESET</code> drops all injection and returns the box to plain passthrough.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x04</code>.
           </p>
-          <pre class="api-signature">RESET  0x04  ·  payload 0 or 1 bytes</pre>
+          <pre class="api-signature">RESET  0x04  ·  payload 1 byte</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <p>
-            An optional flags byte. With <code>LEN</code> <code>0</code> the frame is the release
-            described below.
+            A flags byte. <code>0x00</code> is the release described below, on its own.
           </p>
           <div class="api-response-label">FLAGS</div>
           <table class="api-params">
@@ -37,7 +36,10 @@ const Admin: Component = () => {
               <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>The box also erases its persistent store and reboots, returning at its defaults under its MAC-derived name.</td></tr>
             </tbody>
           </table>
-          <p>Any other bit refuses the frame whole, release included.</p>
+          <p>
+            Any other bit refuses the frame whole, release included, and a frame with no payload does
+            nothing: the byte is required, as every other command's payload is.
+          </p>
           <div class="api-response-label">EFFECT</div>
           <p>
             Releases every piece of PC-owned state in one frame: both{' '}
@@ -69,12 +71,12 @@ const Admin: Component = () => {
             binding: <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>A bare <code>RESET</code>, and the same frame carrying the flag:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+
-| A5     | 04     | 00     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+          <p>The release on its own, and the same frame carrying the flag:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
+| A5     | 04     | 00     | 01 00  | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
 | A5     | 04     | 00     | 01 00  | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+
