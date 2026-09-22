@@ -140,6 +140,7 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>dev.led(target, mode, level)</code></td><td>Drive the status LED. See <A href="/library/led">LED</A>.</td></tr>
               <tr><td><code>dev.reset()</code></td><td>Clear all overrides. See <A href="/library/admin">Admin</A>.</td></tr>
+              <tr><td><code>dev.factory_reset()</code></td><td>Clear all overrides, then the box erases its stored name, options and learned devices and reboots. See <A href="/library/admin#factory-reset">factory_reset</A>.</td></tr>
               <tr><td><code>dev.reapply()</code></td><td>Re-send the active settings.</td></tr>
               <tr><td><code>dev.reconnect()</code></td><td>Rescan, reopen this box, and re-apply held state (<A href="/library/lifecycle#reconnect">reconnect</A>). Raises <code>BadProtoVerError</code> when the box answers on another protocol; it stays disconnected.</td></tr>
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>

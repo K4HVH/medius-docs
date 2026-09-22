@@ -42,7 +42,7 @@ describe('dashboard search index', () => {
       'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceEventCatch.tsx',
       'DeviceClip.tsx', 'DeviceLed.tsx', 'DeviceOptions.tsx', 'DeviceInfo.tsx', 'Device.tsx',
       'DeviceTransform.tsx', 'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx',
-      'DeviceRaw.tsx', 'DeviceTransfer.tsx',
+      'DeviceRaw.tsx', 'DeviceTransfer.tsx', 'DeviceFactoryReset.tsx',
     ];
     const titles = new Set<string>();
     for (const f of files) {

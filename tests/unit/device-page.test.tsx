@@ -102,4 +102,38 @@ describe('Device', () => {
       expect(text).toMatch(/Live device health/i);
     });
   });
+
+  it('offers the factory reset beside the settings it erases, and says what goes', async () => {
+    // It sits on this tab and not with the momentary controls, because what it erases is the
+    // persistent half. The copy has to name that cost: the button is not undoable.
+    mock.status = 'connected';
+    mock.updateOnly = false;
+    const { container } = render(() => <Device />);
+    await waitFor(() => {
+      const text = container.textContent ?? '';
+      expect(text).toMatch(/Factory reset/i);
+      expect(text).toMatch(/Erase everything saved on the box/i);
+      expect(text).toMatch(/box name/i);
+      expect(text).toMatch(/learned/i);
+      expect(text).toMatch(/restarts it/i);
+      // it neither disconnects nor acknowledges: the port stays enumerated and RESET has no reply
+      expect(text).not.toMatch(/reconnects on its own/i);
+      expect(text).not.toMatch(/Erased\./i);
+    });
+    const button = Array.from(container.querySelectorAll('button')).find((b) =>
+      /Erase and restart/i.test(b.textContent ?? ''),
+    );
+    expect(button, 'the factory reset needs a button, not just prose').toBeTruthy();
+  });
+
+  it('keeps the factory reset off a box that cannot take the frame', async () => {
+    // An update-only box speaks an older wire with no flags byte on RESET, so the button would
+    // silently do a plain reset instead of what it says.
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    const { container } = render(() => <Device />);
+    await waitFor(() => {
+      expect(container.textContent ?? '').not.toMatch(/Factory reset/i);
+    });
+  });
 });

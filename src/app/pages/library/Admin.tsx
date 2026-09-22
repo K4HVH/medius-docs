@@ -7,11 +7,13 @@ const Admin: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Admin" subtitle="Reboot a chip and return to passthrough" />
+        <CardHeader title="Admin" subtitle="Reset, erase the store, and reboot a chip" />
         <p>
           Box-maintenance calls: <A href="/library/admin#reboot"><code>reboot</code></A> restarts one
-          of the two chips, <A href="/library/admin#reset"><code>reset</code></A> drops the box back to{' '}
-          <A href="/native/injection">passthrough</A>. Both are{' '}
+          of the two chips, <A href="/library/admin#factory-reset"><code>factory_reset</code></A> erases
+          what the box keeps across a reboot, and{' '}
+          <A href="/library/admin#reset"><code>reset</code></A> drops the box back to{' '}
+          <A href="/native/injection">passthrough</A>. All three are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>: send one frame, no reply.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -67,6 +69,49 @@ device.press(Button::LEFT)?;    // hold left down
 device.release(Button::LEFT)?;  // let it back up
 
 device.reset()?;                // drop all of the above, back to passthrough`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="factory-reset" data-search-target>
+        <Card>
+          <CardHeader title="factory_reset" subtitle="Clear all injection, then erase the box's store and reboot" />
+          <pre class="api-signature">fn factory_reset(&self) -&gt; Result&lt;()&gt;</pre>
+          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <p>
+            Everything <A href="/library/admin#reset"><code>reset</code></A> releases, and then the
+            box erases what it keeps across a reboot and restarts.
+          </p>
+
+          <div class="api-response-label">WHAT IT ERASES</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Stored</th><th>After</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Box name</td>
+                <td>The MAC-derived default, as <A href="/library/options#set-name"><code>set_name</code></A> found it on a new box.</td>
+              </tr>
+              <tr>
+                <td><A href="/library/options">Options</A></td>
+                <td>All seven back at their defaults, the imperfect-clone opt-in included.</td>
+              </tr>
+              <tr>
+                <td>Learned per-device data</td>
+                <td>Gone for every device the box has seen, including any <A href="/library/advanced/patch"><code>patch</code></A> set.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame carrying its
+            NVS flag. The clone re-enumerates on the game PC. The control port stays enumerated
+            while the box reboots, so queries time out until it answers again rather than the link
+            dropping; poll one to know it is back.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`device.factory_reset()?;        // back to a box that has learned nothing`}</code></pre>
         </Card>
       </div>
 
