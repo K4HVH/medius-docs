@@ -9,8 +9,8 @@ const Requests: Component = () => {
       <Card>
         <CardHeader title="Requests" subtitle="Query the box for state" />
         <p>
-          <A href="/native/commands/requests#requests"><code>QUERY</code></A> is the only command that
-          gets a reply, a <A href="/native/commands/requests#resp"><code>RESP</code></A>. The{' '}
+          <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets a reply, a{' '}
+          <A href="/native/commands/requests#resp"><code>RESP</code></A>. The{' '}
           <code>what</code> selector picks the state:{' '}
           <A href="/native/commands/requests#version">version</A>,{' '}
           <A href="/native/commands/requests#health">health</A>,{' '}
@@ -22,13 +22,11 @@ const Requests: Component = () => {
           <A href="/native/commands/requests#catch">catch</A> subscription, an{' '}
           <A href="/native/commands/requests#options">option</A>, the buffered{' '}
           <A href="/native/commands/requests#clip">clip</A>, the{' '}
-          <A href="/native/commands/requests#firmware">firmware</A> on both chips, or the{' '}
+          <A href="/native/commands/requests#firmware">firmware</A> on both chips, the{' '}
+          <A href="/native/commands/requests#rewrite">rewrite</A> and{' '}
+          <A href="/native/commands/requests#patches">descriptor-patch</A> tables (each as a summary
+          and as one entry in full), or the{' '}
           <A href="/native/commands/requests#transforms">field-transform table</A>.
-        </p>
-        <p>
-          Four more selectors read the <A href="/library/advanced/rewrite">rewrite</A> and{' '}
-          <A href="/library/advanced/patch">descriptor-patch</A> tables, each as a summary and as
-          one entry in full.
         </p>
       </Card>
 
@@ -39,7 +37,7 @@ const Requests: Component = () => {
             <code>QUERY</code> asks for one piece of state, named by its <code>what</code> byte.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x05</code>.
           </p>
-          <pre class="api-signature">QUERY  0x05  ·  payload 1 byte (2 for OPTIONS)</pre>
+          <pre class="api-signature">QUERY  0x05  ·  payload 1 byte (2 for OPTIONS, REWRITE_ENTRY and PATCH_ENTRY)</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -48,7 +46,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>which state to read (see below)</td></tr>
-              <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>only for <code>what = 9</code> (OPTIONS): which option to read; omitted otherwise</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>which option (<code>what = 9</code>), rule (<code>13</code>) or patch (<code>15</code>); omitted otherwise</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">SELECTORS</div>
@@ -69,18 +67,20 @@ const Requests: Component = () => {
               <tr><td><code>9</code></td><td>A persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
               <tr><td><code>10</code></td><td>The buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
               <tr><td><code>11</code></td><td>Both chips' firmware versions, the slot each runs, and what is staged.</td><td><A href="/native/commands/requests#firmware"><code>FIRMWARE</code></A></td></tr>
-              <tr><td><code>12</code></td><td>The rewrite-rule table, as a summary.</td><td><A href="/library/advanced/rewrite#query-rewrite"><code>REWRITE</code></A></td></tr>
-              <tr><td><code>13</code></td><td>One rewrite rule in full, in the <code>REWRITE</code> command's own shape.</td><td><A href="/library/advanced/rewrite#query-rewrite-entry"><code>REWRITE_ENTRY</code></A></td></tr>
-              <tr><td><code>14</code></td><td>The descriptor-patch set, as a summary.</td><td><A href="/library/advanced/patch#query-patches"><code>PATCHES</code></A></td></tr>
-              <tr><td><code>15</code></td><td>One descriptor patch in full, in the <code>PATCH</code> command's own shape.</td><td><A href="/library/advanced/patch#query-patch-entry"><code>PATCH_ENTRY</code></A></td></tr>
+              <tr><td><code>12</code></td><td>The rewrite-rule table, as a summary.</td><td><A href="/native/commands/requests#rewrite"><code>REWRITE</code></A></td></tr>
+              <tr><td><code>13</code></td><td>One rewrite rule in full, in the <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> command's own shape.</td><td><A href="/native/commands/requests#rewrite-entry"><code>REWRITE_ENTRY</code></A></td></tr>
+              <tr><td><code>14</code></td><td>The descriptor-patch set, as a summary.</td><td><A href="/native/commands/requests#patches"><code>PATCHES</code></A></td></tr>
+              <tr><td><code>15</code></td><td>One descriptor patch in full, in the <A href="/native/commands/patch#patch"><code>PATCH</code></A> command's own shape.</td><td><A href="/native/commands/requests#patch-entry"><code>PATCH_ENTRY</code></A></td></tr>
               <tr><td><code>16</code></td><td>The active field-transform table.</td><td><A href="/native/commands/requests#transforms"><code>TRANSFORMS</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
             The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
-            carrying the same <code>what</code> and the requested data. Every other command is{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+            carrying the same <code>what</code> and the requested data. Besides <code>QUERY</code>, only{' '}
+            <A href="/native/commands/update#update"><code>UPDATE</code></A> and{' '}
+            <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> reply; every other
+            command is <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
           </p>
           <p>
             Library bindings:{' '}
@@ -97,7 +97,11 @@ const Requests: Component = () => {
             <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, the clip{' '}
             <A href="/library/requests#clip-status"><code>status</code></A> query,{' '}
-            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>, and{' '}
+            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>,{' '}
+            <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>,{' '}
+            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>,{' '}
+            <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>,{' '}
+            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>, and{' '}
             <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -168,7 +172,7 @@ const Requests: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The box also sends this unprompted at startup, as a{' '}
+            The box also sends this unprompted at boot and on the first frame it receives, as a{' '}
             <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> identifies the
             same box across replugs and port renumbering. Library binding:{' '}
             <A href="/library/requests#version"><code>query_version</code></A>.
@@ -221,8 +225,8 @@ const Requests: Component = () => {
               <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
               <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming. It says nothing about <em>what</em> is subscribed; read <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> for the table</td></tr>
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
-              <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: at least one <A href="/library/advanced/rewrite">rewrite rule</A> is installed (the table is non-empty)</td></tr>
-              <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: a <A href="/library/advanced/patch">descriptor patch</A> set is applied to the clone</td></tr>
+              <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: at least one <A href="/native/commands/rewrite">rewrite rule</A> is installed (the table is non-empty)</td></tr>
+              <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: the clone is serving a <A href="/native/commands/patch">descriptor-patch</A> set, as <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b0</td></tr>
               <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
             </tbody>
           </table>
@@ -452,7 +456,19 @@ const Requests: Component = () => {
             narrowed counters clamp at their max instead of wrapping; the three drop counts are full
             width and keep counting.
           </p>
-          <pre class="api-signature">QUERY  what = 5  ·  RESP 29 bytes</pre>
+          <p>
+            <code>session</code> counts the times the box released state a host set. A value other
+            than the last one you read means some or all of it is gone, and you set it again.
+          </p>
+          <p>
+            Most releases drop all of it, and two drop part. Turning{' '}
+            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> off drops
+            only rewrite rules, consuming packet triggers and queued clip transfers, unless the toggle
+            also presents the clone again. A configuration switch by the game PC that unbinds a role
+            (the mouse, the keyboard, the consumer control) drops only the locks, injected usages and
+            owed motion held on that role.
+          </p>
+          <pre class="api-signature">QUERY  what = 5  ·  RESP 31 bytes</pre>
           <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <table class="byte-table">
@@ -472,6 +488,7 @@ const Requests: Component = () => {
               <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>input frames the device chip could not take off the link from the host chip; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
               <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame</td></tr>
+              <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of state a host set; wraps at 0xFFFF, so compare it for inequality</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
@@ -479,10 +496,39 @@ const Requests: Component = () => {
             <code>inject_emits</code> counts reports the box emitted from injection alone. Library binding:{' '}
             <A href="/library/requests#query-stats"><code>query_stats</code></A>.
           </p>
+          <div class="api-response-label">SESSION</div>
+          <p>
+            The state is <A href="/native/injection#safety">injection</A>,{' '}
+            <A href="/native/commands/lock">locks</A>,{' '}
+            <A href="/native/commands/catch"><code>CATCH</code></A> subscriptions,{' '}
+            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>,{' '}
+            <A href="/native/commands/transform#clearing">transforms</A>, the{' '}
+            <A href="/native/commands/clip">clip</A> with its settings and triggers, and an{' '}
+            <A href="/native/commands/led"><code>LED</code></A> override. The count is 0 at boot,
+            which the <A href="/native/connection#hello">ready hello</A> announces. One release counts
+            once however many of these it clears. A release of everything counts only if a command
+            other than a <code>QUERY</code> or <code>RESET</code> arrived since the last count.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>Event</th><th>Counts</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>once</td></tr>
+              <tr><td>the inter-chip link drops</td><td>once per outage</td></tr>
+              <tr><td>the real device detaches</td><td>once; the clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
+              <tr><td>another device attaches</td><td>once</td></tr>
+              <tr><td>a <code>PATCH</code> <code>APPLY</code> or <code>CLEAR</code>, or an <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> toggle, that <A href="/native/commands/patch#presentation">presents</A> the clone again</td><td>once</td></tr>
+              <tr><td>an <A href="/native/commands/update">update</A> takes the clone down</td><td>once</td></tr>
+              <tr><td>control-PC <A href="/native/injection#safety">silence</A></td><td>once per silence, when it released anything</td></tr>
+              <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>when it drops rewrite rules, consuming packet triggers or queued clip transfers; a re-clone it causes counts again</td></tr>
+              <tr><td>a configuration switch by the game PC that unbinds a role</td><td>when a host held a lock, an injected usage or owed motion on that role</td></tr>
+              <tr><td>state the box refused on arrival: a rule with the opt-in off, a patch with no device attached</td><td>not counted</td></tr>
+              <tr><td>the host's own clear: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">EXAMPLE</div>
-          <p>4096 emits, nothing dropped on any of the three wires:</p>
+          <p>4096 emits, nothing dropped on any of the three wires, <code>session</code> at 2:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 1D 00  | 05     | 00 10 00 00  |
+| A5     | 06     | 00     | 1F 00  | 05     | 00 10 00 00  |
 +--------+--------+--------+--------+--------+--------------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
 +--------+--------+--------+--------+--------+--------------+
@@ -492,10 +538,10 @@ const Requests: Component = () => {
 | drops  | merges | maxdep | wedges | wakeup | resets | config |
 +--------+--------+--------+--------+--------+--------+--------+
 
-| 00 00 00 00   | 00 00 00 00   | 00 00 00 00   | lo hi  |
-+---------------+---------------+---------------+--------+
-| link_rx_drops | host_rx_drops | relay_drops   | CRC16  |
-+---------------+---------------+---------------+--------+`}</pre>
+| 00 00 00 00   | 00 00 00 00   | 00 00 00 00   | 02 00   | lo hi  |
++---------------+---------------+---------------+---------+--------+
+| link_rx_drops | host_rx_drops | relay_drops   | session | CRC16  |
++---------------+---------------+---------------+---------+--------+`}</pre>
         </Card>
       </div>
 
@@ -721,9 +767,9 @@ const Requests: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = cloning an over-capacity device is allowed</td></tr>
-              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device needs an interrupt-IN endpoint the box can't service</td></tr>
-              <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is over-capacity and was cloned anyway, so one interface is dead</td></tr>
+              <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed</td></tr>
+              <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
             </tbody>
           </table>
           <p>
@@ -900,7 +946,7 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b0 clear, b1 consume, b2 <code>RUN</code></td></tr>
               <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
               <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
-              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it won, saturating, little-endian</td></tr>
+              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it matched as the top-ranked trigger, saturating, little-endian</td></tr>
               <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
             </tbody>
           </table>
@@ -1048,6 +1094,257 @@ const Requests: Component = () => {
         </Card>
       </div>
 
+      <div id="rewrite" data-search-target>
+        <Card>
+          <CardHeader title="REWRITE" subtitle="RESP payload, what = 12" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 12</code>: a summary of the{' '}
+            <A href="/native/commands/rewrite"><code>REWRITE</code></A> table. A four-byte header,
+            then twelve bytes per rule, in table order.
+          </p>
+          <pre class="api-signature">QUERY  what = 12  ·  RESP 4 + 12n bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0C</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>the state bits below</td></tr>
+              <tr><td>2</td><td><code>gen</code></td><td><code>u8</code></td><td>moves when the table changes, not on an identical re-send; see <A href="/native/commands/rewrite#lifecycle">lifecycle</A></td></tr>
+              <tr><td>3</td><td><code>n</code></td><td><code>u8</code></td><td>number of rules that follow, up to 32</td></tr>
+              <tr><td>+</td><td><code>cls</code></td><td><code>u8</code></td><td>per rule: the surface, as <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>the class's address, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/rewrite#actions">action</A>, 0-8</td></tr>
+              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length; here before <code>off</code>, the reverse of the command</td></tr>
+              <tr><td>+</td><td><code>off</code></td><td><code>u16</code></td><td>patch offset, little-endian</td></tr>
+              <tr><td>+</td><td><code>plen</code></td><td><code>u16</code></td><td>payload length, little-endian</td></tr>
+              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>packets this rule matched as the top-ranked rule, a <code>PASS</code> included; saturating at 65535</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: the last add was refused for capacity, a 33rd rule or a payload the 2048-byte pool cannot hold, an overwrite included. The next change to the table clears it: an add, an overwrite, a removal or a clear. An identical re-send is no change, so a keepalive leaves it set</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            A line carries no match, mask or payload bytes; read those with{' '}
+            <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.{' '}
+            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
+            <code>REWRITE_ON</code> (<code>0x0100</code>) while the list is non-empty.
+          </p>
+          <p>
+            The table is PC-owned session state on the{' '}
+            <A href="/native/commands/rewrite#lifecycle">same lifecycle</A> as locks, so an empty
+            list can mean the box released it, which{' '}
+            <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
+            <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>
+            One rule, <code>DROP</code> on <code>EMIT</code> endpoint 1, after 42 hits, with the
+            table not full:
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 10 00  | 0C     | 00     | 01     |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | gen    |
++--------+--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+--------+
+| 01     | 09     | 01 00  | 01     | 01     | 00     |
++--------+--------+--------+--------+--------+--------+
+| n      | cls    | id     | dir    | action | mlen   |
++--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+
+| 00 00  | 00 00  | 2A 00  | lo hi  |
++--------+--------+--------+--------+
+| off    | plen   | hits   | CRC16  |
++--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="rewrite-entry" data-search-target>
+        <Card>
+          <CardHeader title="REWRITE_ENTRY" subtitle="RESP payload, what = 13" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 13</code>: one rule in full. The <code>QUERY</code> carries{' '}
+            <code>[13][index]</code>, where <code>index</code> is the rule's line in{' '}
+            <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A>.
+          </p>
+          <pre class="api-signature">QUERY  what = 13  ·  RESP 11 + 2 x mlen + plen bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0D</td></tr>
+              <tr><td>1</td><td><code>index</code></td><td><code>u8</code></td><td>the index asked for</td></tr>
+              <tr><td>2</td><td><code>cls</code></td><td><code>u8</code></td><td>from here on, the <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload</td></tr>
+              <tr><td>3</td><td><code>id</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>5</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
+              <tr><td>6</td><td><code>state</code></td><td><code>u8</code></td><td>always <code>1</code></td></tr>
+              <tr><td>7</td><td><code>action</code></td><td><code>u8</code></td><td>0-8</td></tr>
+              <tr><td>8</td><td><code>off</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>10</td><td><code>mlen</code></td><td><code>u8</code></td><td>0-16</td></tr>
+              <tr><td>11</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes</td></tr>
+              <tr><td>11+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes</td></tr>
+              <tr><td>11+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>the rest, <code>plen</code> bytes</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            Strip the first two bytes and the rest is a <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload that reinstalls
+            the rule. An index at or past <code>n</code> gets no reply. Library binding:{' '}
+            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Rule 0, the <code>DROP</code> on <code>EMIT</code> endpoint 1:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 01     | 0B 00  | 0D     | 00     | 09     |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | index  | cls    |
++--------+--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+--------+--------+
+| 01 00  | 01     | 01     | 01     | 00 00  | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+--------+
+| id     | dir    | state  | action | off    | mlen   | CRC16  |
++--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="patches" data-search-target>
+        <Card>
+          <CardHeader title="PATCHES" subtitle="RESP payload, what = 14" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 14</code>: a summary of the stored{' '}
+            <A href="/native/commands/patch"><code>PATCH</code></A> set. A three-byte header, then
+            seven bytes per patch, in set order; an overwrite moves a patch to the end.
+          </p>
+          <pre class="api-signature">QUERY  what = 14  ·  RESP 3 + 7n bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0E</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>the state bits below</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of patches that follow, up to 16</td></tr>
+              <tr><td>+</td><td><code>section</code></td><td><code>u8</code></td><td>per patch, as <A href="/native/commands/patch#patch"><code>PATCH</code></A></td></tr>
+              <tr><td>+</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
+              <tr><td>+</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
+              <tr><td>+</td><td><code>offset</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>+</td><td><code>len</code></td><td><code>u16</code></td><td>length, little-endian</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>APPLIED</code>: the clone is serving a non-empty patched set</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>PENDING</code>: the stored set differs from the one the clone serves, in its patches, their bytes or their order: not yet applied, changed or emptied since, refused, or stored with the <A href="/native/commands/patch#gate">opt-in</A> off</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>REFUSED</code>: the stored set failed a <A href="/native/commands/patch#ladder">check</A> at the clone's last presentation and has not changed since, so the clone serves the device unpatched; the <A href="/native/commands/admin#log"><code>LOG</code></A> line names the check. A change to the set, <code>CLEAR</code>, a presentation that does not refuse it, or a detach clears it</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>FULL</code>: the last add was refused for capacity, a 17th patch or bytes the 1024-byte pool cannot hold, an overwrite included; the next change to the set, or <code>CLEAR</code>, clears it</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            A line carries no patch bytes; read those with{' '}
+            <A href="/native/commands/requests#patch-entry"><code>QUERY(PATCH_ENTRY)</code></A>.{' '}
+            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
+            <code>PATCH_ON</code> (<code>0x0200</code>) while b0 is set.
+          </p>
+          <p>
+            The list is the stored set; the clone <A href="/native/commands/patch#presentation">serves</A>{' '}
+            the same one while b1 is clear, and none while b0 is clear. With the device unplugged it
+            is the last attached device's set. Library binding:{' '}
+            <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>
+            One applied patch, <code>bcdDevice</code> in the device descriptor (<code>offset = 12</code>,{' '}
+            <code>len = 2</code>):
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 00     | 0A 00  | 0E     | 01     | 01     |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
++--------+--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+--------+
+| 00     | 00     | 00     | 0C 00  | 02 00  | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| section| cfg    | index  | offset | len    | CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="patch-entry" data-search-target>
+        <Card>
+          <CardHeader title="PATCH_ENTRY" subtitle="RESP payload, what = 15" />
+          <p>
+            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+            <code>what = 15</code>: one patch in full. The <code>QUERY</code> carries{' '}
+            <code>[15][entry]</code>, where <code>entry</code> is the patch's line in{' '}
+            <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A>.
+          </p>
+          <pre class="api-signature">QUERY  what = 15  ·  RESP 7 + len bytes</pre>
+          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0F</td></tr>
+              <tr><td>1</td><td><code>entry</code></td><td><code>u8</code></td><td>the entry asked for</td></tr>
+              <tr><td>2</td><td><code>section</code></td><td><code>u8</code></td><td>from here on, the <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload</td></tr>
+              <tr><td>3</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
+              <tr><td>4</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
+              <tr><td>5</td><td><code>offset</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>7</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the rest, <code>len</code> bytes</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">EFFECT</div>
+          <p>
+            Strip the first two bytes and the rest is a <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload that restores the
+            patch. An entry at or past <code>n</code> gets no reply. Library binding:{' '}
+            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <p>Entry 0, the <code>bcdDevice</code> patch setting <code>0x0200</code>:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+| A5     | 06     | 01     | 09 00  | 0F     | 00     | 00     |
++--------+--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | what   | entry  | section|
++--------+--------+--------+--------+--------+--------+--------+
+
++--------+--------+--------+--------+--------+
+| 00     | 00     | 0C 00  | 00 02  | lo hi  |
++--------+--------+--------+--------+--------+
+| cfg    | index  | offset | bytes  | CRC16  |
++--------+--------+--------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
       <div id="transforms" data-search-target>
         <Card>
           <CardHeader title="TRANSFORMS" subtitle="RESP payload, what = 16" />
@@ -1110,7 +1407,8 @@ const Requests: Component = () => {
           <p>
             The table is PC-owned session state on the{' '}
             <A href="/native/commands/transform#clearing">same lifecycle</A> as locks and the catch
-            subscription, so an empty list can mean the silence timeout took it. Library binding:{' '}
+            subscription, so an empty list can mean the box released it, which{' '}
+            <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
             <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>

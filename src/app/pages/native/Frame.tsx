@@ -47,6 +47,8 @@ const Frame: Component = () => {
             <tbody>
               <tr><td>Ordinary commands</td><td>Only lets you spot a dropped frame.</td></tr>
               <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>The box copies your <code>SEQ</code> onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, so with several requests outstanding the matching <code>SEQ</code> pairs each reply with its request.</td></tr>
+              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>The box copies your <code>SEQ</code> onto the <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.</td></tr>
+              <tr><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>Match an <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A> to its request by the op it echoes. <code>DATA</code> acknowledgements carry a rolling <code>SEQ</code>, because one answers a whole window of chunks.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -68,7 +70,7 @@ const Frame: Component = () => {
               <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
               <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
               <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-              <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 byte</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
+              <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 or 2 bytes</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
               <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
@@ -88,11 +90,11 @@ const Frame: Component = () => {
               <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2 to 508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
               <tr><td><code>0x18</code></td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
-              <tr><td><code>0x19</code></td><td><A href="/library/advanced/raw"><code>RAW</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x1A</code></td><td><A href="/library/advanced/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>varies</td><td><code>TRANSFER_RESP</code></td></tr>
-              <tr><td><code>0x1B</code></td><td><A href="/library/advanced/transfer#transfer"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x1C</code></td><td><A href="/library/advanced/rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x1D</code></td><td><A href="/library/advanced/patch"><code>PATCH</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x19</code></td><td><A href="/native/commands/raw#raw"><code>RAW</code></A></td><td>PC→box</td><td>2 to 512 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1A</code></td><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>9 to 512 bytes</td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td></tr>
+              <tr><td><code>0x1B</code></td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>2 to 506 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1C</code></td><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>9 to 510 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1D</code></td><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>PC→box</td><td>1 to 510 bytes</td><td>none</td></tr>
               <tr><td><code>0x1E</code></td><td><A href="/native/commands/transform#transform"><code>TRANSFORM</code></A></td><td>PC→box</td><td>8 bytes</td><td>none</td></tr>
             </tbody>
           </table>

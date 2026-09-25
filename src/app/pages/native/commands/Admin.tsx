@@ -47,7 +47,9 @@ const Admin: Component = () => {
             <A href="/native/commands/inject"><code>INJECT</code></A> override, every{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A> scale and the{' '}
             <A href="/native/commands/lock#bearing">bearing</A>, the{' '}
-            <A href="/native/commands/catch"><code>CATCH</code></A> subscription table, the loaded{' '}
+            <A href="/native/commands/catch"><code>CATCH</code></A> subscription table, the{' '}
+            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>, the{' '}
+            <A href="/native/commands/transform#clearing">transforms</A>, the loaded{' '}
             <A href="/native/commands/clip"><code>clip</code></A>, and any{' '}
             <A href="/native/commands/led"><code>LED</code></A> override.
           </p>
@@ -62,7 +64,7 @@ const Admin: Component = () => {
             <A href="/native/commands/update">partition</A> and reboots. That takes the box
             name, every <A href="/library/options">option</A>, and everything the box has learned
             about the devices it has seen, including any{' '}
-            <A href="/library/advanced/patch">descriptor patch set</A>. Settings are read into RAM at
+            <A href="/native/commands/patch">descriptor patch set</A>. Settings are read into RAM at
             boot, so the reboot is what puts the defaults back.
           </p>
           <p>

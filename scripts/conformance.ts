@@ -190,7 +190,7 @@ const opcodeCards = allCards.filter(
 derived(
   'missing-payload',
   opcodeCards,
-  ({ c }) => /api-response-label">PAYLOAD</.test(c.body) || /No payload/.test(c.body),
+  ({ c }) => /api-response-label">PAYLOAD( \([^)]*\))?</.test(c.body) || /No payload/.test(c.body),
   ({ f, c }) => [f, lineAt(f, c), `opcode section "${c.title}" states neither a PAYLOAD nor "No payload"`],
 );
 
