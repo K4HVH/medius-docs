@@ -122,16 +122,43 @@ describe('DeviceEventCatch clip transfers', () => {
     ]);
   });
 
-  it('splits a control transaction the same way, and keeps its answer vocabulary', async () => {
-    // 0xff is a transfer status, not an answer a proxied request carries, so CONTROL names nothing for it.
+  it('splits a control transaction the same way, and names the handshake the game PC got', async () => {
     const { log } = await watching();
     const setup = [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00];
     await show(
-      traffic({ cls: CatchClass.Control, flags: 0xfd, bytes: new Uint8Array(setup) }),
-      traffic({ cls: CatchClass.Control, flags: 0xff, bytes: new Uint8Array([...setup, 0x12, 0x01]) }),
+      traffic({ cls: CatchClass.Control, flags: 0x01, bytes: new Uint8Array(setup) }),
+      traffic({ cls: CatchClass.Control, flags: 0x02, bytes: new Uint8Array(setup) }),
+      traffic({ cls: CatchClass.Control, flags: 0x00, bytes: new Uint8Array([...setup, 0x12, 0x01]) }),
     );
-    expect(log()).toContain('control in 0x0 STALL [80 06 00 01 00 00 12 00]');
-    expect(log()).toContain('control in 0x0 [80 06 00 01 00 00 12 00] [12 01]');
+    const bodies = log().split('\n').map((line) => line.replace(/^#\d+ D\+[\d.]+ms {2}/, ''));
+    expect(bodies).toEqual([
+      'control in 0x0 [80 06 00 01 00 00 12 00] [12 01]',
+      'control in 0x0 NAK [80 06 00 01 00 00 12 00]',
+      'control in 0x0 STALL [80 06 00 01 00 00 12 00]',
+    ]);
+  });
+
+  // Bit 7 is the rule bit on the classes a rewrite rule acts at, beside a control handshake or the bulk
+  // bits. A clip transfer's whole byte is its status, so 0xfd there is a stall, never a rule.
+  it('marks a packet a rewrite rule acted on, and only on the classes a rule acts at', async () => {
+    const { log, queryByText, findByText } = await watching();
+    const out = [0x21, 0x09, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00];
+    await show(traffic({ cls: CatchClass.ClipTransfer, dir: Direction.Negative, flags: 0xfd, bytes: new Uint8Array(out) }));
+    expect(log()).toContain('clip-transfer out 0x0 STALL [21 09 00 02 00 00 02 00]');
+    expect(log()).not.toContain('RULE');
+    expect(queryByText(/RULE marks a packet/)).toBeNull();
+
+    await show(
+      traffic({ cls: CatchClass.Control, dir: Direction.Negative, flags: 0x81, bytes: new Uint8Array([...out, 0x01, 0x00]) }),
+      traffic({ cls: CatchClass.HidIn, clk: ClockDomain.Host, flags: 0x80, bytes: new Uint8Array([0x01, 0x02]) }),
+      traffic({ cls: CatchClass.VendorBulk, flags: 0x81, bytes: new Uint8Array([0xaa]) }),
+      traffic({ cls: CatchClass.Emit, flags: 0x00, bytes: new Uint8Array([0x03]) }),
+    );
+    expect(log()).toContain('control out 0x0 STALL RULE [21 09 00 02 00 00 02 00] [01 00]');
+    expect(log()).toContain('hid-in in 0x0 RULE [01 02]');
+    expect(log()).toContain('vendor-bulk in 0x0 end RULE [aa]');
+    expect(log()).toContain('emit in 0x0 [03]');
+    await findByText('RULE marks a packet one of your rewrite rules changed, dropped, answered or refused.');
   });
 
   it('shows a capture cut inside the setup packet as the bytes it is', async () => {

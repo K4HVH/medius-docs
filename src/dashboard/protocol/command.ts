@@ -117,8 +117,8 @@ export function catchPayload(
   return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, dir, state & 0xff, capture & 0xff]);
 }
 
-// OPTION(IMPERFECT) (§3.10): [id=0][allow u8] - 1 opts into cloning an over-capacity device, 0 is
-// faithful-only (default). Persisted in NVS; takes effect on the next clone.
+// OPTION(IMPERFECT) (§3.10): [id=0][allow u8]. 1 clones a device the box can't copy exactly and admits
+// the advanced control layer, 0 is faithful-only (default). Persisted in NVS.
 export function imperfectPayload(allow: boolean): Uint8Array {
   return new Uint8Array([OPT_IMPERFECT, allow ? 1 : 0]);
 }
@@ -341,12 +341,12 @@ export function patchPayload(
   return buf;
 }
 
-// PATCH apply (§3.14): re-present the clone with the stored patch set (the game PC sees one replug).
+// PATCH apply (§3.14): present the clone again with the stored set, when it differs from the one served.
 export function patchApplyPayload(): Uint8Array {
   return new Uint8Array([PATCH_APPLY]);
 }
 
-// PATCH clear (§3.14): drop every patch for this device and re-present unpatched.
+// PATCH clear (§3.14): erase this device's set; a clone serving patches is presented again without them.
 export function patchClearPayload(): Uint8Array {
   return new Uint8Array([PATCH_CLEAR]);
 }

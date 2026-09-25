@@ -126,10 +126,12 @@ const DeviceInfo = () => {
                       <Section title="Clone">
                       <Row label="Full clone">
                         <Show
-                          when={imp().overCapacity}
+                          when={imp().overCapacity || imp().cloneImperfect}
                           fallback={<Chip variant="success">Yes</Chip>}
                         >
-                          <Chip variant="warning">No · 1 input can't be copied</Chip>
+                          <Chip variant="warning">
+                            {imp().overCapacity ? 'No · needs more than the box can serve, or is high speed' : 'No · not an exact copy'}
+                          </Chip>
                         </Show>
                       </Row>
                       <Row label="Serial number">

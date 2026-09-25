@@ -506,8 +506,8 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
   }
 
-  // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta emits on the box's
-  // own clock instead of waiting for a native cursor-motion report to carry it.
+  // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta leaves on the next
+  // report instead of waiting for a native cursor-motion report to carry it.
   moveRelNow(dx: number, dy: number): Promise<void> {
     return this.moveRel(dx, dy, MV_F_NOW);
   }
@@ -593,8 +593,9 @@ export class SerialLink {
     return this.unsubscribeCatch(filterEverything());
   }
 
-  // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted in NVS; the
-  // box reboots itself to re-clone with the new setting. Fire-and-forget.
+  // Opt into (or out of) imperfect clones and the advanced control layer (§3.10). Persisted in NVS. The
+  // device chip reboots to re-clone a device that needs the opt-in, and presents the clone again when
+  // the toggle changes the patch set it serves. Fire-and-forget.
   allowImperfectClones(allow: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), imperfectPayload(allow)));
   }
@@ -846,12 +847,13 @@ export class SerialLink {
     return this.setPatch(section, cfg, index, offset, new Uint8Array(0));
   }
 
-  // Re-present the clone with the stored patch set (the game PC sees one replug). Needs the opt-in.
+  // Present the clone again with the stored patch set, when it differs from the one served (one replug
+  // on the game PC). Needs the opt-in.
   applyPatch(): Promise<void> {
     return this.send(encode(FrameType.Patch, this.nextSeq(), patchApplyPayload()));
   }
 
-  // Drop every patch for this device and re-present unpatched.
+  // Erase this device's patch set. A clone serving patches is presented again without them.
   clearPatch(): Promise<void> {
     return this.send(encode(FrameType.Patch, this.nextSeq(), patchClearPayload()));
   }
