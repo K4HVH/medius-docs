@@ -283,8 +283,7 @@ const DeviceOptions = () => {
           <div id="imperfect-clone" data-search-target>
             <Section title="Imperfect clone">
             <p>
-              Clone a device that needs more inputs than the box can copy, dropping one of them; the box
-              reboots to apply.
+              Clones a device the box can't copy exactly, and unlocks the advanced control tab.
             </p>
             <div style={controls}>
               <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
@@ -301,7 +300,7 @@ const DeviceOptions = () => {
                     {s().allowed ? 'Allowed' : 'Faithful only'}
                   </Chip>
                   <Show when={s().overCapacity}>
-                    <Chip variant="warning">Attached device needs an input the box can't copy</Chip>
+                    <Chip variant="warning">The attached device needs more than the box can serve, or is high speed</Chip>
                   </Show>
                 </div>
               )}

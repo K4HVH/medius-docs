@@ -37,6 +37,11 @@ import {
   PatchSection,
   TransformOp,
   TransferStatus,
+  TRAFFIC_CONTROL_MASK,
+  TRAFFIC_CONTROL_NAK,
+  TRAFFIC_CONTROL_OK,
+  TRAFFIC_CONTROL_STALL,
+  TRAFFIC_F_RULE,
   transferStatusFromU8,
 } from './opcode';
 
@@ -222,6 +227,8 @@ export interface Stats {
   // Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining,
   // or an OUT packet past what the relay carries in one frame.
   relayDrops: number;
+  // The times the box released state a host set. Wraps at 0xFFFF: compare for inequality.
+  session: number;
 }
 
 // Injection override action, shared by INJECT across buttons, keys, and media (§3.2). Wire values
@@ -588,16 +595,18 @@ export interface UsageSnapshot {
 // clone emitted, the bus lifecycle, and the control transfers a clip ran.
 export interface TrafficEvent {
   tsUs: number;
-  // Which chip stamped it. IN traffic and the input classes come from the host chip; OUT traffic,
-  // control, clip transfers, emit and bus are stamped on the device chip at the tap.
+  // Which chip stamped it. The device's IN traffic and the input classes come from the host chip; OUT
+  // traffic, a vendor IN packet RAW or a clip put there, control, clip transfers, emit and bus are
+  // stamped on the device chip at the tap.
   clk: ClockDomain;
   cls: CatchClass;
   // Endpoint address, interface number, or endpoint number, depending on the class.
   id: number;
   // In (device to PC) or Out (PC to device).
   dir: Direction;
-  // Class-specific: end-of-transfer / ZLP bits for VendorBulk, the device's answer for Control, a
-  // TransferStatus for ClipTransfer, the BusEventKind for Bus, 0 otherwise.
+  // Class-specific: the rule bit on every class a rewrite rule acts at, end-of-transfer / ZLP bits for
+  // VendorBulk, the handshake the game PC got for Control, a TransferStatus for ClipTransfer, the
+  // BusEventKind for Bus. Read it through the traffic* helpers below.
   flags: number;
   // The packet's length before capture truncation. Without it a packet cut short by capture and a
   // genuinely short packet are indistinguishable.
@@ -626,6 +635,39 @@ export function trafficSetup(ev: TrafficEvent): Uint8Array | null {
 export function trafficData(ev: TrafficEvent): Uint8Array {
   if (!controlShaped(ev)) return ev.bytes;
   return ev.bytes.length >= 8 ? ev.bytes.subarray(8) : new Uint8Array(0);
+}
+
+// The handshake the game PC received for a control transaction (§4.10), on any control endpoint.
+export enum ControlStatus {
+  Ok = TRAFFIC_CONTROL_OK,
+  // A STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a
+  // request that failed.
+  Stall = TRAFFIC_CONTROL_STALL,
+  // NAKed until the host gave up, on endpoint 0 only: the device never answered, or a Nak rule.
+  Nak = TRAFFIC_CONTROL_NAK,
+  // The one value bits 0-1 carry that no firmware sends. Kept apart so it never reads as a device fault.
+  Other = TRAFFIC_CONTROL_MASK,
+}
+
+// The handshake a Control event reports, or null for any other class.
+export function trafficControlStatus(ev: TrafficEvent): ControlStatus | null {
+  return ev.cls === CatchClass.Control ? ((ev.flags & TRAFFIC_CONTROL_MASK) as ControlStatus) : null;
+}
+
+// The classes a rewrite rule acts at, which are the ones whose flags carry the rule bit.
+const RULED_CLASSES: ReadonlySet<number> = new Set([
+  CatchClass.HidIn,
+  CatchClass.HidOut,
+  CatchClass.VendorInterrupt,
+  CatchClass.VendorBulk,
+  CatchClass.Control,
+  CatchClass.Emit,
+]);
+
+// Whether a rewrite rule at this event's class changed, dropped, answered or refused the packet. A
+// ClipTransfer status or a BusEventKind that happens to have bit 7 set is not the rule bit.
+export function trafficRuleActed(ev: TrafficEvent): boolean {
+  return RULED_CLASSES.has(ev.cls) && (ev.flags & TRAFFIC_F_RULE) !== 0;
 }
 
 // How a clip's control transfer ended, for a ClipTransfer event: the status a TRANSFER returns, Nak
@@ -675,8 +717,8 @@ export interface CatchState {
 }
 
 // Decoded RESP(OPTIONS, IMPERFECT) (§4.14): the imperfect-clone opt-in state, whether the attached device is
-// over-capacity (needs an interrupt-IN endpoint the box can't service), and whether the live clone was
-// cloned over-capacity anyway (one interface is not cloned).
+// over-capacity or high-speed, and whether the live clone is not an exact copy (an opted-in device, a
+// forced rate, or an applied patch set).
 export interface ImperfectStatus {
   allowed: boolean;
   overCapacity: boolean;
@@ -966,7 +1008,7 @@ export interface ClipPacketTrigger {
 }
 
 // One packet trigger as RESP(CLIP) lists it (§4.15): the trigger, which replays as the command that
-// set it, and the packets it has won, saturating at 65535.
+// set it, and the packets it has matched as the top-ranked trigger, saturating at 65535.
 export interface ClipPacketTriggerEntry extends ClipPacketTrigger {
   hits: number;
 }
@@ -1159,8 +1201,10 @@ export interface RewriteRuleInfo {
   hits: number;
 }
 
-// The decoded RESP(REWRITE) table (§4.17). `gen` increments on every change that alters the table, so a
-// host reads one byte to tell whether its own view is current; `tableFull` marks a refused add.
+// The decoded RESP(REWRITE) table (§4.17). `gen` increments on a change that alters the table and on a
+// clear of a non-empty one, and returns to 0 with the table on RESET, detach, link loss, a re-clone and
+// the opt-in turned off. `tableFull` says the last add was refused for capacity, 32 rules or the
+// 2048-byte payload pool; the next change to the table clears it.
 export interface RewriteTable {
   tableFull: boolean;
   gen: number;
@@ -1190,11 +1234,18 @@ export interface PatchInfo {
   len: number;
 }
 
-// The decoded RESP(PATCHES) set (§4.17).
+// The decoded RESP(PATCHES) set (§4.17). `entries` is the stored set; the clone serves a copy taken when
+// it was last presented.
 export interface PatchSet {
+  // The clone serves a non-empty patched set.
   applied: boolean;
+  // The stored set differs from the one the clone serves: not applied yet, changed or emptied since,
+  // refused, or stored with the opt-in off.
   pending: boolean;
+  // The stored set failed a check at the last presentation and is unchanged since, so the clone serves
+  // the device unpatched.
   refused: boolean;
+  // The last add was refused for capacity, 16 patches or the 1024-byte pool; the next change clears it.
   tableFull: boolean;
   entries: PatchInfo[];
 }

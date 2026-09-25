@@ -2,9 +2,9 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// 9 is firmware 3.4.2: RESP(STATS) is 29 bytes, ending in link_rx_drops and host_rx_drops, one per
-// inter-chip link direction, and relay_drops, the relayed-stream back-pressure those and tx_drops
-// used to be conflated with. 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in the packet trigger
+// 9 is firmware 3.4.2: RESP(STATS) is 31 bytes, adding link_rx_drops and host_rx_drops, one per
+// inter-chip link direction, relay_drops, the relayed-stream back-pressure those and tx_drops used
+// to be conflated with, and session, the count of releases of host-set state. 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in the packet trigger
 // list, CLIP_TRIGGER taking packet triggers, and a vendor interrupt OUT packet matched as VEND_INTR.
 export const PROTO_VER = 9;
 
@@ -210,7 +210,7 @@ export const H_KBD_ATT = 0x80;
 // HEALTH is a u16 from proto 7 (RESP(HEALTH) carries [what][flags u16 LE]); the high byte carries the
 // advanced control layer's state and the field-transform flag.
 export const H_REWRITE_ON = 0x0100; // the rewrite-rule table is non-empty
-export const H_PATCH_ON = 0x0200; // a descriptor-patch set is applied to the clone
+export const H_PATCH_ON = 0x0200; // the clone is serving a descriptor-patch set (RESP(PATCHES) b0)
 export const H_TRANSFORM_ON = 0x0400; // a field transform is active
 
 // DEVICE_INFO flags (§4.3).
@@ -247,11 +247,11 @@ export const RATE_CHANGE_DRIVEN = 0x02;
 export enum RewriteAction {
   Pass = 0, // matched a broader rule but leaves the packet untouched
   Drop = 1, // report class: the packet is not delivered
-  Patch = 2, // overwrite the payload bytes at the offset, length preserved
-  Replace = 3, // the packet becomes the payload
+  Patch = 2, // overwrite the payload bytes at the offset, length preserved (control: an OUT data stage)
+  Replace = 3, // the packet becomes the payload (control: overwrites the start of an OUT data stage, wLength kept)
   Answer = 4, // control: answer from the payload without asking the device
   Stall = 5, // control: protocol STALL
-  Nak = 6, // control: NAK to a timeout
+  Nak = 6, // control: NAK to a timeout on EP0, STALL on a control endpoint above it
   ReplyPatch = 7, // control IN: overwrite the device's reply at the offset
   ReplyReplace = 8, // control IN: replace the device's reply with the payload
 }
@@ -271,8 +271,8 @@ export enum PatchSection {
   Bos = 4, // the BOS descriptor (cfg/index ignored)
 }
 export const PATCH_SEC_COUNT = 5;
-export const PATCH_APPLY = 0xfe; // re-present the clone with the stored set
-export const PATCH_CLEAR = 0xff; // drop every patch for this device, re-present
+export const PATCH_APPLY = 0xfe; // present the clone again with the stored set, when it differs from the served one
+export const PATCH_CLEAR = 0xff; // erase this device's set; a clone serving patches is presented again without them
 
 // TRANSFORM op (§3.15): what a field transform does. Remap moves a source field into a destination,
 // Swap exchanges two axes.
@@ -297,10 +297,10 @@ export function patchSectionFromU8(v: number): PatchSection | null {
 // TRANSFER_RESP status (§3.14): what the real device answered a proxied control request with.
 export enum TransferStatus {
   Ok = 0x00,
-  Refused = 0xfc, // the opt-in is off, or the request was malformed or too large
+  Refused = 0xfc, // not sent: opt-in off, malformed, wLength > 504, short OUT data, or the control queue full
   Stall = 0xfd, // the device protocol-STALLed the request
-  Nak = 0xfe, // the device did not answer before the box timed out
-  NoDevice = 0xff, // no device is cloned to run it against
+  Nak = 0xfe, // no answer: device timeout or bus failure, an undeclared control endpoint, or the host chip silent
+  NoDevice = 0xff, // no device is attached
 }
 
 export function transferStatusFromU8(v: number): TransferStatus {
@@ -320,20 +320,22 @@ export function transferStatusFromU8(v: number): TransferStatus {
 
 // RESP(REWRITE) (§4.17): a 4-byte scalar header (what + flags + gen + n), then 12 bytes per rule.
 export const REWRITE_TAB_MAX = 32; // agrees with the box's REWRITE_TAB_MAX
+export const REWRITE_POOL = 2048; // bytes of rule payload the table holds, every rule's together
 export const REWRITE_MATCH_MAX = 16; // the widest masked-match head a rule carries
 export const RESP_REWRITE_HDR = 4;
 export const REWRITE_ENTRY_LEN = 12;
-export const REWRITE_F_FULL = 0x01; // the table is full
+export const REWRITE_F_FULL = 0x01; // the last add was refused for capacity (32 rules or the payload pool); the next change clears it
 
 // RESP(PATCHES) (§4.17): a 3-byte scalar header (what + flags + n), then 7 bytes per patch. `len` is a
 // u16: a report or configuration descriptor patch routinely exceeds 255 bytes.
 export const PATCHES_MAX = 16; // agrees with the box's PATCH_MAX
+export const PATCH_POOL = 1024; // bytes of patch data one device's set holds, every patch's together
 export const RESP_PATCHES_HDR = 3;
 export const PATCHES_ENTRY_LEN = 7;
-export const PATCHES_F_APPLIED = 0x01;
-export const PATCHES_F_PENDING = 0x02;
-export const PATCHES_F_REFUSED = 0x04; // the last apply refused a patch (out of range for the served descriptor)
-export const PATCHES_F_FULL = 0x08;
+export const PATCHES_F_APPLIED = 0x01; // the clone is serving a non-empty patched set
+export const PATCHES_F_PENDING = 0x02; // the stored set differs from the one the clone serves
+export const PATCHES_F_REFUSED = 0x04; // the stored set, unchanged since, failed a check; the clone serves it unpatched
+export const PATCHES_F_FULL = 0x08; // the last add was refused for capacity (16 patches or the pool); the next change clears it
 
 // RESET flag: the box also erases its persistent store and reboots (§3.4). An empty RESET payload
 // is the release on its own, which is what the command has always been.
@@ -387,9 +389,14 @@ export const CATCH_FLAG_TABLE_FULL = 0x01;
 // distinct value because "no estimate" and "the offset happens to be zero" both report offset 0.
 export const CLK_AGE_NONE = 0xffff;
 
-// TRAFFIC_EVENT flags for class VEND_BULK (§4.10).
+// TRAFFIC_EVENT flags for class VEND_BULK (§4.10). Bit 7 is TRAFFIC_F_RULE.
 export const TRAFFIC_BULK_END = 0x01;
 export const TRAFFIC_BULK_ZLP = 0x02;
+
+// TRAFFIC_EVENT flags bit 7 (§4.10), on every class a rewrite rule acts at (HID_IN, HID_OUT, VEND_INTR,
+// VEND_BULK, CONTROL, EMIT): a rule at that class changed the packet, dropped it, answered it or
+// refused it. A Pass rule, or a Patch that changed no byte, leaves it clear.
+export const TRAFFIC_F_RULE = 0x80;
 
 // UPDATE sub-ops (§3.13). Firmware reaches either chip over this port; the host chip's image is
 // relayed over the inter-chip link, which is the only route to it.
@@ -434,11 +441,12 @@ export const UPD_NAMES: Record<number, string> = {
   0x1c: 'untouched',
 };
 
-// TRAFFIC_EVENT flags for class CONTROL (§4.10): the real device's answer to the proxied request.
-// Class CLIP_XFER carries a TransferStatus in the same byte.
+// TRAFFIC_EVENT flags bits 0-1 for class CONTROL (§4.10): the handshake the game PC received. Bit 7 is
+// TRAFFIC_F_RULE. A CLIP_XFER event's whole flags byte is a TransferStatus.
 export const TRAFFIC_CONTROL_OK = 0x00;
-export const TRAFFIC_CONTROL_STALL = 0xfd;
-export const TRAFFIC_CONTROL_NAK = 0xfe;
+export const TRAFFIC_CONTROL_STALL = 0x01;
+export const TRAFFIC_CONTROL_NAK = 0x02; // NAKed until the host gave up, endpoint 0 only
+export const TRAFFIC_CONTROL_MASK = 0x03;
 
 export function frameTypeFromU8(value: number): FrameType | null {
   switch (value) {
