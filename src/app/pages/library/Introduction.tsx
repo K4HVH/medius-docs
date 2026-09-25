@@ -126,6 +126,11 @@ const Introduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
               </Card>
             </A>
+            <A href="/library/transform" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Transform" subtitle="transform, untransform, query_transforms" />
+              </Card>
+            </A>
             <A href="/library/clip" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Clip" subtitle="Preload input, box-clocked playback" />
@@ -146,6 +151,11 @@ const Introduction: Component = () => {
                 <CardHeader title="Admin" subtitle="reset, reboot" />
               </Card>
             </A>
+            <A href="/library/update" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Update" subtitle="update_firmware, stage_firmware, activate_firmware" />
+              </Card>
+            </A>
             <A href="/library/options" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Options" subtitle="imperfect clones, riding, bearing, emit pace, name" />
@@ -153,12 +163,40 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lifecycle" subtitle="reapply, reconnect" />
+                <CardHeader title="Lifecycle" subtitle="reapply, reconnect, session recovery" />
               </Card>
             </A>
             <A href="/library/diagnostics" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Logs & counters" subtitle="Read logs, snapshot counters" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
+
+      <div id="advanced" data-search-target>
+        <Card>
+          <CardHeader title="Advanced control" />
+          <div class="docs-grid">
+            <A href="/library/advanced/raw" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Raw injection" subtitle="raw" />
+              </Card>
+            </A>
+            <A href="/library/advanced/transfer" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Control transfers" subtitle="transfer, transfer_timeout" />
+              </Card>
+            </A>
+            <A href="/library/advanced/rewrite" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Rewrite rules" subtitle="set_rewrite, remove_rewrite, clear_rewrite" />
+              </Card>
+            </A>
+            <A href="/library/advanced/patch" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Descriptor patches" subtitle="set_patch, apply_patch, clear_patch" />
               </Card>
             </A>
           </div>

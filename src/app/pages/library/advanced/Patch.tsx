@@ -14,27 +14,43 @@ const Patch: Component = () => {
         </p>
         <p>
           Unlike a <A href="/library/advanced/rewrite">rewrite rule</A>, a patch is configuration, not
-          session state: it survives a reconnect and clears only on{' '}
-          <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>. The box stores a
+          session state: it survives a reconnect and clears on{' '}
+          <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A> or{' '}
+          <A href="/library/admin#factory-reset"><code>factory_reset</code></A>. The box stores a
           patch whatever the opt-in, and applies the stored set only under it.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
-  descriptors  ------------------->  [ descriptor patches ]  ---enumerate--->  device descriptor
-                                       overwrite what the                      configuration
-                                       clone presents                          report / string / BOS
+  descriptors -------------------->  [ descriptor patches ]  -----enumerate---->  device descriptor
+                                       overwrite what the                         configuration
+                                       clone presents                             report / string / BOS
 
-  HID report   ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN--->  reads report
-  control      <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  GET_DESCRIPTOR, SET_*`}</pre>
+  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
+  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  class, vendor requests`}</pre>
         <div class="callout callout--warning">
           <p>
-            A patch never changes a descriptor's byte count; the box refuses (and logs) an apply that
-            would. Applying is gated on the imperfect-clone opt-in; with{' '}
+            A patch keeps a descriptor's length, except a STRING patch, which replaces the whole
+            string. Patched descriptors that fail the box's clone or{' '}
+            <A href="/native/commands/patch#ladder">consistency checks</A> are served unpatched, and
+            the box logs which check. Applying is gated on the imperfect-clone opt-in; with{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
             off, <code>apply_patch</code> returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
           </p>
         </div>
+        <table class="api-params">
+          <thead><tr><th>The clone is presented again at</th><th>With</th></tr></thead>
+          <tbody>
+            <tr><td><A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A></td><td>The stored set, when it differs from the one the clone serves.</td></tr>
+            <tr><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A> changing the set the clone serves</td><td>Turned on: the stored set, unless the box refused it. Turned off: no patches, when the clone serves some.</td></tr>
+            <tr><td>The device attaching</td><td>The stored set, under the opt-in.</td></tr>
+            <tr><td><A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A></td><td>No patches, when the clone serves some.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Each presentation is a re-clone, which releases the session: the library re-sends what it
+          holds once the new clone is up (<A href="/library/lifecycle#restart">session recovery</A>).
+        </p>
         <p>
           The setters are <A href="/native/injection#fire-and-forget">fire-and-forget</A>;{' '}
           <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A> reads back the
@@ -56,10 +72,16 @@ const Patch: Component = () => {
             </tbody>
           </table>
           <p>
-            A patch is keyed by <code>(section, cfg, index, offset)</code>; setting one whose key exists
-            overwrites it, and empty <code>bytes</code> removes it. Storing is not gated and does not
-            re-present the clone; <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> does.
-            The set belongs to the attached device, so a patch stored with none attached is dropped.
+            A patch is keyed by <code>(section, cfg, index, offset)</code>: setting one whose key exists
+            overwrites it and moves it to the end of the set, unless it holds those bytes already, and
+            empty <code>bytes</code> removes it. The set belongs to the attached device, so a patch
+            stored with none attached is dropped.
+          </p>
+          <p>
+            The clone serves the set it was presented with, STRING patches included, so a stored change
+            reaches the game PC at the next <A href="/library/advanced/patch">presentation</A>. See the
+            native <A href="/native/commands/patch#patch"><code>PATCH</code></A> command for the limits
+            and the wire layout.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Patch, PatchSection};
@@ -82,11 +104,21 @@ device.apply_patch()?;`}</code></pre>
             Re-presents the clone with the stored patch set: one unplug/replug to the game PC. Gated on{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
             with the opt-in off it returns{' '}
-            <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>. A refused
-            apply shows in{' '}
-            <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>'s{' '}
-            <code>refused</code> flag.
+            <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
           </p>
+          <div class="api-response-label">EFFECT</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Stored set</th><th>What the box does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set serves the device unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
+              <tr><td>The set the clone serves</td><td>Nothing.</td></tr>
+              <tr><td>Refused, and unchanged since</td><td>Nothing, though it reads <code>pending</code>: change the set, or clear it.</td></tr>
+              <tr><td>Any, with no device attached</td><td>Nothing.</td></tr>
+            </tbody>
+          </table>
+          <p>See the native <A href="/native/commands/patch#apply">APPLY</A>.</p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.allow_imperfect_clones(true)?;
 device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pre>
@@ -95,13 +127,24 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
 
       <div id="clear-patch" data-search-target>
         <Card>
-          <CardHeader title="clear_patch" subtitle="Drop every patch for this device" />
+          <CardHeader title="clear_patch" subtitle="Erase this device's stored set" />
           <pre class="api-signature">fn clear_patch(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Drops every patch stored for this device (VID:PID) and re-presents the clone unpatched. This
-            is the only thing that clears the stored set; a reconnect does not.
+            Erases every patch stored for this device (VID:PID); with the device unplugged, the set of
+            the last device attached since boot.
           </p>
+          <div class="api-response-label">EFFECT</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>The clone</th><th>What the box does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Serves patches</td><td>Erases the set and re-presents the clone unpatched: one unplug/replug to the game PC, and a re-clone that releases the session.</td></tr>
+              <tr><td>Serves none</td><td>Erases the set and leaves the clone as it is.</td></tr>
+            </tbody>
+          </table>
+          <p>See the native <A href="/native/commands/patch#clear">CLEAR</A>.</p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.clear_patch()?;`}</code></pre>
         </Card>
@@ -120,7 +163,7 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
           <pre><code class="language-rust">{`let set = device.query_patches()?;
 println!("{} patches, applied={} pending={}", set.entries.len(), set.applied, set.pending);
 if set.refused {
-    eprintln!("the last apply was refused: a patched length no longer matched what it serves");
+    eprintln!("the set failed a check and the device is served unpatched; the box log names it");
 }`}</code></pre>
         </Card>
       </div>

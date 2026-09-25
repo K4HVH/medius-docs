@@ -89,7 +89,9 @@ const Tracing: Component = () => {
             its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and carries the same
             text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream yields. A
             recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
-            <code>reason</code>.
+            <code>reason</code>; <A href="/library/lifecycle#restart">session recovery</A> fires{' '}
+            <code>device chip restarted</code> for a boot and{' '}
+            <code>the box released the session</code> for a release.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`// medius::transport=trace, one line per frame:
@@ -97,7 +99,10 @@ const Tracing: Component = () => {
 // a box log, mirrored:
 //   WARN  medius::device: mouse detached device_log=true
 // a recovered link:
-//   INFO  medius::device: reconnected port="/dev/ttyACM0" reason="rescan"`}</code></pre>
+//   INFO  medius::device: reconnected port="/dev/ttyACM0" reason="rescan"
+// a restarted device chip, and a session the box released:
+//   INFO  medius::device: device chip restarted
+//   INFO  medius::device: the box released the session session=3`}</code></pre>
         </Card>
       </div>
 

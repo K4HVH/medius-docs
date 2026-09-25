@@ -51,7 +51,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
               </tr>
               <tr>
                 <td>Library held-state</td>
-                <td>Cleared. The library forgets which overrides it was holding, so a later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing.</td>
+                <td>Cleared. The library forgets which overrides it was holding, so a later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing, and the <A href="/library/lifecycle#restart">session release</A> the box counts for it brings nothing back.</td>
               </tr>
             </tbody>
           </table>
@@ -141,9 +141,10 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the chip you're talking to
 
           <div class="callout callout--info">
             <p>
-              Rebooting the device chip drops the serial link, so the call can return <code>Ok</code>{' '}
-              as the connection goes away. The reader thread auto-reconnects, or force it with{' '}
-              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
+              A rebooted device chip sends the box's hello, and the library re-sends what it holds once
+              the clone is back; see <A href="/library/lifecycle#restart">session recovery</A>. A
+              link that drops meanwhile comes back through the reader thread's auto-reconnect, or force
+              it with <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
             </p>
           </div>
           <p>

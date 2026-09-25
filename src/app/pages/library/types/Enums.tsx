@@ -116,7 +116,7 @@ const Enums: Component = () => {
               <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
               <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
-              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0).</td><td>every control endpoint.</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, class and vendor requests).</td><td>every control endpoint.</td></tr>
               <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
               <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
               <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
@@ -236,7 +236,7 @@ let trace = device.catch_events([
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
-              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Emit on the box's own clock, whatever movement riding is set to.</td></tr>
+              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the next mouse report the box sends, native or its own, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -594,14 +594,14 @@ match stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
             <tbody>
               <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap, when native traffic passed it.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
             <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
             <tbody>
-              <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and the IN direction of the vendor classes.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
+              <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and native IN traffic on the vendor classes.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, a <A href="/library/advanced/raw">raw</A> packet on a vendor IN endpoint, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -619,20 +619,22 @@ match stream.recv()? {
 
       <div id="control-status" data-search-target>
         <Card>
-          <CardHeader title="ControlStatus" subtitle="How a proxied control transfer ended" />
+          <CardHeader title="ControlStatus" subtitle="The handshake the game PC received for a control transaction" />
           <pre class="api-signature">enum ControlStatus {'{'} Ok, Stalled, Naked, Other(u8) {'}'}</pre>
           <p>
             Read it with <code>TrafficEvent::control_status()</code>, which returns{' '}
             <code>None</code> for any class other than{' '}
-            <A href="/library/types/enums#catch-class"><code>Control</code></A>.
+            <A href="/library/types/enums#catch-class"><code>Control</code></A>. It is{' '}
+            <code>flags</code> bits 0-1; bit 7 is{' '}
+            <A href="/library/types/structs#traffic-event"><code>rule_acted()</code></A>.
           </p>
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>flags</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>flags b0-b1</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed.</td></tr>
-              <tr><td><code>Stalled</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
-              <tr><td><code>Naked</code></td><td><code>0xFE</code></td><td>The device NAKed until the transfer timed out.</td></tr>
-              <tr><td><code>Other(u8)</code></td><td>anything else</td><td>A status byte with no variant in this build, carried verbatim.</td></tr>
+              <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
+              <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
+              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only: the device never answered, or a <code>Nak</code> rule.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -825,9 +827,9 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
               <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
-                <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the device: the opt-in is off, the request was malformed, or the data stage was larger than one control frame carries.</td></tr>
+                <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the device: the opt-in is off, the request was malformed, <code>wLength</code> was above 504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
                 <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
-                <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device NAKed to a timeout, or never answered.</td></tr>
+                <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no answer crossed the link within 800 ms.</td></tr>
                 <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No device is attached on the host chip.</td></tr>
                 <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
               </tbody>
@@ -835,9 +837,10 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           </div>
           <div class="callout callout--info">
             <p>
-              <code>Refused</code> is the box turning the request away; <code>Stall</code> and{' '}
-              <code>Nak</code> are the device answering. The difference says whether the request reached
-              the device.
+              <code>Refused</code> is the box turning the request away before the device;{' '}
+              <code>Stall</code> is the device answering. <code>Nak</code> can be either: a device that
+              did not finish, or a request that got no answer. See the native{' '}
+              <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -847,7 +850,7 @@ match reply.status {
     TransferStatus::Ok => println!("{} bytes", reply.data().len()),
     TransferStatus::Stall => println!("device rejected the request"),
     TransferStatus::NoDevice => println!("nothing attached on the host chip"),
-    TransferStatus::Refused => println!("box refused it: opt-in off, malformed, or too large"),
+    TransferStatus::Refused => println!("box refused it: opt-in off, malformed, too large, or queue full"),
     other => println!("other status: {other:?}"),
 }`}</code></pre>
         </Card>
@@ -868,13 +871,13 @@ match reply.status {
                 <tr><th>Variant</th><th>Byte</th><th>Traffic</th><th>id</th></tr>
               </thead>
               <tbody>
-                <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, before the renderer.</td><td>the interface number</td></tr>
+                <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, as it arrived; see <A href="/library/advanced/rewrite#hid-in-motion">motion</A>.</td><td>the interface number</td></tr>
                 <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the endpoint number</td></tr>
                 <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
                 <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
-                <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
+                <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply. On EP0, class and vendor requests only; a control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
                 <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
-                <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every rewritable class at once.</td><td>ignored</td></tr>
+                <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every surface a packet crosses, so a report meets the rule at <code>HidIn</code> and again at <code>Emit</code>. <code>Pass</code>, <code>Patch</code> and <code>Replace</code> only, ranked below every other class.</td><td>ignored</td></tr>
               </tbody>
             </table>
           </div>
@@ -886,10 +889,10 @@ match reply.status {
       </div>
       <div id="rewrite-action" data-search-target>
         <Card>
-          <CardHeader title="RewriteAction" subtitle="What the winning rewrite rule does" />
+          <CardHeader title="RewriteAction" subtitle="What the top-ranked rewrite rule does" />
           <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
           <p>
-            The winning rule's action decides a matched packet's fate. The class column is which{' '}
+            The top-ranked rule's action decides a matched packet's fate. The class column is which{' '}
             <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
             report-only action on a control class, or the reverse, is{' '}
             <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.
@@ -902,11 +905,11 @@ match reply.status {
               <tbody>
                 <tr><td><code>Pass</code></td><td><code>0</code></td><td>any</td><td>no</td><td>Matched, but left untouched: a shadow over a broader rule.</td></tr>
                 <tr><td><code>Drop</code></td><td><code>1</code></td><td>report</td><td>no</td><td>Not delivered. An <code>Emit</code> drop mutes the wire; a <code>HidIn</code> drop drops the device's contribution while injection still emits.</td></tr>
-                <tr><td><code>Patch</code></td><td><code>2</code></td><td>any</td><td>yes</td><td>Overwrite the payload bytes at <code>offset</code>, length preserved.</td></tr>
-                <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload.</td></tr>
+                <tr><td><code>Patch</code></td><td><code>2</code></td><td>any</td><td>yes</td><td>Overwrite the payload bytes at <code>offset</code>, length preserved. On <code>Control</code>, an OUT request's data stage only.</td></tr>
+                <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload. On <code>Control</code>, the payload overwrites the start of an OUT request's data stage and <code>wLength</code> is kept.</td></tr>
                 <tr><td><code>Answer</code></td><td><code>4</code></td><td>control</td><td>yes</td><td>Answer from the payload without asking the device.</td></tr>
                 <tr><td><code>Stall</code></td><td><code>5</code></td><td>control</td><td>no</td><td>Protocol STALL.</td></tr>
-                <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>NAK to a timeout.</td></tr>
+                <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>EP0 NAKs to a timeout; a control endpoint above 0 STALLs.</td></tr>
                 <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the device's reply at <code>offset</code>.</td></tr>
                 <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the device's reply with the payload.</td></tr>
               </tbody>
@@ -930,7 +933,7 @@ match reply.status {
                 <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
                 <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index, counting from 0</td></tr>
                 <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is that index, <code>index</code> the interface number</td></tr>
-                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor (the whole string is replaced).</td><td><code>index</code> is the string index</td></tr>
+                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: up to 127 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
                 <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
               </tbody>
             </table>
