@@ -74,7 +74,7 @@ const Tracing: Component = () => {
           <pre><code class="language-rust">{`// With "medius=debug" and a box that replies on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
-//   INFO  connect: medius::device: connected proto_ver=8 fw_major=3 fw_minor=4 fw_patch=1
+//   INFO  connect: medius::device: connected proto_ver=9 fw_major=3 fw_minor=4 fw_patch=2
 // "connect:" is the span; the rest is the event with its fields.`}</code></pre>
         </Card>
       </div>
@@ -89,7 +89,9 @@ const Tracing: Component = () => {
             its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and carries the same
             text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream yields. A
             recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
-            <code>reason</code>.
+            <code>reason</code>; <A href="/library/lifecycle#restart">session recovery</A> fires{' '}
+            <code>device chip restarted</code> for a boot and{' '}
+            <code>the box released the session</code> for a release.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`// medius::transport=trace, one line per frame:
@@ -97,7 +99,10 @@ const Tracing: Component = () => {
 // a box log, mirrored:
 //   WARN  medius::device: mouse detached device_log=true
 // a recovered link:
-//   INFO  medius::device: reconnected port="/dev/ttyACM0" reason="rescan"`}</code></pre>
+//   INFO  medius::device: reconnected port="/dev/ttyACM0" reason="rescan"
+// a restarted device chip, and a session the box released:
+//   INFO  medius::device: device chip restarted
+//   INFO  medius::device: the box released the session session=3`}</code></pre>
         </Card>
       </div>
 
@@ -120,7 +125,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr now carries the connect span and an INFO event, e.g.:
-//   INFO  connect: medius::device: connected proto_ver=8 fw_major=3 fw_minor=4 fw_patch=1`}</code></pre>
+//   INFO  connect: medius::device: connected proto_ver=9 fw_major=3 fw_minor=4 fw_patch=2`}</code></pre>
         </Card>
       </div>
 
@@ -164,7 +169,7 @@ tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
 // Each event is now a JSON line, e.g.:
-//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":8}}`}</code></pre>
+//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":9}}`}</code></pre>
         </Card>
       </div>
     </>

@@ -65,10 +65,8 @@ function cards(src: string): CardBlock[] {
   }));
 }
 
-// A method section's signature is a CALL you make; a type card's is a declaration or a constructor list.
-// Two shapes with two sets of rules, and conflating them makes every type card look like a broken method
-// section. The types pages are the type reference by definition, and an opcode signature leads with its
-// opcode name, so a byte layout that merely contains "0xA5" is not one.
+// A method section's signature is a CALL you make; a type card's is a declaration or a constructor
+// list.
 const isMethod = (sig: string, file: string, title: string) =>
   !!sig &&
   !file.includes('/types/') &&
@@ -130,8 +128,7 @@ derived(
   ({ f, c }) => [f, lineAt(f, c), `"${c.title}" has a call signature and no api-badge`],
 );
 // A dispatch card declares the frame and its variant cards below carry the examples: INJECT over
-// "class = button", OPTION over its option ids, UPDATE over its five ops, RESP over its selectors. Four
-// pages do it, so it is a shape, not four omissions.
+// "class = button", OPTION over its option ids, UPDATE over its five ops, RESP over its selectors.
 const hasExample = (c: CardBlock) => c.body.includes('api-response-label">EXAMPLE<');
 const isDispatch = ({ f, c }: { f: string; c: CardBlock }) => {
   const cs = cards(srcOf.get(f)!);
@@ -193,7 +190,7 @@ const opcodeCards = allCards.filter(
 derived(
   'missing-payload',
   opcodeCards,
-  ({ c }) => /api-response-label">PAYLOAD</.test(c.body) || /No payload/.test(c.body),
+  ({ c }) => /api-response-label">PAYLOAD( \([^)]*\))?</.test(c.body) || /No payload/.test(c.body),
   ({ f, c }) => [f, lineAt(f, c), `opcode section "${c.title}" states neither a PAYLOAD nor "No payload"`],
 );
 

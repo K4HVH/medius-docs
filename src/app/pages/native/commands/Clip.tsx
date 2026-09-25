@@ -197,9 +197,9 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="Raw and transfer items" subtitle="Raw reports and control transfers on a content tick" />
           <p>
-            A raw item is <A href="/library/advanced/raw"><code>RAW</code></A>'s payload with its length,
+            A raw item is <A href="/native/commands/raw#raw"><code>RAW</code></A>'s payload with its length,
             and a transfer item is{' '}
-            <A href="/library/advanced/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
+            <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
             <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, read as the
             tick plays: with it off the item is discarded and counted in{' '}
             <A href="/native/commands/requests#clip"><code>gated</code></A>.
@@ -240,7 +240,7 @@ const Clip: Component = () => {
             <tbody>
               <tr><td><code>PAUSE</code>, the natural end</td><td>still run</td></tr>
               <tr><td><code>STOP</code>, <code>RESTART</code>, <code>CLEAR</code>, a fault, a <A href="/native/commands/clip#ctrl">hard stop</A></td><td>dropped</td></tr>
-              <tr><td>a <code>0xFE</code> (NAK to timeout) answer that took 250&nbsp;ms or longer</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
+              <tr><td>a <code>0xFE</code> (no answer) status that took 250&nbsp;ms or longer</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
               <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>dropped, each counted in <code>gated</code></td></tr>
             </tbody>
           </table>
@@ -251,7 +251,7 @@ const Clip: Component = () => {
             </thead>
             <tbody>
               <tr><td>a raw IN item on the mouse, keyboard or media report the box injects into</td><td>emitted once in its native state, if that differs from the raw bytes outside the relative fields</td></tr>
-              <tr><td>a raw IN item on any other report</td><td>stays as sent, as after a <code>RAW</code> command</td></tr>
+              <tr><td>a raw IN item on any other report</td><td>stays as sent, as after a <A href="/native/commands/raw#raw"><code>RAW</code></A> command</td></tr>
             </tbody>
           </table>
           <p>
@@ -401,14 +401,17 @@ const Clip: Component = () => {
 silence     a full 1 s of control-PC silence
 RESET       a RESET command
 detach      the cloned device unplugs
-link loss   the inter-chip link drops`}</pre>
+link loss   the inter-chip link drops
+re-clone    the box clones a device again`}</pre>
           <p>
             Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss) also clears the
+            <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss,{' '}
+            <A href="/native/commands/patch#presentation">re-clone</A>) also clears the
             ring, the settings and the trigger set, and a host reloads the clip and its config. The{' '}
             <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> reaches a clip like any
             other injection.
           </p>
+          <p>A hard stop moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Start playback (<code>op = 0</code>, a single-byte payload so <code>LEN = 1</code>):</p>
@@ -432,6 +435,16 @@ link loss   the inter-chip link drops`}</pre>
           </p>
           <pre class="api-signature">CLIP_SET  0x14  ·  payload [id u8][value u8]</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+          <div class="api-response-label">PAYLOAD</div>
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>the setting, as the table below</td></tr>
+              <tr><td>1</td><td><code>value</code></td><td><code>u8</code></td><td>the setting's new value</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">SETTINGS</div>
           <table class="api-params">
             <thead>
@@ -555,7 +568,7 @@ link loss   the inter-chip link drops`}</pre>
           v                                         v
   [ 8 input bindings ]                      [ 8 packet triggers ]
     key (class, id, edge)                     key (class, id, dir, mlen, match, mask)
-    most specific wins the edge               most specific wins the packet
+    the most specific acts on the edge        the most specific acts on the packet
           |                                         |
           +------------> one CLIP_CTRL op <---------+
                          0 START .. 5 TOGGLE, run on the box`}</pre>
@@ -640,8 +653,8 @@ link loss   the inter-chip link drops`}</pre>
             <thead><tr><th>Bit</th><th>Mask</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>b0</code></td><td><code>0x01</code></td><td>present: set to add or replace the trigger, clear to remove it</td></tr>
-              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: drop every packet the trigger wins, as a <code>DROP</code> <A href="/library/advanced/rewrite">rewrite rule</A> would, before a rule sees it</td></tr>
-              <tr><td><code>b2</code></td><td><code>0x04</code></td><td><code>RUN</code>: run the verb on the first of a run of matching packets, where a trigger without it runs the verb on every packet it wins</td></tr>
+              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: drop every packet the trigger is the most specific match for, as a <code>DROP</code> <A href="/native/commands/rewrite">rewrite rule</A> would, before a rule sees it</td></tr>
+              <tr><td><code>b2</code></td><td><code>0x04</code></td><td><code>RUN</code>: run the verb on the first of a run of matching packets, where a trigger without it runs the verb on every packet it is the most specific match for</td></tr>
             </tbody>
           </table>
           <p>
@@ -653,12 +666,12 @@ link loss   the inter-chip link drops`}</pre>
           <pre class="diagram">{`  packet at a surface
         |
         v
-  [ packet triggers ]   read the bytes as they arrived; the most specific one wins
+  [ packet triggers ]   read the bytes as they arrived; only the most specific one acts
         |     |
-        |     +--> the winner's verb, run on the frame clock's next tick
+        |     +--> the top-ranked trigger's verb, run on the frame clock's next tick
         |     +--> consume: the packet stops here
         v
-  [ rewrite table ]     sees the packet next, and picks its own winner
+  [ rewrite table ]     sees the packet next, and applies its own top-ranked rule
         |
         v
   delivered             to the game PC (IN) or the real device (OUT)`}</pre>
@@ -668,8 +681,8 @@ link loss   the inter-chip link drops`}</pre>
               <tr><th>Name</th><th>What the box does</th></tr>
             </thead>
             <tbody>
-              <tr><td>surfaces</td><td>A trigger sees a packet at every surface a <A href="/library/advanced/rewrite">rewrite rule</A> does, ahead of it. The two are independent: one packet can run a verb and win a rule.</td></tr>
-              <tr><td>winner</td><td>The most specific trigger wins the packet, in the rewrite table's order: an exact <code>id</code> over <code>0xFFFF</code>, more masked bits over fewer, a named <code>dir</code> over both, then the earlier one. One verb runs per packet.</td></tr>
+              <tr><td>surfaces</td><td>A trigger sees a packet at every surface a <A href="/native/commands/rewrite">rewrite rule</A> does, ahead of it. The two are independent: one packet can run a verb and then match a rule.</td></tr>
+              <tr><td>rank</td><td>Only the most specific trigger a packet matches acts on it, ranked in the rewrite table's order: an exact <code>id</code> over <code>0xFFFF</code>, more masked bits over fewer, a named <code>dir</code> over both, then the earlier one. One verb runs per packet.</td></tr>
               <tr><td>tick</td><td>The verb runs on the frame clock's next tick, within one frame of the matching packet (1&nbsp;ms at the default pace), and one that starts the clip plays its first entry on that tick.</td></tr>
               <tr><td>consume</td><td>A consumed <code>HID_IN</code> report is the whole report, so a release edge in it reaches the PC with the next report. Consuming needs <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>: turning it off removes the consuming triggers. A trigger that only watches works with it off.</td></tr>
               <tr><td>catch</td><td><A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> reports a consumed <code>HID_IN</code> or OUT packet, whose taps sit ahead of the triggers. A consumed vendor IN packet or emitted report goes unreported.</td></tr>
@@ -677,7 +690,7 @@ link loss   the inter-chip link drops`}</pre>
               <tr><td>first packet</td><td>A run starts on the first matching packet the trigger sees. A trigger whose condition already holds when it is set fires on the next packet, so one matching the at-rest bytes of a device that reports every poll fires once when it is set.</td></tr>
               <tr><td>shadowed</td><td>A trigger a more specific one outranks still tracks its run, so removing that trigger mid-hold fires nothing.</td></tr>
               <tr><td>re-send</td><td>An identical re-send keeps the run and the count. An overwrite starts both again, and a bus reset or a configuration change starts every run again.</td></tr>
-              <tr><td>hits</td><td>Each trigger counts the packets it won, saturating at 65535, read back in <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. An outranked trigger's count stays still while it tracks its run.</td></tr>
+              <tr><td>hits</td><td>Each trigger counts the packets it matched as the top-ranked trigger, saturating at 65535, read back in <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. An outranked trigger's count stays still while it tracks its run.</td></tr>
               <tr><td>lifetime</td><td>Packet triggers are clip config: soft state, cleared with the rest of it on a <A href="/native/commands/clip#ctrl">hard stop</A>.</td></tr>
             </tbody>
           </table>

@@ -69,8 +69,8 @@ const DeviceInject = () => {
   const [detents, setDetents] = createSignal(1);
   const [pans, setPans] = createSignal(1);
   // With movement riding on, an ordinary move waits for a real cursor report to carry it, so nothing
-  // this card sends reaches the game PC while the real mouse sits still. Bypassing sends it on the
-  // box's own clock instead. With riding off it changes nothing.
+  // this card sends reaches the game PC while the real mouse sits still. Bypassing sends it on the next
+  // mouse report the box sends instead, unspread and unrendered.
   const [bypass, setBypass] = createSignal(false);
   const [pick, setPick] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [holds, setHolds] = createSignal<Hold[]>([]);

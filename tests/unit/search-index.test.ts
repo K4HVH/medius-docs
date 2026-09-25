@@ -3,8 +3,7 @@ import { readFileSync } from 'node:fs';
 import { type SearchEntry, entries as allEntries } from '../../src/app/searchIndex';
 
 // The dashboard is excluded from the doc routes, so it never reaches the markdown twins, llms.txt
-// or the MCP surface. Ctrl+K is its only search, which makes this index the single place a renamed
-// card can silently stop being findable.
+// or the MCP surface.
 
 type Entry = SearchEntry;
 
@@ -43,16 +42,13 @@ describe('dashboard search index', () => {
       'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceEventCatch.tsx',
       'DeviceClip.tsx', 'DeviceLed.tsx', 'DeviceOptions.tsx', 'DeviceInfo.tsx', 'Device.tsx',
       'DeviceTransform.tsx', 'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx',
-      'DeviceRaw.tsx', 'DeviceTransfer.tsx',
+      'DeviceRaw.tsx', 'DeviceTransfer.tsx', 'DeviceFactoryReset.tsx',
     ];
     const titles = new Set<string>();
     for (const f of files) {
       const src = readFileSync(`src/app/pages/dashboard/${f}`, 'utf8');
       for (const m of src.matchAll(/CardHeader\s+title="([^"]+)"/g)) titles.add(m[1]);
-      // Options nests its controls as <Section title="...">, not as their own CardHeader. Only the
-      // anchored ones are addressable, and those are exactly the ones an index entry can point at:
-      // without this the oracle could not see Render, Emit rate, Bearing, Movement riding,
-      // Imperfect clone or Box name, and the comment above would be false for six of them.
+      // Options nests its controls as <Section title="...">, not as their own CardHeader.
       for (const m of src.matchAll(
         /<div id="[^"]+" data-search-target>\s*<Section\s+title="([^"]+)"/g,
       )) {

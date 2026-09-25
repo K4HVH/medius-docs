@@ -140,9 +140,7 @@ describe('dashboard poller', () => {
   });
 
   it('polls health on its own, faster than the box clears its state', async () => {
-    // The keepalive is the poller's own job, not a card's. When it lived on a subscription in the
-    // context, deleting that line passed the whole suite while every Control-tab feature silently
-    // stopped surviving more than a second.
+    // The keepalive is the poller's own job, not a card's.
     const { calls, link } = makeLink();
     await createRoot(async (dispose) => {
       createPoller(() => link);
@@ -255,8 +253,7 @@ describe('dashboard poller', () => {
 
   it('a slow reply does not stack overlapping queries', async () => {
     // The old cards used setInterval around an async refresh, so a reply slower than the interval
-    // left several in flight at once and an older one could land last with a stale value. The
-    // interval must be the gap between replies, not a fixed firing rate.
+    // left several in flight at once and an older one could land last with a stale value.
     const REPLY_MS = 300;
     const INTERVAL_MS = 100;
     let inFlight = 0;

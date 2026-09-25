@@ -122,11 +122,11 @@ export const TRAFFIC_CLASS_OPTIONS = REWRITE_CLASSES.map((c) => ({
 }));
 
 export const TRAFFIC_CLASS_BLURB: Record<number, string> = {
-  [CatchClass.HidIn]: 'Reports the device sends the game PC, by interface.',
+  [CatchClass.HidIn]: 'Reports as the device sends them, by interface, before the box changes anything.',
   [CatchClass.HidOut]: 'Reports the game PC sends the device, by endpoint.',
   [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
   [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
-  [CatchClass.Control]: 'Setup packets on a control endpoint.',
+  [CatchClass.Control]: 'Class and vendor requests on EP0, and every request on a control endpoint above it.',
   [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
 };
 

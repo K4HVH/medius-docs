@@ -8,11 +8,11 @@ import {
 } from '../../src/dashboard/serial';
 import { PROTO_VER, type Version } from '../../src/dashboard/protocol';
 
-// Each protocol with the firmware that reports it: 3.1.0 is protocol 4, 3.4.1 is the current wire,
+// Each protocol with the firmware that reports it: 3.1.0 is protocol 4, 3.4.2 is the current wire,
 // and 3.5.0 stands for a later release on the protocol after it.
 const FW: Record<number, [number, number, number]> = {
   4: [3, 1, 0],
-  [PROTO_VER]: [3, 4, 1],
+  [PROTO_VER]: [3, 4, 2],
   [PROTO_VER + 1]: [3, 5, 0],
 };
 const version = (protoVer: number): Version => ({

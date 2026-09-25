@@ -1,9 +1,5 @@
-// Run one box command and keep whether it failed.
-//
-// Every card needs the same three things around a write: a busy flag, the error if it threw, and
-// the follow-up read. Without it the writes were fire-and-forget `void` calls, so a command that
-// never reached the box looked exactly like one that worked. Worst of all on the persistent
-// options, where the value survives a reboot.
+// Run one box command and keep whether it failed. Every card needs the same three things around a
+// write: a busy flag, the error if it threw, and the follow-up read.
 
 import { type Accessor, createSignal } from 'solid-js';
 

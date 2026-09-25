@@ -20,6 +20,7 @@ import {
   CatchClass,
   Direction,
   REWRITE_MATCH_MAX,
+  REWRITE_POOL,
   REWRITE_TAB_MAX,
   RewriteAction,
   rewriteActionName,
@@ -39,18 +40,30 @@ import {
 } from './hex';
 
 // What each action does to a packet that matches. It reads out under its own control, the way the
-// class blurb does.
+// class blurb does. On Control, Patch and Replace reach only the data an Out request carries.
 const ACTION_BLURB: Record<number, string> = {
   [RewriteAction.Pass]: 'Leaves the packet untouched.',
   [RewriteAction.Drop]: 'The packet is not delivered.',
   [RewriteAction.Patch]: 'Overwrites the payload bytes at the offset, keeping the length.',
   [RewriteAction.Replace]: 'The packet becomes the payload.',
   [RewriteAction.Answer]: 'Answers from the payload without asking the device.',
-  [RewriteAction.Stall]: 'Protocol STALL.',
-  [RewriteAction.Nak]: 'No answer, until the host gives up.',
-  [RewriteAction.ReplyPatch]: 'Overwrites the reply at the offset, keeping the length.',
-  [RewriteAction.ReplyReplace]: 'The reply becomes the payload.',
+  [RewriteAction.Stall]: 'Refuses the request with a stall.',
+  [RewriteAction.Nak]: 'On EP0, no answer until the host gives up. On any other control endpoint, a stall.',
+  [RewriteAction.ReplyPatch]: 'Overwrites the reply to an In request at the offset, keeping the length.',
+  [RewriteAction.ReplyReplace]: 'The reply to an In request becomes the payload.',
 };
+const CONTROL_ACTION_BLURB: Partial<Record<number, string>> = {
+  [RewriteAction.Patch]: 'Overwrites the data an Out request carries at the offset, keeping the length.',
+  [RewriteAction.Replace]: 'Overwrites the start of the data an Out request carries, keeping the length.',
+};
+// The box recomputes the mouse's motion on any report it changes, from the report as it arrived, so a
+// motion rewrite on HID in is lost there.
+const classBlurb = (cls: number): string =>
+  cls === CatchClass.HidIn
+    ? `${TRAFFIC_CLASS_BLURB[cls]} Rewrite mouse motion at Emit: the box recomputes it on any report it changes.`
+    : TRAFFIC_CLASS_BLURB[cls];
+const actionBlurb = (cls: number, a: RewriteAction): string =>
+  (cls === CatchClass.Control ? CONTROL_ACTION_BLURB[a] : undefined) ?? ACTION_BLURB[a];
 
 // A report surface can pass, drop, or rewrite a packet; the control class trades Drop for the answer
 // and reply actions. The box validates the pair, so this only keeps the menu honest.
@@ -170,7 +183,7 @@ const DeviceRewrite = () => {
           >
             <div style={label}>Class</div>
             <RadioGroup name="rw-class" value={rwClass()} onChange={chooseClass} options={TRAFFIC_CLASS_OPTIONS} />
-            <p style={{ ...muted, 'margin-top': '4px' }}>{TRAFFIC_CLASS_BLURB[cls()]}</p>
+            <p style={{ ...muted, 'margin-top': '4px' }}>{classBlurb(cls())}</p>
 
             <div style={section}>
               <div style={label}>Which id</div>
@@ -214,7 +227,7 @@ const DeviceRewrite = () => {
             <div style={section}>
               <div style={label}>Action</div>
               <Combobox value={rwAction()} onChange={(v) => setRwAction(one(v))} options={actionOptions()} />
-              <p style={{ ...muted, 'margin-top': '4px' }}>{ACTION_BLURB[action()]}</p>
+              <p style={{ ...muted, 'margin-top': '4px' }}>{actionBlurb(cls(), action())}</p>
             </div>
 
             <div style={{ ...section, ...row }}>
@@ -254,7 +267,8 @@ const DeviceRewrite = () => {
 
             <Show when={rewrite()?.tableFull}>
               <div class="callout callout--warning" style={section}>
-                The box holds {REWRITE_TAB_MAX} rules and the table is full. Remove one before adding another.
+                The box refused the last rule: it holds {REWRITE_TAB_MAX} rules and {REWRITE_POOL} bytes of
+                rule payload. Remove or shorten one, then add it again.
               </div>
             </Show>
             <Show when={cmd.error()}>

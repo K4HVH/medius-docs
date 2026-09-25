@@ -83,24 +83,24 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
           <p>
             A <code>Device</code> holds your overrides past that itself: a background thread
             (<code>medius-keepalive</code>) sends a{' '}
-            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> every{' '}
-            <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held. There's no{' '}
-            <code>keepalive()</code> to call.
+            <A href="/native/commands/requests#stats"><code>QUERY(STATS)</code></A> every{' '}
+            <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held, and re-sends the
+            held catch subscriptions, rewrite rules and transforms, all on its own.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td>Override held</td><td>Keepalive thread runs; the health reply is dropped.</td></tr>
+              <tr><td>Override held</td><td>Keepalive thread runs; the reply's <A href="/library/types/structs#stats"><code>session</code></A> counter says whether the box released the session.</td></tr>
               <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger of either kind is bound.</td></tr>
-              <tr><td>Idle</td><td>Nothing held, so the thread sends nothing.</td></tr>
+              <tr><td>Idle</td><td>Nothing held, so no <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms, every 500 ms after the first 5 s, until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.press(Button::LEFT)?;
 
-// No further calls. The keepalive thread sends QUERY(HEALTH) on its own,
+// No further calls. The keepalive thread sends QUERY(STATS) on its own,
 // so the hold survives past the 1000 ms silence window.
 std::thread::sleep(std::time::Duration::from_secs(5));
 
@@ -110,7 +110,9 @@ device.reset()?;`}</code></pre>
             <A href="/library/inject#inject"><code>press</code></A> or{' '}
             <A href="/library/inject#inject"><code>force_release</code></A>; the library keeps a
             copy. After a dropped link, <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
-            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it.
+            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it, and after a
+            device-chip restart or a <A href="/library/lifecycle#restart">released session</A> the
+            library restores it itself.
           </p>
         </Card>
       </div>

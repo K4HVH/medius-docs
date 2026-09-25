@@ -43,8 +43,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.4.1
-println!("proto {}", v.proto_ver);     // proto 8
+println!("{v}");                       // fw 3.4.2
+println!("proto {}", v.proto_ver);     // proto 9
 println!("name {}", v.name);           // Loki`}</code></pre>
 
           <div class="callout callout--info">
@@ -178,10 +178,15 @@ match r.native_hz() {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>.{' '}
-            <code>inject_emits</code> counts pure-injection reports emitted; a nonzero{' '}
-            <code>tx_drops</code> or <code>tx_wedges</code> is the signal that delivery degraded under
-            load. The narrowed counters saturate, so a maxed field clamps instead of wrapping.
+            Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. A nonzero{' '}
+            <code>tx_drops</code> or <code>tx_wedges</code> is the signal that the player's own input
+            slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or{' '}
+            <code>host_rx_drops</code> says it was lost between the box's two chips;{' '}
+            <code>relay_drops</code> is back-pressure on a relayed stream, so it rises under load
+            without any input going missing. The narrowed counters saturate, so a maxed field clamps
+            instead of wrapping; the three drop counts are full width. <code>session</code> moves each
+            time the box releases some or all of what a host set, which the library watches for{' '}
+            <A href="/library/lifecycle#restart">session recovery</A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -192,6 +197,13 @@ let s = device.query_stats()?;
 println!("{} emits", s.inject_emits);
 if s.tx_drops > 0 || s.tx_wedges > 0 {
     eprintln!("delivery degraded: {} drops, {} wedges", s.tx_drops, s.tx_wedges);
+}
+if s.link_rx_drops > 0 || s.host_rx_drops > 0 {
+    eprintln!("input lost on the inter-chip link: {} into the device chip, {} into the host chip",
+              s.link_rx_drops, s.host_rx_drops);
+}
+if s.relay_drops > 0 {
+    println!("{} relayed packets shed under load", s.relay_drops);
 }`}</code></pre>
         </Card>
       </div>

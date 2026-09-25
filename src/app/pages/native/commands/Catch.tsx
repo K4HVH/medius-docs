@@ -39,8 +39,9 @@ const Catch: Component = () => {
                         +- VEND_INTR  IN        +- CONTROL, CLIP_XFER
                         +- VEND_BULK  IN        +- EMIT   (after inject + lock)
                         +- BTN KEY MEDIA AXIS   +- BUS
-                           at the merge point,
-                           before the lock scale and before injection`}</pre>
+                           at the merge point,  +- VEND_INTR, VEND_BULK  IN
+                           before the lock scale   from RAW or a clip raw entry
+                           and before injection`}</pre>
         <p>
           Addressing doubles as the filter. The control link runs at 6&nbsp;Mbaud and vendor bulk
           alone measures ~250&nbsp;KiB/s through the box, so every class at once cannot be delivered.
@@ -88,7 +89,7 @@ const Catch: Component = () => {
               <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
               <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
-              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
+              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, class and vendor requests)</td><td>every control endpoint</td></tr>
               <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
               <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
@@ -202,8 +203,10 @@ const Catch: Component = () => {
           <div class="api-response-label">LIFECYCLE</div>
           <p>
             A subscription is PC-owned state, cleared by control-PC silence (the ~1&nbsp;s timeout), a{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, a mouse detach, inter-chip
-            link loss, or an explicit unsubscribe.
+            <A href="/native/commands/admin#reset"><code>RESET</code></A>, a mouse detach, a{' '}
+            <A href="/native/commands/patch#presentation">re-clone</A>, inter-chip link loss, or an
+            explicit unsubscribe. Every clear but the unsubscribe moves the{' '}
+            <A href="/native/commands/requests#stats"><code>session</code></A> count.
           </p>
           <p>
             The host library holds an open table past the silence timeout with the same keepalive it uses for injection
@@ -230,8 +233,8 @@ const Catch: Component = () => {
               <tr><th><code>clk</code></th><th>Stamped by</th><th>Which classes</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
-              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
+              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
+              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
           <p>
@@ -420,11 +423,11 @@ const Catch: Component = () => {
               <tr><th>Class</th><th><code>flags</code></th></tr>
             </thead>
             <tbody>
-              <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet</td></tr>
-              <tr><td><code>CONTROL</code></td><td>how the transaction completed: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> NAK to timeout</td></tr>
-              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/library/advanced/transfer#transfer"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> NAK to timeout or no answer, <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
+              <tr><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VEND_INTR</code>, <code>EMIT</code></td><td>b7 <A href="/native/commands/catch#rules"><code>RULE</code></A>; the rest <code>0</code></td></tr>
+              <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
+              <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, or no reply within 4&nbsp;s), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
-              <tr><td>every other class</td><td><code>0</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONTROL EVENTS</div>
@@ -434,11 +437,35 @@ const Catch: Component = () => {
             the data stage went.
           </p>
           <p>
-            A request served from the box's own value cache still produces an event.
+            It is the transaction as the game PC received it, the same on every control endpoint. A
+            request served from the box's own value cache still produces an event.
           </p>
-          <pre class="diagram">{`  bytes = 80 06 00 01 00 00 12 00   12 01 00 02 00 00 00 40 ...
+          <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
           '------ setup (8) ------'   '---- data stage -------'
-          GET_DESCRIPTOR(device)      dir = 1 (IN), flags = 0 (completed OK)`}</pre>
+          HID GET_REPORT(Input)       dir = 1 (IN), flags = 0 (completed OK)`}</pre>
+          <table class="api-params">
+            <thead>
+              <tr><th>Part</th><th>Carries</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
+              <tr><td>IN data</td><td>The reply the PC received: after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> <A href="/native/commands/rewrite#actions">rule</A>, or an <code>ANSWER</code>'s payload.</td></tr>
+              <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device.</td></tr>
+              <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL, or NAK for a <code>NAK</code> rule on endpoint 0; a failed request above endpoint 0 reads STALL, as the clone STALLs it there.</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">NO EVENT</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Transaction</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone answers it itself, and only class and vendor requests are proxied; a configuration or interface change still raises a <code>BUS</code> event</td></tr>
+              <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
+              <tr><td>a request with a data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
+              <tr><td>above endpoint 0, a request a new SETUP on that endpoint replaced, or one the box had no room to queue</td><td>the box abandons it</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">CLIP_XFER EVENTS</div>
           <p>
             <code>CLIP_XFER</code> carries one event per control transfer a{' '}
@@ -508,6 +535,59 @@ const Catch: Component = () => {
 +--------+--------+--------+--------+--------+
 | flags  |true_len| a=iface| b=alt  | CRC16  |
 +--------+--------+--------+--------+--------+`}</pre>
+          <p>
+            A <code>SET_REPORT</code> on EP0 that a <code>STALL</code> rule refused:{' '}
+            <code>flags = 0x81</code>, <code>RULE</code> with handshake <code>1</code> (STALL), and the
+            two data bytes the PC sent (payload <code>LEN = 22</code>):
+          </p>
+          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
+| A5     | 16     | 3E     | 16 00  | 42 42 0F 00 | 01     | 08     | 00 00  | 02     |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
++--------+--------+--------+--------+-------------+--------+--------+--------+--------+
+
++--------+--------+-------------------------+--------+--------+
+| 81     | 0A 00  | 21 09 00 02 00 00 02 00 | 01 00  | lo hi  |
++--------+--------+-------------------------+--------+--------+
+| flags  |true_len| setup                   | data   | CRC16  |
++--------+--------+-------------------------+--------+--------+`}</pre>
+        </Card>
+      </div>
+
+      <div id="rules" data-search-target>
+        <Card>
+          <CardHeader title="Rules and taps" subtitle="Where each tap sits against the rewrite table" />
+          <p>
+            Flags bit 7, <code>RULE</code>, marks a packet a{' '}
+            <A href="/native/commands/rewrite">rewrite rule</A> acted on at the event's own class:
+            changed its bytes, dropped it, answered it or refused it. A <code>PASS</code>, or a{' '}
+            <code>PATCH</code> that changed no byte, leaves it clear.
+          </p>
+          <pre class="diagram">{`  packet
+     |
+     +--> tap: HID_IN, HID_OUT, vendor OUT    the bytes as they arrived
+     v
+  [ rewrite table ]                           RULE set when the rule acts
+     |
+     +--> tap: vendor IN, EMIT                the bytes delivered
+     v
+  game PC or real device`}</pre>
+          <table class="api-params">
+            <thead>
+              <tr><th>Class</th><th>The bytes are</th><th><code>RULE</code> set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>HID_IN</code></td><td>the device's report as it arrived</td><td>a rule then changed or dropped it</td></tr>
+              <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> OUT</td><td>what the PC sent</td><td>a rule then changed or dropped it on its way to the device</td></tr>
+              <tr><td><code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td><td>what the PC receives</td><td>a rule changed it; a packet a rule drops raises no event</td></tr>
+              <tr><td><code>EMIT</code></td><td>the wire</td><td>a rule changed the report, or a report merged into it; never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>; a dropped report raises no event</td></tr>
+              <tr><td><code>CONTROL</code></td><td>the transaction the PC received, on every control endpoint</td><td>a rule rewrote its data, answered it or refused it</td></tr>
+            </tbody>
+          </table>
+          <p>
+            <code>CLIP_XFER</code> carries a transfer status in its flags byte and never{' '}
+            <code>RULE</code>: a clip's transfer runs past every rule.
+          </p>
         </Card>
       </div>
 

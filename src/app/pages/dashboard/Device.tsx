@@ -6,6 +6,7 @@ import { Chip } from '../../../components/display/Chip';
 import { type Health, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
+import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
 import '../../../styles/docs.css';
@@ -166,6 +167,7 @@ const Device = () => {
 
             <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
               <DeviceOptions />
+              <DeviceFactoryReset />
             </Show>
           </div>
         </div>

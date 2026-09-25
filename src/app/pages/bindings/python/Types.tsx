@@ -391,10 +391,10 @@ const Types: Component = () => {
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td><code>IN</code>, <code>OUT</code> or <code>BOTH</code></td></tr>
                 <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs, on the frame clock's next tick</td></tr>
                 <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>bytes</code></td><td>the head compare, one length, at most <code>PKT_MATCH_MAX</code>: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte (default <code>b""</code>, every packet on the address)</td></tr>
-                <tr><td><code>consume</code></td><td><code>bool</code></td><td>drop every packet the trigger wins, ahead of the rewrite table; the box holds one only under <code>allow_imperfect_clones</code>, on any class but <code>CONTROL</code> (default <code>False</code>)</td></tr>
+                <tr><td><code>consume</code></td><td><code>bool</code></td><td>drop every packet the trigger matches as the top-ranked trigger, ahead of the rewrite table; the box holds one only under <code>allow_imperfect_clones</code>, on any class but <code>CONTROL</code> (default <code>False</code>)</td></tr>
                 <tr><td><code>once_per_run</code></td><td><code>bool</code></td><td>run the action on the first packet of a run of matching ones; needs a class other than <code>CONTROL</code>, a concrete <code>id</code>, and <code>IN</code> or <code>OUT</code> (default <code>False</code>)</td></tr>
                 <tr><td><code>selector_len</code></td><td><code>int</code></td><td>with <code>once_per_run</code>, how many leading match bytes select the run's stream, such as a report ID; the rest are the condition (default <code>0</code>)</td></tr>
-                <tr><td><code>hits</code></td><td><code>int</code></td><td>packets the trigger has won since it was bound or overwritten, saturating; read back by <code>query_config()</code>; <code>bind_packet()</code> does not send it and range-checks it to 0..65535 (<code>ValueError</code>)</td></tr>
+                <tr><td><code>hits</code></td><td><code>int</code></td><td>packets the trigger has matched as the top-ranked trigger since it was bound or overwritten, saturating; read back by <code>query_config()</code>; <code>bind_packet()</code> does not send it and range-checks it to 0..65535 (<code>ValueError</code>)</td></tr>
               </tbody>
             </table>
             <div class="api-response-label">EXAMPLE</div>
@@ -494,7 +494,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
                 <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>an endpoint number</td><td>every vendor interrupt endpoint</td></tr>
                 <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>an endpoint number</td><td>every vendor bulk endpoint</td></tr>
-                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
+                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, class and vendor requests)</td><td>every control endpoint</td></tr>
                 <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>the bus lifecycle</td></tr>
                 <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/bindings/python/api#clip">clip</A>'s transfer ran on</td><td>every control endpoint</td></tr>
@@ -580,7 +580,7 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               </tbody>
             </table>
             <p>
-              The winning entry supplies the <code>capture</code>; the ranking that picks it is on{' '}
+              The top-ranked entry supplies the <code>capture</code>; the ranking that picks it is on{' '}
               <A href="/native/commands/catch#matching">The table</A>.
             </p>
             <p>
@@ -646,8 +646,8 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Stamped</th><th>Covers</th></tr></thead>
               <tbody>
-                <tr><td><code>HOST_CHIP</code></td><td><code>0</code></td><td>in USB interrupt context, when the real device's transfer completed</td><td>motion, usages, <code>HID_IN</code>, and IN transfers on <code>VENDOR_INTERRUPT / VENDOR_BULK</code></td></tr>
-                <tr><td><code>DEVICE_CHIP</code></td><td><code>1</code></td><td>at the tap on the clone side</td><td><code>HID_OUT</code>, every OUT transfer, and <code>CONTROL / EMIT / BUS / CLIP_TRANSFER</code></td></tr>
+                <tr><td><code>HOST_CHIP</code></td><td><code>0</code></td><td>in USB interrupt context, when the real device's transfer completed</td><td>motion, usages, <code>HID_IN</code>, and native IN transfers on <code>VENDOR_INTERRUPT / VENDOR_BULK</code></td></tr>
+                <tr><td><code>DEVICE_CHIP</code></td><td><code>1</code></td><td>at the tap on the clone side</td><td><code>HID_OUT</code>, every OUT transfer, a raw packet on a vendor IN endpoint, and <code>CONTROL / EMIT / BUS / CLIP_TRANSFER</code></td></tr>
               </tbody>
             </table>
             <p>
@@ -739,7 +739,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a real cursor move to carry the delta (the default)</td></tr>
-                <tr><td><code>NOW</code></td><td><code>1</code></td><td>emit on the box's own clock, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
+                <tr><td><code>NOW</code></td><td><code>1</code></td><td>leave on the next mouse report the box sends, native or its own, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
               </tbody>
             </table>
           </div>
@@ -1024,13 +1024,17 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>inject_emits</code></td><td><code>int</code></td><td>injected reports emitted</td></tr>
-                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>dropped TX frames</td></tr>
+                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>reports the clone's IN queue could not hold</td></tr>
                 <tr><td><code>tx_merges</code></td><td><code>int</code></td><td>coalesced TX frames</td></tr>
                 <tr><td><code>tx_maxdepth</code></td><td><code>int</code></td><td>peak TX queue depth</td></tr>
                 <tr><td><code>tx_wedges</code></td><td><code>int</code></td><td>TX stalls</td></tr>
                 <tr><td><code>wakeups</code></td><td><code>int</code></td><td>scheduler wakeups</td></tr>
                 <tr><td><code>reset_count</code></td><td><code>int</code></td><td>resets seen</td></tr>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
+                <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
+                <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
+                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>back-pressure on a relayed stream, either direction; load rather than lost input</td></tr>
+                <tr><td><code>session</code></td><td><code>int</code></td><td>the times the box released some or all of the session state a host set; 0 at boot, wraps, so compare for inequality; the library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
               </tbody>
             </table>
           </div>
@@ -1168,7 +1172,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>allowed</code></td><td><code>bool</code></td><td>imperfect clones opted in</td></tr>
-                <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>mouse exceeds clone capacity</td></tr>
+                <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>device exceeds clone capacity</td></tr>
                 <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>the live clone is imperfect</td></tr>
               </tbody>
             </table>
@@ -1209,7 +1213,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>percent</code></td><td><code>int</code></td><td>share of the command interval a delta is released across; 0 is the whole delta on the next report</td></tr>
-                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 until the box has learned the host's command period</td></tr>
+                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 whenever nothing is being released across an interval</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
@@ -1224,6 +1228,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>frames_rx</code></td><td><code>int</code></td><td>host-side frames received</td></tr>
                 <tr><td><code>crc_drops</code></td><td><code>int</code></td><td>frames dropped on CRC</td></tr>
                 <tr><td><code>reconnects</code></td><td><code>int</code></td><td>link reconnects</td></tr>
+                <tr><td><code>restarts</code></td><td><code>int</code></td><td>device-chip restarts the library <A href="/library/lifecycle#restart">recovered</A> from; a session release leaves it alone</td></tr>
               </tbody>
             </table>
           </div>
@@ -1347,7 +1352,8 @@ for b in medius.list_boxes():
                 <tr><td><code>truncated()</code></td><td><code>bool</code></td><td><code>len(bytes) &lt; true_len</code>: bytes were cut</td></tr>
                 <tr><td><code>setup()</code></td><td><code>Optional[bytes]</code></td><td>the 8-byte setup packet of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event; <code>None</code> for another class or a shorter capture</td></tr>
                 <tr><td><code>data()</code></td><td><code>bytes</code></td><td>the data stage of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event, the whole packet for any other class</td></tr>
-                <tr><td><code>control_status()</code></td><td><code>Optional[<A href="/bindings/python/types#controlstatus">ControlStatus</A>]</code></td><td>what the real device answered; <code>None</code> for any class but <code>CONTROL</code></td></tr>
+                <tr><td><code>control_status()</code></td><td><code>Optional[<A href="/bindings/python/types#controlstatus">ControlStatus</A>]</code></td><td>the handshake the game PC received, <code>flags</code> bits 0-1; <code>None</code> for any class but <code>CONTROL</code></td></tr>
+                <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>whether a rewrite rule changed, dropped, answered or refused the packet: <code>flags</code> bit 7 on <code>HID_IN</code>, <code>HID_OUT</code>, the vendor classes, <code>CONTROL</code> and <code>EMIT</code></td></tr>
                 <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NAK</code> when no answer came) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
                 <tr><td><code>bus_event()</code></td><td><code>Optional[<A href="/bindings/python/types#busevent">BusEvent</A>]</code></td><td>the decoded lifecycle event; <code>None</code> for any class but <code>BUS</code> or an unknown kind</td></tr>
                 <tr><td><code>bulk_end_of_transfer()</code> / <code>bulk_zlp()</code></td><td><code>bool</code></td><td>the two <code>VENDOR_BULK</code> framing bits, read off <code>flags</code></td></tr>
@@ -1357,8 +1363,9 @@ for b in medius.list_boxes():
             <table class="api-params">
               <thead><tr><th>Class</th><th>flags</th><th>Read it with</th></tr></thead>
               <tbody>
-                <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet</td><td><code>bulk_end_of_transfer()</code>, <code>bulk_zlp()</code></td></tr>
-                <tr><td><code>CONTROL</code></td><td>the real device's answer: <code>0</code> OK, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout</td><td><code>control_status()</code></td></tr>
+                <tr><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>EMIT</code></td><td>b7 a rewrite rule acted on the packet</td><td><code>rule_acted()</code></td></tr>
+                <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 a rule acted</td><td><code>bulk_end_of_transfer()</code>, <code>bulk_zlp()</code>, <code>rule_acted()</code></td></tr>
+                <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received, a <A href="/bindings/python/types#controlstatus"><code>ControlStatus</code></A>; b7 a rule acted</td><td><code>control_status()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>0xFE</code> when no answer came</td><td><code>transfer_status()</code></td></tr>
                 <tr><td><code>BUS</code></td><td>the <A href="/bindings/python/types#busevent"><code>BusEventKind</code></A>; the bytes hold its arguments</td><td><code>bus_event()</code></td></tr>
                 <tr><td>everything else</td><td><code>0</code></td><td>-</td></tr>
@@ -1368,8 +1375,18 @@ for b in medius.list_boxes():
               A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one{' '}
               <em>completed transaction</em>: <code>bytes</code> is <code>[setup 8][data...]</code>{' '}
               (IN data only on <code>CLIP_TRANSFER</code>) and <code>direction</code> says which way
-              the data stage went. Requests the box serves from its own descriptor cache still
-              produce an event.
+              the data stage went.
+            </p>
+            <table class="api-params">
+              <thead><tr><th><code>CONTROL</code> data</th><th>Holds</th></tr></thead>
+              <tbody>
+                <tr><td>IN</td><td>the reply the game PC received, after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> rule, or an <code>ANSWER</code> rule's payload</td></tr>
+                <tr><td>OUT</td><td>the data stage the game PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device</td></tr>
+              </tbody>
+            </table>
+            <p>
+              A <code>CONTROL</code> event is the transaction the game PC received, on every control
+              endpoint. Requests the box serves from its value cache still produce one.
             </p>
           </div>
 
@@ -1378,10 +1395,10 @@ for b in medius.list_boxes():
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>OK</code></td><td><code>0</code></td><td>the real device answered</td></tr>
-                <tr><td><code>STALLED</code></td><td><code>1</code></td><td>it STALLed the request</td></tr>
-                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>it NAKed to timeout</td></tr>
-                <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a status byte this build does not know; the raw byte stays on <code>TrafficEvent.flags</code></td></tr>
+                <tr><td><code>OK</code></td><td><code>0</code></td><td>the transaction completed</td></tr>
+                <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed</td></tr>
+                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only</td></tr>
+                <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a handshake value this build does not know; read it off <code>TrafficEvent.flags</code> bits 0-1</td></tr>
               </tbody>
             </table>
           </div>
@@ -1493,7 +1510,7 @@ for b in medius.list_boxes():
 
           <div id="rewrite-rule">
             <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
-            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries.</p>
+            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries. <code>table_full</code> says the box refused the last new rule or overwrite for room, 32 rules or the 2048-byte payload pool; the next change to the table, or a clear, resets it.</p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1509,7 +1526,7 @@ for b in medius.list_boxes():
 
           <div id="patch">
             <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
-            <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries.</p>
+            <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries; the four flags read as on <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>.</p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1612,10 +1629,11 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ClipTransferDataError</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td></tr>
                 <tr><td><code>ClipPacketTriggerError</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td></tr>
+                <tr><td><code>RewritePoolFullError</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td></tr>
               </tbody>
             </table>
             <p>
-              The last twenty-three are argument refusals, raised before a frame reaches the box.
+              The last twenty-four are argument refusals, raised before a frame reaches the box.
             </p>
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
@@ -1643,6 +1661,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ClipTransferDataError</code></td><td>a clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one</td></tr>
                 <tr><td><code>ClipPacketTriggerError</code></td><td>a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A> the box would refuse; the message says why</td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td>a rewrite rule with more than 16 match bytes</td></tr>
+                <tr><td><code>RewritePoolFullError</code></td><td>a rewrite payload past what the held rules leave of the box's 2048-byte payload pool; an overwrite gives back the bytes it replaces</td></tr>
               </tbody>
             </table>
             <div class="callout callout--info">
@@ -1677,7 +1696,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td></tr>
                 <tr><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td></tr>
                 <tr><td><code>ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td></tr>
-                <tr><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td></td><td></td></tr>
+                <tr><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td></tr>
               </tbody>
             </table>
           </div>

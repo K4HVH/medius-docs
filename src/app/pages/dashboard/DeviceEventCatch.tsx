@@ -23,6 +23,7 @@ import {
   CATCH_TABLE_MAX,
   CatchClass,
   ClockDomain,
+  ControlStatus,
   Direction,
   INJ_BTN,
   INJ_KEY,
@@ -30,8 +31,6 @@ import {
   Out,
   TRAFFIC_BULK_END,
   TRAFFIC_BULK_ZLP,
-  TRAFFIC_CONTROL_NAK,
-  TRAFFIC_CONTROL_STALL,
   filterTraffic,
   filterTrafficClass,
   filterWatch,
@@ -39,7 +38,9 @@ import {
   filterWatchClass,
   sameFilter,
   snapshotClass,
+  trafficControlStatus,
   trafficData,
+  trafficRuleActed,
   trafficSetup,
   trafficTransferStatus,
   trafficTruncated,
@@ -141,23 +142,30 @@ const hex = (bytes: Uint8Array): string =>
     .map((b) => b.toString(16).padStart(2, '0'))
     .join(' ');
 
-// The flags byte is class-specific, so decode it per class: a STALLed control transaction reading
-// 0xfd tells you nothing without the table beside you. A clip transfer's event is its answer, so its
-// status is always named, OK included.
+// The handshake the game PC got, named when it was not a plain completion.
+const CONTROL_WORDS: Record<ControlStatus, string> = {
+  [ControlStatus.Ok]: '',
+  [ControlStatus.Stall]: ' STALL',
+  [ControlStatus.Nak]: ' NAK',
+  [ControlStatus.Other]: ' handshake 3',
+};
+
+// The flags byte is class-specific, so decode it per class: a control transaction's handshake sits in
+// its low two bits beside the rule bit, and a clip transfer's whole byte is its answer, so that status
+// is always named, OK included. RULE marks a packet a rewrite rule changed, dropped, answered or refused.
 const trafficFlags = (t: TrafficEvent): string => {
+  let out = '';
   if (t.cls === CatchClass.VendorBulk) {
     const bits: string[] = [];
     if (t.flags & TRAFFIC_BULK_END) bits.push('end');
     if (t.flags & TRAFFIC_BULK_ZLP) bits.push('zlp');
-    return bits.length ? ` ${bits.join('+')}` : '';
+    if (bits.length) out = ` ${bits.join('+')}`;
   }
-  if (t.cls === CatchClass.Control) {
-    if (t.flags === TRAFFIC_CONTROL_STALL) return ' STALL';
-    if (t.flags === TRAFFIC_CONTROL_NAK) return ' NAK';
-    return '';
-  }
+  const handshake = trafficControlStatus(t);
+  if (handshake !== null) out = CONTROL_WORDS[handshake];
   const status = trafficTransferStatus(t);
-  return status === null ? '' : ` ${transferStatusName(status).toUpperCase()}`;
+  if (status !== null) out = ` ${transferStatusName(status).toUpperCase()}`;
+  return trafficRuleActed(t) ? `${out} RULE` : out;
 };
 
 // A control transaction and a clip's transfer carry the setup packet and then the data stage, which
@@ -610,6 +618,11 @@ const DeviceEventCatch = () => {
                 H is the host chip's clock, D the device chip's. Times are from the earliest event held
                 in that clock, and only comparable within one of them.
               </p>
+              <Show when={events().some((e) => e.ev.kind === 'traffic' && trafficRuleActed(e.ev.traffic))}>
+                <p style={{ ...muted, 'margin-top': '4px' }}>
+                  RULE marks a packet one of your rewrite rules changed, dropped, answered or refused.
+                </p>
+              </Show>
             </div>
           </Show>
         </Card>

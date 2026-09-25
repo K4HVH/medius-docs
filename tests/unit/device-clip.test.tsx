@@ -714,11 +714,11 @@ describe('DeviceClip packet triggers', () => {
 
   it('follows the class with its blurb and its id label', async () => {
     const { container, queryByText, queryByLabelText } = await mount();
-    expect(queryByText('Reports the device sends the game PC, by interface.')).toBeTruthy();
+    expect(queryByText('Reports as the device sends them, by interface, before the box changes anything.')).toBeTruthy();
     expect(queryByLabelText('Interface number')).toBeTruthy();
     fireEvent.click(radio(container, 'Control'));
     await settle();
-    expect(queryByText('Setup packets on a control endpoint.')).toBeTruthy();
+    expect(queryByText('Class and vendor requests on EP0, and every request on a control endpoint above it.')).toBeTruthy();
     expect(queryByLabelText('Endpoint number (0 is EP0)')).toBeTruthy();
   });
 

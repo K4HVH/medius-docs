@@ -41,7 +41,10 @@ const health = (over: Partial<Record<string, boolean>> = {}) => ({
   rateConfident: false, lockOn: false, catchOn: false, kbdAttached: false, ...over,
 });
 const rate = { nativePeriodUs: 0, pollPeriodUs: 1000, confident: false, changeDriven: true };
-const stats = { injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges: 0, wakeups: 0, resetCount: 0, configCount: 0 };
+const stats = {
+  injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges: 0, wakeups: 0, resetCount: 0,
+  configCount: 0, linkRxDrops: 0, hostRxDrops: 0, relayDrops: 0, session: 0,
+};
 
 afterEach(cleanup);
 
@@ -67,7 +70,7 @@ describe('DeviceInfo: one Capabilities card', () => {
     expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Keyboard');
     await findByText(/31E3:1232/);                     // the cloned device's USB id
     await findByText('Full clone');                    // over-capacity as a terse row...
-    await findByText(/1 input can't be copied/);       // ...not a prose card
+    await findByText(/needs more than the box can serve, or is high speed/); // ...not a prose card
     // the junk I'm killing must be gone:
     expect(queryByText('Not a full copy')).toBeNull();
     expect(queryByText('Your mouse')).toBeNull();
@@ -99,5 +102,77 @@ describe('DeviceInfo: one Capabilities card', () => {
     await findByText('Full clone');
     await findByText('Yes');              // full-clone success chip
     expect(queryByText('Keyboard')).toBeNull();   // no keyboard section, and the kind isn't keyboard
+  });
+});
+
+describe('DeviceInfo: an imperfect clone of a normal device', () => {
+  it('a patch set or forced rate reads "Full clone: No" without an over-capacity device', async () => {
+    mock.health = health({ mouseAttached: true });
+    mock.mouse = { vid: 0x046d, pid: 0xc08b, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: false, hasBos: false, kind: 2, product: 'G502 HERO' };
+    mock.caps = {
+      mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 1 },
+      keyboard: { nKeys: 0, nkro: false, hasConsumer: false, hasSystem: false, hasReportId: false },
+      mouseChangeDriven: false, kbdChangeDriven: false,
+    };
+    mock.rate = { ...rate, nativePeriodUs: 1000, changeDriven: false, confident: true };
+    mock.stats = stats;
+    mock.imperfect = { allowed: true, overCapacity: false, cloneImperfect: true };
+
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText('Full clone');
+    await findByText(/not an exact copy/);
+    expect(queryByText('Yes')).toBeNull();
+  });
+});
+
+describe('DeviceInfo: the Performance card', () => {
+  const mouse = () => {
+    mock.health = health({ mouseAttached: true });
+    mock.mouse = { vid: 0x046d, pid: 0xc08b, bcdDevice: 0, bcdUsb: 0x0200, hasSerial: false, hasBos: false, kind: 2, product: 'G502 HERO' };
+    mock.caps = {
+      mouse: { nButtons: 5, hasX: true, hasY: true, hasWheel: true, hasReportId: false, nHid: 1 },
+      keyboard: { nKeys: 0, nkro: false, hasConsumer: false, hasSystem: false, hasReportId: false },
+      mouseChangeDriven: false, kbdChangeDriven: false,
+    };
+    mock.rate = { ...rate, nativePeriodUs: 1000, changeDriven: false, confident: true };
+    mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
+  };
+
+  it('a box losing nothing reads healthy on both halves of delivery', async () => {
+    mouse();
+    mock.stats = stats;
+    const { findByText, container } = render(() => <DeviceInfo />);
+    await findByText('Delivery to the PC');
+    await findByText('Inter-chip link');
+    await findByText('Keeping up');
+    expect([...container.querySelectorAll('.chip__label')].filter((e) => e.textContent === 'Healthy')).toHaveLength(2);
+  });
+
+  it('link drops name the chip each count belongs to', async () => {
+    // A count here is a native report or an injected delta lost between the box's own two chips, so
+    // reading it as the PC-facing tx_drops would point at the wrong wire. The two counts are per
+    // direction, so one row each: a single chip carrying both truncates at the card's width.
+    mouse();
+    mock.stats = { ...stats, linkRxDrops: 4, hostRxDrops: 11 };
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText('Link to the device chip');
+    await findByText('4 dropped');
+    await findByText('Link to the host chip');
+    await findByText('11 dropped');
+    expect(queryByText('Inter-chip link')).toBeNull();
+  });
+
+  it('relayed-stream back-pressure reads as load, not as a fault', async () => {
+    // The counter the box used to fold into tx_drops. A vendor stream offered faster than the relay
+    // carries makes this rise with no input lost, so a warning chip here would report a healthy box
+    // as one dropping the player's reports, and both halves of delivery have to stay healthy.
+    mouse();
+    mock.stats = { ...stats, relayDrops: 202 };
+    const { findByText, container } = render(() => <DeviceInfo />);
+    await findByText('Relayed streams');
+    await findByText('202 shed under load');
+    await findByText(/Lost input is the rows above/);
+    expect([...container.querySelectorAll('.chip__label')].filter((e) => e.textContent === 'Healthy')).toHaveLength(2);
+    expect(container.querySelector('.chip--warning')).toBeNull();
   });
 });

@@ -161,7 +161,7 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><code>NOW</code></td><td>This delta emits on the box's own clock instead of waiting for a native cursor-motion report to carry it.</td></tr>
+              <tr><td><code>0x01</code></td><td><code>NOW</code></td><td>This delta leaves on the next mouse report the box sends, native or its own, instead of waiting for a native cursor-motion report to carry it.</td></tr>
               <tr><td><code>0x02</code></td><td><code>FLUSH</code></td><td>Emit the motion already held for a ride, ignoring the ride window.</td></tr>
               <tr><td><code>0x04</code></td><td><code>DISCARD</code></td><td>Drop the motion already held for a ride.</td></tr>
             </tbody>
