@@ -184,7 +184,9 @@ match r.native_hz() {
             <code>host_rx_drops</code> says it was lost between the box's two chips;{' '}
             <code>relay_drops</code> is back-pressure on a relayed stream, so it rises under load
             without any input going missing. The narrowed counters saturate, so a maxed field clamps
-            instead of wrapping; the three drop counts are full width.
+            instead of wrapping; the three drop counts are full width. <code>session</code> moves each
+            time the box releases some or all of what a host set, which the library watches for{' '}
+            <A href="/library/lifecycle#restart">session recovery</A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

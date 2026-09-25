@@ -69,6 +69,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CLIP_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.triggers</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_PKT_TRIG_MAX</code></td><td><code>8</code></td><td><A href="/bindings/c/types#clip-settings"><code>MediusClipSettings.packet_triggers</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_PKT_MATCH_POOL</code></td><td><code>112</code></td><td>Match bytes the box holds across every <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A></td></tr>
+              <tr><td><code>MEDIUS_REWRITE_PAYLOAD_POOL</code></td><td><code>2048</code></td><td>Payload bytes the box holds across every <A href="/bindings/c/types#rewrite-rule"><code>MediusRewriteRule</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_PKT_MATCH</code></td><td><code>16</code></td><td><A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger.match_bytes</code></A> and <code>.mask</code></td></tr>
               <tr><td><code>MEDIUS_CLIP_EDGES_MAX</code></td><td><code>8</code></td><td>Edges in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
               <tr><td><code>MEDIUS_CLIP_RAW_MAX</code></td><td><code>8</code></td><td>Raw reports in one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A></td></tr>
@@ -479,8 +480,8 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Stamped</th><th>Carries</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code></td><td><code>0</code></td><td>In USB interrupt context on the host chip, when the real device's transfer completed.</td><td>Motion and usage events, <code>HID_IN</code>, and the IN direction of <code>VENDOR_INTERRUPT</code> / <code>VENDOR_BULK</code>.</td></tr>
-              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE_CHIP</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>, and <code>CLIP_TRANSFER</code>.</td></tr>
+              <tr><td><code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code></td><td><code>0</code></td><td>In USB interrupt context on the host chip, when the real device's transfer completed.</td><td>Motion and usage events, <code>HID_IN</code>, and native IN traffic on <code>VENDOR_INTERRUPT</code> / <code>VENDOR_BULK</code>.</td></tr>
+              <tr><td><code>MEDIUS_CLOCK_DOMAIN_DEVICE_CHIP</code></td><td><code>1</code></td><td>At the tap on the device chip, the side facing the game PC.</td><td><code>HID_OUT</code>, both OUT directions, a raw packet on a vendor IN endpoint, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code>, and <code>CLIP_TRANSFER</code>.</td></tr>
             </tbody>
           </table>
           <p>
@@ -564,7 +565,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint number.</td><td>Every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint number.</td><td>Every vendor interrupt endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint number.</td><td>Every vendor bulk endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0).</td><td>Every control endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0; on EP0, class and vendor requests).</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td><code>11</code></td><td>The control endpoint number (<code>0</code> is EP0) a <A href="/bindings/c/api#clip">clip</A>'s transfer ran on.</td><td>Every control endpoint.</td></tr>
@@ -631,9 +632,8 @@ const Types: Component = () => {
             bytes. So it lives on the entry that matched, not box-wide.
           </p>
           <p>
-            The winning entry is the one whose <code>capture</code> applies, which is what makes
-            "everything at 16 bytes, except endpoint <code>0x83</code> in full" two entries rather
-            than an impossibility. The ranking is on{' '}
+            The top-ranked entry is the one whose <code>capture</code> applies, so "everything at 16
+            bytes, except endpoint <code>0x83</code> in full" is two entries. The ranking is on{' '}
             <A href="/native/commands/catch#matching">The table</A>.
           </p>
           <pre class="diagram">{`  a report arrives on VENDOR_INTERRUPT endpoint 0x83
@@ -776,7 +776,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a real cursor move to carry the delta.</td></tr>
-              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Emit on the box's own clock.</td></tr>
+              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Leave on the next mouse report the box sends, native or its own, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1048,6 +1048,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
               <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
+              <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>The times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare it for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1213,9 +1214,9 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>True (1) when</th></tr></thead>
             <tbody>
-              <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning an over-capacity device is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device needs an interrupt-IN endpoint the box can't service.</td></tr>
-              <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is over-capacity and was cloned anyway, so one interface is dead.</td></tr>
+              <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed.</td></tr>
+              <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1279,6 +1280,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>frames_rx</code></td><td><code>uint64_t</code></td><td>Frames received from the box.</td></tr>
               <tr><td><code>crc_drops</code></td><td><code>uint64_t</code></td><td>Inbound frames dropped on a bad <A href="/native/frame">checksum</A>.</td></tr>
               <tr><td><code>reconnects</code></td><td><code>uint64_t</code></td><td>Times the library reopened the port.</td></tr>
+              <tr><td><code>restarts</code></td><td><code>uint64_t</code></td><td>Device-chip restarts the library recovered from by re-sending the state it holds. A session release, counted in <A href="/bindings/c/types#stats"><code>MediusStats.session</code></A>, leaves it alone. See <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1446,8 +1448,9 @@ for (uintptr_t i = 0; i < n; i++) {
           <table class="api-params">
             <thead><tr><th>Class</th><th><code>flags</code> reads as</th><th>Decode it with</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet.</td><td><code>medius_traffic_event_bulk_end_of_transfer</code>, <code>medius_traffic_event_bulk_zlp</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>The real device's answer: <code>0</code> it completed, <code>0xFD</code> it STALLed, <code>0xFE</code> it NAKed to timeout.</td><td><code>medius_traffic_event_control_status</code>, into a <code>MediusControlStatus</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_HID_IN</code>, <code>_HID_OUT</code>, <code>_VENDOR_INTERRUPT</code>, <code>_EMIT</code></td><td>Bit 7: a rewrite rule changed, dropped, answered or refused the packet.</td><td><code>medius_traffic_event_rule_acted</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet. Bit 7: a rule acted.</td><td><code>medius_traffic_event_bulk_end_of_transfer</code>, <code>medius_traffic_event_bulk_zlp</code>, <code>medius_traffic_event_rule_acted</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>Bits 0-1: the handshake the game PC received, below. Bit 7: a rule acted.</td><td><code>medius_traffic_event_control_status</code>, into a <code>MediusControlStatus</code>; <code>medius_traffic_event_rule_acted</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>0xFE</code> when no answer came.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td>The bus event kind (table below).</td><td><code>medius_traffic_event_bus_event</code>, into a <code>MediusBusEvent</code></td></tr>
               <tr><td>every other class</td><td><code>0</code>.</td><td>-</td></tr>
@@ -1463,8 +1466,20 @@ for (uintptr_t i = 0; i < n; i++) {
             <code>medius_traffic_event_data</code>.
           </p>
           <p>
-            A request the box answered from its own descriptor cache still produces an event.
+            A <code>CONTROL</code> event is the transaction the game PC received, on every control
+            endpoint: IN data is the reply it received, after any reply rule or an ANSWER, and OUT data
+            is what it sent, before a rule rewrote it. A request the box answered from its value cache
+            still produces an event.
           </p>
+          <table class="api-params">
+            <thead><tr><th><code>MediusControlStatus</code></th><th>Bits 0-1</th><th>The game PC got</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>A completed transaction.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until it gave up, on endpoint 0 only.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_OTHER</code></td><td><code>3</code></td><td>A value this build does not know; read <code>flags</code> for it.</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">BUS EVENT KINDS</div>
           <p>
             A <code>BUS</code> event puts the kind in <code>flags</code> and up to two operands in{' '}
@@ -1487,9 +1502,10 @@ for (uintptr_t i = 0; i < n; i++) {
             </tbody>
           </table>
           <p>
-            None of these announces a chip <em>reboot</em>, which is the only thing that restarts a
-            stamping clock. Call <A href="/bindings/c/streams#timeline"><code>medius_timeline_reset</code></A>{' '}
-            for a chip you know restarted.
+            A chip <em>reboot</em> restarts its stamping clock. Call{' '}
+            <A href="/bindings/c/streams#timeline"><code>medius_timeline_reset</code></A> for a chip
+            that restarted; a device-chip restart raises{' '}
+            <A href="/bindings/c/types#counters"><code>MediusCountersSnapshot.restarts</code></A>.
           </p>
         </Card>
       </div>
@@ -1647,12 +1663,12 @@ for (uintptr_t i = 0; i < n; i++) {
               <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The interface number for <code>HID_IN</code>, the endpoint number for the rest, or <code>MEDIUS_CATCH_ID_ANY</code>.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_DIRECTION_*</code> value: <code>POSITIVE</code> (IN), <code>NEGATIVE</code> (OUT) or <code>BOTH</code>.</td></tr>
               <tr><td><code>action</code></td><td><code>uint8_t</code></td><td>A <A href="/bindings/c/types#clip-action"><code>MEDIUS_CLIP_ACTION_*</code></A> value.</td></tr>
-              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to drop every packet the trigger wins, ahead of the rewrite table. The box holds a consuming trigger only under <code>medius_device_allow_imperfect_clones</code>, on any class but <code>CONTROL</code>.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to drop every packet the trigger matches as the top-ranked trigger, ahead of the rewrite table. The box holds a consuming trigger only under <code>medius_device_allow_imperfect_clones</code>, on any class but <code>CONTROL</code>.</td></tr>
               <tr><td><code>once_per_run</code></td><td><code>uint8_t</code></td><td>1 to run <code>action</code> on the first packet of a run of matching ones; 0 runs it on each. A run is over one stream: a class other than <code>CONTROL</code>, a concrete <code>id</code>, and <code>POSITIVE</code> or <code>NEGATIVE</code>.</td></tr>
               <tr><td><code>selector_len</code></td><td><code>uint8_t</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition, so it is below <code>match_len</code>. 0 without.</td></tr>
               <tr><td><code>match_len</code>, <code>mask_len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>match_bytes</code> / <code>mask</code> (equal). 0 takes every packet on the address.</td></tr>
               <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>uint8_t[MEDIUS_MAX_PKT_MATCH]</code></td><td>The head compare: a packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each byte.</td></tr>
-              <tr><td><code>hits</code></td><td><code>uint16_t</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. Filled by <code>medius_clip_query_config</code> and read by <code>medius_mock_set_clip_settings</code>; <code>medius_clip_bind_packet</code> sends the trigger without it.</td></tr>
+              <tr><td><code>hits</code></td><td><code>uint16_t</code></td><td>Packets the trigger has matched as the top-ranked trigger since it was bound or overwritten, saturating. Filled by <code>medius_clip_query_config</code> and read by <code>medius_mock_set_clip_settings</code>; <code>medius_clip_bind_packet</code> sends the trigger without it.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -1768,9 +1784,9 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed; data is in <code>data</code>.</td></tr>
-                <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it: opt-in off, malformed, or too large.</td></tr>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it before the device: opt-in off, malformed, <code>wLength</code> above 504 or the OUT data shorter than it, or the host chip's control queue full.</td></tr>
                 <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The device STALLed.</td></tr>
-                <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The device NAKed to a timeout.</td></tr>
+                <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no answer crossed the link within 800 ms.</td></tr>
                 <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No device attached on the host chip.</td></tr>
               </tbody>
             </table>
@@ -1818,8 +1834,8 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>A further rule was, or would be, refused.</td></tr>
-              <tr><td><code>generation</code></td><td><code>uint8_t</code></td><td>Bumps only on a change that alters the table.</td></tr>
+              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>The box refused the last new rule or overwrite for room: all 32 entries in use, or no space left in the 2048-byte payload pool. The next change to the table, or a clear, resets it.</td></tr>
+              <tr><td><code>generation</code></td><td><code>uint8_t</code></td><td>Goes up by one on a change to the table, or a clear or silence that empties it; an identical re-send leaves it. Reset, detach, link loss, re-clone and opt-in off return it to 0. The keepalive re-sends every held rule whatever it reads.</td></tr>
               <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Valid entries in <code>entries</code>.</td></tr>
               <tr><td><code>entries</code></td><td><code>MediusRewriteEntry[MEDIUS_MAX_REWRITE_ENTRIES]</code></td><td>One row per rule.</td></tr>
             </tbody>
@@ -1852,10 +1868,10 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Set when</th></tr></thead>
             <tbody>
-              <tr><td><code>applied</code></td><td><code>uint8_t</code></td><td>The stored set is applied to the live clone.</td></tr>
-              <tr><td><code>pending</code></td><td><code>uint8_t</code></td><td>A stored change is not applied yet.</td></tr>
-              <tr><td><code>refused</code></td><td><code>uint8_t</code></td><td>The last apply was refused (a patched length diverged).</td></tr>
-              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>The store is full.</td></tr>
+              <tr><td><code>applied</code></td><td><code>uint8_t</code></td><td>The clone serves a non-empty patched set, which a later store leaves alone until the next presentation.</td></tr>
+              <tr><td><code>pending</code></td><td><code>uint8_t</code></td><td>The stored set differs from the one the clone serves: not applied yet, changed or emptied since, refused, or held back by the opt-in.</td></tr>
+              <tr><td><code>refused</code></td><td><code>uint8_t</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when last presented and is unchanged since, so the device is served unpatched; the box log names the check.</td></tr>
+              <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>The box refused the last new patch or overwrite for room: 16 patches, or no space left in the 1024-byte pool. The next change to the set, or a clear, resets it.</td></tr>
               <tr><td><code>n</code>, <code>entries</code></td><td><code>uint16_t</code>, <code>MediusPatchEntry[]</code></td><td>The stored patches.</td></tr>
             </tbody>
           </table>
@@ -1940,6 +1956,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td><td>A clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td><td>A <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td>A rewrite rule with more than <code>MEDIUS_MAX_REWRITE_MATCH</code> (16) match bytes.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td><td>A rewrite payload past what the held rules leave of <code>MEDIUS_REWRITE_PAYLOAD_POOL</code> (2048); an overwrite gives back the bytes it replaces.</td></tr>
             </tbody>
           </table>
           <table class="api-params">

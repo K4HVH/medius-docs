@@ -220,6 +220,15 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>RewritePoolFull {'{'} len, free, limit {'}'}</code></td>
+                <td>
+                  A rewrite rule's <code>len</code>-byte payload with <code>free</code> bytes left of
+                  the box's <code>limit</code>-byte payload pool (<code>REWRITE_PAYLOAD_POOL</code>,
+                  2048) after the other held rules; an overwrite gives back the bytes it replaces.
+                  Remove a rule or shorten a payload first.
+                </td>
+              </tr>
+              <tr>
                 <td><code>TransformOpFields {'{'} op, src, dst {'}'}</code></td>
                 <td>
                   A <A href="/library/types/structs#transform">transform</A>'s{' '}

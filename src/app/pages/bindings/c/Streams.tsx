@@ -354,8 +354,8 @@ while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
                (unsigned long long)at.box_us,
                (unsigned long long)at.excess_ns);
 
-    /* a chip reboot restarts its clock at zero, which no bus event announces:
-       call medius_timeline_reset(tl, domain) when you know one happened. */
+    /* a chip reboot restarts its clock at zero; a device-chip restart raises
+       MediusCountersSnapshot.restarts: call medius_timeline_reset(tl, domain) then. */
 }
 medius_timeline_free(tl);`}</code></pre>
         </Card>

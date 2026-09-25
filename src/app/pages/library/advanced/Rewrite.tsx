@@ -15,25 +15,37 @@ const Rewrite: Component = () => {
           compare.
         </p>
         <p>
-          Rules are session state: re-asserted on reconnect like a{' '}
+          Rules are session state: re-asserted on each keepalive, on reconnect and by{' '}
+          <A href="/library/lifecycle#restart">session recovery</A> like a{' '}
           <A href="/library/lock"><code>lock</code></A>, and cleared on control-PC silence,{' '}
-          <A href="/library/admin#reset"><code>reset</code></A>, a re-clone, or the opt-in going off.
+          <A href="/library/admin#reset"><code>reset</code></A>, the real device detaching, an
+          inter-chip link loss, a re-clone, or the opt-in going off. See the native{' '}
+          <A href="/native/commands/rewrite#lifecycle">lifecycle</A>.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
-  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN--->  reads report
-                          ^ pre-render               ^ post-render, the wire
-  relayed     <--OUT---  [ HID_OUT ]<-- relay <---------------- interrupt-OUT <--  writes report
+  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
+                          ^ as it arrived            ^ the wire
+  relayed     <--OUT---  [ HID_OUT ]<-- relay <--------------- interrupt-OUT <--  writes report
                           ^ VEND_INTR / VEND_BULK
-  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  GET_DESCRIPTOR, SET_*
+  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  class, vendor requests
                           ^ id = endpoint number
 
-              a rule acts at any [ bracketed ] stage`}</pre>
+              a rule acts at the [ bracketed ] stage its class names; ANY acts at each
+              on EP0 only class and vendor requests reach [ CONTROL ]`}</pre>
         <p>
           A packet reaches the clip's{' '}
           <A href="/library/clip#packet-triggers">packet triggers</A> ahead of the table, and one a
-          trigger consumes reaches no rule.
+          trigger consumes reaches no rule. <A href="/library/catch#traffic">Catch</A> marks a packet
+          a rule acted on (<A href="/library/types/structs#traffic-event"><code>rule_acted</code></A>).
         </p>
+        <div id="hid-in-motion" class="callout callout--warning">
+          <p>
+            The host chip weighs the bound mouse's relative axes from the report as it arrived.
+            Whenever a scale, injection or rendering changes them, the host chip's values replace a{' '}
+            <code>HidIn</code> rewrite of those bytes. Rewrite motion at <code>Emit</code>.
+          </p>
+        </div>
         <div class="callout callout--warning">
           <p>
             The advanced control layer is gated on the imperfect-clone opt-in. With{' '}
@@ -60,14 +72,24 @@ const Rewrite: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its <A href="/library/types/enums#rewrite-class">address</A>, its <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload. Installing one with the whole table already in use is <A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A>.</td></tr>
+              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its <A href="/library/types/enums#rewrite-class">address</A>, its <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload.</td></tr>
             </tbody>
           </table>
           <p>
             A rule is keyed by <code>(class, id, direction, match, mask)</code>; setting one whose key
-            exists overwrites it. The crate validates a rule before sending, so a bad one is a real
-            error rather than a frame the box drops.
+            exists overwrites it, resets its hits and moves it to the end of the table. The crate checks
+            a rule against the box's limits before sending, so a refusal is a real error.
           </p>
+          <div class="api-response-label">REFUSALS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Limit</th><th>Past it</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2048 payload bytes across every held rule (<code>REWRITE_PAYLOAD_POOL</code>), checked first; an overwrite gives back the bytes it replaces</td><td><A href="/library/types/errors#errors"><code>Error::RewritePoolFull</code></A></td></tr>
+              <tr><td>32 rules (<code>REWRITE_MAX_ENTRIES</code>), for a new key</td><td><A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A></td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Direction, RewriteRule, RewriteClass, RewriteAction};
 
@@ -77,9 +99,9 @@ device.allow_imperfect_clones(true)?;
 // Mute the clone's own wire on interrupt-IN endpoint 1.
 device.set_rewrite(&RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop))?;
 
-// Overwrite byte 2 of the device's report on interface 0, when byte 0 is the report id 0x01.
+// Overwrite byte 2 of each report the clone emits on endpoint 1, when byte 0 is the report id 0x01.
 device.set_rewrite(
-    &RewriteRule::new(RewriteClass::HidIn, 0, Direction::Both, RewriteAction::Patch)
+    &RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Patch)
         .matching([0x01], [0xFF])
         .at_offset(2)
         .with_payload([0x00]),
@@ -125,7 +147,8 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
           <p>
             Returns a <A href="/library/types/structs#rewrite-table"><code>RewriteTable</code></A>: a
             full flag, a generation counter, and a row per rule without its match, mask, or payload
-            bytes.
+            bytes. The full flag says the box refused the last new rule or overwrite for room, and the
+            next change to the table, or a clear, resets it.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let table = device.query_rewrite()?;

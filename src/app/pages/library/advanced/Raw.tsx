@@ -16,19 +16,21 @@ const Raw: Component = () => {
         <p>
           The write is stateless: the next native report overwrites it, and <code>raw</code> bypasses
           the <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
-          <A href="/library/clip#packet-triggers">packet triggers</A>.
+          <A href="/library/clip#packet-triggers">packet triggers</A>. No native report can carry a
+          raw <code>IN</code> report, so on an endpoint the device reports on at every poll it takes a
+          poll of its own, within two of the device's reports.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
-  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN--->  reads report
+  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
                                                                     ^
                                                                     +-- raw(n, IN)   <== a report toward the PC
 
-  relayed     <--OUT---  [ HID_OUT ]<-- relay <---------------- interrupt-OUT <--  writes report
-                         (VEND_INTR / VEND_BULK)                 ^
-                                                                 +-- raw(n, OUT)  <== a report toward the device
+  relayed     <--OUT---  [ HID_OUT ]<-- relay <--------------- interrupt-OUT <--  writes report
+                         (VEND_INTR / VEND_BULK)                ^
+                                                                +-- raw(n, OUT)  <== a report toward the device
 
-  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  GET_DESCRIPTOR, SET_*
+  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  class, vendor requests
   enumerate   descriptor patches overwrite what the clone presents`}</pre>
         <div class="callout callout--warning">
           <p>
@@ -52,7 +54,7 @@ const Raw: Component = () => {
             <tbody>
               <tr><td><code>ep</code></td><td><code>u8</code></td><td>The cloned endpoint number, 0 to 15.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, on the wire as given. At most one interrupt endpoint's <code>wMaxPacketSize</code>; a bulk endpoint takes up to the 512-byte frame limit.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, on the wire as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -75,8 +77,8 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
             <table class="api-params">
               <thead><tr><th>Endpoint type</th><th>A payload over the limit</th></tr></thead>
               <tbody>
-                <tr><td>Interrupt</td><td>Past the endpoint's <code>wMaxPacketSize</code> the report is dropped box-side. Keep a report within one packet.</td></tr>
-                <tr><td>Bulk</td><td>Split at the packet size and terminated with a short packet, or a zero-length packet when the payload is an exact multiple, the way a bulk transfer ends on the wire.</td></tr>
+                <tr><td>Interrupt</td><td>Past one packet the report is dropped box-side: the endpoint's <code>wMaxPacketSize</code>, <code>IN</code> or <code>OUT</code>. Keep a report within one packet.</td></tr>
+                <tr><td>Bulk</td><td>Split at <code>wMaxPacketSize</code> in either direction, and terminated with a short packet, or a zero-length packet when the payload is an exact multiple of it, the way a bulk transfer ends on the wire.</td></tr>
               </tbody>
             </table>
           </div>
@@ -84,7 +86,9 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
             <p>
               A single advanced control layer frame carries up to 512 payload bytes (the{' '}
               <A href="/native/frame#layout">frame limit</A>), the bound the C and Python buffers
-              (<code>MEDIUS_MAX_DEV_PAYLOAD</code>) are sized to.
+              (<code>MEDIUS_MAX_DEV_PAYLOAD</code>) are sized to. <code>raw</code> spends two on the
+              endpoint and direction, leaving 510. See the native{' '}
+              <A href="/native/commands/raw#packets"><code>RAW</code></A> command for the wire layout.
             </p>
           </div>
         </Card>
@@ -94,7 +98,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
         <Card>
           <CardHeader title="Raw against injection" subtitle="When the bytes are the point" />
           <p>
-            A standard input in the device's own report belongs in{' '}
+            A standard input in the native report belongs in{' '}
             <A href="/library/inject"><code>inject</code></A> and{' '}
             <A href="/library/move"><code>move_rel</code></A>, not here. Those describe an input and let
             the box render it into a native-faithful report; <code>raw</code> describes bytes and leaves
