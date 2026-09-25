@@ -14,17 +14,20 @@ const Transfer: Component = () => {
           <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>.
         </p>
         <p>
-          It rides its own inter-chip link pair, not the game PC's EP0 proxy, and is single-outstanding.
-          Read a descriptor, string, or vendor value straight from the device.
+          It crosses the inter-chip link on its own messages, past every{' '}
+          <A href="/library/advanced/rewrite">rewrite rule</A>, one at a time. On the host chip it
+          takes its turn in the <A href="/native/commands/transfer#proxy">control queue</A> beside
+          the game PC's requests. Read a descriptor, string, or vendor value straight from
+          the device.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
-  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN--->  reads report
-  relayed     <--OUT---  [ HID_OUT ]<-- relay <---------------- interrupt-OUT <--  writes report
+  HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
+  relayed     <--OUT---  [ HID_OUT ]<-- relay <--------------- interrupt-OUT <--  writes report
 
-  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  GET_DESCRIPTOR, SET_*
-                             ^
-                             +-- transfer(ep, setup)   <== your own control request, its own link pair`}</pre>
+  control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  class, vendor requests
+                  ^
+                  +-- transfer(ep, setup)   <== your own control request: its own messages, past every rule`}</pre>
         <div class="callout callout--warning">
           <p>
             The advanced control layer is gated on the imperfect-clone opt-in. With{' '}
@@ -59,6 +62,13 @@ const Transfer: Component = () => {
             <p>
               <code>transfer</code> uses <code>DEFAULT_TRANSFER_TIMEOUT</code> (1.5&nbsp;s). The box gives
               up after its own ~800&nbsp;ms window; keep <code>transfer_timeout</code> at or above that.
+            </p>
+          </div>
+          <div class="callout callout--warning">
+            <p>
+              A <code>SET_CONFIGURATION</code> or <code>SET_INTERFACE</code> sent here changes the
+              real device only. The clone, and the endpoints the host chip polls, stay where the game
+              PC put them.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>

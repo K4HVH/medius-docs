@@ -84,6 +84,8 @@ import {
   rebootPayload,
   trafficData,
   trafficSetup,
+  trafficControlStatus,
+  trafficRuleActed,
   trafficTransferStatus,
   trafficTruncated,
   versionString,
@@ -111,6 +113,10 @@ import {
   PatchSection,
   TransformOp,
   TransferStatus,
+  ControlStatus,
+  TRAFFIC_BULK_END,
+  TRAFFIC_CONTROL_MASK,
+  TRAFFIC_F_RULE,
   Q_REWRITE,
   Q_REWRITE_ENTRY,
   Q_PATCHES,
@@ -578,25 +584,20 @@ describe('LOCK command (§3.8)', () => {
 
   it('still opens the wire one-click update arrived on', () => {
     // UPDATE/UPDATE_RESP and QUERY(FIRMWARE) shipped in firmware 3.2.0 at protocol 5 and have not
-    // changed since. Raising this floor past 5 strands every 3.2.x box on USB setup, because the
-    // handshake would refuse the connection that carries the update. Raise it only when the update
-    // path itself stops working against that wire.
+    // changed since.
     expect(MIN_PROTO_VER).toBe(5);
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this RESP(CLIP) and CLIP_TRIGGER', () => {
-    // v8 (firmware 3.4.1) widens RESP(CLIP)'s fixed prefix to 31 bytes and appends its packet triggers,
-    // adds packet triggers to CLIP_TRIGGER, and matches a vendor interrupt OUT packet as VEND_INTR. A box
-    // on v7 answers RESP(CLIP) in the older layout and takes no packet trigger; left at 7 the handshake
-    // would hand it the Clip card.
-    expect(PROTO_VER).toBe(8);
+  it('PROTO_VER matches the firmware that speaks this RESP(STATS)', () => {
+    // v9 (firmware 3.4.2) grows RESP(STATS) from 17 bytes to 31: the two inter-chip link drop
+    // counts, relay_drops, then session.
+    expect(PROTO_VER).toBe(9);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
     // A blanket key lock is one entry per blocked edge under id 0xFFFF, never a single Both entry,
-    // and a media usage has no edges at all so it always reports Both. Decoding either as the other
-    // would make the dashboard render a lock the box is not holding.
+    // and a media usage has no edges at all so it always reports Both.
     const resp = parseResp(
       new Uint8Array([
         6, 3,
@@ -1049,8 +1050,7 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
 
   it('decodes a HID_IN capture that arrived whole', () => {
     // ts = 0x00001000, HOST clock (an IN transfer off the real device), class HID_IN, interface 0,
-    // IN, flags 0, true_len 4, 4 bytes. §4.10 puts HID_IN in the host domain; a device-domain
-    // stamp here would be a wire-impossible combination.
+    // IN, flags 0, true_len 4, 4 bytes.
     const ev = parseTrafficEvent(
       new Uint8Array([
         0x00, 0x10, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x01, 0x00, 0x04, 0x00, 0x01, 0x02, 0x03,
@@ -1099,18 +1099,56 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     expect(ev?.bytes).toEqual(new Uint8Array([1, 2]));
   });
 
-  it('decodes a CONTROL transaction: setup 8 then the data stage, the answer in flags', () => {
-    // GET_DESCRIPTOR(device), the real device STALLed it.
+  it('decodes a CONTROL transaction: setup 8 then the data stage, the handshake in flags', () => {
+    // GET_DESCRIPTOR(device) on EP0 that the game PC got a STALL for: handshake 1 in bits 0-1.
     const ev = parseTrafficEvent(
       new Uint8Array([
-        0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01, 0xfd, 0x08, 0x00, 0x80, 0x06, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01, 0x01, 0x08, 0x00, 0x80, 0x06, 0x00,
         0x01, 0x00, 0x00, 0x12, 0x00,
       ]),
     );
     expect(ev?.cls).toBe(CatchClass.Control);
     expect(ev?.id).toBe(0); // EP0
-    expect(ev?.flags).toBe(0xfd);
+    expect(trafficControlStatus(ev!)).toBe(ControlStatus.Stall);
+    expect(trafficRuleActed(ev!)).toBe(false);
     expect(ev?.bytes).toHaveLength(8); // setup only, no data stage arrived
+  });
+
+  it('reads a CONTROL handshake from bits 0-1 and the rule bit from bit 7, apart', () => {
+    const control = (flags: string) =>
+      parseTrafficEvent(fromHex(`00 00 00 00 01 08 00 00 02 ${flags} 08 00 21 09 00 02 00 00 02 00`))!;
+    expect(TRAFFIC_CONTROL_MASK).toBe(0x03);
+    expect(TRAFFIC_F_RULE).toBe(0x80);
+    expect(trafficControlStatus(control('00'))).toBe(ControlStatus.Ok);
+    expect(trafficControlStatus(control('01'))).toBe(ControlStatus.Stall);
+    expect(trafficControlStatus(control('02'))).toBe(ControlStatus.Nak);
+    expect(trafficControlStatus(control('03'))).toBe(ControlStatus.Other);
+    // A STALL rule refused it: the handshake and the rule bit are both there.
+    expect(trafficControlStatus(control('81'))).toBe(ControlStatus.Stall);
+    expect(trafficRuleActed(control('81'))).toBe(true);
+    // An ANSWER rule completed it.
+    expect(trafficControlStatus(control('80'))).toBe(ControlStatus.Ok);
+    expect(trafficRuleActed(control('80'))).toBe(true);
+    expect(trafficRuleActed(control('01'))).toBe(false);
+  });
+
+  it('reads the rule bit on every class a rule acts at, and nowhere else', () => {
+    const withClass = (cls: string, flags: string) =>
+      parseTrafficEvent(fromHex(`00 00 00 00 01 ${cls} 01 00 01 ${flags} 01 00 aa`))!;
+    for (const cls of ['04', '05', '06', '07', '08', '09']) {
+      expect(trafficRuleActed(withClass(cls, '80'))).toBe(true);
+      expect(trafficRuleActed(withClass(cls, '00'))).toBe(false);
+    }
+    // A clip transfer's byte is a TransferStatus: 0xfd is a stall, not a rule.
+    expect(trafficRuleActed(withClass('0b', 'fd'))).toBe(false);
+    expect(trafficTransferStatus(withClass('0b', 'fd'))).toBe(TransferStatus.Stall);
+    // Vendor bulk keeps its end and ZLP bits beside the rule bit.
+    const bulk = withClass('07', '81');
+    expect(bulk.flags & TRAFFIC_BULK_END).toBe(TRAFFIC_BULK_END);
+    expect(trafficRuleActed(bulk)).toBe(true);
+    // Only a control event has a handshake.
+    expect(trafficControlStatus(withClass('04', '01'))).toBeNull();
+    expect(trafficControlStatus(withClass('0b', '01'))).toBeNull();
   });
 
   it('splits a CONTROL transaction into its setup packet and its data stage', () => {
@@ -1505,10 +1543,12 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(nativeHz(resp.rate)).toBeNull();
   });
 
-  it('STATS (§4.6) with saturated fields and a 32-bit count', () => {
+  it('STATS (§4.6) with saturated fields, a 32-bit count, both link drop counts, relay drops and session', () => {
+    // The three u32 counters protocol 9 appends are full-width and do not saturate, so a value past
+    // what the narrowed fields can hold has to survive the decode. session is the u16 after them.
     const p = new Uint8Array([
       5, 0x04, 0x03, 0x02, 0x01, 0xff, 0xff, 0x0a, 0x00, 0xff, 0x02, 0xff, 0xff, 0x07, 0x00, 0x09,
-      0x00,
+      0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x70, 0x11, 0x01, 0x00, 0x03, 0x01,
     ]);
     expect(parseResp(p)).toEqual({
       kind: 'stats',
@@ -1521,6 +1561,10 @@ describe('device-info RESP decoding (v1.4.0)', () => {
         wakeups: 0xffff,
         resetCount: 7,
         configCount: 9,
+        linkRxDrops: 300,
+        hostRxDrops: 65536,
+        relayDrops: 70000,
+        session: 0x0103,
       },
     });
   });
@@ -1530,13 +1574,19 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(parseResp(new Uint8Array([2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // 10 bytes, one short of the header
     expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
     expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
-    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 17
+    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 31
+    // 17 bytes is the protocol-8 layout: enough for the eight counters, short of the link counts.
+    expect(parseResp(new Uint8Array([5, ...new Array(16).fill(0)]))).toBeNull();
+    // 25 is the layout before relay_drops was split out of tx_drops. Decoding it would leave
+    // relayDrops reading whatever followed the frame.
+    expect(parseResp(new Uint8Array([5, ...new Array(24).fill(0)]))).toBeNull();
+    // 29 is the layout before session. Decoding it would leave session reading past the frame.
+    expect(parseResp(new Uint8Array([5, ...new Array(28).fill(0)]))).toBeNull();
   });
 });
 
-// key/media inject (via the class-tagged INJECT) + the unified USAGE_EVENT catch stream + the keyboard
-// half of CAPS. Byte vectors mirror the firmware packers/decoders in ctrl_proto.h so the JS side is
-// pinned to the wire format.
+// key/media inject (via the class-tagged INJECT) + the unified USAGE_EVENT catch stream + the
+// keyboard half of CAPS.
 describe('keyboard + media (v2.0.0)', () => {
   it('injectPayload (key) packs [class][usage u16 LE][action] (§3.2)', () => {
     // Press the 'A' keycode (0x04); release Left Shift (modifier 0xE1). class key = 1.
@@ -1659,9 +1709,7 @@ describe('bearing mode decode', () => {
   });
 });
 
-// RESP(FIRMWARE) (§4.16). Byte vectors are read off the firmware's ota_proto.h and the protocol doc,
-// not written to match this decoder: a decoder checked against its own author's expectations is a
-// false green.
+// RESP(FIRMWARE) (§4.16).
 describe('RESP(FIRMWARE)', () => {
   const payload = (hostPresent: number, staged: number) =>
     new Uint8Array([
@@ -1737,9 +1785,8 @@ describe('RESP(FIRMWARE)', () => {
   });
 });
 
-// The v3.4.0 advanced control layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the four
-// readback decoders, and TRANSFER_RESP. Byte layouts are pinned to the firmware's ctrl_proto.h and
-// mirror tools/medius.py, so a transposed field fails here rather than on the wire.
+// The v3.4.0 advanced control layer (§3.14 / §4.17): the raw/transfer/rewrite/patch encoders, the
+// four readback decoders, and TRANSFER_RESP.
 describe('advanced control layer (§3.14 / §4.17)', () => {
   it('RAW is [ep][bytes..]', () => {
     // interrupt-IN endpoint 1: [ep_num=01][dir=01 (Positive/IN)][bytes].
@@ -1843,6 +1890,13 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
       tableFull: false,
       entries: [{ section: PatchSection.Report, cfg: 0, index: 1, offset: 9, len: 1 }],
     });
+  });
+
+  // A refused set is pending and not applied: the clone serves the device unpatched. FULL is its own bit.
+  it('decodes a refused RESP(PATCHES) with the full flag as four separate bits', () => {
+    const r = parseResp(fromHex('0e 0e 00'));
+    if (r?.kind !== 'patches') throw new Error('expected patches');
+    expect(r.patches).toEqual({ applied: false, pending: true, refused: true, tableFull: true, entries: [] });
   });
 
   it('decodes RESP(PATCH_ENTRY) back into the patch the command takes', () => {

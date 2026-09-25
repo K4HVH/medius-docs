@@ -1,11 +1,5 @@
-// Server-side firmware proxy. Holds the GitHub token and fetches releases and
-// release assets from the private firmware repo; the browser only ever sees the
-// proxied results, never the token.
-//
-// GitHub release asset ids are immutable (a re-uploaded file gets a new id), so
-// asset bytes are cached by id with no invalidation: a new version is new ids,
-// which miss the cache and get fetched once. The asset endpoint only serves ids
-// that appear as .bin assets in the releases list.
+// Server-side firmware proxy. Holds the GitHub token and fetches releases and release assets from
+// the private firmware repo; the browser only ever sees the proxied results, never the token.
 
 const GITHUB_API = 'https://api.github.com';
 const REPO_RE = /^[\w.-]+\/[\w.-]+$/;

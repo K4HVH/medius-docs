@@ -6,11 +6,29 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { TextField } from '../../../components/inputs/TextField';
-import { type TransferResult, TransferStatus, transferStatusName } from '../../../dashboard/protocol';
+import { type TransferResult, TransferStatus } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { chips, muted, row, section } from './ui';
-import { SETUP_DEFAULT, SETUP_FIELDS, decodeSetup, displayName, outDataBlurb, parseHex, parseNum, toHex } from './hex';
+import { SETUP_DEFAULT, SETUP_FIELDS, decodeSetup, outDataBlurb, parseHex, parseNum, toHex } from './hex';
+
+// What each outcome means. A status with no answer covers more than a silent device, so it says so.
+const STATUS_LABEL: Record<number, string> = {
+  [TransferStatus.Ok]: 'OK',
+  [TransferStatus.Refused]: 'Not sent',
+  [TransferStatus.Stall]: 'Stalled',
+  [TransferStatus.Nak]: 'No answer',
+  [TransferStatus.NoDevice]: 'No device',
+};
+const STATUS_BLURB: Record<number, string> = {
+  [TransferStatus.Ok]: 'The device answered.',
+  [TransferStatus.Refused]:
+    "The box did not send it. The request was malformed, asked for more than 504 bytes, carried less Out data than its length, or arrived while the box's control queue was full.",
+  [TransferStatus.Stall]: 'The device refused the request.',
+  [TransferStatus.Nak]:
+    "The device gave no answer within half a second, the transfer failed, the device has no control endpoint with that number, or the box's host chip did not answer within 0.8 s.",
+  [TransferStatus.NoDevice]: 'No device is plugged into the box.',
+};
 
 const statusVariant = (s: TransferStatus): 'success' | 'warning' | 'error' =>
   s === TransferStatus.Ok ? 'success' : s === TransferStatus.Refused ? 'warning' : 'error';
@@ -115,10 +133,11 @@ const DeviceTransfer = () => {
                   <div style={section}>
                     <div style={chips}>
                       <Chip variant={statusVariant(r().status)}>
-                        {displayName(transferStatusName(r().status))}
+                        {STATUS_LABEL[r().status]}
                       </Chip>
                       <Chip variant="neutral">{r().data.length} B in</Chip>
                     </div>
+                    <p style={{ ...muted, 'margin-top': '4px' }}>{STATUS_BLURB[r().status]}</p>
                     <Show when={r().data.length > 0}>
                       <pre
                         class="diagram"

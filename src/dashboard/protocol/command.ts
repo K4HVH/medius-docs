@@ -51,9 +51,7 @@ export function queryPayload(what: number): Uint8Array {
   return new Uint8Array([what]);
 }
 
-// MOVE cursor (§3.1): [motion=0][dx i16 LE][dy i16 LE][flags]. Saturated to the i16 the wire carries;
-// the box then clamps that to the cloned report's field width and carries the remainder into the next
-// emit. `flags` is the movement-riding override (MV_F_*), 0 for an ordinary move.
+// MOVE cursor (§3.1): [motion=0][dx i16 LE][dy i16 LE][flags].
 export function moveCursorPayload(dx: number, dy: number, flags = 0): Uint8Array {
   const out = new Uint8Array(6);
   out[0] = MOTION_CURSOR;
@@ -96,21 +94,7 @@ export function ledPayload(target: LedTarget, mode: LedMode, level: number): Uin
   return new Uint8Array([target, mode, level & 0xff]);
 }
 
-// LOCK (§3.8): [class u8][id u16 LE][direction u8][scale i16 LE]. scale is the percent of the physical
-// value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
-// amplifies to LOCK_SCALE_MAX (2.55x). Locking and unlocking are its two ends. id is class-specific
-// (axis id / button id / keyboard usage / media usage; LOCK_ID_ALL for a blanket).
-//
-// The percent is signed down to LOCK_SCALE_MIN: a negative one reverses what it keeps, so -100 on an
-// axis is a plain inversion. The slot comes from the sign of the delta before the weigh, so a
-// directional negative is well defined. Only an axis takes one; the box refuses a reversal on a
-// momentary usage, which carries one bit and has nothing to reverse.
-//
-// A delta picks up at most two scales, its absolute direction's and its bearing-relative one's, and
-// they multiply, so a block in either zeroes the delta. Direction.With / .Against need a live bearing (§3.12).
-// Direction.Both is the exception: it writes `scale` to the two fixed signs and a full PASS to the
-// relative pair, so a Both of 50 means 50% whether or not a bearing is live rather than squaring to
-// 25% when one is. It is still a total clear, since a Both of PASS returns all four slots to passing.
+// LOCK (§3.8): [class u8][id u16 LE][direction u8][scale i16 LE].
 export function lockPayload(
   cls: LockClass,
   id: number,
@@ -122,9 +106,7 @@ export function lockPayload(
 }
 
 // CATCH (§3.9): [class u8][id u16 LE][dir u8][state u8][capture u8]. One table entry, addressed the
-// same way a LOCK is: class 0xFF is every class and id 0xFFFF every id in the class. state 1
-// subscribes, 0 unsubscribes; the all-classes wildcard with state 0 clears the whole table in one
-// frame. capture caps the bytes taken per event, 0 meaning the whole packet.
+// same way a LOCK is: class 0xFF is every class and id 0xFFFF every id in the class.
 export function catchPayload(
   cls: CatchClass,
   id: number,
@@ -135,8 +117,8 @@ export function catchPayload(
   return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, dir, state & 0xff, capture & 0xff]);
 }
 
-// OPTION(IMPERFECT) (§3.10): [id=0][allow u8] - 1 opts into cloning an over-capacity device, 0 is
-// faithful-only (default). Persisted in NVS; takes effect on the next clone.
+// OPTION(IMPERFECT) (§3.10): [id=0][allow u8]. 1 clones a device the box can't copy exactly and admits
+// the advanced control layer, 0 is faithful-only (default). Persisted in NVS.
 export function imperfectPayload(allow: boolean): Uint8Array {
   return new Uint8Array([OPT_IMPERFECT, allow ? 1 : 0]);
 }
@@ -148,19 +130,15 @@ export function moveRidePayload(timeoutMs: number): Uint8Array {
   return new Uint8Array([OPT_MOVE_RIDE, ms & 0xff, (ms >> 8) & 0xff]);
 }
 
-// OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8] - what the With/Against lock directions
-// are measured against (§3.12). window is how long the last injected delta's direction stays the
-// bearing on that axis; 0 turns it off, leaving both directions inert whatever their scale. mode 0
-// reads each axis's own sign, mode 1 projects the delta onto the injected XY vector. Persisted in NVS.
+// OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8] - what the With/Against lock
+// directions are measured against (§3.12).
 export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array {
   const ms = Math.max(0, Math.min(0xffff, Math.round(windowMs)));
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
 }
 
-// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode is the pace (0 learned,
-// 1 follows the cloned poll rate, 2 fixed rate_hz). forceHz is the rate the clone advertises and the box
-// polls the device at, 0 for native ; it needs IMPERFECT on and re-clones the box when the
-// resolved interval changes. Both are written every call.
+// OPTION(EMIT) (§3.10): [id=2][mode u8][rate_hz u16 LE][force_hz u16 LE]. mode is the pace (0
+// learned, 1 follows the cloned poll rate, 2 fixed rate_hz).
 export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array {
   const hz = Math.max(0, Math.min(0xffff, Math.round(rateHz)));
   const fhz = Math.max(0, Math.min(0xffff, Math.round(forceHz)));
@@ -187,10 +165,7 @@ export function spreadPayload(percent: number): Uint8Array {
   return new Uint8Array([OPT_SPREAD, p & 0xff, p >> 8]);
 }
 
-// OPTION(NAME) (§3.10): [id=3][name ascii 1..32]. 1..32 printable ASCII bytes set the box's name; the
-// id alone (0 value bytes) clears it, reverting to the firmware-synthesised "Medius-XXXX" default. The
-// name is read back on RESP(VERSION), not Q_OPTIONS. Persisted in NVS. Non-ASCII/out-of-range bytes are
-// dropped so only a valid name is ever sent.
+// OPTION(NAME) (§3.10): [id=3][name ascii 1..32].
 export function namePayload(name: string): Uint8Array {
   const bytes: number[] = [];
   for (const ch of name) {
@@ -212,8 +187,7 @@ export function injectPayload(cls: number, id: number, action: number): Uint8Arr
 }
 
 // CLIP_APPEND (§3.11): a back-to-back run of encoded entries, no count and no separators, so the
-// box parses them by walking the tags. Returns null if any entry is unencodable, because a partial
-// append would land as a valid but wrong clip rather than being rejected.
+// box parses them by walking the tags.
 export function clipAppendPayload(entries: ClipEntry[]): Uint8Array | null {
   const parts: Uint8Array[] = [];
   let total = 0;
@@ -250,10 +224,8 @@ export function clipTriggerPayload(t: ClipTrigger, present: boolean): Uint8Array
   return new Uint8Array([t.cls, t.id & 0xff, (t.id >> 8) & 0xff, t.edge, t.action, flags]);
 }
 
-// CLIP_TRIGGER with a traffic class (§3.11), a packet trigger: [class u8][id u16 LE][dir u8][action u8]
-// [flags u8][slen u8][mlen u8][match mlen][mask mlen]. Keyed by (class, id, dir, mlen, match, mask); a
-// removal carries that key with action, flags and slen zero. Null for a trigger the box would refuse
-// on its own bytes (`clipPacketTriggerFault` says why), since a refused frame is dropped with no reply.
+// CLIP_TRIGGER with a traffic class (§3.11), a packet trigger: [class u8][id u16 LE][dir u8][action
+// u8] [flags u8][slen u8][mlen u8][match mlen][mask mlen].
 export function clipPacketTriggerPayload(t: ClipPacketTrigger, present: boolean): Uint8Array | null {
   if ((present ? clipPacketTriggerFault(t) : clipPacketKeyFault(t)) !== null) return null;
   const mlen = t.match.length;
@@ -280,9 +252,7 @@ export function clearClipTriggersPayload(): Uint8Array {
   return new Uint8Array([CLIP_COND_ANY_CLASS, CLIP_COND_ANY_ID & 0xff, CLIP_COND_ANY_ID >> 8, Direction.Both, 0, 0]);
 }
 
-// RAW (§3.14): [ep_num u8][dir u8][bytes...]. Put bytes verbatim on a cloned endpoint, named by number
-// and direction (POS = IN, toward the game PC; NEG = OUT, to the device), never a packed address.
-// Fire-and-forget, and dropped unless OPTION(IMPERFECT) is on.
+// RAW (§3.14): [ep_num u8][dir u8][bytes...].
 export function rawPayload(epNum: number, dir: number, bytes: Uint8Array): Uint8Array {
   const out = new Uint8Array(2 + bytes.length);
   out[0] = epNum & 0x0f;
@@ -292,8 +262,7 @@ export function rawPayload(epNum: number, dir: number, bytes: Uint8Array): Uint8
 }
 
 // TRANSFER (§3.14): [ep u8][setup 8][OUT data..]. The setup packet is the 8 USB bytes
-// [bmRequestType u8][bRequest u8][wValue u16 LE][wIndex u16 LE][wLength u16 LE]. The box runs the
-// request against the real device and answers with TRANSFER_RESP (its own opcode, correlated by SEQ).
+// [bmRequestType u8][bRequest u8][wValue u16 LE][wIndex u16 LE][wLength u16 LE].
 export function transferPayload(
   ep: number,
   bmRequestType: number,
@@ -315,9 +284,8 @@ export function transferPayload(
   return buf;
 }
 
-// REWRITE (§3.14): [cls u8][id u16 LE][dir u8][state u8][action u8][off u16 LE][mlen u8][match mlen]
-// [mask mlen][payload..]. state 1 adds or overwrites, 0 removes; a rule is keyed by (cls, id, dir, match,
-// mask). match and mask are the same length, and the box refuses an action its class does not allow.
+// REWRITE (§3.14): [cls u8][id u16 LE][dir u8][state u8][action u8][off u16 LE][mlen u8][match
+// mlen] [mask mlen][payload..].
 export function rewritePayload(rule: RewriteRule, state: number): Uint8Array {
   const mlen = Math.min(rule.match.length, rule.mask.length);
   const head = new Uint8Array(9);
@@ -373,12 +341,12 @@ export function patchPayload(
   return buf;
 }
 
-// PATCH apply (§3.14): re-present the clone with the stored patch set (the game PC sees one replug).
+// PATCH apply (§3.14): present the clone again with the stored set, when it differs from the one served.
 export function patchApplyPayload(): Uint8Array {
   return new Uint8Array([PATCH_APPLY]);
 }
 
-// PATCH clear (§3.14): drop every patch for this device and re-present unpatched.
+// PATCH clear (§3.14): erase this device's set; a clone serving patches is presented again without them.
 export function patchClearPayload(): Uint8Array {
   return new Uint8Array([PATCH_CLEAR]);
 }
@@ -389,10 +357,8 @@ export function queryEntryPayload(what: number, index: number): Uint8Array {
   return new Uint8Array([what, index & 0xff]);
 }
 
-// TRANSFORM (§3.15): [op u8][sclass u8][sid u16 LE][dclass u8][did u16 LE][state u8]. state 1 adds or
-// overwrites, 0 removes; an entry is keyed by (source, dest). Swap exchanges two axes, Remap moves the
-// source field into the destination. Every result is clamped by the box to the destination field's
-// declared range. There is no scale here: weighing a field is the lock's (§3.8).
+// TRANSFORM (§3.15): [op u8][sclass u8][sid u16 LE][dclass u8][did u16 LE][state u8]. state 1 adds
+// or overwrites, 0 removes; an entry is keyed by (source, dest).
 export function transformPayload(t: Transform, state: number): Uint8Array {
   const out = new Uint8Array(8);
   const dv = new DataView(out.buffer);

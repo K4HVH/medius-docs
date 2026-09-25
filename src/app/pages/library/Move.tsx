@@ -15,7 +15,7 @@ const Move: Component = () => {
           <A href="/native/commands/move#move"><code>MOVE</code></A> frame.
         </p>
         <table class="api-params">
-          <thead><tr><th>Drive a...</th><th>Rides a real move</th><th>Goes on the box's clock</th></tr></thead>
+          <thead><tr><th>Drive a...</th><th>Rides a real move</th><th>Goes on the next report</th></tr></thead>
           <tbody>
             <tr><td>cursor</td><td><A href="/library/move#move-rel"><code>move_rel</code></A></td><td><A href="/library/move#move-rel-now"><code>move_rel_now</code></A></td></tr>
             <tr><td>wheel</td><td><A href="/library/move#wheel"><code>wheel</code></A></td><td><A href="/library/move#wheel-now"><code>wheel_now</code></A></td></tr>
@@ -23,11 +23,13 @@ const Move: Component = () => {
           </tbody>
         </table>
         <p>
-          The right-hand column only differs while{' '}
-          <A href="/library/options#set-movement-riding">movement riding</A> is on.{' '}
+          The right-hand column puts the whole delta on the next mouse report the box sends, whatever{' '}
+          <A href="/library/options#set-movement-riding">movement riding</A>,{' '}
+          <A href="/library/options#set-spread">spreading</A> and{' '}
+          <A href="/library/options#set-render">rendering</A> are set to.{' '}
           <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
-          <A href="/library/move#discard-motion"><code>discard_motion</code></A> act on motion it is
-          already holding.
+          <A href="/library/move#discard-motion"><code>discard_motion</code></A> act on motion the box
+          is still holding from earlier moves.
         </p>
       </Card>
 
@@ -42,7 +44,7 @@ const Move: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>motion</code></td><td><A href="/library/types/enums#motion"><code>Motion</code></A></td><td>The axis to drive: <code>Cursor {'{'} dx, dy {'}'}</code>, <code>Wheel(dz)</code>, or <code>Pan(dz)</code>.</td></tr>
-              <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Whether this delta waits for a real move or emits on the box's own clock.</td></tr>
+              <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Whether this delta waits for a real move or leaves on the next report.</td></tr>
               <tr><td><code>pending</code></td><td><A href="/library/types/enums#pending-motion"><code>PendingMotion</code></A></td><td>What happens to motion the box is already holding for a real move.</td></tr>
             </tbody>
           </table>
@@ -50,8 +52,8 @@ const Move: Component = () => {
             Backs the <A href="/native/commands/move#move"><code>MOVE</code></A> command; the last two
             are its <A href="/native/commands/move#flags">flags byte</A>. With{' '}
             <A href="/library/options#set-movement-riding">movement riding</A> off,{' '}
-            <code>Now</code> and <code>Flush</code> change nothing, while <code>Discard</code> still
-            drops whatever has accumulated since the last emit.
+            <code>Now</code> still skips spreading and rendering, and <code>Flush</code> and{' '}
+            <code>Discard</code> act on what those still hold of earlier moves.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Motion, MoveTiming, PendingMotion};
@@ -165,8 +167,10 @@ device.pan(-1)?;  // pan left`}</code></pre>
           </table>
           <p>
             <A href="/library/move#move-rel"><code>move_rel</code></A> with{' '}
-            <code>MoveTiming::Now</code>: the delta emits on the box's own clock rather than waiting for
-            a real move to carry it, and leaves held motion held.
+            <code>MoveTiming::Now</code>: the delta leaves on the next mouse report the box sends rather
+            than waiting for a real move to carry it, and leaves held motion held. The box sends a report of
+            its own for it on the first poll no native report can be ready for, and a native report of the
+            mouse that reaches the box first carries the delta instead.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.set_movement_riding(Some(Duration::from_millis(20)))?;
@@ -192,7 +196,7 @@ device.move_rel_now(100, 0)?;  // emits whether they move or not`}</code></pre>
             <A href="/library/move#wheel"><code>wheel</code></A> with <code>MoveTiming::Now</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.wheel_now(-1)?;  // one notch down, on the box's clock`}</code></pre>
+          <pre><code class="language-rust">{`device.wheel_now(-1)?;  // one notch down, on the next report`}</code></pre>
         </Card>
       </div>
 
@@ -213,7 +217,7 @@ device.move_rel_now(100, 0)?;  // emits whether they move or not`}</code></pre>
             <A href="/library/move#pan"><code>pan</code></A> with <code>MoveTiming::Now</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.pan_now(-1)?;  // one step left, on the box's clock`}</code></pre>
+          <pre><code class="language-rust">{`device.pan_now(-1)?;  // one step left, on the next report`}</code></pre>
         </Card>
       </div>
 
@@ -226,8 +230,8 @@ device.move_rel_now(100, 0)?;  // emits whether they move or not`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Accumulator</th><th>What flush does</th></tr></thead>
             <tbody>
-              <tr><td>Riding</td><td>Emptied onto the box's own clock, whatever the ride window says. Sends no motion of its own.</td></tr>
-              <tr><td>Immediate</td><td>Gains that amount, so it goes out on the next frame the box emits.</td></tr>
+              <tr><td>Riding</td><td>Emptied into the immediate accumulator, whatever the ride window says. Sends no motion of its own.</td></tr>
+              <tr><td>Immediate</td><td>Gains that amount, so it goes out on the next mouse report the box sends.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>

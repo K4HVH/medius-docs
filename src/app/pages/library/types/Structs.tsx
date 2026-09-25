@@ -25,7 +25,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>8</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>9</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 8, fw_major: 3, fw_minor: 4, fw_patch: 1, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.4.1"); // Display omits proto_ver
+let v = Version { proto_ver: 9, fw_major: 3, fw_minor: 4, fw_patch: 2, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.2"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -69,7 +69,7 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>catch_on</code></td><td><code>bool</code></td><td>The <A href="/library/catch#catch-events"><code>catch</code></A> table holds at least one <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>, whatever class it addresses.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>bool</code></td><td>A keyboard is attached on the host chip, cloned and injectable.</td></tr>
               <tr><td><code>rewrite_on</code></td><td><code>bool</code></td><td>The <A href="/library/advanced/rewrite">rewrite-rule table</A> is non-empty (v3.4.0).</td></tr>
-              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>A <A href="/library/advanced/patch">descriptor-patch set</A> is applied to the clone (v3.4.0).</td></tr>
+              <tr><td><code>patch_on</code></td><td><code>bool</code></td><td>The clone serves a <A href="/library/advanced/patch">descriptor-patch set</A> (v3.4.0).</td></tr>
               <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A <A href="/library/transform">field transform</A> is active (v3.4.0).</td></tr>
             </tbody>
           </table>
@@ -196,21 +196,32 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
         <Card>
           <CardHeader title="Stats" subtitle="Delivery and telemetry counters" />
           <p>
-            Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>.
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means delivery degraded under
-            load. The narrowed fields saturate instead of wrapping.
+            Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>,
+            decoded from the 31-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
+          </p>
+          <p>
+            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's own input
+            slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or{' '}
+            <code>host_rx_drops</code> means it was lost between the box's two chips;{' '}
+            <code>relay_drops</code> is back-pressure on a relayed stream, which is load rather than
+            lost input. The narrowed fields saturate instead of wrapping; the three drop counts are
+            full width, and <code>session</code> wraps.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Packets dropped on a full queue, in either direction (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the clone's IN queue could not hold, so the game PC never saw them (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
               <tr><td><code>wakeups</code></td><td><code>u16</code></td><td>Remote-wakeups issued.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
+              <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
+              <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
+              <tr><td><code>session</code></td><td><code>u16</code></td><td>The times the box released some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; it wraps, so compare it for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>. See the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> for what counts.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -487,6 +498,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether the capture or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
+              <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>Whether a <A href="/library/advanced/rewrite">rewrite rule</A> at this event's class changed, dropped, answered or refused the packet. A <code>Pass</code> rule, or a <code>Patch</code> that changed nothing, leaves it false.</td></tr>
+              <tr><td><code>control_status()</code></td><td><code>Option&lt;<A href="/library/types/enums#control-status">ControlStatus</A>&gt;</code></td><td>The handshake the game PC received, for a <code>Control</code> event.</td></tr>
             </tbody>
           </table>
           <p>
@@ -496,8 +509,9 @@ for ev in device.input_events(CatchFilter::all_input())? {
           <table class="api-params">
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
-              <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet.</td></tr>
-              <tr><td><code>Control</code></td><td>How the proxied transfer ended; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>.</td></tr>
+              <tr><td><code>HidIn</code>, <code>HidOut</code>, <code>VendorInterrupt</code>, <code>Emit</code></td><td>b7 = a rule acted on the packet; read it with <code>rule_acted()</code>.</td></tr>
+              <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet, b7 = a rule acted.</td></tr>
+              <tr><td><code>Control</code></td><td>b0-b1 = the handshake the game PC received; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>. b7 = a rule acted.</td></tr>
               <tr><td><code>ClipTransfer</code></td><td>How the clip's transfer ended; read it with <code>transfer_status()</code>, see <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A>.</td></tr>
               <tr><td><code>Bus</code></td><td>The <A href="/library/types/enums#bus-event"><code>BusEvent</code></A> kind.</td></tr>
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
@@ -506,9 +520,17 @@ for ev in device.input_events(CatchFilter::all_input())? {
           <p>
             A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
             <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
-            <code>direction</code> says which way that data went. Requests answered from the box's
-            descriptor cache still raise events.
+            <code>direction</code> says which way that data went. A <code>Control</code> event is the
+            transaction the game PC received, on every control endpoint, and a request answered from the
+            box's value cache still raises one.
           </p>
+          <table class="api-params">
+            <thead><tr><th><code>Control</code> data</th><th>Holds</th></tr></thead>
+            <tbody>
+              <tr><td>IN</td><td>The reply the game PC received: after a <code>ReplyPatch</code> or <code>ReplyReplace</code> rule, or an <code>Answer</code> rule's payload.</td></tr>
+              <tr><td>OUT</td><td>The data stage the game PC sent, before a <code>Patch</code> or <code>Replace</code> rule rewrote it for the device.</td></tr>
+            </tbody>
+          </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
 
@@ -778,7 +800,9 @@ match clock.age {
           <p>
             A catch stamp is microseconds on a chip that booted before this process did: it{' '}
             <A href="/library/types/enums#clock-domain">wraps, restarts at zero on reboot</A>, and
-            has no relation to any clock here. Feed every event in as it arrives, in order.
+            has no relation to any clock here. Feed every event in as it arrives, in order, and{' '}
+            <code>reset</code> a domain whose chip restarted: a device-chip restart raises{' '}
+            <A href="/library/types/structs#counters-snapshot"><code>restarts</code></A>.
           </p>
           <p>
             <code>&amp;event</code> is anything implementing <code>Timestamped</code>: an{' '}
@@ -919,9 +943,9 @@ for t in &table.entries {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning an over-capacity device is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device needs an interrupt-IN endpoint the box can't service.</td></tr>
-              <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is over-capacity and was cloned anyway, so one interface is dead.</td></tr>
+              <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed.</td></tr>
+              <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1045,7 +1069,7 @@ for t in &table.entries {
         <Card>
           <CardHeader title="CountersSnapshot" subtitle="Link statistics snapshot" />
           <p>
-            Four running link totals from{' '}
+            Five running link totals from{' '}
             <A href="/library/diagnostics#counters"><code>counters()</code></A>.
           </p>
           <table class="api-params">
@@ -1055,6 +1079,7 @@ for t in &table.entries {
               <tr><td><code>frames_rx</code></td><td><code>u64</code></td><td>Frames received from the box.</td></tr>
               <tr><td><code>crc_drops</code></td><td><code>u64</code></td><td>Inbound frames dropped on a bad <A href="/native/frame#crc">checksum</A>.</td></tr>
               <tr><td><code>reconnects</code></td><td><code>u64</code></td><td>Times the library reopened the port.</td></tr>
+              <tr><td><code>restarts</code></td><td><code>u64</code></td><td>Device-chip restarts the library recovered from by re-sending the state it holds. A session release, counted in <A href="/library/types/structs#stats"><code>Stats::session</code></A>, leaves it alone. See <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1156,7 +1181,7 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the packet travels in: <code>IN</code>, <code>OUT</code> or <code>Both</code>. <code>With</code> and <code>Against</code> are <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#clip-action"><code>ClipAction</code></A></td><td>The playback action to run, on the frame clock's next tick.</td></tr>
               <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, one length, 16 bytes at most (<code>PKT_MATCH_MAX</code>). A packet matches when <code>head[i] &amp; mask[i] == match_bytes[i]</code> for each; empty matches every packet on the address. <code>.matching()</code> sets both.</td></tr>
-              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Drop every packet the trigger wins, ahead of the rewrite table; a consumed <code>HidIn</code> report is the whole report. The box holds a consuming trigger only under the imperfect-clone opt-in; <code>.consume()</code> sets it true.</td></tr>
+              <tr><td><code>consume</code></td><td><code>bool</code></td><td>Drop every packet the trigger matches as the top-ranked trigger, ahead of the rewrite table; a consumed <code>HidIn</code> report is the whole report. The box holds a consuming trigger only under the imperfect-clone opt-in; <code>.consume()</code> sets it true.</td></tr>
               <tr><td><code>once_per_run</code></td><td><code>bool</code></td><td>Run the action on the first packet of a run of matching ones, where a plain trigger runs it on each; <code>.once_per_run(selector_len)</code> sets it true.</td></tr>
               <tr><td><code>selector_len</code></td><td><code>u8</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition. <code>0</code> without.</td></tr>
             </tbody>
@@ -1184,7 +1209,7 @@ handle.bind_packet(&held)?;`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>trigger</code></td><td><A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A></td><td>The trigger, in the shape <code>bind_packet</code> takes, so a read entry replays as a bind.</td></tr>
-              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the trigger has won since it was bound or overwritten, saturating. A <code>once_per_run</code> trigger wins every packet of a run and runs its action on the first.</td></tr>
+              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the trigger has matched as the top-ranked trigger since it was bound or overwritten, saturating. A <code>once_per_run</code> trigger counts every packet of a run and runs its action on the first.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1393,9 +1418,9 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>table_full</code></td><td><code>bool</code></td><td>A further rule was, or would be, refused past the 32 the box holds (<code>REWRITE_MAX_ENTRIES</code>).</td></tr>
-              <tr><td><code>generation</code></td><td><code>u8</code></td><td>Bumps only on a change that alters the table, so a host holding a last-seen value re-sends only when the box's diverges. The crate does this for you.</td></tr>
-              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#rewrite-entry">RewriteEntry</A>&gt;</code></td><td>One row per rule, in installation order, not the most-specific-first order the box selects a match by.</td></tr>
+              <tr><td><code>table_full</code></td><td><code>bool</code></td><td>The box refused the last new rule or overwrite for room: all 32 entries in use (<code>REWRITE_MAX_ENTRIES</code>), or no space left in the 2048-byte payload pool (<code>REWRITE_PAYLOAD_POOL</code>). The next change to the table, or a clear, resets it; an identical re-send leaves it. <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> checks both limits before it sends.</td></tr>
+              <tr><td><code>generation</code></td><td><code>u8</code></td><td>Goes up by one on a change to the table, or a clear or silence that empties it; an identical re-send leaves it. <code>reset</code>, detach, link loss, re-clone and opt-in off return it to 0. The crate's keepalive re-sends every held rule whatever it reads. See the native <A href="/native/commands/rewrite#lifecycle">lifecycle</A>.</td></tr>
+              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#rewrite-entry">RewriteEntry</A>&gt;</code></td><td>One row per rule, in table order, not the most-specific-first order the box selects a match by. An overwrite moves a rule to the end.</td></tr>
             </tbody>
           </table>
           <p>
@@ -1423,7 +1448,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>match_len</code></td><td><code>u8</code></td><td>How many match and mask bytes the rule compares.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>The write offset for a patching action.</td></tr>
               <tr><td><code>payload_len</code></td><td><code>u16</code></td><td>How many payload bytes the rule carries.</td></tr>
-              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the rule has matched since it was installed, saturating.</td></tr>
+              <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the rule matched as the top-ranked rule since it was installed or last overwritten, a <code>Pass</code> included; saturating.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1448,7 +1473,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>section</code></td><td><A href="/library/types/enums#patch-section"><code>PatchSection</code></A></td><td>The descriptor this patch targets.</td></tr>
               <tr><td><code>cfg</code></td><td><code>u8</code></td><td>The configuration index, for <code>Config</code> / <code>Report</code>. <code>0</code> is the first configuration, not <code>bConfigurationValue</code>.</td></tr>
               <tr><td><code>index</code></td><td><code>u8</code></td><td>The interface or string index, for <code>Report</code> / <code>String</code>.</td></tr>
-              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at.</td></tr>
+              <tr><td><code>offset</code></td><td><code>u16</code></td><td>The byte offset within the descriptor the overwrite starts at; ignored for <code>String</code>, which is replaced whole.</td></tr>
               <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The overwrite bytes; empty removes the patch at this key.</td></tr>
             </tbody>
           </table>
@@ -1461,25 +1486,26 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           <p>
             What <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>{' '}
             returns, as four apply-state flags over a list of{' '}
-            <A href="/library/types/structs#patch-entry"><code>PatchEntry</code></A>.{' '}
-            <A href="/library/requests#health"><code>query_health</code></A> reports an applied set in its{' '}
-            <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
+            <A href="/library/types/structs#patch-entry"><code>PatchEntry</code></A>. The list is the
+            stored set; <A href="/library/requests#health"><code>query_health</code></A> reports a
+            patched clone in its <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Set when</th></tr></thead>
             <tbody>
-              <tr><td><code>applied</code></td><td>The stored set is applied to the live clone.</td></tr>
-              <tr><td><code>pending</code></td><td>A stored change has not been applied yet; an <code>apply_patch</code> would re-present with it.</td></tr>
-              <tr><td><code>refused</code></td><td>The last apply was refused: a patched descriptor's advertised length no longer matched what it serves. The box logged why.</td></tr>
-              <tr><td><code>table_full</code></td><td>The store is full: a further patch was, or would be, refused past the 16 it holds (<code>PATCH_MAX_ENTRIES</code>).</td></tr>
+              <tr><td><code>applied</code></td><td>The clone serves a non-empty patched set: the one it was presented with, which a later store leaves alone until the next presentation.</td></tr>
+              <tr><td><code>pending</code></td><td>The stored set differs from the one the clone serves, in its patches, bytes or order: not applied yet, changed or emptied since, refused, or held back because the opt-in is off.</td></tr>
+              <tr><td><code>refused</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when the clone was last presented with it and is unchanged since, so the device is served unpatched; the box log names the check. A set change, a clear, a presentation that passes or a detach resets it. A device that fails unpatched is refused with it clear.</td></tr>
+              <tr><td><code>table_full</code></td><td>The box refused the last new patch or overwrite for room: 16 patches in use (<code>PATCH_MAX_ENTRIES</code>), or no space left in the 1024-byte pool. The next change to the set, or a clear, resets it.</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`  set_patch        --> stored          (survives reconnect; NVS, per VID:PID)
-     |                     |
-     | apply_patch         v
-     +-------------> pending -> applied  (one replug; the clone re-presents patched)
-                            \\
-                             +-> refused (a patched length diverged; logged)`}</pre>
+          <pre class="diagram">{`  set_patch --> stored set          (NVS, per VID:PID; pending while it differs from the served set)
+                    |
+                    |  apply_patch, the opt-in turning on, the device attaching
+                    v
+                presented --- checks pass ---> applied   (the clone serves the patched set)
+                    |
+                    +-------- a check fails ---> refused   (served unpatched; the log names the check)`}</pre>
         </Card>
       </div>
       <div id="patch-entry" data-search-target>

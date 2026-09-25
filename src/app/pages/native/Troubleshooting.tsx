@@ -36,12 +36,12 @@ const Troubleshooting: Component = () => {
             </li>
             <li>Another process holds the port. Only one program can have it open.</li>
             <li>It isn't a Medius box, or you opened the wrong port.</li>
-            <li>You opened the port after the hello already fired.</li>
+            <li>You opened the port after both hellos already fired.</li>
           </ul>
           <p>
             The hello is a{' '}
             <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> the box sends
-            on its own once the control link comes up. Missing it costs nothing: send{' '}
+            on its own at boot and on the first frame it receives. Missing it costs nothing: send{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> and read the
             reply. See <A href="/native/connection#hello">the ready hello</A>.
           </p>

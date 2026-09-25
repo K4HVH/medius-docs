@@ -141,14 +141,17 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
           </p>
 
           <p>
-            A <code>Copy</code> snapshot of four totals that only climb, reset only on process
-            restart: rising <code>crc_drops</code> means a flaky cable, <code>reconnects</code> counts
-            port reopens after a dropped link. Full field reference on{' '}
+            A <code>Copy</code> snapshot of five totals that only climb, zeroed only when the process
+            starts: rising <code>crc_drops</code> means a flaky cable, <code>reconnects</code> counts
+            port reopens after a dropped link, and <code>restarts</code> counts the device-chip
+            restarts the library <A href="/library/lifecycle#restart">recovered</A> from.
+            Full field reference on{' '}
             <A href="/library/types/structs#counters-snapshot"><code>CountersSnapshot</code></A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`println!("{:?}", device.counters());`}</code></pre>
+          <pre><code class="language-rust">{`let c = device.counters();
+println!("{} reconnects, {} restarts, {} CRC drops", c.reconnects, c.restarts, c.crc_drops);`}</code></pre>
         </Card>
       </div>
 

@@ -33,11 +33,11 @@ const NativeIntroduction: Component = () => {
           <tbody>
             <tr>
               <td>Firmware version</td>
-              <td><code>3.4.1</code></td>
+              <td><code>3.4.2</code></td>
             </tr>
             <tr>
               <td>Protocol version</td>
-              <td><code>8</code></td>
+              <td><code>9</code></td>
             </tr>
             <tr>
               <td>Transport</td>
@@ -69,7 +69,7 @@ const NativeIntroduction: Component = () => {
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>8</code>. Confirm it during the{' '}
+                These pages describe version <code>9</code>. Confirm it during the{' '}
                 <A href="/native/connection#handshake">handshake</A> from the{' '}
                 <code>proto_ver</code> field of the{' '}
                 <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
@@ -175,6 +175,11 @@ const NativeIntroduction: Component = () => {
                 <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
               </Card>
             </A>
+            <A href="/native/commands/transform" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Transform" subtitle="Swap or remap a field" />
+              </Card>
+            </A>
             <A href="/native/commands/clip" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Clip" subtitle="Buffered clip playback" />
@@ -208,6 +213,34 @@ const NativeIntroduction: Component = () => {
             <A href="/native/commands/usage" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
                 <CardHeader title="Usage IDs" subtitle="Button, key, media numbers" />
+              </Card>
+            </A>
+          </div>
+        </Card>
+      </div>
+
+      <div id="advanced" data-search-target>
+        <Card>
+          <CardHeader title="Advanced control" />
+          <div class="docs-grid">
+            <A href="/native/commands/raw" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Raw" subtitle="Bytes on a cloned endpoint" />
+              </Card>
+            </A>
+            <A href="/native/commands/transfer" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Transfer" subtitle="A control transfer on the device" />
+              </Card>
+            </A>
+            <A href="/native/commands/rewrite" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Rewrite" subtitle="Rewrite packets in flight" />
+              </Card>
+            </A>
+            <A href="/native/commands/patch" style={{ "text-decoration": "none" }}>
+              <Card interactive variant="subtle" padding="compact">
+                <CardHeader title="Patch" subtitle="Patch the cloned descriptors" />
               </Card>
             </A>
           </div>

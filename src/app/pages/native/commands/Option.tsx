@@ -22,7 +22,7 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
                 <td><code>0</code></td>
-                <td>Clone an over-capacity device anyway</td>
+                <td>Clone a device the box can't clone exactly, and admit the advanced control layer</td>
                 <td>off</td>
               </tr>
               <tr>
@@ -98,24 +98,44 @@ const Option: Component = () => {
 
       <div id="imperfect" data-search-target>
         <Card>
-          <CardHeader title="IMPERFECT" subtitle="Clone an over-capacity device anyway" />
+          <CardHeader title="IMPERFECT" subtitle="Clone anyway, and admit the advanced control layer" />
           <pre class="api-signature">id 0  ·  [allow u8]</pre>
           <div class="api-response-label">ALLOW</div>
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone exactly <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Clone it anyway: every other interface byte-faithful, the over-capacity one dead</td></tr>
+              <tr><td><code>1</code></td><td>Clone it anyway, every interface the box can serve byte-faithful, and admit the gated commands below</td></tr>
+            </tbody>
+          </table>
+          <div class="api-response-label">GATES</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>What</th><th>With the opt-in off</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
+              <tr><td>a forced rate, <A href="/native/commands/option#emit"><code>EMIT</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
+              <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear; turning the opt-in off clears the table.</td></tr>
+              <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served; <code>APPLY</code> is ignored, and turning the opt-in off presents a patched clone again without its set.</td></tr>
+              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Answered with status <code>0xFC</code>.</td></tr>
+              <tr><td><A href="/native/commands/raw#raw"><code>RAW</code></A>, and a clip's raw and transfer items</td><td>Discarded; turning the opt-in off drops queued clip transfers.</td></tr>
+              <tr><td>a <A href="/native/commands/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused, and turning the opt-in off removes the ones the box holds.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              Some devices need more interrupt-IN endpoints than the box serves (the Wooting Two HE's
-              analog stream needs a sixth, past the{' '}
+              A device the box can't clone exactly has more interrupt-IN endpoints or HID interfaces
+              than the box serves, runs at high speed, has configurations the box did not capture, a
+              vendor bulk or isochronous endpoint, or HID alternate settings, or has a report
+              descriptor truncated or never captured.
+            </p>
+            <p>
+              The Wooting Two HE's analog stream needs a sixth interrupt-IN endpoint, past the{' '}
               <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
-              five). Changing this for an{' '}
-              <em>attached</em> over-capacity device reboots the box to re-clone; a normal device is
-              unaffected.
+              five. Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
+              the device chip to re-clone; otherwise the clone is presented again when the change
+              alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
             </p>
           </div>
           <p>
@@ -142,7 +162,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Off: injection emits via the frame clock <em>(default)</em></td></tr>
+              <tr><td><code>0</code></td><td>Off: injected motion goes out on native reports and the box's own alike <em>(default)</em></td></tr>
               <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
             </tbody>
           </table>

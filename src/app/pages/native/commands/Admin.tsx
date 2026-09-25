@@ -23,10 +23,23 @@ const Admin: Component = () => {
             <code>RESET</code> drops all injection and returns the box to plain passthrough.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x04</code>.
           </p>
-          <pre class="api-signature">RESET  0x04  ·  payload 0 bytes</pre>
+          <pre class="api-signature">RESET  0x04  ·  payload 1 byte</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
-          <p>No payload (<code>LEN</code> is <code>0</code>).</p>
+          <p>
+            A flags byte. <code>0x00</code> is the release described below, on its own.
+          </p>
+          <div class="api-response-label">FLAGS</div>
+          <table class="api-params">
+            <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>The box also erases its persistent store and reboots, returning at its defaults under its MAC-derived name.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Any other bit refuses the frame whole, release included, and a frame with no payload does
+            nothing: the byte is required, as every other command's payload is.
+          </p>
           <div class="api-response-label">EFFECT</div>
           <p>
             Releases every piece of PC-owned state in one frame: both{' '}
@@ -34,7 +47,9 @@ const Admin: Component = () => {
             <A href="/native/commands/inject"><code>INJECT</code></A> override, every{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A> scale and the{' '}
             <A href="/native/commands/lock#bearing">bearing</A>, the{' '}
-            <A href="/native/commands/catch"><code>CATCH</code></A> subscription table, the loaded{' '}
+            <A href="/native/commands/catch"><code>CATCH</code></A> subscription table, the{' '}
+            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>, the{' '}
+            <A href="/native/commands/transform#clearing">transforms</A>, the loaded{' '}
             <A href="/native/commands/clip"><code>clip</code></A>, and any{' '}
             <A href="/native/commands/led"><code>LED</code></A> override.
           </p>
@@ -43,13 +58,32 @@ const Admin: Component = () => {
             the <A href="/native/injection#safety">safety auto-clear</A> performs. Library binding:{' '}
             <A href="/library/admin#reset"><code>reset</code></A>.
           </p>
+          <div class="api-response-label">WITH THE NVS FLAG</div>
+          <p>
+            The release above runs first, then the box erases the <code>nvs</code>{' '}
+            <A href="/native/commands/update">partition</A> and reboots. That takes the box
+            name, every <A href="/library/options">option</A>, and everything the box has learned
+            about the devices it has seen, including any{' '}
+            <A href="/native/commands/patch">descriptor patch set</A>. Settings are read into RAM at
+            boot, so the reboot is what puts the defaults back.
+          </p>
+          <p>
+            The clone re-enumerates on the game PC. The control port stays enumerated throughout, so
+            the box goes quiet rather than away: queries time out until it answers again. Library
+            binding: <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
+          </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>A bare <code>RESET</code>:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+
-| A5     | 04     | 00     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+          <p>The release on its own, and the same frame carrying the flag:</p>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
+| A5     | 04     | 00     | 01 00  | 00     | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
+          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
+| A5     | 04     | 00     | 01 00  | 01     | lo hi  |
++--------+--------+--------+--------+--------+--------+
+| SOF    | TYPE   | SEQ    | LEN    | flags  | CRC16  |
++--------+--------+--------+--------+--------+--------+`}</pre>
         </Card>
       </div>
 

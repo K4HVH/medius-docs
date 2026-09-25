@@ -36,9 +36,7 @@ export const section = { 'margin-top': 'var(--g-spacing)' } as const;
 
 export const status = { 'margin-top': 'var(--g-spacing-sm)' } as const;
 
-// One column of the two-column card layout. The basis is wider than the Device tab's because
-// these cards carry dense control rows: at 340px two columns still fit on a tablet and every
-// button row wraps three deep.
+// One column of the two-column card layout.
 export const col = {
   flex: '1 1 420px',
   'min-width': '0',

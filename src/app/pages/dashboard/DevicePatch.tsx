@@ -1,8 +1,8 @@
 // Overwrite the bytes the clone presents at enumeration.
 //
 // A patch is stored whether or not imperfect clones are on, so the form stays live and only the apply
-// is withheld. A refused set is the sharp edge: the box returns out of its start path and the clone
-// never comes up, and clearing is the way back.
+// waits for the opt-in. The clone serves the copy of the set it was last presented with, so the card
+// reads the applied and pending flags to say whether what is stored is what the clone carries.
 
 import { For, Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -11,7 +11,7 @@ import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
 import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
-import { type PatchInfo, PATCHES_MAX, PatchSection, patchSectionName } from '../../../dashboard/protocol';
+import { type PatchInfo, PATCH_POOL, PATCHES_MAX, PatchSection, patchSectionName } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { chips, label, muted, row, section } from './ui';
@@ -29,12 +29,13 @@ const SECTION_OPTIONS = SECTIONS.map((s) => ({
   label: `${displayName(patchSectionName(s))} descriptor`,
 }));
 
-// What the offset counts from, which is the one thing the number field cannot say for itself.
+// What the offset counts from, which is the one thing the number field cannot say for itself. A
+// string patch has no offset: its bytes are the whole new string.
 const SECTION_BLURB: Record<number, string> = {
   [PatchSection.Device]: 'Offset into the 18-byte device descriptor.',
   [PatchSection.Config]: 'Offset into that whole configuration, its interfaces and endpoints included.',
   [PatchSection.Report]: "Offset into that interface's report descriptor.",
-  [PatchSection.String]: 'Offset into that string descriptor, its two-byte header included.',
+  [PatchSection.String]: 'The bytes are the new text, one character each, up to 127, and replace the whole string. A 00 byte ends it early.',
   [PatchSection.Bos]: 'Offset into the BOS descriptor.',
 };
 
@@ -42,6 +43,7 @@ const SECTION_BLURB: Record<number, string> = {
 // descriptor keys on cfg + index (the interface); a configuration on cfg; a string on index.
 const usesCfg = (s: PatchSection | null) => s === PatchSection.Config || s === PatchSection.Report;
 const usesIndex = (s: PatchSection | null) => s === PatchSection.Report || s === PatchSection.String;
+const usesOffset = (s: PatchSection | null) => s !== PatchSection.String;
 
 // A chip is capped at 250px and ellipsises past it, so a patch names only what addresses it. The
 // section already names the number it keys on, except a report, which needs both of its.
@@ -51,7 +53,7 @@ const describe = (e: PatchInfo): string => {
   else if (e.section === PatchSection.Config) narrow.push(String(e.cfg));
   else if (e.section === PatchSection.String) narrow.push(String(e.index));
   const head = [displayName(patchSectionName(e.section)), ...narrow].join(' ');
-  return `${head} at ${e.offset}, ${e.len} B`;
+  return usesOffset(e.section) ? `${head} at ${e.offset}, ${e.len} B` : `${head}, ${e.len} B`;
 };
 
 const DevicePatch = () => {
@@ -76,15 +78,38 @@ const DevicePatch = () => {
       cmd.run(() => Promise.reject(new Error('Enter the bytes to write.')));
       return;
     }
-    cmd.run(() => dash.link()!.setPatch(psection(), pCfg(), pIndex(), pOff(), bytes));
+    cmd.run(() => dash.link()!.setPatch(psection(), pCfg(), pIndex(), usesOffset(psection()) ? pOff() : 0, bytes));
   };
 
   const removeOne = (e: PatchInfo) =>
     cmd.run(() => dash.link()!.removePatch(e.section ?? PatchSection.Device, e.cfg, e.index, e.offset));
 
+  const applied = () => patches()?.applied === true;
+  const pending = () => patches()?.pending === true;
+  const refused = () => patches()?.refused === true;
+
+  // The box ignores an Apply that would serve the set the clone already serves, and one for a refused
+  // set that has not changed, so the button says why rather than sending a frame that does nothing.
   const applyWhy = (): string | null => {
     if (!allowed()) return 'Applying needs imperfect clones, on the Device tab.';
-    if (entries().length === 0) return 'Nothing stored to apply.';
+    if (refused()) return 'This set failed a check. Change it, then apply.';
+    if (entries().length === 0 && !applied()) return 'Nothing stored to apply.';
+    if (!pending()) return 'The clone already carries this set.';
+    return null;
+  };
+
+  // An emptied set still on the clone is cleared the way a stored one is, so Clear all stays live while
+  // anything is on the clone, not only while something is stored.
+  const clearable = () => entries().length > 0 || applied() || refused();
+
+  // Where the stored set stands against the clone, and what to do about it. A refused set and a set
+  // waiting on the opt-in have callouts of their own.
+  const stateLine = (): string | null => {
+    if (refused() || !allowed()) return null;
+    if (applied() && !pending()) return 'The clone carries this set.';
+    if (applied() && entries().length === 0) return 'The clone still carries the patches you removed. Apply or Clear all takes them off.';
+    if (applied()) return 'The clone carries an earlier version of this set. Apply to put the changes on it.';
+    if (pending()) return 'This set is not on the clone yet. Apply to put it on.';
     return null;
   };
 
@@ -124,9 +149,11 @@ const DevicePatch = () => {
                 />
               </div>
             </Show>
-            <div style={{ 'max-width': '9rem' }}>
-              <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
-            </div>
+            <Show when={usesOffset(psection())}>
+              <div style={{ 'max-width': '9rem' }}>
+                <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
+              </div>
+            </Show>
           </div>
 
           <div style={section}>
@@ -140,18 +167,19 @@ const DevicePatch = () => {
             <Button
               variant="secondary"
               disabled={cmd.busy() || applyWhy() !== null}
-              title={applyWhy() ?? 'Re-present the clone carrying the stored set'}
+              title={applyWhy() ?? 'Re-clone the device carrying the stored set'}
               onClick={applyPatches}
             >
               Apply
             </Button>
-            <Button variant="secondary" disabled={cmd.busy() || entries().length === 0} onClick={clearAll}>
+            <Button variant="secondary" disabled={cmd.busy() || !clearable()} onClick={clearAll}>
               Clear all
             </Button>
           </div>
           <p style={{ ...muted, 'margin-top': '4px' }}>
-            Applying re-presents the clone, so the game PC sees one replug. Clear all reboots the box if
-            the patches were on the clone.
+            Apply re-clones the device with the stored set. Clear all erases the set, and re-clones the
+            device without it if the clone carries patches. A re-clone is a replug on the game PC and
+            drops the session: injection, locks, rules, the clip and catch subscriptions.
           </p>
           <Show when={!allowed()}>
             <div class="callout callout--info" style={section}>
@@ -160,7 +188,8 @@ const DevicePatch = () => {
           </Show>
           <Show when={patches()?.tableFull}>
             <div class="callout callout--warning" style={section}>
-              The box holds {PATCHES_MAX} patches and the store is full. Remove one before adding another.
+              The box refused the last patch: it holds {PATCHES_MAX} patches and {PATCH_POOL} bytes of patch
+              data per device. Remove or shorten one, then set it again.
             </div>
           </Show>
           <Show when={cmd.error()}>
@@ -172,19 +201,21 @@ const DevicePatch = () => {
           <div style={section}>
             <div style={label}>State</div>
             <div style={chips}>
-              <Chip variant={patches()?.applied ? 'success' : 'neutral'}>
-                {patches()?.applied ? 'Applied' : 'Not applied'}
-              </Chip>
-              <Show when={patches()?.pending}>
-                <Chip variant="info">Not on the clone</Chip>
+              <Chip variant={applied() ? 'success' : 'neutral'}>{applied() ? 'Applied' : 'Not applied'}</Chip>
+              <Show when={pending() && !refused()}>
+                <Chip variant="info">Changes not on the clone</Chip>
               </Show>
-              <Show when={patches()?.refused}>
-                <Chip variant="warning">Last apply refused</Chip>
+              <Show when={refused()}>
+                <Chip variant="warning">Refused</Chip>
               </Show>
             </div>
-            <Show when={patches()?.refused}>
+            <Show when={stateLine()}>
+              <p style={{ ...muted, 'margin-top': '4px' }}>{stateLine()}</p>
+            </Show>
+            <Show when={refused()}>
               <div class="callout callout--warning" style={section}>
-                A refused set leaves the clone down. Clear all brings it back.
+                This set failed a check, so the clone runs without it and the device log names the check.
+                Change the set and apply, or clear it.
               </div>
             </Show>
           </div>
@@ -195,7 +226,7 @@ const DevicePatch = () => {
             </div>
             <Show
               when={entries().length > 0}
-              fallback={<p>Nothing patched.</p>}
+              fallback={<p>{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
             >
               <div style={chips}>
                 <For each={entries()}>

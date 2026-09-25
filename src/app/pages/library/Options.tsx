@@ -11,7 +11,8 @@ const Options: Component = () => {
         <p>
           Seven box settings, each set and read on its own. All persist in NVS and survive a reboot. See
           the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
-          command for the wire contract.
+          command for the wire contract. To put every one of them back at its default, use{' '}
+          <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
         </p>
         <table class="api-params">
           <thead><tr><th>Option</th><th>Set</th><th>Read</th></tr></thead>
@@ -29,21 +30,23 @@ const Options: Component = () => {
 
       <div id="allow-imperfect-clones" data-search-target>
         <Card>
-          <CardHeader title="allow_imperfect_clones" subtitle="Clone an over-capacity device anyway" />
+          <CardHeader title="allow_imperfect_clones" subtitle="Clone anyway, and admit the advanced control layer" />
           <pre class="api-signature">fn allow_imperfect_clones(&self, allow: bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            By default the box refuses a device it can't clone faithfully. <code>true</code> clones an
-            over-capacity device anyway, the rest faithful and the over-capacity interface dead. Changing
-            the setting while such a device is <em>attached</em> reboots the box to re-clone; a normal
-            device is unaffected.
+            By default the box refuses a device it can't clone exactly. <code>true</code> clones it
+            anyway, every interface the box can serve byte-faithful. Changing the setting with such a
+            device <em>attached</em>, or a forced rate pending, reboots the device chip to re-clone.
+            Otherwise the clone re-presents only when the change alters the{' '}
+            <A href="/library/advanced/patch">patch set</A> it serves: turned on, a stored set the box
+            has not refused; turned off, a set it is serving.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>allow</code></td><td><code>bool</code></td><td>Clone an over-capacity device anyway, or stay faithful-only.</td></tr>
+              <tr><td><code>allow</code></td><td><code>bool</code></td><td>Clone anyway, or stay faithful-only.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">GATES</div>
@@ -52,26 +55,35 @@ const Options: Component = () => {
               <tr><th>What</th><th>With the opt-in off</th></tr>
             </thead>
             <tbody>
-              <tr><td>an over-capacity device</td><td>Refused: no clone appears.</td></tr>
+              <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
-              <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>, and turning the opt-in off clears the table.</td></tr>
+              <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>; <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
               <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
               <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Answered <code>Refused</code>.</td></tr>
-              <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box.</td></tr>
+              <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box; turning the opt-in off drops queued clip transfers.</td></tr>
               <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box, and turning the opt-in off removes the ones it holds.</td></tr>
             </tbody>
           </table>
+          <div class="callout callout--info">
+            <p>
+              A device the box can't clone exactly has more interrupt-IN endpoints or HID interfaces
+              than the box serves, runs at high speed, has configurations the box did not capture, a
+              vendor bulk or isochronous endpoint, or HID alternate settings, or has a report
+              descriptor truncated or never captured.
+            </p>
+          </div>
           <div class="callout callout--warning">
             <p>
-              A change that reboots the box clears its soft state, every clip trigger included, so set
-              the opt-in before binding triggers.
+              A change that reboots the device chip or re-presents the clone drops the box's session
+              state and a loaded clip. The library re-sends what it holds once the new clone is up; see{' '}
+              <A href="/library/lifecycle#restart">session recovery</A>.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
-device.allow_imperfect_clones(true)?;   // reboots + re-clones if an over-capacity device is attached`}</code></pre>
+device.allow_imperfect_clones(true)?;   // re-clones if the attached device needs the opt-in`}</code></pre>
         </Card>
       </div>
 
@@ -353,8 +365,8 @@ device.set_spread(0)?;     // off: the whole delta on the next report`}</code></
           <p>
             Returns an{' '}
             <A href="/library/types/structs#imperfect-status"><code>ImperfectStatus</code></A>: the
-            opt-in toggle, whether the attached device is over-capacity, and whether the live clone went
-            over-capacity anyway with one interface dead.
+            opt-in toggle, whether the attached device is over-capacity, and whether the live clone is
+            not an exact copy.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -440,8 +452,9 @@ if bearing.is_live() {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
-            <code>ready</code> is false until a profile arms; until then motion is relayed and injection
-            takes the paced fill whatever <code>mode</code> says.
+            <code>ready</code> is false until a profile arms, and while the box's two chips have not
+            yet agreed which holds the motion; until then motion is relayed and injection takes the
+            paced fill whatever <code>mode</code> says.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -462,9 +475,9 @@ if !status.ready {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
-            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code> and
-            until the box has learned the host's command period. In both the whole delta goes out on
-            the next report.
+            <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
+            the box has learned the host's command period, and while the box's two chips have not yet
+            agreed which holds the motion. In each the whole delta goes out on the next report.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;

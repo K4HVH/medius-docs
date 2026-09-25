@@ -54,7 +54,17 @@ const Clip: Component = () => {
               A clip plays on any clone. The{' '}
               <A href="/library/guides/connection#keepalive">keepalive</A> holds a loaded clip, its
               settings, and its triggers of both kinds past the silence window; a link down for
-              longer clears them on the box, so reload the clip and its config.
+              longer clears them on the box, so reload the clip and its config. A device-chip
+              restart or a <A href="/library/lifecycle#restart">released session</A> empties the ring:
+              the library re-sends the settings and triggers, and{' '}
+              <A href="/library/clip#lost"><code>lost</code></A> says to reload the clip.
+            </p>
+            <p>
+              The release from{' '}
+              <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(false)</code></A>{' '}
+              is partial: it drops consuming packet triggers and queued transfer items and keeps the
+              ring, its settings and every other trigger, unless the toggle also re-presents the
+              clone.
             </p>
           </div>
           <div class="callout callout--info">
@@ -240,6 +250,34 @@ device.clip().append(&clip)?;`}</code></pre>
         </Card>
       </div>
 
+      <div id="lost" data-search-target>
+        <Card>
+          <CardHeader title="lost" subtitle="Whether the box dropped the loaded clip" />
+          <pre class="api-signature">fn lost(&self) -&gt; bool</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <div class="api-response-label">RETURNS</div>
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td><code>true</code></td><td>A clip appended since the last <code>clear</code> is gone from the box: its device chip restarted, the box <A href="/library/lifecycle#restart">released the session</A>, or a <A href="/library/lifecycle#reconnect">reconnect</A> found the ring empty. Set once the box takes a reload again.</td></tr>
+              <tr><td><code>false</code></td><td>Nothing appended, the clip still on the box, or an <code>append</code> or <code>clear</code> since.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            A recovery gives back the settings and triggers, not the ring's content, so the clip is
+            the caller's to rebuild and append.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`let handle = device.clip();
+handle.append(&clip)?;
+
+// later, from a loop that owns the clip
+if handle.lost() {
+    handle.append(&clip)?;   // reload; lost() reads false again
+}`}</code></pre>
+        </Card>
+      </div>
+
       <div id="modes" data-search-target>
         <Card>
           <CardHeader title="Streaming and retained" subtitle="Drain-and-discard, or keep-and-replay" />
@@ -333,7 +371,7 @@ handle.stop()?;`}</code></pre>
                 <tr><td>Fires on</td><td>a press or release edge of a button, key, or media usage</td><td>a packet on a traffic surface, by a masked head compare</td></tr>
                 <tr><td>Key</td><td>usage and edge</td><td>class, id, direction, match and mask</td></tr>
                 <tr><td>The box holds</td><td>8</td><td>8, with 112 match bytes between them</td></tr>
-                <tr><td><code>.consume()</code></td><td>locks the usage for the hold</td><td>drops every packet the trigger wins; needs the imperfect-clone opt-in</td></tr>
+                <tr><td><code>.consume()</code></td><td>locks the usage for the hold</td><td>drops every packet the trigger matches as the top-ranked trigger; needs the imperfect-clone opt-in</td></tr>
                 <tr><td>Calls</td><td><code>bind</code>, <code>unbind</code></td><td><code>bind_packet</code>, <code>unbind_packet</code></td></tr>
                 <tr><td>Reads back in</td><td><A href="/library/types/structs#clip-settings"><code>triggers</code></A></td><td><code>packet_triggers</code>, each with its <code>hits</code></td></tr>
               </tbody>
@@ -406,7 +444,7 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
               lifetime (held by the keepalive, cleared with the clip on a{' '}
               <A href="/native/commands/clip#ctrl">hard stop</A>) and its read-back. It sits beside the{' '}
               <A href="/library/advanced/rewrite">rewrite table</A> and independent of it, reading each
-              packet as it arrived, so one packet can fire a trigger and win a rule.
+              packet as it arrived, so one packet can fire a trigger and have a rule act on it.
             </p>
             <p>
               Find the address and the bytes to match with{' '}
@@ -423,7 +461,7 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
                 <tr><td>address</td><td>the <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>, the id within it (the interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ANY_ID</code>), and the <A href="/library/types/enums#direction"><code>Direction</code></A></td></tr>
                 <tr><td>action</td><td>the engine verb to run, on the frame clock's next tick: within one frame of the matching packet, 1&nbsp;ms at the default pace</td></tr>
                 <tr><td><code>.matching()</code></td><td>head bytes and their mask, one length, 16 at most; left out, every packet on the address matches</td></tr>
-                <tr><td><code>.consume()</code></td><td>drop every packet the trigger wins, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it reaches the PC with the next report</td></tr>
+                <tr><td><code>.consume()</code></td><td>drop every packet the trigger matches as the top-ranked trigger, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it reaches the PC with the next report</td></tr>
                 <tr><td><code>.once_per_run()</code></td><td>run the action on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes select the stream, such as a report ID, and the rest are the condition</td></tr>
               </tbody>
             </table>
@@ -455,17 +493,17 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
                 one action.
               </p>
             </div>
-            <div class="api-response-label">WINNER</div>
+            <div class="api-response-label">RANK</div>
             <p>
-              One trigger wins a packet, the most specific: an exact <code>id</code> over{' '}
-              <code>ANY_ID</code>, more masked bits over fewer, <code>IN</code> or <code>OUT</code>{' '}
-              over <code>Both</code>, then the one bound earlier. <code>hits</code> counts only the
-              packets a trigger won, so an outranked trigger's <code>hits</code> stays still while it
-              keeps tracking its run.
+              Of the triggers a packet matches, only the most specific acts on it: an exact{' '}
+              <code>id</code> over <code>ANY_ID</code>, more masked bits over fewer, <code>IN</code> or{' '}
+              <code>OUT</code> over <code>Both</code>, then the one bound earlier. <code>hits</code>{' '}
+              counts only the packets a trigger matched as the top-ranked trigger, so an outranked
+              trigger's <code>hits</code> stays still while it keeps tracking its run.
             </p>
             <table class="api-params">
               <thead>
-                <tr><th>Report</th><th>Won by</th><th>So</th></tr>
+                <tr><th>Report</th><th>Top-ranked trigger</th><th>So</th></tr>
               </thead>
               <tbody>
                 <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report reaches the PC</td></tr>
@@ -509,12 +547,11 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
             </div>
             <div class="api-response-label">EXAMPLE</div>
             <p>
-              Turn the opt-in on before binding: with an over-capacity device attached it reboots the
-              box to re-clone, and a reboot clears every trigger.
+              Turn the opt-in on before binding: the box refuses a consuming trigger without it.
             </p>
             <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
 
-device.allow_imperfect_clones(true)?;   // first: it can reboot the box
+device.allow_imperfect_clones(true)?;   // first: a consuming trigger needs it
 let clip = device.clip();
 
 // Interface 2 is a vendor-page HID interface. Report ID 7 carries a button in bit 5 of its
@@ -555,8 +592,9 @@ clip.clear_triggers()?;         // both kinds`}</code></pre>
           <p>
             <A href="/library/features/async"><code>AsyncDevice::clip()</code></A> returns an{' '}
             <code>AsyncClipHandle</code> that keeps <code>append</code>, the settings, both kinds of
-            trigger, and the engine verbs synchronous; <code>query_status().await</code> and{' '}
-            <code>query_config().await</code> are futures like the other queries.
+            trigger, the engine verbs and <code>lost</code> synchronous;{' '}
+            <code>query_status().await</code> and <code>query_config().await</code> are futures like
+            the other queries.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let device = Device::find()?.into_async();

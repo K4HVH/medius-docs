@@ -217,23 +217,108 @@ describe('DeviceDeveloper', () => {
     expect(getByText('Patch control 0 both, 9 hits')).toBeTruthy();
   });
 
-  it('applies the stored patch set and renders its flags', async () => {
+  const patchCard = (container: HTMLElement) => container.querySelector('#descriptor-patches') as HTMLElement;
+  const cardButton = (card: HTMLElement, name: string) =>
+    [...card.querySelectorAll('button')].find((b) => b.textContent?.trim() === name) as HTMLButtonElement;
+  const withPatches = (patches: Record<string, unknown>) => {
     mock.poll = {
       imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
       rewrite: { tableFull: false, gen: 0, entries: [] },
-      patches: {
-        applied: true,
-        pending: false,
-        refused: false,
-        tableFull: false,
-        entries: [{ section: PatchSection.Device, cfg: 0, index: 0, offset: 8, len: 2 }],
-      },
+      patches: { applied: false, pending: false, refused: false, tableFull: false, entries: [], ...patches },
     };
-    const { getByText } = render(() => <DeviceDeveloper />);
-    expect(getByText('Applied')).toBeTruthy();
-    fireEvent.click(getByText('Apply'));
+  };
+  const ONE_PATCH = [{ section: PatchSection.Device, cfg: 0, index: 0, offset: 8, len: 2 }];
+
+  it('applies a stored set the clone does not carry yet', async () => {
+    withPatches({ pending: true, entries: ONE_PATCH });
+    const { container, getByText, queryByText } = render(() => <DeviceDeveloper />);
+    expect(getByText('Not applied')).toBeTruthy();
+    expect(getByText('Changes not on the clone')).toBeTruthy();
+    expect(getByText('This set is not on the clone yet. Apply to put it on.')).toBeTruthy();
+    expect(queryByText('Refused')).toBeNull();
+    fireEvent.click(cardButton(patchCard(container), 'Apply'));
     await settle();
     expect(mock.applied).toBe(1);
+  });
+
+  // The box ignores an Apply of the set the clone already serves, so the button stands down and says so.
+  it('stands Apply down when the clone already carries the stored set', () => {
+    withPatches({ applied: true, entries: ONE_PATCH });
+    const { container, getByText, queryByText } = render(() => <DeviceDeveloper />);
+    expect(getByText('Applied')).toBeTruthy();
+    expect(getByText('The clone carries this set.')).toBeTruthy();
+    expect(queryByText('Changes not on the clone')).toBeNull();
+    const apply = cardButton(patchCard(container), 'Apply');
+    expect(apply.disabled).toBe(true);
+    expect(apply.title).toBe('The clone already carries this set.');
+  });
+
+  it('says an applied set edited since is not what the clone carries', () => {
+    withPatches({ applied: true, pending: true, entries: ONE_PATCH });
+    const { container, getByText } = render(() => <DeviceDeveloper />);
+    expect(getByText('Applied')).toBeTruthy();
+    expect(getByText('Changes not on the clone')).toBeTruthy();
+    expect(getByText('The clone carries an earlier version of this set. Apply to put the changes on it.')).toBeTruthy();
+    expect(cardButton(patchCard(container), 'Apply').disabled).toBe(false);
+  });
+
+  // An emptied set still on the clone: Apply presents it unpatched, and Clear all does too.
+  it('offers Apply and Clear all for a set emptied while the clone carries it', () => {
+    withPatches({ applied: true, pending: true });
+    const { container, getByText } = render(() => <DeviceDeveloper />);
+    const card = patchCard(container);
+    expect(cardButton(card, 'Clear all').disabled).toBe(false);
+    expect(cardButton(card, 'Apply').disabled).toBe(false);
+    expect(getByText('The clone still carries the patches you removed. Apply or Clear all takes them off.')).toBeTruthy();
+    expect(getByText('Nothing stored.')).toBeTruthy();
+  });
+
+  it('shows a refused set as refused, with the way on, and stands Apply down', () => {
+    withPatches({ pending: true, refused: true, entries: ONE_PATCH });
+    const { container, getByText, queryByText } = render(() => <DeviceDeveloper />);
+    expect(getByText('Refused')).toBeTruthy();
+    expect(getByText(/This set failed a check, so the clone runs without it/)).toBeTruthy();
+    expect(queryByText('Changes not on the clone')).toBeNull();
+    expect(queryByText(/Apply to put it on/)).toBeNull();
+    const card = patchCard(container);
+    expect(cardButton(card, 'Apply').title).toBe('This set failed a check. Change it, then apply.');
+    expect(cardButton(card, 'Apply').disabled).toBe(true);
+    expect(cardButton(card, 'Clear all').disabled).toBe(false);
+  });
+
+  it('has nothing to apply or clear with nothing stored or carried', () => {
+    withPatches({});
+    const { container, getByText } = render(() => <DeviceDeveloper />);
+    const card = patchCard(container);
+    expect(getByText('Nothing patched.')).toBeTruthy();
+    expect(cardButton(card, 'Apply').title).toBe('Nothing stored to apply.');
+    expect(cardButton(card, 'Clear all').disabled).toBe(true);
+  });
+
+  it('says what Apply and Clear all cost, with no reboot', () => {
+    on();
+    const { container } = render(() => <DeviceDeveloper />);
+    const text = patchCard(container).textContent ?? '';
+    expect(text).toContain('Apply re-clones the device with the stored set.');
+    expect(text).toContain('A re-clone is a replug on the game PC');
+    expect(text).not.toMatch(/reboot/i);
+  });
+
+  it('reads a full flag on either table as the last add refused for room', () => {
+    mock.poll = {
+      imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },
+      rewrite: { tableFull: true, gen: 0, entries: [] },
+      patches: { applied: false, pending: false, refused: false, tableFull: true, entries: [] },
+    };
+    const { getByText } = render(() => <DeviceDeveloper />);
+    expect(getByText(/The box refused the last rule: it holds 32 rules and 2048 bytes of/)).toBeTruthy();
+    expect(getByText(/The box refused the last patch: it holds 16 patches and 1024 bytes of patch/)).toBeTruthy();
+  });
+
+  it('says nothing about room while neither table refused an add', () => {
+    on();
+    const { queryByText } = render(() => <DeviceDeveloper />);
+    expect(queryByText(/The box refused the last/)).toBeNull();
   });
 
   // The helper copy on every sibling card is a function of the live selection, not a fixed string.
@@ -249,12 +334,25 @@ describe('DeviceDeveloper', () => {
   it('blurbs the picked rewrite class, not a fixed sentence', async () => {
     on();
     const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
-    await findByText('Setup packets on a control endpoint.');
+    await findByText('Class and vendor requests on EP0, and every request on a control endpoint above it.');
     expect(queryByText('Reports the game PC sends the device, by endpoint.')).toBeNull();
 
     fireEvent.click(radio(container, 'HID out'));
     await findByText('Reports the game PC sends the device, by endpoint.');
-    expect(queryByText('Setup packets on a control endpoint.')).toBeNull();
+    expect(queryByText('Class and vendor requests on EP0, and every request on a control endpoint above it.')).toBeNull();
+  });
+
+  // A motion rewrite on HID in is lost on any report the box changes, so the rewrite card says where
+  // motion is rewritten. The clip card shares the class blurb and does not carry that sentence.
+  it('tells the rewrite card where mouse motion is rewritten, on HID in only', async () => {
+    on();
+    const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
+    const card = container.querySelector('#rewrite-rules') as HTMLElement;
+    fireEvent.click(radio(card, 'HID in'));
+    await findByText(/before the box changes anything\. Rewrite mouse motion at Emit/);
+    fireEvent.click(radio(card, 'Emit'));
+    await findByText('What the clone sends the game PC, injection included.');
+    expect(queryByText(/Rewrite mouse motion at Emit/)).toBeNull();
   });
 
   it('blurbs the picked rewrite action', async () => {
@@ -272,9 +370,30 @@ describe('DeviceDeveloper', () => {
     );
     fireEvent.click(replace!);
     await waitFor(() => {
-      if (!queryByText('The packet becomes the payload.')) throw new Error('blurb did not follow');
+      if (!queryByText('Overwrites the start of the data an Out request carries, keeping the length.')) {
+        throw new Error('blurb did not follow');
+      }
     });
     expect(queryByText('Leaves the packet untouched.')).toBeNull();
+  });
+
+  // On Control, Replace reaches only an Out request's data; on a report class the packet becomes the
+  // payload. Same action, so the class alone has to swap the sentence.
+  it('blurbs Replace by the class it acts on', async () => {
+    on();
+    const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
+    const card = container.querySelector('#rewrite-rules') as HTMLElement;
+    const box = card.querySelector('[role="combobox"]') as HTMLElement;
+    fireEvent.click(box);
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await settle();
+    fireEvent.click([...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.trim() === 'Replace')!);
+    await findByText('Overwrites the start of the data an Out request carries, keeping the length.');
+    expect(queryByText('The packet becomes the payload.')).toBeNull();
+
+    fireEvent.click(radio(card, 'HID out'));
+    await findByText('The packet becomes the payload.');
+    expect(queryByText(/data an Out request carries/)).toBeNull();
   });
 
   it('blurbs what the patch offset counts from, per descriptor', async () => {
@@ -283,8 +402,30 @@ describe('DeviceDeveloper', () => {
     await findByText('Offset into the 18-byte device descriptor.');
 
     fireEvent.click(radio(container, 'String descriptor'));
-    await findByText('Offset into that string descriptor, its two-byte header included.');
+    await findByText(/replace the whole string/);
     expect(queryByText('Offset into the 18-byte device descriptor.')).toBeNull();
+  });
+
+  // A string patch replaces the whole string, so the card has no offset to offer for it and sends 0
+  // whatever the field held before.
+  it('drops the offset for a string patch and sends it as 0', async () => {
+    on();
+    const { container } = render(() => <DeviceDeveloper />);
+    const card = container.querySelector('#descriptor-patches') as HTMLElement;
+    const offset = () =>
+      [...card.querySelectorAll('label.number-input__label')].find((l) => l.textContent?.trim() === 'Offset');
+    const off = offset()!.parentElement!.querySelector('input') as HTMLInputElement;
+    fireEvent.input(off, { target: { value: '7' } });
+    fireEvent.blur(off);
+    await settle();
+    fireEvent.click(radio(card, 'String descriptor'));
+    await settle();
+    expect(offset()).toBeUndefined();
+    const bytes = [...card.querySelectorAll('label')].find((l) => l.textContent?.trim() === 'Bytes (hex)');
+    fireEvent.input(bytes!.parentElement!.querySelector('input')!, { target: { value: '41 42' } });
+    fireEvent.click([...card.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Set patch')!);
+    await settle();
+    expect(mock.patches).toEqual([{ section: PatchSection.String, cfg: 0, index: 0, offset: 0, len: 2 }]);
   });
 
   // Scoped: the rewrite card carries an In/Out direction of its own.
@@ -336,6 +477,18 @@ describe('DeviceDeveloper', () => {
     expect(mock.transfers[0]).toEqual([0, 0x80, 6, 0x0100, 0, 18]);
     expect(getByText('OK')).toBeTruthy();
     expect(getByText('2 B in')).toBeTruthy();
+  });
+
+  // No answer covers more than a silent device, and the card says which cases.
+  it('says what a transfer with no answer can mean', async () => {
+    on();
+    mock.transferReply = { ep: 0, status: TransferStatus.Nak, data: new Uint8Array() };
+    const { getByText, findByText, queryByText } = render(() => <DeviceDeveloper />);
+    fireEvent.click(getByText('Run'));
+    await findByText('No answer');
+    expect(getByText(/no control endpoint with that number/)).toBeTruthy();
+    expect(getByText(/host chip did not answer within 0\.8 s/)).toBeTruthy();
+    expect(queryByText('NAK')).toBeNull();
   });
 });
 

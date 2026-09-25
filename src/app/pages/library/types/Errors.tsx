@@ -56,7 +56,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>8</code>;{' '}
+                  The box replied, but its <code>proto_ver</code> wasn't <code>9</code>;{' '}
                   <code>got</code> carries the reported value. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
                   another protocol. See the <A href="/library/connection">handshake</A>.
@@ -217,6 +217,15 @@ const Errors: Component = () => {
                 <td>
                   A further <A href="/library/advanced/rewrite">rewrite rule</A> with all{' '}
                   <code>limit</code> already in use. Remove one first.
+                </td>
+              </tr>
+              <tr>
+                <td><code>RewritePoolFull {'{'} len, free, limit {'}'}</code></td>
+                <td>
+                  A rewrite rule's <code>len</code>-byte payload with <code>free</code> bytes left of
+                  the box's <code>limit</code>-byte payload pool (<code>REWRITE_PAYLOAD_POOL</code>,
+                  2048) after the other held rules; an overwrite gives back the bytes it replaces.
+                  Remove a rule or shorten a payload first.
                 </td>
               </tr>
               <tr>

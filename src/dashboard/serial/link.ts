@@ -1,141 +1,141 @@
 /// <reference types="w3c-web-serial" />
-// The device control link over Web Serial: frame the wire protocol, correlate
-// QUERY/RESP by SEQ and selector, and run the version handshake. Mirrors the
-// medius crate's link/correlation behavior.
+// The device control link over Web Serial: frame the wire protocol, correlate QUERY/RESP by SEQ and
+// selector, and run the version handshake. Mirrors the medius crate's link/correlation behavior.
 
 import {
-  type Bearing,
-  type CatchEvent,
-  type CatchFilter,
-  type Caps,
-  type CatchState,
-  type ClipEntry,
-  type ClipStatus,
-  type ClipPacketTrigger,
-  type ClipTrigger,
-  type DecodedFrame,
-  type DeviceInfo,
-  type EmitPace,
-  type Render,
-  type Spread,
-  type Health,
-  type ImperfectStatus,
-  type Locks,
-  type LockTarget,
-  type LogLine,
-  type Rate,
-  type RewriteRule,
-  type RewriteTable,
-  type PatchSet,
-  type Transform,
-  type TransformTable,
-  type PatchEntry,
-  type TransferResult,
-  PatchSection,
-  type Stats,
-  type Version,
-  ClipOp,
-  EmitMode,
-  RenderMode,
-  FrameDecoder,
-  FrameType,
-  MAX_PAYLOAD,
-  MIN_PROTO_VER,
-  PROTO_VER,
-  Q_CLIP,
-  OPT_BEARING,
-  OPT_EMIT,
-  OPT_RENDER,
-  OPT_SPREAD,
-  OPT_IMPERFECT,
-  OPT_MOVE_RIDE,
-  Q_CAPS,
-  Q_CATCH,
-  Q_DEVICE_INFO,
-  Q_HEALTH,
-  Q_LOCKS,
-  Q_OPTIONS,
-  Q_RATE,
-  Q_STATS,
-  Q_VERSION,
-  INJ_BTN,
-  INJ_KEY,
-  INJ_MEDIA,
-  Direction,
-  LockClass,
-  LedMode,
-  LedTarget,
-  RebootTarget,
+  anyPending,
+  BearingMode,
+  bearingPayload,
   catchPayload,
+  clearClipTriggersPayload,
   clearNamePayload,
+  clearRewritePayload,
+  clearTransformPayload,
   clipAppendPayload,
   clipCtrlPayload,
-  clipSetPayload,
-  clearClipTriggersPayload,
+  ClipOp,
   clipPacketTriggerPayload,
+  clipSetPayload,
   clipTriggerPayload,
+  Direction,
+  EmitMode,
   emitPayload,
-  renderPayload,
-  spreadPayload,
   encode,
   encodeClipEntry,
   filterEverything,
+  FrameDecoder,
+  FrameType,
   imperfectPayload,
+  INJ_BTN,
+  INJ_KEY,
+  INJ_MEDIA,
   injectPayload,
+  LedMode,
   ledPayload,
-  BearingMode,
-  bearingPayload,
+  LedTarget,
   LOCK_SCALE_BLOCK,
   LOCK_SCALE_PASS,
+  LockClass,
   lockPayload,
+  MAX_PAYLOAD,
+  MIN_PROTO_VER,
   moveCursorPayload,
-  moveWheelPayload,
   movePanPayload,
   moveRidePayload,
+  moveWheelPayload,
   MV_F_DISCARD,
   MV_F_FLUSH,
   MV_F_NOW,
   namePayload,
+  OPT_BEARING,
+  OPT_EMIT,
+  OPT_IMPERFECT,
+  OPT_MOVE_RIDE,
+  OPT_RENDER,
+  OPT_SPREAD,
+  OTA_CHUNK,
+  OTA_CREDIT,
+  OTA_OP_ABORT,
+  OTA_OP_ACTIVATE,
+  OTA_OP_BEGIN,
+  OTA_OP_DATA,
+  OTA_OP_END,
+  OTA_TGT_DEVICE,
   parseLog,
   parseMotionEvent,
   parseResp,
   parseTrafficEvent,
   parseTransferResp,
   parseUsageEvent,
-  queryPayload,
-  rebootPayload,
-  rawPayload,
-  transferPayload,
-  rewritePayload,
-  clearRewritePayload,
-  patchPayload,
   patchApplyPayload,
   patchClearPayload,
-  transformPayload,
-  clearTransformPayload,
-  queryEntryPayload,
+  patchPayload,
+  PatchSection,
+  PROTO_VER,
+  Q_CAPS,
+  Q_CATCH,
+  Q_CLIP,
+  Q_DEVICE_INFO,
+  Q_FIRMWARE,
+  Q_HEALTH,
+  Q_LOCKS,
+  Q_OPTIONS,
+  Q_PATCH_ENTRY,
+  Q_PATCHES,
+  Q_RATE,
   Q_REWRITE,
   Q_REWRITE_ENTRY,
-  Q_PATCHES,
-  Q_PATCH_ENTRY,
+  Q_STATS,
   Q_TRANSFORMS,
+  Q_VERSION,
+  queryEntryPayload,
+  queryPayload,
+  rawPayload,
+  rebootPayload,
+  RebootTarget,
+  RenderMode,
+  renderPayload,
+  rewritePayload,
+  RST_F_NVS,
+  spreadPayload,
+  transferPayload,
+  transformPayload,
+  type Bearing,
+  type Caps,
+  type CatchEvent,
+  type CatchFilter,
+  type CatchState,
+  type ClipEntry,
+  type ClipPacketTrigger,
+  type ClipStatus,
+  type ClipTrigger,
+  type DecodedFrame,
+  type DeviceInfo,
+  type EmitPace,
   type FirmwareInfo,
-  anyPending,
-  Q_FIRMWARE,
-  OTA_OP_BEGIN,
-  OTA_OP_DATA,
-  OTA_OP_END,
-  OTA_OP_ABORT,
-  OTA_OP_ACTIVATE,
-  OTA_TGT_DEVICE,
-  OTA_CHUNK,
-  OTA_CREDIT,
+  type Health,
+  type ImperfectStatus,
+  type Locks,
+  type LockTarget,
+  type LogLine,
+  type PatchEntry,
+  type PatchSet,
+  type Rate,
+  type Render,
+  type RewriteRule,
+  type RewriteTable,
+  type Spread,
+  type Stats,
+  type TransferResult,
+  type Transform,
+  type TransformTable,
+  type Version,
+  UPD_ACK,
+  UPD_NAMES,
   UPD_OK,
   UPD_READY,
-  UPD_ACK,
-  UPD_STAGED,
-  UPD_NAMES,
   UPD_RESP_LEN,
+  UPD_STAGED,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
 
@@ -158,8 +158,7 @@ export class QueryTimeoutError extends Error {
 }
 
 // The box answered a query and the reply is in a layout this build does not decode: firmware that
-// lays the reply out another way. Retrying reads the same bytes again, so a caller shows it rather
-// than waiting for a value.
+// lays the reply out another way.
 export class UnreadableReplyError extends Error {
   constructor(what: string) {
     super(`the box's reply to ${what} is in a layout this page does not read`);
@@ -264,9 +263,7 @@ interface Pending {
   timer: ReturnType<typeof setTimeout>;
 }
 
-// A TRANSFER_RESP waiter, keyed by the SEQ the reply echoes. TRANSFER_RESP is its own opcode carrying
-// [ep][status] rather than a selector byte, so it cannot ride the RESP path that correlates on the
-// selector; it needs its own SEQ-keyed map.
+// A TRANSFER_RESP waiter, keyed by the SEQ the reply echoes.
 interface TransferWaiter {
   resolve: (result: TransferResult) => void;
   reject: (err: Error) => void;
@@ -338,10 +335,7 @@ export class SerialLink {
   async open(baudRate: number = CTRL_BAUD): Promise<void> {
     if (this.opened) throw new Error('link already opened');
     this.opened = true;
-    // Adopt a port that is already open rather than opening it again. A close that could not finish
-    // (the usual cause is the box re-enumerating underneath it as it reboots into a new image)
-    // leaves the port open, and Web Serial answers the next open() with "the port is already open",
-    // which strands the page with no way back except a replug.
+    // Adopt a port that is already open rather than opening it again.
     if (!this.port.readable || !this.port.writable) {
       await this.port.open({ baudRate });
     }
@@ -432,8 +426,7 @@ export class SerialLink {
   }
 
   // The active CATCH table (§4.9): the box-wide drop count, the cross-chip clock estimate, and one
-  // entry per subscription with its own drop count. CATCH is fire-and-forget, so this is the only
-  // way to see that an entry landed rather than being refused by a full table.
+  // entry per subscription with its own drop count.
   async queryCatch(timeoutMs?: number): Promise<CatchState> {
     const resp = parseResp(await this.query(Q_CATCH, timeoutMs));
     if (resp?.kind !== 'catch') throw new Error('unexpected reply to CATCH query');
@@ -475,16 +468,10 @@ export class SerialLink {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
-  // Weigh physical input on a target and direction (§3.8). `scale` is the percent of the physical
-  // value the box keeps: LOCK_SCALE_BLOCK blocks it, LOCK_SCALE_PASS passes it untouched, above that
-  // amplifies. `lock` and `unlock` are its two ends. Direction.With / .Against are measured against
-  // the bearing (§3.12) and do nothing until one is live; see `setBearing`.
-  // A blanket (id LOCK_ID_ALL) carries the direction to every member, so an every-key lock can block
-  // press edges alone. A media usage has no edges and ignores the byte either way.
+  // Weigh physical input on a target and direction (§3.8).
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
-    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent: the
-    // box does a different thing per class with it, and every other client refuses it too. A media usage
-    // has no edges at all, so an edge named on one goes out as Both, which is what the box reports back.
+    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent:
+    // the box does a different thing per class with it, and every other client refuses it too.
     if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
       return Promise.reject(new Error(`${Direction[direction]} is measured against the bearing, which only an axis has`));
     }
@@ -504,9 +491,7 @@ export class SerialLink {
     return this.scale(target, direction, LOCK_SCALE_PASS);
   }
 
-  // Move the cursor (§3.1). Relative, in the cloned mouse's units. The wire field is an i16, so
-  // a larger delta saturates here rather than wrapping; the box then clamps that to the cloned
-  // report's own field width and carries the remainder into later reports.
+  // Move the cursor (§3.1). Relative, in the cloned mouse's units.
   moveRel(dx: number, dy: number, flags = 0): Promise<void> {
     return this.send(encode(FrameType.Move, this.nextSeq(), moveCursorPayload(dx, dy, flags)));
   }
@@ -521,9 +506,8 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
   }
 
-  // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta emits on the box's
-  // own clock instead of waiting for a native cursor-motion report to carry it. With riding off these
-  // are the same as `moveRel` / `wheel`.
+  // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta leaves on the next
+  // report instead of waiting for a native cursor-motion report to carry it.
   moveRelNow(dx: number, dy: number): Promise<void> {
     return this.moveRel(dx, dy, MV_F_NOW);
   }
@@ -557,13 +541,15 @@ export class SerialLink {
     return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(cls, id, action)));
   }
 
-  // The box-wide safety clear (§3.4). Wider than its name: in one atomic release it drops every
-  // injected usage, every lock, the whole CATCH subscription table, the loaded clip AND its
-  // configuration (autolock scope, loop, retain, and every trigger of both kinds), and it returns the
-  // status LEDs back to the box. It is the recovery for a press whose release was lost, because it
-  // does not depend on knowing what is held. Release known holds one at a time when that matters.
+  // The box-wide safety clear (§3.4).
   reset(): Promise<void> {
-    return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array(0)));
+    return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array([0])));
+  }
+
+  // The same release, and then the box erases its persistent store and reboots (§3.4). The link
+  // drops while it does; the dashboard's own reconnect brings it back.
+  factoryReset(): Promise<void> {
+    return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array([RST_F_NVS])));
   }
 
   // Inject a keyboard key or modifier by HID keycode (§3.2, class key), tri-state action (0/1/2).
@@ -579,9 +565,7 @@ export class SerialLink {
   }
 
   // Add one entry to the CATCH subscription table (§3.9); event frames arrive on `onEvent` tagged
-  // motion, usages, or traffic. The table holds 32 entries and matching is most-specific-first, so
-  // "everything at 16 bytes, except endpoint 0x83 in full" is two calls. The subscription clears
-  // after ~1 s of control-PC silence, so poll a query to reset the timer.
+  // motion, usages, or traffic.
   catch(filter: CatchFilter): Promise<void> {
     return this.send(
       encode(
@@ -609,43 +593,30 @@ export class SerialLink {
     return this.unsubscribeCatch(filterEverything());
   }
 
-  // Opt into (or out of) cloning an over-capacity device imperfectly (§3.10). Persisted in NVS; the box
-  // reboots itself to re-clone with the new setting. Fire-and-forget. Read the state back with
-  // `queryImperfect`.
+  // Opt into (or out of) imperfect clones and the advanced control layer (§3.10). Persisted in NVS. The
+  // device chip reboots to re-clone a device that needs the opt-in, and presents the clone again when
+  // the toggle changes the patch set it serves. Fire-and-forget.
   allowImperfectClones(allow: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), imperfectPayload(allow)));
   }
 
-  // Set movement riding (§3.10): a window in milliseconds, or 0 to turn it off. With it on, injected
-  // motion only rides a native cursor-motion report inside the window (no synthetic motion frames),
-  // so injection's report density matches the native mouse. Persisted in NVS. Read back with
-  // `queryMovementRiding`.
+  // Set movement riding (§3.10): a window in milliseconds, or 0 to turn it off.
   setMovementRiding(windowMs: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), moveRidePayload(windowMs)));
   }
 
-  // Set emit-rate pacing and the forced wire rate (§3.10). Learned tracks the mouse's native report rate
-  // (default), Interval follows the cloned poll rate, Fixed paces at rateHz (snapped to 1000/n, capped at
-  // 1000); the mode raises the emit ceiling only and idle still emits when pending. forceHz is the rate
-  // the clone advertises and the box polls the device at, 0 for native ; it needs IMPERFECT on
-  // and re-clones the box when the resolved interval changes. Both ride one command, so both are written
-  // every call. Persisted in NVS. Read back with `queryEmitPace`.
+  // Set emit-rate pacing and the forced wire rate (§3.10).
   setEmitPace(mode: EmitMode, rateHz = 0, forceHz = 0): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), emitPayload(mode, rateHz, forceHz)));
   }
 
   // Set the bearing (§3.10, §3.12): what the With/Against lock directions are measured against.
-  // `windowMs` is how long the last injected delta's direction stays the bearing on that axis; 0 turns
-  // it off, leaving both directions inert whatever their scale. `mode` reads each axis's own sign
-  // (PerAxis) or projects the delta onto the injected XY vector (Vector). Persisted in NVS. Read back
-  // with `queryBearing`.
   setBearing(windowMs: number, mode: BearingMode = BearingMode.PerAxis): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
-  // The texture motion is rendered with (§3.10). `full` puts native motion through the same
-  // model rather than relaying it, so the latency rendering adds reaches it too; off by default. Both
-  // ride one command, so both are written every call. Persisted in NVS. Read back with `queryRender`.
+  // The texture motion is rendered with (§3.10). `full` puts native motion through the same model
+  // rather than relaying it, so the latency rendering adds reaches it too; off by default.
   setRender(mode: RenderMode, full: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), renderPayload(mode, full)));
   }
@@ -693,8 +664,7 @@ export class SerialLink {
   // no clone is up, and after FINALIZE on a retained clip.
   async clipAppend(entries: ClipEntry[]): Promise<void> {
     // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two
-    // appends misaligns everything after it rather than being rejected. Entries run from 3 bytes to a
-    // whole frame, so a frame closes as soon as the next entry would overflow it.
+    // appends misaligns everything after it rather than being rejected.
     const batches: ClipEntry[][] = [];
     let batch: ClipEntry[] = [];
     let size = 0;
@@ -727,9 +697,7 @@ export class SerialLink {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }
 
-  // Write one clip scalar setting (§3.11): autolock scope, loop, retain, or ride. Two of the four are
-  // coerced by the box with no reply: retain is ignored unless the ring is empty, and the autolock
-  // scope is masked to the defined bits. Read the value back to see what landed.
+  // Write one clip scalar setting (§3.11): autolock scope, loop, retain, or ride.
   clipSet(id: number, value: number): Promise<void> {
     return this.send(encode(FrameType.ClipSet, this.nextSeq(), clipSetPayload(id, value)));
   }
@@ -743,9 +711,7 @@ export class SerialLink {
   }
 
   // Remove a trigger binding. Only its (class, id, edge) key is read; action and consume are
-  // carried for symmetry and ignored. One address is special: the any-class, any-id, both-edges
-  // binding is byte-identical to the box's clear-all sentinel, so removing that one removes them
-  // all.
+  // carried for symmetry and ignored.
   clipUntrigger(trigger: ClipTrigger): Promise<void> {
     return this.send(
       encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, false)),
@@ -753,9 +719,7 @@ export class SerialLink {
   }
 
   // Add or overwrite a packet trigger (§3.11): CLIP_TRIGGER with a traffic class. Keyed by the
-  // address and the match and mask bytes. The box drops a frame it refuses with no reply, so one it
-  // would refuse on its own bytes is refused here; `clipPacketTriggerFault` names the reason, and the
-  // refusals that turn on box state (the opt-in, the slots, the match pool) show in the read-back.
+  // address and the match and mask bytes.
   clipPacketTrigger(trigger: ClipPacketTrigger): Promise<void> {
     const payload = clipPacketTriggerPayload(trigger, true);
     if (!payload) return Promise.reject(new Error('the box would refuse that packet trigger'));
@@ -775,8 +739,7 @@ export class SerialLink {
   }
 
   // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.
-  // Persisted in NVS, no reboot. Fire-and-forget. Read it back on RESP(VERSION) as the name tail after
-  // the MAC (there is no Q_OPTIONS readback for it).
+  // Persisted in NVS, no reboot. Fire-and-forget.
   setName(name: string): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), namePayload(name)));
   }
@@ -787,9 +750,8 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
   }
 
-  // The advanced control layer (§3.14), addressed in the CATCH (class, id, dir) space and admitted only under
-  // OPTION(IMPERFECT). RAW, REWRITE and PATCH are fire-and-forget and dropped while the opt-in is off; a
-  // PATCH is stored regardless and applied only under it; TRANSFER answers Refused while it is off.
+  // The advanced control layer (§3.14), addressed in the CATCH (class, id, dir) space and admitted
+  // only under OPTION(IMPERFECT).
 
   // Put bytes verbatim on a cloned endpoint: an IN endpoint reaches the game PC, an OUT endpoint reaches
   // the device. Fire-and-forget.
@@ -797,9 +759,8 @@ export class SerialLink {
     return this.send(encode(FrameType.Raw, this.nextSeq(), rawPayload(epNum, dir, bytes)));
   }
 
-  // Run one control request against the real device and return its status and IN data. The setup packet
-  // is the 8 USB bytes; `out` carries the OUT-stage data for a host-to-device request. Answers
-  // TRANSFER_RESP, correlated by SEQ.
+  // Run one control request against the real device and return its status and IN data. The setup
+  // packet is the 8 USB bytes; `out` carries the OUT-stage data for a host-to-device request.
   transfer(
     ep: number,
     bmRequestType: number,
@@ -830,9 +791,8 @@ export class SerialLink {
     });
   }
 
-  // Add or overwrite a rewrite rule (§3.14). Keyed by (class, id, dir, match, mask): a matching key with
-  // a new action or payload overwrites, an identical set is a no-op. Fire-and-forget. Read the table
-  // back with `queryRewrite` to see that it landed rather than being refused by a full table.
+  // Add or overwrite a rewrite rule (§3.14). Keyed by (class, id, dir, match, mask): a matching key
+  // with a new action or payload overwrites, an identical set is a no-op. Fire-and-forget.
   setRewrite(rule: RewriteRule): Promise<void> {
     return this.send(encode(FrameType.Rewrite, this.nextSeq(), rewritePayload(rule, 1)));
   }
@@ -847,9 +807,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Rewrite, this.nextSeq(), clearRewritePayload()));
   }
 
-  // The rewrite table (§4.17): the full flag, the generation counter, and one summary per rule. The
-  // generation counter increments on every change that alters the table, so a divergence from a cached
-  // one is how a reconnect learns to re-send its rules.
+  // The rewrite table (§4.17): the full flag, the generation counter, and one summary per rule.
   async queryRewrite(timeoutMs?: number): Promise<RewriteTable> {
     const resp = parseResp(await this.query(Q_REWRITE, timeoutMs));
     if (resp?.kind !== 'rewrite') throw new Error('unexpected reply to REWRITE query');
@@ -889,12 +847,13 @@ export class SerialLink {
     return this.setPatch(section, cfg, index, offset, new Uint8Array(0));
   }
 
-  // Re-present the clone with the stored patch set (the game PC sees one replug). Needs the opt-in.
+  // Present the clone again with the stored patch set, when it differs from the one served (one replug
+  // on the game PC). Needs the opt-in.
   applyPatch(): Promise<void> {
     return this.send(encode(FrameType.Patch, this.nextSeq(), patchApplyPayload()));
   }
 
-  // Drop every patch for this device and re-present unpatched.
+  // Erase this device's patch set. A clone serving patches is presented again without them.
   clearPatch(): Promise<void> {
     return this.send(encode(FrameType.Patch, this.nextSeq(), patchClearPayload()));
   }
@@ -920,9 +879,8 @@ export class SerialLink {
     return resp.patch;
   }
 
-  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new op
-  // overwrites. Transforms are faithful and ungated. Fire-and-forget; read the table back with
-  // `queryTransforms` to see that it landed rather than being refused by a full or undeclared field.
+  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new
+  // op overwrites. Transforms are faithful and ungated.
   setTransform(t: Transform): Promise<void> {
     return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 1)));
   }
@@ -1099,9 +1057,7 @@ export class SerialLink {
       return;
     }
     if (f.ty === FrameType.TransferResp) {
-      // Its own opcode, correlated by the SEQ that echoes the TRANSFER. A reply left over from before
-      // a reboot can land under a SEQ this connection is reusing; the waiter is claimed and deleted, so
-      // a second reply for the same SEQ finds nothing and is dropped.
+      // Its own opcode, correlated by the SEQ that echoes the TRANSFER.
       const w = this.transferWaiters.get(f.seq);
       if (w) {
         clearTimeout(w.timer);
@@ -1278,9 +1234,8 @@ export class SerialLink {
   }
 }
 
-// Open and handshake at each control rate in turn. Only silence moves on to the next rate: a protocol
-// this page cannot speak, or a port that will not open, says nothing about the rate. Every link that
-// does not come back is closed here.
+// Open and handshake at each control rate in turn. Only silence moves on to the next rate: a
+// protocol this page cannot speak, or a port that will not open, says nothing about the rate.
 export async function attachLink(
   port: SerialPort,
   make: (port: SerialPort) => SerialLink,

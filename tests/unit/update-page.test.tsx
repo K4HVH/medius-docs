@@ -18,8 +18,8 @@ const st = vi.hoisted(() => ({
       name: string;
     } | null>(null);
     const [firmwareInfo, setFirmwareInfo] = createSignal<unknown>({
-      device: { major: 3, minor: 4, patch: 1, slot: 0, state: 1 },
-      host: { major: 3, minor: 4, patch: 1, slot: 0, state: 1 },
+      device: { major: 3, minor: 4, patch: 2, slot: 0, state: 1 },
+      host: { major: 3, minor: 4, patch: 2, slot: 0, state: 1 },
       slotSize: 1,
       deviceStaged: false,
       hostStaged: false,
@@ -86,7 +86,7 @@ vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.holdReleases) await new Promise(() => {});
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
-    return [{ tag: 'v3.4.1', assets: mock.assets }];
+    return [{ tag: 'v3.4.2', assets: mock.assets }];
   },
   downloadAsset: async () => new Uint8Array([1]),
 }));
@@ -96,10 +96,10 @@ vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
 import Update from '../../src/app/pages/dashboard/Update';
 
-// The box runs the release it is offered: 3.4.1 on the current wire. One that reverts lands on 3.4.0,
-// protocol 7.
-const ON_RELEASE = { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' };
-const REVERTED = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' };
+// The box runs the release it is offered: 3.4.2 on the current wire. One that reverts lands on 3.4.1,
+// protocol 8.
+const ON_RELEASE = { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' };
+const REVERTED = { protoVer: 8, fwMajor: 3, fwMinor: 4, fwPatch: 1, mac: [], name: '' };
 
 const mount = () => {
   mock.s = st.make();
@@ -119,8 +119,8 @@ afterEach(() => {
 
 const dev = { name: 'medius_device.bin', size: 1, url: 'd' };
 const host = { name: 'medius_host.bin', size: 1, url: 'h' };
-const reverted = { major: 3, minor: 4, patch: 0, slot: 0, state: 1 };
-const onRelease = { major: 3, minor: 4, patch: 1, slot: 0, state: 1 };
+const reverted = { major: 3, minor: 4, patch: 1, slot: 0, state: 1 };
+const onRelease = { major: 3, minor: 4, patch: 2, slot: 0, state: 1 };
 const fw = (h: typeof reverted, d = onRelease) => ({
   device: d,
   host: h,
@@ -206,7 +206,7 @@ describe('Update', () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/updated and verified/i));
-    expect(r.container.textContent).toMatch(/3\.4\.1/);
+    expect(r.container.textContent).toMatch(/3\.4\.2/);
   });
 
   it('the mouse-side chip reverting is not verified, even though the main chip moved', async () => {
@@ -250,7 +250,7 @@ describe('Update', () => {
   });
 
   it('reconnecting after a never-came-back update does not sign off a box that reverted', async () => {
-    // "Your box is back on v3.4.0" with a Finish button here would present a failed update as the end
+    // "Your box is back on v3.4.1" with a Finish button here would present a failed update as the end
     // of the flow.
     mock.assets = [dev, host];
     mock.outcome = 'sent';

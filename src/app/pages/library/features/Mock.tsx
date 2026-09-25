@@ -132,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
           <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 8, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 9, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -335,7 +335,7 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               <tr>
                 <td><code>clip_packet</code></td>
                 <td><code>(Option&lt;ClipAction&gt;, bool)</code></td>
-                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific match wins it and counts it in its <code>hits</code>. The action is <code>None</code> when no trigger wins, and when a <code>once_per_run</code> winner sees the packet continue a run; the bool is whether the winner consumes the packet.</td>
+                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> when no trigger matches, and when that trigger is <code>once_per_run</code> and the packet continues a run; the bool is whether that trigger consumes the packet.</td>
               </tr>
             </tbody>
           </table>
@@ -370,7 +370,7 @@ let down = [0x07, 0x20, 0x00];
 assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (Some(ClipAction::Start), false));
 assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (None, false));
 
-// Both packets were won, so both count.
+// The trigger was the top-ranked match for both packets, so both count.
 assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></pre>
         </Card>
       </div>
@@ -397,7 +397,7 @@ assert!(matches!(err, Error::NoReply));
 
 // A box on an unknown protocol version fails the handshake.
 let mock = MockBox::new().with_version(Version {
-    proto_ver: 9,
+    proto_ver: 10,
     fw_major: 0,
     fw_minor: 0,
     fw_patch: 0,
@@ -405,7 +405,83 @@ let mock = MockBox::new().with_version(Version {
     name: String::new(),
 });
 let err = Device::open_mock(mock).unwrap_err();
-assert!(matches!(err, Error::BadProtoVer { got: 9 }));`}</code></pre>
+assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
+        </Card>
+      </div>
+
+      <div id="restart" data-search-target>
+        <Card>
+          <CardHeader title="Simulating a restart or a release" subtitle="restart, link_lost, detach, attach" />
+          <pre class="api-signature">fn restart(&self)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn link_lost(&self)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn detach(&self, back_within_grace: bool)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+          <pre class="api-signature">fn attach(&self)</pre>
+          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+
+          <p>
+            Each drops the mock's session state the way the box does (locks, held input, rewrite
+            rules, transforms, the clip and its config), keeps what it stores, and draws the{' '}
+            <A href="/library/lifecycle#restart">session recovery</A> a real box draws.
+          </p>
+
+          <div class="api-response-label">METHODS</div>
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Simulates</th><th>How the library notices it</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>restart</code></td>
+                <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too.</td>
+                <td>The hello, now and again on the next frame the mock receives; <code>session</code> back at 0.</td>
+              </tr>
+              <tr>
+                <td><code>link_lost</code></td>
+                <td>The link between the box's chips dropping and coming back. The clone stays up.</td>
+                <td><A href="/library/types/structs#stats"><code>Stats::session</code></A> moving.</td>
+              </tr>
+              <tr>
+                <td><code>detach</code></td>
+                <td>The real device detaching. With <code>back_within_grace</code> it re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach</code>.</td>
+                <td><code>session</code> moving; the recovery waits for a clone.</td>
+              </tr>
+              <tr>
+                <td><code>attach</code></td>
+                <td>A device attaching. A clone that was up is cloned again, which releases the session; one that was down comes up with nothing to release.</td>
+                <td>A clone for the recovery to re-send to.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            As on the box, <code>session</code> counts a release only when a command other than a{' '}
+            <code>QUERY</code> arrived since the last one.
+          </p>
+
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-rust">{`use medius::{Axis, Device, Direction, MockBox};
+use std::time::Duration;
+
+let mock = MockBox::new();
+let device = Device::open_mock(mock.clone())?;
+device.scale(Axis::X, Direction::Both, 40)?;
+let scale_x = || device.query_locks().map(|l| l.scale_of(Axis::X, Direction::Positive));
+
+mock.detach(false);                 // the clone goes down, and the scale with it
+assert_eq!(scale_x()?, 100);
+mock.attach();                      // a new clone: the library puts the scale back
+while scale_x()? != 40 {
+    std::thread::sleep(Duration::from_millis(5));
+}
+assert_eq!(device.counters().restarts, 0);   // a release, not a restart
+
+mock.restart();                     // a boot: the hello, and the same recovery
+while device.counters().restarts == 0 {
+    std::thread::sleep(Duration::from_millis(5));
+}
+assert_eq!(scale_x()?, 40);`}</code></pre>
         </Card>
       </div>
     </>

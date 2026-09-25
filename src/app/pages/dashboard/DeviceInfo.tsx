@@ -126,10 +126,12 @@ const DeviceInfo = () => {
                       <Section title="Clone">
                       <Row label="Full clone">
                         <Show
-                          when={imp().overCapacity}
+                          when={imp().overCapacity || imp().cloneImperfect}
                           fallback={<Chip variant="success">Yes</Chip>}
                         >
-                          <Chip variant="warning">No · 1 input can't be copied</Chip>
+                          <Chip variant="warning">
+                            {imp().overCapacity ? 'No · needs more than the box can serve, or is high speed' : 'No · not an exact copy'}
+                          </Chip>
                         </Show>
                       </Row>
                       <Row label="Serial number">
@@ -172,18 +174,60 @@ const DeviceInfo = () => {
           </Show>
           <Show when={stats()}>
             {(s) => (
-              <Row label="Delivery">
+              <>
+                <Row label="Delivery to the PC">
+                  <Show
+                    when={s().txDrops === 0 && s().txWedges === 0}
+                    fallback={
+                      <Chip variant="warning">
+                        {s().txDrops} dropped, {s().txWedges} recovered
+                      </Chip>
+                    }
+                  >
+                    <Chip variant="success">Healthy</Chip>
+                  </Show>
+                </Row>
+                {/* The other half of delivery: input lost on the link between the box's own two
+                    chips, which the counters above never see. One count per direction, so a
+                    nonzero one splits into the rows that name the chip it belongs to. */}
                 <Show
-                  when={s().txDrops === 0 && s().txWedges === 0}
+                  when={s().linkRxDrops > 0 || s().hostRxDrops > 0}
                   fallback={
-                    <Chip variant="warning">
-                      {s().txDrops} dropped, {s().txWedges} recovered
-                    </Chip>
+                    <Row label="Inter-chip link">
+                      <Chip variant="success">Healthy</Chip>
+                    </Row>
                   }
                 >
-                  <Chip variant="success">Healthy</Chip>
+                  <Row label="Link to the device chip">
+                    <Chip variant={s().linkRxDrops > 0 ? 'warning' : 'success'}>
+                      {s().linkRxDrops} dropped
+                    </Chip>
+                  </Row>
+                  <Row label="Link to the host chip">
+                    <Chip variant={s().hostRxDrops > 0 ? 'warning' : 'success'}>
+                      {s().hostRxDrops} dropped
+                    </Chip>
+                  </Row>
                 </Show>
-              </Row>
+                {/* Back-pressure on a relayed vendor or OUT stream. It is load, not lost input, so
+                    it never reads as a fault: warning chips here would make a box carrying a busy
+                    vendor pipe look like one losing the player's reports, which is exactly what a
+                    single counter for both used to do. */}
+                <Row label="Relayed streams">
+                  <Show
+                    when={s().relayDrops > 0}
+                    fallback={<Chip variant="success">Keeping up</Chip>}
+                  >
+                    <Chip variant="info">{s().relayDrops} shed under load</Chip>
+                  </Show>
+                </Row>
+                <Show when={s().relayDrops > 0}>
+                  <p style={muted}>
+                    A vendor or OUT stream offered more than the relay carries. Lost input is the
+                    rows above.
+                  </p>
+                </Show>
+              </>
             )}
           </Show>
         </Card>

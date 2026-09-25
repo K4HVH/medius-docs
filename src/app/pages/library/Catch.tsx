@@ -85,9 +85,10 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
 // dropping \`events\` unsubscribes`}</code></pre>
           <p>
             The keepalive re-asserts the table, and it survives a{' '}
-            <A href="/library/lifecycle#reconnect">reconnect</A>. It clears on control-PC silence, on{' '}
-            <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream), or on link
-            loss. See the native{' '}
+            <A href="/library/lifecycle#reconnect">reconnect</A> and a{' '}
+            <A href="/library/lifecycle#restart">session recovery</A>. The box clears it on control-PC
+            silence, on <A href="/library/admin#reset"><code>reset</code></A> (which ends the
+            stream), on link loss, when the device detaches, and on a re-clone. See the native{' '}
             <A href="/native/commands/catch#catch"><code>CATCH</code></A> command for the wire layout.
           </p>
         </Card>
@@ -198,13 +199,14 @@ for event in &device.catch_events([filter])? {
           <p>
             What <code>flags</code> carries per class is on{' '}
             <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>;{' '}
-            <code>control_status()</code>, <code>transfer_status()</code>, and{' '}
-            <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.
+            <code>control_status()</code>, <code>rule_acted()</code>, <code>transfer_status()</code>,
+            and <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.
           </p>
           <p>
             A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
             <code>bytes</code> is <code>[setup 8][data...]</code>, split by{' '}
-            <code>setup()</code> and <code>data()</code>.
+            <code>setup()</code> and <code>data()</code>. A <code>Control</code> event is the
+            transaction the game PC received, on every control endpoint.
           </p>
         </Card>
       </div>
@@ -220,8 +222,8 @@ for event in &device.catch_events([filter])? {
           <table class="api-params">
             <thead><tr><th>Domain</th><th>Stamped</th><th>Covers</th></tr></thead>
             <tbody>
-              <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, vendor IN</td></tr>
-              <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, <code>Control</code>, <code>Emit</code>, <code>Bus</code>, <code>ClipTransfer</code></td></tr>
+              <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, the device's vendor IN</td></tr>
+              <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, a <A href="/library/advanced/raw">raw</A> vendor IN packet, <code>Control</code>, <code>Emit</code>, <code>Bus</code>, <code>ClipTransfer</code></td></tr>
             </tbody>
           </table>
           <p>

@@ -53,9 +53,12 @@ const Injection: Component = () => {
           <CardHeader title="Fire-and-forget" subtitle="No per-command acknowledgement" />
           <p>
             Command frames get no echo and no acknowledgement, so you can stream input fast (up to
-            about one command per millisecond). The exception is{' '}
-            <A href="/native/commands/requests#requests"><code>QUERY</code></A>, which returns a{' '}
-            <A href="/native/commands/requests#resp"><code>RESP</code></A>.
+            about one command per millisecond). The exceptions are{' '}
+            <A href="/native/commands/requests#requests"><code>QUERY</code></A> and{' '}
+            <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>, which each return a
+            reply frame, and <A href="/native/commands/update#update"><code>UPDATE</code></A>, which
+            answers every op except <code>DATA</code>. <code>DATA</code> chunks get one acknowledgement
+            per window, and a chunk the box refuses is answered on its own.
           </p>
           <p>Correctness comes from three places:</p>
           <table class="api-params">
@@ -162,6 +165,24 @@ const Injection: Component = () => {
             silence until it changes.
           </p>
           <p>
+            A report of the box's own goes on the first poll no native report can be ready for, so it does
+            not move a native report to a later poll. A native report of the mouse that reaches the box
+            first carries the box's motion and button changes.
+          </p>
+          <p>
+            One of the box's own that the PC takes in more than one packet goes once the device has been
+            still for 12 ms.
+          </p>
+          <p>
+            Native reports under another report ID on the same endpoint go first, for two polls at most.
+            While they fill every poll, a report of the box's own takes the next one and leaves them two in
+            three.
+          </p>
+          <p>
+            A change waits until the PC has collected the report carrying the changes before it, so a press
+            and its release never cancel and changes reach the PC in the order sent.
+          </p>
+          <p>
             <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times that middle row,
             pacing to the mouse's learnt report rate.{' '}
             <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,
@@ -200,6 +221,10 @@ const Injection: Component = () => {
                 <td>The real mouse is detached, so there's nothing left to inject into.</td>
               </tr>
               <tr>
+                <td>re-clone</td>
+                <td>The box clones a device again: another device attaches, a <A href="/native/commands/patch#presentation">patch presentation</A>, or an <A href="/native/commands/update">update</A> takes the clone down.</td>
+              </tr>
+              <tr>
                 <td><A href="/native/commands/admin#reset"><code>RESET</code></A></td>
                 <td>You send the reset command explicitly.</td>
               </tr>
@@ -209,6 +234,10 @@ const Injection: Component = () => {
             To hold an injected button deliberately, keep the link busy: any valid frame resets the
             timer, so a periodic{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> suffices.
+          </p>
+          <p>
+            Each release moves the <A href="/native/commands/requests#stats"><code>session</code></A> count, so a host that polls it knows when
+            to set its state again.
           </p>
           <div class="callout callout--info">
             <p>
