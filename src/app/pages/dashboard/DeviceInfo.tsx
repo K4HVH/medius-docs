@@ -175,23 +175,23 @@ const DeviceInfo = () => {
           <Show when={stats()}>
             {(s) => (
               <>
-                <Row label="Delivery to the PC">
+                <Row label="PC delivery">
                   <Chip variant={s().txDrops > 0 || s().txWedges > 0 ? 'warning' : 'success'}>
                     {s().txDrops} dropped, {s().txWedges} recovered
                   </Chip>
                 </Row>
-                <Row label="Link to the device chip">
+                <Row label="Device link">
                   <Chip variant={s().linkRxDrops > 0 ? 'warning' : 'success'}>
                     {s().linkRxDrops} dropped
                   </Chip>
                 </Row>
-                <Row label="Link to the host chip">
+                <Row label="Host link">
                   <Chip variant={s().hostRxDrops > 0 ? 'warning' : 'success'}>
                     {s().hostRxDrops} dropped
                   </Chip>
                 </Row>
                 {/* Load on a relayed vendor or OUT stream, so an info chip rather than a warning. */}
-                <Row label="Relayed streams">
+                <Row label="Relay">
                   <Chip variant={s().relayDrops > 0 ? 'info' : 'success'}>
                     {s().relayDrops} dropped
                   </Chip>

@@ -145,11 +145,11 @@ describe('DeviceInfo: the Performance card', () => {
     mouse();
     mock.stats = stats;
     const { findByText, container } = render(() => <DeviceInfo />);
-    await findByText('Delivery to the PC');
-    expect(chip(container, 'Delivery to the PC')?.textContent).toBe('0 dropped, 0 recovered');
-    expect(chip(container, 'Link to the device chip')?.textContent).toBe('0 dropped');
-    expect(chip(container, 'Link to the host chip')?.textContent).toBe('0 dropped');
-    expect(chip(container, 'Relayed streams')?.textContent).toBe('0 dropped');
+    await findByText('PC delivery');
+    expect(chip(container, 'PC delivery')?.textContent).toBe('0 dropped, 0 recovered');
+    expect(chip(container, 'Device link')?.textContent).toBe('0 dropped');
+    expect(chip(container, 'Host link')?.textContent).toBe('0 dropped');
+    expect(chip(container, 'Relay')?.textContent).toBe('0 dropped');
     expect(container.querySelector('.chip--warning')).toBeNull();
     expect(container.querySelector('.chip--info')).toBeNull();
   });
@@ -158,19 +158,19 @@ describe('DeviceInfo: the Performance card', () => {
     mouse();
     mock.stats = { ...stats, txDrops: 3, txWedges: 1, linkRxDrops: 4, hostRxDrops: 11, relayDrops: 202 };
     const { findByText, container } = render(() => <DeviceInfo />);
-    await findByText('Delivery to the PC');
-    expect(chip(container, 'Delivery to the PC')?.textContent).toBe('3 dropped, 1 recovered');
-    expect(chip(container, 'Link to the device chip')?.textContent).toBe('4 dropped');
-    expect(chip(container, 'Link to the host chip')?.textContent).toBe('11 dropped');
-    expect(chip(container, 'Relayed streams')?.textContent).toBe('202 dropped');
+    await findByText('PC delivery');
+    expect(chip(container, 'PC delivery')?.textContent).toBe('3 dropped, 1 recovered');
+    expect(chip(container, 'Device link')?.textContent).toBe('4 dropped');
+    expect(chip(container, 'Host link')?.textContent).toBe('11 dropped');
+    expect(chip(container, 'Relay')?.textContent).toBe('202 dropped');
   });
 
   it('a relayed-stream count is an info chip, a lost-input count a warning', async () => {
     mouse();
     mock.stats = { ...stats, relayDrops: 202 };
     const { findByText, container } = render(() => <DeviceInfo />);
-    await findByText('Relayed streams');
-    expect(chip(container, 'Relayed streams')?.classList.contains('chip--info')).toBe(true);
+    await findByText('Relay');
+    expect(chip(container, 'Relay')?.classList.contains('chip--info')).toBe(true);
     expect(container.querySelector('.chip--warning')).toBeNull();
   });
 });
