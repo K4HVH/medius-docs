@@ -84,11 +84,11 @@ const Connection: Component = () => {
 
       <div id="hello" data-search-target>
         <Card>
-          <CardHeader title="The ready hello" subtitle="Unsolicited RESP(VERSION) on link-up" />
+          <CardHeader title="The ready hello" subtitle="Unsolicited RESP(VERSION), twice per boot" />
           <p>
-            The box sends one{' '}
-            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> on its own as
-            soon as its serial link is up. Treat it as "box is here and ready" and skip your own{' '}
+            The box sends a{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> on its own twice
+            per boot. Treat either as "box is here and ready" and skip your own{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
           </p>
           <table class="api-params">
@@ -96,13 +96,19 @@ const Connection: Component = () => {
               <tr><th>Trigger</th><th>When it fires</th></tr>
             </thead>
             <tbody>
-              <tr><td>Power-on</td><td>Once, as the box boots.</td></tr>
-              <tr><td>First contact</td><td>On the first valid frame after a program opens the port, so a program that connects after the power-on hello still gets one.</td></tr>
+              <tr><td>Power-on</td><td>Once, as the device chip boots, before any other frame.</td></tr>
+              <tr><td>First contact</td><td>Once, on the first valid frame the device chip receives after it boots, ahead of that frame's reply. A program that opens the port after another has spoken gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
             </tbody>
           </table>
+          <pre class="diagram">{`  device chip boots         -->  hello, SEQ 0
+  first valid frame         -->  hello, SEQ 0, then that frame's reply
+  every later frame         -->  no hello
+  device chip restarts      -->  hello at boot, and again on the next frame`}</pre>
           <p>
             The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A>, and its payload is
-            identical to a queried reply.
+            identical to a queried reply. One arriving mid-session means the device chip restarted,
+            and its session state, such as <A href="/native/commands/lock">locks</A> and{' '}
+            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>, is gone.
           </p>
           <div class="callout callout--info">
             <p>

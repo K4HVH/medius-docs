@@ -292,6 +292,7 @@ re-clone    the box binds a device again`}</pre>
             reconnect, exactly as it does a{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A>.
           </p>
+          <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
           <div class="api-response-label">WHAT A CLEAR RELEASES</div>
           <p>
             The <A href="/native/commands/transform#cross">cross-class holds</A> go before the

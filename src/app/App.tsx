@@ -24,6 +24,10 @@ import CmdTransform from './pages/native/commands/Transform';
 import CmdOption from './pages/native/commands/Option';
 import CmdClip from './pages/native/commands/Clip';
 import CmdUpdate from './pages/native/commands/Update';
+import CmdRaw from './pages/native/commands/Raw';
+import CmdTransfer from './pages/native/commands/Transfer';
+import CmdRewrite from './pages/native/commands/Rewrite';
+import CmdPatch from './pages/native/commands/Patch';
 import NativeFlashing from './pages/native/Flashing';
 import NativeTroubleshooting from './pages/native/Troubleshooting';
 import AiAccess from './pages/AiAccess';
@@ -115,6 +119,10 @@ const App: Component = () => {
           <Route path="/native/commands/transform" component={CmdTransform} />
           <Route path="/native/commands/option" component={CmdOption} />
           <Route path="/native/commands/clip" component={CmdClip} />
+          <Route path="/native/commands/raw" component={CmdRaw} />
+          <Route path="/native/commands/transfer" component={CmdTransfer} />
+          <Route path="/native/commands/rewrite" component={CmdRewrite} />
+          <Route path="/native/commands/patch" component={CmdPatch} />
           <Route path="/native/commands/usage" component={CmdUsage} />
           <Route path="/native/flashing" component={NativeFlashing} />
           <Route path="/native/troubleshooting" component={NativeTroubleshooting} />

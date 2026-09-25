@@ -175,12 +175,14 @@ const Lock: Component = () => {
 silence     ~1 s with no control-PC frame
 RESET       a RESET command
 link loss   the inter-chip link drops
-detach      the real device goes away`}</pre>
+detach      the real device goes away
+re-clone    the box binds a device again`}</pre>
             <p>
               Hold one with a keepalive if it has to outlast a second of quiet. Injection auto-clears
               on the same events, described on{' '}
               <A href="/native/injection#safety">Injection</A>.
             </p>
+            <p>Every clear here but the unlock moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
           </div>
 
           <div class="api-response-label">EFFECT</div>

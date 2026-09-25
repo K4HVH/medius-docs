@@ -68,9 +68,14 @@ src/
           Led.tsx                     # LED 0x09
           Lock.tsx                    # LOCK 0x0A
           Catch.tsx                   # CATCH 0x0B, MOTION_EVENT 0x0C, USAGE_EVENT 0x0F, TRAFFIC_EVENT 0x16
+          Transform.tsx               # TRANSFORM 0x1E
           Option.tsx                  # OPTION 0x11
           Clip.tsx                    # CLIP_APPEND 0x12, CLIP_CTRL 0x13, CLIP_SET 0x14, CLIP_TRIGGER 0x15
           Update.tsx                  # UPDATE 0x17, UPDATE_RESP 0x18
+          Raw.tsx                     # RAW 0x19 (advanced control)
+          Transfer.tsx                # TRANSFER 0x1A, TRANSFER_RESP 0x1B (advanced control)
+          Rewrite.tsx                 # REWRITE 0x1C (advanced control)
+          Patch.tsx                   # PATCH 0x1D (advanced control)
           Usage.tsx                   # button/keycode/consumer usage id reference
         Flashing.tsx                  # Firmware updates over REBOOT
         Troubleshooting.tsx           # Common problems and fixes
@@ -90,6 +95,9 @@ src/
         Update.tsx                    # /library/update
         Lifecycle.tsx                 # keepalive, reapply, reconnect
         Diagnostics.tsx               # logs(), counters()
+        Transform.tsx                 # /library/transform
+        advanced/                     # the advanced control layer
+          Raw.tsx  Transfer.tsx  Rewrite.tsx  Patch.tsx
         TypesAndErrors.tsx            # /library/types, the overview card over types/
         GuideCalls.tsx                # /library/guides/calls
         GuideConnection.tsx           # /library/guides/connection
@@ -127,6 +135,14 @@ src/
         DeviceClip.tsx                # Clip playback card
         DeviceLed.tsx                 # Status light card
         UsagePicker.tsx               # class + usage picker shared by inject, lock and clip
+        DeviceTransform.tsx           # Field transforms card
+        DeviceDeveloper.tsx           # /dashboard/advanced-control: the advanced control layer
+        DeviceRewrite.tsx             # Rewrite rules card
+        DevicePatch.tsx               # Descriptor patches card (stored vs served, refused, full)
+        DeviceRaw.tsx                 # Raw report card
+        DeviceTransfer.tsx            # Control transfer card
+        DeviceFactoryReset.tsx        # Factory reset card
+        hex.ts                        # hex parsing, setup-packet fields, traffic class blurbs
         Setup.tsx                     # /dashboard/setup: the install wizard
         Update.tsx                    # /dashboard/update: one-click update
         Advanced.tsx                  # /dashboard/advanced: manual flash
@@ -186,6 +202,8 @@ Each fact set lives in exactly ONE place; every other page links to it, it does 
 | Frame layout | `Frame.tsx` (`#layout`) | |
 | Opcode list | `Frame.tsx` (`#opcodes`) | |
 | Chip roles | `Architecture.tsx` | Elsewhere link the words "device chip" / "host chip" |
+| `RESP(PATCHES)` flags (APPLIED, PENDING, REFUSED, FULL) | `commands/Requests.tsx` (`#patches`) | Patch pages describe presentation and link the bits |
+| `TRAFFIC_EVENT` flags, the `RULE` bit, which side of the rewrite table each tap sits | `commands/Catch.tsx` (`#traffic-event`, `#rules`) | `Rewrite.tsx` links there |
 
 Library enum and struct definitions live ONCE, as proper per-type tables under `library/types/` (`Enums.tsx`, `Structs.tsx`, `Frames.tsx`, `Errors.tsx`; one row per variant or field, not a comma-list crammed in a cell). Method pages link to Types for the type and show usage in an example; they do NOT re-table variants or fields.
 

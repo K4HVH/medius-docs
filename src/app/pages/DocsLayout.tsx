@@ -58,6 +58,13 @@ const nativeCommandTabs: TabOption[] = [
   { value: '/native/commands/usage', label: 'Usage IDs', icon: BsHash },
 ];
 
+const nativeAdvancedTabs: TabOption[] = [
+  { value: '/native/commands/raw', label: 'Raw', icon: BsBroadcast },
+  { value: '/native/commands/transfer', label: 'Transfer', icon: BsArrowLeftRight },
+  { value: '/native/commands/rewrite', label: 'Rewrite', icon: BsCodeSlash },
+  { value: '/native/commands/patch', label: 'Patch', icon: BsFileCode },
+];
+
 const nativeReferenceTabs: TabOption[] = [
   { value: '/native/flashing', label: 'Flashing', icon: BsBoxArrowInDown },
   { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
@@ -67,7 +74,7 @@ const nativeReferenceTabs: TabOption[] = [
 const aiAccessTabs: TabOption[] = [{ value: '/ai', label: 'AI & LLMs', icon: BsStars }];
 
 const allNativeTabs = [
-  ...nativeOverviewTabs, ...nativeProtocolTabs, ...nativeCommandTabs, ...nativeReferenceTabs,
+  ...nativeOverviewTabs, ...nativeProtocolTabs, ...nativeCommandTabs, ...nativeAdvancedTabs, ...nativeReferenceTabs,
 ];
 
 const libraryGettingStartedTabs: TabOption[] = [
@@ -344,6 +351,14 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={nativeCommandTabs}
             />
+            <Divider spacing="compact" label="Advanced control" labelAlign="start" />
+            <Tabs
+              orientation="vertical"
+              variant="subtle"
+              value={location.pathname}
+              onChange={handlePageNav}
+              options={nativeAdvancedTabs}
+            />
             <Divider spacing="compact" label="Reference" labelAlign="start" />
             <Tabs
               orientation="vertical"
@@ -378,7 +393,7 @@ const DocsLayout = (props: RouteSectionProps) => {
               onChange={handlePageNav}
               options={libraryApiTabs}
             />
-            <Divider spacing="compact" label="Advanced control layer" labelAlign="start" />
+            <Divider spacing="compact" label="Advanced control" labelAlign="start" />
             <Tabs
               orientation="vertical"
               variant="subtle"
