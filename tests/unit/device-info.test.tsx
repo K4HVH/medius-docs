@@ -138,40 +138,39 @@ describe('DeviceInfo: the Performance card', () => {
     mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
   };
 
-  it('a box losing nothing reads healthy on both halves of delivery', async () => {
+  const chip = (container: HTMLElement, row: string) =>
+    [...container.querySelectorAll('div')].find((d) => d.firstElementChild?.textContent === row)?.querySelector('.chip');
+
+  it('a box losing nothing shows every counter at zero', async () => {
     mouse();
     mock.stats = stats;
     const { findByText, container } = render(() => <DeviceInfo />);
-    await findByText('Delivery to the PC');
-    await findByText('Inter-chip link');
-    await findByText('Keeping up');
-    expect([...container.querySelectorAll('.chip__label')].filter((e) => e.textContent === 'Healthy')).toHaveLength(2);
+    await findByText('PC delivery');
+    expect(chip(container, 'PC delivery')?.textContent).toBe('0 dropped, 0 recovered');
+    expect(chip(container, 'Device link')?.textContent).toBe('0 dropped');
+    expect(chip(container, 'Host link')?.textContent).toBe('0 dropped');
+    expect(chip(container, 'Relay')?.textContent).toBe('0 dropped');
+    expect(container.querySelector('.chip--warning')).toBeNull();
+    expect(container.querySelector('.chip--info')).toBeNull();
   });
 
-  it('link drops name the chip each count belongs to', async () => {
-    // A count here is a native report or an injected delta lost between the box's own two chips, so
-    // reading it as the PC-facing tx_drops would point at the wrong wire. The two counts are per
-    // direction, so one row each: a single chip carrying both truncates at the card's width.
+  it('each counter shows its own count on its own row', async () => {
     mouse();
-    mock.stats = { ...stats, linkRxDrops: 4, hostRxDrops: 11 };
-    const { findByText, queryByText } = render(() => <DeviceInfo />);
-    await findByText('Link to the device chip');
-    await findByText('4 dropped');
-    await findByText('Link to the host chip');
-    await findByText('11 dropped');
-    expect(queryByText('Inter-chip link')).toBeNull();
+    mock.stats = { ...stats, txDrops: 3, txWedges: 1, linkRxDrops: 4, hostRxDrops: 11, relayDrops: 202 };
+    const { findByText, container } = render(() => <DeviceInfo />);
+    await findByText('PC delivery');
+    expect(chip(container, 'PC delivery')?.textContent).toBe('3 dropped, 1 recovered');
+    expect(chip(container, 'Device link')?.textContent).toBe('4 dropped');
+    expect(chip(container, 'Host link')?.textContent).toBe('11 dropped');
+    expect(chip(container, 'Relay')?.textContent).toBe('202 dropped');
   });
 
-  it('relayed-stream back-pressure reads as load, not as a fault', async () => {
-    // The counter the box used to fold into tx_drops. A vendor stream offered faster than the relay
-    // carries makes this rise with no input lost, so a warning chip here would report a healthy box
-    // as one dropping the player's reports, and both halves of delivery have to stay healthy.
+  it('a relayed-stream count is an info chip, a lost-input count a warning', async () => {
     mouse();
     mock.stats = { ...stats, relayDrops: 202 };
     const { findByText, container } = render(() => <DeviceInfo />);
-    await findByText('Relayed streams');
-    await findByText('202 shed under load');
-    expect([...container.querySelectorAll('.chip__label')].filter((e) => e.textContent === 'Healthy')).toHaveLength(2);
+    await findByText('Relay');
+    expect(chip(container, 'Relay')?.classList.contains('chip--info')).toBe(true);
     expect(container.querySelector('.chip--warning')).toBeNull();
   });
 });
