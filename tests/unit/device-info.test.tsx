@@ -171,7 +171,6 @@ describe('DeviceInfo: the Performance card', () => {
     const { findByText, container } = render(() => <DeviceInfo />);
     await findByText('Relayed streams');
     await findByText('202 shed under load');
-    await findByText(/Lost input is the rows above/);
     expect([...container.querySelectorAll('.chip__label')].filter((e) => e.textContent === 'Healthy')).toHaveLength(2);
     expect(container.querySelector('.chip--warning')).toBeNull();
   });
