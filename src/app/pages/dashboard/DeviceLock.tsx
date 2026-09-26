@@ -27,6 +27,7 @@ import {
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
+import { displayName } from './hex';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
 import { chips, label, row, section } from './ui';
 
@@ -103,7 +104,7 @@ const DeviceLock = () => {
   const active = createMemo(() =>
     (locks()?.entries ?? ([] as LockEntry[])).map((e) => {
       const dn = dirName(e.cls, e.direction);
-      const head = dn ? `${targetName(e.cls, e.id)} ${dn}` : targetName(e.cls, e.id);
+      const head = displayName(dn ? `${targetName(e.cls, e.id)} ${dn}` : targetName(e.cls, e.id));
       return {
         key: `${e.cls}:${e.id}:${e.direction}`,
         text:

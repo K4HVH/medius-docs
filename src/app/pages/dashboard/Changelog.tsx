@@ -58,7 +58,7 @@ const Release = (props: { release: FirmwareRelease }) => (
     <div style={{ display: 'flex', 'align-items': 'baseline', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
       <strong style={{ 'font-size': 'var(--font-size-lg)' }}>{props.release.tag}</strong>
       <Show when={props.release.prerelease}>
-        <Chip variant="warning">pre-release</Chip>
+        <Chip variant="warning">Pre-release</Chip>
       </Show>
       <span style={muted}>{fmtDate(props.release.publishedAt)}</span>
     </div>

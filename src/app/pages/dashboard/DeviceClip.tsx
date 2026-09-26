@@ -170,7 +170,7 @@ const triggerText = (t: ClipTrigger): string => {
   const edge = t.edge === Direction.Positive ? 'press' : t.edge === Direction.Negative ? 'release' : 'both edges';
   const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
   const locks = t.consume && t.edge !== Direction.Negative;
-  return `${who} ${edge} -> ${op}${locks ? ' (consume)' : ''}`;
+  return displayName(`${who} ${edge} -> ${op}${locks ? ' (consume)' : ''}`);
 };
 
 // Box refusals, in this card's field names.
@@ -647,7 +647,7 @@ const DeviceClip = () => {
                 <Chip variant="neutral">
                   {clip()!.totalBytes > 0
                     ? `${Math.round(((clip()!.played ?? 0) / clip()!.totalBytes) * 100)}% played`
-                    : 'not started'}
+                    : 'Not started'}
                 </Chip>
               </Show>
               <Chip variant={delta((s) => s.ticks) > 0 ? 'info' : 'neutral'}>
