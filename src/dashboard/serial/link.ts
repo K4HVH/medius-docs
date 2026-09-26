@@ -334,7 +334,7 @@ export class SerialLink {
     if (!this.port.readable || !this.port.writable) {
       await this.port.open({ baudRate });
     }
-    // Deassert DTR/RTS so opening the port cannot strap or reset the device chip.
+    // Deasserted like the reference client; DTR/RTS reset neither chip (measured 2026-09-26).
     try {
       await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
     } catch {
