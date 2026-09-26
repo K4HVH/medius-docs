@@ -211,7 +211,7 @@ describe('DeviceLock', () => {
       { cls: LockClass.Media, id: 0xe9, direction: Direction.Both, scale: LOCK_SCALE_BLOCK },
     ] satisfies Entry[];
     const { findByText, queryByText } = render(() => <DeviceLock />);
-    expect(await findByText('all keys press')).toBeTruthy();
+    expect(await findByText('All keys press')).toBeTruthy();
     expect(await findByText('Volume Up')).toBeTruthy();
     expect(queryByText('Volume Up both')).toBeNull();
   });

@@ -110,8 +110,8 @@ export const InstallPorts = (props: { socket: PortId }) => (
     badge={`${holdButton(props.socket)}.`}
     cells={cells((id) =>
       id === props.socket
-        ? { tone: 'connect', sub: 'This device', note: 'plug in' }
-        : { tone: 'clear', sub: '', note: 'unplug' },
+        ? { tone: 'connect', sub: 'This device', note: 'Plug in' }
+        : { tone: 'clear', sub: '', note: 'Unplug' },
     )}
   />
 );
@@ -120,7 +120,7 @@ export const ClearPort = (props: { socket: PortId }) => (
   <Ports
     cells={cells((id) =>
       id === props.socket
-        ? { tone: 'clear', sub: '', note: 'unplug' }
+        ? { tone: 'clear', sub: '', note: 'Unplug' }
         : { tone: 'idle', sub: '', note: '' },
     )}
   />
@@ -130,9 +130,9 @@ export const ClearPort = (props: { socket: PortId }) => (
 export const WiringPorts = () => (
   <Ports
     cells={{
-      usb1: { tone: 'connect', sub: 'Game PC', note: 'plug in' },
-      usb2: { tone: 'connect', sub: 'This device', note: 'plug in' },
-      usb3: { tone: 'device', sub: 'Mouse/keyboard', note: 'plug in' },
+      usb1: { tone: 'connect', sub: 'Game PC', note: 'Plug in' },
+      usb2: { tone: 'connect', sub: 'This device', note: 'Plug in' },
+      usb3: { tone: 'device', sub: 'Mouse/keyboard', note: 'Plug in' },
     }}
   />
 );

@@ -186,7 +186,7 @@ describe('Control page', () => {
   it('renders a blanket lock the picker cannot build but another client can set', async () => {
     // The active list has always been able to show these; only the picker was limited.
     const { findByText } = mount();
-    await findByText('all keys press');
+    await findByText('All keys press');
   });
 
   it('renders a weighed direction as its percentage, not as a lock', async () => {
