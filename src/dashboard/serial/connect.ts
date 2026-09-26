@@ -49,7 +49,7 @@ export function classifyConnectError(e: unknown): ConnectVerdict {
     return classify(e);
   } catch {
     // A thrown value can be hostile: a null prototype, a throwing getter, a Proxy refusing instanceof.
-    return { kind: 'other', message: 'the browser gave no reason' };
+    return { kind: 'other', message: 'The browser gave no reason' };
   }
 }
 
@@ -68,7 +68,7 @@ function classify(e: unknown): ConnectVerdict {
   // Two SecurityErrors: expired transient activation, which one more click fixes, and a permissions
   // policy block, which it doesn't.
   if (name === 'SecurityError' && !/policy|disallow/i.test(message)) return { kind: 'needs-click' };
-  return { kind: 'other', message: message || 'the browser gave no reason' };
+  return { kind: 'other', message: message || 'The browser gave no reason' };
 }
 
 const better = (a: ConnectVerdict | null, b: ConnectVerdict): ConnectVerdict =>
