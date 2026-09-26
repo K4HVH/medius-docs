@@ -91,7 +91,7 @@ describe('Advanced', () => {
   it('a release fetch that failed leaves the page usable, not frozen', async () => {
     mock.releasesThrow = true;
     const r = render(() => <Advanced />);
-    await waitFor(() => expect(r.container.textContent).toMatch(/could not reach the firmware/i));
+    await waitFor(() => expect(r.container.textContent).toMatch(/couldn't reach the firmware/i));
     // The crash was in a `disabled=` prop reading the rejected resource, so it only fired once the
     // Flash button rendered: walk all the way to it.
     await openGate(r);

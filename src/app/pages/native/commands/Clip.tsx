@@ -7,7 +7,7 @@ const Clip: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="CLIP" subtitle="Preload input and let the box play it back, frame by frame" />
+        <CardHeader title="CLIP" subtitle="Preloaded input, played back by the box frame by frame" />
         <p>
           A clip is a ring of per-frame entries on the box. The box drains one entry per native frame
           into the same <A href="/native/injection#state">injection state</A> that{' '}
@@ -15,8 +15,7 @@ const Clip: Component = () => {
           <A href="/native/commands/move"><code>MOVE</code></A> feed.
         </p>
         <p>
-          Playback is box-clocked: its timing does not depend on how fast or how evenly the host
-          can send.
+          Playback is box-clocked, independent of host send timing.
         </p>
         <p>
           Like <A href="/native/commands/inject"><code>INJECT</code></A> a clip is field-generic and{' '}
@@ -30,18 +29,18 @@ const Clip: Component = () => {
           1&nbsp;ms. A field for a class the clone has no interface for is discarded.
         </p>
         <p>
-          Read the ring depth, playback state, and settings back with{' '}
-          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reads back ring depth,
+          playback state, and settings.
         </p>
-        <div class="api-response-label">TWO MODES</div>
+        <div class="api-response-label">MODES</div>
         <p>
-          A clip runs in one of two shapes, set by the <code>retain</code> flag on{' '}
-          <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.
+          The <code>retain</code> flag on{' '}
+          <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> picks the mode.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Mode</th><th>The ring</th><th>Replay</th><th>Suits</th></tr>
+              <tr><th>Mode</th><th>Ring</th><th>Replay</th><th>Suits</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -88,7 +87,7 @@ const Clip: Component = () => {
 
       <div id="entries" data-search-target>
         <Card>
-          <CardHeader title="Entry format" subtitle="The bytes CLIP_APPEND carries" />
+          <CardHeader title="Entry format" subtitle="CLIP_APPEND bytes" />
           <p>
             A clip is a byte stream of variable-length entries, little-endian. The first byte of each entry is
             a tag: <code>0x00</code> is a <code>gap run</code>, any other value is a{' '}
@@ -131,8 +130,8 @@ const Clip: Component = () => {
             <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> payload.
           </p>
           <p>
-            An entry that can never be valid (a reserved bit, a count out of range, a length past 512
-            bytes) faults the clip as soon as playback reaches it.
+            An invalid entry (a reserved bit, a count out of range, a length past 512 bytes) faults
+            the clip when playback reaches it.
           </p>
           <div class="api-response-label">EDGES</div>
           <p>
@@ -161,8 +160,8 @@ const Clip: Component = () => {
             </tbody>
           </table>
           <p>
-            An edge is a level: it sticks until a later tick changes it, and the box NAKs while it is held
-            still.
+            An edge is a level: it holds until a later tick changes it, and the box NAKs while it is
+            unchanged.
           </p>
           <div class="api-response-label">COMBINED TICK</div>
           <p>
@@ -174,7 +173,7 @@ const Clip: Component = () => {
           <div class="api-response-label">PLAYBACK ORDER</div>
           <table class="api-params">
             <thead>
-              <tr><th>Frame</th><th>Entry</th><th>The clone emits</th></tr>
+              <tr><th>Frame</th><th>Entry</th><th>Clone emits</th></tr>
             </thead>
             <tbody>
               <tr><td><code>0</code></td><td>motion</td><td>cursor moves</td></tr>
@@ -213,7 +212,7 @@ const Clip: Component = () => {
               <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>cloned endpoint number</td></tr>
               <tr><td>1</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN, onto cloned IN endpoint <code>ep_num</code>; <code>2</code> = OUT, relayed to the real device</td></tr>
               <tr><td>2</td><td><code>len</code></td><td><code>u16</code></td><td>length of <code>bytes</code>, little-endian</td></tr>
-              <tr><td>4</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the report, verbatim; sent in entry order, ahead of the tick's report</td></tr>
+              <tr><td>4</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>report, verbatim; sent in entry order, ahead of the tick's report</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">TRANSFER ITEM</div>
@@ -223,14 +222,14 @@ const Clip: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> = EP0, or a control endpoint the device declares</td></tr>
-              <tr><td>1</td><td><code>setup</code></td><td><code>u8[8]</code></td><td>the setup packet</td></tr>
-              <tr><td>9</td><td><code>data</code></td><td><code>u8[]</code></td><td>the OUT data: <code>wLength</code> bytes when bit 7 of the first setup byte (the request type) is clear, absent when it is set</td></tr>
+              <tr><td>1</td><td><code>setup</code></td><td><code>u8[8]</code></td><td>setup packet</td></tr>
+              <tr><td>9</td><td><code>data</code></td><td><code>u8[]</code></td><td>OUT data: <code>wLength</code> bytes when bit 7 of the first setup byte (the request type) is clear, absent when it is set</td></tr>
             </tbody>
           </table>
           <p>
-            The box queues transfers (1&nbsp;KiB) and runs them one at a time. Each answer comes back as a{' '}
-            <A href="/native/commands/catch#traffic-event"><code>CLIP_XFER</code></A> event, in the order
-            the items drained.
+            The box queues transfers (1&nbsp;KiB) and runs them one at a time. Each result arrives as a{' '}
+            <A href="/native/commands/catch#traffic-event"><code>CLIP_XFER</code></A> event, in drain
+            order.
           </p>
           <div class="api-response-label">TRANSFER QUEUE</div>
           <table class="api-params">
@@ -247,7 +246,7 @@ const Clip: Component = () => {
           <div class="api-response-label">NATIVE STATE</div>
           <table class="api-params">
             <thead>
-              <tr><th>Report</th><th>What release does</th></tr>
+              <tr><th>Report</th><th>On release</th></tr>
             </thead>
             <tbody>
               <tr><td>a raw IN item on the mouse, keyboard or media report the box injects into</td><td>emitted once in its native state, if that differs from the raw bytes outside the relative fields</td></tr>
@@ -275,9 +274,9 @@ const Clip: Component = () => {
         <Card>
           <CardHeader title="CLIP_APPEND" subtitle="Fill the ring" />
           <p>
-            Append a batch of whole <A href="/native/commands/clip#entries">entries</A> to the tail of the
-            ring. Send it while stopped to preload, or while playing (streaming mode) to keep topping up in
-            real time. <A href="/native/frame#opcodes">Opcode</A> <code>0x12</code>.
+            Appends whole <A href="/native/commands/clip#entries">entries</A> to the ring's tail: while
+            stopped to preload, or while playing (streaming mode) to top up.{' '}
+            <A href="/native/frame#opcodes">Opcode</A> <code>0x12</code>.
           </p>
           <pre class="api-signature">CLIP_APPEND  0x12  ·  payload = one or more whole entries</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -297,7 +296,7 @@ const Clip: Component = () => {
           </p>
           <p>
             The link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so a lost frame
-            shows up as a <code>SEQ</code> gap and the box marks the clip <code>faulted</code> in{' '}
+            shows as a <code>SEQ</code> gap and the box marks the clip <code>faulted</code> in{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. Recover with{' '}
             <code>CLEAR</code>, then rebuild.
           </p>
@@ -312,9 +311,9 @@ const Clip: Component = () => {
           <p>
             Keep an append under{' '}
             <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes.
-            In streaming mode the box drains from the head while you append to the tail, so{' '}
-            <code>free</code> opens back up as it plays. The ring itself is 64 KB on a box with PSRAM and
-            16 KB on one without, so never assume a size.
+            In streaming mode the head drains while the host appends to the tail, so{' '}
+            <code>free</code> recovers as it plays. The ring is 64 KB with PSRAM and 16 KB without;
+            never assume a size.
           </p>
           <pre class="diagram">{`  the ring, read by QUERY(CLIP):
 
@@ -328,7 +327,7 @@ const Clip: Component = () => {
           <p>
             Library binding: <A href="/library/clip#builder"><code>ClipBuilder</code></A> +{' '}
             <A href="/library/clip#handle"><code>append</code></A>, which splits a large clip into whole-entry
-            frames for you.
+            frames.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Append one content tick, cursor <code>dx = 10</code> (a 5-byte entry, so <code>LEN = 5</code>):</p>
@@ -359,9 +358,9 @@ const Clip: Component = () => {
             <tbody>
               <tr><td><code>0</code></td><td><code>START</code></td><td>play from the ring head, applying the <code>autolock</code> setting</td></tr>
               <tr><td><code>1</code></td><td><code>STOP</code></td><td>halt playback and release the clip's auto-lock; buffered entries survive in retained mode</td></tr>
-              <tr><td><code>2</code></td><td><code>PAUSE</code></td><td>freeze the playhead where it is; held levels stay down, motion stops</td></tr>
-              <tr><td><code>3</code></td><td><code>RESUME</code></td><td>continue a paused clip from where it stopped</td></tr>
-              <tr><td><code>4</code></td><td><code>RESTART</code></td><td>jump back to the head and play from the top (retained clip)</td></tr>
+              <tr><td><code>2</code></td><td><code>PAUSE</code></td><td>freeze the playhead; held levels stay down, motion stops</td></tr>
+              <tr><td><code>3</code></td><td><code>RESUME</code></td><td>continue a paused clip</td></tr>
+              <tr><td><code>4</code></td><td><code>RESTART</code></td><td>play from the head (retained clip)</td></tr>
               <tr><td><code>5</code></td><td><code>TOGGLE</code></td><td>start if stopped, stop if playing</td></tr>
               <tr><td><code>6</code></td><td><code>CLEAR</code></td><td>stop and empty the ring, dropping every buffered entry and clearing a fault</td></tr>
               <tr><td><code>7</code></td><td><code>FINALIZE</code></td><td>mark the buffered clip complete; the box stops treating an emptied ring as an underrun</td></tr>
@@ -389,7 +388,7 @@ const Clip: Component = () => {
           <div class="api-response-label">UNDERRUN</div>
           <p>
             In streaming mode, if the ring drains with no <code>FINALIZE</code>, the box idles (NAKs, holding
-            its levels) and stays <code>playing</code> until you refill it; a topping-up host or any keepalive
+            its levels) and stays <code>playing</code> until refilled; a topping-up host or any keepalive
             resets the 1 s silence timer.
           </p>
           <p>
@@ -406,10 +405,10 @@ re-clone    the box clones a device again`}</pre>
           <p>
             Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss,{' '}
-            <A href="/native/commands/patch#presentation">re-clone</A>) also clears the
-            ring, the settings and the trigger set, and a host reloads the clip and its config. The{' '}
-            <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> reaches a clip like any
-            other injection.
+            <A href="/native/commands/patch#presentation">re-clone</A>) also clears the ring, settings
+            and trigger set, which a host reloads. The{' '}
+            <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> applies to a clip like
+            any other injection.
           </p>
           <p>A hard stop moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
           <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
@@ -427,10 +426,9 @@ re-clone    the box clones a device again`}</pre>
         <Card>
           <CardHeader title="CLIP_SET" subtitle="Set a clip setting" />
           <p>
-            Set one of the clip's settings, <A href="/native/commands/option">OPTION</A>-shaped. A setting
-            sticks until you change it or a <A href="/native/commands/clip#ctrl">hard stop</A> clears it;
-            read them all back with{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.{' '}
+            Sets one clip setting, <A href="/native/commands/option">OPTION</A>-shaped. A setting holds
+            until changed or cleared by a <A href="/native/commands/clip#ctrl">hard stop</A>;{' '}
+            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reads them all back.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x14</code>.
           </p>
           <pre class="api-signature">CLIP_SET  0x14  ·  payload [id u8][value u8]</pre>
@@ -441,8 +439,8 @@ re-clone    the box clones a device again`}</pre>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>the setting, as the table below</td></tr>
-              <tr><td>1</td><td><code>value</code></td><td><code>u8</code></td><td>the setting's new value</td></tr>
+              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>setting (table below)</td></tr>
+              <tr><td>1</td><td><code>value</code></td><td><code>u8</code></td><td>new value</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">SETTINGS</div>
@@ -459,8 +457,7 @@ re-clone    the box clones a device again`}</pre>
           </table>
           <div class="api-response-label">AUTO-LOCK</div>
           <p>
-            The <code>autolock</code> value is a bitmask of the physical-input classes <code>START</code> locks
-            while the clip plays, clip-owned and released on <code>STOP</code>. A host{' '}
+            <code>autolock</code> locks are clip-owned and released on <code>STOP</code>; a host{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A> is untouched. <code>0</code> = no
             auto-lock; <code>0x1F</code> = every class.
           </p>
@@ -478,7 +475,7 @@ re-clone    the box clones a device again`}</pre>
           <p>
             A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
             default, so it plays on its own timeline; <code>ride</code> puts it back on the ride,
-            additive to physical motion and dropped while the user holds still.
+            additive to physical motion and dropped while the mouse is still.
           </p>
           <p>
             While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
@@ -506,10 +503,9 @@ re-clone    the box clones a device again`}</pre>
         <Card>
           <CardHeader title="CLIP_TRIGGER" subtitle="Bind a physical edge or a matched packet to an engine verb" />
           <p>
-            Fire a <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> verb on the box from a
-            physical edge, the same edge <A href="/native/commands/catch"><code>CATCH</code></A> reports,
-            or from a matched packet. There's no host round-trip, so even the first emitted frame is
-            box-timed.
+            Fires a <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> verb on the box from a
+            physical edge (as <A href="/native/commands/catch"><code>CATCH</code></A> reports it) or a
+            matched packet, with no host round-trip, so even the first emitted frame is box-timed.
           </p>
           <p>
             Triggers are a{' '}
@@ -529,7 +525,7 @@ re-clone    the box clones a device again`}</pre>
             <tbody>
               <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>input class (below)</td></tr>
               <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>usage within the class, little-endian; <code>0xFFFF</code> = any</td></tr>
-              <tr><td>3</td><td><code>edge</code></td><td><code>u8</code></td><td>which edge fires (below)</td></tr>
+              <tr><td>3</td><td><code>edge</code></td><td><code>u8</code></td><td>firing edge (below)</td></tr>
               <tr><td>4</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op to fire, <code>0</code>-<code>5</code></td></tr>
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>bit0 present, bit1 consume (below)</td></tr>
             </tbody>
@@ -560,7 +556,7 @@ re-clone    the box clones a device again`}</pre>
               <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: lock the trigger usage while it stays active. Press edge only; a release-edge binding stores the flag and never acts on it</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TWO KINDS</div>
+          <div class="api-response-label">KINDS</div>
           <pre class="diagram">{`  class 0..2, 0xFF                          class 4..9
   a physical edge                           a packet on a traffic surface
   button, key, media                        HID_IN, HID_OUT, VEND_INTR, VEND_BULK, CONTROL, EMIT
@@ -577,13 +573,14 @@ re-clone    the box clones a device again`}</pre>
             <code>present</code> removes it.
           </p>
           <p>
-            To wipe the whole set in one frame send the clear-all sentinel:{' '}
+            The clear-all sentinel wipes the whole set, input bindings and packet triggers alike:{' '}
             <code>class = 0xFF</code>, <code>id = 0xFFFF</code>, <code>edge = 0</code> (both),{' '}
-            <code>flags = 0</code>. It clears the input bindings and the packet triggers alike.
+            <code>flags = 0</code>.
           </p>
           <p>
-            Preload the ring (and, for a replayable macro, mark it{' '}
-            <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A>d) before you bind.
+            Preload the ring (and{' '}
+            <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A> it for a replayable macro)
+            before binding.
           </p>
           <p>
             Library binding: <A href="/library/clip#handle"><code>bind</code></A>,{' '}
@@ -608,9 +605,9 @@ re-clone    the box clones a device again`}</pre>
         <Card>
           <CardHeader title="Packet triggers" subtitle="CLIP_TRIGGER with a traffic class" />
           <p>
-            A traffic class in the <code>class</code> byte makes the binding a packet trigger: a
-            packet on that surface whose head matches runs the verb, as an input edge does for the
-            input classes. The frame carries the match after the six bytes every binding has.{' '}
+            A traffic class in the <code>class</code> byte makes a packet trigger: a packet on that
+            surface whose head matches runs the verb, as an input edge does. The match follows the six
+            bytes every binding has.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
           </p>
           <pre class="api-signature">CLIP_TRIGGER  0x15  ·  packet payload 8 + 2 x mlen bytes</pre>
@@ -623,8 +620,8 @@ re-clone    the box clones a device again`}</pre>
             </thead>
             <tbody>
               <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>traffic class, <code>4</code>-<code>9</code> (below)</td></tr>
-              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>the class's address as <A href="/native/commands/catch#catch"><code>CATCH</code></A> gives it, little-endian; <code>0xFFFF</code> = any</td></tr>
-              <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td>the packet's direction: <code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class address as in <A href="/native/commands/catch#catch"><code>CATCH</code></A>, little-endian; <code>0xFFFF</code> = any</td></tr>
+              <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td>packet direction: <code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
               <tr><td>4</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op to fire, <code>0</code>-<code>5</code></td></tr>
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>bit0 present, bit1 consume, bit2 <code>RUN</code> (below)</td></tr>
               <tr><td>6</td><td><code>slen</code></td><td><code>u8</code></td><td>selector length: below <code>mlen</code> with <code>RUN</code>, <code>0</code> without</td></tr>
@@ -637,7 +634,7 @@ re-clone    the box clones a device again`}</pre>
           <div class="api-response-label">SURFACES</div>
           <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Class</th><th>Value</th><th>Carries</th><th>The head is</th></tr></thead>
+            <thead><tr><th>Class</th><th>Value</th><th>Carries</th><th>Head</th></tr></thead>
             <tbody>
               <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>IN</td><td>the device's report as it arrived, ahead of any rewrite</td></tr>
               <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>OUT</td><td>a report the PC writes to the device</td></tr>
@@ -662,7 +659,7 @@ re-clone    the box clones a device again`}</pre>
             <code>present</code> clear with the same key removes. The box holds 8 packet triggers
             beside the 8 bindings, with 112 match bytes between them.
           </p>
-          <div class="api-response-label">A PACKET'S PATH</div>
+          <div class="api-response-label">PACKET PATH</div>
           <pre class="diagram">{`  packet at a surface
         |
         v
@@ -678,7 +675,7 @@ re-clone    the box clones a device again`}</pre>
           <div class="api-response-label">RULES</div>
           <table class="api-params">
             <thead>
-              <tr><th>Name</th><th>What the box does</th></tr>
+              <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
               <tr><td>surfaces</td><td>A trigger sees a packet at every surface a <A href="/native/commands/rewrite">rewrite rule</A> does, ahead of it. The two are independent: one packet can run a verb and then match a rule.</td></tr>
@@ -696,8 +693,8 @@ re-clone    the box clones a device again`}</pre>
           </table>
           <div class="api-response-label">REFUSED</div>
           <p>
-            A refused frame is dropped whole, with no reply, and leaves the set as it was: a new key is
-            not held and an existing key keeps its trigger. Compare what{' '}
+            A refused frame is dropped whole, with no reply, and leaves the set unchanged: a new key
+            isn't added and an existing key keeps its trigger. Compare what{' '}
             <code>QUERY(CLIP)</code> reads back with what was sent.
           </p>
           <table class="api-params">

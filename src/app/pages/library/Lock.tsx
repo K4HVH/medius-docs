@@ -9,9 +9,9 @@ const Lock: Component = () => {
       <Card>
         <CardHeader title="Lock" subtitle="Weigh one physical input; injection still drives it" />
         <p>
-          A scale sets how much of the <em>physical</em> device reaches the game PC on one input,
-          while host <A href="/native/injection">injection</A> still drives that same input at full
-          strength. Blocking and passing are its two ends.
+          A scale sets how much of one <em>physical</em> input reaches the game PC;{' '}
+          <A href="/native/injection">injection</A> still drives that input unweighed. Blocking and
+          passing are its two ends.
         </p>
         <pre class="diagram">{`  scale -100  physical  <--   inverted
   scale 0     physical  --X   blocked
@@ -22,7 +22,7 @@ const Lock: Component = () => {
   injection always -->  unweighed, whatever the scale`}</pre>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Weigh a...</th><th>Any percentage, signed</th><th>Block</th><th>Release</th></tr></thead>
+            <thead><tr><th>Weigh a...</th><th>Signed percent</th><th>Block</th><th>Release</th></tr></thead>
             <tbody>
               <tr><td>relative axis (X / Y / wheel / pan)</td><td><A href="/library/lock#scale"><code>scale</code></A> / <A href="/library/lock#lock-axis"><code>scale_axis</code></A></td><td><A href="/library/lock#lock"><code>lock</code></A> / <A href="/library/lock#lock-axis"><code>lock_axis</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A> / <A href="/library/lock#lock-axis"><code>unlock_axis</code></A></td></tr>
               <tr><td>button, key, or media usage</td><td>truncates to a lock; a negative is refused</td><td><A href="/library/lock#lock"><code>lock</code></A></td><td><A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
@@ -46,21 +46,21 @@ const Lock: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> measured against the bearing. Only an axis has a bearing, so a relative direction anywhere else is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. A media usage has no edges, so an edge on one goes out as <code>Both</code>.</td></tr>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it goes out as <code>Both</code>.</td></tr>
               <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies, and down to <code>LOCK_SCALE_MIN</code> (-255) reverses. Outside that is <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
-            A delta picks up one fixed-direction scale and one relative one, multiplied, so a block in either zeroes the product. <code>With</code> and <code>Against</code> need a live bearing; see{' '}
-            <A href="/library/options#set-bearing"><code>set_bearing</code></A>. A momentary usage
-            carries one bit, so any scale under 100 locks it and a negative on one is{' '}
+            A delta gets one fixed-direction scale times one relative one, so a block in either zeroes
+            the product. <code>With</code> and <code>Against</code> need a live bearing (
+            <A href="/library/options#set-bearing"><code>set_bearing</code></A>). A momentary usage is one
+            bit: any scale under 100 locks it, and a negative is{' '}
             <A href="/library/types/errors#errors"><code>Error::LockScaleUsage</code></A>.
           </p>
           <p>
-            The slot comes from the delta's sign before the weigh, so a <code>Positive</code> of{' '}
-            <code>-100</code> turns what arrived rightward into leftward and leaves the other sign
-            alone.
+            The slot comes from the delta's sign before weighing: <code>Positive</code> at{' '}
+            <code>-100</code> turns rightward motion leftward and leaves leftward motion alone.
           </p>
           <div class="callout callout--info">
             <p>
@@ -76,7 +76,7 @@ let device = Device::find()?;
 device.scale(Axis::X, Direction::Against, 40)?;  // 40% of physical motion opposing the injection
 device.scale(Axis::X, Direction::With, 130)?;    // 130% of it along the injection
 device.scale(Axis::Y, Direction::Negative, 60)?; // 60% of upward motion, always
-device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted`}</code></pre>
+device.scale(Axis::Y, Direction::Both, -100)?;   // Y inverted`}</code></pre>
         </Card>
       </div>
 
@@ -96,16 +96,15 @@ device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted`}</co
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media usage).</td></tr>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which sign or edge to block. An axis also takes the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
             </tbody>
           </table>
           <p>
-            A lock holds until you{' '}
-            <A href="/library/lock#unlock"><code>unlock</code></A> it. The box also clears every lock on
-            control-PC silence, on <A href="/library/admin#reset"><code>reset</code></A>, on inter-chip
-            link loss, and when the real device detaches. See the native{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> command for the wire layout.
+            A lock holds until <A href="/library/lock#unlock"><code>unlock</code></A>, control-PC
+            silence, <A href="/library/admin#reset"><code>reset</code></A>, inter-chip link loss, or the
+            real device detaching. The wire layout is on the native{' '}
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A> command.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Button, Key, MediaKey, Direction};
@@ -125,10 +124,9 @@ device.move_rel(50, 0)?;                          // injection still moves X`}</
           <pre class="api-signature">fn unlock(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            <A href="/library/lock#scale"><code>scale</code></A> at <code>LOCK_SCALE_PASS</code>: the
-            same <code>target</code> and <code>direction</code>, back to passing untouched.{' '}
-            <code>Direction::Both</code> clears every direction of the target, the bearing-relative
-            pair included, so an unlock never leaves the relative pair still weighing.
+            <A href="/library/lock#scale"><code>scale</code></A> at <code>LOCK_SCALE_PASS</code> for the
+            same <code>target</code> and <code>direction</code>. <code>Direction::Both</code> clears every
+            direction of the target, the bearing-relative pair included.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
@@ -146,10 +144,10 @@ device.unlock(Axis::X, Direction::Both)?;   // X passes untouched again`}</code>
           <pre class="api-signature">fn scale_axis(&self, axis: Axis, direction: Direction, scale: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Convenience for <A href="/library/lock#lock"><code>lock</code></A> /{' '}
+            <A href="/library/lock#lock"><code>lock</code></A> /{' '}
             <A href="/library/lock#unlock"><code>unlock</code></A> /{' '}
-            <A href="/library/lock#scale"><code>scale</code></A> with an{' '}
-            <A href="/library/types/enums#axis"><code>Axis</code></A>, where the direction is a sign.
+            <A href="/library/lock#scale"><code>scale</code></A> for an{' '}
+            <A href="/library/types/enums#axis"><code>Axis</code></A>, with a sign as the direction.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
@@ -168,15 +166,14 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
           <pre class="api-signature">fn scale_all(&self, what: Blanket, direction: Direction, scale: i16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Weigh an entire input group at once with a{' '}
-            <A href="/library/types/enums#blanket"><code>Blanket</code></A>.{' '}
-            <code>direction</code> reaches every member the same way it reaches one, so{' '}
-            <code>Keys</code> takes an edge and <code>Media</code>, having none, sends <code>Both</code>.
+            A <A href="/library/types/enums#blanket"><code>Blanket</code></A> weighs a whole input
+            group. <code>direction</code> reaches every member as it reaches one: <code>Keys</code> takes
+            an edge, and <code>Media</code>, having none, sends <code>Both</code>.
           </p>
           <p>
-            <code>Blanket::Aim</code> is how you address X and Y together in{' '}
-            <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A>, where the
-            box reads X and Y as one thing.
+            <code>Blanket::Aim</code> addresses X and Y together in{' '}
+            <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A>, which reads
+            X and Y as one vector.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Blanket, Direction};
@@ -195,8 +192,8 @@ device.scale_all(Blanket::Aim, Direction::Against, 40)?; // 40% of motion opposi
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps every lock call
             synchronous (<code>scale</code>, <code>lock</code>/<code>unlock</code>,{' '}
-            <code>scale_axis</code>, and <code>scale_all</code> with their lock and unlock pairs) since
-            they expect no reply; <code>query_locks</code> is a future like the other queries.
+            <code>scale_axis</code>, and <code>scale_all</code> with their lock and unlock pairs), with no
+            reply to await; <code>query_locks</code> is a future.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;

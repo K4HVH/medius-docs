@@ -7,12 +7,12 @@ const Transfer: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Transfer" subtitle="Run one control request against the real device" />
+        <CardHeader title="Transfer" subtitle="One control request on the real device" />
         <p>
-          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> puts one USB control
-          transfer on the real device, from the control PC, and{' '}
-          <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> carries the
-          device's answer back: a descriptor, a string, a vendor value, or the handshake that ended it.
+          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> runs one USB control
+          transfer on the real device from the control PC;{' '}
+          <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> returns the
+          result: a descriptor, a string, a vendor value, or the handshake that ended it.
         </p>
         <pre class="diagram">{`  control PC           DEVICE chip            HOST chip            real device
       |                     |                      |                     |
@@ -28,19 +28,19 @@ const Transfer: Component = () => {
         </p>
         <div class="callout callout--warning">
           <p>
-            <code>TRANSFER</code> is part of the advanced control layer and runs only under the{' '}
-            <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>. With it off, a
-            request with a full setup packet answers <code>0xFC</code> and never reaches the device.
+            <code>TRANSFER</code> is advanced control and runs only under the{' '}
+            <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>. Otherwise a
+            request with a full setup packet gets <code>0xFC</code> and never reaches the device.
           </p>
         </div>
       </Card>
 
       <div id="transfer" data-search-target>
         <Card>
-          <CardHeader title="TRANSFER" subtitle="One control request, answered once" />
+          <CardHeader title="TRANSFER" subtitle="One request, one reply" />
           <p>
-            <code>TRANSFER</code> carries a target endpoint, an eight-byte setup packet, and the OUT
-            data stage if the request has one.{' '}
+            <code>TRANSFER</code> carries a target endpoint, an eight-byte setup packet, and any OUT
+            data stage.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x1A</code>.
           </p>
           <pre class="api-signature">TRANSFER  0x1A  ·  payload 9..512 bytes</pre>
@@ -52,8 +52,8 @@ const Transfer: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> = EP0, else a control endpoint the real device declares, matched on bits 0-3</td></tr>
-              <tr><td>1</td><td><code>bmRequestType</code></td><td><code>u8</code></td><td>bit 7 sets the direction: <code>1</code> IN, <code>0</code> OUT</td></tr>
-              <tr><td>2</td><td><code>bRequest</code></td><td><code>u8</code></td><td>the request code</td></tr>
+              <tr><td>1</td><td><code>bmRequestType</code></td><td><code>u8</code></td><td>bit 7 is direction: <code>1</code> IN, <code>0</code> OUT</td></tr>
+              <tr><td>2</td><td><code>bRequest</code></td><td><code>u8</code></td><td>request code</td></tr>
               <tr><td>3</td><td><code>wValue</code></td><td><code>u16</code></td><td>little-endian</td></tr>
               <tr><td>5</td><td><code>wIndex</code></td><td><code>u16</code></td><td>little-endian</td></tr>
               <tr><td>7</td><td><code>wLength</code></td><td><code>u16</code></td><td>data stage length, little-endian, at most <code>504</code></td></tr>
@@ -61,8 +61,8 @@ const Transfer: Component = () => {
             </tbody>
           </table>
           <p>
-            Offsets 1 to 8 are the setup packet exactly as the device receives it. The box never
-            rewrites or retries it.
+            Offsets 1 to 8 are the setup packet exactly as the device receives it, never rewritten or
+            retried.
           </p>
           <div class="api-response-label">DATA STAGE</div>
           <table class="api-params">
@@ -78,23 +78,23 @@ const Transfer: Component = () => {
           </p>
           <div class="callout callout--warning">
             <p>
-              A <code>SET_CONFIGURATION</code> or <code>SET_INTERFACE</code> sent here changes the
-              real device only. The clone, and the endpoints the host chip polls, stay where the game
-              PC put them.
+              A <code>SET_CONFIGURATION</code> or <code>SET_INTERFACE</code> sent here changes only the
+              real device; the clone and the endpoints the host chip polls stay as the game PC set
+              them.
             </p>
           </div>
           <div class="api-response-label">REFUSALS</div>
           <table class="api-params">
             <thead>
-              <tr><th>When</th><th>The box sends</th></tr>
+              <tr><th>When</th><th>Sends</th></tr>
             </thead>
             <tbody>
-              <tr><td>the payload is shorter than 9 bytes</td><td>nothing; the frame is discarded</td></tr>
-              <tr><td>the <A href="/native/commands/option#imperfect">opt-in</A> is off</td><td><code>0xFC</code></td></tr>
-              <tr><td><code>wLength</code> is above <code>504</code></td><td><code>0xFC</code></td></tr>
-              <tr><td>an OUT request carries fewer than <code>wLength</code> data bytes</td><td><code>0xFC</code></td></tr>
-              <tr><td>the host chip's <A href="/native/commands/transfer#proxy">control queue</A> is full, from any of its users</td><td><code>0xFC</code></td></tr>
-              <tr><td><code>ep</code> is not <code>0</code> and names no declared control endpoint</td><td><code>0xFE</code>, or <code>0xFF</code> with no device attached</td></tr>
+              <tr><td>payload under 9 bytes</td><td>nothing; frame discarded</td></tr>
+              <tr><td><A href="/native/commands/option#imperfect">opt-in</A> off</td><td><code>0xFC</code></td></tr>
+              <tr><td><code>wLength</code> above <code>504</code></td><td><code>0xFC</code></td></tr>
+              <tr><td>OUT request with fewer than <code>wLength</code> data bytes</td><td><code>0xFC</code></td></tr>
+              <tr><td>host chip <A href="/native/commands/transfer#proxy">control queue</A> full, from any user</td><td><code>0xFC</code></td></tr>
+              <tr><td>nonzero <code>ep</code> naming no declared control endpoint</td><td><code>0xFE</code>, or <code>0xFF</code> with no device attached</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -115,7 +115,7 @@ const Transfer: Component = () => {
 +---------------+----------+--------+--------+--------+--------+`}</pre>
           <p>
             An OUT request: <code>SET_REPORT(Output)</code> on interface 0 with one data byte,{' '}
-            <code>02</code>, the Caps Lock LED of a boot keyboard.
+            <code>02</code>, a boot keyboard's Caps Lock LED.
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+
 | A5     | 1A     | 08     | 0A 00  | 00     |
@@ -139,7 +139,7 @@ const Transfer: Component = () => {
 
       <div id="transfer-resp" data-search-target>
         <Card>
-          <CardHeader title="TRANSFER_RESP" subtitle="The device's answer to one TRANSFER" />
+          <CardHeader title="TRANSFER_RESP" subtitle="Result of one TRANSFER" />
           <p>
             One reply per <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> with a
             full setup packet, its <A href="/native/frame#seq"><code>SEQ</code></A> echoing the
@@ -154,8 +154,8 @@ const Transfer: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td>echoes the command's <code>ep</code> byte</td></tr>
-              <tr><td>1</td><td><code>status</code></td><td><code>u8</code></td><td>how the transfer ended, in the table below</td></tr>
-              <tr><td>2..</td><td><code>data</code></td><td><code>u8[]</code></td><td>the IN data stage, present only on an IN request with <code>status = 0</code>; the frame <A href="/native/frame#layout"><code>LEN</code></A> gives its length</td></tr>
+              <tr><td>1</td><td><code>status</code></td><td><code>u8</code></td><td>how the transfer ended, as below</td></tr>
+              <tr><td>2..</td><td><code>data</code></td><td><code>u8[]</code></td><td>IN data stage, only on an IN request with <code>status = 0</code>; length from the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">STATUS</div>
@@ -167,7 +167,7 @@ const Transfer: Component = () => {
               <tr><td><code>0x00</code></td><td>completed</td><td>the device finished the status stage; an IN request's data follows</td></tr>
               <tr><td><code>0xFC</code></td><td>refused</td><td>stopped before the device, per the <A href="/native/commands/transfer#transfer">refusals</A></td></tr>
               <tr><td><code>0xFD</code></td><td>STALL</td><td>the device STALLed the request</td></tr>
-              <tr><td><code>0xFE</code></td><td>no answer</td><td>the device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no answer crossed the link within 800 ms</td></tr>
+              <tr><td><code>0xFE</code></td><td>no answer</td><td>device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, or no reply crossed the link within 800 ms</td></tr>
               <tr><td><code>0xFF</code></td><td>no device</td><td>nothing attached on the host chip, or the host chip is re-enumerating it</td></tr>
             </tbody>
           </table>
@@ -176,7 +176,7 @@ const Transfer: Component = () => {
             event, the transfer a <A href="/native/commands/clip#items">clip</A> runs.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>The device descriptor, answering <code>SEQ 07</code> (18 data bytes, so <code>LEN = 20</code>):</p>
+          <p>The device descriptor for <code>SEQ 07</code> (18 data bytes, so <code>LEN = 20</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
 | A5     | 1B     | 07     | 14 00  | 00     | 00     |
 +--------+--------+--------+--------+--------+--------+
@@ -199,10 +199,10 @@ const Transfer: Component = () => {
 
       <div id="in-flight" data-search-target>
         <Card>
-          <CardHeader title="One at a time" subtitle="A TRANSFER holds the control port until it answers" />
+          <CardHeader title="One at a time" subtitle="A TRANSFER holds the control port until its reply" />
           <p>
-            The box runs a <code>TRANSFER</code> to completion before it reads the next control
-            frame, so one is in flight at a time and replies arrive in command order.
+            The box runs a <code>TRANSFER</code> to completion before reading the next control
+            frame, so replies arrive in command order.
           </p>
           <pre class="diagram">{`  TRANSFER A --> [ runs, up to 800 ms ] --> TRANSFER_RESP A
   TRANSFER B --> waits on the box -------------------------> [ runs ] --> TRANSFER_RESP B
@@ -213,24 +213,24 @@ const Transfer: Component = () => {
               <tr><th>Quantity</th><th>Value</th></tr>
             </thead>
             <tbody>
-              <tr><td>Device answer, on the host chip</td><td>500 ms, then <code>0xFE</code>.</td></tr>
-              <tr><td>Link answer, on the device chip</td><td>800 ms, then <code>0xFE</code>.</td></tr>
+              <tr><td>Device reply, host chip</td><td>500 ms, then <code>0xFE</code>.</td></tr>
+              <tr><td>Link reply, device chip</td><td>800 ms, then <code>0xFE</code>.</td></tr>
               <tr><td>Frames held while one runs</td><td>63 frames, the running one included, or just under 16 KiB of payload; a frame past either is dropped.</td></tr>
-              <tr><td>Injection silence timer</td><td>Restarts when the frame is read, and again when an answer arrives; an 800 ms timeout leaves it counting from the frame.</td></tr>
+              <tr><td>Injection silence timer</td><td>Restarts when the frame is read and again when a reply arrives; an 800 ms timeout leaves it counting from the frame.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>
               Every other command waits behind a running <code>TRANSFER</code>, including{' '}
               <A href="/native/commands/move#move"><code>MOVE</code></A> and{' '}
-              <A href="/native/commands/inject#inject"><code>INJECT</code></A>. Keep transfers out of
-              a stream that has to land on time.
+              <A href="/native/commands/inject#inject"><code>INJECT</code></A>; keep transfers out of
+              time-critical streams.
             </p>
           </div>
           <div class="callout callout--info">
             <p>
-              An <code>0xFE</code> from the 800 ms window leaves the request queued on the host chip.
-              It can still reach the device after the reply, and its late answer is dropped.
+              An <code>0xFE</code> from the 800 ms window leaves the request queued on the host chip;
+              it can still reach the device after the reply, and its late result is dropped.
             </p>
           </div>
         </Card>
@@ -238,11 +238,11 @@ const Transfer: Component = () => {
 
       <div id="proxy" data-search-target>
         <Card>
-          <CardHeader title="One control queue" subtitle="Every request to the real device takes its turn" />
+          <CardHeader title="One control queue" subtitle="Requests to the real device take turns" />
           <p>
-            The host chip feeds the real device one control request at a time from a single queue,
-            six deep. A <code>TRANSFER</code> takes its turn there beside the game PC's requests, the
-            transfers a <A href="/native/commands/clip#items">clip</A> runs, and the box's own.
+            The host chip feeds the real device one control request at a time from one six-deep
+            queue, shared by <code>TRANSFER</code>, the game PC's requests,{' '}
+            <A href="/native/commands/clip#items">clip</A> transfers, and the box's own.
           </p>
           <pre class="diagram">{`  game PC ------EP0------> clone -----------------+
                                                   |
@@ -252,7 +252,7 @@ const Transfer: Component = () => {
                                                   |    six deep            one at a time
   halt clears, baseline reads (HOST chip) --------+`}</pre>
           <p>
-            A queue filled by any of them answers a <code>TRANSFER</code> with <code>0xFC</code>.
+            A queue filled by any of them refuses a <code>TRANSFER</code> with <code>0xFC</code>.
           </p>
           <div class="api-response-label">TAPS</div>
           <p>
@@ -265,7 +265,7 @@ const Transfer: Component = () => {
           <div class="callout callout--warning">
             <p>
               A slow request holds the device's EP0 for up to 500 ms, and a game PC request queued
-              behind it waits that long for its answer.
+              behind it waits that long.
             </p>
           </div>
         </Card>

@@ -9,16 +9,15 @@ const Connection: Component = () => {
       <Card>
         <CardHeader title="Connecting" subtitle="Open, find, and release the port" />
         <p>
-          The <code>medius</code> crate is the Rust client and <code>Device</code> is the handle. Opening
-          one finds the box, runs the <A href="/native/connection">handshake</A>, and starts the
-          background threads in one call.
+          <code>Device</code> is the handle. Opening one finds the box, runs the{' '}
+          <A href="/native/connection">handshake</A>, and starts the background threads in one call.
         </p>
         <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
       </Card>
 
       <div id="open" data-search-target>
         <Card>
-          <CardHeader title="Open a device" subtitle="Auto-detect, or a path you already have" />
+          <CardHeader title="Open a device" subtitle="Auto-detect, or a known path" />
           <pre class="api-signature">fn Device::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;Device&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre class="api-signature">fn Device::find() -&gt; Result&lt;Device&gt;</pre>
@@ -42,7 +41,7 @@ const Connection: Component = () => {
             <tbody>
               <tr>
                 <td><code>open</code></td>
-                <td>Opens a serial path you already have (Linux <code>/dev/ttyACM0</code>, Windows <code>COM3</code>).</td>
+                <td>Opens a serial path (Linux <code>/dev/ttyACM0</code>, Windows <code>COM3</code>).</td>
               </tr>
               <tr>
                 <td><code>find</code></td>
@@ -60,16 +59,16 @@ const Connection: Component = () => {
 // auto-detect the box:
 let dev = Device::find()?;
 
-// or, open a path you already know:
+// or open a known path:
 let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
         </Card>
       </div>
 
       <div id="zero-config" data-search-target>
         <Card>
-          <CardHeader title="Zero config" subtitle="No settings struct, just three read-only values" />
+          <CardHeader title="Zero config" subtitle="Three read-only values" />
           <p>
-            Nothing to configure. Two read-only defaults bound the{' '}
+            Nothing to configure. Two defaults bound the{' '}
             <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and the keepalive
             timer.
           </p>
@@ -122,23 +121,21 @@ println!("speaks protocol:   {}", PROTO_VER);                   // 9`}</code></p
           <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
-            Behind the <code>async</code> feature, <A href="/library/features/async"><code>AsyncDevice</code></A> turns the reply-reading
-            queries into futures; the{' '}
+            Behind the <code>async</code> feature,{' '}
+            <A href="/library/features/async"><code>AsyncDevice</code></A> makes the queries futures;{' '}
             <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
-            Construct one with <code>AsyncDevice::find</code>, <code>open</code> by path, or{' '}
-            <code>into_async</code>.
           </p>
           <pre><code class="language-bash">cargo add medius --features async</code></pre>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::AsyncDevice;
 
-// discover and open directly as async:
+// find and open as async:
 let dev = AsyncDevice::find()?;
 let version = block_on(dev.query_version())?; // awaits the reply
 dev.move_rel(10, 0)?;                          // fire-and-forget, stays sync
 
-// or open a path you already have:
+// or open a known path:
 let dev = AsyncDevice::open("/dev/ttyACM0")?;`}</code></pre>
         </Card>
       </div>

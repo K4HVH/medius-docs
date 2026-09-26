@@ -9,9 +9,9 @@ const Transform: Component = () => {
       <Card>
         <CardHeader title="Transform" subtitle="Swap or remap a field on the wire" />
         <p>
-          <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A> moves a field
-          the clone's descriptor declares into another one, clamped to the destination's declared
-          range, so the clone still emits only values the real device could. It carries no{' '}
+          <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A> moves one
+          declared field into another, clamped to the destination's declared range, so the clone
+          emits only values the real device could. It needs no{' '}
           <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>, unlike the
           rewrite/raw/patch layer.
         </p>
@@ -64,7 +64,7 @@ const Transform: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>the operation, as the <A href="/native/commands/transform">table above</A></td></tr>
+              <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>operation (<A href="/native/commands/transform">table above</A>)</td></tr>
               <tr><td>1</td><td><code>sclass</code></td><td><code>u8</code></td><td>source class: <code>0</code> button, <code>1</code> key, <code>2</code> media, <code>3</code> axis</td></tr>
               <tr><td>2</td><td><code>sid</code></td><td><code>u16</code></td><td>source id within the class, little-endian</td></tr>
               <tr><td>4</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
@@ -91,23 +91,22 @@ const Transform: Component = () => {
               <tr><th>Refused when</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>op</code> is above <code>1</code></td><td>remap and swap are the whole set</td></tr>
-              <tr><td>the op does not admit that <A href="/native/commands/transform#pairs">class pair</A></td><td>each op names the shapes it can read and write</td></tr>
-              <tr><td>the source and the destination are the same field</td><td>a move needs two; to weigh a field in place, use the <A href="/native/commands/lock#scale">lock</A></td></tr>
-              <tr><td>a field this clone does not declare</td><td>the box will not store an address it cannot reach; re-send the entry after a re-clone</td></tr>
-              <tr><td>the table already holds 32 entries</td><td>nothing is evicted; the readback's full flag says an entry was turned away</td></tr>
+              <tr><td><code>op</code> above <code>1</code></td><td>only remap and swap exist</td></tr>
+              <tr><td>a <A href="/native/commands/transform#pairs">class pair</A> the op doesn't admit</td><td>each op names the shapes it can read and write</td></tr>
+              <tr><td>source and destination are the same field</td><td>a move needs two; to weigh a field in place, use the <A href="/native/commands/lock#scale">lock</A></td></tr>
+              <tr><td>a field the clone doesn't declare</td><td>the box stores no unreachable address; re-send after a re-clone</td></tr>
+              <tr><td>table already at 32 entries</td><td>nothing is evicted; the readback's full flag marks the refusal</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            An entry takes effect on the next report the device sends. The box walks the table in the
-            order entries were installed, so a swap installed after a remap exchanges what the remap
-            wrote.
+            An entry applies from the device's next report. The box walks the table in install order,
+            so a swap installed after a remap exchanges what the remap wrote.
           </p>
           <p>
-            <code>TRANSFORM</code> has no reply, so a refused entry shows up as its absence from{' '}
-            <A href="/native/commands/requests#transforms"><code>RESP(TRANSFORMS)</code></A>. That
-            reply also carries the full flag, and the <code>TRANSFORM_ON</code>{' '}
+            No reply: a refused entry is absent from{' '}
+            <A href="/native/commands/requests#transforms"><code>RESP(TRANSFORMS)</code></A>, which
+            also carries the full flag. The <code>TRANSFORM_ON</code>{' '}
             <A href="/native/commands/requests#health">health</A> bit follows the table.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -152,8 +151,8 @@ const Transform: Component = () => {
 
       <div id="pairs" data-search-target>
         <Card>
-          <CardHeader title="Field pairs" subtitle="Which source and destination each op admits" />
-          <p>Each op reads and writes a fixed set of shapes. Anything else is refused.</p>
+          <CardHeader title="Field pairs" subtitle="Source and destination per op" />
+          <p>Each op admits a fixed set of shapes; anything else is refused.</p>
           <pre class="diagram">{`  swap    axis a    <--------->  axis b      two axes
   remap   axis a    ---------->  axis b      one report, source zeroed
           button i  ---------->  button j    one report, source bit cleared
@@ -163,19 +162,13 @@ const Transform: Component = () => {
   every pair is two different fields`}</pre>
           <table class="api-params">
             <thead>
-              <tr><th>Name</th><th>What the box does</th></tr>
+              <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>swap</code></td><td>Reads both axes, then writes both. Two remaps would read the second after the first had overwritten it and leave the pair equal.</td></tr>
-              <tr><td><code>remap</code></td><td>Adds the source onto the destination's own value, then zeroes the source. A button destination is OR'd the press instead, and the source bit is cleared.</td></tr>
+              <tr><td><code>swap</code></td><td>Reads both axes, then writes both; two remaps would leave the pair equal.</td></tr>
+              <tr><td><code>remap</code></td><td>Adds the source to the destination's value, then zeroes the source. A button destination is OR'd the press instead, and the source bit cleared.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHAT A REMAP LEAVES</div>
-          <p>
-            An axis remap adds, so a destination that was already moving keeps its own motion and
-            picks up the source's on top. Only the source is zeroed. The sum is clamped to the
-            destination's declared range like any other result.
-          </p>
         </Card>
       </div>
 
@@ -183,9 +176,9 @@ const Transform: Component = () => {
         <Card>
           <CardHeader title="Button to key or media" subtitle="The one remap that crosses collections" />
           <p>
-            A button source can drive a keyboard or Consumer destination. The key or media usage is
-            emitted through that collection's own interface, exactly as{' '}
-            <A href="/native/commands/inject#key"><code>INJECT</code></A> emits one.
+            A button source can drive a keyboard or Consumer destination, emitted through that
+            collection's interface as <A href="/native/commands/inject#key"><code>INJECT</code></A>{' '}
+            emits one.
           </p>
           <div class="api-response-label">HELD, NOT LATCHED</div>
           <pre class="diagram">{`  physical button    ____----------________-----____
@@ -194,22 +187,19 @@ const Transform: Component = () => {
   driven from the button mask the device just reported,
   re-read every report, with no edge latch to strand`}</pre>
           <p>
-            Because it follows the level, a configuration switch, a missed release, or a destination
-            that was briefly unbound all resolve on the next report instead of leaving a key held
-            with nothing pressed.
+            Following the level, a configuration switch, missed release, or briefly unbound
+            destination resolves on the next report, never leaving a key held with nothing pressed.
           </p>
           <div class="api-response-label">EVERY MOUSE COLLECTION</div>
           <p>
-            A device may split its buttons across two mouse collections. The destination is held
-            while any collection the box reports on has that button down, and a collection that does
-            not declare the id holds nothing for it.
+            Buttons may span two mouse collections. The destination is held while any collection the
+            box reports on has that button down; a collection not declaring the id holds nothing.
           </p>
           <div class="api-response-label">INERT WHEN UNBOUND</div>
           <p>
-            An entry naming a destination collection the box has not bound is refused outright. One
-            whose collection goes away with a configuration switch turns inert: it does nothing and
-            does not clear its source, so the button keeps reaching the game PC until that
-            collection binds again.
+            An entry naming an unbound destination collection is refused. One whose collection goes
+            away with a configuration switch turns inert and leaves its source uncleared, so the
+            button keeps reaching the game PC until that collection binds again.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
@@ -237,10 +227,10 @@ const Transform: Component = () => {
 
       <div id="order" data-search-target>
         <Card>
-          <CardHeader title="Where the pass sits" subtitle="Against locks, rendering, and injection" />
+          <CardHeader title="Pipeline order" subtitle="Locks, rendering, injection" />
           <p>
-            The weigh comes first and the field pass moves what it left, so a transform carries a
-            weighed value and everything downstream reads the field where the table put it.
+            The weigh runs first and the field pass moves what it left; everything downstream reads
+            the field where the table put it.
           </p>
           <pre class="diagram">{`  physical report
        |
@@ -259,25 +249,23 @@ const Transform: Component = () => {
               <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/native/commands/lock"><code>LOCK</code></A></td><td>the physical field</td><td>a lock bites on the sign the device reported, not on where the value ends up, so a swap never moves a lock with it</td></tr>
-              <tr><td><A href="/native/commands/option#render">rendering</A></td><td>the transformed, weighed cursor delta</td><td>the model is fed the same numbers the wire would have carried, so a scale changes what it renders rather than what it corrects</td></tr>
-              <tr><td><A href="/native/injection">injection</A></td><td>nothing the table wrote</td><td>injected motion drains into the axis after the pass; a remap that zeroed that axis does not take it with it</td></tr>
+              <tr><td><A href="/native/commands/lock"><code>LOCK</code></A></td><td>the physical field</td><td>a lock applies on the sign the device reported, not where the value ends up, so a swap never moves a lock with it</td></tr>
+              <tr><td><A href="/native/commands/option#render">rendering</A></td><td>the transformed, weighed cursor delta</td><td>the model gets the numbers the wire would have carried, so a scale changes what it renders, not what it corrects</td></tr>
+              <tr><td><A href="/native/injection">injection</A></td><td>nothing the table wrote</td><td>injected motion drains into the axis after the pass, so a remap that zeroed that axis doesn't remove it</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHAT CATCH SEES</div>
+          <div class="api-response-label">CATCH</div>
           <p>
-            The input classes of{' '}
-            <A href="/native/commands/catch#catch"><code>CATCH</code></A> tap the physical report
-            before either pass, so they still report the value the device sent. Its{' '}
-            <code>EMIT</code> class is the mirror and carries what the clone actually put on the
-            wire.
+            <A href="/native/commands/catch#catch"><code>CATCH</code></A> input classes tap the
+            physical report before either pass, so they report the value the device sent;{' '}
+            <code>EMIT</code> carries what the clone put on the wire.
           </p>
         </Card>
       </div>
 
       <div id="clearing" data-search-target>
         <Card>
-          <CardHeader title="Lifecycle" subtitle="A transform is PC-owned session state" />
+          <CardHeader title="Lifecycle" subtitle="PC-owned session state" />
           <div class="api-response-label">CLEARS ON</div>
           <pre class="diagram">{`remove      a TRANSFORM with state = 0 and the entry's (source, dest)
 clear       state 0 with both classes 0xFF and both ids 0xFFFF, a blanket
@@ -287,17 +275,16 @@ link loss   the inter-chip link drops
 detach      the real device goes away
 re-clone    the box binds a device again`}</pre>
           <p>
-            Any valid frame resets the silence timer, so a keepalive holds the table open. The host
-            library re-asserts the whole table after a device-side blip and across a control-link
-            reconnect, exactly as it does a{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>.
+            Any valid frame resets the silence timer, so a keepalive keeps the table. The library
+            re-asserts the whole table after a device-side blip and across a control-link reconnect,
+            as for <A href="/native/commands/lock"><code>LOCK</code></A>.
           </p>
           <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
-          <div class="api-response-label">WHAT A CLEAR RELEASES</div>
+          <div class="api-response-label">RELEASE</div>
           <p>
-            The <A href="/native/commands/transform#cross">cross-class holds</A> go before the
-            entries do, so no key or media usage is left down once the entry that drove it is gone.
-            Removing one entry releases only what that entry was holding.
+            <A href="/native/commands/transform#cross">Cross-class holds</A> release before their
+            entries go, so no key or media usage stays down after its entry. Removing one entry
+            releases only its own holds.
           </p>
           <p>
             <A href="/native/commands/admin#reset"><code>RESET</code></A>, a detach and a link drop

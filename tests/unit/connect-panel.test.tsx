@@ -64,7 +64,7 @@ describe('ConnectPanel', () => {
     Object.defineProperty(window, 'location', { configurable: true, value: { ...real, reload } });
     try {
       const { getByRole, queryByRole, container } = render(() => <ConnectPanel />);
-      expect(container.textContent).toContain('v3.5.0, which is newer than this dashboard');
+      expect(container.textContent).toContain('v3.5.0, newer than this dashboard');
       expect(container.textContent).not.toMatch(/too old/i);
       expect(queryByRole('button', { name: /set up/i })).toBeNull();
       getByRole('button', { name: /reload/i }).click();

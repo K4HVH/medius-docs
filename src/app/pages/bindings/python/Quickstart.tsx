@@ -9,19 +9,18 @@ const Quickstart: Component = () => {
       <Card>
         <CardHeader title="First program" subtitle="Connect, move, click, read one event" />
         <p>
-          One file that finds <A href="/native/hardware">the box</A>, moves the cursor, clicks, and
-          reads one physical event. Install with{' '}
-          <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
+          One file: find the <A href="/native/hardware">box</A>, move, click, read one physical
+          event. Install with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
           (<code>pip install medius</code>, see <A href="/bindings/python">Install</A>). What each
-          call does lives in the <A href="/library">Rust Library</A> and{' '}
+          call does is in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A>.
         </p>
         <div class="callout callout--info">
           <p>
-            <span class="api-badge api-badge--executed">Fire-and-forget</span> calls return the moment
-            they're queued (<A href="/native/injection#fire-and-forget">the injection model</A>);{' '}
+            <span class="api-badge api-badge--executed">Fire-and-forget</span> calls return once
+            queued (<A href="/native/injection#fire-and-forget">the injection model</A>);{' '}
             <span class="api-badge api-badge--responded">Blocks</span> calls wait for the box's{' '}
-            <A href="/native/commands/requests">reply</A>. Either kind raises a{' '}
+            <A href="/native/commands/requests">reply</A>. Both raise a{' '}
             <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
           </p>
         </div>
@@ -38,10 +37,10 @@ try:
         v = dev.query_version()                      # blocks for one reply
         print(f"firmware {v.fw_major}.{v.fw_minor}.{v.fw_patch}, proto {v.proto_ver}")
 
-        dev.move_rel(100, 0)                         # nudge cursor 100 right
+        dev.move_rel(100, 0)                         # cursor 100 right
         dev.press(Usage.button(Button.LEFT))         # hold left down
         time.sleep(0.02)
-        dev.soft_release(Usage.button(Button.LEFT))  # let it back up
+        dev.soft_release(Usage.button(Button.LEFT))  # release it
 
         with dev.catch_events(CatchFilter.everything()) as stream:  # subscribe to everything
             event = stream.recv_timeout(5000)                      # one event, or None after 5 s
@@ -58,14 +57,14 @@ try:
                       f"{len(t.bytes)} of {t.true_len} bytes")
             else:
                 print(f"event  {event.kind.name}")
-        # stream + link are closed here, on block exit
+        # stream and link close on block exit
 except NotFoundError:
     raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
           <div class="callout callout--info">
             <p>
-              The cursor won't move and the click won't land on this machine: injection only reaches
-              the <em>game</em> PC through the clone port, not the control PC running this script.
-              See <A href="/native/hardware">Hardware</A> for the port map.
+              Injection reaches only the <em>game</em> PC, through the clone port, so the cursor and
+              click don't show on the control PC running this script. Port map:{' '}
+              <A href="/native/hardware">Hardware</A>.
             </p>
           </div>
         </Card>
@@ -76,7 +75,7 @@ except NotFoundError:
           <CardHeader title="Walkthrough" subtitle="Each call, its kind, and its concept page" />
           <table class="api-params">
             <thead>
-              <tr><th>Call</th><th>Kind</th><th>Does (follow the link)</th></tr>
+              <tr><th>Call</th><th>Kind</th><th>Does</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -112,13 +111,13 @@ except NotFoundError:
               <tr>
                 <td><A href="/bindings/python/streams"><code>stream.recv_timeout(5000)</code></A></td>
                 <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Wait up to 5 s for one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>, or <code>None</code>. More on <A href="/bindings/python/streams">Streams</A>.</td>
+                <td>Wait up to 5 s for one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>, or <code>None</code>. See <A href="/bindings/python/streams">Streams</A>.</td>
               </tr>
             </tbody>
           </table>
           <p>
             <A href="/bindings/python/types#button">Button</A> ids are on{' '}
-            <A href="/native/commands/usage#buttons">Usage IDs</A>; the full call surface is the{' '}
+            <A href="/native/commands/usage#buttons">Usage IDs</A>; every call is on the{' '}
             <A href="/bindings/python/api">API index</A>.
           </p>
         </Card>
@@ -131,9 +130,9 @@ except NotFoundError:
 # firmware 3.4.2, proto 9
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
           <p>
-            The <code>motion</code> line needs a real mouse move or click inside the 5-second window.{' '}
-            <code>CatchFilter.everything()</code> subscribes to every class, so a <code>traffic</code>{' '}
-            line can arrive first on a device with busy vendor endpoints; narrow it with{' '}
+            The <code>motion</code> line needs a physical mouse move or click within 5 s.{' '}
+            <code>CatchFilter.everything()</code> covers every class, so a device with busy vendor
+            endpoints can print a <code>traffic</code> line first; narrow it with{' '}
             <code>CatchFilter.watch_axes()</code>.
           </p>
         </Card>
@@ -164,13 +163,12 @@ except NotFoundError:
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
             <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
             a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
-            <code>truncated()</code>. Full payload shapes on{' '}
+            <code>truncated()</code>. Payload shapes are on{' '}
             <A href="/bindings/python/streams">Streams</A>.
           </p>
           <p>
-            To skip diffing snapshots yourself, subscribe with{' '}
-            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> instead: it
-            yields press and release edges directly.
+            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
+            and release edges directly, with no snapshot diffing.
           </p>
         </Card>
       </div>
@@ -196,7 +194,7 @@ except NotFoundError:
             </tbody>
           </table>
           <p>
-            Catch the base <code>MediusError</code> to handle them all at once. Full list and the{' '}
+            Catch <code>MediusError</code> to handle them all. Full list and the{' '}
             <A href="/bindings/python/types#status"><code>Status</code></A> codes on{' '}
             <A href="/bindings/python/types">Types &amp; errors</A>;
             patterns on <A href="/bindings/python/usage">Calls &amp; errors</A>.
@@ -208,8 +206,8 @@ except NotFoundError:
         <Card>
           <CardHeader title="Closing" subtitle="A with-block, close(), or garbage collection" />
           <p>
-            A <code>Device</code> and each stream hold a live connection. Close it three ways, all
-            safe to combine:
+            A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
+            to combine:
           </p>
           <table class="api-params">
             <thead>
@@ -217,8 +215,8 @@ except NotFoundError:
             </thead>
             <tbody>
               <tr><td><code>with Device.find() as dev:</code></td><td>the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> exits (used twice above, for the link and the stream)</td></tr>
-              <tr><td><code>dev.close()</code></td><td>you call it; idempotent, a second call is a no-op</td></tr>
-              <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>the object is collected, via <a href="https://docs.python.org/3/reference/datamodel.html#object.__del__" target="_blank" rel="noreferrer"><code>__del__</code></a>, if you forgot</td></tr>
+              <tr><td><code>dev.close()</code></td><td>you call it; a second call is a no-op</td></tr>
+              <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>the object is collected, via <a href="https://docs.python.org/3/reference/datamodel.html#object.__del__" target="_blank" rel="noreferrer"><code>__del__</code></a></td></tr>
             </tbody>
           </table>
           <p>

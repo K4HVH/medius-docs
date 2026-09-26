@@ -14,9 +14,8 @@ import DeviceLed from './DeviceLed';
 import { col, columns, row } from './ui';
 import '../../../styles/docs.css';
 
-// Everything on this page is momentary: the box drops all of it after a second of control-link
-// silence. The persistent options live on the Device tab instead, so a setting that survives a
-// reboot is not sitting in the same column as a test control that does not.
+// Everything here is momentary: the box drops it after 1 s of control-link silence. Persistent
+// options live on the Device tab.
 const Control = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
@@ -56,7 +55,7 @@ const Control = () => {
         >
           <div id="controls" data-search-target>
             <Card>
-              <CardHeader title="Controls" subtitle="Drive the box to test it" />
+              <CardHeader title="Controls" subtitle="Test the box" />
               <div aria-live="polite">
                 <Switch>
                   <Match when={dash.status() === 'connecting'}>
@@ -64,7 +63,7 @@ const Control = () => {
                   </Match>
 
                   <Match when={dash.status() === 'flashing'}>
-                    <p>Updating. See the Update tab.</p>
+                    <p>Updating.</p>
                     <Button variant="primary" disabled onClick={() => navigate('/dashboard/update')}>
                       Go to Update
                     </Button>
@@ -90,7 +89,7 @@ const Control = () => {
           <DeviceLed />
           <div id="safety-clear" data-search-target>
             <Card>
-              <CardHeader title="Safety clear" subtitle="Clear all injection, locks, subscriptions and the clip" />
+              <CardHeader title="Safety clear" subtitle="Clears injection, locks, subscriptions and the clip" />
               <div style={row}>
                 <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
                   Clear everything

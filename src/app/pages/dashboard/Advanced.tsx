@@ -23,8 +23,7 @@ const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'No
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
-// One manual flasher with full control: any chip, app or factory, release or upload, written over
-// the download path (works even on a dead box).
+// Manual ROM-download flasher: any chip, app or factory, release or upload. Works on a dead box.
 const Advanced = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
@@ -37,27 +36,24 @@ const Advanced = () => {
   const [done, setDone] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
-  // Kept apart from `err` so switching chip clears the flash failure that named the other socket
-  // without also wiping why the chosen file was refused.
+  // Apart from `err`, so a chip switch clears the flash failure but keeps the file refusal.
   const [fileErr, setFileErr] = createSignal<string | null>(null);
-  // FileUpload calls onError and THEN onChange for the same selection, so onFiles has to know a
-  // rejection has just landed. Covers a mixed drop too, where one file is kept and one refused.
+  // FileUpload calls onError THEN onChange for one selection (a mixed drop included), so onFiles
+  // must not clear that rejection.
   let rejectedThisPick = false;
 
-  // Re-arm the unplug gate whenever the chosen chip changes.
-  // Leaving the release path abandons whatever the upload path complained about.
   createEffect(() => {
     if (source() !== 'upload') setFileErr(null);
   });
 
-  // A failure from the previous chip named the other socket; leaving it up contradicts the diagram.
+  // The previous chip's failure names the other socket, contradicting the diagram.
   createEffect(() => {
     chip();
     setErr(null);
   });
 
-  // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
-  // during render, and there is no ErrorBoundary anywhere: one unguarded read freezes the page.
+  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
+  // one unguarded read freezes the page.
   const latest = () => {
     try {
       return releases()?.[0] ?? null;
@@ -81,9 +77,8 @@ const Advanced = () => {
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
-  // Which selection a read belongs to. A slow read of an earlier file resolving after a newer one
-  // was picked would otherwise arm the earlier file's bytes under the newer file's name, which is
-  // the whole hazard this clearing is for.
+  // Tags each read with its selection, so a slow earlier read can't arm its bytes under a newer
+  // file's name.
   let pick = 0;
   const onFiles = (fs: File[]) => {
     const mine = ++pick;
@@ -100,8 +95,8 @@ const Advanced = () => {
         setImage(new Uint8Array(b));
       })
       .catch(() => {
-        // `pick` does not move when SOURCE does, so a slow read can land after the user has left
-        // the upload path, and "pick it again" has no picker to point at there.
+        // `pick` doesn't move with SOURCE, so a slow read can land after the upload path, with no
+        // picker left to point at.
         if (mine !== pick || source() !== 'upload') return;
         setImage(null);
         setFileErr('That file could not be read. Pick it again.');
@@ -115,13 +110,12 @@ const Advanced = () => {
     setErr(null);
     setFileErr(null);
     dash.clearFlashResult();
-    // Captured before the awaits: the comboboxes are disabled during a flash, and this makes the
-    // image and the offset come from the same reading either way.
+    // Captured before the awaits so the image and its offset come from one reading.
     const target = { chip: chip(), kind: kind() };
     setBusy(true);
     try {
-      // Both chips flash over their own native USB in ROM download: the device chip on USB1, the
-      // host chip on USB3, each entered by holding the button beside that socket while plugging in.
+      // ROM download over each chip's native USB: device chip on USB1, host chip on USB3, entered by
+      // holding the button beside that socket while plugging in.
       const port = await requestRomPort();
       const a = latest()?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
@@ -232,7 +226,7 @@ const Advanced = () => {
                     </Match>
                     <Match when={releases.error}>
                       <div class="callout callout--warning">
-                        Could not reach the firmware downloads. Choose Upload a file instead.
+                        Couldn't reach the firmware downloads. Choose Upload a file.
                       </div>
                     </Match>
                     <Match when={asset()}>
@@ -244,7 +238,7 @@ const Advanced = () => {
                     </Match>
                     <Match when={!asset()}>
                       <div class="callout callout--warning">
-                        No <code>{assetName()}</code> in the latest release. Upload one instead.
+                        No <code>{assetName()}</code> in the latest release. Upload one.
                       </div>
                     </Match>
                   </Switch>
@@ -265,9 +259,9 @@ const Advanced = () => {
                   />
                   <Show when={kind() === 'app'}>
                     <div class="callout callout--info">
-                      An application image keeps the partition layout already on the chip. Write the
-                      factory image if the box has never had one, or it will have a single app slot and
-                      cannot be updated over the control port.
+                      An application image keeps the chip's partition layout. A box that never had
+                      the factory image needs it first: with one app slot it can't update over the
+                      control port.
                     </div>
                   </Show>
                   <Show when={validationError()}>

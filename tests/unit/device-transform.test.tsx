@@ -132,7 +132,7 @@ describe('DeviceTransform', () => {
       { op: TransformOp.Remap, sclass: 0, sid: 3, dclass: 1, did: 4 },
     ];
     const { findByText } = render(() => <DeviceTransform />);
-    expect(await findByText(/Swap Move left\/right \(X\) and Move up\/down \(Y\)/)).toBeTruthy();
+    expect(await findByText(/Swap X \(left\/right\) and Y \(up\/down\)/)).toBeTruthy();
     expect(await findByText(/Side 1 to A/)).toBeTruthy();
   });
 });

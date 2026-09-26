@@ -7,12 +7,12 @@ const Led: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="LED" subtitle="Drive a status LED, or restore the box's display" />
+        <CardHeader title="LED" subtitle="Status LED override" />
         <p>
           <A href="/library/led#led"><code>led</code></A> overrides one of the box's two green status
-          LEDs, or with <A href="/library/types/enums#led-mode"><code>LedMode::Auto</code></A> returns it
-          to the box's own status display. It's{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.
+          LEDs; <A href="/library/types/enums#led-mode"><code>LedMode::Auto</code></A> returns it to the
+          status display. <A href="/native/injection#fire-and-forget">Fire-and-forget</A>: one frame, no
+          reply.
         </p>
       </Card>
 
@@ -32,11 +32,10 @@ const Led: Component = () => {
             </tbody>
           </table>
           <p>
-            An override holds until you send <code>Auto</code>, and the box also reverts the LED to its
-            status display on control-PC silence, on{' '}
-            <A href="/library/admin#reset"><code>reset</code></A>, or on inter-chip link loss. See the
-            native <A href="/native/commands/led#led"><code>LED</code></A> command for the status
-            patterns each chip shows.
+            <code>Auto</code>, control-PC silence,{' '}
+            <A href="/library/admin#reset"><code>reset</code></A>, or inter-chip link loss returns an
+            override to the status display. Each chip's status patterns are on the native{' '}
+            <A href="/native/commands/led#led"><code>LED</code></A> command.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, LedTarget, LedMode};
@@ -52,9 +51,9 @@ device.led(LedTarget::Device, LedMode::Auto, 0)?;    // back to the status displ
           <CardHeader title="On AsyncDevice" subtitle="Still fire-and-forget, no await" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> re-exposes <code>led</code>{' '}
-            unchanged: it expects no reply, so there's no <code>.await</code> and no{' '}
+            unchanged: no reply, so no <code>.await</code> and no{' '}
             <a href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html" target="_blank" rel="noreferrer"><code>block_on</code></a>.
-            Only the queries are async.
+            Only queries are async.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{AsyncDevice, LedTarget, LedMode};

@@ -1,4 +1,4 @@
-// Frame encoding and a streaming decoder - the wire packet codec.
+// Wire frame codec.
 
 import { crc16Ccitt } from './crc';
 import { FrameType, MAX_PAYLOAD, SOF, frameTypeFromU8 } from './opcode';
@@ -56,7 +56,7 @@ enum State {
   CrcHi,
 }
 
-// A streaming frame decoder that invokes a callback per valid, CRC-checked, known-opcode frame.
+// Calls back once per valid, CRC-checked, known-opcode frame.
 export class FrameDecoder {
   private state: State = State.Sof;
   private ty = 0;

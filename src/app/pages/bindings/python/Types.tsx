@@ -7,21 +7,20 @@ const Types: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Types & errors" subtitle="Every enum, dataclass, and exception the package exposes" />
+        <CardHeader title="Types & errors" subtitle="Every enum, dataclass, and exception" />
         <p>
-          Reference for the values the <A href="/bindings/python/api">API</A> takes and returns.
-          Field meanings live with each command, so this page links to the{' '}
-          <A href="/library/types">Library types</A> and <A href="/native">Native API</A>. Raw HID
-          id meanings (keycodes, button slots, Consumer usages) are on{' '}
+          The values the <A href="/bindings/python/api">API</A> takes and returns. Field meanings
+          are on the <A href="/library/types">Library types</A> and <A href="/native">Native API</A>;
+          raw HID ids (keycodes, button slots, Consumer usages) on{' '}
           <A href="/native/commands/usage">Usage IDs</A>.
         </p>
         <div class="callout callout--info">
           <p>
             Every enum subclasses{' '}
             <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer"><code>enum.IntEnum</code></a>. A member{' '}
-            <em>is</em> its <A href="/native/frame">wire byte</A>: <code>int(Button.LEFT) == 0</code>,
-            and anywhere an enum is accepted a bare <code>int</code> works too, for a raw HID id, an
-            endpoint number, or an interface number with no named member.
+            <em>is</em> its <A href="/native/frame">wire byte</A>: <code>int(Button.LEFT) == 0</code>.
+            Anywhere an enum is accepted, a bare <code>int</code> works too, for a raw HID id,
+            endpoint number, or interface number with no named member.
           </p>
         </div>
       </Card>
@@ -66,17 +65,16 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="Lock & blanket enums" subtitle="Direction · BearingMode · LockTargetKind · Blanket" />
           <p>
-            See <A href="/native/commands/lock">Lock</A> for what a direction and a blanket class
-            mean, and <A href="/library/catch">Catch</A> for the third reading a direction has on a
-            traffic subscription.
+            See <A href="/native/commands/lock">Lock</A> for directions and blanket classes, and{' '}
+            <A href="/library/catch">Catch</A> for a direction on a traffic subscription.
           </p>
 
           <div id="direction" data-search-target>
             <div class="api-response-label">Direction</div>
             <p>
-              One enum with three readings, picked by what it is attached to: an axis, a usage, or a{' '}
-              <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> naming one of
-              the byte-oriented <A href="/bindings/python/types#catchclass">catch classes</A>.
+              Read by what it is attached to: an axis, a usage, or a{' '}
+              <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> naming a
+              byte-oriented <A href="/bindings/python/types#catchclass">catch class</A>.
             </p>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a button or key</th><th>On a traffic-class filter</th></tr></thead>
@@ -89,36 +87,36 @@ const Types: Component = () => {
               </tbody>
             </table>
             <p>
-              The aliases are the same values under names that read at the call site:{' '}
+              Aliases are the same values under call-site names:{' '}
               <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
-              <code>AGAINST</code> are measured against the bearing rather than a fixed sign;{' '}
+              <code>AGAINST</code> are measured against the bearing, not a fixed sign;{' '}
               <code>.is_relative</code> tells them apart.
             </p>
             <p>
               Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
               anywhere else raises{' '}
               <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. A media
-              usage has no edges: an edge named on one goes out as <code>BOTH</code>, which is what{' '}
-              <A href="/bindings/python/types#locks"><code>Locks</code></A> reports it as.
+              usage has no edges: an edge named on one goes out, and reads back in{' '}
+              <A href="/bindings/python/types#locks"><code>Locks</code></A>, as <code>BOTH</code>.
             </p>
           </div>
 
           <div id="bearing-mode" data-search-target>
             <div class="api-response-label">BearingMode</div>
             <p>
-              How the box reads the direction it is injecting, which is what <code>WITH</code> and{' '}
+              How the box reads the direction it is injecting, which <code>WITH</code> and{' '}
               <code>AGAINST</code> resolve by. Set with <code>dev.set_bearing(window_ms, mode)</code>.
             </p>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its own sign against its own bearing, independently; the default</td></tr>
-                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs the whole aim, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
+                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs X and Y as one vector, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
               </tbody>
             </table>
             <p>
-              What <A href="/bindings/python/types#locks"><code>Locks</code></A> reports back under{' '}
-              <code>VECTOR</code> is there.
+              Under <code>VECTOR</code>, <A href="/bindings/python/types#locks"><code>Locks</code></A>{' '}
+              reports that one scale.
             </p>
           </div>
 
@@ -133,7 +131,7 @@ const Types: Component = () => {
                 <tr><td><code>USAGE</code></td><td><code>3</code></td></tr>
               </tbody>
             </table>
-            <p>Built for you by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); you rarely name it directly.</p>
+            <p>Built by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts).</p>
           </div>
 
           <div id="blanket" data-search-target>
@@ -158,10 +156,9 @@ const Types: Component = () => {
           <CardHeader title="Keycode enums" subtitle="Key · MediaKey" />
           <p>
             Named subsets of the{' '}
-            <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>.
-            The full list of ids and what they do is on{' '}
-            <A href="/native/commands/usage#keycodes">Usage IDs</A> (keys) and{' '}
-            <A href="/native/commands/usage#consumer">Usage IDs</A> (media). Any call that takes a{' '}
+            <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>;
+            full lists on Usage IDs (<A href="/native/commands/usage#keycodes">keys</A>,{' '}
+            <A href="/native/commands/usage#consumer">media</A>). Any call taking a{' '}
             <code>Key</code> or <code>MediaKey</code> also accepts a raw <code>int</code> usage.
           </p>
 
@@ -302,7 +299,7 @@ const Types: Component = () => {
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="Clip" subtitle="ClipState · Edge · ClipAction · ClipTrigger · ClipPacketTrigger · ClipSettings · ClipStatus" />
-          <p>The buffered-clip types. Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>Buffered-clip types. See <A href="/library/clip">Clip</A>.</p>
           <div id="clipstate" data-search-target>
             <div class="api-response-label">ClipState</div>
             <table class="api-params">
@@ -331,7 +328,7 @@ const Types: Component = () => {
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>NEW</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
-                <tr><td><code>PENDING_VERIFY</code></td><td><code>1</code></td><td>Booted and on probation; the window <A href="/native/commands/update#rollback">rollback</A> lives in.</td></tr>
+                <tr><td><code>PENDING_VERIFY</code></td><td><code>1</code></td><td>Booted and on probation, the <A href="/native/commands/update#rollback">rollback</A> window.</td></tr>
                 <tr><td><code>VALID</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
                 <tr><td><code>INVALID</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
                 <tr><td><code>ABORTED</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
@@ -368,7 +365,7 @@ const Types: Component = () => {
           </div>
           <div id="cliptrigger" data-search-target>
             <div class="api-response-label">ClipTrigger</div>
-            <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action itself with no host round-trip.</p>
+            <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action with no host round-trip.</p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -382,7 +379,7 @@ const Types: Component = () => {
           </div>
           <div id="clippackettrigger" data-search-target>
             <div class="api-response-label">ClipPacketTrigger</div>
-            <p>A dataclass binding a matched packet to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind_packet()</code></A> and read back by <code>clip.query_config()</code>. It is keyed by <code>(traffic_class, id, direction, match_bytes, mask)</code>. Concept on <A href="/library/clip#packet-triggers">Clip</A>.</p>
+            <p>A dataclass binding a matched packet to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind_packet()</code></A> and read back by <code>clip.query_config()</code>, keyed by <code>(traffic_class, id, direction, match_bytes, mask)</code>. See <A href="/library/clip#packet-triggers">Clip</A>.</p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -479,9 +476,9 @@ clip.clear_triggers()             # both kinds`}</code></pre>
             <div class="api-response-label">CatchClass</div>
             <p>
               The address class a <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
-              names. It is the same address vocabulary <A href="/bindings/python/api#lock"><code>lock</code></A>{' '}
-              uses, with members <code>0</code> to <code>3</code> being the lock classes unchanged,
-              extended with the byte-oriented traffic the box carries. <code>id</code> is class-specific.
+              names: members <code>0</code> to <code>3</code> are the{' '}
+              <A href="/bindings/python/api#lock"><code>lock</code></A> classes, unchanged; the rest are
+              the byte-oriented traffic the box carries. <code>id</code> is class-specific.
             </p>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>id means</th><th>As a blanket</th></tr></thead>
@@ -501,8 +498,8 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
             <p>
-              There is no every-class member. The wildcard is <code>CatchFilter.everything()</code>,
-              whose <code>catch_class</code> reads <code>None</code>. <code>cls.is_input()</code> is
+              The every-class wildcard is <code>CatchFilter.everything()</code>, whose{' '}
+              <code>catch_class</code> reads <code>None</code>. <code>cls.is_input()</code> is
               true for <code>0</code> to <code>3</code>, <code>cls.is_traffic()</code> for the rest.
             </p>
             <p>
@@ -527,8 +524,8 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
             <p>
-              It is what <code>CatchFilter.traffic</code> and <code>traffic_class</code> take, so an
-              input class cannot reach a traffic constructor at all.
+              <code>CatchFilter.traffic</code> and <code>traffic_class</code> take it, so an input
+              class cannot reach a traffic constructor.
             </p>
           </div>
 
@@ -551,8 +548,8 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               One subscription entry: a class, an id inside it, a direction, and how many bytes to keep
               per event. Pass one or an iterable to{' '}
               <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> or{' '}
-              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>. The
-              instance methods return a new filter rather than mutating in place.
+              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>. Instance
+              methods return a new filter.
             </p>
             <pre class="api-signature">{`CatchFilter.watch(usage)               -> CatchFilter         # a Usage, or a Button/Key/MediaKey
 CatchFilter.watch_axis(axis)           -> CatchFilter         # one Axis
@@ -575,12 +572,12 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               <tbody>
                 <tr><td><code>catch_class</code></td><td><code>Optional[<A href="/bindings/python/types#catchclass">CatchClass</A>]</code></td><td>the address class, or <code>None</code> for the every-class wildcard</td></tr>
                 <tr><td><code>id</code></td><td><code>Optional[int]</code></td><td>the class-specific id, or <code>None</code> for the every-id wildcard. An id of <code>0</code> is a real address, not a wildcard.</td></tr>
-                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>for an input class, the press/release edge, exactly as for a lock; for a traffic class, the transfer flow, where <code>POSITIVE</code> is IN (device to PC) and <code>NEGATIVE</code> is OUT (PC to device).</td></tr>
+                <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>for an input class, the press/release edge, as for a lock; for a traffic class, the transfer flow, where <code>POSITIVE</code> is IN (device to PC) and <code>NEGATIVE</code> is OUT (PC to device).</td></tr>
                 <tr><td><code>capture</code></td><td><code>int</code></td><td>bytes captured per event; <code>0</code> = the whole packet</td></tr>
               </tbody>
             </table>
             <p>
-              The top-ranked entry supplies the <code>capture</code>; the ranking that picks it is on{' '}
+              The top-ranked entry supplies the <code>capture</code>; the ranking is on{' '}
               <A href="/native/commands/catch#matching">The table</A>.
             </p>
             <p>
@@ -588,22 +585,20 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               <code>capture</code>, and false once one is narrowed to a direction.
             </p>
             <p>
-              The arguments are checked here, before they reach ctypes.{' '}
-              <code>with_direction</code>, <code>watch_axis</code>, <code>watch_class</code>,{' '}
-              <code>traffic</code>, and <code>traffic_class</code> want a member of their enum, and{' '}
-              <code>with_capture</code> a byte; anything else is a <code>ValueError</code> naming the
-              argument.
+              Arguments are checked before ctypes: <code>with_direction</code>,{' '}
+              <code>watch_axis</code>, <code>watch_class</code>, <code>traffic</code>, and{' '}
+              <code>traffic_class</code> take a member of their enum, <code>with_capture</code> a
+              byte; anything else raises a <code>ValueError</code> naming the argument.
             </p>
             <div class="callout callout--warning">
               <p>
-                The box's table holds 32 entries.{' '}
+                The box's table holds 32 entries;{' '}
                 <A href="/bindings/python/api#streams"><code>catch_events()</code></A> raises{' '}
-                <code>CatchTableFullError</code> when the union of every subscription in this
-                process exceeds it. What the box itself refuses (a class this firmware does not know)
-                raises nothing: compare{' '}
+                <code>CatchTableFullError</code> when this process's subscriptions together exceed
+                it. A box-side refusal (a class this firmware does not know) raises nothing: compare{' '}
                 <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> from{' '}
-                <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> against
-                what you sent.
+                <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> with what
+                you sent.
               </p>
             </div>
           </div>
@@ -618,7 +613,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <code>CaptureNotApplicableError</code>.
             </p>
             <p>
-              A ceiling request, not a guarantee. The box holds one entry per address and cuts once, so
+              A ceiling, not a guarantee: the box holds one entry per address and cuts once, so
               another subscriber naming that address more widely raises yours too.
             </p>
           </div>
@@ -651,16 +646,15 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
             <p>
-              A stamp is only meaningful against another from the same domain. Both clocks are
-              box-local, wrap every ~71.6 minutes, and restart at zero when that chip reboots, so a
-              value below the previous one is a wrap, a reboot, or a domain change.
+              Compare stamps only within one domain. Both clocks are box-local, wrap every ~71.6
+              minutes, and restart at zero when their chip reboots, so a value below the previous one
+              is a wrap, a reboot, or a domain change.
             </p>
             <p>
-              To put stamps on this machine's clock, feed them to a{' '}
-              <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>; to cross the two
-              domains, apply the offset in{' '}
-              <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A> and respect
-              its error bound.
+              A <A href="/bindings/python/streams#timeline"><code>Timeline</code></A> puts stamps on
+              this machine's clock; to cross domains, apply the{' '}
+              <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A> offset
+              within its error bound.
             </p>
           </div>
 
@@ -739,7 +733,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a real cursor move to carry the delta (the default)</td></tr>
-                <tr><td><code>NOW</code></td><td><code>1</code></td><td>leave on the next mouse report the box sends, native or its own, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
+                <tr><td><code>NOW</code></td><td><code>1</code></td><td>leave on the box's next mouse report, native or its own, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
               </tbody>
             </table>
           </div>
@@ -793,8 +787,8 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
         <Card>
           <CardHeader title="Parameter builders" subtitle="Usage · Motion · LockTarget" />
           <p>
-            Small classes that wrap a native struct. Build them with their class methods and pass
-            the result to the matching call. Never construct one field by field.
+            Classes that wrap a C struct. Build them with their class methods, never field by field,
+            and pass the result to the matching call.
           </p>
 
           <div id="input" data-search-target>
@@ -808,8 +802,8 @@ usage.id             -> int`}</pre>
             <p>
               An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>, and what a{' '}
               <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and a{' '}
-              <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> hand back.
-              It compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>.
+              <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> return. It
+              compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>.
             </p>
             <div class="api-response-label">EXAMPLE</div>
             <pre><code class="language-python">{`# Naming a button off the stream: id is the Button value, kind says which class it is.
@@ -1034,7 +1028,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
                 <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
                 <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>back-pressure on a relayed stream, either direction; load rather than lost input</td></tr>
-                <tr><td><code>session</code></td><td><code>int</code></td><td>the times the box released some or all of the session state a host set; 0 at boot, wraps, so compare for inequality; the library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
+                <tr><td><code>session</code></td><td><code>int</code></td><td>times the box released some or all of the session state a host set; 0 at boot, wraps, so compare for inequality; the library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
               </tbody>
             </table>
           </div>
@@ -1081,7 +1075,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is weighed (an axis or a usage)</td></tr>
                 <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class entry, where <code>target</code> names only the class</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>which direction of the target this entry weighs</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept, signed: a negative one reverses what it keeps. A usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept, signed: a negative one reverses what it keeps. A usage is one bit, so the box stores the block or pass it renders: never a value between, never negative</td></tr>
                 <tr><td><code>is_block</code></td><td><code>bool</code></td><td><code>scale == 0</code>: blocked outright rather than weighed</td></tr>
               </tbody>
             </table>
@@ -1102,17 +1096,16 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
             <p>
-              Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window. A box
-              that has been set boots at its own value.
+              Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window; a box
+              that has been set boots at its stored value.
             </p>
           </div>
 
           <div id="catchstate" data-search-target>
             <div class="api-response-label">CatchState (query_catch())</div>
             <p>
-              The live subscription table read back from the box. Since{' '}
-              <A href="/bindings/python/api#streams"><code>catch_events()</code></A>{' '}
-              gets no reply, this is the only way to see which filters the box holds.
+              The live subscription table: the only view of which filters the box holds, since{' '}
+              <A href="/bindings/python/api#streams"><code>catch_events()</code></A> gets no reply.
             </p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1129,7 +1122,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <div class="api-response-label">CatchEntry</div>
             <p>
               One row of the box's table: the <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
-              you sent, with a drop count attached.
+              you sent, with its drop count.
             </p>
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1154,8 +1147,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
             <p>
-              Two independent crystals make an offset stale at up to 20 µs per second, so extrapolate
-              with <code>rate_ppb</code> rather than trusting it.
+              Two independent crystals drift the offset by up to 20 µs per second; extrapolate with{' '}
+              <code>rate_ppb</code>.
             </p>
             <div class="callout callout--info">
               <p>
@@ -1186,7 +1179,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <tbody>
                 <tr><td><code>mode</code></td><td><A href="/bindings/python/types#emitpace"><code>EmitPace</code></A></td><td>the pace</td></tr>
                 <tr><td><code>resolved_hz</code></td><td><code>int</code></td><td>the ceiling in effect; 0 = learned/adaptive or no device yet, 1000 once the renderer has a profile</td></tr>
-                <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves native </td></tr>
+                <tr><td><code>force_hz</code></td><td><code>int | None</code></td><td>the forced wire rate requested; None leaves native</td></tr>
                 <tr><td><code>advertised_hz</code></td><td><code>int</code></td><td>what the clone's input endpoints advertise now, forced or native; 0 = no clone</td></tr>
                 <tr><td><code>force_active</code></td><td><code>bool</code></td><td>whether a forced interval is written into the descriptor being served</td></tr>
               </tbody>
@@ -1213,7 +1206,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>percent</code></td><td><code>int</code></td><td>share of the command interval a delta is released across; 0 is the whole delta on the next report</td></tr>
-                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 whenever nothing is being released across an interval</td></tr>
+                <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 when nothing is released across an interval</td></tr>
               </tbody>
             </table>
             <p>See <A href="/library/options">Options</A>.</p>
@@ -1275,11 +1268,11 @@ for b in medius.list_boxes():
         <Card>
           <CardHeader title="Event & log types" subtitle="Yielded by the streams" />
           <p>
-            Payloads from <A href="/bindings/python/streams">streams</A>.{' '}
+            <A href="/bindings/python/streams">Stream</A> payloads:{' '}
             <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> yields <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>,{' '}
             <A href="/bindings/python/api#streams"><code>dev.input_events()</code></A> yields <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A>, and{' '}
             <A href="/bindings/python/api#streams"><code>dev.logs()</code></A> yields <A href="/bindings/python/types#logline"><code>LogLine</code></A>. What catch
-            reports lives on <A href="/library/catch">Catch</A>.
+            reports is on <A href="/library/catch">Catch</A>.
           </p>
 
           <div id="catchevent" data-search-target>
@@ -1308,7 +1301,7 @@ for b in medius.list_boxes():
                 <tr><td><code>dz</code></td><td><code>int</code></td><td>wheel delta</td></tr>
               </tbody>
             </table>
-            <p>The stamp and its domain stay on the <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> around it.</p>
+            <p>The enclosing <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries the stamp and domain.</p>
           </div>
 
           <div id="usagesnapshot" data-search-target>
@@ -1323,9 +1316,8 @@ for b in medius.list_boxes():
               </tbody>
             </table>
             <p>
-              Only held usages that resolve against your filters appear, and no event is emitted when
-              none do, so a subscription to one button stays sparse even while the mouse reports at
-              1 kHz.
+              Only held usages matching your filters appear, and no event is emitted when none do, so
+              a one-button subscription stays sparse while the mouse reports at 1 kHz.
             </p>
             <p>
               An empty snapshot still names its class: <code>cls</code> and <code>direction</code>{' '}
@@ -1407,8 +1399,8 @@ for b in medius.list_boxes():
             <div class="api-response-label">InputEvent</div>
             <p>
               One decoded input: a press edge, a release edge, or a motion report. Yielded by{' '}
-              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>, which diffs
-              the box's held-usage snapshots so you do not have to.
+              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>, diffed from
+              the box's held-usage snapshots.
             </p>
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1480,7 +1472,7 @@ for b in medius.list_boxes():
       <div id="advanced-types" data-search-target>
         <Card>
           <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
-          <p>The value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
+          <p>Value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
 
           <div id="setup">
             <div class="api-response-label">Setup</div>
@@ -1544,7 +1536,7 @@ for b in medius.list_boxes():
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="Transform types" subtitle="Transform · Transforms" />
-          <p>The value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. To weigh a field, or reverse it, use <A href="/bindings/python/api#lock"><code>dev.scale</code></A>, whose percent is signed.</p>
+          <p>Value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. To weigh or reverse a field, use <A href="/bindings/python/api#lock"><code>dev.scale</code></A> (signed percent).</p>
           <div id="transforms">
             <pre class="api-signature">{`Transform.swap(a, b)              -> Transform
 Transform.remap(source, dest)     -> Transform
@@ -1567,8 +1559,8 @@ Transform(op, source, dest)`}</pre>
           <CardHeader title="Errors" subtitle="MediusError, its subclasses, and the Status codes" />
           <p>
             Every <span class="api-badge api-badge--responded">Blocks</span> call (and any that fails
-            on the wire) raises a <code>MediusError</code> or one of its subclasses. Catch the base
-            class to catch them all. Canonical mapping: <A href="/library/types/errors">Library errors</A>.
+            on the wire) raises a <code>MediusError</code> or a subclass; catch the base class for
+            all of them. Canonical mapping: <A href="/library/types/errors">Library errors</A>.
           </p>
 
           <div id="mediuserror" data-search-target>
@@ -1638,14 +1630,14 @@ except MediusError as e:     # any other failure
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
               <tbody>
-                <tr><td><code>CatchTableFullError</code></td><td>the union of every subscription in this process needs more than the box's 32 entries</td></tr>
+                <tr><td><code>CatchTableFullError</code></td><td>this process's subscriptions together need more than the box's 32 entries</td></tr>
                 <tr><td><code>EmptySubscriptionError</code></td><td>a subscription with no filters, which would never yield an event</td></tr>
                 <tr><td><code>CaptureNotApplicableError</code></td><td>a <A href="/bindings/python/types#capture"><code>Capture</code></A> on an input class, which carries no packet</td></tr>
                 <tr><td><code>NotAnInputFilterError</code></td><td>a traffic class passed to <code>input_events</code>, which cannot decode one</td></tr>
                 <tr><td><code>WildcardNotInputError</code></td><td><code>CatchFilter.everything()</code> passed to <code>input_events</code>; it covers traffic too</td></tr>
                 <tr><td><code>HalfEdgeInputFilterError</code></td><td>an input filter narrowed to one edge, which cannot be decoded into press and release</td></tr>
                 <tr><td><code>ReservedIdError</code></td><td>an exact id equal to the blanket sentinel, which would address the whole class instead</td></tr>
-                <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is made</td></tr>
+                <tr><td><code>RelativeDirectionError</code></td><td><code>Direction.WITH</code> or <code>AGAINST</code> where only a fixed sign or edge can be addressed; they resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call</td></tr>
                 <tr><td><code>LockScaleRangeError</code></td><td>a lock scale outside <code>LOCK_SCALE_MIN</code> to <code>LOCK_SCALE_MAX</code></td></tr>
                 <tr><td><code>LockScaleUsageError</code></td><td>a negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse</td></tr>
                 <tr><td><code>ImperfectRequiredError</code></td><td><code>set_rewrite</code> or <code>apply_patch</code> with the imperfect-clone opt-in off</td></tr>
@@ -1667,8 +1659,8 @@ except MediusError as e:     # any other failure
             <div class="callout callout--info">
               <p>
                 <code>DisconnectedError</code> ends a <A href="/bindings/python/streams">stream</A>{' '}
-                iteration cleanly rather than propagating. <code>OK</code> and{' '}
-                <code>ERR_UNKNOWN</code> have no dedicated subclass; <code>ERR_UNKNOWN</code> raises
+                iteration cleanly instead of propagating. <code>OK</code> and{' '}
+                <code>ERR_UNKNOWN</code> have no subclass; <code>ERR_UNKNOWN</code> raises
                 the base <code>MediusError</code>.
               </p>
             </div>

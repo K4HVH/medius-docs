@@ -1,5 +1,4 @@
-// Run one box command and keep whether it failed. Every card needs the same three things around a
-// write: a busy flag, the error if it threw, and the follow-up read.
+// One box write with its busy flag, its error, and the follow-up read.
 
 import { type Accessor, createSignal } from 'solid-js';
 

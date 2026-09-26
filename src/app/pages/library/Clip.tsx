@@ -7,13 +7,12 @@ const Clip: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Clip" subtitle="Preload input and let the box play it back" />
+        <CardHeader title="Clip" subtitle="Preload input, box-clocked playback" />
         <p>
-          Build a sequence of per-frame input with a{' '}
-          <A href="/library/clip#builder"><code>ClipBuilder</code></A>, hand it to the{' '}
+          A <A href="/library/clip#builder"><code>ClipBuilder</code></A> builds per-frame input; the{' '}
           <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
-          <A href="/library/clip#clip"><code>Device::clip()</code></A>, and the box drains it into the same
-          injection state <A href="/library/move"><code>move</code></A> and{' '}
+          <A href="/library/clip#clip"><code>Device::clip()</code></A> loads it, and the box drains it
+          into the injection state <A href="/library/move"><code>move</code></A> and{' '}
           <A href="/library/inject"><code>inject</code></A> feed.
         </p>
         <p>
@@ -53,11 +52,11 @@ const Clip: Component = () => {
             <p>
               A clip plays on any clone. The{' '}
               <A href="/library/guides/connection#keepalive">keepalive</A> holds a loaded clip, its
-              settings, and its triggers of both kinds past the silence window; a link down for
-              longer clears them on the box, so reload the clip and its config. A device-chip
-              restart or a <A href="/library/lifecycle#restart">released session</A> empties the ring:
-              the library re-sends the settings and triggers, and{' '}
-              <A href="/library/clip#lost"><code>lost</code></A> says to reload the clip.
+              settings and both kinds of trigger past the silence window; a link down longer clears
+              them on the box, and the clip and config need reloading. A device-chip restart or a{' '}
+              <A href="/library/lifecycle#restart">released session</A> empties the ring: the library
+              re-sends the settings and triggers, and <A href="/library/clip#lost"><code>lost</code></A>{' '}
+              flags the clip for reload.
             </p>
             <p>
               The release from{' '}
@@ -69,8 +68,8 @@ const Clip: Component = () => {
           </div>
           <div class="callout callout--info">
             <p>
-              The ring is 64 KB on a box with PSRAM and 16 KB on one without, so never assume a
-              size: <code>ClipStatus::free</code> on a cleared ring is the size.
+              The ring is 64 KB with PSRAM and 16 KB without; <code>ClipStatus::free</code> on a
+              cleared ring is the size.
             </p>
           </div>
         </Card>
@@ -82,8 +81,7 @@ const Clip: Component = () => {
           <pre class="api-signature">fn new() -&gt; ClipBuilder</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <p>
-            Each method appends one per-frame entry, so a builder is a timeline read top to bottom. Motion is
-            a relative delta; an edge is an{' '}
+            Each method appends one per-frame entry. Motion is a relative delta; an edge is an{' '}
             <A href="/library/types/enums#action"><code>Action</code></A> that stays held until a later frame
             changes it; a <code>gap</code> NAKs like an idle mouse.
           </p>
@@ -104,8 +102,8 @@ const Clip: Component = () => {
             </tbody>
           </table>
           <p>
-            They take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, so chain them
-            or push in a loop; <code>clear()</code> reuses the allocation, and <code>byte_len()</code> is
+            They take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, for chaining or a
+            loop; <code>clear()</code> reuses the allocation, and <code>byte_len()</code> is
             the ring space the entries take. Each one-field call wraps <code>frame</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -158,15 +156,15 @@ clip.release(Button::LEFT);`}</code></pre>
               <tr><td><code>press / release / force_release(usage)</code></td><td>Add a press, soft-release, or force-release edge of any <A href="/library/types/structs#usage"><code>Usage</code></A>.</td></tr>
               <tr><td><code>edge(usage, action)</code></td><td>Add an edge with an explicit <A href="/library/types/enums#action"><code>Action</code></A>. A frame holds up to 8 (<code>CLIP_EDGES_MAX</code>).</td></tr>
               <tr><td><code>raw(ep, direction, bytes)</code></td><td>Add a raw report, as <A href="/library/advanced/raw#raw"><code>Device::raw</code></A> sends one. A frame holds up to 8 (<code>CLIP_RAW_MAX</code>), sent in order ahead of the frame's report.</td></tr>
-              <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each answer is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
+              <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each reply is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
               <tr><td><code>byte_len()</code></td><td>The ring bytes the frame takes, at most 512 for a frame <code>append</code> accepts.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>
-              Raw reports and transfers need the imperfect-clone opt-in as the frame plays. With{' '}
+              Raw reports and transfers need{' '}
               <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
-              off, the box discards them and counts each in{' '}
+              on as the frame plays; with it off, the box discards them and counts each in{' '}
               <A href="/library/types/structs#clip-status"><code>ClipStatus::gated</code></A>.
             </p>
           </div>
@@ -190,8 +188,8 @@ device.clip().append(&clip)?;`}</code></pre>
           <CardHeader title="ClipHandle" subtitle="Fill the ring, configure, and drive playback" />
           <p>
             From <A href="/library/clip#clip"><code>Device::clip()</code></A>. Every method below is{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>: it queues a frame and returns.{' '}
-            <A href="/library/requests#clip-status"><code>query_status</code></A> reads the ring depth and
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>.{' '}
+            <A href="/library/requests#clip-status"><code>query_status</code></A> reads ring depth and
             playback state; <A href="/library/requests#clip-config"><code>query_config</code></A> reads
             the config back.
           </p>
@@ -206,7 +204,7 @@ device.clip().append(&clip)?;`}</code></pre>
               <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
               <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
               <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
-              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's own clock, the default). Changeable mid-playback. Only its wheel and pan while rendering is on with a profile armed.</td></tr>
+              <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's clock, the default). Changeable mid-playback. Only its wheel and pan while rendering is on with a profile armed.</td></tr>
               <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
             </tbody>
           </table>
@@ -242,9 +240,9 @@ device.clip().append(&clip)?;`}</code></pre>
           </table>
           <div class="callout callout--info">
             <p>
-              A dropped append (or an overflow) leaves the clip{' '}
-              <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A> and stops it.
-              Recover with <code>clear</code> and rebuild, not by appending more; a faulted stream is missing entries.
+              A dropped append or an overflow faults the clip (
+              <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>) and stops it.
+              A faulted stream is missing entries: <code>clear</code> and rebuild.
             </p>
           </div>
         </Card>
@@ -264,8 +262,8 @@ device.clip().append(&clip)?;`}</code></pre>
             </tbody>
           </table>
           <p>
-            A recovery gives back the settings and triggers, not the ring's content, so the clip is
-            the caller's to rebuild and append.
+            A recovery restores the settings and triggers, not the ring's content; the caller rebuilds
+            and appends the clip.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let handle = device.clip();
@@ -282,8 +280,7 @@ if handle.lost() {
         <Card>
           <CardHeader title="Streaming and retained" subtitle="Drain-and-discard, or keep-and-replay" />
           <p>
-            A clip runs in one of two shapes, chosen by{' '}
-            <A href="/library/clip#handle"><code>set_retain</code></A> before the first{' '}
+            <A href="/library/clip#handle"><code>set_retain</code></A> picks the shape before the first{' '}
             <A href="/library/clip#handle"><code>append</code></A>.
           </p>
           <table class="api-params">
@@ -291,13 +288,13 @@ if handle.lost() {
               <tr><th>Aspect</th><th>Streaming (default)</th><th>Retained</th></tr>
             </thead>
             <tbody>
-              <tr><td>Turn on</td><td>nothing, it's the default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
-              <tr><td>The ring</td><td>each entry is freed as it plays, so it's unbounded</td><td>entries are kept after playing, up to 64 KiB</td></tr>
-              <tr><td>Top up mid-play</td><td>yes, append to the tail in real time</td><td>append until <code>finalize</code>, then it's sealed</td></tr>
-              <tr><td>Replay</td><td>no, it plays once</td><td>yes, it rewinds and replays</td></tr>
+              <tr><td>Turn on</td><td>default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
+              <tr><td>The ring</td><td>each entry freed as it plays; unbounded</td><td>entries kept after playing, up to 64 KiB</td></tr>
+              <tr><td>Top up mid-play</td><td>yes, appends to the tail in real time</td><td>until <code>finalize</code>, then sealed</td></tr>
+              <tr><td>Replay</td><td>no, plays once</td><td>yes, rewinds and replays</td></tr>
               <tr><td><code>loop</code></td><td>not available</td><td>available once <code>finalize</code>d</td></tr>
               <tr><td><code>stop</code></td><td>flushes the buffer</td><td>rewinds and keeps the clip</td></tr>
-              <tr><td>Best for</td><td>open-ended or generated input</td><td>a fixed macro you replay on a trigger</td></tr>
+              <tr><td>Best for</td><td>open-ended or generated input</td><td>a fixed macro replayed on a trigger</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`streaming (drain-and-discard)
@@ -310,8 +307,7 @@ retained (keep-and-replay, up to 64 KiB)
                     +---- start / loop rewinds to base <----+`}</pre>
           <div class="callout callout--info">
             <p>
-              <code>set_retain</code> only takes effect before the first <code>append</code>, and an{' '}
-              <code>append</code> after <code>finalize</code> is rejected. To reload a retained clip,{' '}
+              An <code>append</code> after <code>finalize</code> is rejected; to reload a retained clip,{' '}
               <A href="/library/clip#handle"><code>clear</code></A> it and build again.
             </p>
           </div>
@@ -322,7 +318,7 @@ use std::time::Duration;
 
 let handle = device.clip();       // device: an open Device
 handle.set_autolock(&[Blanket::Aim])?;   // lock only X and Y while playing
-handle.append(&clip)?;                    // preload (clip, next_chunk: ClipBuilders you built)
+handle.append(&clip)?;                    // preload (clip, next_chunk: built ClipBuilders)
 handle.start()?;
 
 loop {
@@ -343,8 +339,7 @@ handle.stop()?;`}</code></pre>
           <p>
             A trigger runs one{' '}
             <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> on the box, with no
-            host round-trip. One set holds two kinds: an input trigger fires on a button, key, or
-            media edge, and a packet trigger fires on a packet crossing a traffic surface.
+            host round-trip. One set holds both kinds.
           </p>
           <pre class="diagram">{`  a physical edge                 a packet at a traffic surface
   button, key, media              HidIn, HidOut, VendorInterrupt,
@@ -379,10 +374,9 @@ handle.stop()?;`}</code></pre>
           </div>
           <div class="callout callout--info">
             <p>
-              The <A href="/library/guides/connection#keepalive">keepalive</A> holds a bound trigger
-              of either kind past the silence window. A reconnect reads the set back from the box: a
-              drop shorter than that window leaves every trigger bound, and a longer one clears the
-              set.
+              The <A href="/library/guides/connection#keepalive">keepalive</A> holds bound triggers
+              past the silence window, and a reconnect reads the set back: a shorter drop leaves every
+              trigger bound, a longer one clears the set.
             </p>
           </div>
 
@@ -399,9 +393,9 @@ handle.stop()?;`}</code></pre>
               </tbody>
             </table>
             <p>
-              Input triggers are a managed set keyed by <code>(usage, edge)</code>, like a{' '}
-              <A href="/library/lock">lock</A>. A physical edge runs the one most-specific match, so a
-              trigger on <code>Key::F1</code> resolves before an any-key one.
+              Input triggers are keyed by <code>(usage, edge)</code>, like a{' '}
+              <A href="/library/lock">lock</A>. A physical edge runs only the most specific match:{' '}
+              <code>Key::F1</code> before an any-key trigger.
             </p>
             <table class="api-params">
               <thead>
@@ -416,8 +410,8 @@ handle.stop()?;`}</code></pre>
             </table>
             <div class="callout callout--info">
               <p>
-                <code>.consume()</code> locks the trigger usage while it stays active. It applies to the
-                press edge only, so a <code>Edge::Release</code> binding carries the flag with no effect.
+                <code>.consume()</code> locks the trigger usage while it stays active, on the press edge
+                only; on an <code>Edge::Release</code> binding it has no effect.
               </p>
             </div>
             <div class="api-response-label">EXAMPLE</div>
@@ -429,7 +423,7 @@ clip.append(&recording)?;
 clip.finalize()?;            // close it so it can replay
 
 // Hold-to-play: F1 down starts, F1 up stops. The press binding's consume locks F1
-// for the whole hold, so the release binding does not need one.
+// for the whole hold; the release binding needs none.
 clip.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start).consume())?;
 clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop))?;
 
@@ -440,15 +434,15 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           <div id="packet-triggers" data-search-target>
             <div class="api-response-label">PACKET TRIGGERS</div>
             <p>
-              A packet trigger's only effect is a clip verb, so it is clip config: it shares the clip's
-              lifetime (held by the keepalive, cleared with the clip on a{' '}
-              <A href="/native/commands/clip#ctrl">hard stop</A>) and its read-back. It sits beside the{' '}
-              <A href="/library/advanced/rewrite">rewrite table</A> and independent of it, reading each
-              packet as it arrived, so one packet can fire a trigger and have a rule act on it.
+              A packet trigger is clip config: it shares the clip's lifetime (held by the keepalive,
+              cleared with the clip on a <A href="/native/commands/clip#ctrl">hard stop</A>) and its
+              read-back. It sits beside the <A href="/library/advanced/rewrite">rewrite table</A>,
+              independent of it, reading each packet as it arrived, so one packet can fire a trigger and
+              have a rule act on it.
             </p>
             <p>
-              Find the address and the bytes to match with{' '}
-              <A href="/library/catch#catch-events"><code>catch_events</code></A>: a{' '}
+              <A href="/library/catch#catch-events"><code>catch_events</code></A> shows the address and
+              bytes to match: a{' '}
               <code>HidIn</code> event's <code>id</code> is the interface number and its{' '}
               <code>bytes</code> are the report. The box's rules are on{' '}
               <A href="/native/commands/clip#packet-triggers"><code>CLIP_TRIGGER</code></A>.
@@ -498,12 +492,12 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
               Of the triggers a packet matches, only the most specific acts on it: an exact{' '}
               <code>id</code> over <code>ANY_ID</code>, more masked bits over fewer, <code>IN</code> or{' '}
               <code>OUT</code> over <code>Both</code>, then the one bound earlier. <code>hits</code>{' '}
-              counts only the packets a trigger matched as the top-ranked trigger, so an outranked
-              trigger's <code>hits</code> stays still while it keeps tracking its run.
+              counts only packets matched as the top-ranked trigger; an outranked trigger's{' '}
+              <code>hits</code> stays still while it keeps tracking its run.
             </p>
             <table class="api-params">
               <thead>
-                <tr><th>Report</th><th>Top-ranked trigger</th><th>So</th></tr>
+                <tr><th>Report</th><th>Top-ranked trigger</th><th>Result</th></tr>
               </thead>
               <tbody>
                 <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report reaches the PC</td></tr>
@@ -540,15 +534,12 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
                 <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>,
                 the set holds 8 triggers (<code>CLIP_PKT_TRIG_MAX</code>), and their match bytes share
                 a pool of 112 (<code>CLIP_PKT_MATCH_POOL</code>). A bind the box refuses leaves the set
-                as it was: a new key is not held, and a key the box holds keeps its old trigger. Compare
-                what <A href="/library/requests#clip-config"><code>query_config</code></A> reads back
-                with what was bound. Turning the opt-in off removes the consuming triggers.
+                as it was (a new key is not held; a held key keeps its old trigger), so compare what{' '}
+                <A href="/library/requests#clip-config"><code>query_config</code></A> reads back with what
+                was bound. Turning the opt-in off removes the consuming triggers.
               </p>
             </div>
             <div class="api-response-label">EXAMPLE</div>
-            <p>
-              Turn the opt-in on before binding: the box refuses a consuming trigger without it.
-            </p>
             <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
 
 device.allow_imperfect_clones(true)?;   // first: a consuming trigger needs it
@@ -571,7 +562,7 @@ let set_report = ClipPacketTrigger::new(TrafficClass::Control, 0, Direction::OUT
     .matching([0x21, 0x09], [0xFF, 0xFF]);
 clip.bind_packet(&set_report)?;
 
-// A refused bind leaves the set as it was, so compare what reads back with what was bound.
+// A refused bind leaves the set unchanged: compare the read-back with what was bound.
 let bound = clip.query_config()?.packet_triggers;
 for t in [&held, &let_go, &set_report] {
     match bound.iter().find(|e| &e.trigger == t) {
@@ -593,8 +584,7 @@ clip.clear_triggers()?;         // both kinds`}</code></pre>
             <A href="/library/features/async"><code>AsyncDevice::clip()</code></A> returns an{' '}
             <code>AsyncClipHandle</code> that keeps <code>append</code>, the settings, both kinds of
             trigger, the engine verbs and <code>lost</code> synchronous;{' '}
-            <code>query_status().await</code> and <code>query_config().await</code> are futures like
-            the other queries.
+            <code>query_status().await</code> and <code>query_config().await</code> are futures.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let device = Device::find()?.into_async();

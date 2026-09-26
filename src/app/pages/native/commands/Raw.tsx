@@ -7,11 +7,11 @@ const Raw: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Raw" subtitle="Put bytes verbatim on a cloned endpoint" />
+        <CardHeader title="Raw" subtitle="Verbatim bytes on a cloned endpoint" />
         <p>
-          <A href="/native/commands/raw#raw"><code>RAW</code></A> places one packet, or one bulk
-          transfer, byte for byte on an endpoint named by number and direction: IN toward the game PC, OUT to the real
-          device. It enters the path after every stage that reads or rewrites a packet.
+          <A href="/native/commands/raw#raw"><code>RAW</code></A> places one packet or bulk transfer,
+          byte for byte, on an endpoint named by number and direction: IN to the game PC, OUT to the
+          real device. It enters the path after every stage that reads or rewrites a packet.
         </p>
         <pre class="diagram">{`  IN    native report --> rewrite --> lock, render, inject --> rewrite ---+
                           HID_IN                               EMIT       |
@@ -25,17 +25,17 @@ const Raw: Component = () => {
 
   rewrite = the rewrite rules and the clip packet triggers on that surface`}</pre>
         <p>
-          A standard input in the native report belongs in{' '}
+          Standard inputs belong in{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> and{' '}
           <A href="/native/commands/move#move"><code>MOVE</code></A>, which the box renders into a
-          faithful report. <code>RAW</code> is for bytes no semantic field describes.
+          faithful report; <code>RAW</code> is for bytes no semantic field describes.
         </p>
         <div class="callout callout--warning">
           <p>
             <code>RAW</code> runs only under{' '}
-            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>. With the
-            opt-in off the box discards the frame with no reply, and a{' '}
-            <A href="/native/commands/clip#items">clip raw item</A> is discarded and counted in{' '}
+            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>. Otherwise
+            the box discards the frame with no reply, and discards a{' '}
+            <A href="/native/commands/clip#items">clip raw item</A>, counted in{' '}
             <A href="/native/commands/requests#clip"><code>gated</code></A>.
           </p>
         </div>
@@ -56,9 +56,9 @@ const Raw: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>the endpoint number; the box reads the low four bits</td></tr>
+              <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>endpoint number; low four bits used</td></tr>
               <tr><td>1</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> IN, <code>2</code> OUT (the <A href="/native/commands/lock"><code>LOCK</code></A> direction byte)</td></tr>
-              <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the packet, verbatim; the frame <A href="/native/frame#layout"><code>LEN</code></A> delimits it, so at most 510 bytes</td></tr>
+              <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>packet, verbatim; delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A>, so at most 510 bytes</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">DIRECTION</div>
@@ -67,8 +67,8 @@ const Raw: Component = () => {
               <tr><th>Value</th><th>Name</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>1</code></td><td>IN</td><td>queued on the clone's IN endpoint <code>ep_num</code>, a HID interrupt or vendor interrupt or bulk endpoint, for the game PC to read</td></tr>
-              <tr><td><code>2</code></td><td>OUT</td><td>relayed through the host chip to the real device's OUT endpoint <code>ep_num</code>, a HID interrupt or vendor interrupt or bulk endpoint</td></tr>
+              <tr><td><code>1</code></td><td>IN</td><td>queued on the clone's IN endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) for the game PC to read</td></tr>
+              <tr><td><code>2</code></td><td>OUT</td><td>relayed through the host chip to OUT endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) on the real device</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">REFUSALS</div>
@@ -77,11 +77,11 @@ const Raw: Component = () => {
               <tr><th>Refused when</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>the payload is shorter than 2 bytes</td><td>the frame carries no endpoint address</td></tr>
-              <tr><td>the game PC has not configured the clone</td><td>the clone's endpoints are unarmed until the PC's <code>SET_CONFIGURATION</code></td></tr>
-              <tr><td><code>dir</code> is not <code>1</code> or <code>2</code></td><td><code>1</code> maps to an IN address and <code>2</code> to an OUT address; other values name neither</td></tr>
-              <tr><td>IN: the clone has no HID or vendor IN endpoint numbered <code>ep_num</code></td><td>the box writes only IN endpoints it cloned</td></tr>
-              <tr><td>OUT: the real device has no OUT endpoint numbered <code>ep_num</code></td><td>the host chip drops the packet, with no endpoint to submit it to</td></tr>
+              <tr><td>payload under 2 bytes</td><td>no endpoint address</td></tr>
+              <tr><td>clone not yet configured by the game PC</td><td>clone endpoints are unarmed until the PC's <code>SET_CONFIGURATION</code></td></tr>
+              <tr><td><code>dir</code> is not <code>1</code> or <code>2</code></td><td>only <code>1</code> (IN) and <code>2</code> (OUT) name an address</td></tr>
+              <tr><td>IN: no cloned HID or vendor IN endpoint <code>ep_num</code></td><td>the box writes only IN endpoints it cloned</td></tr>
+              <tr><td>OUT: no real-device OUT endpoint <code>ep_num</code></td><td>the host chip drops it, with no endpoint to submit to</td></tr>
               <tr><td>an interrupt packet past its <A href="/native/commands/raw#packets">limit</A></td><td>an interrupt transfer is one packet, so a split would reach the PC as two reports</td></tr>
             </tbody>
           </table>
@@ -101,7 +101,7 @@ const Raw: Component = () => {
 +--------+--------+--------+--------+--------+--------+-------------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes       | CRC16  |
 +--------+--------+--------+--------+--------+--------+-------------+--------+`}</pre>
-          <p>The matching release, the same report with the button bit clear:</p>
+          <p>The release, button bit clear:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+-------------+--------+
 | A5     | 19     | 01     | 06 00  | 01     | 01     | 00 00 00 00 | lo hi  |
 +--------+--------+--------+--------+--------+--------+-------------+--------+
@@ -126,10 +126,10 @@ const Raw: Component = () => {
 
       <div id="packets" data-search-target>
         <Card>
-          <CardHeader title="Packet size" subtitle="What each transfer type carries" />
+          <CardHeader title="Packet size" subtitle="Per transfer type" />
           <p>
-            An OUT packet is the endpoint's own <code>wMaxPacketSize</code> on the wire, as it is
-            IN; the inter-chip relay carries a bulk payload in pieces of at most 64 bytes.
+            An OUT packet is the endpoint's <code>wMaxPacketSize</code> on the wire, as IN; the
+            inter-chip relay carries a bulk payload in pieces of at most 64 bytes.
           </p>
           <table class="api-params">
             <thead>
@@ -150,7 +150,7 @@ const Raw: Component = () => {
           <div class="api-response-label">QUEUES</div>
           <table class="api-params">
             <thead>
-              <tr><th>Name</th><th>What the box does</th></tr>
+              <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
               <tr><td>HID IN, 8 reports</td><td>drops the oldest native report when full, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
@@ -161,7 +161,7 @@ const Raw: Component = () => {
           </table>
           <div class="callout callout--warning">
             <p>
-              A bulk IN transfer longer than the queue's free slots reaches the game PC cut short. At{' '}
+              A bulk IN transfer longer than the queue's free slots reaches the game PC truncated. At{' '}
               <code>wMaxPacketSize = 64</code>, 510 bytes is 8 packets, the whole queue.
             </p>
           </div>
@@ -170,14 +170,14 @@ const Raw: Component = () => {
 
       <div id="state" data-search-target>
         <Card>
-          <CardHeader title="Lifetime" subtitle="A RAW IN report holds until the next native one" />
+          <CardHeader title="Lifetime" subtitle="Held until the next native report" />
           <p>
             A <code>RAW</code> IN report is the last state the game PC read on that endpoint until
             the next native report replaces it.
           </p>
           <p>
-            No native report can carry a <code>RAW</code> report, so it takes a poll of its own. On an
-            endpoint the device reports on at every poll, it goes after at most two of the device's reports.
+            A <code>RAW</code> report takes a poll of its own; no native report carries it. On an
+            endpoint the device reports on every poll, it goes after at most two native reports.
           </p>
           <pre class="diagram">{`  native report   [ btn 0 ]                            [ btn 0 ]
   RAW, dir = 1                  [ btn 1 ]
@@ -195,11 +195,11 @@ const Raw: Component = () => {
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Mechanism</th><th>What it does</th></tr>
+              <tr><th>Mechanism</th><th>Effect</th></tr>
             </thead>
             <tbody>
               <tr><td>report merging</td><td>sums motion between other queued reports and keeps each <code>RAW</code> report whole, byte for byte</td></tr>
-              <tr><td>change suppression</td><td>records a <code>RAW</code> report shaped like the mouse, keyboard or media report the box injects into as the last report emitted, the baseline its injected frames compare against</td></tr>
+              <tr><td>change suppression</td><td>records a <code>RAW</code> report shaped like the mouse, keyboard or media report the box injects into as the last report emitted, the baseline for injected frames</td></tr>
             </tbody>
           </table>
           <p>
@@ -211,12 +211,12 @@ const Raw: Component = () => {
 
       <div id="catch" data-search-target>
         <Card>
-          <CardHeader title="Catch taps" subtitle="Which traffic classes a RAW packet raises" />
+          <CardHeader title="Catch taps" subtitle="Traffic classes a RAW packet raises" />
           <p>
             A <code>RAW</code> IN packet raises{' '}
             <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>s on the taps it
-            passes. The <A href="/native/commands/catch#catch"><code>HID_IN</code></A> tap and the OUT
-            taps sit upstream of the point where <code>RAW</code> enters.
+            passes. The <A href="/native/commands/catch#catch"><code>HID_IN</code></A> and OUT taps sit
+            upstream of <code>RAW</code>'s entry point.
           </p>
           <table class="api-params">
             <thead>

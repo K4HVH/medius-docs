@@ -7,39 +7,36 @@ const Quickstart: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Quickstart" subtitle="Plug in and send your first command" />
+        <CardHeader title="Quickstart" subtitle="Wiring to first command" />
         <p>
-          A Medius box sits inline between a USB device and a PC. The real device passes through, and
-          your program sends input of its own (cursor and buttons for a mouse, keys and media for a
-          keyboard) over a USB-serial link.
+          The box sits between a USB device and a PC. The device passes through while a program
+          injects over a USB-serial link: cursor and buttons for a mouse, keys and media for a
+          keyboard.
         </p>
         <p>
-          The box talks in <A href="/native/frame">frames</A>, small fixed-shape packets that each
-          carry one command. Most are{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>: you send and move on with
-          no reply. The exception is{' '}
-          <A href="/native/commands/requests#requests"><code>QUERY</code></A>, which gets one answer
-          back.
+          The box speaks in <A href="/native/frame">frames</A>, fixed-shape packets of one command
+          each. Most are <A href="/native/injection#fire-and-forget">fire-and-forget</A>, with no
+          reply; <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets one.
         </p>
       </Card>
 
       <div id="wiring" data-search-target>
         <Card>
-          <CardHeader title="Wire it up" subtitle="The safe 3-port layout" />
+          <CardHeader title="Wiring" subtitle="Safe 3-port layout" />
           <ul>
             <li><code>USB1</code> (<A href="/native/hardware">clone</A>) → game PC</li>
             <li><code>USB2</code> (control) → control PC</li>
             <li><code>USB3</code> (mouse) → real mouse</li>
           </ul>
           <p>
-            The clone copies the real mouse's USB identity, so the game PC enumerates the same device it
-            would if the mouse were plugged in directly.
+            The clone copies the mouse's USB identity, so the game PC enumerates the same device as a
+            direct connection.
           </p>
           <div class="callout callout--danger">
             <p>
               Never connect <code>USB1</code> and <code>USB3</code> to the same machine. The{' '}
-              <code>USB3</code> 5V rail can't be pulled low in firmware, so wiring both to one
-              machine back-feeds power and can force a shutdown and drain the battery.
+              <code>USB3</code> 5V rail can't be pulled low in firmware, so the pair back-feeds
+              power, which can force a shutdown and drain the battery.
             </p>
           </div>
           <p>
@@ -50,27 +47,26 @@ const Quickstart: Component = () => {
 
       <div id="open" data-search-target>
         <Card>
-          <CardHeader title="Open the link" subtitle="Open at the fixed baud, speak binary" />
+          <CardHeader title="Open the link" subtitle="Fixed baud, binary" />
           <p>
             Open <code>/dev/ttyACM0</code> (Linux) or <code>COMx</code> (Windows) at{' '}
-            <code>6,000,000</code> baud, <code>8N1</code>, and speak binary immediately. There's no{' '}
-            <code>115200</code> handshake and no baud-switch frame.
+            <code>6,000,000</code> baud, <code>8N1</code>, and send binary immediately; no{' '}
+            <code>115200</code> handshake or baud-switch frame.
           </p>
           <p>
-            <A href="/native/commands/requests#resp"><code>RESP</code></A> is the box's reply to a
-            question. To learn the protocol version:
+            <A href="/native/commands/requests#resp"><code>RESP</code></A> carries the box's
+            replies. To read the protocol version:
           </p>
           <ol>
             <li>
-              On first contact the box sends one{' '}
-              <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> on its own,
-              with <A href="/native/frame#seq"><code>SEQ</code></A> <code>0</code>, your
-              ready signal. Or send{' '}
-              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> yourself.
+              On first contact the box sends one unsolicited{' '}
+              <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> with{' '}
+              <A href="/native/frame#seq"><code>SEQ</code></A> <code>0</code>, the ready signal. Or
+              send <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
             </li>
             <li>
-              Read <code>proto_ver</code> from the <code>VERSION</code> payload, the one-byte
-              protocol version the firmware speaks.
+              Read <code>proto_ver</code>, the one-byte protocol version, from the{' '}
+              <code>VERSION</code> payload.
             </li>
             <li>
               Check <code>proto_ver == 9</code> before trusting the commands here.
@@ -87,18 +83,17 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="Send a MOVE" subtitle="Relative cursor movement" />
           <p>
-            <A href="/native/commands/move#move"><code>MOVE</code></A> nudges the cursor on the PC.
+            <A href="/native/commands/move#move"><code>MOVE</code></A> moves the PC's cursor.
           </p>
           <ul>
             <li>
-              <A href="/native/frame#seq"><code>SEQ</code></A> is a number you pick and increment per
-              frame. For a{' '}
-              <A href="/native/commands/requests#requests"><code>QUERY</code></A> the box echoes it
-              in the matching <A href="/native/commands/requests#resp"><code>RESP</code></A> so you
-              can pair reply to request; here <code>0</code>.
+              <A href="/native/frame#seq"><code>SEQ</code></A> is a caller-chosen number, incremented
+              per frame. A <A href="/native/commands/requests#requests"><code>QUERY</code></A>'s{' '}
+              <A href="/native/commands/requests#resp"><code>RESP</code></A> echoes it; here{' '}
+              <code>0</code>.
             </li>
             <li>
-              <code>CRC16</code> lets the box reject a corrupted frame. It is <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> (polynomial{' '}
+              <code>CRC16</code> lets the box reject a corrupted frame: <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> (polynomial{' '}
               <code>0x1021</code>, initial value <code>0xFFFF</code>) over{' '}
               <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian.
             </li>
@@ -121,17 +116,16 @@ def encode(type, seq, payload):
 frame = encode(0x01, 0, struct.pack('<BhhB', 0, 100, 0, 0))
 port.write(frame)`}</code></pre>
           <p>
-            <A href="/native/commands/move#move"><code>MOVE</code></A> has opcode{' '}
-            <code>0x01</code>. Its payload is a <code>motion</code> byte (<code>0</code> = cursor),
-            two signed 16-bit deltas, <code>dx</code> then <code>dy</code>, and a{' '}
-            <A href="/native/commands/move#flags"><code>flags</code></A> byte (<code>0</code> for an
-            ordinary move). <code>+x</code> is right, <code>+y</code> is down. The example moves 100
+            <A href="/native/commands/move#move"><code>MOVE</code></A> is opcode <code>0x01</code>.
+            Payload: a <code>motion</code> byte (<code>0</code> = cursor), signed 16-bit{' '}
+            <code>dx</code> then <code>dy</code>, and a{' '}
+            <A href="/native/commands/move#flags"><code>flags</code></A> byte (<code>0</code> for a
+            plain move). <code>+x</code> is right, <code>+y</code> is down; the example moves 100
             right, 0 down.
           </p>
           <p>
-            That builds the bytes{' '}
-            <code>A5 01 00 06 00 00 64 00 00 00 00 &lt;crc&gt;</code>. The byte-by-byte breakdown is on{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A>, the frame format on{' '}
+            That builds <code>A5 01 00 06 00 00 64 00 00 00 00 &lt;crc&gt;</code>. Byte breakdown
+            on <A href="/native/commands/move#move"><code>MOVE</code></A>, frame format on{' '}
             <A href="/native/frame">Frame Format</A>.
           </p>
         </Card>
@@ -139,38 +133,37 @@ port.write(frame)`}</code></pre>
 
       <div id="confirm" data-search-target>
         <Card>
-          <CardHeader title="Confirm" subtitle="Check the chain before relying on injection" />
+          <CardHeader title="Confirm" subtitle="Check the chain before injecting" />
           <p>
-            <A href="/native/injection">Injection</A> is the input your program sends on top of the
-            real mouse's passthrough. Before relying on it, send{' '}
-            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A>, read the{' '}
-            <code>flags</code> byte from the{' '}
-            <A href="/native/commands/requests#resp"><code>RESP</code></A>, and check these bits are
-            set.
+            <A href="/native/injection">Injection</A> is input added on top of the mouse's
+            passthrough. Before relying on it, send{' '}
+            <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and check these
+            bits in the <A href="/native/commands/requests#resp"><code>RESP</code></A>'s{' '}
+            <code>flags</code> word.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Flag</th><th>Mask</th><th>Means</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>LINK_UP</code></td><td><code>0x01</code></td><td>The link to the host chip is up.</td></tr>
+              <tr><td><code>LINK_UP</code></td><td><code>0x01</code></td><td>Host-chip link is up.</td></tr>
               <tr><td><code>MOUSE_ATTACHED</code></td><td><code>0x02</code></td><td>A mouse is on <code>USB3</code>.</td></tr>
               <tr><td><code>CLONE_CONFIGURED</code></td><td><code>0x04</code></td><td>The game PC has enumerated the clone.</td></tr>
             </tbody>
           </table>
           <p>
-            A flag is set when <code>(flags &amp; mask)</code> is non-zero. With all three set, your{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC. The full
-            byte is on <A href="/native/commands/requests#health">HEALTH</A>.
+            A flag is set when <code>(flags &amp; mask)</code> is non-zero. With all three set, a{' '}
+            <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC. Full
+            word on <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
       </div>
 
       <div id="library" data-search-target>
         <Card>
-          <CardHeader title="Skip the framing" />
+          <CardHeader title="Rust library" />
           <p>
-            For a ready-made client, <code>cargo add medius</code>. See the{' '}
+            Ready-made client: <code>cargo add medius</code>. See the{' '}
             <A href="/library">library</A>.
           </p>
         </Card>

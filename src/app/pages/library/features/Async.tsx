@@ -14,7 +14,7 @@ const Async: Component = () => {
         </p>
         <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <p>
-          Reply waits use <a href="https://crates.io/crates/flume" target="_blank" rel="noreferrer"><code>flume</code></a>, so futures run under any executor, no <a href="https://tokio.rs" target="_blank" rel="noreferrer"><code>tokio</code></a>.
+          Reply waits use <a href="https://crates.io/crates/flume" target="_blank" rel="noreferrer"><code>flume</code></a>, so futures run under any executor, without <a href="https://tokio.rs" target="_blank" rel="noreferrer"><code>tokio</code></a>.
         </p>
         <pre><code class="language-bash">cargo add futures</code></pre>
         <p>
@@ -25,7 +25,7 @@ const Async: Component = () => {
 
       <div id="construction" data-search-target>
         <Card>
-          <CardHeader title="Constructing an AsyncDevice" subtitle="open, find, into_async, into_inner" />
+          <CardHeader title="Construction" subtitle="open, find, into_async, into_inner" />
 
           <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
@@ -48,24 +48,22 @@ const Async: Component = () => {
               <tr>
                 <td><code>open</code></td>
                 <td>
-                  Takes a serial-port path, opens it, and runs the handshake. It blocks like{' '}
-                  <A href="/library/connection#open"><code>Device::open</code></A>, then hands back an{' '}
-                  <code>AsyncDevice</code>.
+                  Opens a serial-port path and runs the handshake, blocking like{' '}
+                  <A href="/library/connection#open"><code>Device::open</code></A>.
                 </td>
               </tr>
               <tr>
                 <td><code>find</code></td>
                 <td>
-                  Discovers the first medius box by USB id, opens it, and runs the handshake. Blocks
-                  like <A href="/library/connection#open"><code>Device::find</code></A>, then returns an <code>AsyncDevice</code>.
+                  Opens the first medius box by USB id and runs the handshake, blocking like{' '}
+                  <A href="/library/connection#open"><code>Device::find</code></A>.
                 </td>
               </tr>
               <tr>
                 <td><code>into_async</code></td>
                 <td>
-                  Reinterprets an already-open{' '}
-                  <A href="/library/connection"><code>Device</code></A> as an <code>AsyncDevice</code>. It's
-                  zero-cost over the same <code>Link</code> core, no new connection.
+                  Reinterprets an open <A href="/library/connection"><code>Device</code></A>, at zero
+                  cost over the same <code>Link</code> core; no new connection.
                 </td>
               </tr>
               <tr>
@@ -76,13 +74,13 @@ const Async: Component = () => {
           </table>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`// discover and open in one call (runs the handshake, blocks)
+          <pre><code class="language-rust">{`// find, open and handshake (blocks)
 let device = AsyncDevice::find()?;
 
 // or by path:
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 
-// or reinterpret an already-open Device:
+// or reinterpret an open Device:
 let device = Device::find()?.into_async();`}</code></pre>
 
           <div class="callout callout--info">
@@ -92,8 +90,7 @@ let device = Device::find()?.into_async();`}</code></pre>
               <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
               <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
               <A href="/library/lifecycle#reapply"><code>reapply</code></A>, and{' '}
-              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>. Only the queries
-              are futures.
+              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
             </p>
           </div>
         </Card>
@@ -101,7 +98,7 @@ let device = Device::find()?.into_async();`}</code></pre>
 
       <div id="queries" data-search-target>
         <Card>
-          <CardHeader title="Awaiting a query" subtitle="Every query method is a future" />
+          <CardHeader title="Queries" subtitle="Every query method is a future" />
 
           <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
@@ -136,7 +133,7 @@ let device = Device::find()?.into_async();`}</code></pre>
             </tbody>
           </table>
           <p>
-            Two shown; every other query resolves the same way. The full list is on{' '}
+            Every other query resolves the same way; the full list is on{' '}
             <A href="/library/requests#async"><code>Requests</code></A>.
           </p>
 

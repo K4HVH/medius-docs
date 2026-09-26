@@ -9,14 +9,13 @@ const Move: Component = () => {
       <Card>
         <CardHeader title="Move" subtitle="Cursor motion, scroll, and pan" />
         <p>
-          <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis: the
-          cursor pair (X and Y together), the wheel, or AC Pan (horizontal scroll), picked by a{' '}
-          <code>motion</code> byte. It injects on top of the real mouse, so the emitted report
-          carries both, and it's{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+          <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis, picked
+          by a <code>motion</code> byte: the cursor pair (X and Y together), the wheel, or AC Pan
+          (horizontal scroll). It adds to native motion, so the emitted report carries both.{' '}
+          <A href="/native/injection#fire-and-forget">Fire-and-forget</A>.
         </p>
         <p>
-          The momentary inputs (buttons, keys, media) have their own verb,{' '}
+          The momentary inputs (buttons, keys, media) use{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
         </p>
         <table class="api-params">
@@ -47,11 +46,11 @@ const Move: Component = () => {
               <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>0</code> = cursor</td></tr>
               <tr><td>1</td><td><code>dx</code></td><td><code>i16</code></td><td>horizontal step; +x = right, little-endian</td></tr>
               <tr><td>3</td><td><code>dy</code></td><td><code>i16</code></td><td>vertical step; +y = down, little-endian</td></tr>
-              <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the riding override, <code>0</code> for an ordinary move</td></tr>
+              <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">GUARANTEES</div>
-          <pre class="diagram">{`exact   net move = the sum of every delta you send
+          <pre class="diagram">{`exact   net move = the sum of every delta sent
 range   full i16 per axis, no clamp
 signs   +x right, +y down (screen-style), +z wheel up
 paced   a large move drains across frames; nothing is dropped`}</pre>
@@ -87,12 +86,12 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
             <tbody>
               <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>1</code> = wheel</td></tr>
               <tr><td>1</td><td><code>dz</code></td><td><code>i16</code></td><td>scroll steps; + = up, - = down, little-endian</td></tr>
-              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>the riding override, <code>0</code> for an ordinary move</td></tr>
+              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The box adds <code>dz</code> into its{' '}
+            The box adds <code>dz</code> to its{' '}
             <A href="/native/injection#state">accumulator</A> and drains it across{' '}
             <A href="/native/frame">frames</A> with carry, no clamp.{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Library binding:{' '}
@@ -112,9 +111,9 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         <Card>
           <CardHeader title="MOVE (pan)" subtitle="Horizontal scroll (AC Pan)" />
           <p>
-            With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, the mouse's horizontal
-            scroll (Consumer usage <code>0x0238</code>), by a relative amount. A first-class relative
-            axis, a peer of the wheel.
+            With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, horizontal scroll
+            (Consumer usage <code>0x0238</code>), by a relative amount. Pan is a relative axis like
+            the wheel.
           </p>
           <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -126,18 +125,18 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
             <tbody>
               <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>2</code> = pan</td></tr>
               <tr><td>1</td><td><code>dpan</code></td><td><code>i16</code></td><td>pan steps; + = right, - = left, little-endian</td></tr>
-              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>the riding override, <code>0</code> for an ordinary move</td></tr>
+              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The box adds <code>dpan</code> into its{' '}
+            The box adds <code>dpan</code> to its{' '}
             <A href="/native/injection#state">accumulator</A> and drains it across{' '}
-            <A href="/native/frame">frames</A> with carry, no clamp, exactly as the wheel does.{' '}
+            <A href="/native/frame">frames</A> with carry, no clamp, as for the wheel.{' '}
             <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Pan is{' '}
             <A href="/native/commands/lock">lockable</A> in any direction and{' '}
-            <A href="/native/commands/catch#motion-event">catchable</A> as the fourth axis of a
-            motion event.
+            <A href="/native/commands/catch#motion-event">catchable</A> as a motion event's fourth
+            axis.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>Pan <code>dpan = 1</code>, one step right (<code>motion = 2</code>):</p>
@@ -154,29 +153,30 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
           <CardHeader title="MOVE flags" subtitle="Per-command movement-riding override" />
           <p>
             The <code>flags</code> byte overrides{' '}
-            <A href="/native/commands/option#move-ride">movement riding</A> for this one command.
+            <A href="/native/commands/option#move-ride">movement riding</A> for this command only.
           </p>
           <pre class="api-signature">MOVE  0x01  ·  flags at offset 5 (cursor) / 3 (wheel)</pre>
           <div class="api-response-label">FLAGS</div>
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><code>NOW</code></td><td>This delta leaves on the next mouse report the box sends, native or its own, instead of waiting for a native cursor-motion report to carry it.</td></tr>
+              <tr><td><code>0x01</code></td><td><code>NOW</code></td><td>The delta leaves on the next mouse report sent, native or the box's own, without waiting for a native cursor-motion report.</td></tr>
               <tr><td><code>0x02</code></td><td><code>FLUSH</code></td><td>Emit the motion already held for a ride, ignoring the ride window.</td></tr>
               <tr><td><code>0x04</code></td><td><code>DISCARD</code></td><td>Drop the motion already held for a ride.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            The box applies discard, then flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together refuse the frame. Injected motion
-            lands in one of two <A href="/native/injection#state">accumulators</A>, so a bypassing delta
-            never carries the held one out with it. Library bindings:{' '}
+            Order: discard, flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together
+            refuse the frame. Injected motion lands in one of two{' '}
+            <A href="/native/injection#state">accumulators</A>, so a bypassing delta never carries
+            held motion out with it. Library bindings:{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
             <A href="/library/move#flush-motion"><code>flush_motion</code></A>,{' '}
             <A href="/library/move#discard-motion"><code>discard_motion</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Send the held motion now, with no delta of its own (<code>flags = 0x02</code>):</p>
+          <p>Flush held motion with no delta (<code>flags = 0x02</code>):</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 01     | 00     | 06 00  | 00     | 00 00  | 00 00  | 02     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+

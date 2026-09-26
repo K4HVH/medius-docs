@@ -9,9 +9,9 @@ const Led: Component = () => {
       <Card>
         <CardHeader title="LED" subtitle="Drive a status LED" />
         <p>
-          <A href="/native/commands/led#led"><code>LED</code></A> overrides one of the box's status
-          LEDs, or returns it to the box's own status display. Each chip has a single green LED.
-          It's <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+          <A href="/native/commands/led#led"><code>LED</code></A> overrides a status LED or returns
+          it to the box's status display. Each chip has one green LED.{' '}
+          <A href="/native/injection#fire-and-forget">Fire-and-forget</A>.
         </p>
       </Card>
 
@@ -19,8 +19,8 @@ const Led: Component = () => {
         <Card>
           <CardHeader title="LED" subtitle="Override or restore a status LED" />
           <p>
-            <code>LED</code> picks a chip's green LED and either forces it to a pattern or returns it to
-            its auto status display. <A href="/native/frame#opcodes">Opcode</A> <code>0x09</code>.
+            <code>LED</code> forces a chip's green LED to a pattern or returns it to auto status
+            display. <A href="/native/frame#opcodes">Opcode</A> <code>0x09</code>.
           </p>
           <pre class="api-signature">LED  0x09  ·  payload 3 bytes</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -31,7 +31,7 @@ const Led: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>target</code></td><td><code>u8</code></td><td>which chip's LED (see below)</td></tr>
-              <tr><td>1</td><td><code>mode</code></td><td><code>u8</code></td><td>what to drive it to (see below)</td></tr>
+              <tr><td>1</td><td><code>mode</code></td><td><code>u8</code></td><td>drive mode (see below)</td></tr>
               <tr><td>2</td><td><code>level</code></td><td><code>u8</code></td><td>brightness 0-255; used by solid and blink, ignored for off and auto</td></tr>
             </tbody>
           </table>
@@ -40,9 +40,9 @@ const Led: Component = () => {
               <tr><th>Target</th><th>Value</th><th>LED</th></tr>
             </thead>
             <tbody>
-              <tr><td>device</td><td><code>0</code></td><td>The device chip's own LED.</td></tr>
-              <tr><td>host</td><td><code>1</code></td><td>The host chip's LED; the device relays it over the <A href="/native/architecture#data-flow">inter-chip link</A>.</td></tr>
-              <tr><td>both</td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
+              <tr><td>device</td><td><code>0</code></td><td>Device chip LED.</td></tr>
+              <tr><td>host</td><td><code>1</code></td><td>Host chip LED, relayed over the <A href="/native/architecture#data-flow">inter-chip link</A>.</td></tr>
+              <tr><td>both</td><td><code>2</code></td><td>Both LEDs.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -50,10 +50,10 @@ const Led: Component = () => {
               <tr><th>Mode</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>auto</td><td><code>0</code></td><td>Return the LED to the box's status display (see below).</td></tr>
+              <tr><td>auto</td><td><code>0</code></td><td>Box status display (see below).</td></tr>
               <tr><td>off</td><td><code>1</code></td><td>LED dark.</td></tr>
-              <tr><td>solid</td><td><code>2</code></td><td>LED lit steadily at <code>level</code> brightness.</td></tr>
-              <tr><td>blink</td><td><code>3</code></td><td>LED blinks at <code>level</code> brightness.</td></tr>
+              <tr><td>solid</td><td><code>2</code></td><td>Lit steadily at <code>level</code> brightness.</td></tr>
+              <tr><td>blink</td><td><code>3</code></td><td>Blinks at <code>level</code> brightness.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">STATUS DISPLAY</div>
@@ -61,23 +61,21 @@ const Led: Component = () => {
             In <code>auto</code> (the default), each chip drives its own LED from its state.
           </p>
           <p>
-            The device chip is solid when the inter-chip link, the real mouse, and the clone are all
-            up, slow-blinks when the link is up but the mouse or clone is missing, and is off with no
-            link.
+            Device chip: solid with link, mouse, and clone all up; slow blink with the link up but the
+            mouse or clone missing; off with no link.
           </p>
           <p>
-            The host chip is solid while the mouse is streaming and off when it isn't.
+            Host chip: solid while the mouse streams, off otherwise.
           </p>
           <div class="api-response-label">EFFECT</div>
           <p>
-            An override holds until you send <code>auto</code> again, and the box also reverts it to
-            status on control-PC silence (the same ~1 s timeout that clears{' '}
-            <A href="/native/injection#safety">injection</A>), on{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, or on inter-chip link loss.
+            An override holds until <code>auto</code>, control-PC silence (the same ~1 s timeout that
+            clears <A href="/native/injection#safety">injection</A>),{' '}
+            <A href="/native/commands/admin#reset"><code>RESET</code></A>, or inter-chip link loss.
           </p>
           <p>
-            There's no game-PC-visible surface: a host or both override travels the inter-chip link
-            only. Library binding:{' '}
+            Invisible to the game PC: a host or both override travels only the inter-chip link.
+            Library binding:{' '}
             <A href="/library/led#led"><code>led</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
