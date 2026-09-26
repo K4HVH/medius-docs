@@ -148,19 +148,19 @@ const DeviceInfo = () => {
       <div id="performance" data-search-target>
         <Card>
           <CardHeader title="Performance" subtitle="Report rate and delivery" />
-          <Show when={rate()} fallback={<Row label="Report rate">not measured</Row>}>
+          <Show when={rate()} fallback={<Row label="Report rate">Not measured</Row>}>
             {(r) => (
               <Row label="Report rate">
                 <Show
                   when={!r().changeDriven}
                   fallback={
                     <span style={muted}>
-                      on key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
+                      On key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
                     </span>
                   }
                 >
-                  <Show when={mouseAttached()} fallback={<span style={muted}>no mouse</span>}>
-                    <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>waiting...</span>}>
+                  <Show when={mouseAttached()} fallback={<span style={muted}>No mouse</span>}>
+                    <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>Waiting...</span>}>
                       {nativeHz(r())} Hz
                     </Show>
                   </Show>

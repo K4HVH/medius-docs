@@ -19,15 +19,15 @@ describe('InstallPorts', () => {
     // installing, so its final role is the wrong thing to print here.
     const { container } = render(() => <InstallPorts socket="usb1" />);
     expect(tileFor(container, 'USB1')).toContain('This device');
-    expect(tileFor(container, 'USB1')).toContain('plug in');
+    expect(tileFor(container, 'USB1')).toContain('Plug in');
     expect(tileFor(container, 'USB1')).not.toContain('Game PC');
   });
 
   it('every other cable has to be out', () => {
     const { container } = render(() => <InstallPorts socket="usb3" />);
     expect(tileFor(container, 'USB3')).toContain('This device');
-    expect(tileFor(container, 'USB1')).toContain('unplug');
-    expect(tileFor(container, 'USB2')).toContain('unplug');
+    expect(tileFor(container, 'USB1')).toContain('Unplug');
+    expect(tileFor(container, 'USB2')).toContain('Unplug');
   });
 
   it('names the button by its own socket, never left/right or a chip', () => {
@@ -41,9 +41,9 @@ describe('InstallPorts', () => {
 describe('ClearPort', () => {
   it('marks the one cable to pull and says nothing about the others', () => {
     const { container } = render(() => <ClearPort socket="usb1" />);
-    expect(tileFor(container, 'USB1')).toContain('unplug');
-    expect(tileFor(container, 'USB2')).not.toContain('unplug');
-    expect(tileFor(container, 'USB3')).not.toContain('unplug');
+    expect(tileFor(container, 'USB1')).toContain('Unplug');
+    expect(tileFor(container, 'USB2')).not.toContain('Unplug');
+    expect(tileFor(container, 'USB3')).not.toContain('Unplug');
   });
 });
 

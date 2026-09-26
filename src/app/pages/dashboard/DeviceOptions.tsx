@@ -331,7 +331,7 @@ const DeviceOptions = () => {
                   {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
                 </Chip>
                 <Show when={rideDirty()}>
-                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied</span>
+                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
                 </Show>
               </div>
             </Show>
@@ -390,7 +390,7 @@ const DeviceOptions = () => {
                     : 'Off'}
                 </Chip>
                 <Show when={bearDirty()}>
-                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied</span>
+                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
                 </Show>
               </div>
             </Show>
@@ -463,7 +463,7 @@ const DeviceOptions = () => {
                   </Show>
                   <Show when={renderDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      not applied
+                      Not applied
                     </span>
                   </Show>
                 </div>
@@ -508,7 +508,7 @@ const DeviceOptions = () => {
                     <Chip variant="warning">Waiting for injection</Chip>
                   </Show>
                   <Show when={spreadDirty()}>
-                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied</span>
+                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
                   </Show>
                 </div>
               )}
@@ -601,7 +601,7 @@ const DeviceOptions = () => {
                   </Show>
                   <Show when={emitDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      not applied
+                      Not applied
                     </span>
                   </Show>
                 </div>

@@ -101,7 +101,7 @@ describe('classifyConnectError', () => {
   it('a failure with nothing to say still says something', () => {
     expect(classifyConnectError(new Error(''))).toEqual({
       kind: 'other',
-      message: 'the browser gave no reason',
+      message: 'The browser gave no reason',
     });
   });
 
