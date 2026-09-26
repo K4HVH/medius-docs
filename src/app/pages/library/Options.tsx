@@ -9,10 +9,10 @@ const Options: Component = () => {
       <Card>
         <CardHeader title="Options" subtitle="Persistent box settings" />
         <p>
-          Seven box settings, each set and read on its own. All persist in NVS and survive a reboot. See
-          the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
-          command for the wire contract. To put every one of them back at its default, use{' '}
-          <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
+          Seven box settings, each set and read on its own, all persisted in NVS across a reboot. The
+          wire contract is on the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
+          command; <A href="/library/admin#factory-reset"><code>factory_reset</code></A> returns all
+          seven to their defaults.
         </p>
         <table class="api-params">
           <thead><tr><th>Option</th><th>Set</th><th>Read</th></tr></thead>
@@ -34,9 +34,9 @@ const Options: Component = () => {
           <pre class="api-signature">fn allow_imperfect_clones(&self, allow: bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            By default the box refuses a device it can't clone exactly. <code>true</code> clones it
-            anyway, every interface the box can serve byte-faithful. Changing the setting with such a
-            device <em>attached</em>, or a forced rate pending, reboots the device chip to re-clone.
+            By default the box refuses a device it can't clone exactly; <code>true</code> clones it
+            anyway, every interface the box can serve byte-faithful. Changing it with such a device{' '}
+            <em>attached</em>, or a forced rate pending, reboots the device chip to re-clone.
             Otherwise the clone re-presents only when the change alters the{' '}
             <A href="/library/advanced/patch">patch set</A> it serves: turned on, a stored set the box
             has not refused; turned off, a set it is serving.
@@ -52,16 +52,16 @@ const Options: Component = () => {
           <div class="api-response-label">GATES</div>
           <table class="api-params">
             <thead>
-              <tr><th>What</th><th>With the opt-in off</th></tr>
+              <tr><th>What</th><th>Opt-in off</th></tr>
             </thead>
             <tbody>
               <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
               <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>; <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
               <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
-              <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Answered <code>Refused</code>.</td></tr>
+              <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Replied <code>Refused</code>.</td></tr>
               <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box; turning the opt-in off drops queued clip transfers.</td></tr>
-              <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box, and turning the opt-in off removes the ones it holds.</td></tr>
+              <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box; turning the opt-in off removes held ones.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
@@ -75,8 +75,8 @@ const Options: Component = () => {
           <div class="callout callout--warning">
             <p>
               A change that reboots the device chip or re-presents the clone drops the box's session
-              state and a loaded clip. The library re-sends what it holds once the new clone is up; see{' '}
-              <A href="/library/lifecycle#restart">session recovery</A>.
+              state and a loaded clip; the library re-sends what it holds once the new clone is up (
+              <A href="/library/lifecycle#restart">session recovery</A>).
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -94,7 +94,7 @@ device.allow_imperfect_clones(true)?;   // re-clones if the attached device need
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             <code>Some(window)</code> turns riding on: injected cursor and wheel motion ride a native
-            cursor-motion report seen within <code>window</code>; the box emits no synthetic motion frame.
+            cursor-motion report seen within <code>window</code>, with no synthetic motion frame.
             Motion unridden past the window is dropped, not dumped on the next move.{' '}
             <code>None</code> (the default) is off.
           </p>
@@ -103,16 +103,15 @@ device.allow_imperfect_clones(true)?;   // re-clones if the attached device need
             and it clamps to 65535 ms.
           </p>
           <p>
-            Pure idle injection, moving the cursor while the user holds still, stops working while
-            riding is on, unless a move opts out with{' '}
+            While riding is on, idle injection (motion while the mouse is still) needs{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>. Button, key and media
             injection are unaffected.
           </p>
           <div class="callout callout--warning">
             <p>
-              A change to this setting drops whatever motion was held for a ride, and clears the
-              standing <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
-              <code>With</code> / <code>Against</code> scale stops applying at that instant.
+              A change drops motion held for a ride and clears the standing{' '}
+              <A href="/native/commands/lock#bearing">bearing</A>, so every <code>With</code> /{' '}
+              <code>Against</code> scale stops applying at once.
             </p>
           </div>
           <table class="api-params">
@@ -135,7 +134,7 @@ device.set_movement_riding(None)?;                             // back to gaples
 
       <div id="set-emit-pace" data-search-target>
         <Card>
-          <CardHeader title="set_emit_pace" subtitle="Pick what paces injected motion, and what rate the clone runs at" />
+          <CardHeader title="set_emit_pace" subtitle="Injected-motion pace and clone rate" />
           <pre class="api-signature">fn set_emit_pace(&self, pace: EmitPace, force_hz: Option&lt;u16&gt;) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
@@ -156,7 +155,7 @@ device.set_movement_riding(None)?;                             // back to gaples
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>The rate ceiling for injected motion.</td></tr>
+              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>Rate ceiling for injected motion.</td></tr>
               <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the native interval.</td></tr>
             </tbody>
           </table>
@@ -165,20 +164,20 @@ device.set_movement_riding(None)?;                             // back to gaples
 
 let device = Device::find()?;
 device.set_emit_pace(EmitPace::Fixed(1000), None)?;   // a fixed 1 kHz ceiling
-device.set_emit_pace(EmitPace::Learned, None)?;       // back to the box's own default`}</code></pre>
+device.set_emit_pace(EmitPace::Learned, None)?;       // back to the default`}</code></pre>
         </Card>
       </div>
 
       <div id="set-name" data-search-target>
         <Card>
-          <CardHeader title="set_name" subtitle="Give the box a human-readable name" />
+          <CardHeader title="set_name" subtitle="Human-readable box name" />
           <pre class="api-signature">fn set_name(&self, name: &str) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             Sets the box's name, the readable partner to its{' '}
             <A href="/library/discovery#identity">MAC</A>. The firmware keeps the leading printable-ASCII
-            run, capped at 32 bytes; an empty string clears it. Read it back off{' '}
-            <A href="/library/types/structs#version"><code>Version::name</code></A>, not a query.
+            run, capped at 32 bytes; an empty string clears it. It reads back on{' '}
+            <A href="/library/types/structs#version"><code>Version::name</code></A>.
           </p>
           <table class="api-params">
             <thead>
@@ -203,8 +202,8 @@ let name = device.query_version()?.name;  // read it back off Version`}</code></
           <pre class="api-signature">fn clear_name(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Clears the custom name, reverting the box to a firmware-synthesised{' '}
-            <code>Medius-XXXX</code> default derived from its MAC.
+            Clears the custom name; the box reverts to the <code>Medius-XXXX</code> default derived
+            from its MAC.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -246,8 +245,8 @@ device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
               horizontal flick can come out with its vertical share removed.
             </p>
             <p>
-              A change to either field drops the standing bearing and the box's banked fractions, which
-              is a visible step while a relative scale is live.
+              A change to either field drops the standing bearing and the box's banked fractions, a
+              visible step while a relative scale is live.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -263,7 +262,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
 
       <div id="set-render" data-search-target>
         <Card>
-          <CardHeader title="set_render" subtitle="Pick the texture motion is rendered with" />
+          <CardHeader title="set_render" subtitle="Motion texture" />
           <pre class="api-signature">fn set_render(&self, mode: RenderMode, full: bool) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
@@ -275,18 +274,17 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             model is fed.
           </p>
           <p>
-            <code>full</code> is whose motion the model renders: injected motion alone, or the mouse's
-            own cursor delta taken out of the relayed report and joined to it as one stream. Buttons,
-            the wheel and every other field stay relayed either way.
+            <code>full</code> picks what the model renders: injected motion alone, or joined with the
+            native cursor delta taken out of the relayed report, as one stream. Buttons, the wheel and
+            every other field stay relayed either way.
           </p>
           <div class="callout callout--warning">
             <p>
-              Rendering adds a small amount of latency, which reaches native motion when{' '}
-              <code>full</code> is on. Motion asking for exact timing skips the model:{' '}
+              Rendering adds a little latency, to native motion too when <code>full</code> is on.{' '}
               <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
               <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
-              <A href="/library/move#discard-motion"><code>discard_motion</code></A> take the paced
-              path, and with <code>full</code> on the rendered stream ignores{' '}
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A> skip the model for
+              the paced path, and with <code>full</code> on the rendered stream ignores{' '}
               <A href="/library/options#set-movement-riding">movement riding</A>.
             </p>
             <p>
@@ -300,15 +298,15 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; the box boots at <code>Despiked</code>.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered by the model rather than relayed; the box boots with it off.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture; the box boots at <code>Despiked</code>.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Render native motion instead of relaying it; the box boots with it off.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, RenderMode};
 
 let device = Device::find()?;
-device.set_render(RenderMode::Despiked, false)?;   // the box's own default
+device.set_render(RenderMode::Despiked, false)?;   // the default
 device.set_render(RenderMode::Despiked, true)?;    // render native motion too
 device.set_render(RenderMode::Off, false)?;        // renderer out of the path, the paced fill`}</code></pre>
         </Card>
@@ -316,14 +314,14 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
 
       <div id="set-spread" data-search-target>
         <Card>
-          <CardHeader title="set_spread" subtitle="Set how far an injected delta is spread in time" />
+          <CardHeader title="set_spread" subtitle="Injected-delta spread in time" />
           <pre class="api-signature">fn set_spread(&self, percent: u16) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            An aim loop slower than the native report rate hands the box a delta worth several native
-            reports. <code>percent</code> is how much of the interval between commands the box releases
-            that delta across: <code>0</code> puts the whole delta on the next report, <code>100</code>
-            releases it evenly over one interval, and above <code>100</code> carries a standing backlog.
+            A command loop slower than the native report rate sends deltas worth several native
+            reports. <code>percent</code> is the share of the command interval the box releases each
+            across: <code>0</code> puts the whole delta on the next report, <code>100</code> spreads it
+            evenly over one interval, and above <code>100</code> carries a standing backlog.
           </p>
           <table class="api-params">
             <thead>
@@ -335,23 +333,22 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           </table>
           <div class="callout callout--warning">
             <p>
-              Spreading costs half the interval in latency on average, about 4 ms on a 125 Hz loop.
-              The delivered total never changes, and a loop at the native report rate keeps each
-              command whole, on a report of its own.
+              Spreading adds half the interval of latency on average, about 4 ms on a 125 Hz loop. The
+              delivered total never changes; a loop at the native report rate keeps each command whole,
+              on its own report.
             </p>
             <p>
-              Motion asking for exact timing is not spread:{' '}
               <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
-              <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
-              <A href="/library/move#discard-motion"><code>discard_motion</code></A>. Neither is wheel
-              motion.
+              <A href="/library/move#flush-motion"><code>flush_motion</code></A>,{' '}
+              <A href="/library/move#discard-motion"><code>discard_motion</code></A> and wheel motion are
+              never spread.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
-device.set_spread(100)?;   // the box's own default: one whole command interval
+device.set_spread(100)?;   // the default: one whole command interval
 device.set_spread(50)?;    // half the interval, for half the added latency
 device.set_spread(0)?;     // off: the whole delta on the next report`}</code></pre>
         </Card>
@@ -359,7 +356,7 @@ device.set_spread(0)?;     // off: the whole delta on the next report`}</code></
 
       <div id="query-imperfect" data-search-target>
         <Card>
-          <CardHeader title="query_imperfect" subtitle="Read the imperfect-clone state" />
+          <CardHeader title="query_imperfect" subtitle="Imperfect-clone state" />
           <pre class="api-signature">fn query_imperfect(&self) -&gt; Result&lt;ImperfectStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -382,7 +379,7 @@ if status.over_capacity && !status.allowed {
 
       <div id="query-movement-riding" data-search-target>
         <Card>
-          <CardHeader title="query_movement_riding" subtitle="Read the ride window" />
+          <CardHeader title="query_movement_riding" subtitle="Ride window" />
           <pre class="api-signature">fn query_movement_riding(&self) -&gt; Result&lt;Option&lt;Duration&gt;&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -402,15 +399,15 @@ match device.query_movement_riding()? {
 
       <div id="query-emit-pace" data-search-target>
         <Card>
-          <CardHeader title="query_emit_pace" subtitle="Read the pacing mode and the rate the clone runs at" />
+          <CardHeader title="query_emit_pace" subtitle="Pacing mode and clone rate" />
           <pre class="api-signature">fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns an{' '}
             <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
-            carrying the pace and the rates. <code>advertised_hz</code> is what the clone advertises now: the
-            native rate while nothing is forced, the forced rate once something is, with no
-            record of what the device declared before a force was applied.
+            with the pace and the rates. <code>advertised_hz</code> is the clone's current rate: native
+            while nothing is forced, the forced rate once something is, keeping no record of what the
+            device declared before the force.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, EmitPace};
@@ -426,7 +423,7 @@ println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
 
       <div id="query-bearing" data-search-target>
         <Card>
-          <CardHeader title="query_bearing" subtitle="Read the bearing window and geometry" />
+          <CardHeader title="query_bearing" subtitle="Bearing window and geometry" />
           <pre class="api-signature">fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -447,7 +444,7 @@ if bearing.is_live() {
 
       <div id="query-render" data-search-target>
         <Card>
-          <CardHeader title="query_render" subtitle="Read the texture and whether a profile has armed" />
+          <CardHeader title="query_render" subtitle="Texture, and whether a profile armed" />
           <pre class="api-signature">fn query_render(&self) -&gt; Result&lt;RenderStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -470,14 +467,14 @@ if !status.ready {
 
       <div id="query-spread" data-search-target>
         <Card>
-          <CardHeader title="query_spread" subtitle="Read the percent and the interval in effect" />
+          <CardHeader title="query_spread" subtitle="Percent and interval in effect" />
           <pre class="api-signature">fn query_spread(&self) -&gt; Result&lt;SpreadStatus&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
             <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
             the box has learned the host's command period, and while the box's two chips have not yet
-            agreed which holds the motion. In each the whole delta goes out on the next report.
+            agreed which holds the motion; in each case the whole delta goes out on the next report.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Device;
@@ -498,8 +495,7 @@ if status.span_us == 0 {
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
             fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
             <code>query_movement_riding</code>, <code>query_bearing</code>,{' '}
-            <code>query_emit_pace</code>, and <code>query_render</code> futures, like the other
-            queries.
+            <code>query_emit_pace</code>, and <code>query_render</code> futures.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use std::time::Duration;

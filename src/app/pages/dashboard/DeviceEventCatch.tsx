@@ -1,10 +1,5 @@
-// Watch the traffic the box carries, live.
-//
-// The presets are the common subscriptions; the custom builder reaches the rest of the table, which
-// the presets alone could not (one endpoint rather than a class, one direction, a capture length
-// other than the hardcoded 16). Every event carries a box timestamp and the clock that stamped it,
-// and both are shown: they are the only way to see the spacing between reports, and this is the one
-// client a person reads timing off by eye.
+// The builder reaches what presets can't: one endpoint, one direction, another capture length. Each
+// event shows its box stamp and clock, the only view of report spacing.
 
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -52,9 +47,8 @@ import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
 import { chips, label, muted, row, section } from './ui';
 
-// Each preset is one table entry per class it covers. The byte-oriented ones cap the capture: a HID
-// or vendor packet runs to 64 bytes and the control link is shared with everything else here, so
-// capturing every byte of a busy endpoint costs more link than a browser log can use.
+// Byte presets cap capture at 16: every byte of a busy endpoint costs more shared control link than
+// a browser log can use.
 const PRESETS: Record<string, CatchFilter[]> = {
   input: [
     filterWatchAxes(),
@@ -93,15 +87,14 @@ const CLASS_NAMES: Record<number, string> = {
   [CatchClass.Any]: 'everything',
 };
 
-// Classes 0 to 3 carry a decoded input event and no bytes, so no capture length applies to them.
+// Classes 0 to 3 carry decoded events, no bytes, so no capture length.
 const isInputClass = (cls: number) =>
   cls === CatchClass.Button ||
   cls === CatchClass.Key ||
   cls === CatchClass.Media ||
   cls === CatchClass.Axis;
 
-// What the id means, per class. A picker that just says "id" invites an endpoint number where an
-// interface number belongs.
+// A bare "id" invites an endpoint number where an interface number belongs.
 const ID_MEANING: Record<number, string> = {
   [CatchClass.Button]: 'button id',
   [CatchClass.Key]: 'HID keycode',
@@ -142,7 +135,7 @@ const hex = (bytes: Uint8Array): string =>
     .map((b) => b.toString(16).padStart(2, '0'))
     .join(' ');
 
-// The handshake the game PC got, named when it was not a plain completion.
+// The game PC's handshake, named unless it was a plain completion.
 const CONTROL_WORDS: Record<ControlStatus, string> = {
   [ControlStatus.Ok]: '',
   [ControlStatus.Stall]: ' STALL',
@@ -150,9 +143,8 @@ const CONTROL_WORDS: Record<ControlStatus, string> = {
   [ControlStatus.Other]: ' handshake 3',
 };
 
-// The flags byte is class-specific, so decode it per class: a control transaction's handshake sits in
-// its low two bits beside the rule bit, and a clip transfer's whole byte is its answer, so that status
-// is always named, OK included. RULE marks a packet a rewrite rule changed, dropped, answered or refused.
+// Flags are per class: control keeps its handshake in the low two bits beside the rule bit, and a clip
+// transfer's whole byte is its status, always named, OK included.
 const trafficFlags = (t: TrafficEvent): string => {
   let out = '';
   if (t.cls === CatchClass.VendorBulk) {
@@ -168,8 +160,7 @@ const trafficFlags = (t: TrafficEvent): string => {
   return trafficRuleActed(t) ? `${out} RULE` : out;
 };
 
-// A control transaction and a clip's transfer carry the setup packet and then the data stage, which
-// read as two groups. A capture that cut the setup packet short has no split to show.
+// Setup and data stage as two groups; a capture that cut the setup short shows one.
 const trafficBytes = (t: TrafficEvent): string => {
   const setup = trafficSetup(t);
   if (!setup) return `[${hex(t.bytes)}]`;
@@ -177,8 +168,7 @@ const trafficBytes = (t: TrafficEvent): string => {
   return data.length ? `[${hex(setup)}] [${hex(data)}]` : `[${hex(setup)}]`;
 };
 
-// One log line per event kind. Every variant needs a branch: an unhandled one would fall through to
-// another kind's fields and render nonsense rather than failing.
+// Every event kind needs a branch, or it falls through to another kind's fields.
 const eventBody = (e: InputEventEntry): string => {
   if (e.ev.kind === 'motion') {
     const m = e.ev.motion;
@@ -225,9 +215,7 @@ const DeviceEventCatch = () => {
   const [preset, setPreset] = createSignal('input');
   const [custom, setCustom] = createSignal<CatchFilter[]>([]);
   const [streaming, setStreaming] = createSignal(false);
-  // What the box is actually subscribed to, which matches the picker only between a Watch and the
-  // next Stop. Reading the picker instead would let a click change, with no visible cue, how events already on
-  // screen are interpreted.
+  // The box's live subscription; the picker matches it only between Watch and Stop.
   const [active, setActive] = createSignal<CatchFilter[]>([]);
 
   // The custom entry under construction.
@@ -239,15 +227,14 @@ const DeviceEventCatch = () => {
 
   const catchState = () => (streaming() ? state() : null);
   const state = dash.poll('catch');
-  // The table the box accepted, read back once immediately after subscribing. The polled value
-  // cannot answer this: a tick already in flight when Watch is pressed lands with the previous
-  // (empty) table, and every entry would read as refused for one interval.
+  // Read once after subscribing: a poll in flight at Watch lands the previous empty table, which reads
+  // every entry as refused.
   const [accepted, setAccepted] = createSignal<CatchEntry[] | null>(null);
   const [droppedByBox, setDroppedByBox] = createSignal(false);
 
   const chosen = (): CatchFilter[] => (mode() === 'preset' ? PRESETS[preset()] : custom());
 
-  // Bumped by stop and by unmount, so a start still awaiting its frames can tell the card has moved on.
+  // Bumped by stop and unmount, so a pending start can tell it is stale.
   let generation = 0;
 
   const start = async () => {
@@ -309,17 +296,15 @@ const DeviceEventCatch = () => {
 
   const events = () => dash.inputEvents();
 
-  // Refused entries are invisible except by absence from the returned table, so reconcile what we
-  // asked for against what the box accepted. Only a full table raises a flag; an unknown class, a
-  // bad direction, and a wildcard class carrying a real id are all refused with no reply.
+  // A refusal shows only as absence from the returned table. Only a full table raises a flag; an
+  // unknown class, a bad direction and a real id on a wildcard class get no reply.
   const refused = createMemo(() => {
     const table = accepted();
     if (!table || !streaming()) return [];
     return active().filter((f) => !table.some((e) => sameFilter(e, f)));
   });
 
-  // The box clears the whole table after a second without a control frame, which a backgrounded
-  // tab can cause. Reported as what it is, rather than leaving a Stop button over a dead stream.
+  // The box clears the table after 1 s without a control frame.
   let sawOn = false;
   createEffect(() => {
     const on = dash.health()?.catchOn;
@@ -342,9 +327,8 @@ const DeviceEventCatch = () => {
     (catchState()?.entries ?? []).reduce((n, e) => n + e.dropped, 0),
   );
 
-  // Stamps are only comparable inside one clock domain, so each domain gets its own baseline. The
-  // smallest stamp in the buffer, not the first seen: the box drains four priority queues, so
-  // events arrive out of tap order and the first one through is often not the earliest.
+  // One baseline per clock domain, from its smallest stamp: the box drains four priority queues, so
+  // events arrive out of tap order.
   const origins = createMemo(() => {
     const o: Record<number, number> = {};
     for (const e of events()) {
@@ -362,8 +346,7 @@ const DeviceEventCatch = () => {
       const ev = e[i].ev;
       if (ev.kind !== 'usages') continue;
       const c = snapshotClass(ev.snapshot);
-      // An all-released snapshot carries no class byte, so treat an empty one as a button clear
-      // only when buttons are subscribed; otherwise it might be a key or media release.
+      // An all-released snapshot has no class byte: a button clear only while buttons are subscribed.
       if (c === INJ_BTN || (c === null && watchingButtons)) return ev.snapshot;
     }
     return null;
@@ -395,7 +378,7 @@ const DeviceEventCatch = () => {
 
   const clockLine = createMemo(() => {
     const c = catchState()?.clock;
-    if (!c || c.ageMs === null) return 'Cross-chip clock not measured yet.';
+    if (!c || c.ageMs === null) return 'Cross-chip clock not measured.';
     return `Host clock leads the device clock by ${ms(c.offsetUs)} ms, +/- ${ms(c.delayUs)} ms, measured ${c.ageMs} ms ago.`;
   });
 
@@ -403,9 +386,9 @@ const DeviceEventCatch = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="input-catch" data-search-target>
         <Card>
-          <CardHeader title="Input catch" subtitle="Watch the traffic the box carries, live" />
+          <CardHeader title="Input catch" subtitle="Watch live traffic" />
 
-          <div style={label}>How to choose</div>
+          <div style={label}>Mode</div>
           <RadioGroup
             name="catch-mode"
             value={mode()}
@@ -413,13 +396,13 @@ const DeviceEventCatch = () => {
             disabled={streaming()}
             options={[
               { value: 'preset', label: 'Presets' },
-              { value: 'custom', label: 'Build a table' },
+              { value: 'custom', label: 'Custom table' },
             ]}
           />
 
           <Show when={mode() === 'preset'}>
             <div style={section}>
-              <div style={label}>What to watch</div>
+              <div style={label}>Preset</div>
               <RadioGroup
                 name="catch-preset"
                 value={preset()}
@@ -427,7 +410,7 @@ const DeviceEventCatch = () => {
                 disabled={streaming()}
                 options={[
                   { value: 'input', label: 'All input' },
-                  { value: 'buttons', label: 'Buttons only' },
+                  { value: 'buttons', label: 'Buttons' },
                   { value: 'motion', label: 'Movement, wheel, pan' },
                   { value: 'keys', label: 'Keyboard + media' },
                   { value: 'traffic', label: 'Raw endpoints' },
@@ -449,14 +432,14 @@ const DeviceEventCatch = () => {
             </div>
             <Show when={cls() !== CatchClass.Bus && cls() !== CatchClass.Any}>
               <div style={section}>
-                <div style={label}>Which id</div>
+                <div style={label}>Id</div>
                 <RadioGroup
                   name="catch-anyid"
                   value={anyId()}
                   onChange={setAnyId}
                   options={[
                     { value: 'any', label: 'Every id' },
-                    { value: 'one', label: 'Just one' },
+                    { value: 'one', label: 'One id' },
                   ]}
                 />
                 <Show when={anyId() === 'one'}>
@@ -506,7 +489,7 @@ const DeviceEventCatch = () => {
               <div style={label}>
                 Table ({custom().length} of {CATCH_TABLE_MAX})
               </div>
-              <Show when={custom().length > 0} fallback={<p style={muted}>No entries yet.</p>}>
+              <Show when={custom().length > 0} fallback={<p style={muted}>No entries.</p>}>
                 <div style={chips}>
                   <For each={custom()}>
                     {(f) => (
@@ -548,8 +531,8 @@ const DeviceEventCatch = () => {
 
           <Show when={droppedByBox()}>
             <div class="callout callout--warning" style={section}>
-              The box cleared the subscription. It does that after one second with no control frame, which
-              a backgrounded tab can cause. Press Watch to start again.
+              The box cleared the subscription after 1 s with no control frame, which a backgrounded tab
+              can cause. Press Watch to restart.
             </div>
           </Show>
 
@@ -560,16 +543,16 @@ const DeviceEventCatch = () => {
                 {refused().map(describe).join(', ')}.{' '}
                 <Show
                   when={catchState()?.tableFull}
-                  fallback={<>It does not know that address on this firmware.</>}
+                  fallback={<>This firmware doesn't know that address.</>}
                 >
-                  Its {CATCH_TABLE_MAX}-entry table is full.
+                  The {CATCH_TABLE_MAX}-entry table is full.
                 </Show>
               </div>
             </Show>
 
             <Show when={latestButtons()}>
               <div style={section}>
-                <div style={label}>Buttons held now</div>
+                <div style={label}>Held buttons</div>
                 <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
                   <div style={chips}>
                     <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
@@ -597,7 +580,7 @@ const DeviceEventCatch = () => {
             <div style={section}>
               <div style={label}>
                 Recent events ({events().length} received, {catchState()?.dropped ?? 0} dropped by the
-                box, {entryDrops()} of those charged to an entry)
+                box, {entryDrops()} charged to entries)
               </div>
               <Show when={events().length > 0} fallback={<p>Move, click, or type...</p>}>
                 <pre class="diagram" style={{ 'max-height': '14rem', overflow: 'auto', margin: 0 }}>
@@ -615,12 +598,12 @@ const DeviceEventCatch = () => {
                 </pre>
               </Show>
               <p style={{ ...muted, 'margin-top': '4px' }}>
-                H is the host chip's clock, D the device chip's. Times are from the earliest event held
-                in that clock, and only comparable within one of them.
+                H is the host chip's clock, D the device chip's. Times count from the earliest held event
+                on that clock and compare only within one clock.
               </p>
               <Show when={events().some((e) => e.ev.kind === 'traffic' && trafficRuleActed(e.ev.traffic))}>
                 <p style={{ ...muted, 'margin-top': '4px' }}>
-                  RULE marks a packet one of your rewrite rules changed, dropped, answered or refused.
+                  RULE marks a packet a rewrite rule changed, dropped, answered or refused.
                 </p>
               </Show>
             </div>

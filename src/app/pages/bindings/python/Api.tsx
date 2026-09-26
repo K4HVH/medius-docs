@@ -9,15 +9,15 @@ const Api: Component = () => {
       <Card>
         <CardHeader title="API index" subtitle="Every Python call, linked to what it does" />
         <p>
-          The full <code>Device</code> surface, grouped. What each call does lives in the{' '}
-          <A href="/library">Rust Library</A> and <A href="/native">Native API</A>. Types
-          and enums are on <A href="/bindings/python/types">Types &amp; errors</A>; streams on{' '}
+          Every <code>Device</code> call, grouped. What each does is in the{' '}
+          <A href="/library">Rust Library</A> and <A href="/native">Native API</A>; types and enums
+          on <A href="/bindings/python/types">Types &amp; errors</A>; streams on{' '}
           <A href="/bindings/python/streams">Streams</A>.
         </p>
         <p>
-          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>. They
-          return once the frame is queued. The query calls, plus <code>Device.open</code> /{' '}
-          <code>find</code>, block for the <A href="/native/hardware">box</A>'s reply. Any call raises
+          Most calls are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: they
+          return once the frame is queued. Queries, <code>Device.open</code> and{' '}
+          <code>find</code> block for the <A href="/native/hardware">box</A>'s reply. Any call raises
           a <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
         </p>
       </Card>
@@ -31,7 +31,7 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>Device.open(path)</code></td><td>Open a serial path and <A href="/native/connection#handshake">handshake</A>.</td></tr>
               <tr><td><code>Device.find()</code></td><td>Open the first box found, or raise <A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A>.</td></tr>
-              <tr><td><code>dev.clone()</code></td><td>Another handle to the same link; the connection is shared.</td></tr>
+              <tr><td><code>dev.clone()</code></td><td>Another handle to the same link.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Free the handle. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
             </tbody>
@@ -46,7 +46,7 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>, reading each one's version and, on a box this package speaks to, its device info; <code>device</code> is <code>None</code> for a box on another protocol.</td></tr>
+              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>, reading each box's version and, on this protocol, its device info; <code>device</code> is <code>None</code> for a box on another protocol.</td></tr>
               <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches.</td></tr>
               <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. With none, a connected box on another protocol raises <code>BadProtoVerError</code>, since its clone is unread.</td></tr>
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
@@ -81,9 +81,9 @@ const Api: Component = () => {
           <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
           <p>
             See <A href="/library/inject">Inject</A> and the{' '}
-            <A href="/native/injection">injection model</A> (press / soft-release / force-release). One
-            usage vocabulary drives every verb; build a <A href="/bindings/python/types#input"><code>Usage</code></A>{' '}
-            with <code>Usage.button</code> / <code>key</code> / <code>media</code>. Ids are on{' '}
+            <A href="/native/injection">injection model</A> (press / soft-release / force-release).
+            Every verb takes a <A href="/bindings/python/types#input"><code>Usage</code></A> built with{' '}
+            <code>Usage.button</code> / <code>key</code> / <code>media</code>; ids are on{' '}
             <A href="/native/commands/usage">Usage IDs</A>.
           </p>
           <table class="api-params">
@@ -108,7 +108,7 @@ const Api: Component = () => {
 
       <div id="lock" data-search-target>
         <Card>
-          <CardHeader title="Locks" subtitle="Weigh the user's own input" />
+          <CardHeader title="Locks" subtitle="Weigh physical input" />
           <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> takes one of the <A href="/bindings/python/types#scale-constants">scale constants</A>.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
@@ -122,10 +122,10 @@ const Api: Component = () => {
           </table>
           <div class="callout callout--warning">
             <p>
-              A scale auto-clears; it isn't permanent. The{' '}
-              <A href="/library/guides/connection#keepalive">keepalive</A> holds it for you.{' '}
-              <code>Direction.WITH</code> and <code>Direction.AGAINST</code> need a live bearing, set
-              with <code>dev.set_bearing(window_ms, mode)</code>; the refusal rules for them are on{' '}
+              A scale auto-clears; the{' '}
+              <A href="/library/guides/connection#keepalive">keepalive</A> holds it.{' '}
+              <code>Direction.WITH</code> and <code>Direction.AGAINST</code> need a live bearing
+              (<code>dev.set_bearing(window_ms, mode)</code>); their refusal rules are on{' '}
               <A href="/bindings/python/types#direction"><code>Direction</code></A>.
             </p>
           </div>
@@ -150,8 +150,8 @@ const Api: Component = () => {
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
               <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
-              <tr><td><code>dev.set_spread(percent)</code></td><td>How much of the interval between commands an injected delta is released across, in percent. 0 puts the whole delta on the next report, 100 releases the delta over one interval, and above 100 overlaps. The box boots at 100. See <A href="/library/options">Options</A>.</td></tr>
-              <tr><td><code>dev.set_render(mode, full)</code></td><td>Pick the texture (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>) and whether native motion is rendered by the model rather than relayed. Both ride one frame, so <code>full</code> is required rather than defaulted; a <code>mode</code> outside <code>RenderMode</code> raises <code>ValueError</code> and nothing is sent. <code>full</code> is off on a box that has not been set. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_spread(percent)</code></td><td>The share of the interval between commands an injected delta is released across, in percent: 0 puts the whole delta on the next report, 100 spreads it over one interval, above 100 overlaps. The box boots at 100. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_render(mode, full)</code></td><td>Pick the texture (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>) and whether native motion is rendered by the model rather than relayed. Both share one frame, so <code>full</code> is required, not defaulted; a <code>mode</code> outside <code>RenderMode</code> raises <code>ValueError</code> and nothing is sent. <code>full</code> is off on a box that has not been set. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -161,9 +161,9 @@ const Api: Component = () => {
         <Card>
           <CardHeader title="Queries" subtitle="Read box state; each blocks for one reply" />
           <p>
-            See <A href="/library/requests">Requests</A>. Each blocks for the box's reply and returns
-            a <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>{' '}
-            documented on <A href="/bindings/python/types">Types &amp; errors</A>.
+            See <A href="/library/requests">Requests</A>. Each returns a{' '}
+            <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>{' '}
+            from <A href="/bindings/python/types">Types &amp; errors</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
@@ -212,7 +212,7 @@ const Api: Component = () => {
       <div id="streams" data-search-target>
         <Card>
           <CardHeader title="Streams" subtitle="Subscribe to live input and logs" />
-          <p>Consuming events is covered on <A href="/bindings/python/streams">Streams</A>; the catch feature itself on <A href="/library/catch">Catch</A> and <A href="/library/diagnostics">Logs &amp; counters</A>.</p>
+          <p>Consuming events is on <A href="/bindings/python/streams">Streams</A>, the catch feature on <A href="/library/catch">Catch</A>, and logs on <A href="/library/diagnostics">Logs &amp; counters</A>.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
@@ -229,8 +229,8 @@ const Api: Component = () => {
           </p>
           <div class="callout callout--info">
             <p>
-              The box's own refusals get no reply, so check what it actually holds with{' '}
-              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A>.
+              Box-side refusals get no reply;{' '}
+              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> reads what it holds.
             </p>
           </div>
         </Card>
@@ -242,14 +242,14 @@ const Api: Component = () => {
           <p>
             Build a stream with <code>ClipBuilder</code>, then drive it with the{' '}
             <A href="/library/clip#handle"><code>ClipHandle</code></A> from <code>dev.clip()</code>.{' '}
-            Concept on <A href="/library/clip">Clip</A>.
+            See <A href="/library/clip">Clip</A>.
           </p>
           <div class="api-response-label">CLIPBUILDER</div>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Appends</th></tr></thead>
             <tbody>
               <tr><td><code>ClipBuilder() / .clear()</code></td><td>A new builder (chainable); reset for reuse.</td></tr>
-              <tr><td><code>.byte_len()</code></td><td>The ring bytes the entries take, to hold against <A href="/bindings/python/types#clipstatus"><code>ClipStatus.free</code></A> before an append.</td></tr>
+              <tr><td><code>.byte_len()</code></td><td>Ring bytes the entries take; compare with <A href="/bindings/python/types#clipstatus"><code>ClipStatus.free</code></A> before an append.</td></tr>
               <tr><td><code>.gap(frames)</code></td><td>A gap run (0 = no-op).</td></tr>
               <tr><td><code>.move(dx, dy) / .wheel(dz) / .pan(dpan)</code></td><td>A cursor / wheel / pan (horizontal scroll) motion frame.</td></tr>
               <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
@@ -281,7 +281,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge)</code></td><td>Remove one input trigger by usage + edge.</td></tr>
-              <tr><td><code>clip.bind_packet(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A>: a packet it matches runs its <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> on the frame clock's next tick, and only the <A href="/library/clip#packet-triggers">most specific trigger</A> a packet matches acts on it. One the box would refuse raises <A href="/bindings/python/types#subclasses"><code>ClipPacketTriggerError</code></A> before anything is sent: the <A href="/library/clip#packet-triggers">crate's refusals</A>, and a <code>selector_len</code> without <code>once_per_run</code>. A bind the box refuses leaves the set as it was, so compare what <code>clip.query_config()</code> reads back with what was bound.</td></tr>
+              <tr><td><code>clip.bind_packet(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A>: a matched packet runs its <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> on the frame clock's next tick, and only the <A href="/library/clip#packet-triggers">most specific</A> matching trigger acts. A trigger the box would refuse (the <A href="/library/clip#packet-triggers">crate's refusals</A>, or a <code>selector_len</code> without <code>once_per_run</code>) raises <A href="/bindings/python/types#subclasses"><code>ClipPacketTriggerError</code></A> before anything is sent. A bind the box refuses leaves the set unchanged; compare <code>clip.query_config()</code>'s readback with what was bound.</td></tr>
               <tr><td><code>clip.unbind_packet(trigger)</code></td><td>Remove the packet trigger with that trigger's <code>(traffic_class, id, direction, match_bytes, mask)</code>; its other fields are ignored, and a key the box cannot hold is refused as <code>bind_packet()</code> refuses it.</td></tr>
               <tr><td><code>clip.clear_triggers()</code></td><td>Remove every trigger of both kinds.</td></tr>
               <tr><td><code>clip.start() / clip.stop()</code></td><td>Begin playback; stop and flush the ring, releasing the auto-lock.</td></tr>
@@ -303,7 +303,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
       <div id="advanced" data-search-target>
         <Card>
           <CardHeader title="Advanced control layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
-          <p>The imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. <code>set_rewrite</code> and <code>apply_patch</code> need the opt-in (<code>dev.allow_imperfect_clones(True)</code>) or raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>; <code>dev.raw</code> sends without asking and the box drops it while the opt-in is off; the queries, removes, clears, and <code>set_patch</code> do not, and a transfer with the opt-in off returns <code>TransferStatus.REFUSED</code> rather than raising.</p>
+          <p>Gated on the imperfect-clone opt-in, <code>dev.allow_imperfect_clones(True)</code>. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. With it off, <code>set_rewrite</code> and <code>apply_patch</code> raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>, the box drops <code>dev.raw</code> (sent unchecked), and a transfer returns <code>TransferStatus.REFUSED</code> without raising; queries, removes, clears and <code>set_patch</code> need no opt-in.</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -327,7 +327,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
       <div id="transforms" data-search-target>
         <Card>
           <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
-          <p>Faithful field transforms, always available; no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>) so it can move a button onto a key or media usage. To weigh a field, or reverse it, use <code>dev.scale</code>, whose percent is signed.</p>
+          <p>Faithful field transforms, no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>), so it can move a button onto a key or media usage. To weigh or reverse a field, use <code>dev.scale</code> (signed percent).</p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -344,11 +344,11 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
 
       <div id="mock" data-search-target>
         <Card>
-          <CardHeader title="Mock box" subtitle="An in-process fake box for tests, feature-gated" />
+          <CardHeader title="Mock box" subtitle="In-process fake box for tests, feature-gated" />
           <p>
-            <code>MockBox</code> needs a native library built with the <code>mock</code> feature, and
-            raises <code>RuntimeError</code> without it; check <code>medius.HAS_MOCK</code>. Building it
-            is on <A href="/bindings/python/build">Build &amp; features</A>, the concept on{' '}
+            <code>MockBox</code> needs a library built with the <code>mock</code> feature and raises{' '}
+            <code>RuntimeError</code> without it; check <code>medius.HAS_MOCK</code>. Building it is on{' '}
+            <A href="/bindings/python/build">Build &amp; features</A>, the concept on{' '}
             <A href="/library/features/mock">Mock</A>.
           </p>
           <div class="api-response-label">OPEN</div>
@@ -370,7 +370,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>mock.set_transfer_reply(status, data=b"")</code></td><td>The status and IN data a transfer is answered with while the opt-in is on; with it off, <code>REFUSED</code>.</td></tr>
               <tr><td><code>mock.set_movement_riding</code>, <code>set_bearing</code>, <code>set_emit_pace</code>, <code>set_spread_learned</code>, <code>set_render</code>, <code>set_advertised_hz</code></td><td>Set what the option queries answer.</td></tr>
               <tr><td><code>mock.set_clip_status(status)</code></td><td>Set the <A href="/bindings/python/types#clipstatus"><code>ClipStatus</code></A> <code>clip.query_status()</code> answers.</td></tr>
-              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A> <code>clip.query_config()</code> answers. Its packet triggers are bound in order, as <code>clip.bind_packet()</code> binds them, under the opt-in <code>set_imperfect_status</code> scripted, so script it first for a consuming one. The reply is these settings plus the packet triggers bound on the mock; <code>set_retain</code>, <code>finalize</code>, input binds and playback go out as recorded frames that leave it as scripted.</td></tr>
+              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A> <code>clip.query_config()</code> answers. Its packet triggers bind in order, as <code>clip.bind_packet()</code> binds them, under the opt-in <code>set_imperfect_status</code> scripted: script it first for a consuming one. The reply is these settings plus the triggers bound on the mock; <code>set_retain</code>, <code>finalize</code>, input binds and playback are recorded frames that leave it as scripted.</td></tr>
               <tr><td><code>mock.clip_packet(traffic_class, id,</code> <code>direction, head)</code></td><td><code>Tuple[Optional[ClipAction], bool]</code>: run one packet through the mock's packet triggers, as the box does; the most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> when no trigger matches, and when that trigger is <code>once_per_run</code> and the packet continues a run; the bool is whether that trigger consumes the packet.</td></tr>
               <tr><td><code>mock.restart()</code></td><td>Simulate a device-chip restart: the mock drops its session state, keeps what it stores, and sends its hello now and again on the next frame it receives. See <A href="/library/features/mock#restart">restart</A>.</td></tr>
               <tr><td><code>mock.link_lost()</code></td><td>Simulate the link between the box's chips dropping and coming back: the mock releases the session a host set, counted in <A href="/bindings/python/types#stats"><code>Stats.session</code></A>, and the clone stays up.</td></tr>
@@ -424,7 +424,7 @@ with MockBox() as mock:
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present medius ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> (now including the CH343 serial).</td></tr>
+              <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present medius ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A>, including the CH343 serial.</td></tr>
               <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. See <A href="/bindings/python/api#discovery">Discovery</A>.</td></tr>
               <tr><td><code>medius.default_query_timeout_ms()</code></td><td>The default query reply wait (1000 ms).</td></tr>
               <tr><td><code>medius.default_transfer_timeout_ms()</code></td><td>The default control-transfer reply wait (1500 ms).</td></tr>

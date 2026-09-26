@@ -1,8 +1,5 @@
-// Overwrite the bytes the clone presents at enumeration.
-//
-// A patch is stored whether or not imperfect clones are on, so the form stays live and only the apply
-// waits for the opt-in. The clone serves the copy of the set it was last presented with, so the card
-// reads the applied and pending flags to say whether what is stored is what the clone carries.
+// A patch is stored with imperfect clones off too; only Apply waits for the opt-in. The clone serves
+// the set it last enumerated with, which the applied and pending flags compare against the store.
 
 import { For, Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -29,24 +26,20 @@ const SECTION_OPTIONS = SECTIONS.map((s) => ({
   label: `${displayName(patchSectionName(s))} descriptor`,
 }));
 
-// What the offset counts from, which is the one thing the number field cannot say for itself. A
-// string patch has no offset: its bytes are the whole new string.
+// What the offset counts from. A string patch has no offset.
 const SECTION_BLURB: Record<number, string> = {
   [PatchSection.Device]: 'Offset into the 18-byte device descriptor.',
-  [PatchSection.Config]: 'Offset into that whole configuration, its interfaces and endpoints included.',
+  [PatchSection.Config]: 'Offset into the whole configuration, interfaces and endpoints included.',
   [PatchSection.Report]: "Offset into that interface's report descriptor.",
-  [PatchSection.String]: 'The bytes are the new text, one character each, up to 127, and replace the whole string. A 00 byte ends it early.',
+  [PatchSection.String]: 'The bytes replace the whole string, one character each, up to 127. A 00 byte ends it early.',
   [PatchSection.Bos]: 'Offset into the BOS descriptor.',
 };
 
-// The device and BOS descriptors are singletons, so cfg and index do not address them. A report
-// descriptor keys on cfg + index (the interface); a configuration on cfg; a string on index.
 const usesCfg = (s: PatchSection | null) => s === PatchSection.Config || s === PatchSection.Report;
 const usesIndex = (s: PatchSection | null) => s === PatchSection.Report || s === PatchSection.String;
 const usesOffset = (s: PatchSection | null) => s !== PatchSection.String;
 
-// A chip is capped at 250px and ellipsises past it, so a patch names only what addresses it. The
-// section already names the number it keys on, except a report, which needs both of its.
+// A chip ellipsises past 250px, so a patch names only what addresses it.
 const describe = (e: PatchInfo): string => {
   const narrow: string[] = [];
   if (e.section === PatchSection.Report) narrow.push(`cfg ${e.cfg}`, `interface ${e.index}`);
@@ -88,8 +81,8 @@ const DevicePatch = () => {
   const pending = () => patches()?.pending === true;
   const refused = () => patches()?.refused === true;
 
-  // The box ignores an Apply that would serve the set the clone already serves, and one for a refused
-  // set that has not changed, so the button says why rather than sending a frame that does nothing.
+  // The box ignores an Apply of the set already served or of an unchanged refused set, so the button
+  // says why.
   const applyWhy = (): string | null => {
     if (!allowed()) return 'Applying needs imperfect clones, on the Device tab.';
     if (refused()) return 'This set failed a check. Change it, then apply.';
@@ -98,18 +91,16 @@ const DevicePatch = () => {
     return null;
   };
 
-  // An emptied set still on the clone is cleared the way a stored one is, so Clear all stays live while
-  // anything is on the clone, not only while something is stored.
+  // Clear all stays live while anything is on the clone, stored or not.
   const clearable = () => entries().length > 0 || applied() || refused();
 
-  // Where the stored set stands against the clone, and what to do about it. A refused set and a set
-  // waiting on the opt-in have callouts of their own.
+  // Refused sets and sets waiting on the opt-in have their own callouts.
   const stateLine = (): string | null => {
     if (refused() || !allowed()) return null;
     if (applied() && !pending()) return 'The clone carries this set.';
-    if (applied() && entries().length === 0) return 'The clone still carries the patches you removed. Apply or Clear all takes them off.';
-    if (applied()) return 'The clone carries an earlier version of this set. Apply to put the changes on it.';
-    if (pending()) return 'This set is not on the clone yet. Apply to put it on.';
+    if (applied() && entries().length === 0) return 'The clone still carries the removed patches. Apply or Clear all takes them off.';
+    if (applied()) return 'The clone carries an earlier version of this set. Apply to update it.';
+    if (pending()) return 'Not on the clone yet. Apply to put it on.';
     return null;
   };
 
@@ -120,7 +111,7 @@ const DevicePatch = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="descriptor-patches" data-search-target>
         <Card>
-          <CardHeader title="Descriptor patches" subtitle="Change how the clone introduces itself" />
+          <CardHeader title="Descriptor patches" subtitle="Change the clone's descriptors" />
 
           <div style={label}>Descriptor</div>
           <RadioGroup
@@ -167,7 +158,7 @@ const DevicePatch = () => {
             <Button
               variant="secondary"
               disabled={cmd.busy() || applyWhy() !== null}
-              title={applyWhy() ?? 'Re-clone the device carrying the stored set'}
+              title={applyWhy() ?? 'Re-clone with the stored set'}
               onClick={applyPatches}
             >
               Apply
@@ -177,9 +168,9 @@ const DevicePatch = () => {
             </Button>
           </div>
           <p style={{ ...muted, 'margin-top': '4px' }}>
-            Apply re-clones the device with the stored set. Clear all erases the set, and re-clones the
-            device without it if the clone carries patches. A re-clone is a replug on the game PC and
-            drops the session: injection, locks, rules, the clip and catch subscriptions.
+            Apply re-clones the device with the stored set. Clear all erases the set, re-cloning without
+            it if the clone carries patches. A re-clone is a replug on the game PC and drops the
+            session: injection, locks, rules, the clip and catch subscriptions.
           </p>
           <Show when={!allowed()}>
             <div class="callout callout--info" style={section}>

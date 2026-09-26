@@ -26,7 +26,7 @@ const DeviceLed = () => {
   const dash = useDashboard();
   const [target, setTarget] = createSignal('both');
   const [level, setLevel] = createSignal(255);
-  // The box has no LED readback, so this is what was last accepted, not what the box holds.
+  // No LED readback: this is the last mode the box accepted.
   const [sent, setSent] = createSignal<LedMode | null>(null);
   const cmd = createCommand();
 
@@ -41,8 +41,8 @@ const DeviceLed = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="status-light" data-search-target>
         <Card>
-          <CardHeader title="Status light" subtitle="The box's green LEDs" />
-          <div style={label}>Which light</div>
+          <CardHeader title="Status light" subtitle="Green LEDs" />
+          <div style={label}>Light</div>
           <RadioGroup
             name="led-target"
             value={target()}

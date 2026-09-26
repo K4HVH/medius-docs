@@ -1,11 +1,5 @@
-// Buffered clip playback: build a clip, load it into the box's ring, and drive the engine.
-//
-// A clip plays on any clone. With a mouse cloned a tick is one native frame, not a millisecond; with
-// none it is the emit rate OPTION(EMIT) fixes, else 1 ms. Everything below is refused by the box
-// while no clone is up. The engine is soft state on a 1 s dead-man switch, which the clip status poll
-// doubles as the keepalive for. Raw report and transfer ticks play only under imperfect clones, so
-// they are offered only while it is on. A trigger is an input edge or a packet on a traffic surface;
-// only a packet trigger that consumes needs the opt-in, so one that watches binds without it.
+// A tick is one native frame with a mouse cloned, else the OPTION(EMIT) fixed rate, else 1 ms. The
+// engine is soft state on a 1 s dead-man switch; the clip status poll is its keepalive.
 
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -98,8 +92,7 @@ const CLASSES: PickerClass[] = [
   { value: INJ_MEDIA, label: 'Media', table: MEDIA },
 ];
 
-// Triggers reach further than clip entries do: the box accepts a whole-class binding and a
-// whole-of-everything binding, and the list below already names them.
+// Triggers also take whole-class and any-input bindings.
 const TRIGGER_CLASSES: PickerClass[] = [
   { ...CLASSES[0], blanket: CLIP_COND_ANY_ID, blanketLabel: 'Any button' },
   { ...CLASSES[1], blanket: CLIP_COND_ANY_ID, blanketLabel: 'Any key' },
@@ -137,7 +130,7 @@ const RAW_DIRS = [
   { value: String(Direction.Negative), label: 'Out' },
 ];
 
-// What the codec refused an entry for, in the words of the fields on this card.
+// Codec refusals, in this card's field names.
 const FAULT_TEXT: Record<ClipEntryFault, string> = {
   gap: 'A wait must be 1 to 65535 ticks.',
   edges: `A tick must carry at most ${CLIP_EDGES_MAX} buttons or keys.`,
@@ -180,7 +173,7 @@ const triggerText = (t: ClipTrigger): string => {
   return `${who} ${edge} -> ${op}${locks ? ' (consume)' : ''}`;
 };
 
-// Why the box would refuse a packet trigger, in the words of the fields on this card.
+// Box refusals, in this card's field names.
 const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
   class: 'Class must be one of the six traffic surfaces.',
   direction: 'Direction must be Both, In or Out.',
@@ -199,15 +192,12 @@ const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
   pool: `Packet triggers share ${CLIP_PKT_MATCH_POOL} match bytes. Remove one or shorten the match.`,
 };
 
-// A packet trigger's chip names what it runs, then the class and id it watches, the way a rewrite
-// rule's does. A chip is capped at 250px and ellipsises past it, so the direction and the match stay
-// out of the name and in the line below.
+// A chip ellipsises past 250px, so direction and match go in the line below.
 const packetName = (t: ClipPacketTrigger): string => {
   const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
   return `${op} ${rewriteClassName(t.cls)} ${t.id === CATCH_ID_ANY ? 'any' : t.id}`;
 };
 
-// A packet trigger read back in words: where it watches, what it matches, then what it does.
 const packetText = (t: ClipPacketTrigger): string => {
   const unit = t.cls === CatchClass.HidIn ? 'interface' : 'endpoint';
   const where = t.id === CATCH_ID_ANY ? `every ${unit}` : `${unit} ${t.id}`;
@@ -221,16 +211,15 @@ const packetText = (t: ClipPacketTrigger): string => {
   return `${displayName(rewriteClassName(t.cls))}, ${where}, ${dir}, ${what}: ${does.join(', ')}`;
 };
 
-// The one way a report class travels, which takes the other direction off its picker.
+// Classes that travel one way.
 const DIR_WHY: Record<number, string> = {
   [CatchClass.HidIn]: 'Every HID in report travels In.',
   [CatchClass.HidOut]: 'Every HID out report travels Out.',
   [CatchClass.Emit]: 'Every emitted report travels In.',
 };
 
-// Why the box did not take a packet trigger it was sent, read from the first status after the bind;
-// null when it holds that key with the verb and flags that went out. A key it already held takes no
-// slot and no pool bytes, so only the opt-in refuses an overwrite.
+// Read from the first status after the bind; null when the box holds the key with the sent verb and
+// flags. An overwrite takes no slot or pool bytes, so only the opt-in refuses it.
 const bindRefusal = (t: ClipPacketTrigger, c: ClipStatus): string | null => {
   const held = c.packetTriggers.find((h) => samePacketTrigger(h, t));
   if (
@@ -254,7 +243,7 @@ const bindRefusal = (t: ClipPacketTrigger, c: ClipStatus): string | null => {
 
 const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
 
-// The box counts a packet trigger's hits in 16 bits and holds the count at the top.
+// Hits are 16-bit and saturate.
 const HITS_MAX = 0xffff;
 const hitsText = (hits: number): string => (hits >= HITS_MAX ? `${HITS_MAX}+ hits` : plural(hits, 'hit'));
 
@@ -288,7 +277,7 @@ const DeviceClip = () => {
   const [setup, setSetup] = createSignal<Record<string, string>>(SETUP_DEFAULT);
   const [outData, setOutData] = createSignal('');
   const setupType = () => parseNum(setup().type);
-  // The two gated kinds leave the picker with the opt-in, so a kind picked while it was on falls back.
+  // Raw and transfer leave the picker with the opt-in; a kind picked while it was on falls back.
   const gated = (k: string) => k === 'raw' || k === 'transfer';
   const kindNow = () => (gated(kind()) && !allowed() ? 'move' : kind());
 
@@ -311,8 +300,7 @@ const DeviceClip = () => {
   const [pktOnce, setPktOnce] = createSignal(false);
   const [pktSelector, setPktSelector] = createSignal(0);
   const pktCls = () => Number(pktClass());
-  // Picking a class can strand a direction it never carries; fall back to Both, which every class
-  // takes, the way the rewrite editor falls back to Pass.
+  // A new class can lack the direction; fall back to Both, which every class takes.
   const choosePktClass = (v: string) => {
     setPktClass(v);
     if (!clipPacketDirOk(Number(v), Number(pktDir()) as Direction)) setPktDir(String(Direction.Both));
@@ -324,15 +312,13 @@ const DeviceClip = () => {
       { dir: Direction.Negative, label: 'Out' },
     ].map((o) => ({ value: String(o.dir), label: o.label, disabled: !clipPacketDirOk(pktCls(), o.dir) }));
   const packets = () => clip()?.packetTriggers ?? [];
-  // Consuming drops traffic, which needs the opt-in, and a drop has no meaning on a control request.
-  // A box ticked while it could apply falls back with whichever of the two took it away.
+  // Consuming drops traffic: it needs the opt-in and means nothing on a control request.
   const consumeWhy = (): string | null => {
-    if (pktCls() === CatchClass.Control) return 'A control request always reaches the device, so there is nothing to consume.';
+    if (pktCls() === CatchClass.Control) return 'A control request always reaches the device.';
     if (!allowed()) return 'Consuming a packet needs imperfect clones, on the Device tab. Watching one does not.';
     return null;
   };
   const consumeNow = () => pktConsume() && consumeWhy() === null;
-  // When the verb runs and what becomes of the packet, as the two checkboxes are set.
   const pktBlurb = () => {
     const when = pktOnce()
       ? 'The verb runs on the first of a run of matching packets. The selector is the leading match bytes that pick the stream, such as a report ID.'
@@ -341,12 +327,10 @@ const DeviceClip = () => {
     return `${when} ${packet}`;
   };
 
-  // The four counters are boot-lifetime and never reset by the box, so an absolute reading says
-  // nothing about this clip. Baseline them and show the difference.
+  // The counters are boot-lifetime, so show the difference from a baseline.
   const [base, setBase] = createSignal<ClipStatus | null>(null);
   const rebaseline = () => setBase(clip() ?? null);
-  // Baseline on the very first status, so a box that has been used by someone else does not open
-  // with their lifetime totals under a caption claiming they belong to this clip.
+  // Baseline on the first status, so earlier use doesn't count toward this clip.
   createEffect(() => {
     const c = clip();
     if (c && base() === null) setBase(c);
@@ -363,9 +347,7 @@ const DeviceClip = () => {
   const loaded = () => (clip()?.totalBytes ?? 0) > 0;
   const finalized = () => clip()?.finalized === true;
 
-  // What we asked the box for, held until the box agrees. Reading the poll directly made two quick
-  // clicks race (the second read the pre-first value and dropped the first bit), and left the
-  // checkbox showing a state the box had refused.
+  // Held until the box agrees, so two quick clicks don't race on the polled value.
   const [scopeEdit, setScopeEdit] = createSignal<number | null>(null);
   const scope = () => scopeEdit() ?? (clip()?.autolock ?? 0) & CLIP_LOCK_ALL;
   createEffect(() => {
@@ -379,8 +361,7 @@ const DeviceClip = () => {
   const loopOn = () => flagEdit().loop ?? clip()?.loop === true;
   const retainOn = () => flagEdit().retain ?? clip()?.retain === true;
   const rideOn = () => flagEdit().ride ?? clip()?.ride === true;
-  // Rendering takes the clip's cursor motion, so the clip's own ride setting then covers only the
-  // wheel and pan.
+  // Rendering takes the clip's cursor motion, leaving its ride setting only wheel and pan.
   const rendered = () =>
     render()?.ready === true && (render()?.mode ?? RenderMode.Off) !== RenderMode.Off;
   const riding = () => (moveRide() ?? 0) > 0;
@@ -403,8 +384,7 @@ const DeviceClip = () => {
 
   const ctrl = (op: ClipOp) =>
     cmd.run(async () => {
-      // Re-baselined at the clear, not nulled: the box never resets these counters, so "since this
-      // clip" means since this moment.
+      // Re-baselined, not nulled: the box never resets these counters.
       if (op === ClipOp.Clear) rebaseline();
       await dash.link()!.clipCtrl(op);
     });
@@ -419,7 +399,7 @@ const DeviceClip = () => {
     if (k === 'raw') {
       const bytes = parseHex(rawBytes());
       if (bytes === null) return 'Bytes must be hex.';
-      if (bytes.length === 0) return 'Enter the bytes to put on the endpoint.';
+      if (bytes.length === 0) return 'Enter the bytes to send.';
       return { kind: 'tick', raw: [{ ep: rawEp(), dir: Number(rawDir()) as Direction, bytes }] };
     }
     if (k === 'transfer') {
@@ -437,7 +417,7 @@ const DeviceClip = () => {
     return { kind: 'tick', edges: [{ cls: u.cls, id: u.id, action: Number(edgeAction()) as Action }] };
   };
 
-  // Refused here, where the fields are, since the box faults the whole clip on an entry it cannot read.
+  // Refused here: the box faults the whole clip on an entry it can't read.
   const addEntry = () => {
     const picked = pickedEntry();
     const fault = typeof picked === 'string' ? null : clipEntryFault(picked);
@@ -460,17 +440,15 @@ const DeviceClip = () => {
     });
 
   const setScope = (bit: number, on: boolean) => {
-    // Masked to the defined bits: the box coerces the value the same way, so sending anything else
-    // would make the readback disagree with what we asked for.
+    // Masked to the defined bits, as the box does, so the readback matches.
     const next = ((on ? scope() | bit : scope() & ~bit) & CLIP_LOCK_ALL) >>> 0;
     setScopeEdit(next);
     cmd.run(() => dash.link()!.clipSet(CLIP_SET_AUTOLOCK, next));
   };
 
   const setFlag = (id: number, on: boolean) => {
-    // Loop only wraps a replayable clip, so it cannot outlive the setting it depends on. The box
-    // keeps the two independently: leaving loop set would hold a flag nothing on screen shows, and
-    // it would take effect again the moment replayable came back.
+    // The box keeps loop and replayable apart; clearing loop with replayable stops a hidden loop flag
+    // returning with it.
     const dropLoop = id === CLIP_SET_RETAIN && !on && loopOn();
     const field =
       id === CLIP_SET_LOOP ? 'loop' : id === CLIP_SET_RETAIN ? 'retain' : id === CLIP_SET_RIDE ? 'ride' : null;
@@ -491,8 +469,7 @@ const DeviceClip = () => {
     cmd.run(async () => {
       const u = trigUsage();
       const action = Number(trigOp());
-      // The radio only offers bindable ops, but the value arrives as a string: a binding the box
-      // will not store is one it discards with no reply, so refuse it here instead.
+      // The box discards an unbindable op with no reply, so refuse it here.
       if (!isTriggerAction(action)) throw new Error('that verb cannot be bound to an input');
       await dash.link()!.clipTrigger({
         cls: u.cls,
@@ -527,9 +504,8 @@ const DeviceClip = () => {
     };
   };
 
-  // CLIP_TRIGGER has no reply, and the box drops a trigger on state this card reads late: the opt-in
-  // turned off elsewhere, or another client filling the slots or the match pool. So a bind is checked
-  // against the first status read after it went out. `before` is the status on screen at the send.
+  // CLIP_TRIGGER has no reply, and the box can drop a trigger on state read late (opt-in, slots, pool),
+  // so a bind is checked against the next status. `before` is the status at the send.
   const [sentPacket, setSentPacket] = createSignal<{ trigger: ClipPacketTrigger; before: ClipStatus | null } | null>(
     null,
   );
@@ -544,7 +520,7 @@ const DeviceClip = () => {
     cmd.run(() => Promise.reject(new Error(why)));
   });
 
-  // Refused here, where the fields are, for everything the fields decide.
+  // Refused here for everything the fields decide.
   const addPacket = () => {
     setSentPacket(null);
     const picked = pickedPacket();
@@ -573,8 +549,7 @@ const DeviceClip = () => {
     cmd.run(() => dash.link()!.clipClearTriggers());
   };
 
-  // The box keys a binding on (class, id, edge) and overwrites in place, so a full table still
-  // accepts a rebind of an address it already holds.
+  // Bindings key on (class, id, edge) and overwrite in place, so a full table accepts a rebind.
   const replacing = createMemo(() => {
     const u = trigUsage();
     const want = {
@@ -590,8 +565,7 @@ const DeviceClip = () => {
     () => (clip()?.triggers.length ?? 0) >= CLIP_TRIG_MAX && !replacing(),
   );
 
-  // A packet trigger's key carries its match and mask, so whether a bind replaces one is only known
-  // once the two hex fields parse.
+  // The key includes match and mask, so replacing is known only once both parse.
   const pktReplacing = createMemo(() => {
     const picked = pickedPacket();
     return typeof picked !== 'string' && packets().some((t) => samePacketTrigger(t, picked));
@@ -602,21 +576,19 @@ const DeviceClip = () => {
 
   const completeWhy = (): string | null => {
     if (finalized()) return 'Already marked complete.';
-    if (!retainOn()) return 'Only a replayable clip can be marked complete. Turn on Replayable before sending the first tick.';
+    if (!retainOn()) return 'Only a replayable clip can be marked complete. Turn on Replayable before the first tick.';
     if (!loaded()) return 'Send at least one tick first.';
     return null;
   };
 
   const draftBytes = createMemo(() => bytesOf(draft()));
-  // Only once the ring size is known. Treating "no status yet" as "will not fit" disabled Send and
-  // warned about a ring nobody had measured.
+  // Only once the ring size is known.
   const wontFit = createMemo(() => {
     const c = clip();
     return c ? draftBytes() > c.freeBytes : false;
   });
 
-  // Removing the fully-wild binding is byte-identical to the clear-all sentinel, so the box wipes
-  // every binding rather than that one. The note below states it.
+  // Removing the fully-wild binding is byte-identical to clear-all.
   const isWildcard = (t: ClipTrigger) =>
     t.cls === CLIP_COND_ANY_CLASS && t.id === CLIP_COND_ANY_ID && t.edge === Direction.Both;
 
@@ -624,7 +596,7 @@ const DeviceClip = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="clip-playback" data-search-target>
         <Card>
-          <CardHeader title="Clip playback" subtitle="Load a clip into the box and play it back" />
+          <CardHeader title="Clip playback" subtitle="Load and play a clip" />
 
           <Show when={ready()} fallback={<p style={muted}>Clips need a cloned device. Plug one into USB3.</p>}>
           <Show
@@ -636,7 +608,7 @@ const DeviceClip = () => {
               </p>
             }
           >
-          <Show when={clip()} fallback={<p style={status}>Reading status...</p>}>
+          <Show when={clip()} fallback={<p style={status}>Reading...</p>}>
             <Show when={render() && (cursorRides() || wheelRides())}>
               <div class="callout callout--warning">
                 {cursorRides() && rendered()
@@ -647,7 +619,7 @@ const DeviceClip = () => {
                   : cursorRides()
                     ? "the clip's cursor motion is"
                     : "the clip's wheel and pan motion is"}{' '}
-                only emitted alongside a real mouse move. Button, key and media ticks still play.
+                only emitted alongside physical motion. Button, key and media ticks still play.
               </div>
             </Show>
 
@@ -700,18 +672,18 @@ const DeviceClip = () => {
                 <Chip variant="warning">{plural(delta((s) => s.gated), 'discarded item')}</Chip>
               </Show>
             </div>
-            <p style={{ ...muted, 'margin-top': '4px' }}>Counts are since this clip was loaded.</p>
+            <p style={{ ...muted, 'margin-top': '4px' }}>Counts since this clip loaded.</p>
 
             <Show when={state() === ClipState.Faulted}>
               <div class="callout callout--danger" role="alert">
-                An append was lost or the ring overran, so the stream may be misaligned and the box
-                stopped it. Clear is the only way to recover, and it discards the clip.
+                An append was lost or the ring overran, so the box stopped the possibly misaligned
+                stream. Only Clear recovers, discarding the clip.
               </div>
             </Show>
 
             <Show when={(clip()?.held.length ?? 0) > 0}>
               <div style={section}>
-                <div style={label}>Held by injection now</div>
+                <div style={label}>Held by injection</div>
                 <div style={chips}>
                   <For each={clip()?.held ?? []}>
                     {(u) => <Chip variant="warning">{usageName(u.cls, u.id)}</Chip>}
@@ -737,7 +709,7 @@ const DeviceClip = () => {
               </Button>
             </div>
             <p style={muted}>
-              Start on a paused clip resumes it rather than replaying from the beginning.
+              Start resumes a paused clip.
             </p>
 
             </Section>
@@ -745,7 +717,7 @@ const DeviceClip = () => {
             <Section title="Settings">
             <div style={checkColumn}>
               <Checkbox
-                label="Replayable (keep the clip after playing it)"
+                label="Replayable (kept after playing)"
                 checked={retainOn()}
                 disabled={busy() || loaded()}
                 title={loaded() ? 'Only changeable while the ring is empty. Clear the clip first.' : ''}
@@ -770,7 +742,7 @@ const DeviceClip = () => {
             </div>
 
             <div style={section}>
-              <div style={label}>Lock these inputs while a clip plays</div>
+              <div style={label}>Lock during playback</div>
               <div style={checkColumn}>
                 <For each={SCOPES}>
                   {(s) => (
@@ -783,13 +755,13 @@ const DeviceClip = () => {
                   )}
                 </For>
               </div>
-              <p style={{ ...muted, 'margin-top': '4px' }}>Applied at the next start, not to a clip already playing.</p>
+              <p style={{ ...muted, 'margin-top': '4px' }}>Applies from the next start.</p>
             </div>
 
             </Section>
 
             <Section title="Build">
-            <div style={label}>Add a tick</div>
+            <div style={label}>Tick</div>
             <RadioGroup
               name="clip-kind"
               value={kindNow()}
@@ -841,7 +813,7 @@ const DeviceClip = () => {
                 <div style={{ 'max-width': '9rem' }}>
                   <NumberInput
                     name="clip-raw-ep"
-                    label="Endpoint number"
+                    label="Endpoint"
                     value={rawEp()}
                     min={0}
                     max={15}
@@ -863,7 +835,7 @@ const DeviceClip = () => {
                 <div style={{ 'max-width': '9rem' }}>
                   <NumberInput
                     name="clip-xfer-ep"
-                    label="Endpoint number"
+                    label="Endpoint"
                     value={xferEp()}
                     min={0}
                     max={15}
@@ -923,9 +895,9 @@ const DeviceClip = () => {
 
             <div style={section}>
               <div style={label}>
-                Not yet sent ({plural(draft().length, 'tick')}, {draftBytes()} B)
+                Unsent ({plural(draft().length, 'tick')}, {draftBytes()} B)
               </div>
-              <Show when={draft().length > 0} fallback={<p style={muted}>Nothing built yet.</p>}>
+              <Show when={draft().length > 0} fallback={<p style={muted}>Nothing built.</p>}>
                 <div style={chips}>
                   <For each={draft()}>
                     {(e, i) => (
@@ -938,15 +910,14 @@ const DeviceClip = () => {
               </Show>
               <Show when={finalized()}>
                 <div class="callout callout--warning">
-                  This clip is marked complete, so the box drops anything more sent to it. Clear it to
-                  load a different one.
+                  This clip is marked complete; the box drops anything more sent to it. Clear it to load
+                  another.
                 </div>
               </Show>
               <Show when={wontFit()}>
                 <div class="callout callout--warning">
-                  More than the ring has free. A long clip goes out as several frames, so the box
-                  would take the first few, drop the one that overflows, and fault with a partial clip
-                  loaded.
+                  More than the ring has free. A long clip goes out as several frames: the box would take
+                  the first few, drop the overflowing one and fault with a partial clip loaded.
                 </div>
               </Show>
               <div style={{ ...section, ...row }}>
@@ -997,8 +968,8 @@ const DeviceClip = () => {
               </Show>
               <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
                 <p style={muted}>
-                  Removing the any-input binding clears every trigger, packet triggers included: the
-                  box reads that exact address as its clear-all.
+                  Removing the any-input binding clears every trigger, packet triggers included: that
+                  address is the clear-all.
                 </p>
               </Show>
               <Show when={packets().length > 0}>
@@ -1063,14 +1034,14 @@ const DeviceClip = () => {
                   <p style={{ ...muted, 'margin-top': '4px' }}>{TRAFFIC_CLASS_BLURB[pktCls()]}</p>
                 </div>
                 <div style={section}>
-                  <div style={label}>Which id</div>
+                  <div style={label}>Id</div>
                   <RadioGroup
                     name="clip-pkt-anyid"
                     value={pktAnyId()}
                     onChange={setPktAnyId}
                     options={[
                       { value: 'any', label: 'Every id' },
-                      { value: 'one', label: 'Just one' },
+                      { value: 'one', label: 'One id' },
                     ]}
                   />
                   <Show when={pktAnyId() === 'one'}>
@@ -1115,8 +1086,8 @@ const DeviceClip = () => {
                   </div>
                 </div>
                 <p style={{ ...muted, 'margin-top': '4px' }}>
-                  Match and mask are the same length, {CLIP_PKT_MATCH_MAX} bytes at most. Blank matches
-                  every packet on that address.
+                  Match and mask: same length, at most {CLIP_PKT_MATCH_MAX} bytes. Blank matches every
+                  packet on that address.
                 </p>
               </Show>
               <div style={section}>

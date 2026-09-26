@@ -7,18 +7,11 @@ const Usage: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Calls & errors" subtitle="The C-specific shapes: status codes, handle lifecycle, builders" />
+        <CardHeader title="Calls & errors" subtitle="Status codes, handle lifecycle, builders" />
         <p>
-          What each call <em>does</em> lives in the <A href="/library">Rust Library</A> and{' '}
-          <A href="/native">Native API</A> sections. The full call list is on the{' '}
-          <A href="/bindings/c/api">API index</A>; structs and enums are on{' '}
-          <A href="/bindings/c/types">Types &amp; errors</A>.
-        </p>
-        <p>
-          <span class="api-badge api-badge--executed">Fire-and-forget</span> calls return as soon as the{' '}
-          <A href="/native/frame">frame</A> is queued;{' '}
-          <span class="api-badge api-badge--responded">Blocks</span> calls wait for the{' '}
-          <A href="/native/hardware">box</A>'s reply. Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.
+          What each call <em>does</em> is in the <A href="/library">Rust Library</A> and{' '}
+          <A href="/native">Native API</A> sections. The <A href="/bindings/c/api">API index</A>{' '}
+          lists every call; <A href="/bindings/c/types">Types &amp; errors</A> every struct and enum.
         </p>
       </Card>
 
@@ -26,8 +19,8 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="Fire-and-forget vs blocking" subtitle="The two call-kind badges" />
           <p>
-            Two return shapes, both yielding a <code>MediusStatus</code>. The badge on each row of the{' '}
-            <A href="/bindings/c/api">API index</A> says which is which.
+            Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
+            <A href="/bindings/c/api">API index</A> badges each call.
           </p>
           <table class="api-params">
             <thead>
@@ -36,22 +29,22 @@ const Usage: Component = () => {
             <tbody>
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Returns once the frame is queued for the wire; no reply is awaited. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
+                <td>Returns once the <A href="/native/frame">frame</A> is queued, without awaiting a reply. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
                 <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
               </tr>
               <tr>
                 <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Sends a QUERY and waits for the box's RESP, up to the query timeout. The <A href="/bindings/c/api#queries"><code>medius_device_query_*</code></A> reads and the open/handshake calls. See <A href="/native/commands/requests#requests">Requests</A>.</td>
+                <td>Sends a QUERY and waits for the <A href="/native/hardware">box</A>'s RESP, up to the query timeout. The <A href="/bindings/c/api#queries"><code>medius_device_query_*</code></A> reads and the open/handshake calls. See <A href="/native/commands/requests#requests">Requests</A>.</td>
                 <td><code>MEDIUS_STATUS_ERR_NO_REPLY</code> / <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code>.</td>
               </tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning{' '}
-              <code>MEDIUS_STATUS_OK</code> means the frame was handed to the writer, not that the box
-              acted on it; there's no acknowledgement. The default reply wait is{' '}
-              <A href="/bindings/c/api#module"><code>medius_default_query_timeout_ms()</code></A>; the held-override keepalive cadence is{' '}
+              <code>MEDIUS_STATUS_OK</code> from a{' '}
+              <span class="api-badge api-badge--executed">Fire-and-forget</span> call means the writer
+              took the frame, not that the box acted on it. Default reply wait:{' '}
+              <A href="/bindings/c/api#module"><code>medius_default_query_timeout_ms()</code></A>; held-override keepalive cadence:{' '}
               <A href="/bindings/c/api#module"><code>medius_default_keepalive_cadence_ms()</code></A> (see{' '}
               <A href="/library/guides/connection#keepalive">keepalive</A>).
             </p>
@@ -63,11 +56,10 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="Errors" subtitle="MediusStatus + a thread-local last error" />
           <p>
-            Every fallible call returns a <code>MediusStatus</code> and writes its real result through
-            an out-param. <code>MEDIUS_STATUS_OK</code> is <code>0</code>; anything else is a failure
-            and the out-param is untouched. Fetch the human-readable detail separately. Every
-            enumerator and its value is on <A href="/bindings/c/types#errors">Types &amp; errors</A>;
-            the canonical mapping is <A href="/library/types/errors">Errors</A>.
+            Every fallible call returns a <code>MediusStatus</code> and writes its result through an
+            out-param. <code>MEDIUS_STATUS_OK</code> is <code>0</code>; on anything else the out-param
+            is untouched. <A href="/bindings/c/types#errors">Types &amp; errors</A> lists every
+            enumerator; <A href="/library/types/errors">Errors</A> is the canonical mapping.
           </p>
           <pre class="diagram">{`  call ──▶ MediusStatus
              │
@@ -86,15 +78,14 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
 }`}</code></pre>
           <p>
             <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A> returns the full message length in bytes (excluding
-            the NUL), so a caller can size a buffer and retry on truncation.{' '}
+            the NUL); retry with a larger buffer on truncation.{' '}
             <A href="/bindings/c/api#module"><code>medius_last_error_proto_ver</code></A> returns the offending version byte after a{' '}
             <code>BadProtoVer</code>, else <code>0</code>.
           </p>
           <div class="callout callout--warning">
             <p>
               The last error is <strong>thread-local and overwritten by the next <code>medius_*</code>{' '}
-              call on that thread</strong>. Read it right after the call that failed, before doing
-              anything else on the same thread.
+              call on that thread</strong>; read it right after the failing call.
             </p>
           </div>
           <div class="callout callout--info">
@@ -113,11 +104,10 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
         <Card>
           <CardHeader title="Lifecycle" subtitle="Opaque pointers, manual free, no RAII or GC" />
           <p>
-            Handles are opaque pointers you own. There's no destructor or{' '}
-            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>:{' '}
-            <code>medius_*_clone</code> makes another owner of the{' '}
-            <em>same</em> underlying object (reference-counted), and you must call the matching{' '}
-            <code>medius_*_free</code> on every handle you hold. See{' '}
+            Handles are opaque, reference-counted pointers with no destructor or{' '}
+            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>.{' '}
+            <code>medius_*_clone</code> adds an owner of the <em>same</em> object; call the matching{' '}
+            <code>medius_*_free</code> on every handle. See{' '}
             <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
           </p>
           <pre class="diagram">{`  medius_device_open / _find  ──▶  MediusDevice *    (you own it)
@@ -199,15 +189,14 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
           <div class="callout callout--info">
             <p>
               <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
-              a no-op, so cleanup paths don't need null checks. Freeing a stream unsubscribes when its
-              last handle drops.
+              a no-op, so cleanup needs no null checks. A stream unsubscribes when its last handle is
+              freed.
             </p>
             <p>
-              Catch events and log lines are fixed-size structs written into your
-              buffer, so there's nothing to free per event. A{' '}
-              <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A> holds
-              captured bytes inline in <code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> with a{' '}
-              <code>len</code> beside it, so a copied event owns nothing and outlives its stream.
+              Catch events and log lines are fixed-size structs written into your buffer, with nothing
+              to free. A <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A>{' '}
+              holds captured bytes inline (<code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> plus{' '}
+              <code>len</code>), so a copy owns nothing and outlives its stream.
             </p>
           </div>
         </Card>
@@ -219,18 +208,18 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
           <p>
             Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
             <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
-            targets are built structs in C: <A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
-            <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>, and{' '}
+            targets are structs in C (<A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
+            <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>,{' '}
             <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, plus{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>, each with a
-            helper constructor.
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>), each with
+            helper constructors.
           </p>
           <p>
             A <code>MediusUsage</code> holds a{' '}
             <A href="/native/commands/usage#buttons">button id</A>,{' '}
             <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
-            <A href="/native/commands/usage#consumer">Consumer usage</A>, and the same value drives an
-            inject, a lock, or a catch test.
+            <A href="/native/commands/usage#consumer">Consumer usage</A>; one value serves inject, lock
+            and catch.
           </p>
           <table class="api-params">
             <thead>
@@ -244,7 +233,7 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
               <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
               <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
-              <tr><td><code>medius_catch_filter_watch(MediusUsage)</code></td><td><code>MediusCatchFilter</code></td><td rowspan="3"><A href="/library/catch">catch</A> / <A href="/bindings/c/api#catch-filters">the whole helper set</A></td></tr>
+              <tr><td><code>medius_catch_filter_watch(MediusUsage)</code></td><td><code>MediusCatchFilter</code></td><td rowspan="3"><A href="/library/catch">catch</A> / <A href="/bindings/c/api#catch-filters">all helpers</A></td></tr>
               <tr><td><code>medius_catch_filter_watch_axis(MediusAxis)</code></td><td><code>MediusCatchFilter</code></td></tr>
               <tr><td><code>medius_catch_filter_traffic(MediusCatchClass, uint16_t)</code></td><td><code>MediusCatchFilter</code></td></tr>
             </tbody>
@@ -266,16 +255,16 @@ MediusLockTarget side = medius_lock_target_usage(medius_usage_button(MEDIUS_BUTT
 medius_device_lock(dev, side, MEDIUS_DIRECTION_BOTH);`}</code></pre>
           <div class="callout callout--info">
             <p>
-              A button, key, and media usage all lock the same way:{' '}
+              Buttons, keys and media lock the same way:{' '}
               <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
-              <code>medius_lock_target_axis(...)</code> an axis or the wheel. The struct fields are on{' '}
+              <code>medius_lock_target_axis(...)</code> an axis or the wheel. Fields:{' '}
               <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
             </p>
           </div>
           <p>
-            A catch filter narrows the same way: a base names what to observe, a modifier returns a
-            narrowed copy. Nothing is mutated, so one blanket can be the base for several entries.
-            Fields are on <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>.
+            A catch filter starts from a base that names what to observe; each modifier returns a
+            narrowed copy, so one blanket can seed several entries. Fields:{' '}
+            <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-c">{`/* every key edge, whole report */
@@ -292,10 +281,9 @@ MediusEventStream *events = NULL;
 medius_device_catch_events(dev, filters, 2, &events);   /* the array is not retained */`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              The same usage addresses a lock and a catch entry, so it can be in both. Where each
-              class is tapped, and which ones a lock can reach, is on{' '}
-              <A href="/native/commands/catch#catch">Catch</A>; what comes back is on{' '}
-              <A href="/bindings/c/streams">Streams</A>.
+              One usage can address both a lock and a catch entry.{' '}
+              <A href="/native/commands/catch#catch">Catch</A> covers where each class is tapped and
+              which ones a lock reaches; <A href="/bindings/c/streams">Streams</A> covers what comes back.
             </p>
           </div>
         </Card>

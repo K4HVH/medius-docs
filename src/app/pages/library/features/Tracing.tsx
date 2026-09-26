@@ -9,15 +9,14 @@ const Tracing: Component = () => {
       <Card>
         <CardHeader title="Tracing" subtitle="Structured diagnostics over the link" />
         <p>
-          The <code>tracing</code> feature wires the crate into{' '}
-          <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>:
-          it emits a span and events as it works the link, but adds no medius functions and changes no
-          behaviour. You read them by installing a{' '}
-          <A href="/library/features/tracing#subscriber">subscriber</A>.
+          The <code>tracing</code> feature emits a span and events to{' '}
+          <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>{' '}
+          as the crate works the link, with no new functions and no behaviour change. A{' '}
+          <A href="/library/features/tracing#subscriber">subscriber</A> reads them.
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
         <p>
-          Off by default; with the feature off the macros expand to nothing, so there's no runtime cost.
+          Off by default; off, the macros expand to nothing and cost nothing at runtime.
         </p>
       </Card>
 
@@ -36,7 +35,7 @@ const Tracing: Component = () => {
                   The <code>connect</code> span and <code>connected</code> event (<code>INFO</code>),
                   handshake retries (<code>DEBUG</code>) and failures (<code>WARN</code>), query resolved
                   (<code>DEBUG</code>) and timed out (<code>WARN</code>), the <code>reconnected</code>{' '}
-                  event (<code>INFO</code>), plus the box's own logs re-emitted with{' '}
+                  event (<code>INFO</code>), plus box logs re-emitted with{' '}
                   <code>device_log=true</code>.
                 </td>
               </tr>
@@ -54,8 +53,7 @@ const Tracing: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              Keepalive has no target of its own; its periodic frame shows up as an ordinary{' '}
-              <code>medius::transport</code> tx event.
+              Keepalive frames show up as ordinary <code>medius::transport</code> tx events.
             </p>
           </div>
         </Card>
@@ -63,7 +61,7 @@ const Tracing: Component = () => {
 
       <div id="spans" data-search-target>
         <Card>
-          <CardHeader title="The connect span" subtitle="A span wraps related events" />
+          <CardHeader title="connect span" subtitle="A span wraps related events" />
           <p>
             The <code>connect</code> span wraps the handshake; retry and <code>connected</code> events
             nest inside it. Its fields are the numbers{' '}
@@ -81,12 +79,12 @@ const Tracing: Component = () => {
 
       <div id="events" data-search-target>
         <Card>
-          <CardHeader title="Frames, device logs, and reconnects" subtitle="The events worth knowing" />
+          <CardHeader title="Frames, device logs, and reconnects" subtitle="Transport, log and recovery events" />
           <p>
-            The <code>medius::transport</code> events are the per-frame mirror of the{' '}
+            <code>medius::transport</code> events mirror the{' '}
             <A href="/library/diagnostics#counters"><code>frames_tx</code> / <code>frames_rx</code></A>{' '}
-            counters. A re-emitted <A href="/native/commands/admin#log"><code>LOG</code></A> frame keeps
-            its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and carries the same
+            counters per frame. A re-emitted <A href="/native/commands/admin#log"><code>LOG</code></A>{' '}
+            frame keeps its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and the
             text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream yields. A
             recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
             <code>reason</code>; <A href="/library/lifecycle#restart">session recovery</A> fires{' '}
@@ -110,11 +108,11 @@ const Tracing: Component = () => {
         <Card>
           <CardHeader title="Install a subscriber" subtitle="Print the events to stderr" />
           <p>
-            The crate ships no subscriber, so add one alongside the feature, usually{' '}
-            <a href="https://docs.rs/tracing-subscriber" target="_blank" rel="noreferrer"><code>tracing-subscriber</code></a>.
-            The <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html" target="_blank" rel="noreferrer"><code>fmt</code></a>{' '}
+            Add a subscriber alongside the feature, usually{' '}
+            <a href="https://docs.rs/tracing-subscriber" target="_blank" rel="noreferrer"><code>tracing-subscriber</code></a>,
+            whose <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html" target="_blank" rel="noreferrer"><code>fmt</code></a>{' '}
             subscriber writes lines to stderr; call <code>init()</code> once before opening. Without one,
-            every span and event is discarded with no output.
+            every span and event is discarded.
           </p>
           <pre><code class="language-bash">cargo add tracing-subscriber</code></pre>
           <div class="api-response-label">EXAMPLE</div>
@@ -124,7 +122,7 @@ tracing_subscriber::fmt::init();
 
 let device = Device::find()?;
 device.move_rel(10, 0)?;
-// stderr now carries the connect span and an INFO event, e.g.:
+// stderr carries the connect span and an INFO event, e.g.:
 //   INFO  connect: medius::device: connected proto_ver=9 fw_major=3 fw_minor=4 fw_patch=2`}</code></pre>
         </Card>
       </div>
@@ -143,13 +141,13 @@ tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
 
-// Or set it at runtime instead, no recompile:
+// Or at runtime, no recompile:
 //   RUST_LOG=medius=debug ./your-program
 //   RUST_LOG=medius::transport=trace ./your-program   # every frame`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              <code>medius::transport=trace</code> emits one line per frame in both directions. Leave it
-              off unless you're chasing a wire-level bug.
+              <code>medius::transport=trace</code> emits one line per frame in both directions; use it
+              for wire-level bugs.
             </p>
           </div>
         </Card>
@@ -157,9 +155,9 @@ tracing_subscriber::fmt()
 
       <div id="json" data-search-target>
         <Card>
-          <CardHeader title="JSON output" subtitle="Ship structured events" />
+          <CardHeader title="JSON output" subtitle="Structured events" />
           <p>
-            Swap the formatter for JSON and each event becomes one object with its fields as keys. Needs{' '}
+            The JSON formatter writes each event as one object, fields as keys. Needs{' '}
             <code>tracing-subscriber</code>'s <code>json</code> feature.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -168,7 +166,7 @@ tracing_subscriber::fmt()
     .json()
     .with_env_filter("medius=debug")
     .init();
-// Each event is now a JSON line, e.g.:
+// one JSON line per event, e.g.:
 //   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":9}}`}</code></pre>
         </Card>
       </div>

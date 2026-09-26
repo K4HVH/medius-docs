@@ -10,7 +10,7 @@ const Architecture: Component = () => {
         <Card>
           <CardHeader title="How it fits together" subtitle="Mouse, box, and PC" />
           <p>
-            The clone is a copy of the real mouse's USB identity.
+            The clone copies the mouse's USB identity.
           </p>
           <table class="api-params">
             <thead>
@@ -23,7 +23,7 @@ const Architecture: Component = () => {
               <tr>
                 <td>Host chip</td>
                 <td>
-                  Reads the mouse on <code>USB3</code>, and decides its four relative axes: what an
+                  Reads the mouse on <code>USB3</code> and sets its four relative axes: what an
                   injected <A href="/native/commands/move">movement</A> comes to, and when it goes
                   out.
                 </td>
@@ -31,7 +31,7 @@ const Architecture: Component = () => {
               <tr>
                 <td>Device chip</td>
                 <td>
-                  Presents the clone to the PC, and merges the host chip's answer into the report it
+                  Presents the clone to the PC and merges the host chip's axes into each report it
                   sends.
                 </td>
               </tr>
@@ -66,54 +66,53 @@ const Architecture: Component = () => {
             <tbody>
               <tr>
                 <td><A href="/native/hardware"><code>USB3</code></A></td>
-                <td>The real mouse.</td>
+                <td>Real mouse.</td>
               </tr>
               <tr>
                 <td><A href="/native/hardware"><code>USB1</code></A></td>
-                <td>The PC receiving the mouse.</td>
+                <td>PC receiving the mouse.</td>
               </tr>
               <tr>
                 <td><A href="/native/transport"><code>USB2</code></A></td>
                 <td>
-                  The program driving the box, over a{' '}
+                  Program driving the box, over a{' '}
                   <A href="/native/transport">CH343 serial link</A>.
                 </td>
               </tr>
             </tbody>
           </table>
           <p>
-            That program speaks the <A href="/native/frame">binary protocol</A>, sending{' '}
-            <A href="/native/commands/move">movement</A>,{' '}
+            The program sends <A href="/native/commands/move">movement</A>,{' '}
             <A href="/native/commands/inject">button</A>, and{' '}
-            <A href="/native/commands/move#wheel">scroll</A> commands.
+            <A href="/native/commands/move#wheel">scroll</A> commands in the{' '}
+            <A href="/native/frame">binary protocol</A>.
           </p>
         </Card>
       </div>
 
       <div id="transparency" data-search-target>
         <Card>
-          <CardHeader title="What reaches the PC" subtitle="A real mouse, plus your input" />
+          <CardHeader title="What reaches the PC" subtitle="Real mouse plus injected input" />
           <p>
-            To the PC the clone is the same model of mouse, with the same buttons and capabilities. Your
-            input adds to the real mouse's input rather than replacing it (<A href="/native/injection">Injection
-            Model</A>).
+            The PC enumerates the same model of mouse, with the same buttons and capabilities.
+            Injected input adds to native input (<A href="/native/injection">Injection Model</A>).
           </p>
           <table class="api-params">
             <thead>
               <tr>
-                <th>When your program</th>
-                <th>The box</th>
+                <th>Program</th>
+                <th>Box</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Sends input</td>
-                <td>Layers your movement, scroll, and button state onto the real mouse.</td>
+                <td>Layers injected movement, scroll, and button state onto native input.</td>
               </tr>
               <tr>
                 <td>Goes quiet</td>
                 <td>
-                  Returns to plain passthrough, just a wire, per the{' '}
+                  Returns to plain passthrough per the{' '}
                   <A href="/native/injection#safety">safety rule</A>.
                 </td>
               </tr>
@@ -124,16 +123,14 @@ const Architecture: Component = () => {
 
       <div id="two-pcs" data-search-target>
         <Card>
-          <CardHeader title="Two computers" subtitle="A separate driver host" />
+          <CardHeader title="Two computers" subtitle="Separate control PC" />
           <p>
-            Your program on <A href="/native/transport"><code>USB2</code></A> runs on a
-            different computer from the one receiving the mouse on{' '}
-            <A href="/native/hardware"><code>USB1</code></A>.
+            The program on <A href="/native/transport"><code>USB2</code></A> runs on a different
+            computer from the PC on <A href="/native/hardware"><code>USB1</code></A>.
           </p>
           <div class="callout callout--info">
             <p>
-              See <A href="/native/hardware">Hardware</A> for the ports and how to wire them, including
-              the one pairing to avoid.
+              Port wiring, and the one pairing to avoid, on <A href="/native/hardware">Hardware</A>.
             </p>
           </div>
         </Card>

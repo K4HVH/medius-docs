@@ -9,8 +9,8 @@ const Rewrite: Component = () => {
       <Card>
         <CardHeader title="Rewrite" subtitle="Match traffic in flight and change it" />
         <p>
-          <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> manages a table of up
-          to 32 rules on the device chip. A rule matches packets at one surface and passes, drops,
+          <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> manages up to 32 rules
+          on the device chip. A rule matches packets at one surface and passes, drops,
           patches, replaces, answers or refuses them before they reach the game PC or the real
           device.
         </p>
@@ -33,7 +33,7 @@ const Rewrite: Component = () => {
         <div class="table-scroll">
         <table class="api-params">
           <thead>
-            <tr><th>Name</th><th>Value</th><th><code>id</code> is</th><th>Carries</th><th>The head is</th></tr>
+            <tr><th>Name</th><th>Value</th><th><code>id</code> is</th><th>Carries</th><th>Head</th></tr>
           </thead>
           <tbody>
             <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>an interface number; <code>0xFFFF</code> = every HID interface</td><td>IN</td><td>the device's report as it arrived, report ID first</td></tr>
@@ -49,8 +49,8 @@ const Rewrite: Component = () => {
         <div class="callout callout--warning">
           <p>
             Rules need <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>.
-            With it off the box discards every <code>REWRITE</code> but the whole-table clear, and
-            turning it off empties the table.
+            Otherwise the box discards every <code>REWRITE</code> but the whole-table clear; turning
+            it off empties the table.
           </p>
         </div>
       </Card>
@@ -71,16 +71,16 @@ const Rewrite: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>cls</code></td><td><code>u8</code></td><td>the surface, <code>4</code>-<code>9</code> or <code>0xFF</code>, as the <A href="/native/commands/rewrite">table above</A></td></tr>
-              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>the class's address, little-endian; <code>0xFFFF</code> = every id in the class</td></tr>
+              <tr><td>0</td><td><code>cls</code></td><td><code>u8</code></td><td>surface, <code>4</code>-<code>9</code> or <code>0xFF</code>, as the <A href="/native/commands/rewrite">table above</A></td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class address, little-endian; <code>0xFFFF</code> = every id in the class</td></tr>
               <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT; on <code>CONTROL</code>, the request's direction</td></tr>
               <tr><td>4</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> set (add or overwrite), <code>0</code> remove the keyed rule</td></tr>
-              <tr><td>5</td><td><code>action</code></td><td><code>u8</code></td><td>what the rule does, <A href="/native/commands/rewrite#actions"><code>0</code>-<code>8</code></A></td></tr>
+              <tr><td>5</td><td><code>action</code></td><td><code>u8</code></td><td>rule action, <A href="/native/commands/rewrite#actions"><code>0</code>-<code>8</code></A></td></tr>
               <tr><td>6</td><td><code>off</code></td><td><code>u16</code></td><td>byte offset a <code>PATCH</code> or <code>REPLY_PATCH</code> writes at, little-endian</td></tr>
               <tr><td>8</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length, <code>0</code>-<code>16</code>; <code>0</code> takes every packet on the address</td></tr>
               <tr><td>9</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes compared against the <A href="/native/commands/rewrite">packet head</A></td></tr>
               <tr><td>9+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes: a head byte ANDed with its mask byte must equal the match byte</td></tr>
-              <tr><td>9+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>the rest of the frame, <code>plen</code> bytes: what the action writes or answers with</td></tr>
+              <tr><td>9+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>rest of the frame, <code>plen</code> bytes: what the action writes or replies with</td></tr>
             </tbody>
           </table>
           </div>
@@ -95,16 +95,16 @@ const Rewrite: Component = () => {
               <tr><th>Refused when</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>OPTION(IMPERFECT)</code> is off, for any frame but the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
-              <tr><td>the frame is shorter than <code>9 + 2 x mlen</code></td><td>malformed</td></tr>
-              <tr><td><code>11 + 2 x mlen + plen</code> is above 512</td><td>a rule must fit its own <A href="/native/commands/requests#rewrite-entry">readback</A> in one frame</td></tr>
-              <tr><td><code>cls</code> is not <code>4</code>-<code>9</code> or <code>0xFF</code></td><td>the other classes have no packet to rewrite</td></tr>
-              <tr><td><code>dir</code> is above <code>2</code></td><td>a packet travels IN or OUT</td></tr>
-              <tr><td><code>mlen</code> is above <code>16</code></td><td>the head compare reads at most 16 bytes</td></tr>
-              <tr><td>the action is not valid on <code>cls</code></td><td>each action names its classes in the <A href="/native/commands/rewrite#actions">action table</A></td></tr>
+              <tr><td><code>OPTION(IMPERFECT)</code> off, for any frame but the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
+              <tr><td>frame shorter than <code>9 + 2 x mlen</code></td><td>malformed</td></tr>
+              <tr><td><code>11 + 2 x mlen + plen</code> above 512</td><td>a rule must fit its own <A href="/native/commands/requests#rewrite-entry">readback</A> in one frame</td></tr>
+              <tr><td><code>cls</code> is not <code>4</code>-<code>9</code> or <code>0xFF</code></td><td>other classes carry no packet</td></tr>
+              <tr><td><code>dir</code> above <code>2</code></td><td>a packet travels IN or OUT</td></tr>
+              <tr><td><code>mlen</code> above <code>16</code></td><td>the head compare reads at most 16 bytes</td></tr>
+              <tr><td>action invalid on <code>cls</code></td><td>the <A href="/native/commands/rewrite#actions">action table</A> lists each action's classes</td></tr>
               <tr><td><code>off + plen</code> of a <code>PATCH</code> or <code>REPLY_PATCH</code> passes 64 on a report class or <code>ANY</code>, or 2056 on <code>CONTROL</code></td><td>the write lands past the largest packet the surface carries</td></tr>
               <tr><td>a <code>REPLACE</code> payload above 64 bytes on a report class or <code>ANY</code></td><td>a report is at most 64 bytes</td></tr>
-              <tr><td>the payloads of all rules would pass 2048 bytes</td><td>one shared pool; an overwrite is costed with its old payload returned, and a refused one keeps the old rule; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
+              <tr><td>all rule payloads would pass 2048 bytes</td><td>one shared pool; an overwrite is costed with its old payload returned, and a refused one keeps the old rule; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
               <tr><td>a 33rd rule</td><td>nothing is evicted; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
               <tr><td><code>state = 0</code> with no rule under that key</td><td>nothing to remove</td></tr>
             </tbody>
@@ -166,19 +166,18 @@ const Rewrite: Component = () => {
 
       <div id="actions" data-search-target>
         <Card>
-          <CardHeader title="Actions" subtitle="What the top-ranked rule does to a packet" />
+          <CardHeader title="Actions" subtitle="Top-ranked rule's effect" />
           <p>
-            The <code>action</code> byte picks one. Report classes are <code>4</code>-<code>7</code>{' '}
-            and <code>9</code>.
+            Report classes are <code>4</code>-<code>7</code> and <code>9</code>.
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>PASS</code></td><td><code>0</code></td><td>Any class. The packet goes through as it came, and a broader rule it outranks does not act.</td></tr>
-              <tr><td><code>DROP</code></td><td><code>1</code></td><td>Report classes. The packet is not delivered.</td></tr>
-              <tr><td><code>PATCH</code></td><td><code>2</code></td><td>Any class. Writes the payload at <code>off</code> and keeps the length. A write that would run past the packet's end is left unapplied.</td></tr>
+              <tr><td><code>PASS</code></td><td><code>0</code></td><td>Any class. The packet passes unchanged, and a broader rule it outranks doesn't act.</td></tr>
+              <tr><td><code>DROP</code></td><td><code>1</code></td><td>Report classes. The packet is dropped.</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>2</code></td><td>Any class. Writes the payload at <code>off</code> and keeps the length; a write past the packet's end is left unapplied.</td></tr>
               <tr><td><code>REPLACE</code></td><td><code>3</code></td><td>Any class. A report becomes the payload, length included.</td></tr>
               <tr><td><code>ANSWER</code></td><td><code>4</code></td><td><code>CONTROL</code>. The box completes the request itself.</td></tr>
               <tr><td><code>STALL</code></td><td><code>5</code></td><td><code>CONTROL</code>. The request ends in a STALL handshake.</td></tr>
@@ -207,7 +206,7 @@ const Rewrite: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              On EP0 the table matches class and vendor requests. The clone answers standard requests
+              On EP0 the table matches class and vendor requests. The clone serves standard requests
               such as <code>GET_DESCRIPTOR</code> itself; change a descriptor with{' '}
               <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
               passes every request to the table.
@@ -257,18 +256,17 @@ const Rewrite: Component = () => {
           </div>
           <div class="api-response-label">HITS</div>
           <p>
-            A rule counts one hit for each packet it matches as the top-ranked rule, a{' '}
-            <code>PASS</code> rule included. A <code>cls = 0xFF</code> rule counts at each surface
-            it matches at, and its <code>PATCH</code> applies at each.{' '}
-            <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> reports it
-            saturated at 65535.
+            A rule counts one hit per packet it matches as top-ranked, <code>PASS</code> included. A{' '}
+            <code>cls = 0xFF</code> rule counts, and its <code>PATCH</code> applies, at each surface
+            it matches. <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A>{' '}
+            reports hits saturated at 65535.
           </p>
         </Card>
       </div>
 
       <div id="order" data-search-target>
         <Card>
-          <CardHeader title="Order" subtitle="Against clip triggers, the pipeline, and RAW" />
+          <CardHeader title="Order" subtitle="Clip triggers, pipeline, RAW" />
           <p>Each surface runs its packets through two tables before delivery.</p>
           <pre class="diagram">{`  packet at a surface
         |
@@ -282,7 +280,7 @@ const Rewrite: Component = () => {
   delivered                  to the game PC (IN) or the real device (OUT)`}</pre>
           <table class="api-params">
             <thead>
-              <tr><th>Name</th><th>What the box does</th></tr>
+              <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
               <tr><td><A href="/native/commands/clip#packet-triggers">packet triggers</A></td><td>A packet can fire a trigger and then match a rule. A report a trigger consumes reaches no rule and counts no hit.</td></tr>
@@ -305,7 +303,7 @@ const Rewrite: Component = () => {
             fixed side of the table, and flags bit 7 marks a packet a rule acted on: changed, dropped,
             answered or refused. A <code>PASS</code> leaves it clear. A{' '}
             <code>CONTROL</code> event is the transaction the game PC received, on every control
-            endpoint; <A href="/native/commands/catch#rules">rules and taps</A> has each class.
+            endpoint; each class is in <A href="/native/commands/catch#rules">rules and taps</A>.
           </p>
         </Card>
       </div>
@@ -327,9 +325,9 @@ detach      the real device goes away
 re-clone    the box clones the device again: a replug, or a patch presentation
 opt-in off  OPTION(IMPERFECT) turned off`}</pre>
           <p>
-            Any valid frame resets the silence timer, so a keepalive holds the table. The host
-            library re-asserts its held rules on its keepalive and across a control-link
-            reconnect, as it does a <A href="/native/commands/lock"><code>LOCK</code></A>.
+            Any valid frame resets the silence timer, so a keepalive holds the table. The library
+            re-asserts its held rules on keepalive and across a control-link reconnect, as for{' '}
+            <A href="/native/commands/lock"><code>LOCK</code></A>.
           </p>
           <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
           <div class="api-response-label">GEN</div>

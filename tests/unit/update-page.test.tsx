@@ -69,7 +69,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
       mock.updates += 1;
       if (mock.outcome === 'sent') {
         mock.s!.setError(
-          'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
+          'The update was sent, but the box did not come back on its own. Replug it, then connect.',
         );
         mock.s!.setStatus('disconnected');
       }
@@ -216,7 +216,7 @@ describe('Update', () => {
     const r = await runUpdate(/update both chips/i);
     mock.s!.setFirmwareInfo(fw(reverted));
     await waitFor(() =>
-      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+      expect(r.container.textContent).toMatch(/not on the version sent/i),
     );
     expect(r.container.textContent).not.toMatch(/updated and verified/i);
   });
@@ -226,7 +226,7 @@ describe('Update', () => {
     const r = await runUpdate(/mouse-side only/i);
     mock.s!.setFirmwareInfo(fw(reverted));
     await waitFor(() =>
-      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+      expect(r.container.textContent).toMatch(/not on the version sent/i),
     );
   });
 
@@ -235,7 +235,7 @@ describe('Update', () => {
     const r = await runUpdate(/update both chips/i);
     mock.s!.setVersion(REVERTED);
     await waitFor(() =>
-      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+      expect(r.container.textContent).toMatch(/not on the version sent/i),
     );
     expect(r.container.textContent).not.toMatch(/updated and verified/i);
   });
@@ -246,7 +246,7 @@ describe('Update', () => {
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
     expect(r.container.textContent).not.toMatch(/verified/i);
-    expect(r.container.textContent).toMatch(/unplug it, plug it back in/i);
+    expect(r.container.textContent).toMatch(/replug it, then connect/i);
   });
 
   it('reconnecting after a never-came-back update does not sign off a box that reverted', async () => {
@@ -259,7 +259,7 @@ describe('Update', () => {
     mock.s!.setVersion(REVERTED);
     r.getByRole('button', { name: /^connect$/i }).click();
     await waitFor(() =>
-      expect(r.container.textContent).toMatch(/not on the version that was sent/i),
+      expect(r.container.textContent).toMatch(/not on the version sent/i),
     );
     expect(r.container.textContent).not.toMatch(/updated and verified/i);
   });

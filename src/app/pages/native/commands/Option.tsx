@@ -28,7 +28,7 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
                 <td><code>1</code></td>
-                <td>Inject motion only on a real move</td>
+                <td>Inject motion only on a native move</td>
                 <td>off</td>
               </tr>
               <tr>
@@ -40,7 +40,7 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#name"><code>NAME</code></A></td>
                 <td><code>3</code></td>
-                <td>Give the box a human-readable name</td>
+                <td>Human-readable box name</td>
                 <td>Medius-XXXX</td>
               </tr>
               <tr>
@@ -52,20 +52,20 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#render"><code>RENDER</code></A></td>
                 <td><code>5</code></td>
-                <td>The texture the box renders motion with</td>
+                <td>Motion rendering texture</td>
                 <td>de-spiked, injected only</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/option#spread"><code>SPREAD</code></A></td>
                 <td><code>6</code></td>
-                <td>How far an injected delta is spread in time</td>
+                <td>Injected delta spread over time</td>
                 <td>one command interval</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          A box that has been set boots at its own stored value, not the factory one.
+          A set option boots at its stored value, not the factory default.
         </p>
       </Card>
 
@@ -73,8 +73,8 @@ const Option: Component = () => {
         <Card>
           <CardHeader title="OPTION" subtitle="One generic, persistent option" />
           <p>
-            <code>OPTION</code> carries an <code>id</code> byte then an id-specific value, and the box
-            persists the setting across a reboot. <A href="/native/frame#opcodes">Opcode</A>{' '}
+            <code>OPTION</code> carries an <code>id</code> byte then an id-specific value; the setting
+            persists across reboots. <A href="/native/frame#opcodes">Opcode</A>{' '}
             <code>0x11</code>.
           </p>
           <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
@@ -85,8 +85,8 @@ const Option: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>which option</td></tr>
-              <tr><td>1..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific; the frame <code>LEN</code> delimits it, so a new option needs no new opcode</td></tr>
+              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>option</td></tr>
+              <tr><td>1..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, delimited by the frame <code>LEN</code></td></tr>
             </tbody>
           </table>
           <p>
@@ -111,14 +111,14 @@ const Option: Component = () => {
           <div class="api-response-label">GATES</div>
           <table class="api-params">
             <thead>
-              <tr><th>What</th><th>With the opt-in off</th></tr>
+              <tr><th>Item</th><th>Opt-in off</th></tr>
             </thead>
             <tbody>
               <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/native/commands/option#emit"><code>EMIT</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
               <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear; turning the opt-in off clears the table.</td></tr>
               <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served; <code>APPLY</code> is ignored, and turning the opt-in off presents a patched clone again without its set.</td></tr>
-              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Answered with status <code>0xFC</code>.</td></tr>
+              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Replied with status <code>0xFC</code>.</td></tr>
               <tr><td><A href="/native/commands/raw#raw"><code>RAW</code></A>, and a clip's raw and transfer items</td><td>Discarded; turning the opt-in off drops queued clip transfers.</td></tr>
               <tr><td>a <A href="/native/commands/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused, and turning the opt-in off removes the ones the box holds.</td></tr>
             </tbody>
@@ -156,7 +156,7 @@ const Option: Component = () => {
 
       <div id="move-ride" data-search-target>
         <Card>
-          <CardHeader title="MOVE_RIDE" subtitle="Inject motion only on a real move" />
+          <CardHeader title="MOVE_RIDE" subtitle="Inject motion only on a native move" />
           <pre class="api-signature">id 1  ·  [timeout u16 LE] ms</pre>
           <div class="api-response-label">TIMEOUT</div>
           <table class="api-params">
@@ -167,7 +167,7 @@ const Option: Component = () => {
             </tbody>
           </table>
           <p>
-            This keeps injected motion's report density identical to the real mouse's.
+            Injected motion keeps native report density.
           </p>
           <div class="callout callout--warning">
             <p>
@@ -204,14 +204,13 @@ const Option: Component = () => {
           <CardHeader title="EMIT" subtitle="Pace and wire-rate injected motion" />
           <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
           <p>
-            Every <code>OPTION(EMIT)</code> writes all three fields, so send the values you want to keep
-            along with the one you are changing.
+            Every <code>OPTION(EMIT)</code> writes all three fields; resend the ones to keep.
           </p>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
             <thead><tr><th>Value</th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The rate the real mouse actually reports at</td></tr>
+              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The mouse's measured report rate</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
             </tbody>
@@ -221,7 +220,7 @@ const Option: Component = () => {
               Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333 and 250 are exact
               (<code>0</code> means 1000).
             </p>
-            <p>The pace is a ceiling. The box emits only while injection is pending, so idle stays idle.</p>
+            <p>The pace is a ceiling; the box emits only while injection is pending.</p>
           </div>
           <div class="api-response-label">FORCE_HZ</div>
           <table class="api-params">
@@ -246,8 +245,8 @@ const Option: Component = () => {
             </p>
           </div>
           <p>
-            A <code>mode</code> the box does not know discards the <strong>whole</strong> command,{' '}
-            <code>force_hz</code> included, and there is no reply to say so.
+            An unknown <code>mode</code> discards the <strong>whole</strong> command,{' '}
+            <code>force_hz</code> included, with no reply.
           </p>
           <p>
             Read{' '}
@@ -270,22 +269,22 @@ const Option: Component = () => {
 
       <div id="name" data-search-target>
         <Card>
-          <CardHeader title="NAME" subtitle="Give the box a human-readable name" />
+          <CardHeader title="NAME" subtitle="Human-readable box name" />
           <pre class="api-signature">id 3  ·  [name ascii 1..32]  (0 bytes = clear)</pre>
           <div class="api-response-label">VALUE</div>
           <table class="api-params">
             <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>1..32</code> printable ASCII</td><td>Sets the box's name to those bytes.</td></tr>
-              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the synthesised <code>Medius-XXXX</code> default derived from the MAC.</td></tr>
+              <tr><td><code>1..32</code> printable ASCII</td><td>Sets the name to those bytes.</td></tr>
+              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the MAC-derived <code>Medius-XXXX</code> default.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              The name is the readable partner to the box{' '}
+              The name pairs with the box{' '}
               <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
-              rides on <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> as the
-              ASCII tail after the MAC, so it's read there, not through{' '}
+              is the ASCII tail of <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A>{' '}
+              after the MAC, read there rather than through{' '}
               <A href="/native/commands/requests#options"><code>QUERY(OPTIONS)</code></A>.
             </p>
           </div>
@@ -321,7 +320,7 @@ const Option: Component = () => {
             <tbody>
               <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
               <tr><td><code>1</code></td><td>Vector</td></tr>
-              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply to say so</td></tr>
+              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
@@ -349,11 +348,10 @@ const Option: Component = () => {
       </div>
       <div id="render" data-search-target>
         <Card>
-          <CardHeader title="RENDER" subtitle="The texture the box renders motion with" />
+          <CardHeader title="RENDER" subtitle="Motion rendering texture" />
           <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
           <p>
-            Both fields are written on every <code>OPTION(RENDER)</code>, so send the value you want to
-            keep along with the one you are changing.
+            Every <code>OPTION(RENDER)</code> writes both fields; resend the one to keep.
           </p>
           <div class="api-response-label">MODE</div>
           <table class="api-params">
@@ -382,12 +380,12 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
-              <tr><td><code>1</code></td><td>Renders both. The device's cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
+              <tr><td><code>1</code></td><td>Renders both: native cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>
-              Rendering adds a small amount of latency, which reaches native motion when{' '}
+              Rendering adds a little latency, which reaches native motion when{' '}
               <code>full</code> is <code>1</code>.
             </p>
             <p>
@@ -403,25 +401,25 @@ const Option: Component = () => {
             </p>
             <p>
               A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
-              paced path instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each ask
-              for exact timing, which is what the renderer decides.{' '}
+              paced path instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each fix
+              exact timing, which the renderer otherwise sets.{' '}
               <A href="/native/commands/clip">Clip</A> cursor motion renders like a <code>MOVE</code>{' '}
               with no flag.
             </p>
             <p>
               Under <code>full</code> the rendered stream ignores{' '}
               <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot then
-              holds native motion it never rides out. A clip's stream is treated the same way.
+              holds native motion it never rides out. A clip's stream does too.
             </p>
             <p>
               The profile is built from the live mouse and never persisted, so every boot starts without
-              one and arms off a window the mouse moved in. <code>full</code> renders nothing while{' '}
-              <code>mode</code> is <code>0</code>, since there is no model in the path.
+              one and arms from a window of mouse motion. <code>full</code> renders nothing while{' '}
+              <code>mode</code> is <code>0</code>, with no model in the path.
             </p>
           </div>
           <p>
             A <code>mode</code> above 3 or a <code>full</code> above 1 discards the{' '}
-            <strong>whole</strong> command, and there is no reply to say so.
+            <strong>whole</strong> command, with no reply.
           </p>
           <p>
             Read{' '}
@@ -443,21 +441,20 @@ const Option: Component = () => {
       </div>
       <div id="spread" data-search-target>
         <Card>
-          <CardHeader title="SPREAD" subtitle="How far an injected delta is spread in time" />
+          <CardHeader title="SPREAD" subtitle="Injected delta spread over time" />
           <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
           <p>
-            A host loop slower than the native report rate hands the box a delta worth several native
-            reports. The percent says how much of the interval between commands the box releases that
-            delta across.
+            A host loop slower than the native report rate sends deltas worth several native reports.
+            The percent is the share of the command interval the box releases each delta across.
           </p>
           <div class="api-response-label">PERCENT</div>
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>The whole delta goes out on the next report the box emits.</td></tr>
-              <tr><td><code>1..99</code></td><td>The delta is released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
-              <tr><td><code>100</code> <em>(default)</em></td><td>The delta is released evenly across one whole command interval.</td></tr>
-              <tr><td><code>101..65535</code></td><td>The delta is released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
+              <tr><td><code>1..99</code></td><td>Released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
+              <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
+              <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`a 250 Hz host on a 1000 Hz native rate: one MOVE of 8 every 4 ms, 12 ms of wire
@@ -466,10 +463,10 @@ const Option: Component = () => {
   percent = 0    8  .  .  .  8  .  .  .  8  .  .  .    one report per command, 4x the delta
   percent = 100  2  2  2  2  2  2  2  2  2  2  2  2    a report every ms at the native magnitude`}</pre>
           <p>
-            The box learns the interval from <A href="/native/commands/move"><code>MOVE</code></A>{' '}
-            arrivals, as the gap those arrivals most often sit at, so a burst does not move it and a
-            loop that changes rate is followed. Until it has one, and for commands more than about
-            32 ms apart, the whole delta goes out on the next report whatever the percent says.
+            The box learns the interval as the most common gap between{' '}
+            <A href="/native/commands/move"><code>MOVE</code></A> arrivals, so a burst doesn't move it
+            and a rate change is followed. Until it has one, and for commands more than about 32 ms
+            apart, the whole delta goes out on the next report regardless of percent.
           </p>
           <table class="api-params">
             <thead><tr><th>Aspect</th><th><code>percent = 0</code></th><th><code>percent = 100</code></th></tr></thead>
@@ -483,19 +480,19 @@ const Option: Component = () => {
           <p>
             A loop at the native report rate keeps each command whole: it waits in a short queue and
             leaves on a report of its own, no later than the first report after its interval ends. A
-            delta smaller than the number of reports in its interval cannot be divided into one count
-            per report: it goes out once, part way through.
+            delta smaller than its interval's report count can't be split one count per report; it
+            goes out once, part way through.
           </p>
           <div class="callout callout--info">
             <p>
               A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag is not spread:{' '}
-              <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each ask for exact timing.
-<code>FLUSH</code> and <code>DISCARD</code> also act on the part
-              of an earlier delta still waiting, so they mean the same thing whatever the percent is.
+              <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each fix exact timing.{' '}
+              <code>FLUSH</code> and <code>DISCARD</code> also act on any still-waiting part of an
+              earlier delta, so they mean the same at any percent.
             </p>
             <p>
-              This and <A href="/native/commands/option#render"><code>RENDER</code></A> are independent
-              and compose. Under <code>full</code> rendering only injected motion is spread; native
+              <code>SPREAD</code> and <A href="/native/commands/option#render"><code>RENDER</code></A>{' '}
+              compose independently. Under <code>full</code> rendering only injected motion is spread; native
               motion already arrives at the device's report rate.
             </p>
           </div>

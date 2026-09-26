@@ -1,8 +1,5 @@
-// The advanced control layer: the two tables the box stores beside the two one-shot wire operations.
-//
-// Rewrite rules and raw reports are dropped while imperfect clones are off and a control transfer is
-// refused, but a descriptor patch is stored either way and only applied under the opt-in. Each card
-// says which of those it is, so the tab carries no banner of its own.
+// With imperfect clones off, rewrites and raw reports drop and transfers are refused, while a patch
+// is stored but not applied. Each card says which, so the tab has no banner.
 
 import { Match, Show, Switch } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
@@ -52,7 +49,7 @@ const DeviceDeveloper = () => {
                   </Match>
 
                   <Match when={dash.status() === 'flashing'}>
-                    <p>Updating. See the Update tab.</p>
+                    <p>Updating.</p>
                     <Button variant="primary" disabled onClick={() => navigate('/dashboard/update')}>
                       Go to Update
                     </Button>

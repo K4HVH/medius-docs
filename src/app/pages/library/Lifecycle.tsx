@@ -7,8 +7,8 @@ const Lifecycle: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Lifecycle" subtitle="Re-asserting held state after a dropped link or a released session" />
-        <p>The library holds deliberate overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them if the link drops and reopens or the box drops them.</p>
+        <CardHeader title="Lifecycle" subtitle="Held state after a dropped link or released session" />
+        <p>The library holds overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them after a dropped link or when the box drops them.</p>
         <table class="api-params">
           <thead><tr><th>Call</th><th>Does</th></tr></thead>
           <tbody>
@@ -22,7 +22,7 @@ const Lifecycle: Component = () => {
 
       <div id="reapply" data-search-target>
         <Card>
-          <CardHeader title="reapply" subtitle="Re-send the held overrides so the box matches the library" />
+          <CardHeader title="reapply" subtitle="Re-send held overrides" />
 
           <pre class="api-signature">fn reapply(&self) -&gt; Result&lt;()&gt;</pre>
           <p>
@@ -30,25 +30,23 @@ const Lifecycle: Component = () => {
           </p>
 
           <p>
-            One frame goes out per held override;{' '}
-            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> does this for you after a
-            drop.
+            One frame per held override;{' '}
+            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> does this after a drop.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.press(Button::LEFT)?;
-device.reapply()?; // re-assert the held override, e.g. if the box reset under you`}</code></pre>
+device.reapply()?; // re-assert the held override, e.g. after a box reset`}</code></pre>
 
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`// The no-op case: reset clears every override, so reapply sends nothing.
 device.reset()?;
-device.reapply()?; // does nothing, no buttons are held`}</code></pre>
+device.reapply()?; // sends nothing`}</code></pre>
 
           <div class="callout callout--info">
             <p>
-              Overrides are keyed by their{' '}
-              <A href="/library/types/structs#usage"><code>Usage</code></A> (a button, key, or media
-              usage).{' '}
+              Overrides are keyed by{' '}
+              <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).{' '}
               <A href="/library/inject#inject"><code>press</code></A> and{' '}
               <A href="/library/inject#inject"><code>force_release</code></A> add a held override;{' '}
               <A href="/library/inject#inject"><code>release</code></A> and{' '}
@@ -66,14 +64,14 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
           <p>
-            The reader thread auto-reconnects on any read error, so call this only to force a rescan.
-            It blocks while it rescans and reopens the port, and errors if the box can't be found or
-            opened, but never waits on a box reply.
+            The reader thread auto-reconnects on any read error; call this only to force a rescan. It
+            blocks while rescanning and reopening the port, errors if the box can't be found or opened,
+            and never waits on a box reply.
           </p>
           <p>On each call:</p>
           <ol>
             <li>
-              Rescans for the box by its USB identity, vendor ID <code>0x1A86</code> and product ID{' '}
+              Rescans for the box by USB identity, vendor ID <code>0x1A86</code> and product ID{' '}
               <code>0x55D3</code> (see <A href="/native/transport">Transport</A>).
             </li>
             <li>
@@ -82,17 +80,17 @@ device.reapply()?; // does nothing, no buttons are held`}</code></pre>
               disconnected.
             </li>
             <li>
-              Re-applies the held overrides, the same work as{' '}
-              <A href="/library/lifecycle#reapply"><code>reapply</code></A>. A box whose{' '}
+              Re-applies held overrides, as{' '}
+              <A href="/library/lifecycle#reapply"><code>reapply</code></A> does. A box whose{' '}
               <A href="/native/connection#hello">hello</A> arrives during the rescan booted while the
-              link was down, and gets the held state by{' '}
+              link was down, and gets held state through{' '}
               <A href="/library/lifecycle#restart">session recovery</A>.
             </li>
             <li>Bumps the reconnect counter.</li>
           </ol>
 
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`// After a known unplug and replug, force a rescan and confirm it took.
+          <pre><code class="language-rust">{`// After an unplug and replug, force a rescan and confirm it.
 let before = device.counters().reconnects;
 device.reconnect()?;
 let after = device.counters().reconnects;
@@ -100,8 +98,8 @@ assert!(after > before);`}</code></pre>
 
           <div class="callout callout--info">
             <p>
-              The reconnect count is the <code>reconnects</code> field in{' '}
-              <A href="/library/diagnostics#counters">diagnostics</A>.
+              <code>reconnects</code> is a{' '}
+              <A href="/library/diagnostics#counters">diagnostics</A> counter.
             </p>
           </div>
         </Card>
@@ -130,11 +128,11 @@ assert!(after > before);`}</code></pre>
            ---- RESP(CLIP) --------------------------->  an empty ring: the loaded clip is lost
                                                          restarts += 1, for a restart only`}</pre>
           <table class="api-params">
-            <thead><tr><th>Trigger</th><th>How the library notices it</th></tr></thead>
+            <thead><tr><th>Trigger</th><th>Detected by</th></tr></thead>
             <tbody>
               <tr><td>A device-chip restart</td><td>The box's <A href="/native/connection#hello">ready hello</A>, unasked, on a link the box has already answered.</td></tr>
               <tr><td>A session release: a <code>RESET</code> the library did not send, the link between the box's chips dropping, the device detaching, a re-clone (<A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A>, <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>, an <A href="/library/options#allow-imperfect-clones">opt-in</A> toggle that re-presents the clone, another device), a configuration switch by the game PC that unbinds a role, control-PC silence, the opt-in turned off</td><td><code>Stats::session</code> moving. The keepalive reads it each tick while anything is held, and every 20 ms for 5 s after <code>apply_patch</code>, <code>clear_patch</code> or <code>allow_imperfect_clones</code>.</td></tr>
-              <tr><td>This library's own <A href="/library/admin#reset"><code>reset</code></A></td><td>The box counts it; the library holds nothing after it, so nothing goes back.</td></tr>
+              <tr><td>The library's own <A href="/library/admin#reset"><code>reset</code></A></td><td>Counted by the box; the library holds nothing after it, so nothing is re-sent.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -144,7 +142,7 @@ assert!(after > before);`}</code></pre>
               <tr><td>Clip settings, input triggers and packet triggers</td><td>Re-sent.</td></tr>
               <tr><td>Rewrite rules and consuming packet triggers, after <code>allow_imperfect_clones(false)</code></td><td>Dropped by the library as the box drops them.</td></tr>
               <tr><td>A loaded clip</td><td>Gone with the ring; <A href="/library/clip#lost"><code>ClipHandle::lost</code></A> reports it.</td></tr>
-              <tr><td>An <A href="/library/led#led">LED</A> override</td><td>Not held by the library, so not re-sent: call <code>led</code> again.</td></tr>
+              <tr><td>An <A href="/library/led#led">LED</A> override</td><td>Not held, so not re-sent: call <code>led</code> again.</td></tr>
               <tr><td><A href="/library/options">Options</A> and <A href="/library/advanced/patch">patch sets</A></td><td>Kept in the box's NVS.</td></tr>
             </tbody>
           </table>
@@ -161,9 +159,9 @@ clip.append(&burst)?;
 let before = device.query_stats()?.session;
 device.allow_imperfect_clones(true)?;
 device.apply_patch()?;          // a re-clone: the box releases the session
-// ... the library puts the scale back once the new clone is up ...
+// ... the library re-sends the scale once the new clone is up ...
 if device.query_stats()?.session != before && clip.lost() {
-    clip.append(&burst)?;       // the ring's content is the caller's to reload
+    clip.append(&burst)?;       // the caller reloads the ring
 }`}</code></pre>
         </Card>
       </div>
@@ -187,8 +185,8 @@ device.reconnect()?;   // blocks: rescan + reopen`}</code></pre>
 
           <div class="callout callout--info">
             <p>
-              See <A href="/library/features/async">async</A> for the full async surface and how{' '}
-              <code>into_inner</code> and <code>into_async</code> move between the two views.
+              <code>into_inner</code> and <code>into_async</code> switch between the two views; the full
+              async surface is on <A href="/library/features/async">async</A>.
             </p>
           </div>
         </Card>

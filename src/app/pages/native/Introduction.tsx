@@ -16,9 +16,9 @@ const NativeIntroduction: Component = () => {
           binary control protocol.
         </p>
         <p>
-          The box sits inline between a USB device and a PC. The real device (mouse, keyboard, or
-          combo) passes through unchanged while your program injects over a separate USB-serial
-          link: cursor and buttons for a mouse, keys and media for a keyboard.
+          The box sits between a USB device and a PC. The device (mouse, keyboard, or combo) passes
+          through unchanged while a program injects over a separate USB-serial link: cursor and
+          buttons for a mouse, keys and media for a keyboard.
         </p>
         <p>
           Drive it from any language; the Rust <A href="/library">library</A> is the official client.
@@ -57,43 +57,42 @@ const NativeIntroduction: Component = () => {
             </tr>
           </tbody>
         </table>
-        <p>Before you talk to the box:</p>
+        <p>Before connecting:</p>
         <table class="api-params">
           <thead>
             <tr>
               <th>Topic</th>
-              <th>What to know</th>
+              <th>Detail</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>Protocol version</td>
               <td>
-                These pages describe version <code>9</code>. Confirm it during the{' '}
-                <A href="/native/connection#handshake">handshake</A> from the{' '}
-                <code>proto_ver</code> field of the{' '}
-                <A href="/native/commands/requests#version"><code>VERSION</code></A> reply; a
-                different value means firmware these pages don't cover.
+                These pages cover version <code>9</code>. Check <code>proto_ver</code> in the{' '}
+                <A href="/native/commands/requests#version"><code>VERSION</code></A> reply during
+                the <A href="/native/connection#handshake">handshake</A>; any other value is
+                firmware these pages don't cover.
               </td>
             </tr>
             <tr>
               <td>Wire format</td>
               <td>
-                The box speaks <A href="/native/frame">framed binary</A> from the first byte. No
-                startup baud, no text mode.
+                <A href="/native/frame">Framed binary</A> from the first byte; no startup baud or
+                text mode.
               </td>
             </tr>
             <tr>
-              <td>Finding the port</td>
-              <td>Scan for the CH343's VID/PID pair to locate the box's serial port.</td>
+              <td>Port discovery</td>
+              <td>Scan for the CH343's VID/PID pair.</td>
             </tr>
             <tr>
               <td>Correlation</td>
               <td>
-                <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.
-                A <A href="/native/commands/requests#requests"><code>QUERY</code></A> is correlated
-                to its <A href="/native/commands/requests#resp"><code>RESP</code></A> by{' '}
-                <A href="/native/frame#seq"><code>SEQ</code></A>.
+                <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.{' '}
+                <A href="/native/frame#seq"><code>SEQ</code></A> pairs a{' '}
+                <A href="/native/commands/requests#requests"><code>QUERY</code></A> with its{' '}
+                <A href="/native/commands/requests#resp"><code>RESP</code></A>.
               </td>
             </tr>
           </tbody>
@@ -187,7 +186,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="QUERY and its RESP, all sixteen selectors" />
+                <CardHeader title="Requests" subtitle="QUERY, RESP, sixteen selectors" />
               </Card>
             </A>
             <A href="/native/commands/led" style={{ "text-decoration": "none" }}>
@@ -240,7 +239,7 @@ const NativeIntroduction: Component = () => {
             </A>
             <A href="/native/commands/patch" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Patch" subtitle="Patch the cloned descriptors" />
+                <CardHeader title="Patch" subtitle="Patch cloned descriptors" />
               </Card>
             </A>
           </div>

@@ -1,7 +1,4 @@
-// Move the value of one field the real device drives into another, before the clone emits it.
-//
-// The picker is the shared one, so a remap reaches a key or a media usage and not only another axis.
-// Weighing a field is the lock panel's, whose scale is signed; this card only moves them.
+// Moves a native field's value into another before the clone emits it. Weighing is the lock card's.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -26,9 +23,9 @@ import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
 import { chips, label, row, section } from './ui';
 
 const AXES: NamedUsage[] = [
-  { id: LockAxis.X, name: 'Move left/right (X)', group: 'Axes' },
-  { id: LockAxis.Y, name: 'Move up/down (Y)', group: 'Axes' },
-  { id: LockAxis.Wheel, name: 'Scroll wheel', group: 'Axes' },
+  { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
+  { id: LockAxis.Y, name: 'Y (up/down)', group: 'Axes' },
+  { id: LockAxis.Wheel, name: 'Wheel', group: 'Axes' },
   { id: LockAxis.Pan, name: 'Pan (horizontal scroll)', group: 'Axes' },
 ];
 
@@ -37,13 +34,10 @@ const OP_LABELS = [
   { value: String(TransformOp.Remap), label: 'Remap' },
 ];
 
-// An axis reads as its own name; every other class shares the injection tables, so the usage names
-// there are the ones the rest of the dashboard already prints.
 const fieldName = (cls: number, id: number): string =>
   cls === LockClass.Axis ? (AXES.find((a) => a.id === id)?.name ?? `axis ${id}`) : usageName(cls, id);
 
-// A read-back entry names itself. A chip is capped at 250px and ellipsises past it, so each reads as
-// the plain move it is.
+// A chip ellipsises past 250px, so each reads as the plain move.
 const describe = (t: Transform): string => {
   const src = fieldName(t.sclass, t.sid);
   const dst = fieldName(t.dclass, t.did);
@@ -63,8 +57,7 @@ const DeviceTransform = () => {
   const remapping = () => curOp() === TransformOp.Remap;
   const buttonSource = () => source().cls === LockClass.Button;
 
-  // The five named buttons plus a numbered entry for each button the mouse declares past them
-  // (RESP(CAPS) n_buttons), so a remap can start from any button the cloned device carries.
+  // Every button the clone declares (RESP(CAPS) n_buttons).
   const buttons = () => buttonsUpTo(caps()?.mouse?.nButtons ?? 0);
   const axisClass = (): PickerClass => ({
     value: LockClass.Axis,
@@ -78,11 +71,11 @@ const DeviceTransform = () => {
     table: buttons(),
   });
 
-  // A swap is axis work; a remap is the one operation that can start from a button.
+  // Only a remap can start from a button.
   const sourceClasses = (): PickerClass[] => (remapping() ? [axisClass(), buttonClass()] : [axisClass()]);
 
-  // An axis writes an axis. A button writes another button, or a key or media usage on the clone's
-  // own keyboard and consumer interfaces, which is the cross-class remap.
+  // An axis writes an axis; a button writes a button, or a key or media usage on the clone's keyboard
+  // and consumer interfaces.
   const destClasses = (): PickerClass[] =>
     remapping() && buttonSource()
       ? [
@@ -94,13 +87,12 @@ const DeviceTransform = () => {
 
   const firstAxisOtherThan = (id: number) => (id === LockAxis.X ? LockAxis.Y : LockAxis.X);
 
-  // Both pickers are one class deep on a swap, so the class radio that would tell them apart is not
-  // rendered. The field label carries the distinction instead.
-  const srcLabel = () => (remapping() ? 'Move this input' : 'Swap this axis');
-  const dstLabel = () => (remapping() ? 'Into this input' : 'With this axis');
+  // A swap renders no class radios, so the field labels tell the two pickers apart.
+  const srcLabel = () => (remapping() ? 'Source' : 'Axis');
+  const dstLabel = () => (remapping() ? 'Target' : 'With axis');
 
-  // Leaving Remap strands a button source on an operation that only takes axes, and a radio with no
-  // matching option keeps sending the old field. Fall back to the two axes both operations take.
+  // Leaving Remap strands a button source, and an unmatched radio keeps sending the old field, so fall
+  // back to X and Y.
   const chooseOp = (v: string) => {
     setOp(v);
     if (Number(v) !== TransformOp.Remap && buttonSource()) {
@@ -109,8 +101,7 @@ const DeviceTransform = () => {
     }
   };
 
-  // Changing the source's class changes what the destination can be, so the destination follows it
-  // rather than being left addressing a class this pair no longer admits.
+  // A new source class changes what the destination can be, so the destination follows.
   const chooseSource = (v: UsageValue) => {
     const was = source().cls;
     setSource(v);
@@ -129,8 +120,7 @@ const DeviceTransform = () => {
   };
 
   const apply = () => {
-    // Both operations MOVE a value, so a field named as both ends is not an operation at all and the
-    // box refuses it. Say so here rather than sending a frame the box drops with no reply.
+    // The box drops a field named as both ends with no reply, so refuse it here.
     const s = source();
     const d = dest();
     if (s.cls === d.cls && s.id === d.id) {
@@ -157,7 +147,7 @@ const DeviceTransform = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="transforms" data-search-target>
         <Card>
-          <CardHeader title="Transforms" subtitle="Move the real device's inputs between fields" />
+          <CardHeader title="Transforms" subtitle="Move native inputs between fields" />
 
           <div style={section}>
             <div style={label}>Operation</div>
@@ -187,7 +177,7 @@ const DeviceTransform = () => {
           </div>
 
           <Show when={buttonSource()}>
-            <p>A button carries one bit, so it arrives whole or not at all.</p>
+            <p>A button is one bit, so it arrives whole or not at all.</p>
           </Show>
 
           <div style={{ ...section, ...row }}>
@@ -201,7 +191,7 @@ const DeviceTransform = () => {
 
           <Show when={full()}>
             <div class="callout callout--warning" style={section}>
-              Its {TRANSFORM_MAX_ENTRIES}-entry table is full. Remove one before adding another.
+              The {TRANSFORM_MAX_ENTRIES}-entry table is full. Remove an entry first.
             </div>
           </Show>
           <Show when={cmd.error()}>
@@ -214,7 +204,7 @@ const DeviceTransform = () => {
             <div style={label}>
               Active ({active().length} of {TRANSFORM_MAX_ENTRIES})
             </div>
-            <Show when={active().length > 0} fallback={<p>Every input untouched.</p>}>
+            <Show when={active().length > 0} fallback={<p>None.</p>}>
               <div style={chips}>
                 <For each={active()}>
                   {(t) => (

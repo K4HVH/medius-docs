@@ -1,5 +1,4 @@
-// Browser client for the server-side firmware proxy (/api/firmware/*). The token
-// lives on the server, so this just calls same-origin endpoints.
+// Client for the server's firmware proxy (/api/firmware/*), which holds the token.
 
 export interface FirmwareAsset {
   id: number;
@@ -27,7 +26,7 @@ export async function fetchReleases(): Promise<FirmwareRelease[]> {
   const res = await fetch('/api/firmware/releases');
   if (res.status === 503) {
     throw new FirmwareUnavailableError(
-      'Firmware fetch is not set up on this server. Upload a .bin instead.',
+      "Firmware fetch isn't set up on this server. Upload a .bin.",
     );
   }
   if (!res.ok) {
@@ -45,10 +44,9 @@ export async function downloadAsset(asset: FirmwareAsset): Promise<Uint8Array> {
     throw new Error(body?.error ?? `Download failed (${res.status}).`);
   }
   const bytes = new Uint8Array(await res.arrayBuffer());
-  // A mid-stream CDN drop yields a truncated image that esptool's MD5 cannot
-  // catch (it hashes the truncated file), so reject a short download here.
+  // esptool's MD5 hashes a truncated file too, so a short download is rejected here.
   if (asset.size && bytes.length !== asset.size) {
-    throw new Error(`Download was incomplete (${bytes.length} of ${asset.size} bytes). Try again.`);
+    throw new Error(`Incomplete download (${bytes.length} of ${asset.size} bytes). Try again.`);
   }
   return bytes;
 }

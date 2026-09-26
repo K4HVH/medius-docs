@@ -6,13 +6,13 @@ const LABEL: Record<PortId, string> = { usb1: 'USB1', usb2: 'USB2', usb3: 'USB3'
 const ORDER: PortId[] = ['usb1', 'usb2', 'usb3'];
 
 export const holdButton = (id: PortId) =>
-  `Hold the button next to ${LABEL[id]} down while you plug ${LABEL[id]} in`;
+  `Hold the button next to ${LABEL[id]} while plugging it in`;
 
 type Tone = 'connect' | 'device' | 'clear' | 'idle';
 
 const COLOUR: Record<Tone, string> = {
   connect: 'var(--color-success)',
-  // The mouse or keyboard is not a computer, so it does not read as one of the other two.
+  // A mouse or keyboard isn't a computer, so it gets its own colour.
   device: 'var(--color-primary)',
   clear: 'var(--color-danger)',
   idle: 'var(--g-border-color-subtle)',
@@ -103,11 +103,8 @@ const cells = (f: (id: PortId) => Cell): Record<PortId, Cell> => ({
   usb3: f('usb3'),
 });
 
-/**
- * Writing firmware to one chip. The cable goes into the machine running this page, whatever that
- * socket does afterwards, and every other cable has to be out: a chip already powered through
- * another port does not come up in download mode, and USB1 with USB3 can kill the computer.
- */
+// Flashing one chip: its cable into this machine, every other cable out. A chip powered through
+// another port skips download mode, and USB1 with USB3 can kill the computer.
 export const InstallPorts = (props: { socket: PortId }) => (
   <Ports
     badge={`${holdButton(props.socket)}.`}
@@ -119,7 +116,6 @@ export const InstallPorts = (props: { socket: PortId }) => (
   />
 );
 
-/** Getting one cable out, and nothing else. */
 export const ClearPort = (props: { socket: PortId }) => (
   <Ports
     cells={cells((id) =>
@@ -130,10 +126,7 @@ export const ClearPort = (props: { socket: PortId }) => (
   />
 );
 
-/**
- * Where the three cables live once it is installed. USB2 is the one that has to reach the machine
- * you are reading this on, or there is nothing here to connect to.
- */
+// Installed wiring. USB2 must reach this machine to connect.
 export const WiringPorts = () => (
   <Ports
     cells={{

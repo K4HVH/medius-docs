@@ -9,7 +9,7 @@ const Transform: Component = () => {
       <Card>
         <CardHeader title="Transform" subtitle="Swap or remap a field on the wire" />
         <p>
-          A transform moves a field the clone's descriptor declares into another one. It needs no{' '}
+          A transform moves a field the clone's descriptor declares into another. It needs no{' '}
           <A href="/library/options#allow-imperfect-clones">imperfect-clone opt-in</A>, unlike the{' '}
           <A href="/library/advanced/raw">advanced control layer</A>.
         </p>
@@ -27,7 +27,7 @@ const Transform: Component = () => {
                                                    +-- btn->key / btn->media --> that interface's report`}</pre>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Transform a...</th><th>Exchange it with another</th><th>Move it into another field</th><th>Weigh or invert it</th></tr></thead>
+            <thead><tr><th>Transform a...</th><th>Swap</th><th>Remap</th><th>Weigh or invert</th></tr></thead>
             <tbody>
               <tr><td>relative axis (X / Y / wheel / pan)</td><td><A href="/library/transform#helpers"><code>transform_swap</code></A></td><td><A href="/library/transform#helpers"><code>transform_remap</code></A></td><td><A href="/library/lock#scale"><code>scale</code></A>, at a signed percent</td></tr>
               <tr><td>button</td><td>axes only</td><td><A href="/library/transform#helpers"><code>transform_remap</code></A>, into a button, key, or media</td><td>one bit: <A href="/library/lock#lock"><code>lock</code></A> or <A href="/library/lock#unlock"><code>unlock</code></A></td></tr>
@@ -38,7 +38,7 @@ const Transform: Component = () => {
         <p>
           All are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.{' '}
           <A href="/library/transform#transform"><code>transform</code></A> takes any{' '}
-          <A href="/library/types/structs#transform"><code>Transform</code></A> built from parts, and{' '}
+          <A href="/library/types/structs#transform"><code>Transform</code></A> built from parts;{' '}
           <A href="/library/transform#query-transforms"><code>query_transforms</code></A> reads the
           active table.
         </p>
@@ -54,20 +54,20 @@ const Transform: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A> and the source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
             </tbody>
           </table>
           <p>
-            An entry is keyed by its{' '}
-            <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; setting one
-            whose key exists overwrites it in place, keeping its position. Entries apply in
-            installation order, so two that write the same field do not commute.
+            Entries are keyed by{' '}
+            <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; setting an
+            existing key overwrites it in place, keeping its position. Entries apply in installation
+            order, so two that write the same field do not commute.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, Axis, Transform};
 
 let device = Device::find()?;
-device.transform(&Transform::swap(Axis::X, Axis::Y))?;      // the mouse's two axes, exchanged
+device.transform(&Transform::swap(Axis::X, Axis::Y))?;      // X and Y exchanged
 device.transform(&Transform::remap(Axis::Wheel, Axis::Y))?; // the wheel drives vertical motion`}</code></pre>
         </Card>
       </div>
@@ -89,8 +89,8 @@ device.transform(&Transform::remap(Axis::Wheel, Axis::Y))?; // the wheel drives 
 let device = Device::find()?;
 device.transform_swap(Axis::X, Axis::Y)?;        // exchange the two axes
 device.transform_remap(Axis::Wheel, Axis::Y)?;   // the wheel drives vertical motion
-device.transform_remap(Button::new(4), Key::A)?; // the fifth button emits 'A' on the keyboard interface
-device.scale(Axis::Y, Direction::Both, -100)?;   // and Y arrives inverted`}</code></pre>
+device.transform_remap(Button::new(4), Key::A)?; // fifth button emits 'A' on the keyboard interface
+device.scale(Axis::Y, Direction::Both, -100)?;   // Y inverted`}</code></pre>
         </Card>
       </div>
 
@@ -115,7 +115,7 @@ device.clear_transforms()?;   // or drop everything`}</code></pre>
 
       <div id="query-transforms" data-search-target>
         <Card>
-          <CardHeader title="query_transforms" subtitle="Read the active table" />
+          <CardHeader title="query_transforms" subtitle="Active table" />
           <pre class="api-signature">fn query_transforms(&self) -&gt; Result&lt;Transforms&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
@@ -139,7 +139,7 @@ for t in &table.entries {
           <CardHeader title="On AsyncDevice" subtitle="the transforms fire, query_transforms awaits" />
           <p>
             Transforms carry no opt-in check, so <A href="/library/features/async"><code>AsyncDevice</code></A>{' '}
-            keeps every setter synchronous. Only <code>query_transforms</code> is a future.
+            keeps every setter synchronous; only <code>query_transforms</code> is a future.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;
