@@ -4,7 +4,7 @@ import { useLocation } from '@solidjs/router';
 const SITE = 'https://medius.k4tech.net';
 const DEFAULT_TITLE = 'Medius Documentation';
 const DEFAULT_DESC =
-  'Documentation for Medius: the binary control protocol of the mouse-passthrough firmware, the device behaviour, and the medius Rust library.';
+  "Medius documentation: the mouse-passthrough firmware's binary control protocol and device behaviour, and the medius Rust library.";
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string): void {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -26,10 +26,8 @@ function upsertCanonical(href: string): void {
   el.setAttribute('href', href);
 }
 
-// Per-route <head> for the SPA and the prerendered snapshots. The title and
-// description come from the page's own header card. Tags are updated in place
-// (index.html ships sensible defaults), so there is never a duplicate tag and
-// non-JS consumers still get a reasonable title.
+// Per-route <head> from the page's header card, for the SPA and prerendered snapshots.
+// Tags update in place over index.html's defaults, so none is duplicated.
 export default function RouteMeta() {
   const location = useLocation();
   createEffect(() => {

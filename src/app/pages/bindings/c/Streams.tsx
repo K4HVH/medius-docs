@@ -35,11 +35,11 @@ const Streams: Component = () => {
           <p>
             Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> and write
             an opaque handle through an out-param. A catch subscription is an array of{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, each
-            built by a <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A>{' '}
-            helper. The array is read during the call and not retained, so it can live on the stack.
-            The four filter fields are on <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>,
-            the classes on <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A>.
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries from the{' '}
+            <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A> helpers; the
+            call doesn't retain it, so it can live on the stack. Fields:{' '}
+            <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>; classes:{' '}
+            <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A>.
           </p>
           <pre class="api-signature">{`MediusStatus medius_device_catch_events(struct MediusDevice *dev,
                                         const MediusCatchFilter *filters,
@@ -74,16 +74,14 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
           <p>
             The box's table holds{' '}
             <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_CATCH_ENTRIES</code></A> (32)
-            entries. Asking for more, or for a filter the box cannot honour, fails the whole call with
-            its own <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> rather than
-            narrowing the subscription with no status.
+            entries. More entries, or a filter the box cannot honour, fail the whole call with its own{' '}
+            <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.
           </p>
           <div class="callout callout--info">
             <p>
-              Subscribing to everything at full length is more than the control link carries, and
-              bulk goes undrained under a busy mouse. Use <code>capture</code> to buy headroom; the
-              queue ranking and the link budget are on{' '}
-              <A href="/native/commands/catch#delivery">Delivery</A>.
+              Everything at full length exceeds what the control link carries; bulk goes undrained
+              under a busy mouse. Lower <code>capture</code> for headroom. Queue ranking and link
+              budget: <A href="/native/commands/catch#delivery">Delivery</A>.
             </p>
           </div>
         </Card>
@@ -93,10 +91,10 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
         <Card>
           <CardHeader title="Receive" subtitle="Blocking, polling, and timed reads" />
           <p>
-            There's no iterator. Loop a receive call until it returns{' '}
-            <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> (the stream closes after a{' '}
-            <A href="/library/admin">reset</A> or <A href="/library/connection">link loss</A>). Each
-            writes one event through <code>*out</code>.
+            Loop a receive call until it returns <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> (the
+            stream closes after a <A href="/library/admin">reset</A> or{' '}
+            <A href="/library/connection">link loss</A>). Each call writes one event through{' '}
+            <code>*out</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th><th>Blocks?</th></tr></thead>
@@ -106,7 +104,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
               <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td><td>Up to <code>timeout_ms</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">LOGS MIRROR THIS</div>
+          <div class="api-response-label">LOG STREAM</div>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
@@ -130,11 +128,10 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
             (a button, key, or media <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage</a>).
           </p>
           <p>
-            Every variable-length payload is an inline array with a count beside it, never a pointer:
-            the usage list caps at{' '}
+            Variable-length payloads are inline arrays with a count, never pointers: usages cap at{' '}
             <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_USAGES</code></A> (256), a
-            captured packet at <code>MEDIUS_MAX_TRAFFIC_BYTES</code> (180). An event you copy stays
-            valid, and nothing needs freeing.
+            captured packet at <code>MEDIUS_MAX_TRAFFIC_BYTES</code> (180). A copied event stays
+            valid; nothing needs freeing.
           </p>
           <pre><code class="language-c">{`typedef struct MediusCatchEvent {
     MediusCatchEventKind kind;          // MOTION=0, USAGES=1, TRAFFIC=2
@@ -177,24 +174,24 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <p>
             <A href="/native/architecture">Host-chip</A> stamps cover motion, usages,{' '}
             <code>HID_IN</code> and IN traffic; device-chip stamps cover <code>HID_OUT</code>, OUT
-            traffic, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code> and <code>CLIP_TRANSFER</code>. The two chips boot independently, so put both on your own clock with
-            a <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.
+            traffic, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code> and <code>CLIP_TRANSFER</code>. The chips boot independently; a{' '}
+            <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A> puts both on your clock.
           </p>
           <div class="api-response-label">INSPECTORS</div>
           <table class="api-params">
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that <code>MediusUsage</code> usage (button, key, or media) is held.</td></tr>
-              <tr><td><code>medius_traffic_event_truncated(&amp;ev.data.traffic)</code></td><td><code>bool</code>: true if <code>len &lt; true_len</code>, so the packet was cut at the matching entry's <code>capture</code>. Without it a cut packet and a genuinely short one read identically.</td></tr>
+              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that usage (button, key, or media) is held.</td></tr>
+              <tr><td><code>medius_traffic_event_truncated(&amp;ev.data.traffic)</code></td><td><code>bool</code>: true if <code>len &lt; true_len</code>, meaning the matching entry's <code>capture</code> cut the packet. It separates a cut packet from a short one.</td></tr>
               <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
             </tbody>
           </table>
           <div class="callout callout--info">
             <p>
-              <code>medius_event_stream_dropped</code> counts what <em>your</em> consumer lost.
-              What the box shed before it ever reached the wire is on{' '}
-              <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>: a box-wide
-              total, plus a per-entry count so you can tell which subscription is the expensive one.
+              <code>medius_event_stream_dropped</code> counts what <em>your</em> consumer lost.{' '}
+              <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A> counts what the
+              box shed before the wire: a box-wide total and a per-entry count, which names the
+              expensive subscription.
             </p>
           </div>
         </Card>
@@ -206,7 +203,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <pre><code class="language-c">{`#include <medius.h>
 #include <stdio.h>
 
-/* a blanket over every class at 16 bytes a packet, plus one vendor endpoint's IN traffic in full */
+/* every class at 16 bytes a packet, plus one vendor endpoint's IN traffic in full */
 MediusCatchFilter filters[2] = {
     medius_catch_filter_with_capture(medius_catch_filter_everything(), 16),
     medius_catch_filter_inbound(
@@ -253,9 +250,8 @@ medius_event_stream_free(events);`}</code></pre>
         <Card>
           <CardHeader title="Decoded input" subtitle="Press and release edges, not snapshots" />
           <p>
-            The box reports held-usage snapshots.{' '}
-            <code>medius_device_input_events</code> diffs them into edges, so nothing on your side has
-            to remember what was down last report.
+            The box reports held-usage snapshots; <code>medius_device_input_events</code> diffs them
+            into edges, so your code tracks nothing between reports.
           </p>
           <pre class="api-signature">{`MediusStatus medius_device_input_events(struct MediusDevice *dev,
                                         const MediusCatchFilter *filters,
@@ -272,9 +268,9 @@ medius_event_stream_free(events);`}</code></pre>
               <tr><td><code>medius_input_stream_recv(stream, &amp;out)</code></td><td>Block for the next <A href="/bindings/c/types#input-event"><code>MediusInputEvent</code></A>; <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close.</td></tr>
               <tr><td><code>medius_input_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code>: the next queued event, or <code>false</code> (never blocks).</td></tr>
               <tr><td><code>medius_input_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code>: <code>false</code> on timeout or close.</td></tr>
-              <tr><td><code>medius_input_stream_held(stream, class_, out, cap)</code></td><td>Write that class's currently held usages into <code>out[0..cap]</code>; returns how many there are. A return above <code>cap</code> means the buffer was short.</td></tr>
+              <tr><td><code>medius_input_stream_held(stream, class_, out, cap)</code></td><td>Write that class's held usages into <code>out[0..cap]</code>; returns the count, which exceeds <code>cap</code> when the buffer was short.</td></tr>
               <tr><td><code>medius_input_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events the subscription dropped behind a slow consumer.</td></tr>
-              <tr><td><code>medius_input_stream_free(stream)</code></td><td>Release the handle. Null is a no-op; this stream has no clone, because it owns the held sets it diffs.</td></tr>
+              <tr><td><code>medius_input_stream_free(stream)</code></td><td>Release the handle; null is a no-op. No clone: the stream owns the held sets it diffs.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -316,8 +312,8 @@ medius_input_stream_free(input);`}</code></pre>
         <Card>
           <CardHeader title="Timeline" subtitle="Put box stamps on this machine's clock" />
           <p>
-            A catch stamp is microseconds on a chip that booted before your process did: it wraps every
-            ~71.6 minutes and relates to nothing here. A <code>MediusTimeline</code> maps it.
+            A catch stamp is microseconds on a chip's clock: it wraps every ~71.6 minutes and relates
+            to nothing on this machine. A <code>MediusTimeline</code> maps it.
           </p>
           <pre class="api-signature">{`struct MediusTimeline *medius_timeline_new(void);
 void     medius_timeline_free(struct MediusTimeline *t);
@@ -326,9 +322,9 @@ bool     medius_timeline_observe(struct MediusTimeline *t, const MediusCatchEven
 void     medius_timeline_reset(struct MediusTimeline *t, MediusClockDomain domain);
 uint64_t medius_timeline_samples(struct MediusTimeline *t, MediusClockDomain domain);`}</pre>
           <p>
-            Feed every event in as it arrives, in order, with your own monotonic reading as{' '}
-            <code>now_ns</code>. A <A href="/bindings/c/types#stamped"><code>MediusStamped</code></A>{' '}
-            comes back on that same scale.
+            Feed every event in arrival order, with a monotonic reading as <code>now_ns</code>; the{' '}
+            <A href="/bindings/c/types#stamped"><code>MediusStamped</code></A> comes back on that
+            scale.
           </p>
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
@@ -354,8 +350,8 @@ while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
                (unsigned long long)at.box_us,
                (unsigned long long)at.excess_ns);
 
-    /* a chip reboot restarts its clock at zero; a device-chip restart raises
-       MediusCountersSnapshot.restarts: call medius_timeline_reset(tl, domain) then. */
+    /* a chip reboot restarts its clock at zero (a device-chip restart raises
+       MediusCountersSnapshot.restarts): call medius_timeline_reset(tl, domain) */
 }
 medius_timeline_free(tl);`}</code></pre>
         </Card>
@@ -366,8 +362,8 @@ medius_timeline_free(tl);`}</code></pre>
           <CardHeader title="No async" subtitle="Build it on the non-blocking reads" />
           <div class="callout callout--warning">
             <p>
-              The <A href="/bindings/c">C ABI</A> is synchronous; there's no <A href="/library/features/async">async</A> API.
-              Poll with <code>medius_event_stream_try_recv</code>, block with a budget using{' '}
+              The <A href="/bindings/c">C ABI</A> is synchronous, with no <A href="/library/features/async">async</A> API.
+              Poll with <code>medius_event_stream_try_recv</code>, bound a block with{' '}
               <code>medius_event_stream_recv_timeout</code>, or run the blocking{' '}
               <code>recv</code> loop on its own thread. Catch and log handles clone; an input stream
               does not.

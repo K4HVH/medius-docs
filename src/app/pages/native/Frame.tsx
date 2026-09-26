@@ -8,9 +8,9 @@ const Frame: Component = () => {
     <>
       <div id="layout" data-search-target>
         <Card>
-          <CardHeader title="Frame format" subtitle="The one packet shape" />
+          <CardHeader title="Frame format" subtitle="One packet shape" />
           <p>
-            Every message, both directions, is a frame with one fixed shape.
+            Every message, both directions, has this shape.
           </p>
           <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD 0..512][CRC16 u16 LE]</pre>
           <table class="byte-table">
@@ -19,36 +19,36 @@ const Frame: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>SOF</code></td><td>1</td><td>start-of-frame marker, always <code>0xA5</code></td></tr>
-              <tr><td><code>TYPE</code></td><td>1</td><td>the opcode</td></tr>
+              <tr><td><code>TYPE</code></td><td>1</td><td>opcode</td></tr>
               <tr><td><code>SEQ</code></td><td>1</td><td>per-frame sequence number</td></tr>
               <tr><td><code>LEN</code></td><td>2</td><td>payload byte count, little-endian</td></tr>
-              <tr><td><code>PAYLOAD</code></td><td>0-512</td><td>the command's data; empty for argument-free commands</td></tr>
+              <tr><td><code>PAYLOAD</code></td><td>0-512</td><td>command data; empty for argument-free commands</td></tr>
               <tr><td><code>CRC16</code></td><td>2</td><td>checksum over the frame body</td></tr>
             </tbody>
           </table>
           <p>
-            Max payload 512 bytes, so a frame is at most 519. Every multi-byte number is little-endian:
-            the 16-bit value <code>100</code> is the bytes <code>64 00</code>.
+            Max payload 512 bytes, max frame 519. Multi-byte numbers are little-endian: 16-bit{' '}
+            <code>100</code> is <code>64 00</code>.
           </p>
         </Card>
       </div>
 
       <div id="seq" data-search-target>
         <Card>
-          <CardHeader title="Sequence numbers" subtitle="Matching a reply to its request" />
+          <CardHeader title="Sequence numbers" subtitle="Reply matching" />
           <p>
-            <code>SEQ</code> is a one-byte counter you set per frame, typically incrementing and
+            <code>SEQ</code> is a one-byte, caller-set counter per frame, typically incrementing and
             wrapping at 255.
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Command</th><th>Role of <code>SEQ</code></th></tr>
+              <tr><th>Command</th><th>Role</th></tr>
             </thead>
             <tbody>
-              <tr><td>Ordinary commands</td><td>Only lets you spot a dropped frame.</td></tr>
-              <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>The box copies your <code>SEQ</code> onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, so with several requests outstanding the matching <code>SEQ</code> pairs each reply with its request.</td></tr>
-              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>The box copies your <code>SEQ</code> onto the <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.</td></tr>
-              <tr><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>Match an <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A> to its request by the op it echoes. <code>DATA</code> acknowledgements carry a rolling <code>SEQ</code>, because one answers a whole window of chunks.</td></tr>
+              <tr><td>Ordinary commands</td><td>Dropped-frame detection only.</td></tr>
+              <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>Copied onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, pairing each reply with its request when several are outstanding.</td></tr>
+              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Copied onto the <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.</td></tr>
+              <tr><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>An <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A> matches its request by the echoed op. <code>DATA</code> acknowledgements carry a rolling <code>SEQ</code>, since one covers a whole window of chunks.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -58,8 +58,7 @@ const Frame: Component = () => {
         <Card>
           <CardHeader title="Opcodes" subtitle="The TYPE byte" />
           <p>
-            The opcodes run from <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is
-            ignored harmlessly.
+            Opcodes run <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is ignored.
           </p>
           <table class="api-params">
             <thead>
@@ -99,20 +98,20 @@ const Frame: Component = () => {
             </tbody>
           </table>
           <p>
-            <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were the old <code>WHEEL</code>,{' '}
-            <code>KEY</code>, and <code>CONSUMER</code> commands, folded into{' '}
+            <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were <code>WHEEL</code>,{' '}
+            <code>KEY</code>, and <code>CONSUMER</code>, now{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A> (motion-tagged) and{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged). <code>0x10</code>{' '}
-            was <code>CONS_EVENT</code>, folded into the class-tagged{' '}
-            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>. The old numbers are
-            never reused.
+            <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged);{' '}
+            <code>0x10</code> was <code>CONS_EVENT</code>, now the class-tagged{' '}
+            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>. Retired numbers
+            are never reused.
           </p>
         </Card>
       </div>
 
       <div id="crc" data-search-target>
         <Card>
-          <CardHeader title="Checksum & integrity" subtitle="Rejecting corrupted frames" />
+          <CardHeader title="Checksum" subtitle="Rejecting corrupted frames" />
           <p>
             The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
             <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
@@ -146,14 +145,14 @@ def encode_frame(type, seq, payload):
 
       <div id="example" data-search-target>
         <Card>
-          <CardHeader title="Example: a MOVE frame" />
+          <CardHeader title="Example MOVE frame" />
           <p>
             A cursor <A href="/native/commands/move#move"><code>MOVE</code></A> of{' '}
             <code>dx = 100</code>, <code>dy = 0</code>.
           </p>
           <ul>
             <li>Opcode <code>0x01</code>.</li>
-            <li>Payload is the <code>motion</code> byte (<code>00</code> = cursor), the two 16-bit values <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then the <code>flags</code> byte (<code>00</code>).</li>
+            <li>Payload: <code>motion</code> (<code>00</code> = cursor), 16-bit <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then <code>flags</code> (<code>00</code>).</li>
             <li><code>LEN</code> is <code>06 00</code>.</li>
           </ul>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -162,8 +161,8 @@ def encode_frame(type, seq, payload):
 | SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
           <p>
-            The CRC bytes are the little-endian <code>crc16_ccitt</code> of{' '}
-            <code>01 00 06 00 00 64 00 00 00 00</code>. Compute them rather than copying a literal.
+            The CRC is the little-endian <code>crc16_ccitt</code> of{' '}
+            <code>01 00 06 00 00 64 00 00 00 00</code>; compute it, don't copy a literal.
           </p>
         </Card>
       </div>

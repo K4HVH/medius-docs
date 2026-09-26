@@ -1,5 +1,5 @@
-// Web Serial availability checks. The API exists only in Chromium-based browsers
-// (Chrome/Edge/Opera 89+) and only in a secure context (HTTPS or localhost).
+// Web Serial exists only in Chromium browsers (Chrome/Edge/Opera 89+), in a secure context
+// (HTTPS or localhost).
 
 export function isWebSerialSupported(): boolean {
   return typeof navigator !== 'undefined' && 'serial' in navigator;

@@ -1,15 +1,13 @@
-// Helpers the advanced-control cards share: the hex and number field parsers, the setup packet's
-// fields, the traffic address a rewrite rule and a packet trigger both name, and the casing that
-// turns the protocol's own names into option labels.
+// Parsers and labels shared by the advanced-control cards.
 
 import { CatchClass, Direction, REWRITE_CLASSES, rewriteClassName } from '../../../dashboard/protocol';
 
-// Bytes as spaced lowercase hex, the form every hex field on these cards reads and writes.
+// Spaced lowercase hex, the form every hex field reads and writes.
 export const toHex = (b: Uint8Array): string =>
   Array.from(b, (x) => x.toString(16).padStart(2, '0')).join(' ');
 
-// Parse spaced or run-together hex into bytes; an odd nibble count or a non-hex character is a null,
-// which the caller reports rather than sending a half-formed frame. An empty string is an empty array.
+// Spaced or run-together hex. Null on an odd nibble count or a non-hex character, for the caller
+// to report; empty on empty.
 export const parseHex = (s: string): Uint8Array | null => {
   const clean = s.replace(/0x/gi, '').replace(/[\s,]+/g, '');
   if (clean.length === 0) return new Uint8Array(0);
@@ -19,8 +17,8 @@ export const parseHex = (s: string): Uint8Array | null => {
   return out;
 };
 
-// A match and its mask from their two hex fields, or what is wrong with them. The box compares a
-// packet's head byte for byte under the mask, so the two are one length, `max` bytes at most.
+// The box compares a packet's head byte for byte under the mask, so both are one length, at most
+// `max` bytes.
 export const parseMatchMask = (
   match: string,
   mask: string,
@@ -34,7 +32,7 @@ export const parseMatchMask = (
   return { match: m, mask: k };
 };
 
-// A small integer from a decimal or 0x-prefixed field; null on anything else.
+// Decimal or 0x-prefixed; null otherwise.
 export const parseNum = (s: string): number | null => {
   const t = s.trim();
   if (t === '') return null;
@@ -42,9 +40,8 @@ export const parseNum = (s: string): number | null => {
   return Number.isFinite(v) && v >= 0 ? Math.floor(v) : null;
 };
 
-// The five setup fields keep their specification names and stay text: bmRequestType and wValue are
-// read and written in hex wherever USB is documented, and a spinner showing 256 for 0x0100 would be
-// the wrong instrument for a setup packet.
+// Spec names, as text fields: USB documents bmRequestType and wValue in hex, and a spinner would
+// show 256 for 0x0100.
 export const SETUP_FIELDS = [
   { key: 'type', label: 'bmRequestType', placeholder: '0x80' },
   { key: 'req', label: 'bRequest', placeholder: '6' },
@@ -53,7 +50,7 @@ export const SETUP_FIELDS = [
   { key: 'length', label: 'wLength', placeholder: '18' },
 ] as const;
 
-// The setup packet every setup editor opens on: GET_DESCRIPTOR for the 18-byte device descriptor.
+// GET_DESCRIPTOR for the 18-byte device descriptor.
 export const SETUP_DEFAULT: Record<string, string> = {
   type: '0x80',
   req: '6',
@@ -62,12 +59,10 @@ export const SETUP_DEFAULT: Record<string, string> = {
   length: '18',
 };
 
-// bmRequestType is a bitmap, so the one field nobody reads at a glance is the one worth reading
-// back in words. Bit 7 is the direction, bits 6-5 the type, bits 4-0 the recipient.
+// bmRequestType: bit 7 direction, bits 6-5 type, bits 4-0 recipient.
 const TYPE_NAME = ['standard', 'class', 'vendor', 'reserved'];
 const RECIPIENT_NAME = ['the device', 'an interface', 'an endpoint', 'another target'];
 
-// The standard requests, which are the ones a bRequest number alone will not tell you.
 const STANDARD_REQUEST: Record<number, string> = {
   0: 'GET_STATUS',
   1: 'CLEAR_FEATURE',
@@ -91,20 +86,18 @@ export const decodeSetup = (bm: number, req: number | null): string => {
   return named ? `${head}: ${named}.` : `${head}.`;
 };
 
-// Where a raw report's bytes land, which is the whole meaning of the direction sitting above it.
 export const RAW_DIR_BLURB: Record<number, string> = {
-  [Direction.Positive]: 'The report reaches the game PC.',
-  [Direction.Negative]: 'The report reaches the device.',
+  [Direction.Positive]: 'Reaches the game PC.',
+  [Direction.Negative]: 'Reaches the device.',
 };
 
-// What the Out data field is for, which bit 7 of bmRequestType decides.
+// Bit 7 of bmRequestType sets whether the Out data field is used.
 export const outDataBlurb = (bm: number | null): string =>
   bm !== null && (bm & 0x80) === 0
-    ? 'The data stage this request carries to the device.'
-    : 'Unused: this request reads, it does not write.';
+    ? 'Data stage sent to the device.'
+    : 'Unused: this request reads.';
 
-// The protocol names things in lowercase wire vocabulary. Sentence case is what an option label wears
-// everywhere else on the dashboard, except where the wire name is an acronym or a hyphenated pair.
+// Sentence-cases a wire name, except acronyms and hyphenated pairs.
 const SPECIAL: Record<string, string> = {
   ok: 'OK',
   nak: 'NAK',
@@ -114,27 +107,24 @@ const SPECIAL: Record<string, string> = {
 
 export const displayName = (t: string): string => SPECIAL[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
 
-// The six traffic surfaces, and what each one carries. It reads out under the class picker, the way
-// the options card blurbs the render mode it is sitting on.
 export const TRAFFIC_CLASS_OPTIONS = REWRITE_CLASSES.map((c) => ({
   value: String(c),
   label: displayName(rewriteClassName(c)),
 }));
 
 export const TRAFFIC_CLASS_BLURB: Record<number, string> = {
-  [CatchClass.HidIn]: 'Reports as the device sends them, by interface, before the box changes anything.',
-  [CatchClass.HidOut]: 'Reports the game PC sends the device, by endpoint.',
+  [CatchClass.HidIn]: 'Native reports by interface, before the box changes them.',
+  [CatchClass.HidOut]: 'Reports from the game PC to the device, by endpoint.',
   [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
   [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
-  [CatchClass.Control]: 'Class and vendor requests on EP0, and every request on a control endpoint above it.',
+  [CatchClass.Control]: 'Class and vendor requests on EP0, and every request on higher control endpoints.',
   [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
 };
 
-// HID_IN addresses an interface; every other class keys on the endpoint number, HID_OUT included.
-// The catch card's id table says the same, and the box looks all of them up by EP_NUM.
+// HID_IN keys on the interface; every other class, HID_OUT included, on the endpoint number.
 export const trafficIdLabel = (cls: number): string => {
-  if (cls === CatchClass.HidIn) return 'Interface number';
-  return cls === CatchClass.Control ? 'Endpoint number (0 is EP0)' : 'Endpoint number';
+  if (cls === CatchClass.HidIn) return 'Interface';
+  return cls === CatchClass.Control ? 'Endpoint (0 is EP0)' : 'Endpoint';
 };
 
 export const trafficDirWord = (d: number): string =>

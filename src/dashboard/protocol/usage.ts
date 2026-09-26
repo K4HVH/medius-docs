@@ -1,12 +1,11 @@
-// Names for the momentary usages the box addresses: mouse buttons, HID Keyboard/Keypad keycodes,
-// and Consumer (media) usages.
+// Names for mouse buttons, HID Keyboard/Keypad keycodes and Consumer (media) usages.
 
 import { INJ_BTN, INJ_KEY, INJ_MEDIA } from './opcode';
 
 export interface NamedUsage {
   id: number;
   name: string;
-  // Groups the pickers sort and section by. Not on the wire.
+  // Picker grouping only; not on the wire.
   group: string;
 }
 
@@ -18,18 +17,14 @@ export const BUTTONS: NamedUsage[] = [
   { id: 4, name: 'Side 2', group: 'Mouse' },
 ];
 
-// The compile-time ceiling the box caps a declared button count at (ctrl_proto.h MAX_BUTTONS): the
-// widest owned mice declare sixteen, so a picker never offers a numbered button past it.
+// The box's cap on a declared button count (ctrl_proto.h MAX_BUTTONS).
 export const MAX_BUTTONS = 16;
 
-// The name for one button id: the five standard buttons by name, then a numeric id up to the count
-// the cloned mouse declares.
 export function buttonName(id: number): string {
   return BUTTONS[id]?.name ?? `Button ${id + 1}`;
 }
 
-// The button list a picker offers for a mouse declaring `n` buttons (RESP(CAPS) n_buttons, the
-// injection cap): the five named, plus a numbered entry for each declared button past them.
+// Named buttons, then one numbered entry per further declared button (RESP(CAPS) n_buttons).
 export function buttonsUpTo(n: number): NamedUsage[] {
   const count = Math.min(Math.max(n, BUTTONS.length), MAX_BUTTONS);
   if (count <= BUTTONS.length) return BUTTONS;
@@ -158,8 +153,7 @@ export const KEYS: NamedUsage[] = [
   { id: 0xe7, name: 'Right GUI', group: 'Modifiers' },
 ];
 
-// Consumer page usages a keyboard's media collection actually reports. 16-bit, so this is a subset
-// by nature; the pickers accept a raw value alongside the table.
+// Consumer usages a keyboard's media collection reports; the pickers also take a raw 16-bit value.
 export const MEDIA: NamedUsage[] = [
   { id: 0xb0, name: 'Play', group: 'Transport' },
   { id: 0xb1, name: 'Pause', group: 'Transport' },
@@ -183,8 +177,7 @@ export const MEDIA: NamedUsage[] = [
   { id: 0x22a, name: 'Bookmarks', group: 'Browser' },
 ];
 
-// The table for one INJECT class. Unknown class yields an empty table rather than throwing, so a
-// caller rendering a class byte off the wire cannot crash the page on a value it did not expect.
+// Empty for an unknown class, so an unexpected class byte off the wire can't crash the page.
 export function usageTable(cls: number): NamedUsage[] {
   if (cls === INJ_BTN) return BUTTONS;
   if (cls === INJ_KEY) return KEYS;
@@ -197,8 +190,7 @@ for (const cls of [INJ_BTN, INJ_KEY, INJ_MEDIA]) {
   for (const u of usageTable(cls)) index.set(`${cls}:${u.id}`, u.name);
 }
 
-// A usage's display name, falling back to the hex id. Every id is addressable whether or not the
-// table names it, so the fallback is the normal case for an unnamed Consumer usage, not an error.
+// Falls back to the hex id, the normal case for an unnamed Consumer usage.
 export function usageName(cls: number, id: number): string {
   const named = index.get(`${cls}:${id}`);
   if (named) return named;

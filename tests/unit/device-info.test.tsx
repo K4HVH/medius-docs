@@ -70,7 +70,7 @@ describe('DeviceInfo: one Capabilities card', () => {
     expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Keyboard');
     await findByText(/31E3:1232/);                     // the cloned device's USB id
     await findByText('Full clone');                    // over-capacity as a terse row...
-    await findByText(/needs more than the box can serve, or is high speed/); // ...not a prose card
+    await findByText(/over box capacity, or high speed/); // ...not a prose card
     // the junk I'm killing must be gone:
     expect(queryByText('Not a full copy')).toBeNull();
     expect(queryByText('Your mouse')).toBeNull();

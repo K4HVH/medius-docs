@@ -176,7 +176,7 @@ describe('DeviceInject', () => {
   it('hides the cursor and button controls when no mouse is cloned', async () => {
     mock.setHealth(health({ cloneConfigured: false }));
     const { queryByText, findByText } = render(() => <DeviceInject />);
-    await findByText('No mouse is cloned.');
+    await findByText('No mouse cloned.');
     expect(queryByText('Scroll up')).toBeNull();
   });
 
@@ -231,7 +231,7 @@ describe('DeviceInject', () => {
     // Key and media holds reach a keyboard interface that is not there, so the box drops them.
     mock.setHealth(health({ kbdAttached: false }));
     const { findByText } = render(() => <DeviceInject />);
-    await findByText('No keyboard is attached, so the box discards key and media holds.');
+    await findByText('No keyboard attached: the box discards key and media holds.');
     await findByText('Press');
   });
 

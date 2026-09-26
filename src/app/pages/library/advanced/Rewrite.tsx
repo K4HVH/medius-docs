@@ -9,8 +9,8 @@ const Rewrite: Component = () => {
       <Card>
         <CardHeader title="Rewrite rules" subtitle="Rewrite a matched packet in flight" />
         <p>
-          The box holds a table of rules that match traffic and rewrite, answer, refuse, or drop it.
-          A rule is addressed in the same <code>(class, id, direction)</code> space{' '}
+          A rule matches traffic and rewrites, answers, refuses, or drops it. It is addressed in the{' '}
+          <code>(class, id, direction)</code> space{' '}
           <A href="/library/catch">catch</A> reads, in the write direction, narrowed by a masked head
           compare.
         </p>
@@ -48,9 +48,9 @@ const Rewrite: Component = () => {
         </div>
         <div class="callout callout--warning">
           <p>
-            The advanced control layer is gated on the imperfect-clone opt-in. With{' '}
-            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
-            off, <code>set_rewrite</code> returns{' '}
+            The advanced control layer needs{' '}
+            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
+            with it off, <code>set_rewrite</code> returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
           </p>
         </div>
@@ -58,7 +58,7 @@ const Rewrite: Component = () => {
           <code>set_rewrite</code>, <code>remove_rewrite</code>, and <code>clear_rewrite</code> are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>;{' '}
           <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> reads back
-          what the box actually holds.
+          what the box holds.
         </p>
       </Card>
 
@@ -72,13 +72,13 @@ const Rewrite: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>The rule to install: its <A href="/library/types/enums#rewrite-class">address</A>, its <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload.</td></tr>
+              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>Its <A href="/library/types/enums#rewrite-class">address</A>, <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload.</td></tr>
             </tbody>
           </table>
           <p>
-            A rule is keyed by <code>(class, id, direction, match, mask)</code>; setting one whose key
-            exists overwrites it, resets its hits and moves it to the end of the table. The crate checks
-            a rule against the box's limits before sending, so a refusal is a real error.
+            Rules are keyed by <code>(class, id, direction, match, mask)</code>; setting an existing key
+            overwrites the rule, resets its hits and moves it to the end of the table. The crate checks
+            the box's limits before sending, so a refusal is a real error.
           </p>
           <div class="api-response-label">REFUSALS</div>
           <table class="api-params">
@@ -96,7 +96,7 @@ const Rewrite: Component = () => {
 let device = Device::find()?;
 device.allow_imperfect_clones(true)?;
 
-// Mute the clone's own wire on interrupt-IN endpoint 1.
+// Drop the clone's wire on interrupt-IN endpoint 1.
 device.set_rewrite(&RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop))?;
 
 // Overwrite byte 2 of each report the clone emits on endpoint 1, when byte 0 is the report id 0x01.
@@ -131,8 +131,8 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
           <pre class="api-signature">fn clear_rewrite(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
-            Drops the whole table. It always clears the crate's held rules, whatever the opt-in, so a
-            reconnect never re-asserts a rule you cleared.
+            Drops the whole table, and the crate's held rules whatever the opt-in, so a reconnect never
+            re-asserts a cleared rule.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.clear_rewrite()?;`}</code></pre>
@@ -141,14 +141,14 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
 
       <div id="query-rewrite" data-search-target>
         <Card>
-          <CardHeader title="query_rewrite" subtitle="Read the table's summary" />
+          <CardHeader title="query_rewrite" subtitle="Table summary" />
           <pre class="api-signature">fn query_rewrite(&self) -&gt; Result&lt;RewriteTable&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
             Returns a <A href="/library/types/structs#rewrite-table"><code>RewriteTable</code></A>: a
             full flag, a generation counter, and a row per rule without its match, mask, or payload
-            bytes. The full flag says the box refused the last new rule or overwrite for room, and the
-            next change to the table, or a clear, resets it.
+            bytes. The full flag means the box refused the last new rule or overwrite for room; the next
+            table change or a clear resets it.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let table = device.query_rewrite()?;
@@ -161,7 +161,7 @@ for e in &table.entries {
 
       <div id="query-rewrite-entry" data-search-target>
         <Card>
-          <CardHeader title="query_rewrite_entry" subtitle="Read one rule in full" />
+          <CardHeader title="query_rewrite_entry" subtitle="One rule in full" />
           <pre class="api-signature">fn query_rewrite_entry(&self, index: u8) -&gt; Result&lt;RewriteRule&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <table class="api-params">
@@ -193,8 +193,8 @@ for i in 0..table.entries.len() as u8 {
           <CardHeader title="On AsyncDevice" subtitle="set_rewrite and the queries await; remove and clear fire" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> makes{' '}
-            <code>set_rewrite</code> a future: it awaits the imperfect-clone opt-in check before it
-            sends, as do <code>query_rewrite</code> and <code>query_rewrite_entry</code>.{' '}
+            <code>set_rewrite</code> a future, awaiting the opt-in check before sending;{' '}
+            <code>query_rewrite</code> and <code>query_rewrite_entry</code> are futures too.{' '}
             <code>remove_rewrite</code> and <code>clear_rewrite</code> carry no opt-in check and stay
             synchronous.
           </p>

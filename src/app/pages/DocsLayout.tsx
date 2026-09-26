@@ -70,7 +70,7 @@ const nativeReferenceTabs: TabOption[] = [
   { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
 ];
 
-// Cross-cutting AI access group, shown at the foot of every code section.
+// AI access group, at the foot of every code section.
 const aiAccessTabs: TabOption[] = [{ value: '/ai', label: 'AI & LLMs', icon: BsStars }];
 
 const allNativeTabs = [
@@ -187,7 +187,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   const location = useLocation();
   const dash = useDashboard();
   const flashing = () => dash.status() === 'flashing';
-  // Block all in-app navigation (back/forward, links, programmatic) during a flash.
+  // Block in-app navigation (back/forward, links, programmatic) during a flash.
   useBeforeLeave((e) => {
     if (flashing()) e.preventDefault();
   });
@@ -252,7 +252,7 @@ const DocsLayout = (props: RouteSectionProps) => {
     const s = rawSection();
     if (s === 'native' || s === 'library' || s === 'bindings') setLastCodeSection(s);
   });
-  // The AI page is cross-cutting, so keep the sidebar of the section it was opened from.
+  // The AI page keeps the sidebar of the section it was opened from.
   const activeSection = () => {
     const s = rawSection();
     return s === 'ai' ? lastCodeSection() : s;
@@ -284,7 +284,7 @@ const DocsLayout = (props: RouteSectionProps) => {
     setTimeout(() => scrollToTarget(hash), 50);
   });
 
-  // Syntax-highlight the page's code blocks after each route renders.
+  // Highlight code blocks after each route renders.
   createEffect(() => {
     location.pathname;
     requestAnimationFrame(() => {
@@ -550,8 +550,8 @@ const DocsLayout = (props: RouteSectionProps) => {
         onKeybinding={() => {
           if (!flashing()) setSearchOpen((prev) => !prev);
         }}
-        placeholder="Search documentation..."
-        emptyMessage="No results found"
+        placeholder="Search docs..."
+        emptyMessage="No results"
       />
     </>
   );

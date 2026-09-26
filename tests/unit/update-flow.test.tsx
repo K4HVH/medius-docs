@@ -250,7 +250,7 @@ describe('updateOverControl', () => {
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('sent');
     expect(api.error()).toMatch(/did not come back on its own/i);
-    expect(api.error()).toMatch(/unplug it, plug it back in/i);
+    expect(api.error()).toMatch(/replug it, then connect/i);
     // It must not claim anything about what is running now, nor leave the old firmware read to compare.
     expect(api.error()).not.toMatch(/installed|verified/i);
     expect(api.firmwareInfo()).toBeNull();

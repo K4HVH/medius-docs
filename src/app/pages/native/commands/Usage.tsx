@@ -7,11 +7,11 @@ const Usage: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Usage IDs" subtitle="The id numbers inject and lock take" />
+        <CardHeader title="Usage IDs" subtitle="Ids for INJECT and LOCK" />
         <p>
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> and{' '}
-          <A href="/native/commands/lock#lock"><code>LOCK</code></A> both name an input by an{' '}
-          <code>id</code>, and the numbers depend on the class: a{' '}
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A> name an input by an{' '}
+          <code>id</code>, per class: a{' '}
           <A href="/native/commands/usage#buttons">button id</A> for the mouse, a{' '}
           <A href="/native/commands/usage#keycodes">HID keyboard usage</A> for a key, or a 16-bit{' '}
           <A href="/native/commands/usage#consumer">Consumer usage</A> for a media key.
@@ -22,13 +22,12 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="Button ids" subtitle="Mouse buttons (class = button)" />
           <p>
-            A semantic id, bound at clone time to the real mouse's buttons, and the same id for{' '}
+            A semantic id, bound at clone time to the mouse's buttons, shared by{' '}
             <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named; a
-            mouse that declares more carries a numeric id for each, up to the count{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>{' '}
-            reports. A command for an id past that count is a no-op, so read <code>n_buttons</code>{' '}
-            first.
+            <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named;
+            each further declared button gets a numeric id, up to{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>.
+            An id past that count is a no-op, so read <code>n_buttons</code> first.
           </p>
           <table class="api-params">
             <thead><tr><th>Button</th><th><code>id</code></th></tr></thead>
@@ -44,8 +43,8 @@ const Usage: Component = () => {
           <p>
             The Rust library names the five as{' '}
             <A href="/library/types/structs#button"><code>Button</code></A> constants
-            (<code>Button::LEFT</code> to <code>Button::SIDE2</code>) and takes any id past them up to
-            the declared count.
+            (<code>Button::LEFT</code> to <code>Button::SIDE2</code>) and takes further ids up to the
+            declared count.
           </p>
         </Card>
       </div>
@@ -54,10 +53,10 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="HID keyboard usages" subtitle="Keys and modifiers (class = key)" />
           <p>
-            The <code>id</code> is a HID Keyboard/Keypad usage from the{' '}
+            A HID Keyboard/Keypad usage from the{' '}
             <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>{' '}
-            (page 0x07). A usage of <code>0xE0</code>-<code>0xE7</code> is a modifier and folds into
-            the modifier byte; any other usage fills a keycode slot. The common ones:
+            (page 0x07). <code>0xE0</code>-<code>0xE7</code> are modifiers and fold into the
+            modifier byte; any other usage fills a keycode slot. Common ones:
           </p>
           <table class="api-params">
             <thead><tr><th>Key</th><th>Usage</th></tr></thead>
@@ -93,11 +92,11 @@ const Usage: Component = () => {
         <Card>
           <CardHeader title="Consumer usages" subtitle="Media keys (class = media)" />
           <p>
-            The <code>id</code> is a 16-bit usage from the Consumer page (0x0C) of the{' '}
+            A 16-bit usage from the Consumer page (0x0C) of the{' '}
             <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>.
-            Present-gated to a board with a Consumer collection, read from the{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A>{' '}
-            <code>CONSUMER</code> flag. The usual transport controls:
+            Available only on a board with a Consumer collection (the{' '}
+            <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>CONSUMER</code>{' '}
+            flag). Common transport controls:
           </p>
           <table class="api-params">
             <thead><tr><th>Media key</th><th>Usage</th></tr></thead>

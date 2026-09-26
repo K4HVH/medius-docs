@@ -9,8 +9,8 @@ const Connection: Component = () => {
       <Card>
         <CardHeader title="Connection & handshake" subtitle="Open, find, and handshake" />
         <p>
-          The handshake confirms the device on the serial port is a Medius box and speaks a protocol
-          version you understand: one request, one reply.
+          The handshake confirms the serial device is a Medius box speaking a supported protocol
+          version: one request, one reply.
         </p>
         <ul>
           <li>No baud negotiation.</li>
@@ -21,22 +21,21 @@ const Connection: Component = () => {
 
       <div id="handshake" data-search-target>
         <Card>
-          <CardHeader title="Handshake" subtitle="One round-trip to confirm the box" />
+          <CardHeader title="Handshake" subtitle="One round-trip" />
           <ol>
             <li>
-              Open the serial port at <code>6,000,000</code> baud
-              (<A href="/native/transport">Transport</A>). The box speaks{' '}
-              <A href="/native/frame">framed binary</A> from the first byte.
+              Open the port at <code>6,000,000</code> baud
+              (<A href="/native/transport">Transport</A>); <A href="/native/frame">framed binary</A>{' '}
+              from the first byte.
             </li>
             <li>
-              Catch the unsolicited hello the box sends on its own
-              (<A href="/native/connection#hello">below</A>), or send a{' '}
-              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> yourself.
-              Both produce the same{' '}
+              Catch the unsolicited hello (<A href="/native/connection#hello">below</A>) or send{' '}
+              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>; both
+              produce the same{' '}
               <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
             </li>
             <li>
-              Read <code>proto_ver</code> from that reply and check it equals <code>9</code>.
+              Check that reply's <code>proto_ver</code> is <code>9</code>.
             </li>
           </ol>
           <table class="api-params">
@@ -45,15 +44,15 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>proto_ver == 9</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 9</code></td><td>Speaks a protocol these pages don't cover; don't assume the commands behave as described.</td></tr>
-              <tr><td>No reply</td><td>Not a Medius box, or the port or baud is wrong.</td></tr>
+              <tr><td><code>proto_ver != 9</code></td><td>Speaks a protocol these pages don't cover; commands may behave otherwise.</td></tr>
+              <tr><td>No reply</td><td>Not a Medius box, or wrong port or baud.</td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">
             <p>
-              The check is mandatory, not advisory. Firmware 3.1.x and earlier report <code>4</code>,
-              where <A href="/native/commands/lock#lock"><code>LOCK</code></A>'s last byte was a state
-              (<code>1</code> = lock, <code>0</code> = unlock) rather than a{' '}
+              The check is mandatory. Firmware 3.1.x and earlier report <code>4</code>, where{' '}
+              <A href="/native/commands/lock#lock"><code>LOCK</code></A>'s last byte is a state
+              (<code>1</code> = lock, <code>0</code> = unlock), not a{' '}
               <A href="/native/commands/lock#scale">scale</A>.
             </p>
             <pre class="diagram">{`a proto-9 host talking to a proto-4 box
@@ -61,22 +60,22 @@ const Connection: Component = () => {
   scale = 100  (unlock)  ->  state = 100, non-zero  ->  LOCKS it
   scale =   0  (block)   ->  state = 0              ->  UNLOCKS it`}</pre>
           </div>
-          <div class="api-response-label">THE REPLY: RESP(VERSION)</div>
+          <div class="api-response-label">RESP(VERSION)</div>
           <p>
-            Full detail on the <A href="/native/commands/requests#version">Requests</A> page.
+            Full detail on <A href="/native/commands/requests#version">Requests</A>.
           </p>
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>the selector byte, echoed back; <code>0x00</code> = <code>VERSION</code></td></tr>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>selector, echoed; <code>0x00</code> = <code>VERSION</code></td></tr>
               <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>9</code></td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
-              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the box MAC, a stable per-box id</td></tr>
-              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>the box's human-readable name (may be empty), delimited by the frame <code>LEN</code></td></tr>
+              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>box MAC, a stable per-box id</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>human-readable box name (may be empty), delimited by the frame <code>LEN</code></td></tr>
             </tbody>
           </table>
         </Card>
@@ -84,20 +83,18 @@ const Connection: Component = () => {
 
       <div id="hello" data-search-target>
         <Card>
-          <CardHeader title="The ready hello" subtitle="Unsolicited RESP(VERSION), twice per boot" />
+          <CardHeader title="Ready hello" subtitle="Unsolicited RESP(VERSION), twice per boot" />
           <p>
-            The box sends a{' '}
-            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> on its own twice
-            per boot. Treat either as "box is here and ready" and skip your own{' '}
+            Treat either hello as ready and skip the{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Trigger</th><th>When it fires</th></tr>
+              <tr><th>Trigger</th><th>When</th></tr>
             </thead>
             <tbody>
               <tr><td>Power-on</td><td>Once, as the device chip boots, before any other frame.</td></tr>
-              <tr><td>First contact</td><td>Once, on the first valid frame the device chip receives after it boots, ahead of that frame's reply. A program that opens the port after another has spoken gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
+              <tr><td>First contact</td><td>Once, on the device chip's first valid frame after boot, ahead of that frame's reply. A program opening the port after another has spoken gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`  device chip boots         -->  hello, SEQ 0
@@ -105,19 +102,18 @@ const Connection: Component = () => {
   every later frame         -->  no hello
   device chip restarts      -->  hello at boot, and again on the next frame`}</pre>
           <p>
-            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A>, and its payload is
-            identical to a queried reply. One arriving mid-session means the device chip restarted,
-            and its session state, such as <A href="/native/commands/lock">locks</A> and{' '}
-            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>, is gone.
+            The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> and the same payload
+            as a queried reply. One arriving mid-session means the device chip restarted and lost its
+            session state, such as <A href="/native/commands/lock">locks</A> and{' '}
+            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>.
           </p>
           <div class="callout callout--info">
             <p>
-              The <A href="/library/connection">medius library</A> does all of this inside{' '}
+              The <A href="/library/connection">medius library</A>'s{' '}
               <A href="/library/connection#open"><code>open</code></A> and{' '}
-              <A href="/library/connection#open"><code>find</code></A>: it sends{' '}
-              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retries a
-              few times, and checks <code>proto_ver == 9</code> before handing you a working
-              connection.
+              <A href="/library/connection#open"><code>find</code></A> do all of this: send{' '}
+              <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retry a few
+              times, and check <code>proto_ver == 9</code> before returning a connection.
             </p>
           </div>
         </Card>

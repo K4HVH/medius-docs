@@ -8,11 +8,11 @@ Built with [SolidJS](https://solidjs.com) and MidnightUI.
 
 | Section | What |
 |---|---|
-| Native API | The binary control protocol and how the box behaves. Covers the hardware, transport, frame format, injection model, and every command (opcodes `0x01`-`0x1E`). |
-| Rust Library | API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `tracing` features. |
-| Bindings | The C ABI and Python bindings over the same crate. |
-| Dashboard | The in-browser box dashboard: connect, view device info, update firmware, recover, and read the device log. |
-| AI Access | Using the docs with an AI assistant: per-page Markdown twins, `llms.txt`, and the MCP server. |
+| Native API | Binary control protocol and box behaviour: hardware, transport, frame format, injection model, every command (opcodes `0x01`-`0x1E`). |
+| Rust Library | `medius` crate reference: connecting, command bindings, keepalive, reconnect, and the `async` / `mock` / `tracing` features. |
+| Bindings | C ABI and Python bindings over the crate. |
+| Dashboard | In-browser box dashboard: connect, device info, firmware update, recovery, device log. |
+| AI Access | Per-page Markdown twins, `llms.txt`, and the MCP server. |
 
 ## Development
 
@@ -26,7 +26,7 @@ Built with [SolidJS](https://solidjs.com) and MidnightUI.
 bun install
 ```
 
-### Dev Server
+### Dev server
 
 ```bash
 bun run dev
@@ -40,9 +40,9 @@ Open [http://localhost:3000](http://localhost:3000).
 bun run build
 ```
 
-Output goes to `dist/`.
+Output: `dist/`.
 
-## Tech Stack
+## Tech stack
 
 | Tool | Role |
 |---|---|
@@ -56,7 +56,7 @@ Output goes to `dist/`.
 ## Deployment
 
 CI builds the app and a multi-arch container on every push to `main` and publishes it to
-`ghcr.io/k4hvh/medius-docs`. Run it with Docker:
+`ghcr.io/k4hvh/medius-docs`. Run it:
 
 ```bash
 docker run --rm -p 3000:3000 ghcr.io/k4hvh/medius-docs:latest

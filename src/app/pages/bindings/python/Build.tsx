@@ -7,21 +7,21 @@ const Build: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Build & features" subtitle="Turning on mock, and building from source" />
+        <CardHeader title="Build & features" subtitle="Enabling mock, building from source" />
         <p>
-          The <A href="/library/features/mock">mock</A> feature is compiled into the native library,
-          not switched on from Python, so turning it on means building that library.
+          The <A href="/library/features/mock">mock</A> feature is compiled into the library, not
+          switched on from Python; enabling it means rebuilding the library.
         </p>
       </Card>
 
       <div id="features" data-search-target>
         <Card>
-          <CardHeader title="Feature flags" subtitle="mock, and how to tell what's built in" />
+          <CardHeader title="Feature flags" subtitle="mock, and checking for it" />
           <p>
-            Both are <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">Cargo features</a>{' '}
+            <code>mock</code> is a <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">Cargo feature</a>{' '}
             on the <a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer"><code>medius-capi</code></a>{' '}
-            crate. On import, Python reads what the loaded library exposes and sets{' '}
-            <code>medius.HAS_MOCK</code> to match.
+            crate. On import, Python sets <code>medius.HAS_MOCK</code> from what the loaded library
+            exposes.
           </p>
           <table class="api-params">
             <thead>
@@ -40,9 +40,9 @@ const Build: Component = () => {
           <div class="callout callout--warning">
             <p>
               The <code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code>{' '}
-              wheel does not have it. <code>MockBox()</code> raises{' '}
+              wheel is built without it, and <code>MockBox()</code> raises{' '}
               <code><a href="https://docs.python.org/3/library/exceptions.html#RuntimeError" target="_blank" rel="noreferrer">RuntimeError</a></code> there.
-              Gate on the flag first: <code>if medius.HAS_MOCK:</code>.
+              Gate on <code>if medius.HAS_MOCK:</code> first.
             </p>
           </div>
           <div class="api-response-label">FEATURE CHECK</div>
@@ -60,7 +60,7 @@ export MEDIUS_LIB=$PWD/target/release/libmedius_capi.so
 python -c "import medius; print(medius.HAS_MOCK)"
 # True`}</code></pre>
           <p>
-            To bake the feature into an installed wheel, build the library first and let pip reuse it:
+            To include it in an installed wheel, build the library first; pip reuses it:
           </p>
           <pre><code class="language-bash">{`cargo build --release -p medius-capi --features mock
 MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
@@ -71,8 +71,8 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
         <Card>
           <CardHeader title="Finding the library" subtitle="MEDIUS_LIB and the load order" />
           <p>
-            On <code>import medius</code> the package loads the native library, trying these in order
-            and stopping at the first hit. <code>MEDIUS_LIB</code> overrides the rest.
+            <code>import medius</code> loads the library from the first of these that exists;{' '}
+            <code>MEDIUS_LIB</code> overrides the rest.
           </p>
           <pre class="diagram">{`import medius
    │
@@ -102,8 +102,8 @@ MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>
           <CardHeader title="Packaging" subtitle="Prebuilt wheels, and building from source" />
           <p>
             Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a>), macOS, and 64-bit Windows get a prebuilt wheel from{' '}
-            <code>pip install medius</code>. On <a href="https://musl.libc.org" target="_blank" rel="noreferrer">musl</a> Linux (<a href="https://alpinelinux.org" target="_blank" rel="noreferrer">Alpine</a>) or 32-bit Windows there's no wheel,
-            so <code>pip</code> builds the native library from source.
+            <code>pip install medius</code>. On <a href="https://musl.libc.org" target="_blank" rel="noreferrer">musl</a> Linux (<a href="https://alpinelinux.org" target="_blank" rel="noreferrer">Alpine</a>) or 32-bit Windows,{' '}
+            <code>pip</code> builds the library from source.
           </p>
           <pre><code class="language-bash">{`# build from source even where a wheel exists
 pip install medius --no-binary medius

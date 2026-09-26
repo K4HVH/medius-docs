@@ -7,12 +7,11 @@ const Build: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Build & features" subtitle="Linking and the optional surface" />
+        <CardHeader title="Build & features" subtitle="Linking and optional features" />
         <p>
-          Two files: the header <A href="/bindings/c"><code>medius.h</code></A> and the native
-          library <A href="/bindings/c"><code>libmedius_capi</code></A>. Point the compiler at both
-          and link. C++ is identical: same header, add <code>-std=c++17</code>. For your first
-          program see the <A href="/bindings/c/quickstart">Quickstart</A>.
+          Two files: the header <A href="/bindings/c"><code>medius.h</code></A> and the library{' '}
+          <A href="/bindings/c"><code>libmedius_capi</code></A>. C++ uses the same header with{' '}
+          <code>-std=c++17</code>. First program: <A href="/bindings/c/quickstart">Quickstart</A>.
         </p>
       </Card>
 
@@ -20,7 +19,7 @@ const Build: Component = () => {
         <Card>
           <CardHeader title="Feature flags" subtitle="Mock, off by default" />
           <p>
-            One surface is gated. It is a{' '}
+            Mock is a{' '}
             <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">cargo feature</a>{' '}
             on <code>medius-capi</code>{' '}
             <em>and</em> a matching{' '}
@@ -41,17 +40,16 @@ const Build: Component = () => {
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-bash">{`# build the library with the surface
+          <pre><code class="language-bash">{`# build the library with mock
 cargo build -p medius-capi --release --features mock
 
-# define the matching macro when you compile your program
+# define the matching macro when compiling
 cc app.c -DMEDIUS_FEATURE_MOCK \\
    -I medius-capi/include -L target/release -lmedius_capi -lpthread -o app`}</code></pre>
           <div class="callout callout--warning">
             <p>
-              The prebuilt tarball does <strong>not</strong> have it. Define a macro whose symbols
-              aren't in the library and you get a link error; build the library with a feature but
-              forget the macro and the declarations stay hidden. The two must match.
+              The prebuilt tarball is built <strong>without</strong> it. The macro without the
+              feature is a link error; the feature without the macro leaves the declarations hidden.
             </p>
           </div>
         </Card>
@@ -59,14 +57,14 @@ cc app.c -DMEDIUS_FEATURE_MOCK \\
 
       <div id="loading" data-search-target>
         <Card>
-          <CardHeader title="Linking & loading" subtitle="Header, library, and the flags that find them" />
+          <CardHeader title="Linking & loading" subtitle="Header, library, and their flags" />
           <p>
             Get the two files from a <A href="/bindings/c/build#packaging">release tarball</A>, or
             build the <a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer">crate</a>{' '}
-            yourself with the{' '}
+            with the{' '}
             <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>{' '}
             (<code>cargo build -p medius-capi --release</code> writes them under{' '}
-            <code>target/release/</code>). Then these flags wire them in.
+            <code>target/release/</code>).
           </p>
           <pre class="diagram">{`  compile  ──▶  needs your code + medius.h
   link     ──▶  adds libmedius_capi
@@ -78,11 +76,11 @@ cc app.c -DMEDIUS_FEATURE_MOCK \\
             <tbody>
               <tr><td><code>-I&lt;dir&gt;</code></td><td>the directory holding <code>medius.h</code></td><td><code>-I medius-capi/include</code></td></tr>
               <tr><td><code>-L&lt;dir&gt;</code></td><td>the directory holding the library</td><td><code>-L target/release</code></td></tr>
-              <tr><td><code>-lmedius_capi</code></td><td>the library itself (the linker adds the <code>lib</code> prefix and extension)</td><td>resolves <code>libmedius_capi.so</code></td></tr>
+              <tr><td><code>-lmedius_capi</code></td><td>the library (the linker adds the <code>lib</code> prefix and extension)</td><td>resolves <code>libmedius_capi.so</code></td></tr>
               <tr><td><a href="https://man7.org/linux/man-pages/man7/pthreads.7.html" target="_blank" rel="noreferrer"><code>-lpthread</code></a></td><td>Linux only; the core spawns reader/keepalive threads</td><td>append after <code>-lmedius_capi</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">PER-OS LIBRARY FILENAME</div>
+          <div class="api-response-label">LIBRARY FILENAMES</div>
           <table class="api-params">
             <thead>
               <tr><th>OS</th><th>Shared library</th><th>Static library</th><th>Note</th></tr>
@@ -107,14 +105,12 @@ LD_LIBRARY_PATH=target/release ./hello
 # medius 3.4.2, abi 9`}</code></pre>
           <div class="callout callout--info">
             <p>
-              <code>-L</code> only helps the linker. The shared
-              library must also be findable by the dynamic loader when the program <em>runs</em>:
-              Linux <code>LD_LIBRARY_PATH</code> or an rpath, macOS <code>DYLD_LIBRARY_PATH</code> /{' '}
+              <code>-L</code> is link-time only. At <em>run</em> time the loader finds the shared
+              library via Linux <code>LD_LIBRARY_PATH</code> or an rpath, macOS <code>DYLD_LIBRARY_PATH</code> /{' '}
               <code>@rpath</code>, Windows the <code>.dll</code> next to the exe or on <code>PATH</code>.
             </p>
             <p>
-              Or link the static library (<code>.a</code> / <code>.lib</code>) to fold it into your
-              binary.
+              Or link the static library (<code>.a</code> / <code>.lib</code>) into the binary.
             </p>
           </div>
         </Card>
@@ -124,10 +120,9 @@ LD_LIBRARY_PATH=target/release ./hello
         <Card>
           <CardHeader title="Packaging" subtitle="Prebuilt tarballs, no vcpkg or Conan port" />
           <p>
-            Each release attaches one tarball per platform,{' '}
-            <code>medius-capi-&lt;target-triple&gt;.tar.gz</code>, to the{' '}
-            <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">GitHub
-            Release</a>. Download, unpack, and use the flags above.
+            Each <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">GitHub
+            Release</a> attaches one tarball per platform,{' '}
+            <code>medius-capi-&lt;target-triple&gt;.tar.gz</code>. Unpack it and use the flags above.
           </p>
           <table class="api-params">
             <thead>
@@ -141,9 +136,9 @@ LD_LIBRARY_PATH=target/release ./hello
           <div class="callout callout--info">
             <p>
               No <a href="https://vcpkg.io" target="_blank" rel="noreferrer">vcpkg</a> or{' '}
-              <a href="https://conan.io" target="_blank" rel="noreferrer">Conan</a> port: those build
-              C and C++ from source with no Rust toolchain, so a Rust-backed library doesn't fit. Use
-              the prebuilt tarball, or build <code>medius-capi</code> from source. Python uses the{' '}
+              <a href="https://conan.io" target="_blank" rel="noreferrer">Conan</a> port (both build
+              from source without a Rust toolchain). Use the prebuilt tarball or build{' '}
+              <code>medius-capi</code> from source. Python uses the{' '}
               <A href="/bindings/python/build#packaging">prebuilt wheel</A>.
             </p>
           </div>

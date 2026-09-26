@@ -56,8 +56,8 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied, but its <code>proto_ver</code> wasn't <code>9</code>;{' '}
-                  <code>got</code> carries the reported value. The{' '}
+                  The box replied with a <code>proto_ver</code> other than <code>9</code>, carried in{' '}
+                  <code>got</code>. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
                   another protocol. See the <A href="/library/connection">handshake</A>.
                 </td>
@@ -116,17 +116,16 @@ const Errors: Component = () => {
                 <td><code>RelativeDirection {'{'} direction, what {'}'}</code></td>
                 <td>
                   A call addressed <code>Direction::With</code> or <code>Against</code> where only a
-                  fixed sign or edge fits; <code>what</code> names it. Those are resolved against the{' '}
-                  <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call is
-                  made; use <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
+                  fixed sign or edge fits; <code>what</code> names it. Those resolve against the{' '}
+                  <A href="/native/commands/lock#bearing">bearing</A> at emit time; use{' '}
+                  <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
                 </td>
               </tr>
               <tr>
                 <td><code>LockScaleRange {'{'} scale, min, max {'}'}</code></td>
                 <td>
                   A <A href="/library/lock#scale">lock scale</A> outside <code>min</code> to{' '}
-                  <code>max</code>. The percent is signed, so the range runs from a full reversal to a
-                  full amplification.
+                  <code>max</code>. The percent is signed: full reversal to full amplification.
                 </td>
               </tr>
               <tr>
@@ -254,9 +253,8 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ReservedId {'{'} class, id {'}'}</code></td>
                 <td>
-                  An exact id of <code>0xFFFF</code>, which is the every-id sentinel on the wire, so
-                  the subscription would address the whole class instead. Only a media usage is wide
-                  enough to reach it.
+                  An exact id of <code>0xFFFF</code>, the wire's every-id sentinel, which would address
+                  the whole class. Only a media usage is wide enough to reach it.
                 </td>
               </tr>
               <tr>

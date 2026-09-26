@@ -1,7 +1,4 @@
-// Put bytes verbatim on one cloned endpoint.
-//
-// The box drops a report for an endpoint no clone serves, and drops every report while imperfect
-// clones are off, so the card stands its body down rather than reporting a send that went nowhere.
+// The box drops every raw report while imperfect clones are off, so the controls hide then.
 
 import { Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -39,7 +36,7 @@ const DeviceRaw = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="raw-report" data-search-target>
         <Card>
-          <CardHeader title="Raw report" subtitle="Send a report exactly as you type it" />
+          <CardHeader title="Raw report" subtitle="Send a report verbatim" />
 
           <Show
             when={allowed()}
@@ -52,7 +49,7 @@ const DeviceRaw = () => {
             <div style={{ ...row, 'align-items': 'flex-end' }}>
               <div style={{ 'max-width': '9rem' }}>
                 <NumberInput
-                  label="Endpoint number"
+                  label="Endpoint"
                   value={ep()}
                   min={0}
                   max={15}

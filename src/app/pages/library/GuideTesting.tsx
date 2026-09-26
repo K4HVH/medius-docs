@@ -10,10 +10,11 @@ const GuideTesting: Component = () => {
         <Card>
           <CardHeader title="Testing without hardware" subtitle="Assert the frames with MockBox" />
           <p>
-            With the <A href="/library/features/mock"><code>mock</code></A> feature, drive a{' '}
+            The <A href="/library/features/mock"><code>mock</code></A> feature backs a{' '}
             <A href="/library/connection"><code>Device</code></A> with a{' '}
-            <A href="/library/features/mock"><code>MockBox</code></A> and assert the queued frames through{' '}
-            <A href="/library/features/mock#inspect"><code>recorded_frames</code></A>.
+            <A href="/library/features/mock"><code>MockBox</code></A>;{' '}
+            <A href="/library/features/mock#inspect"><code>recorded_frames</code></A> returns the queued
+            frames.
           </p>
           <pre><code class="language-bash">cargo add medius --features mock</code></pre>
           <div class="api-response-label">EXAMPLE</div>
@@ -39,7 +40,7 @@ fn press_queues_an_inject() {
 
       <div id="logs-without-hardware" data-search-target>
         <Card>
-          <CardHeader title="Driving logs in a test" subtitle="Push log lines with a MockBox" />
+          <CardHeader title="Logs in tests" subtitle="Push log lines with a MockBox" />
           <p>
             <code>push_log</code> on a <code>MockBox</code> emits a{' '}
             <A href="/native/commands/admin#log"><code>LOG</code></A> frame that surfaces on{' '}
@@ -68,11 +69,11 @@ fn logs_reach_the_stream() {
         <Card>
           <CardHeader title="Testing async code" subtitle="A MockBox behind an AsyncDevice" />
           <p>
-            There's no <code>AsyncDevice::with_mock</code>: build a mocked <code>Device</code>, then call{' '}
-            <A href="/library/features/async"><code>into_async</code></A>. Drive the futures with{' '}
-            <A href="/library/guides/calls#block-on"><code>block_on</code></A>, so the test needs no async
-            runtime. A <A href="/library/features/mock"><code>silent</code></A> box sends no reply, resolving
-            the query to{' '}
+            Mock an <code>AsyncDevice</code> with <code>Device::with_mock</code> then{' '}
+            <A href="/library/features/async"><code>into_async</code></A>;{' '}
+            <A href="/library/guides/calls#block-on"><code>block_on</code></A> drives the futures with no
+            async runtime. A <A href="/library/features/mock"><code>silent</code></A> box never replies, so a
+            query resolves to{' '}
             <A href="/library/types/errors"><code>Err(Error::QueryTimeout)</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>

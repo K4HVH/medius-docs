@@ -92,7 +92,7 @@ describe('DeviceOptions', () => {
     fireEvent.click(container.querySelector('input[value="1"]')!);   // bearing geometry
     await settle();
     expect(button(container, 'Revert')).toBeTruthy();
-    expect((await findAllByText('not applied yet')).length).toBe(1);
+    expect((await findAllByText('not applied')).length).toBe(1);
 
     fireEvent.click(button(container, 'Revert')!);
     await settle();

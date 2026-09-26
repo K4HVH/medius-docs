@@ -13,9 +13,7 @@ const fmtDate = (iso: string) => {
     : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-// Release notes are a commit list grouped under per-repo headers. A "- subject
-// (hash)" line renders as a list item; a "**Repo**" or "## Repo" line becomes a
-// section heading; anything else renders as a line of text.
+// Notes are "- subject (hash)" items under "**Repo**" or "## Repo" headings.
 type Block =
   | { kind: 'heading'; text: string }
   | { kind: 'list'; items: string[] }
@@ -66,7 +64,7 @@ const Release = (props: { release: FirmwareRelease }) => (
     </div>
     <Show
       when={props.release.notes.trim()}
-      fallback={<p style={muted}>No notes for this release.</p>}
+      fallback={<p style={muted}>No notes.</p>}
     >
       <Notes notes={props.release.notes} />
     </Show>
@@ -78,7 +76,7 @@ const Changelog = () => {
   return (
     <div id="changelog" data-search-target>
       <Card>
-        <CardHeader title="Changelog" subtitle="Firmware release history" />
+        <CardHeader title="Changelog" subtitle="Firmware releases" />
         <Switch>
           <Match when={releases.loading}>
             <p>Loading...</p>

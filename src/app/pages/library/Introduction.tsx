@@ -77,7 +77,7 @@ const Introduction: Component = () => {
 
               <tr>
                 <td><A href="/library/features/tracing"><code>tracing</code></A></td>
-                <td>Tracing instrumentation across the connection lifecycle.</td>
+                <td>Tracing across the connection lifecycle.</td>
               </tr>
             </tbody>
           </table>
@@ -113,7 +113,7 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/move" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel, and the riding override" />
+                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel, riding override" />
               </Card>
             </A>
             <A href="/library/lock" style={{ "text-decoration": "none" }}>
@@ -138,12 +138,12 @@ const Introduction: Component = () => {
             </A>
             <A href="/library/requests" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="version, health, and the device-info queries" />
+                <CardHeader title="Requests" subtitle="version, health, device info" />
               </Card>
             </A>
             <A href="/library/led" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="LED" subtitle="Drive a status LED" />
+                <CardHeader title="LED" subtitle="Status LED" />
               </Card>
             </A>
             <A href="/library/admin" style={{ "text-decoration": "none" }}>
@@ -228,7 +228,7 @@ const Introduction: Component = () => {
 
       <div id="guides" data-search-target>
         <Card>
-          <CardHeader title="Guides" subtitle="Behaviour and how-to, outside the reference" />
+          <CardHeader title="Guides" subtitle="Behaviour and how-to" />
           <div class="docs-grid">
             <A href="/library/guides/calls" style={{ "text-decoration": "none" }}>
               <Card interactive variant="subtle" padding="compact">

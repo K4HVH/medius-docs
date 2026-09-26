@@ -17,7 +17,7 @@ type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
 const STEPS: Step[] = ['main', 'unplug', 'mouse', 'unplug3', 'cables'];
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
-const HAZARD = 'USB1 and USB3 in the same computer at once can kill it.';
+const HAZARD = 'USB1 and USB3 in one computer can kill it.';
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Setup = () => {
@@ -28,8 +28,8 @@ const Setup = () => {
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
 
-  // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
-  // during render, and there is no ErrorBoundary anywhere: one unguarded read freezes the page.
+  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
+  // one unguarded read freezes the page.
   const latest = () => {
     try {
       return releases()?.[0] ?? null;
@@ -45,8 +45,7 @@ const Setup = () => {
       : undefined;
   };
 
-  // Write a full factory image to whichever chip is in download mode on this cable. Only one chip's
-  // USB is plugged in and only its own button is held, so only one chip can answer.
+  // Only one chip's USB is plugged in with its button held, so only that chip answers.
   const install = async (assetName: string, next: Step) => {
     setErr(null);
     dash.clearFlashResult();
@@ -59,24 +58,24 @@ const Setup = () => {
         asset = null;
       }
       if (!asset) {
-        setErr("The download isn't ready. Reload the page and try again in a few minutes.");
+        setErr("The download isn't ready. Reload and try again in a few minutes.");
         return;
       }
       const port = await requestRomPort();
       const image = await downloadAsset(asset);
       if (await dash.flashNative(port, image, 'factory')) {
-        // The chip has just been rewritten, so any link still open is a stale one.
+        // The chip was just rewritten, so any open link is stale.
         void dash.disconnect().catch(() => undefined);
         setStep(next);
       } else {
-        // Read the reason BEFORE disconnecting: disconnect() nulls `error` synchronously, and the
-        // messages it was discarding are the ones pressing the button again cannot fix.
+        // Read the reason BEFORE disconnect(), which nulls `error` synchronously; a retry can't fix
+        // what it says.
         const why = dash.error();
         void dash.disconnect().catch(() => undefined);
         setErr(why ?? 'That did not finish.');
       }
     } catch (e) {
-      // A cancel and an empty chooser are the same DOMException, and the second is far more likely.
+      // A cancel and an empty chooser throw the same DOMException; the second is likelier.
       setErr(isUserCancel(e) ? 'Nothing to install to.' : (e as Error).message);
     } finally {
       setBusy(false);
@@ -119,7 +118,7 @@ const Setup = () => {
       <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
         <div id="install" data-search-target>
           <Card>
-            <CardHeader title="Install Medius" subtitle="The ports are numbered on the box" />
+            <CardHeader title="Install Medius" subtitle="Ports are numbered on the box" />
             <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
               <Chip variant="neutral">{counter()}</Chip>
             </div>

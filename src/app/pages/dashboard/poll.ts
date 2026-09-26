@@ -1,5 +1,5 @@
-// One poller for the whole dashboard. Cards ask for a value and get a signal; the poller owns the
-// timers, deduplicates subscribers, and stops a query the moment nothing is watching it.
+// One poller for the dashboard: shared timers, deduplicated subscribers, and a query stops once
+// nothing watches it.
 
 import { type Accessor, createSignal, onCleanup } from 'solid-js';
 import type {
@@ -67,13 +67,13 @@ const RUN: { [K in PollKey]: (l: SerialLink) => Promise<PollValues[K]> } = {
   transforms: (l) => l.queryTransforms(),
 };
 
-// The box drops injection, locks, the catch table and the loaded clip after this long with no
-// inbound control frame, and any valid frame resets that timer.
+// The box drops injection, locks, the catch table and the clip after this long without a control
+// frame.
 export const SILENCE_CLEAR_MS = 1000;
 export const KEEPALIVE_MS = SILENCE_CLEAR_MS / 2;
 
-// The interval a subscriber gets when it does not ask for one. Persistent options sit at 4 s
-// because only another client can change them behind our back; a write refreshes them at once.
+// Default intervals. Persistent options sit at 4 s: only another client changes them, and a write
+// refreshes at once.
 const DEFAULT_MS: Record<PollKey, number> = {
   health: KEEPALIVE_MS,
   version: 4000,
@@ -82,8 +82,7 @@ const DEFAULT_MS: Record<PollKey, number> = {
   rate: 2000,
   stats: 2000,
   locks: 1000,
-  // Catch events and log lines arrive unsolicited, so this query is only the drop counts, the clock
-  // estimate and the accepted table.
+  // Events arrive unsolicited; this reads drop counts, the clock estimate and the table.
   catch: 2000,
   imperfect: 4000,
   moveRide: 4000,
@@ -92,12 +91,10 @@ const DEFAULT_MS: Record<PollKey, number> = {
   render: 4000,
   spread: 4000,
   clip: 1000,
-  // The rewrite table is PC-owned session state a safety clear releases; its editor polls fast so the
-  // live table and the generation counter stay current as rules are added and removed.
+  // Session state a safety clear releases, so the editors poll fast.
   rewrite: 1000,
   transforms: 1000,
-  // Patches persist in the box's store across a reboot, so their set only changes when a client changes
-  // it; a write refreshes it at once.
+  // Patches persist, so only a client changes them; a write refreshes at once.
   patches: 2000,
 };
 
@@ -106,30 +103,24 @@ const MIN_MS = 100;
 interface Slot {
   read: Accessor<unknown>;
   write: (v: unknown) => void;
-  // Whether the box's last answer was in a layout this build does not decode. A decoded value
-  // clears it; a miss says nothing about the layout, so it leaves it as it was.
+  // The last reply's layout didn't decode. A decoded value clears it; a miss leaves it.
   unreadable: Accessor<boolean>;
   setUnreadable: (v: boolean) => void;
-  // Token to requested interval. The slot runs at the smallest interval anyone asked for, so one
-  // card wanting a fast readout speeds the shared query up rather than starting a second one.
+  // Token to requested interval; the slot runs at the smallest.
   subs: Map<symbol, number>;
   timer: ReturnType<typeof setTimeout> | null;
-  // Bumped to abandon an in-flight tick. A tick that resolves after its generation is stale must
-  // not write its value: the link may have changed underneath it.
+  // Bumped to abandon an in-flight tick, whose link may have changed.
   gen: number;
 }
 
 export interface Poller {
   // Subscribe for the lifetime of the calling component. Returns null until the first reply lands.
   subscribe<K extends PollKey>(key: K, everyMs?: number): Accessor<PollValues[K] | null>;
-  // Whether the box answers this query in a layout this build cannot decode, so the value stays null
-  // however long the card waits.
+  // True when the box replies in a layout this build can't decode; the value then stays null.
   unreadable(key: PollKey): Accessor<boolean>;
-  // Re-read now, without waiting for the next tick. Call it after a write so the readout reflects
-  // what was just set instead of showing the old value for up to one interval.
+  // Re-read now; call after a write.
   refresh(key: PollKey): void;
-  // Drop every cached value and restart the live slots. For a link change, where holding the
-  // previous box's numbers on screen would be worse than showing nothing.
+  // Drop every cached value and restart the live slots, for a link change.
   reset(): void;
 }
 
@@ -157,13 +148,11 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     const s = slots.get(key);
     if (!s || s.gen !== gen) return;
     const l = link();
-    // Skipped while there is no link, purely to avoid a thrown call per tick; the catch below would
-    // swallow it either way, so this is cost, not correctness.
+    // Skipped with no link only to save a thrown call per tick.
     if (l) {
       try {
         const v = await RUN[key](l);
-        // Re-check after the await: a reset or a link change during the round trip means this
-        // value belongs to a box we are no longer talking to.
+        // A reset or link change during the round trip makes this value stale.
         if (s.gen !== gen || link() !== l) return;
         s.write(v);
         s.setUnreadable(false);
@@ -172,14 +161,12 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
         if (e instanceof UnreadableReplyError && s.gen === gen && link() === l) s.setUnreadable(true);
       }
     }
-    // The check at the top of the tick is what actually stops a stale loop; this one only avoids
-    // arming a timer that would immediately fail that check.
+    // Only avoids arming a timer the top check would reject.
     if (s.gen !== gen) return;
     s.timer = setTimeout(() => void tick(key, gen), intervalOf(s));
   };
 
-  // Restart a slot's loop from now. Always the way a loop starts, so there is exactly one running
-  // per slot: bumping the generation strands whatever was already scheduled.
+  // The only way a loop starts, so one runs per slot: bumping the generation strands the old one.
   const restart = (key: PollKey): void => {
     const s = slotFor(key);
     if (s.timer !== null) {
@@ -195,8 +182,7 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     const token = Symbol(key);
     const before = s.subs.size === 0 ? Infinity : intervalOf(s);
     s.subs.set(token, Math.max(MIN_MS, everyMs ?? DEFAULT_MS[key]));
-    // A first subscriber starts the loop. A later one that wants it faster restarts it, so the
-    // shorter interval applies now rather than after the tick already scheduled at the old one.
+    // A first subscriber starts the loop; a faster later one restarts it so its interval applies now.
     if (intervalOf(s) < before) restart(key);
     onCleanup(() => {
       s.subs.delete(token);
@@ -227,7 +213,7 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
   subscribe('health', KEEPALIVE_MS);
 
   if (typeof document !== 'undefined') {
-    // Coming back to the tab, read everything again rather than waiting out a clamped interval.
+    // On tab return, re-read everything rather than wait out a clamped interval.
     const onVisible = () => {
       if (!document.hidden) for (const key of slots.keys()) refresh(key);
     };

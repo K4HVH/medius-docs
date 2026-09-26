@@ -1,9 +1,5 @@
-// The box's persistent options: set on the device, survive a reboot.
-//
-// Every control here reads its value back from the box until you touch it. It used to open on a
-// hardcoded default instead, so a box paced at Fixed 250 Hz showed a radio reading Learned directly
-// above a chip reading Fixed 250 Hz, and pressing Apply on what looked like a no-op reconfigured it.
-
+// Each control reads its value back from the box until touched. A hardcoded default here once made
+// Apply reconfigure a box that looked unchanged.
 import { Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
@@ -79,8 +75,7 @@ const SPREAD_BLURB: Record<string, string> = {
   full: 'Injected motion over the whole command interval.',
 };
 
-// A percent this control cannot express, set by another client or an older session, keeps its own
-// entry rather than reading as one of the three.
+// A percent outside the three, set by another client, keeps its own entry.
 const spreadKeyFor = (percent: number): string =>
   percent === 0 ? 'off' : percent === 50 ? 'half' : percent === 100 ? 'full' : 'custom';
 
@@ -119,8 +114,8 @@ const DeviceOptions = () => {
   const version = dash.poll('version');
   const cmd = createCommand();
 
-  // Each control follows the box until the user edits it, then holds their edit until it is applied.
-  // Without the second half, a poll landing mid-edit would overwrite what they were typing.
+  // Each control reads back from the box until edited, then holds the edit until applied, so a poll
+  // can't overwrite typing.
   const [nameEdit, setNameEdit] = createSignal<string | null>(null);
   const [rideEdit, setRideEdit] = createSignal<number | null>(null);
   const [bearEdit, setBearEdit] = createSignal<number | null>(null);
@@ -133,9 +128,7 @@ const DeviceOptions = () => {
   const [forceEdit, setForceEdit] = createSignal<number | null>(null);
   const [forceOnEdit, setForceOnEdit] = createSignal<boolean | null>(null);
 
-  // Every editable option below shares one shape: an unapplied edit offers Revert and marks the
-  // status chip. Emit rate was the only one that did, so a pending bearing or riding window looked
-  // applied.
+  // An unapplied edit offers Revert and marks the status chip.
   const rideDirty = () => rideEdit() !== null;
   const bearDirty = () => bearEdit() !== null || bearMode() !== null;
   const emitDirty = () =>
@@ -152,7 +145,6 @@ const DeviceOptions = () => {
 
   const name = () => nameEdit() ?? version()?.name ?? '';
   const rideWindow = () => rideEdit() ?? (ride() && ride()! > 0 ? ride()! : 20);
-  // Reads back off the box until touched, like every other control here.
   const bearWindow = () =>
     bearEdit() ?? (bearing() && bearing()!.windowMs > 0 ? bearing()!.windowMs : BEARING_WINDOW_DEFAULT_MS);
   const bearGeometry = (): BearingMode =>
@@ -171,17 +163,13 @@ const DeviceOptions = () => {
   const renderKey = () =>
     renderEdit() ?? RENDER_NAMES[render()?.mode ?? RenderMode.Despiked] ?? 'despiked';
   const fullOn = () => fullEdit() ?? (render()?.full ?? false);
-  // A box that has never been in Fixed mode reports 0 here, which is below the field's own minimum
-  // and would be sent as a 0 Hz Apply, so 0 falls through to the default rather than being shown.
+  // A box never in Fixed mode reports 0, below the field minimum, so `||` falls through to 500.
   const hz = () => hzEdit() ?? (emit()?.fixedHz || 500);
   const forceOn = () => forceOnEdit() ?? (emit()?.forceHz ?? 0) > 0;
-  // The box's own advertised rate is the sensible starting point. || not ??, as the sibling above: an
-  // unforced box reports 0 here, which is below the field's own minimum and would be sent as an Apply
-  // that turns the force off while the radio says Forced.
+  // `||` as above: an unforced box reports 0, which would Apply as force off under a Forced radio.
   const forceHz = () => forceEdit() ?? (emit()?.forceHz || emit()?.advertisedHz || 1000);
 
-  // Each write clears its own edit only once the frame is away. A failure leaves the edit showing,
-  // so the field still holds what the user asked for rather than snapping back as if it landed.
+  // Each write clears its edit only once sent, so a failure leaves the edit showing.
   const applyName = () => {
     const v = name().trim();
     if (v.length === 0) return;
@@ -245,15 +233,14 @@ const DeviceOptions = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="options" data-search-target>
         <Card>
-          <CardHeader title="Options" subtitle="Persistent settings saved on the box" />
+          <CardHeader title="Options" subtitle="Saved on the box" />
           <Show when={cmd.error()}>
             <div class="callout callout--danger" role="alert">{cmd.error()}</div>
           </Show>
 
           <Section title="Box name" first>
           <p>
-            Up to {NAME_MAX} letters, numbers and symbols; left unset, the box derives one from its
-            id.
+            Up to {NAME_MAX} letters, numbers and symbols. Unset, the box derives one from its id.
           </p>
           <div style={controls}>
             <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
@@ -272,7 +259,7 @@ const DeviceOptions = () => {
               Clear
             </Button>
           </div>
-          <Show when={version()} fallback={<p style={status}>Reading status...</p>}>
+          <Show when={version()} fallback={<p style={status}>Reading...</p>}>
             <div style={status}>
               <Chip variant="neutral">{version()!.name}</Chip>
             </div>
@@ -293,14 +280,14 @@ const DeviceOptions = () => {
                 Faithful only
               </Button>
             </div>
-            <Show when={imperfect()} fallback={<p style={status}>Reading status...</p>}>
+            <Show when={imperfect()} fallback={<p style={status}>Reading...</p>}>
               {(s) => (
                 <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                   <Chip variant={s().allowed ? 'success' : 'neutral'}>
                     {s().allowed ? 'Allowed' : 'Faithful only'}
                   </Chip>
                   <Show when={s().overCapacity}>
-                    <Chip variant="warning">The attached device needs more than the box can serve, or is high speed</Chip>
+                    <Chip variant="warning">Device over box capacity, or high speed</Chip>
                   </Show>
                 </div>
               )}
@@ -312,8 +299,8 @@ const DeviceOptions = () => {
           <div id="movement-riding" data-search-target>
             <Section title="Movement riding">
             <p>
-              Injected motion waits for a real mouse move within the window and is dropped if none
-              arrives, so it keeps the real device's report timing.
+              Injected motion waits up to the window for physical motion and is dropped if none
+              arrives, keeping native report timing.
             </p>
             <div style={controls}>
               <div style={{ 'max-width': '8rem' }}>
@@ -338,13 +325,13 @@ const DeviceOptions = () => {
                 </Button>
               </Show>
             </div>
-            <Show when={ride() !== null} fallback={<p style={status}>Reading status...</p>}>
+            <Show when={ride() !== null} fallback={<p style={status}>Reading...</p>}>
               <div style={status}>
                 <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
                   {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
                 </Chip>
                 <Show when={rideDirty()}>
-                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied</span>
                 </Show>
               </div>
             </Show>
@@ -355,8 +342,8 @@ const DeviceOptions = () => {
           <div id="bearing" data-search-target>
             <Section title="Bearing">
             <p>
-              What the with and against lock directions are measured against: the direction the box is
-              injecting on that axis, held for the window.
+              The reference for the with and against lock directions: the injected direction on each
+              axis, held for the window.
             </p>
             <RadioGroup
               name="bearing-mode"
@@ -395,7 +382,7 @@ const DeviceOptions = () => {
                 </Button>
               </Show>
             </div>
-            <Show when={bearing() !== null} fallback={<p style={status}>Reading status...</p>}>
+            <Show when={bearing() !== null} fallback={<p style={status}>Reading...</p>}>
               <div style={status}>
                 <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
                   {bearing()!.windowMs > 0
@@ -403,7 +390,7 @@ const DeviceOptions = () => {
                     : 'Off'}
                 </Chip>
                 <Show when={bearDirty()}>
-                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied</span>
                 </Show>
               </div>
             </Show>
@@ -413,8 +400,8 @@ const DeviceOptions = () => {
           <div id="render" data-search-target>
             <Section title="Render">
             <p>
-              Emits injected motion with the native report texture, and picks which motion is
-              rendered. The box saves both together, so Apply writes both.
+              Emits injected motion with native report texture, and picks which motion is rendered.
+              One Apply saves both.
             </p>
             <RadioGroup
               name="render-mode"
@@ -457,15 +444,14 @@ const DeviceOptions = () => {
                 </Button>
               </Show>
             </div>
-            <Show when={render()} fallback={<p style={status}>Reading status...</p>}>
+            <Show when={render()} fallback={<p style={status}>Reading...</p>}>
               {(r) => (
                 <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                   <Chip variant={r().mode === RenderMode.Off || r().mode === null ? 'neutral' : 'success'}>
                     {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
                   </Chip>
                   <Show when={r().full}>
-                    {/* Nothing goes through the model until a profile arms, so an unarmed box is
-                        still relaying however the option is set. */}
+                    {/* Until a profile arms, the box relays however this is set. */}
                     <Chip variant={r().mode === RenderMode.Off || !r().ready ? 'neutral' : 'success'}>
                       {r().mode === RenderMode.Off || !r().ready
                         ? 'Native motion relayed'
@@ -477,7 +463,7 @@ const DeviceOptions = () => {
                   </Show>
                   <Show when={renderDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      not applied yet
+                      not applied
                     </span>
                   </Show>
                 </div>
@@ -489,8 +475,8 @@ const DeviceOptions = () => {
           <div id="spread" data-search-target>
             <Section title="Spread">
             <p>
-              Releases injected motion across the interval between host commands instead of on one
-              report, so injected reports carry the native per-report magnitude.
+              Releases injected motion across the interval between host commands, so injected reports
+              carry native per-report magnitude.
             </p>
             <RadioGroup
               name="spread-percent"
@@ -513,17 +499,16 @@ const DeviceOptions = () => {
                 </Button>
               </Show>
             </div>
-            <Show when={spread()} fallback={<p style={status}>Reading status...</p>}>
+            <Show when={spread()} fallback={<p style={status}>Reading...</p>}>
               {(sp) => (
                 <div style={status}>
                   <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
-                  {/* The box learns the interval from injection, so a set percent spreads nothing
-                      until some has arrived. */}
+                  {/* The box learns the interval from injection, so nothing spreads until some arrives. */}
                   <Show when={sp().percent > 0 && sp().spanUs === 0}>
                     <Chip variant="warning">Waiting for injection</Chip>
                   </Show>
                   <Show when={spreadDirty()}>
-                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied yet</span>
+                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>not applied</span>
                   </Show>
                 </div>
               )}
@@ -534,8 +519,7 @@ const DeviceOptions = () => {
           <div id="emit-rate" data-search-target>
             <Section title="Emit rate">
             <p>
-              Paces injected motion as a ceiling, and sets the rate the clone itself runs at. The box
-              saves both together, so Apply writes both.
+              Paces injected motion as a ceiling, and sets the clone's wire rate. One Apply saves both.
             </p>
             <RadioGroup
               name="emit-mode"
@@ -599,7 +583,7 @@ const DeviceOptions = () => {
                 </Button>
               </Show>
             </div>
-            <Show when={emit()} fallback={<p style={status}>Reading status...</p>}>
+            <Show when={emit()} fallback={<p style={status}>Reading...</p>}>
               {(s) => (
                 <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
                   <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
@@ -617,7 +601,7 @@ const DeviceOptions = () => {
                   </Show>
                   <Show when={emitDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      not applied yet
+                      not applied
                     </span>
                   </Show>
                 </div>

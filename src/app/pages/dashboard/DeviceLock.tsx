@@ -1,13 +1,5 @@
-// Weigh what the real device drives while the control link still drives it too.
-//
-// The picker covers the whole lock address space. It used to offer eight fixed mouse targets, which
-// left keys, media usages, and the whole-class blanket unreachable from here even though the active
-// list below could already render them when another client set them.
-//
-// Blocking and passing are the two ends of one scale. The buttons are shortcuts to those two named
-// constants, which the slider's own range reaches as well, and the range is signed because the sign is
-// what inverts an axis. The two bearing-relative directions mean nothing without a bearing, so they
-// are offered on axes alone, and a reversal only on axes at all: one bit has nothing to reverse.
+// Lock and Unlock are the ends of one signed scale; the sign inverts an axis. With, against and
+// reversal are offered on axes only: one bit has no bearing and nothing to reverse.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -39,9 +31,9 @@ import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
 import { chips, label, row, section } from './ui';
 
 const AXES: NamedUsage[] = [
-  { id: LockAxis.X, name: 'Move left/right (X)', group: 'Axes' },
-  { id: LockAxis.Y, name: 'Move up/down (Y)', group: 'Axes' },
-  { id: LockAxis.Wheel, name: 'Scroll wheel', group: 'Axes' },
+  { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
+  { id: LockAxis.Y, name: 'Y (up/down)', group: 'Axes' },
+  { id: LockAxis.Wheel, name: 'Wheel', group: 'Axes' },
   { id: LockAxis.Pan, name: 'Pan (horizontal scroll)', group: 'Axes' },
 ];
 
@@ -52,10 +44,8 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign; a button or key locks by edge. One direction byte, two vocabularies, plus
-// the two that name a sign relative to the bearing rather than a fixed one. Media is the one class
-// with no edges at all: the box suppresses the usage whole and reports it as Both, so naming a
-// direction here would read as a distinction the box does not make.
+// An axis locks by sign, a button or key by edge. Media has no edges: the box suppresses it whole
+// and reports Both, so it gets no direction word.
 const dirName = (cls: number, d: Direction): string => {
   if (cls === LockClass.Media) return '';
   if (d === Direction.With) return 'with injection';
@@ -79,8 +69,7 @@ const DeviceLock = () => {
   const locks = dash.poll('locks');
   const cmd = createCommand(() => dash.refreshPoll('locks'));
 
-  // The five named buttons plus a numbered entry for each button the mouse declares past them
-  // (RESP(CAPS) n_buttons), so a lock can address any button the cloned device carries.
+  // Every button the clone declares (RESP(CAPS) n_buttons).
   const caps = dash.poll('caps');
   const classes = (): PickerClass[] => [
     { value: LockClass.Axis, label: 'Axis', table: AXES, blanket: LOCK_ID_ALL, blanketLabel: 'Every axis', hideId: true },
@@ -91,10 +80,8 @@ const DeviceLock = () => {
 
   const dir = (): Direction => Number(direction()) as Direction;
 
-  // An every-axis lock goes out as one frame per axis rather than the class wildcard. The box has no
-  // blanket representation for the mouse classes: it expands one into per-target scales and reads it
-  // back as one entry per axis either way. Firmware that predates the axis blanket drops the wildcard
-  // on arrival, so the per-axis frames are both equivalent and the only form that works everywhere.
+  // One frame per axis: the box expands a wildcard into the same per-axis entries anyway, and older
+  // firmware drops the axis wildcard.
   const targets = (): { cls: LockClass; id: number }[] => {
     const t = target();
     if (t.cls === LockClass.Axis && t.id === LOCK_ID_ALL) {
@@ -111,9 +98,8 @@ const DeviceLock = () => {
       }
     });
 
-  // Every weighed (target, direction) the box reports, whoever set it. One entry per direction, so a
-  // target weighed several ways shows up several times. A blanket key lock arrives as one entry per
-  // blocked edge, which reads out here as "all keys press" rather than one both-edge chip.
+  // One chip per weighed (target, direction) the box reports, whoever set it; a blanket key lock
+  // arrives as one entry per blocked edge.
   const active = createMemo(() =>
     (locks()?.entries ?? ([] as LockEntry[])).map((e) => {
       const dn = dirName(e.cls, e.direction);
@@ -134,9 +120,8 @@ const DeviceLock = () => {
   const isAxis = () => target().cls === LockClass.Axis;
   const isMedia = () => target().cls === LockClass.Media;
 
-  // Picking a class can strand the selected direction on an option the new class does not offer, and
-  // a radio with no matching option keeps sending the old byte. Fall back to Both, which every class
-  // takes.
+  // A new class can lack the selected direction, and an unmatched radio keeps sending the old byte,
+  // so fall back to Both.
   const chooseTarget = (v: UsageValue) => {
     setTarget(v);
     if (v.cls === LockClass.Media || (v.cls !== LockClass.Axis && isRelativeDirection(dir()))) {
@@ -165,18 +150,18 @@ const DeviceLock = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="input-locks" data-search-target>
         <Card>
-          <CardHeader title="Input locks" subtitle="Weigh what the real device drives" />
+          <CardHeader title="Input locks" subtitle="Weigh native input" />
 
           <UsagePicker
             classes={classes()}
             name="lock-target"
             value={target()}
             onChange={chooseTarget}
-            usageLabel="Which input"
+            usageLabel="Input"
           />
 
           <Show when={!isAxis()}>
-            <p>A button, key, or media usage carries one bit, so Lock and Unlock are all it has.</p>
+            <p>A button, key or media usage is one bit, so it only locks or unlocks.</p>
           </Show>
 
           <Show when={isMedia()}>
@@ -197,8 +182,8 @@ const DeviceLock = () => {
             <div style={section}>
               <div style={label}>
                 {scale() < 0
-                  ? `Reverse the real motion, keeping ${Math.abs(scale())}%`
-                  : `Keep ${scale()}% of the real motion`}
+                  ? `Reverse physical motion, keeping ${Math.abs(scale())}%`
+                  : `Keep ${scale()}% of physical motion`}
               </div>
               <Slider
                 value={scale()}
@@ -212,15 +197,14 @@ const DeviceLock = () => {
 
           <Show when={isAxis() && dir() === Direction.Both}>
             <div class="callout callout--info" style={section}>
-              Both means the same whether or not the box is injecting, and a Both at 100% clears every
-              direction.
+              Both applies whether or not the box is injecting. Both at 100% clears every direction.
             </div>
           </Show>
 
 
           <Show when={isAxis() && isRelativeDirection(dir())}>
             <div class="callout callout--info" style={section}>
-              With and against follow the direction the box is injecting on that axis. See{' '}
+              With and against follow the injected direction on that axis. See{' '}
               <A href="/native/commands/lock#bearing">the bearing</A>.
             </div>
           </Show>
@@ -250,7 +234,7 @@ const DeviceLock = () => {
 
           <div style={section}>
             <div style={label}>Active</div>
-            <Show when={active().length > 0} fallback={<p>Everything passing untouched.</p>}>
+            <Show when={active().length > 0} fallback={<p>None.</p>}>
               <div style={chips}>
                 <For each={active()}>
                   {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}

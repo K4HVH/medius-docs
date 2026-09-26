@@ -27,8 +27,8 @@ export type ConnectOutcome<L> =
   | { ok: true; port: SerialPort; link: L; version: Version }
   | { ok: false; verdict: ConnectVerdict };
 
-// How much a failure tells us about the box itself. A port that opened and then answered wrongly,
-// or not at all, is talking about this device. One that would not open says nothing about it.
+// How much a failure says about the box: a port that opened and answered wrongly, or not at all, is
+// this device; one that wouldn't open says nothing.
 const TELLS_US: Record<ConnectVerdict['kind'], number> = {
   'old-firmware': 4,
   'new-firmware': 4,
@@ -48,8 +48,7 @@ export function classifyConnectError(e: unknown): ConnectVerdict {
   try {
     return classify(e);
   } catch {
-    // A thrown value can be hostile all the way down: a null prototype, a getter that throws, a
-    // Proxy that refuses instanceof. None of that may cost the page its only way forward.
+    // A thrown value can be hostile: a null prototype, a throwing getter, a Proxy refusing instanceof.
     return { kind: 'other', message: 'the browser gave no reason' };
   }
 }
@@ -60,15 +59,14 @@ function classify(e: unknown): ConnectVerdict {
     return { kind, version: e.version };
   }
   if (e instanceof NoReplyError) return { kind: 'silent' };
-  // Keyed on `name`, not on `instanceof DOMException`: a DOMException inherits from Error in a
-  // browser, so its message is the bare text and the name is the only thing that survives.
+  // Keyed on `name`: a browser DOMException's message is bare text, so only the name survives.
   const name = nameOf(e);
   const message = e instanceof Error ? e.message : String(e);
   if (name === 'NotFoundError') return { kind: 'no-port' };
   if (name === 'NetworkError' || name === 'InvalidStateError') return { kind: 'busy' };
   if (/already open|failed to open|access denied/i.test(message)) return { kind: 'busy' };
-  // Two different SecurityErrors: transient activation expiring, which one more click fixes, and a
-  // permissions policy that blocks the feature outright, which it does not.
+  // Two SecurityErrors: expired transient activation, which one more click fixes, and a permissions
+  // policy block, which it doesn't.
   if (name === 'SecurityError' && !/policy|disallow/i.test(message)) return { kind: 'needs-click' };
   return { kind: 'other', message: message || 'the browser gave no reason' };
 }
@@ -76,11 +74,8 @@ function classify(e: unknown): ConnectVerdict {
 const better = (a: ConnectVerdict | null, b: ConnectVerdict): ConnectVerdict =>
   a && TELLS_US[a.kind] >= TELLS_US[b.kind] ? a : b;
 
-/**
- * Try to reach a box. `skipGranted` goes straight to the chooser, which is how a retry escapes a
- * granted port that is the wrong device: without it a single silent CH343 the browser remembers
- * would answer every future attempt and the real box could never be picked.
- */
+// `skipGranted` goes straight to the chooser, so a retry escapes a remembered silent CH343 that is
+// the wrong device.
 export async function attemptConnect<L>(
   deps: ConnectDeps<L>,
   opts: { skipGranted?: boolean } = {},
@@ -106,8 +101,7 @@ export async function attemptConnect<L>(
         best = better(best, classifyConnectError(e));
       }
     }
-    // A port that opened has answered about this box. Report that rather than making someone who
-    // has one box pick it out of a dialog again.
+    // An opened port has answered for this box; report that rather than reopen the chooser.
     if (best && (best.kind === 'old-firmware' || best.kind === 'new-firmware' || best.kind === 'silent')) {
       return { ok: false, verdict: best };
     }
@@ -118,8 +112,7 @@ export async function attemptConnect<L>(
     picked = await deps.choose();
   } catch (e) {
     const verdict = classifyConnectError(e);
-    // An empty chooser and a cancelled one are the same error, and both say less than a grant that
-    // failed to open. Keep the better answer.
+    // An empty or cancelled chooser says less than a grant that failed to open.
     if (verdict.kind === 'no-port' && best) return { ok: false, verdict: best };
     return { ok: false, verdict };
   }

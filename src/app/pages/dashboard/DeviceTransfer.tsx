@@ -1,5 +1,3 @@
-// Run one control request against the real device and show what it answered.
-
 import { For, Show, createSignal } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
@@ -12,7 +10,7 @@ import { createCommand } from './action';
 import { chips, muted, row, section } from './ui';
 import { SETUP_DEFAULT, SETUP_FIELDS, decodeSetup, outDataBlurb, parseHex, parseNum, toHex } from './hex';
 
-// What each outcome means. A status with no answer covers more than a silent device, so it says so.
+// No answer covers more than a silent device.
 const STATUS_LABEL: Record<number, string> = {
   [TransferStatus.Ok]: 'OK',
   [TransferStatus.Refused]: 'Not sent',
@@ -23,11 +21,11 @@ const STATUS_LABEL: Record<number, string> = {
 const STATUS_BLURB: Record<number, string> = {
   [TransferStatus.Ok]: 'The device answered.',
   [TransferStatus.Refused]:
-    "The box did not send it. The request was malformed, asked for more than 504 bytes, carried less Out data than its length, or arrived while the box's control queue was full.",
+    "The box didn't send it: the request was malformed, asked for more than 504 bytes, carried less Out data than its length, or met a full control queue.",
   [TransferStatus.Stall]: 'The device refused the request.',
   [TransferStatus.Nak]:
-    "The device gave no answer within half a second, the transfer failed, the device has no control endpoint with that number, or the box's host chip did not answer within 0.8 s.",
-  [TransferStatus.NoDevice]: 'No device is plugged into the box.',
+    "The device gave no answer within 0.5 s, the transfer failed, the device has no control endpoint with that number, or the box's host chip did not answer within 0.8 s.",
+  [TransferStatus.NoDevice]: 'No device plugged into the box.',
 };
 
 const statusVariant = (s: TransferStatus): 'success' | 'warning' | 'error' =>
@@ -68,7 +66,7 @@ const DeviceTransfer = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="control-transfer" data-search-target>
         <Card>
-          <CardHeader title="Control transfer" subtitle="Ask the real device and read its answer" />
+          <CardHeader title="Control transfer" subtitle="Send a request to the device" />
 
           <Show
             when={allowed()}
@@ -81,7 +79,7 @@ const DeviceTransfer = () => {
             <div style={{ ...row, 'align-items': 'flex-end' }}>
               <div style={{ 'max-width': '9rem' }}>
                 <NumberInput
-                  label="Endpoint number"
+                  label="Endpoint"
                   value={ep()}
                   min={0}
                   max={15}

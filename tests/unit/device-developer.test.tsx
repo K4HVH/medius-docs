@@ -234,7 +234,7 @@ describe('DeviceDeveloper', () => {
     const { container, getByText, queryByText } = render(() => <DeviceDeveloper />);
     expect(getByText('Not applied')).toBeTruthy();
     expect(getByText('Changes not on the clone')).toBeTruthy();
-    expect(getByText('This set is not on the clone yet. Apply to put it on.')).toBeTruthy();
+    expect(getByText('Not on the clone yet. Apply to put it on.')).toBeTruthy();
     expect(queryByText('Refused')).toBeNull();
     fireEvent.click(cardButton(patchCard(container), 'Apply'));
     await settle();
@@ -258,7 +258,7 @@ describe('DeviceDeveloper', () => {
     const { container, getByText } = render(() => <DeviceDeveloper />);
     expect(getByText('Applied')).toBeTruthy();
     expect(getByText('Changes not on the clone')).toBeTruthy();
-    expect(getByText('The clone carries an earlier version of this set. Apply to put the changes on it.')).toBeTruthy();
+    expect(getByText('The clone carries an earlier version of this set. Apply to update it.')).toBeTruthy();
     expect(cardButton(patchCard(container), 'Apply').disabled).toBe(false);
   });
 
@@ -269,7 +269,7 @@ describe('DeviceDeveloper', () => {
     const card = patchCard(container);
     expect(cardButton(card, 'Clear all').disabled).toBe(false);
     expect(cardButton(card, 'Apply').disabled).toBe(false);
-    expect(getByText('The clone still carries the patches you removed. Apply or Clear all takes them off.')).toBeTruthy();
+    expect(getByText('The clone still carries the removed patches. Apply or Clear all takes them off.')).toBeTruthy();
     expect(getByText('Nothing stored.')).toBeTruthy();
   });
 
@@ -334,12 +334,12 @@ describe('DeviceDeveloper', () => {
   it('blurbs the picked rewrite class, not a fixed sentence', async () => {
     on();
     const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
-    await findByText('Class and vendor requests on EP0, and every request on a control endpoint above it.');
-    expect(queryByText('Reports the game PC sends the device, by endpoint.')).toBeNull();
+    await findByText('Class and vendor requests on EP0, and every request on higher control endpoints.');
+    expect(queryByText('Reports from the game PC to the device, by endpoint.')).toBeNull();
 
     fireEvent.click(radio(container, 'HID out'));
-    await findByText('Reports the game PC sends the device, by endpoint.');
-    expect(queryByText('Class and vendor requests on EP0, and every request on a control endpoint above it.')).toBeNull();
+    await findByText('Reports from the game PC to the device, by endpoint.');
+    expect(queryByText('Class and vendor requests on EP0, and every request on higher control endpoints.')).toBeNull();
   });
 
   // A motion rewrite on HID in is lost on any report the box changes, so the rewrite card says where
@@ -349,7 +349,7 @@ describe('DeviceDeveloper', () => {
     const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
     const card = container.querySelector('#rewrite-rules') as HTMLElement;
     fireEvent.click(radio(card, 'HID in'));
-    await findByText(/before the box changes anything\. Rewrite mouse motion at Emit/);
+    await findByText(/before the box changes them\. Rewrite mouse motion at Emit/);
     fireEvent.click(radio(card, 'Emit'));
     await findByText('What the clone sends the game PC, injection included.');
     expect(queryByText(/Rewrite mouse motion at Emit/)).toBeNull();
@@ -370,7 +370,7 @@ describe('DeviceDeveloper', () => {
     );
     fireEvent.click(replace!);
     await waitFor(() => {
-      if (!queryByText('Overwrites the start of the data an Out request carries, keeping the length.')) {
+      if (!queryByText("Overwrites the start of an Out request's data, keeping the length.")) {
         throw new Error('blurb did not follow');
       }
     });
@@ -388,12 +388,12 @@ describe('DeviceDeveloper', () => {
     fireEvent.keyDown(box, { key: 'Enter' });
     await settle();
     fireEvent.click([...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.trim() === 'Replace')!);
-    await findByText('Overwrites the start of the data an Out request carries, keeping the length.');
+    await findByText("Overwrites the start of an Out request's data, keeping the length.");
     expect(queryByText('The packet becomes the payload.')).toBeNull();
 
     fireEvent.click(radio(card, 'HID out'));
     await findByText('The packet becomes the payload.');
-    expect(queryByText(/data an Out request carries/)).toBeNull();
+    expect(queryByText(/an Out request's data/)).toBeNull();
   });
 
   it('blurbs what the patch offset counts from, per descriptor', async () => {
@@ -432,11 +432,11 @@ describe('DeviceDeveloper', () => {
   it('blurbs where a raw report lands, per direction', async () => {
     on();
     const { container, queryByText, findByText } = render(() => <DeviceDeveloper />);
-    await findByText('The report reaches the game PC.');
+    await findByText('Reaches the game PC.');
 
     fireEvent.click(radio(container.querySelector('#raw-report') as HTMLElement, 'Out'));
-    await findByText('The report reaches the device.');
-    expect(queryByText('The report reaches the game PC.')).toBeNull();
+    await findByText('Reaches the device.');
+    expect(queryByText('Reaches the game PC.')).toBeNull();
   });
 
   // A class request's bRequest is not a standard one, so the standard name must not be claimed for it.
@@ -456,14 +456,14 @@ describe('DeviceDeveloper', () => {
     on();
     const { container, findByText, queryByText } = render(() => <DeviceDeveloper />);
     await findByText('Device to host, standard, to the device: GET_DESCRIPTOR.');
-    await findByText('Unused: this request reads, it does not write.');
+    await findByText('Unused: this request reads.');
 
     const field = [...container.querySelectorAll('input')].find(
       (i) => (i as HTMLInputElement).value === '0x80',
     ) as HTMLInputElement;
     fireEvent.input(field, { target: { value: '0x21' } });
     await findByText('Host to device, class, to an interface.');
-    await findByText('The data stage this request carries to the device.');
+    await findByText('Data stage sent to the device.');
     expect(queryByText('Device to host, standard, to the device: GET_DESCRIPTOR.')).toBeNull();
   });
 
@@ -637,12 +637,12 @@ describe('traffic address labels', () => {
         CatchClass.Emit,
       ].map(trafficIdLabel),
     ).toEqual([
-      'Interface number',
-      'Endpoint number',
-      'Endpoint number',
-      'Endpoint number',
-      'Endpoint number (0 is EP0)',
-      'Endpoint number',
+      'Interface',
+      'Endpoint',
+      'Endpoint',
+      'Endpoint',
+      'Endpoint (0 is EP0)',
+      'Endpoint',
     ]);
   });
 });
@@ -684,7 +684,7 @@ describe('whole-number fields on the advanced control cards', () => {
 
   it('keeps the raw report endpoint to a whole number, and sends what it shows', async () => {
     const root = card('raw-report');
-    const el = numberField(root, 'Endpoint number');
+    const el = numberField(root, 'Endpoint');
     await typeFraction(el);
     expect(el.value).toBe('3');
     text(root, 'Bytes (hex)', '01');
@@ -695,7 +695,7 @@ describe('whole-number fields on the advanced control cards', () => {
 
   it('keeps the control transfer endpoint to a whole number, and sends what it shows', async () => {
     const root = card('control-transfer');
-    const el = numberField(root, 'Endpoint number');
+    const el = numberField(root, 'Endpoint');
     await typeFraction(el);
     expect(el.value).toBe('3');
     fireEvent.click(button(root, 'Run'));
@@ -722,7 +722,7 @@ describe('whole-number fields on the advanced control cards', () => {
 
   it('keeps the rewrite id to a whole number, and sends what it shows', async () => {
     const root = card('rewrite-rules');
-    const el = numberField(root, 'Endpoint number (0 is EP0)');
+    const el = numberField(root, 'Endpoint (0 is EP0)');
     await typeFraction(el);
     expect(el.value).toBe('3');
     fireEvent.click(button(root, 'Add rule'));

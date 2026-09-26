@@ -1,6 +1,3 @@
-// Style objects the dashboard cards share. Previously each card carried its own copy of `label`
-// and open-coded the same flex rows, so a spacing change meant editing five files.
-
 export const label = {
   color: 'var(--g-text-muted, #8a8a8a)',
   'font-size': 'var(--font-size-xs, 0.8rem)',
@@ -9,13 +6,13 @@ export const label = {
 
 export const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
 
-// A row of buttons.
+// Buttons.
 export const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
-// A row of chips.
+// Chips.
 export const chips = { display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' } as const;
 
-// An input and its buttons sharing one baseline.
+// An input and its buttons on one baseline.
 export const controls = {
   display: 'flex',
   gap: 'var(--g-spacing-sm)',
@@ -23,7 +20,7 @@ export const controls = {
   'align-items': 'flex-end',
 } as const;
 
-// Label-left, value-right.
+// Label left, value right.
 export const field = {
   display: 'flex',
   'justify-content': 'space-between',
@@ -31,12 +28,12 @@ export const field = {
   padding: '6px 0',
 } as const;
 
-// The gap between one labelled section of a card and the next.
+// Gap between card sections.
 export const section = { 'margin-top': 'var(--g-spacing)' } as const;
 
 export const status = { 'margin-top': 'var(--g-spacing-sm)' } as const;
 
-// One column of the two-column card layout.
+// One column of a two-column card.
 export const col = {
   flex: '1 1 420px',
   'min-width': '0',
@@ -45,8 +42,7 @@ export const col = {
   gap: 'var(--g-spacing)',
 } as const;
 
-// A vertical stack of checkboxes. Checkbox renders inline, so a bare row of them runs together
-// with no gap between the label of one and the box of the next.
+// Checkbox renders inline, so a bare row runs one label into the next box.
 export const checkColumn = {
   display: 'flex',
   'flex-direction': 'column',

@@ -40,12 +40,11 @@ const Device = () => {
   let logEl: HTMLPreElement | undefined;
   let follow = true;
 
-  // Stay following only while the view is at (or near) the bottom.
+  // Follow only while scrolled to the bottom.
   const onLogScroll = () => {
     if (logEl) follow = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight <= 24;
   };
 
-  // Scroll to the newest line unless the user has scrolled up.
   createEffect(() => {
     dash.deviceLog();
     if (logEl && follow) logEl.scrollTop = logEl.scrollHeight;
@@ -75,7 +74,7 @@ const Device = () => {
           <div style={col}>
             <div id="your-box" data-search-target>
               <Card>
-                <CardHeader title="Your box" subtitle="Connect over USB to view and manage your box" />
+                <CardHeader title="Your box" subtitle="Connect over USB" />
                 <div aria-live="polite">
                   <Switch>
                     <Match when={dash.status() === 'connected'}>
@@ -94,7 +93,7 @@ const Device = () => {
                     </Match>
 
                     <Match when={dash.status() === 'flashing'}>
-                      <p>Updating. See the Update tab.</p>
+                      <p>Updating.</p>
                       <Button variant="primary" disabled onClick={() => navigate('/dashboard/update')}>
                         Go to Update
                       </Button>
@@ -124,7 +123,7 @@ const Device = () => {
               <div id="status" data-search-target>
                 <Card>
                   <CardHeader title="Status" subtitle="Live device health" />
-                  <Show when={dash.health()} fallback={<p>Reading status...</p>}>
+                  <Show when={dash.health()} fallback={<p>Reading...</p>}>
                     {(h) => (
                       <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
                         <For each={healthItems(h())}>
@@ -143,10 +142,10 @@ const Device = () => {
           <div style={col}>
             <div id="device-log" data-search-target>
               <Card>
-                <CardHeader title="Device log" subtitle="Live diagnostics from the box" />
+                <CardHeader title="Device log" subtitle="Live box diagnostics" />
                 <Show
                   when={dash.status() === 'connected' || dash.deviceLog().length > 0}
-                  fallback={<p>Connect to see the box's diagnostic messages here.</p>}
+                  fallback={<p>Connect to see diagnostics.</p>}
                 >
                   <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
                     <Button variant="subtle" size="compact" onClick={() => dash.clearDeviceLog()}>Clear</Button>
@@ -157,7 +156,7 @@ const Device = () => {
                     class="diagram"
                     style={{ 'max-height': '360px', overflow: 'auto', 'white-space': 'pre-wrap' }}
                   >
-                    <Show when={dash.deviceLog().length > 0} fallback="(no messages yet)">
+                    <Show when={dash.deviceLog().length > 0} fallback="(no messages)">
                       {dash.deviceLog().join('\n')}
                     </Show>
                   </pre>

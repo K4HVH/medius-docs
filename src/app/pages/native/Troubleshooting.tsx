@@ -7,15 +7,13 @@ const Troubleshooting: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Troubleshooting" subtitle="Common failures and what they mean" />
+        <CardHeader title="Troubleshooting" subtitle="Common failures" />
         <p>
-          Every message in either direction is a{' '}
-          <A href="/native/frame"><code>frame</code></A> (one packet on the wire). Most commands are{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>: you send, the box stays
-          silent. The exception is{' '}
-          <A href="/native/commands/requests#requests"><code>QUERY</code></A>, which asks for a piece
-          of the box's state and gets back one{' '}
-          <A href="/native/commands/requests#resp"><code>RESP</code></A> frame.
+          Every message is a <A href="/native/frame"><code>frame</code></A> (one packet on the
+          wire). Most commands are{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>, with no reply;{' '}
+          <A href="/native/commands/requests#requests"><code>QUERY</code></A> asks for box state and
+          gets one <A href="/native/commands/requests#resp"><code>RESP</code></A> frame.
         </p>
       </Card>
 
@@ -23,54 +21,52 @@ const Troubleshooting: Component = () => {
         <Card>
           <CardHeader title="No reply to QUERY(VERSION)" subtitle="Wrong baud, a held port, or not a Medius box" />
           <p>
-            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> asks for the
-            firmware and protocol version; the reply is a{' '}
-            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame. If none
-            comes back, check:
+            If <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> (firmware
+            and protocol version) gets no{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A>, check:
           </p>
           <ul>
             <li>
-              The port wasn't opened at <code>6,000,000</code> baud. The box speaks{' '}
-              <A href="/native/frame">framed binary</A> from the first byte, with no slower startup
-              speed.
+              Port not opened at <code>6,000,000</code> baud;{' '}
+              <A href="/native/frame">framed binary</A> from the first byte, no slower startup speed.
             </li>
-            <li>Another process holds the port. Only one program can have it open.</li>
-            <li>It isn't a Medius box, or you opened the wrong port.</li>
-            <li>You opened the port after both hellos already fired.</li>
+            <li>Another process holds the port; only one can open it.</li>
+            <li>Not a Medius box, or the wrong port.</li>
+            <li>Port opened after both hellos fired.</li>
           </ul>
           <p>
-            The hello is a{' '}
-            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> the box sends
-            on its own at boot and on the first frame it receives. Missing it costs nothing: send{' '}
-            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> and read the
-            reply. See <A href="/native/connection#hello">the ready hello</A>.
+            The hello is an unsolicited{' '}
+            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> at boot and on
+            the first frame received. Missing it costs nothing: send{' '}
+            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>. See{' '}
+            <A href="/native/connection#hello">ready hello</A>.
           </p>
         </Card>
       </div>
 
       <div id="no-injection" data-search-target>
         <Card>
-          <CardHeader title="Injection does nothing" subtitle="Check HEALTH before you rely on it" />
+          <CardHeader title="Injection does nothing" subtitle="Check HEALTH first" />
           <p>
-            <A href="/native/injection">Injection</A> is the input your program adds on top of the
-            real mouse's passthrough (movement, buttons, scroll). If it has no effect, send{' '}
+            <A href="/native/injection">Injection</A> is input added on top of the mouse's
+            passthrough (movement, buttons, scroll). If it has no effect, send{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and read the{' '}
             <code>flags</code> word (<code>u16</code>, little-endian).
           </p>
           <p>
-            The box only merges injection once <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a
-            mouse is on <A href="/native/hardware"><code>USB3</code></A>), and{' '}
-            <code>CLONE_CONFIGURED</code> (the PC has enumerated the clone) are all set. The full
-            flags word is on <A href="/native/commands/requests#health">HEALTH</A>.
+            The box merges injection only once <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a
+            mouse on <A href="/native/hardware"><code>USB3</code></A>), and{' '}
+            <code>CLONE_CONFIGURED</code> (the PC enumerated the clone) are all set. Full flags word
+            on <A href="/native/commands/requests#health">HEALTH</A>.
           </p>
         </Card>
       </div>
 
       <div id="button-stuck-release" data-search-target>
         <Card>
-          <CardHeader title="A held button releases on its own" subtitle="The silence auto-clear dropped it" />
+          <CardHeader title="Held button releases" subtitle="Silence auto-clear" />
           <p>
-            The box clears all injection if your program goes quiet, so input can't get stuck.
+            The box clears all injection when the program goes quiet, so input can't stick.
           </p>
           <table class="api-params">
             <thead>
@@ -78,18 +74,17 @@ const Troubleshooting: Component = () => {
             </thead>
             <tbody>
               <tr><td>Silence timeout (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, returns to plain passthrough.</td></tr>
-              <tr><td>Any frame that passes its <A href="/native/frame#crc">checksum</A> (including a <A href="/native/commands/requests#requests"><code>QUERY</code></A>)</td><td>Resets the timer.</td></tr>
+              <tr><td>Any frame passing its <A href="/native/frame#crc">checksum</A> (including a <A href="/native/commands/requests#requests"><code>QUERY</code></A>)</td><td>Resets the timer.</td></tr>
             </tbody>
           </table>
           <p>
             To hold an injected button, keep the link busy with periodic frames (a{' '}
             <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> is enough), or
-            let{' '}
-            <A href="/library/guides/connection#keepalive">the library's keepalive</A> do it.
+            use <A href="/library/guides/connection#keepalive">the library's keepalive</A>.
           </p>
           <div class="callout callout--info">
             <p>
-              See <A href="/native/injection#safety">Injection</A> for the safety state machine.
+              Safety state machine on <A href="/native/injection#safety">Injection</A>.
             </p>
           </div>
         </Card>
@@ -97,21 +92,20 @@ const Troubleshooting: Component = () => {
 
       <div id="shutdown" data-search-target>
         <Card>
-          <CardHeader title="A machine shuts off or drains its battery" subtitle="USB1 and USB3 on the same machine" />
+          <CardHeader title="Machine shuts off or drains battery" subtitle="USB1 and USB3 on the same machine" />
           <p>
             <A href="/native/hardware"><code>USB1</code></A> and{' '}
-            <A href="/native/hardware"><code>USB3</code></A> share one internal rail, and the{' '}
-            <A href="/native/hardware"><code>USB3</code></A> 5V rail can't be pulled low in firmware,
-            so wiring both to one machine back-feeds power into it. Keep them apart:
+            <A href="/native/hardware"><code>USB3</code></A> share one internal 5V rail that firmware
+            can't pull low, so wiring both to one machine back-feeds power into it. Keep them apart:
           </p>
           <table class="api-params">
             <thead>
               <tr><th>Port</th><th>Carries</th><th>Connects to</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/native/hardware"><code>USB1</code></A></td><td>the clone to the PC</td><td>the game PC</td></tr>
-              <tr><td><A href="/native/hardware"><code>USB2</code></A></td><td>the control link</td><td>the control PC</td></tr>
-              <tr><td><A href="/native/hardware"><code>USB3</code></A></td><td>the real mouse</td><td>the mouse</td></tr>
+              <tr><td><A href="/native/hardware"><code>USB1</code></A></td><td>clone</td><td>game PC</td></tr>
+              <tr><td><A href="/native/hardware"><code>USB2</code></A></td><td>control link</td><td>control PC</td></tr>
+              <tr><td><A href="/native/hardware"><code>USB3</code></A></td><td>real mouse</td><td>mouse</td></tr>
             </tbody>
           </table>
           <div class="callout callout--danger">
@@ -126,12 +120,12 @@ const Troubleshooting: Component = () => {
 
       <div id="port-gone" data-search-target>
         <Card>
-          <CardHeader title="The serial port disappeared after a REBOOT" subtitle="The chip is in ROM download mode" />
+          <CardHeader title="Serial port gone after REBOOT" subtitle="Chip in ROM download mode" />
           <p>
             A download <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>{' '}
-            (<code>target</code> <code>0</code> or <code>1</code>) drops a chip into ROM download mode,
-            so its running firmware, and the serial port that firmware provides, goes away. Flash the
-            chip or power-cycle the box to get the port back. See{' '}
+            (<code>target</code> <code>0</code> or <code>1</code>) puts a chip in ROM download mode,
+            removing its running firmware and the serial port it provides. Flash the chip or
+            power-cycle the box to restore the port. See{' '}
             <A href="/native/flashing">Flashing</A>.
           </p>
         </Card>
@@ -139,15 +133,15 @@ const Troubleshooting: Component = () => {
 
       <div id="no-logs" data-search-target>
         <Card>
-          <CardHeader title="No LOG frames arrive" subtitle="Only sent while a control PC is attached" />
+          <CardHeader title="No LOG frames" subtitle="Sent only with a control PC attached" />
           <p>
             <A href="/native/commands/admin#log"><code>LOG</code></A> is the box's unsolicited
             diagnostic frame (box to PC). If none arrive, check:
           </p>
           <ul>
-            <li>No control PC is attached. <A href="/native/commands/admin#log"><code>LOG</code></A> is only emitted while one is.</li>
-            <li>It logged before first contact. That output is dropped, not buffered.</li>
-            <li>It's early ROM-bootloader output, which is plain ASCII the frame decoder ignores.</li>
+            <li>No control PC attached; <A href="/native/commands/admin#log"><code>LOG</code></A> is emitted only while one is.</li>
+            <li>Logged before first contact; that output is dropped, not buffered.</li>
+            <li>Early ROM-bootloader output, plain ASCII the frame decoder ignores.</li>
           </ul>
         </Card>
       </div>

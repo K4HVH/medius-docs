@@ -127,12 +127,10 @@ import {
   ImageState,
 } from './types';
 
-// Decoded RESP(OPTIONS, EMIT) (§4.14): the emit-rate pacing mode, the configured fixed rate, the rate
-// actually in effect (resolvedHz 0 = adaptive/learnt, or no device yet in interval mode; 1000 once the
-// renderer has a profile), the requested
-// wire rate (forceHz 0 = off), what the clone's input endpoints advertise now (advertisedHz 0 = no
-// clone), and whether a forced interval is in the served descriptor. mode null is a mode the box
-// reported that this build doesn't know.
+// RESP(OPTIONS, EMIT) (§4.14). resolvedHz is the rate in effect (0 = learnt, or no device yet in
+// interval mode; 1000 once the renderer has a profile); forceHz 0 = off; advertisedHz is what the
+// clone's input endpoints advertise (0 = no clone); forceActive: a forced interval is being served.
+// mode null is a mode this build doesn't know.
 export interface EmitPace {
   mode: EmitMode | null;
   fixedHz: number;
@@ -142,16 +140,14 @@ export interface EmitPace {
   forceActive: boolean;
 }
 
-// What the box renders motion with, whether native motion goes through it, and whether a
-// profile has been learned for the attached device. Nothing is rendered until one has.
+// `ready`: a profile is learned for the attached device. Nothing renders until one is.
 export interface Render {
   mode: RenderMode | null;
   full: boolean;
   ready: boolean;
 }
 
-// How far an injected delta is spread across the host's command interval, and the interval the box is
-// releasing across. `spanUs` is 0 until the box has learned the host's command period.
+// `spanUs` is the interval the box releases across; 0 until it learns the host's command period.
 export interface Spread {
   percent: number;
   spanUs: number;
@@ -302,9 +298,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       const entries: LockEntry[] = [];
       for (let i = 0; i < n; i++) {
         const off = 2 + LOCK_ENTRY_LEN * i;
-        // An entry this build cannot name is dropped, the way the crate drops one, rather than kept as
-        // a raw byte wearing the enum's type: scaleOf would compare it against a class or direction
-        // nothing matches and report a pass over a lock the box is holding.
+        // Dropped like the crate does: kept, scaleOf would report a pass over a lock the box holds.
         const cls = lockClassFromU8(payload[off]);
         const direction = directionFromU8(payload[off + 3]);
         if (cls === null || direction === null) continue;
@@ -322,8 +316,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       // [clk_age_ms u16][n u8] then n × [class][id u16 LE][dir][capture][dropped u16].
       if (payload.length < CATCH_HDR_LEN) return null;
       const n = payload[18];
-      // The frame's 512-byte payload ceiling would admit 70 entries, but the box's table holds 32,
-      // so a larger count is a malformed reply rather than a bigger table.
+      // The payload fits 70 entries but the table holds 32, so a larger count is malformed.
       if (n > CATCH_TABLE_MAX) return null;
       if (payload.length < CATCH_HDR_LEN + CATCH_ENTRY_LEN * n) return null;
       const ageMs = u16le(payload, 16);
@@ -380,14 +373,12 @@ export function parseResp(payload: Uint8Array): Resp | null {
       // [seq_gaps u16][xfers u16][xfer_errs u16][gated u16][n_held u8] then n_held x [class][id u16 LE],
       // then [autolock][flags][n_trig] then n_trig x [class][id u16 LE][edge][action][consume], then
       // [n_pkt] then n_pkt x [class][id u16 LE][dir][action][flags][slen][mlen][hits u16 LE][match][mask].
-      // The reply is exactly as long as its own counts say: a shorter one is truncated, and a longer
-      // one is a layout this build does not know.
+      // Exactly as long as its counts say: shorter is truncated, longer is an unknown layout.
       if (payload.length < RESP_CLIP_HDR) return null;
       const nHeld = payload[RESP_CLIP_HDR - 1];
       if (nHeld > CLIP_HELD_MAX) return null;
       const cfgAt = RESP_CLIP_HDR + 3 * nHeld;
-      // The config section is fixed-size and always present, so a reply that stops inside it is
-      // truncated rather than a box that omitted its configuration.
+      // The config section is fixed-size and always present, so stopping inside it is truncation.
       if (payload.length < cfgAt + 3) return null;
       const held: Usage[] = [];
       for (let i = 0; i < nHeld; i++) {
@@ -524,8 +515,8 @@ export function parseResp(payload: Uint8Array): Resp | null {
       }
     }
     case Q_TRANSFORMS: {
-      // [what][flags][n] then n × [op][sclass][sid u16 LE][dclass][did u16 LE]. No per-entry state
-      // byte: a read-back entry is always a live one. No scale either: a transform only moves a field.
+      // [what][flags][n] then n × [op][sclass][sid u16 LE][dclass][did u16 LE]; every read-back entry
+      // is live.
       if (payload.length < RESP_TRANSFORMS_HDR) return null;
       const n = payload[2];
       if (n > TRANSFORM_MAX_ENTRIES) return null;
@@ -659,7 +650,7 @@ export function parseTransferResp(payload: Uint8Array): TransferResult {
 }
 
 // Parse a MOTION_EVENT payload (§4.10): [ts_us u32][clk u8][dx i16][dy i16][dz i16][dpan i16].
-// Unsolicited. AC Pan (dpan) is the fourth relative axis, a peer of the wheel.
+// Unsolicited.
 export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
   if (payload.length < EVENT_HDR + 8) return null;
   return {
@@ -673,10 +664,8 @@ export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
 }
 
 // Parse a USAGE_EVENT payload (§4.10): [ts_us u32][clk u8][cls u8][dir u8][n u8] then
-// n × [class u8][id u16 LE]. A class-tagged held-usage snapshot (buttons, keys, or media, one class
-// per event). Class and edge are in the HEADER, not read off the entries: the snapshot that most
-// needs them is the empty one: the release of the last held usage, which lists nothing.
-// Unsolicited.
+// n × [class u8][id u16 LE]. Unsolicited. Class and edge come from the HEADER: the empty snapshot
+// (release of the last held usage) lists nothing to read them from.
 export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
   if (payload.length < EVENT_HDR + 3) return null;
   const n = payload[EVENT_HDR + 2];

@@ -9,22 +9,21 @@ const Quickstart: Component = () => {
       <Card>
         <CardHeader title="First program" subtitle="Connect, command, one event, free" />
         <p>
-          One file: <A href="/library/connection">connect</A>, read the firmware version, move the
-          cursor, click the left button, wait for the user to move the real mouse, then free it.
+          One file: <A href="/library/connection">connect</A>, read the firmware version, move,
+          click, wait for one physical motion event, free.
         </p>
         <p>
-          Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
-          check, and the detail comes from{' '}
-          <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A>. What the commands{' '}
-          <em>mean</em> lives in the{' '}
+          Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>;{' '}
+          <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A> has the detail.
+          What the commands <em>mean</em> is in the{' '}
           <A href="/library">Library</A> and <A href="/native">Native</A> sections.
         </p>
         <div class="callout callout--info">
           <p>
-            Get <A href="/bindings/c"><code>medius.h</code></A> and the library from{' '}
+            <A href="/bindings/c"><code>medius.h</code></A> and the library:{' '}
             <A href="/bindings/c/build">Build &amp; features</A>. New to the{' '}
-            <A href="/native/hardware">box</A> itself? Read the{' '}
-            <A href="/native/quickstart">Native quickstart</A> first.
+            <A href="/native/hardware">box</A>? Start with the{' '}
+            <A href="/native/quickstart">Native quickstart</A>.
           </p>
         </div>
         <pre class="diagram">{`  find()            ──▶  open + handshake      blocks
@@ -39,15 +38,14 @@ const Quickstart: Component = () => {
         <Card>
           <CardHeader title="The program" subtitle="Every call, with error checks" />
           <p>
-            <code>check()</code> is the whole error story: compare against <code>MEDIUS_STATUS_OK</code>{' '}
-            (which is <code>0</code>), and on anything else pull the text with{' '}
-            <code>medius_last_error_message</code>. Results land through an out-pointer
-            (<code>&amp;dev</code>, <code>&amp;v</code>, <code>&amp;events</code>), never the return value.
+            <code>check()</code> compares against <code>MEDIUS_STATUS_OK</code> (<code>0</code>) and
+            on anything else reads <code>medius_last_error_message</code>. Results land through an
+            out-pointer (<code>&amp;dev</code>, <code>&amp;v</code>, <code>&amp;events</code>), never the return value.
           </p>
           <pre><code class="language-c">{`#include <stdio.h>
 #include <medius.h>
 
-/* Returns 0 on success, 1 on failure (after printing the last error). */
+/* 0 on success; 1 on failure, after printing the last error */
 static int check(MediusStatus s, const char *what) {
     if (s == MEDIUS_STATUS_OK) return 0;
     char msg[256];
@@ -93,21 +91,19 @@ firmware 3.4.2 (proto 9)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
           <p>
             The subscription is an array of{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries, and
-            this program passes one. Wanting keys as well is a second entry from{' '}
-            <code>medius_catch_filter_watch_class</code>; wanting a vendor endpoint's raw packets is a
-            third from <code>medius_catch_filter_traffic</code>.
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries; this
+            program passes one. Add <code>medius_catch_filter_watch_class</code> for keys, or{' '}
+            <code>medius_catch_filter_traffic</code> for a vendor endpoint's raw packets.
           </p>
           <p>
-            The array is read during the call and not retained, so a local like this one is fine. The
-            whole helper set is on <A href="/bindings/c/api#catch-filters">API index</A>.
+            The call reads the array without retaining it, so a local is fine. All helpers:{' '}
+            <A href="/bindings/c/api#catch-filters">API index</A>.
           </p>
           <div class="callout callout--info">
             <p>
               <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
-              something the filters address happens, so with this one entry it returns when the user
-              moves the real mouse. To poll instead, to subscribe to more classes, or to loop over many
-              events, see <A href="/bindings/c/streams">Streams</A>.
+              the filters match an event; with this entry, a physical mouse motion. Polling, more
+              classes and event loops are on <A href="/bindings/c/streams">Streams</A>.
             </p>
           </div>
         </Card>
@@ -117,8 +113,8 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
         <Card>
           <CardHeader title="Run it" subtitle="gcc or clang, link libmedius_capi" />
           <p>
-            Run from the unpacked release, with <code>medius.h</code> under <code>include/</code> and{' '}
-            <A href="/bindings/c"><code>libmedius_capi.so</code></A> beside it. <code>cc</code>,{' '}
+            Run from the unpacked release (<code>medius.h</code> under <code>include/</code>,{' '}
+            <A href="/bindings/c"><code>libmedius_capi.so</code></A> beside it). <code>cc</code>,{' '}
             <a href="https://gcc.gnu.org/" target="_blank" rel="noreferrer"><code>gcc</code></a>, and{' '}
             <a href="https://clang.llvm.org/" target="_blank" rel="noreferrer"><code>clang</code></a> all work.
           </p>
@@ -148,22 +144,21 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
           <CardHeader title="Walkthrough" subtitle="Errors, out-params, freeing, blocking" />
           <table class="api-params">
             <thead>
-              <tr><th>Mechanic</th><th>How it works in C</th></tr>
+              <tr><th>Mechanic</th><th>In C</th></tr>
             </thead>
             <tbody>
               <tr>
                 <td>Errors</td>
                 <td>
-                  Every fallible call returns a <code>MediusStatus</code>;{' '}
-                  <code>MEDIUS_STATUS_OK</code> is <code>0</code>, everything else is a failure.
-                  Read the human text with <code>medius_last_error_message(buf, cap)</code>{' '}
-                  right after the failing call.
+                  Every fallible call returns a <code>MediusStatus</code>:{' '}
+                  <code>MEDIUS_STATUS_OK</code> (<code>0</code>) or a failure. Read the text with{' '}
+                  <code>medius_last_error_message(buf, cap)</code> right after the failing call.
                 </td>
               </tr>
               <tr>
                 <td>Results</td>
                 <td>
-                  Return values are status codes, so data comes back through an out-pointer:{' '}
+                  Data comes back through an out-pointer:{' '}
                   <A href="/bindings/c/api#queries"><code>medius_device_query_version(dev, &amp;v)</code></A> fills <code>v</code>.
                 </td>
               </tr>
@@ -171,9 +166,8 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
                 <td>Freeing</td>
                 <td>
                   Each handle has a <code>*_free</code>: <A href="/bindings/c/api#connect"><code>medius_device_free</code></A>,{' '}
-                  <A href="/bindings/c/api#streams"><code>medius_event_stream_free</code></A>, <A href="/bindings/c/api#streams"><code>medius_log_stream_free</code></A>. All are
-                  NULL-safe no-ops. Catch events are fixed-size structs, so there's nothing to free
-                  per event.
+                  <A href="/bindings/c/api#streams"><code>medius_event_stream_free</code></A>, <A href="/bindings/c/api#streams"><code>medius_log_stream_free</code></A>, each a no-op on
+                  NULL. Catch events are fixed-size structs with nothing to free.
                 </td>
               </tr>
               <tr>
@@ -183,7 +177,7 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
                 <td>
                   <A href="/bindings/c/api#move"><code>move_rel</code></A>, <A href="/bindings/c/api#move"><code>wheel</code></A>, <A href="/bindings/c/api#inject"><code>press</code></A>, <A href="/bindings/c/api#inject"><code>inject</code></A>,
                   and the <A href="/bindings/c/api#lock">lock</A> / <A href="/bindings/c/api#led-admin-options">LED</A> calls queue a <A href="/native/frame">frame</A> and return at
-                  once. This is the <A href="/native/injection#fire-and-forget">fire-and-forget</A> model.
+                  once (the <A href="/native/injection#fire-and-forget">fire-and-forget</A> model).
                 </td>
               </tr>
               <tr>
@@ -200,8 +194,8 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
               <tr>
                 <td>Sharing</td>
                 <td>
-                  <A href="/bindings/c/api#connect"><code>medius_device_clone</code></A> / <A href="/bindings/c/api#streams"><code>medius_event_stream_clone</code></A> hand back
-                  another handle to the same link; each clone must be freed. See{' '}
+                  <A href="/bindings/c/api#connect"><code>medius_device_clone</code></A> / <A href="/bindings/c/api#streams"><code>medius_event_stream_clone</code></A> return
+                  another handle to the same link; free each clone. See{' '}
                   <A href="/library/lifecycle">Lifecycle</A>.
                 </td>
               </tr>
@@ -211,9 +205,9 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
 uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns full length */`}</pre>
           <div class="callout callout--warning">
             <p>
-              <code>medius_last_error_message</code> is per-thread and reflects only the most recent
-              failure on that thread, so read it before the next call overwrites it. It returns the
-              full message length (excluding the NUL), so size your buffer and retry if it was truncated.
+              <code>medius_last_error_message</code> holds the calling thread's latest failure; read it
+              before the next call overwrites it. It returns the full length (excluding the NUL);
+              retry with a larger buffer if it was truncated.
             </p>
           </div>
         </Card>
@@ -224,7 +218,7 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
           <CardHeader title="Call reference" subtitle="Each call's Library and Native page" />
           <table class="api-params">
             <thead>
-              <tr><th>In the program</th><th>What it means</th></tr>
+              <tr><th>Call</th><th>What it means</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -245,7 +239,7 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
               </tr>
               <tr>
                 <td><code>medius_device_catch_events</code> / <code>medius_event_stream_recv</code></td>
-                <td><A href="/library/catch">Catch</A> · consuming them in C on <A href="/bindings/c/streams">Streams</A></td>
+                <td><A href="/library/catch">Catch</A> · in C, <A href="/bindings/c/streams">Streams</A></td>
               </tr>
               <tr>
                 <td><code>medius_device_free</code></td>
@@ -254,8 +248,8 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
             </tbody>
           </table>
           <p>
-            Every call and type is indexed on <A href="/bindings/c/api">API index</A> and{' '}
-            <A href="/bindings/c/types">Types &amp; errors</A>. These mirror the{' '}
+            <A href="/bindings/c/api">API index</A> and{' '}
+            <A href="/bindings/c/types">Types &amp; errors</A> list every call and type; both mirror the{' '}
             <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">medius</a> crate
             (<a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer">source</a>).
           </p>
