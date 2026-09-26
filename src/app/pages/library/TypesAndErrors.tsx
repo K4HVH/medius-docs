@@ -20,7 +20,7 @@ const TypesAndErrors: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Button, Action, Health, Version, Error, Result};
 
-// One flat namespace. This does NOT work:
+// One flat namespace. Does not compile:
 // use medius::types::Button;`}</code></pre>
         </Card>
       </div>

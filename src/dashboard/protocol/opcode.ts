@@ -2,10 +2,9 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// 9 is firmware 3.4.2: RESP(STATS) is 31 bytes, adding link_rx_drops and host_rx_drops, one per
-// inter-chip link direction, relay_drops, the relayed-stream back-pressure those and tx_drops used
-// to be conflated with, and session, the count of releases of host-set state. 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in the packet trigger
-// list, CLIP_TRIGGER taking packet triggers, and a vendor interrupt OUT packet matched as VEND_INTR.
+// 9 is firmware 3.4.2: a 31-byte RESP(STATS) adding link_rx_drops and host_rx_drops (one per link
+// direction), relay_drops and session. 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in the packet
+// trigger list, packet triggers on CLIP_TRIGGER, and vendor interrupt OUT matched as VEND_INTR.
 export const PROTO_VER = 9;
 
 // The oldest wire this page will still open.
@@ -17,7 +16,7 @@ export const INJ_KEY = 1;
 export const INJ_MEDIA = 2;
 export const MOTION_CURSOR = 0;
 export const MOTION_WHEEL = 1;
-export const MOTION_PAN = 2; // AC Pan (horizontal scroll), a first-class relative axis peer of the wheel
+export const MOTION_PAN = 2; // AC Pan (horizontal scroll)
 
 // MOVE flags (§3.1): the per-command movement-riding override. Applied DISCARD, then FLUSH, then the
 // delta; FLUSH and DISCARD together contradict and the box refuses the frame.
@@ -34,8 +33,7 @@ export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 // RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale i16 LE].
 export const LOCK_ENTRY_LEN = 6;
-// The most entries one RESP(LOCKS) carries (§4.8): 2 + 85 × 6 is the frame's payload exactly, so
-// this is what fits rather than a table size.
+// Most entries one RESP(LOCKS) carries (§4.8): 2 + 85 × 6 fills the payload. Not a table size.
 export const LOCKS_MAX = 85;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)
@@ -48,8 +46,7 @@ export const Q_PATCHES = 14; // descriptor-patch set summary (RESP(PATCHES): fla
 export const Q_PATCH_ENTRY = 15; // one descriptor patch in full, in the PATCH command's own shape (§4.17)
 export const Q_TRANSFORMS = 16; // field-transform table (RESP(TRANSFORMS): flags + list, §4.18)
 
-// CLIP_CTRL engine verbs (§3.11). Ops 0..5 are the shared action space a trigger binding's `action`
-// byte renders from, so a trigger runs the same verb the control PC would.
+// CLIP_CTRL engine verbs (§3.11); ops 0..5 double as a trigger binding's `action`.
 export enum ClipOp {
   Start = 0,
   Stop = 1,
@@ -77,8 +74,7 @@ export const CLIP_PKT_TRIG_MAX = 8;
 export const CLIP_PKT_MATCH_MAX = 16; // one masked head, as wide as a rewrite rule's
 export const CLIP_PKT_MATCH_POOL = 112;
 
-// Autolock scope (the CLIP_SET_AUTOLOCK value): which classes the clip blocks physical input on
-// while it plays, so physical input cannot add to what it plays.
+// Autolock scope (the CLIP_SET_AUTOLOCK value): classes whose physical input a playing clip blocks.
 export const CLIP_LOCK_AIM = 0x01; // the X and Y cursor axes
 export const CLIP_LOCK_WHEEL = 0x02;
 export const CLIP_LOCK_BUTTONS = 0x04;
@@ -117,7 +113,7 @@ export const CLIP_F_RAW = 0x10; // [n] then n x [ep_num][dir][len u16][bytes]: R
 export const CLIP_F_XFER = 0x20; // [n] then n x [ep][setup 8][OUT data]: TRANSFER's payload
 export const CLIP_EDGES_MAX = 8;
 export const CLIP_RAW_MAX = 8;
-// An entry rides inside one CLIP_APPEND, so a frame's payload is the most it can be.
+// An entry fits in one CLIP_APPEND payload.
 export const CLIP_ENTRY_MAX = MAX_PAYLOAD;
 
 // Held usages in one RESP(CLIP) snapshot, the reply's fixed scalar prefix (held_n is its last byte),
@@ -128,8 +124,7 @@ export const CLIP_TRIG_LEN = 6;
 // RESP(CLIP) bytes ahead of a packet trigger's match: the command's eight and hits u16.
 export const CLIP_PKT_TRIG_ENTRY = 10;
 
-// A state byte this build does not know reads as Faulted rather than Idle: an unknown engine state
-// is not one a UI should offer Start on.
+// An unknown state byte reads as Faulted, so the UI never offers Start on it.
 export function clipStateFromU8(v: number): ClipState {
   switch (v) {
     case 0:
@@ -157,13 +152,13 @@ export const NAME_MAX = 32;
 
 // OPTION(EMIT) emit-rate pacing modes (§3.10). Fixed snaps to 1000/n Hz and is capped at 1000.
 export enum EmitMode {
-  Learned = 0, // pace to the mouse's learnt native report rate (default)
+  Learned = 0, // pace to the learnt native report rate (default)
   Interval = 1, // follow the cloned mouse's bInterval poll rate
   Fixed = 2, // pace at a fixed rate_hz
 }
 
-// OPTION(RENDER)'s mode: Off is the paced fill; the rest render the mouse's learned texture and differ only
-// in the onboard path smoother. The box boots at Despiked.
+// OPTION(RENDER)'s mode: Off is the paced fill; the rest render the learned native texture and differ
+// only in the onboard path smoother. The box boots at Despiked.
 export enum RenderMode {
   Off = 0,
   Stock = 1,
@@ -337,8 +332,8 @@ export const PATCHES_F_PENDING = 0x02; // the stored set differs from the one th
 export const PATCHES_F_REFUSED = 0x04; // the stored set, unchanged since, failed a check; the clone serves it unpatched
 export const PATCHES_F_FULL = 0x08; // the last add was refused for capacity (16 patches or the pool); the next change clears it
 
-// RESET flag: the box also erases its persistent store and reboots (§3.4). An empty RESET payload
-// is the release on its own, which is what the command has always been.
+// RESET flag: the box also erases its persistent store and reboots (§3.4). An empty payload is the
+// plain release.
 export const RST_F_NVS = 0x01;
 
 export enum FrameType {
@@ -378,28 +373,26 @@ export const EVENT_TS_LEN = 4;
 // Byte width of the header every catch event frame shares: ts_us then the clk domain byte (§4.10).
 export const EVENT_HDR = EVENT_TS_LEN + 1;
 
-// The CATCH table's size (§3.9). A refused entry is visible by its absence from RESP(CATCH) plus
-// the table-full flag, because CATCH itself has no reply.
+// The CATCH table's size (§3.9). CATCH has no reply, so a refusal shows as absence from RESP(CATCH)
+// plus the table-full flag.
 export const CATCH_TABLE_MAX = 32;
 
 // RESP(CATCH) flags (§4.9).
 export const CATCH_FLAG_TABLE_FULL = 0x01;
 
-// RESP(CATCH) clk_age_ms sentinel (§4.9): no cross-chip clock estimate has been taken yet. It is a
-// distinct value because "no estimate" and "the offset happens to be zero" both report offset 0.
+// RESP(CATCH) clk_age_ms sentinel (§4.9): no cross-chip clock estimate yet. Needed because no
+// estimate and a true zero offset both report offset 0.
 export const CLK_AGE_NONE = 0xffff;
 
 // TRAFFIC_EVENT flags for class VEND_BULK (§4.10). Bit 7 is TRAFFIC_F_RULE.
 export const TRAFFIC_BULK_END = 0x01;
 export const TRAFFIC_BULK_ZLP = 0x02;
 
-// TRAFFIC_EVENT flags bit 7 (§4.10), on every class a rewrite rule acts at (HID_IN, HID_OUT, VEND_INTR,
-// VEND_BULK, CONTROL, EMIT): a rule at that class changed the packet, dropped it, answered it or
-// refused it. A Pass rule, or a Patch that changed no byte, leaves it clear.
+// TRAFFIC_EVENT flags bit 7 (§4.10), on every rewrite class: a rule changed, dropped, answered or
+// refused the packet. A Pass rule, or a Patch that changed no byte, leaves it clear.
 export const TRAFFIC_F_RULE = 0x80;
 
-// UPDATE sub-ops (§3.13). Firmware reaches either chip over this port; the host chip's image is
-// relayed over the inter-chip link, which is the only route to it.
+// UPDATE sub-ops (§3.13). The host chip's image is relayed over the inter-chip link.
 export const OTA_OP_BEGIN = 0;
 export const OTA_OP_DATA = 1;
 export const OTA_OP_END = 2;

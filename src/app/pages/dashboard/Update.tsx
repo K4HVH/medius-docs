@@ -27,9 +27,8 @@ const Update = () => {
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
 
-  // An update writes flash on both chips, so a refresh mid-transfer leaves a half-written spare slot.
-  // Nothing is bricked (the running slot is untouched and the box times the session out), but the
-  // transfer is wasted, so it is worth a prompt.
+  // A refresh mid-transfer wastes it on a half-written spare slot. The running slot is untouched and
+  // the box times the session out.
   createEffect(() => {
     if (dash.status() !== 'flashing') return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -44,8 +43,8 @@ const Update = () => {
     if (dash.status() === 'connected') void dash.readFirmwareInfo();
   });
 
-  // A resource whose fetch rejected re-throws on every read, including from a `disabled=` prop
-  // during render, and there is no ErrorBoundary anywhere: one unguarded read freezes the page.
+  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
+  // one unguarded read freezes the page.
   const latest = () => {
     try {
       return releases()?.[0] ?? null;
@@ -65,8 +64,8 @@ const Update = () => {
     return matches(c ? { major: c.fwMajor, minor: c.fwMinor, patch: c.fwPatch } : null);
   };
   const hostOnRelease = () => matches(dash.firmwareInfo()?.host);
-  // What each chip that was ASKED to change reports now. A chip that reverted completes a
-  // handshake, so the handshake is not the evidence: the version it reports is.
+  // A reverted chip still completes the handshake; only the version each ASKED chip reports proves
+  // the update.
   const landed = () => {
     if (which() === 'main') return deviceOnRelease();
     if (which() === 'mouse') return hostOnRelease();
@@ -78,22 +77,21 @@ const Update = () => {
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
-  // The one place either ending says what happened. Both used to claim it separately, and the
-  // sent arm was still signing a reverted box off as finished after the done arm stopped.
+  // Both endings report the outcome only through this.
   const Landed = () => (
     <Show
       when={landed()}
       fallback={
         <div class="callout callout--warning">
-          The box came back, but not on the version that was sent. It reverts anything that will not
-          run, so it is still working. Try the update again.
+          The box came back, but not on the version sent. It reverts anything that won't run, so it
+          still works. Try the update again.
         </div>
       }
     >
       <div class="callout callout--info">
         Updated and verified.{' '}
         <Show when={dash.version()}>
-          {(v) => <>Your box is on <strong>v{versionString(v())}</strong>.</>}
+          {(v) => <>Running <strong>v{versionString(v())}</strong>.</>}
         </Show>
       </div>
     </Show>
@@ -106,10 +104,8 @@ const Update = () => {
     setStep('update');
   };
 
-  // Update over the control port the box is already connected on. Both chips write the slot they are
-  // not running and boot it, and the box reverts anything that will not run. No reboot into ROM
-  // download, no second port grant, no cable move: the mouse-side chip's image is relayed over the
-  // inter-chip link, which is the only route to it.
+  // Over the connected control port: each chip writes its spare slot and boots it, and the box
+  // reverts anything that won't run. The mouse-side image is relayed over the inter-chip link.
   const runUpdate = async () => {
     setErr(null);
     dash.clearFlashResult();
@@ -119,11 +115,10 @@ const Update = () => {
     try {
       const da = deviceAsset();
       const ha = hostAsset();
-      // Three different situations, and only the first is fixed by waiting. Point at the other
-      // choice only when it would actually work, and name where that choice lives: it is on the
-      // previous screen, not this one.
+      // Only the first is fixed by waiting. The other two name the choice that works, which is on
+      // the previous screen.
       if (!latest() || (!da && !ha)) {
-        setErr("There's no update available right now. Try again in a few minutes.");
+        setErr('No update available right now. Try again in a few minutes.');
         return;
       }
       if (wantDevice && !da) {
@@ -140,7 +135,7 @@ const Update = () => {
       const outcome = await dash.updateOverControl(images);
       if (outcome === 'verified') setStep('done');
       else if (outcome === 'sent') setStep('sent');
-      else if (!dash.error()) setErr("That didn't finish. The box kept the firmware it was running.");
+      else if (!dash.error()) setErr("That didn't finish. The box kept its running firmware.");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -162,7 +157,7 @@ const Update = () => {
       <Show when={dash.status() !== 'flashing'}>
         <div id="update" data-search-target>
           <Card>
-            <CardHeader title="Update" subtitle="Get the latest firmware" />
+            <CardHeader title="Update" subtitle="Latest firmware" />
             <Show when={err()}>
               {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
             </Show>
@@ -203,8 +198,7 @@ const Update = () => {
 
               <Match when={step() === 'update'}>
                 <p>
-                  Everything happens over the cable you are already connected on. The mouse stops working
-                  for a few seconds, then comes back.
+                  Runs over the current connection. The mouse stops working for a few seconds.
                 </p>
                 <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                   <WiringPorts />
@@ -230,9 +224,8 @@ const Update = () => {
               </Match>
 
               <Match when={step() === 'sent'}>
-                {/* The transfer and the activate went through and then nothing answered, so what is
-                    running now is exactly what this cannot say. The instruction itself lives in the
-                    shared error, which ConnectPanel renders on every page that offers Connect. */}
+                {/* Transfer and activate went through, then nothing replied, so the running version is
+                    unknown. The instruction is in the shared error that ConnectPanel renders. */}
                 <Show
                   when={dash.status() === 'connected'}
                   fallback={<ConnectPanel />}

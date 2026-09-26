@@ -6,10 +6,8 @@ import { Button } from '../components/inputs/Button';
 
 const SITE = 'https://medius.k4tech.net';
 
-// Titlebar "use this page with an AI" menu: copy/view the Markdown twin, or open
-// the page in ChatGPT/Claude. Shown only on documentation routes (the ones with
-// a prerendered .md twin). The menu is portaled to <body> so the titlebar's
-// overflow:hidden cannot clip it.
+// Titlebar AI menu, on doc routes only (the ones with a prerendered .md twin).
+// Portaled to <body> so the titlebar's overflow:hidden cannot clip it.
 export default function AiActions() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,7 +50,7 @@ export default function AiActions() {
     clearTimeout(copyTimer);
   });
 
-  // Close the menu when the route changes.
+  // Close on route change.
   createEffect(() => {
     location.pathname;
     close();
@@ -72,8 +70,8 @@ export default function AiActions() {
   };
 
   const prompt = () =>
-    `Read the Medius documentation page at ${mdUrl()} and help me use it. ` +
-    `The full docs index is at ${SITE}/llms.txt and there is an MCP server at ${SITE}/mcp.`;
+    `Read the Medius docs page at ${mdUrl()} and help me use it. ` +
+    `Docs index: ${SITE}/llms.txt. MCP server: ${SITE}/mcp.`;
 
   return (
     <Show when={isDoc()}>
@@ -83,7 +81,7 @@ export default function AiActions() {
           size="compact"
           icon={BsStars}
           onClick={toggle}
-          aria-label="Use this page with an AI assistant"
+          aria-label="Use this page with AI"
         />
         <Show when={open()}>
           <Portal>

@@ -7,18 +7,18 @@ const Raw: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Raw injection" subtitle="Put a report byte-for-byte on a cloned endpoint" />
+        <CardHeader title="Raw injection" subtitle="A report, byte-for-byte, on a cloned endpoint" />
         <p>
           <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint, named by number and
           direction: <code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real
-          device. It carries no semantic model and no merge with native motion.
+          device. It bypasses the semantic model and never merges with native motion.
         </p>
         <p>
-          The write is stateless: the next native report overwrites it, and <code>raw</code> bypasses
-          the <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
-          <A href="/library/clip#packet-triggers">packet triggers</A>. No native report can carry a
-          raw <code>IN</code> report, so on an endpoint the device reports on at every poll it takes a
-          poll of its own, within two of the device's reports.
+          The write is stateless: the next native report overwrites it. <code>raw</code> bypasses the{' '}
+          <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
+          <A href="/library/clip#packet-triggers">packet triggers</A>. No native report carries a raw{' '}
+          <code>IN</code> report, so on an endpoint the device reports on at every poll it takes its own
+          poll, within two of the device's reports.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
 
@@ -34,9 +34,9 @@ const Raw: Component = () => {
   enumerate   descriptor patches overwrite what the clone presents`}</pre>
         <div class="callout callout--warning">
           <p>
-            The whole advanced control layer is gated on the imperfect-clone opt-in. With{' '}
-            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
-            off, the box drops a <code>raw</code> frame and says nothing, so the call still returns{' '}
+            The advanced control layer needs{' '}
+            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+            With it off, the box drops a <code>raw</code> frame with no reply, so the call still returns{' '}
             <code>Ok</code>.
           </p>
         </div>
@@ -52,9 +52,9 @@ const Raw: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>ep</code></td><td><code>u8</code></td><td>The cloned endpoint number, 0 to 15.</td></tr>
+              <tr><td><code>ep</code></td><td><code>u8</code></td><td>Cloned endpoint number, 0 to 15.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, on the wire as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, sent as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -68,27 +68,23 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
 
       <div id="size" data-search-target>
         <Card>
-          <CardHeader title="Packet size" subtitle="What the endpoint carries decides what fits" />
-          <p>
-            The report is bounded by the endpoint it goes on, and the two transfer types the box relays
-            treat an over-long payload differently.
-          </p>
+          <CardHeader title="Packet size" subtitle="Bounded by the endpoint" />
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th>Endpoint type</th><th>A payload over the limit</th></tr></thead>
+              <thead><tr><th>Endpoint type</th><th>Over the limit</th></tr></thead>
               <tbody>
-                <tr><td>Interrupt</td><td>Past one packet the report is dropped box-side: the endpoint's <code>wMaxPacketSize</code>, <code>IN</code> or <code>OUT</code>. Keep a report within one packet.</td></tr>
-                <tr><td>Bulk</td><td>Split at <code>wMaxPacketSize</code> in either direction, and terminated with a short packet, or a zero-length packet when the payload is an exact multiple of it, the way a bulk transfer ends on the wire.</td></tr>
+                <tr><td>Interrupt</td><td>Dropped box-side past one packet (the endpoint's <code>wMaxPacketSize</code>), <code>IN</code> or <code>OUT</code>.</td></tr>
+                <tr><td>Bulk</td><td>Split at <code>wMaxPacketSize</code> in either direction and ended with a short packet, or a zero-length packet when the payload is an exact multiple of it.</td></tr>
               </tbody>
             </table>
           </div>
           <div class="callout callout--info">
             <p>
-              A single advanced control layer frame carries up to 512 payload bytes (the{' '}
-              <A href="/native/frame#layout">frame limit</A>), the bound the C and Python buffers
-              (<code>MEDIUS_MAX_DEV_PAYLOAD</code>) are sized to. <code>raw</code> spends two on the
-              endpoint and direction, leaving 510. See the native{' '}
-              <A href="/native/commands/raw#packets"><code>RAW</code></A> command for the wire layout.
+              An advanced control layer frame carries up to 512 payload bytes (the{' '}
+              <A href="/native/frame#layout">frame limit</A>), the size of the C and Python buffers
+              (<code>MEDIUS_MAX_DEV_PAYLOAD</code>). <code>raw</code> spends two on endpoint and
+              direction, leaving 510. The wire layout is on the native{' '}
+              <A href="/native/commands/raw#packets"><code>RAW</code></A> command.
             </p>
           </div>
         </Card>
@@ -96,13 +92,12 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
 
       <div id="vs-inject" data-search-target>
         <Card>
-          <CardHeader title="Raw against injection" subtitle="When the bytes are the point" />
+          <CardHeader title="Raw vs injection" subtitle="Bytes or semantic input" />
           <p>
             A standard input in the native report belongs in{' '}
             <A href="/library/inject"><code>inject</code></A> and{' '}
-            <A href="/library/move"><code>move_rel</code></A>, not here. Those describe an input and let
-            the box render it into a native-faithful report; <code>raw</code> describes bytes and leaves
-            them untouched.
+            <A href="/library/move"><code>move_rel</code></A>, which describe an input for the box to
+            render into a native-faithful report; <code>raw</code> sends bytes untouched.
           </p>
           <div class="table-scroll">
             <table class="api-params">
@@ -117,21 +112,19 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
             </table>
           </div>
           <p>
-            Reach for <code>raw</code> when the report itself is the point: a vendor packet no HID field
-            describes, a byte sequence a device expects on an OUT endpoint, a report shape the semantic
-            core does not model.
+            <code>raw</code> is for a vendor packet no HID field describes, a byte sequence a device
+            expects on an OUT endpoint, or a report shape the semantic core does not model.
           </p>
         </Card>
       </div>
 
       <div id="gate" data-search-target>
         <Card>
-          <CardHeader title="The imperfect-clone gate" subtitle="One opt-in admits the whole layer" />
+          <CardHeader title="Imperfect-clone gate" subtitle="One opt-in admits the whole layer" />
           <p>
-            The box admits the advanced control layer under the imperfect-clone opt-in and nothing else.
             <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> and{' '}
-            <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> read that state before
-            they send. <code>raw</code> runs per report, so it sends without asking.
+            <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> read the opt-in
+            before sending; <code>raw</code> runs per report, so it sends without asking.
           </p>
           <table class="api-params">
             <thead><tr><th>Error</th><th>Returned on</th></tr></thead>
@@ -141,9 +134,9 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           </table>
           <p>
             The opt-in is a persistent <A href="/library/options">box option</A>, read back with{' '}
-            <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>. It is the same
-            gate the native <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>{' '}
-            sets.
+            <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>; the native{' '}
+            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> sets the same
+            gate.
           </p>
         </Card>
       </div>
@@ -153,7 +146,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           <CardHeader title="On AsyncDevice" subtitle="raw is a future over the same send" />
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>raw</code> a
-            future. The send is fire-and-forget, the same as the sync call.
+            future; the send stays fire-and-forget.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;

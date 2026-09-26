@@ -8,7 +8,7 @@ const Frames: Component = () => {
     <>
       <div id="frames" data-search-target>
         <Card>
-          <CardHeader title="Frame types" subtitle="FrameType and DecodedFrame for low-level work" />
+          <CardHeader title="Frame types" subtitle="FrameType, DecodedFrame" />
           <p>
             Low-level types for inspecting raw <A href="/native/frame">frame</A> traffic:{' '}
             <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one
@@ -122,7 +122,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>UpdateResp</code></td>
                 <td><code>0x18</code></td>
-                <td>The answer to one update op (box to PC).</td>
+                <td>The reply to one update op (box to PC).</td>
               </tr>
             </tbody>
           </table>
@@ -139,7 +139,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ty</code></td>
                 <td><code>FrameType</code></td>
-                <td>Which opcode this frame carries.</td>
+                <td>The frame's opcode.</td>
               </tr>
               <tr>
                 <td><code>seq</code></td>
@@ -170,9 +170,9 @@ println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</c
 
           <div class="callout callout--info">
             <p>
-              Full wire layout is on the <A href="/native/frame">frame</A> page. For everyday work,
-              stay on <A href="/library/requests">Requests</A> and{' '}
-              <A href="/library/diagnostics">Diagnostics</A> instead.
+              The wire layout is on the <A href="/native/frame">frame</A> page;{' '}
+              <A href="/library/requests">Requests</A> and{' '}
+              <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
             </p>
           </div>
         </Card>

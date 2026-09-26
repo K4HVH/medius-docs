@@ -4,8 +4,6 @@ import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
 import { createCommand } from './action';
 
-// The other half of the Options card: one control that puts every persistent setting, and everything
-// the box has learned about the devices it has seen, back to how a new box leaves the factory.
 const DeviceFactoryReset = () => {
   const dash = useDashboard();
   const [done, setDone] = createSignal(false);
@@ -24,11 +22,10 @@ const DeviceFactoryReset = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="factory-reset" data-search-target>
         <Card>
-          <CardHeader title="Factory reset" subtitle="Erase everything saved on the box" />
+          <CardHeader title="Factory reset" subtitle="Erase everything saved" />
           <p>
-            Clears the box name, every option above, and everything the box has learned about the
-            devices it has seen, then restarts it. It stops responding for a moment while it
-            restarts.
+            Clears the box name, every option above and everything learned about devices, then
+            restarts. The box stops responding for a moment.
           </p>
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
             <Button variant="danger" disabled={cmd.busy()} onClick={factoryReset}>

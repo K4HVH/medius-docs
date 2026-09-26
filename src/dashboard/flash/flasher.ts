@@ -1,5 +1,4 @@
-// esptool-js flashing over a chip's native USB. Loaded lazily (dynamic import) so esptool-js stays
-// out of the main bundle.
+// Loaded lazily so esptool-js stays out of the main bundle.
 
 import { ESPLoader, type FlashOptions, type IEspLoaderTerminal, Transport } from 'esptool-js';
 import SparkMD5 from 'spark-md5';
@@ -12,8 +11,7 @@ import {
   validateImage,
 } from './types';
 
-// Native USB ignores the serial baud and breaks on a baud change, so stay at the
-// ROM baud (no changeBaud).
+// Native USB ignores the baud and breaks on a change, so stay at the ROM baud.
 const NATIVE_BAUD = 115200;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -25,7 +23,6 @@ function md5Hex(image: Uint8Array): string {
 
 const addressFor = (kind: FlashKind) => (kind === 'factory' ? FACTORY_FLASH_ADDR : APP_FLASH_ADDR);
 
-// esptool a chip already in ROM download mode on a native USB `port`.
 async function runEsptool(
   port: SerialPort,
   image: Uint8Array,

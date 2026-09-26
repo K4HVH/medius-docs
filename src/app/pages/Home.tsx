@@ -27,7 +27,7 @@ const Home: Component = () => {
           <div>
             <h1 style={{ "margin-bottom": 'var(--g-spacing-sm)' }}>Medius</h1>
             <p class="text-lg">
-              Documentation for the Medius box and the Rust library.
+              Documentation for the Medius box and Rust library.
             </p>
           </div>
 
@@ -36,7 +36,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Native API"
-                  subtitle="The binary control protocol"
+                  subtitle="Binary control protocol"
                 />
               </Card>
             </A>
@@ -44,7 +44,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Rust Library"
-                  subtitle="The official Rust client"
+                  subtitle="Official Rust client"
                 />
               </Card>
             </A>
@@ -52,7 +52,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Bindings"
-                  subtitle="Drive the box from C, C++, or Python"
+                  subtitle="C, C++ and Python clients"
                 />
               </Card>
             </A>
@@ -60,7 +60,7 @@ const Home: Component = () => {
               <Card interactive padding="normal">
                 <CardHeader
                   title="Dashboard"
-                  subtitle="Connect, view, and flash your box"
+                  subtitle="Connect, view and flash a box"
                 />
               </Card>
             </A>

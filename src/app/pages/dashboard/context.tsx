@@ -45,8 +45,7 @@ export type ConnectionStatus =
 
 export type { ConnectVerdict };
 
-// One event received on the CATCH stream, with its rolling box-side sequence. The sequence is
-// shared across all three event frame types, so a gap is a drop regardless of which kind fell out.
+// A CATCH event and its box sequence, shared across all three frame types, so any gap is a drop.
 export interface InputEventEntry {
   seq: number;
   ev: CatchEvent;
@@ -57,34 +56,29 @@ export interface DashboardContextValue {
   secure: boolean;
   status: Accessor<ConnectionStatus>;
   version: Accessor<Version | null>;
-  // A box on an older protocol connects for one thing: being updated. Everything else on this page
-  // speaks the current wire, so it is not offered while this is true.
+  // A box on an older protocol connects only to be updated.
   updateOnly: Accessor<boolean>;
   health: Accessor<Health | null>;
   error: Accessor<string | null>;
-  // Why the last connect attempt did not produce a link. Null once one succeeds, and null before
-  // anything has been tried.
+  // Why the last connect failed; null before any attempt and after a success.
   verdict: Accessor<ConnectVerdict | null>;
   link: Accessor<SerialLink | null>;
-  // `force` skips the ports the browser already remembers and asks which device to use. It is what
-  // a retry does, so a remembered port that is the wrong box cannot answer for every later attempt.
+  // `force` skips remembered ports and asks for a device, so a remembered wrong box can't answer
+  // every retry.
   connect: (force?: boolean) => Promise<void>;
   disconnect: () => Promise<void>;
-  // Subscribe a card to one box readback for as long as it is mounted. The poller owns the timer
-  // and shares one query across every card that wants the same value.
+  // Subscribe a card to a readback while mounted; cards share one query per value.
   poll: Poller['subscribe'];
-  // Whether the box answers a readback in a layout this build cannot decode.
+  // True when a readback's layout doesn't decode.
   pollUnreadable: Poller['unreadable'];
-  // Re-read a value now. Call it straight after writing that value, so the readout shows what was
-  // just set instead of the previous value until the next tick.
+  // Re-read now; call after a write.
   refreshPoll: Poller['refresh'];
   flashProgress: Accessor<FlashProgress | null>;
   flashLog: Accessor<string[]>;
   firmwareInfo: Accessor<FirmwareInfo | null>;
   readFirmwareInfo: () => Promise<FirmwareInfo | null>;
-  // 'verified' only when the box came back and answered. 'sent' means the transfer and the activate
-  // succeeded but nothing has confirmed what is running now: the box reverts an image that will
-  // not boot, so claiming a version here would be a claim nothing checked.
+  // 'verified' only when the box came back and replied; 'sent' means transfer and activate succeeded
+  // but nothing confirmed the running version.
   updateOverControl: (images: {
     device?: Uint8Array;
     host?: Uint8Array;
@@ -95,8 +89,7 @@ export interface DashboardContextValue {
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
   clearInputEvents: () => void;
-  // Register a raw tap on the catch stream (the input-events store is capped and shared); returns an
-  // unsubscribe. Lets a high-rate consumer keep its own buffer.
+  // A raw catch-stream tap for a consumer keeping its own buffer; returns an unsubscribe.
   subscribeEvents: (fn: (ev: CatchEvent, seq: number) => void) => () => void;
 }
 
@@ -104,13 +97,13 @@ function formatLogLine(line: LogLine): string {
   return `[${LogLevel[line.level]}] ${line.text}`;
 }
 
-// Exported so a card can be mounted against a stand-in value without opening a serial port.
+// Exported so a card can mount against a stand-in value.
 export const DashboardContext = createContext<DashboardContextValue>();
 
 // Flash and update failures only: a failed CONNECT is a verdict, not a string.
 function flashErrorText(e: unknown): string {
   if (e instanceof Error) {
-    // Web Serial's own wording surfaces raw otherwise, and none of it says what to do.
+    // Web Serial's wording says nothing about what to do.
     if (/already open/i.test(e.message)) {
       return 'That port is still held by an earlier session. Reload the page, or replug the control cable.';
     }
@@ -146,12 +139,9 @@ export const DashboardProvider: ParentComponent = (props) => {
   const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
   const eventTaps = new Set<(ev: CatchEvent, seq: number) => void>();
 
-  // Every card's readback runs through one poller. It is fed a derived link rather than `link`
-  // itself so a flash silences it in one place: during a flash esptool owns a port and the control
-  // link must not be touched, and there is no start/stop call left to forget at a new call site.
+  // Fed a derived link so a flash silences every readback in one place: esptool owns a port then.
   const poller = createPoller(() => (status() === 'flashing' ? null : link()));
-  // The poller keeps health polled on its own as the link keepalive; this subscription is only for
-  // reading the value.
+  // The poller already polls health as the keepalive; this only reads it.
   const health = poller.subscribe('health');
 
   // An update waiting for its verdict reattaches on its own, and owns the status until it ends.
@@ -165,8 +155,7 @@ export const DashboardProvider: ParentComponent = (props) => {
         eventTaps.forEach((fn) => fn(ev, seq));
       },
       onClose: () => {
-        // Only the stored link: another link may already own this port, and closing it would take
-        // that one's port down with it.
+        // Only the stored link: another may already own this port.
         if (link() !== nl) return;
         if (!updating) {
           setStatus('disconnected');
@@ -176,16 +165,15 @@ export const DashboardProvider: ParentComponent = (props) => {
         }
         setLink(null);
         poller.reset();
-        // The read loop is finished but the port is still open and its writer still locked. Without
-        // this the next connect adopts the port and cannot get a writer, which nothing recovers.
+        // The port is still open with its writer locked; otherwise the next connect can't get a writer.
         void nl.close().catch(() => undefined);
       },
     });
     return nl;
   };
 
-  // Reopen the port after an activate, at whichever rate the box answers; `awaitVerdict` settles what it
-  // runs. Returns false if it never came back (then a power-cycle is needed). The status stays the caller's.
+  // Reopens after an activate at whichever rate the box answers; false if it never came back. The
+  // status stays the caller's.
   const tryReconnect = async (port: SerialPort): Promise<boolean> => {
     await sleep(2000);
     for (let attempt = 0; attempt < 4; attempt++) {
@@ -213,8 +201,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     setInputEvents([]);
     setFirmwareInfo(null);
     setStatus('connecting');
-    // A link left behind by a failed update still holds the port's writer lock. Opening a second
-    // link over it throws where nothing can recover, so let go of it first.
+    // A failed update's link still holds the writer lock, and a second link over it throws
+    // unrecoverably.
     const stale = link();
     if (stale) {
       setLink(null);
@@ -236,14 +224,12 @@ export const DashboardProvider: ParentComponent = (props) => {
         { skipGranted: force },
       );
     } catch (e) {
-      // Nothing may escape: an unhandled rejection here leaves the whole page on "Connecting..."
-      // with no button to press and no way back but a reload.
+      // Nothing may escape, or the page sticks on "Connecting..." until a reload.
       outcome = { ok: false, verdict: classifyConnectError(e) };
     }
 
-    // Something else may have moved on while the chooser and handshake ran (a disconnect, or the
-    // setup wizard starting an install). Whoever changed the status owns it now; this link is not
-    // wanted and must not be installed over the top.
+    // A disconnect or an install may have changed the status meanwhile; its owner wins and this link
+    // closes.
     if (disposed || status() !== 'connecting') {
       if (outcome.ok) await outcome.link.close().catch(() => undefined);
       return;
@@ -255,17 +241,14 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
     setVersion(outcome.version);
     setLink(outcome.link);
-    // Cleared before the cards mount, so each slot is queried once rather than by both the reset
-    // and the first subscriber.
+    // Reset before the cards mount, so each slot is queried once.
     poller.reset();
     setStatus('connected');
   };
 
   const disconnect = async () => {
     const l = link();
-    // Status first. The cards unmount on it, and their cleanup releases what they are holding over
-    // a link that is still open; dropping the link first left every hold set on the game PC until
-    // the box's own silence timer caught it a second later.
+    // Status first: the cards unmount on it and release their holds over the still-open link.
     setStatus('disconnected');
     setLink(null);
     setVersion(null);
@@ -297,9 +280,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
   };
 
-  // Wait for each chip's verdict on the image it booted, reattaching whenever the box stops answering: a
-  // revert reboots the main chip, possibly onto the other control rate. No verdict by the deadline is no
-  // verification.
+  // Reattaches whenever the box stops answering: a revert reboots the main chip, maybe onto the other
+  // control rate. No verdict by the deadline is no verification.
   const awaitVerdict = async (port: SerialPort, hostExpected: boolean): Promise<Verdict> => {
     const deadline = Date.now() + CONFIRM_TIMEOUT_MS;
     const drop = async () => {
@@ -337,17 +319,15 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
   };
 
-  // Update over the control port the user is already connected to. Nothing reboots into ROM download
-  // and no second port grant is needed: each chip writes the slot it is not running, and the box
-  // reverts anything that will not boot. The host chip's image is relayed over the inter-chip link,
-  // which is the only route to it.
+  // Each chip writes its spare slot and the box reverts anything that won't boot. The host image is
+  // relayed over the inter-chip link.
   const updateOverControl = async (images: {
     device?: Uint8Array;
     host?: Uint8Array;
   }): Promise<'verified' | 'sent' | 'failed'> => {
     const l = link();
     if (!l) {
-      setError('Connect to the box before updating.');
+      setError('Connect to the box first.');
       return 'failed';
     }
     if (!images.device && !images.host) return 'failed';
@@ -356,8 +336,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     setStatus('flashing');
     const ctrlPort = l.serialPort;
     try {
-      // The host chip first: its image travels through the device chip, so it has to be staged while
-      // the device chip is still running the firmware that can relay it.
+      // Host first: the device chip's running firmware relays its image.
       if (images.host) {
         setFlashProgress({ phase: 'writing', written: 0, total: images.host.length });
         await l.stageFirmware(OTA_TGT_HOST, images.host, (written, total) =>
@@ -386,13 +365,11 @@ export const DashboardProvider: ParentComponent = (props) => {
       const verdict = (await tryReconnect(ctrlPort)) ? await awaitVerdict(ctrlPort, hostExpected) : 'gone';
       setFlashProgress({ phase: 'done' });
       if (verdict !== 'ok') {
-        // Shared, not page-local: this is the one instruction that fixes it, and navigating to
-        // another tab used to destroy it. Device, Control and Update all surface it. The claim is
-        // only what the code can support: what is running now is what nothing has checked.
+        // Shared, not page-local, so it survives a tab change; Device, Control and Update show it.
         setError(
           verdict === 'host'
-            ? "The update was sent, but the mouse-side chip isn't answering. Unplug the box, plug it back in, then connect. If it still isn't answering, open Set up."
-            : 'The update was sent, but the box did not come back on its own. Unplug it, plug it back in, then connect.',
+            ? "The update was sent, but the mouse-side chip isn't answering. Replug the box, then connect. If it still isn't answering, open Set up."
+            : 'The update was sent, but the box did not come back on its own. Replug it, then connect.',
         );
         setStatus('disconnected');
         return 'sent';
@@ -400,13 +377,8 @@ export const DashboardProvider: ParentComponent = (props) => {
       setStatus('connected');
       return 'verified';
     } catch (e) {
-      // A refused activate stops at the host chip, and whatever is staged stays armed: the next
-      // activate would commit it alone and leave the two chips on different versions. Disarm it,
-      // host first, the same order it was staged in. Each target gets its own try, so a box that
-      // has already gone away on the first one does not skip the second.
-      // Short, because the usual reason for being here is a box that has stopped answering, and the
-      // full op timeout twice over would hold the progress bar for tens of seconds before the real
-      // error appears. A box that IS answering replies at once.
+      // Disarm what is staged, host first, or the next activate commits it alone and splits the chips'
+      // versions. One try per target, on a short timeout: an answering box replies at once.
       const staged: number[] = [];
       if (images.host) staged.push(OTA_TGT_HOST);
       if (images.device) staged.push(OTA_TGT_DEVICE);
@@ -425,8 +397,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     }
   };
 
-  // Flash a chip already in ROM download on its native USB port (recovery / host
-  // chip). Independent of the control link; restores it afterwards if one was up.
+  // A chip in ROM download on its native USB. Independent of the control link; restores its status.
   const flashNative = async (
     port: SerialPort,
     image: Uint8Array,

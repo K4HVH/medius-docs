@@ -7,15 +7,13 @@ const Update: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Update" subtitle="Replace either chip's firmware over the open connection" />
+        <CardHeader title="Update" subtitle="Either chip's firmware, over the open connection" />
         <p>
-          Write a new image with{' '}
-          <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> and commit it with{' '}
-          <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>;{' '}
+          <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> writes an image and{' '}
+          <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> commits it;{' '}
           <A href="/library/update#update-firmware"><code>update_firmware</code></A> does both for one
-          chip, and <A href="/library/update#abort-update"><code>abort_update</code></A> throws a
-          transfer away. Nothing reboots
-          into ROM download and no second port is involved; the wire is{' '}
+          chip, and <A href="/library/update#abort-update"><code>abort_update</code></A> discards a
+          transfer. No ROM download reboot, no second port; the wire is{' '}
           <A href="/native/commands/update"><code>UPDATE</code></A>.
         </p>
         <div class="callout callout--info">
@@ -27,7 +25,7 @@ const Update: Component = () => {
         </div>
         <table class="api-params">
           <thead>
-            <tr><th>Update a...</th><th>Write it</th><th>Write and commit it</th></tr>
+            <tr><th>Update a...</th><th>Write</th><th>Write and commit</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -64,13 +62,13 @@ device.activate_firmware()?;`}</code></pre>
 
       <div id="stage-firmware" data-search-target>
         <Card>
-          <CardHeader title="stage_firmware" subtitle="Write an image into a chip's spare slot, without booting it" />
+          <CardHeader title="stage_firmware" subtitle="Write an image to a chip's spare slot" />
           <pre class="api-signature">fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Blocks for the whole transfer, a few seconds per chip; the clone disconnects from the
-            game PC for the duration. A chip on probation refuses to open another update, so
-            this waits for both to confirm the image they booted and otherwise returns{' '}
+            Blocks for the whole transfer, a few seconds per chip, while the clone is disconnected from
+            the game PC. A chip on probation refuses another update, so this waits for both to confirm
+            their booted image, else returns{' '}
             <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
             <code>ON_PROBATION</code>.
           </p>
@@ -85,15 +83,14 @@ device.activate_firmware()?;`}</code></pre>
             </tbody>
           </table>
           <p>
-            Returns the number of bytes the box wrote. A box on the single-app layout answers{' '}
-            <code>NO_SLOT</code> and needs one flash over{' '}
-            <A href="/native/flashing">ROM download</A> first.
+            Returns the bytes the box wrote. A box on the single-app layout replies{' '}
+            <code>NO_SLOT</code> and needs one <A href="/native/flashing">ROM download</A> flash first.
           </p>
           <div class="callout callout--info">
             <p>
-              A staged image is inert. Nothing boots it until{' '}
-              <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>, so a
-              power cut in between brings the running firmware back.
+              A staged image is inert until{' '}
+              <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>; a power cut
+              in between boots the running firmware.
             </p>
           </div>
           <div class="api-response-label">EXAMPLE</div>
@@ -115,21 +112,19 @@ println!("\\nstaged {written} bytes, not yet booted");`}</code></pre>
           <pre class="api-signature">fn activate_firmware(&self) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Commits every staged image and reboots into it, host chip first, then reconnects. Takes
-            tens of seconds if the host chip is involved. With nothing staged it returns{' '}
+            Commits every staged image and reboots into it, host chip first, then reconnects: tens of
+            seconds when the host chip is involved. With nothing staged, returns{' '}
             <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
             <code>NOTHING_STAGED</code>.
           </p>
           <p>
-            The bootloader reverts a chip that boots an image which cannot run, so a bad image costs
-            a reboot. See{' '}
-            <A href="/native/commands/update#rollback">rollback</A>.
+            The bootloader reverts a chip whose image cannot run, so a bad image costs a reboot (
+            <A href="/native/commands/update#rollback">rollback</A>).
           </p>
           <div class="callout callout--warning">
             <p>
-              A refusal stops at the host chip and leaves the device image staged and armed, so the
-              next call would commit it alone and put the two chips on different versions. Either
-              retry the whole update or{' '}
+              A refusal at the host chip leaves the device image staged and armed; the next call would
+              commit it alone, putting the chips on different versions. Retry the whole update, or{' '}
               <A href="/library/update#abort-update"><code>abort_update</code></A> each staged target
               first.
             </p>
@@ -143,13 +138,12 @@ println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
 
       <div id="abort-update" data-search-target>
         <Card>
-          <CardHeader title="abort_update" subtitle="Throw a staged or in-flight transfer away" />
+          <CardHeader title="abort_update" subtitle="Discard a staged or in-flight transfer" />
           <pre class="api-signature">fn abort_update(&self, target: UpdateTarget) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            Drops whatever is staged or in flight for one target. The clone comes back without a
-            reboot, and the running slot is untouched. A session left alone times out on the box after
-            ten seconds, so this is a courtesy rather than a requirement.
+            Drops what is staged or in flight for one target. The clone returns without a reboot; the
+            running slot is untouched. An abandoned session times out on the box after ten seconds.
           </p>
           <table class="api-params">
             <thead>
@@ -176,14 +170,14 @@ if let Err(e) = device.activate_firmware() {
 
       <div id="update-firmware" data-search-target>
         <Card>
-          <CardHeader title="update_firmware" subtitle="Stage one image and activate it in a single call" />
+          <CardHeader title="update_firmware" subtitle="Stage and activate one image" />
           <pre class="api-signature">fn update_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;()&gt;</pre>
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <p>
-            <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> followed by{' '}
-            <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>, for the
-            one-chip case. Use the two calls separately to update both chips together. If the activate
-            refuses, the staged image is cleared before the error is returned.
+            <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> then{' '}
+            <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>, for one chip;
+            both chips together need the two calls separately. If the activate refuses, the staged image
+            is cleared before the error returns.
           </p>
           <table class="api-params">
             <thead>
@@ -216,9 +210,8 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
           <p><span class="api-badge api-badge--responded">Blocks</span></p>
           <pre><code class="language-bash">cargo add medius --features async</code></pre>
           <p>
-            Each one runs the synchronous transfer on its own thread and resolves when it finishes, so
-            the crate stays runtime-agnostic. They are not cancellable: dropping the future does not
-            stop a transfer the box has already begun.
+            Each runs the synchronous transfer on its own thread and resolves when it finishes, keeping
+            the crate runtime-agnostic. Dropping the future does not stop a transfer the box has begun.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use futures::executor::block_on;

@@ -177,7 +177,7 @@ describe('Control page', () => {
     // labelled "release the keys" would be a trap next to a live event stream.
     const { findByText } = mount();
     // The card subtitle carries this now; the paragraph under it only restated the subtitle.
-    const body = (await findByText(/Clear all injection/)).textContent ?? '';
+    const body = (await findByText(/Clears injection/)).textContent ?? '';
     expect(body).toMatch(/lock/i);
     expect(body).toMatch(/subscription/i);
     expect(body).toMatch(/clip/i);
@@ -191,7 +191,7 @@ describe('Control page', () => {
 
   it('renders a weighed direction as its percentage, not as a lock', async () => {
     const { findByText } = mount();
-    await findByText('Move up/down (Y) against injection at 40%');
+    await findByText('Y (up/down) against injection at 40%');
   });
 
   it('surfaces the cross-chip clock estimate rather than dropping it', async () => {

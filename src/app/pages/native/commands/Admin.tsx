@@ -9,7 +9,7 @@ const Admin: Component = () => {
       <Card>
         <CardHeader title="Admin" subtitle="Reset, reboot, and logs" />
         <p>
-          Three <A href="/native/frame">frames</A> that manage the box rather than inject input:{' '}
+          Three box-management <A href="/native/frame">frames</A>:{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A>,{' '}
           <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>, and{' '}
           <A href="/native/commands/admin#log"><code>LOG</code></A>.
@@ -27,22 +27,22 @@ const Admin: Component = () => {
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <div class="api-response-label">PAYLOAD</div>
           <p>
-            A flags byte. <code>0x00</code> is the release described below, on its own.
+            A flags byte; <code>0x00</code> is the plain release below.
           </p>
           <div class="api-response-label">FLAGS</div>
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>The box also erases its persistent store and reboots, returning at its defaults under its MAC-derived name.</td></tr>
+              <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>Also erases the persistent store and reboots, returning at defaults under the MAC-derived name.</td></tr>
             </tbody>
           </table>
           <p>
-            Any other bit refuses the frame whole, release included, and a frame with no payload does
-            nothing: the byte is required, as every other command's payload is.
+            Any other bit refuses the whole frame, release included. A frame with no payload does
+            nothing: the byte is required, like every command's payload.
           </p>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Releases every piece of PC-owned state in one frame: both{' '}
+            Releases all PC-owned state in one frame: both{' '}
             <A href="/native/injection#state">accumulators</A>, every{' '}
             <A href="/native/commands/inject"><code>INJECT</code></A> override, every{' '}
             <A href="/native/commands/lock"><code>LOCK</code></A> scale and the{' '}
@@ -54,26 +54,25 @@ const Admin: Component = () => {
             <A href="/native/commands/led"><code>LED</code></A> override.
           </p>
           <p>
-            The report is then byte-identical to passthrough; sending it twice is a no-op. This is what
-            the <A href="/native/injection#safety">safety auto-clear</A> performs. Library binding:{' '}
+            The report is then byte-identical to passthrough; a second <code>RESET</code> is a no-op.
+            The <A href="/native/injection#safety">safety auto-clear</A> performs the same release.
+            Library binding:{' '}
             <A href="/library/admin#reset"><code>reset</code></A>.
           </p>
-          <div class="api-response-label">WITH THE NVS FLAG</div>
+          <div class="api-response-label">NVS FLAG</div>
           <p>
-            The release above runs first, then the box erases the <code>nvs</code>{' '}
-            <A href="/native/commands/update">partition</A> and reboots. That takes the box
-            name, every <A href="/library/options">option</A>, and everything the box has learned
-            about the devices it has seen, including any{' '}
-            <A href="/native/commands/patch">descriptor patch set</A>. Settings are read into RAM at
-            boot, so the reboot is what puts the defaults back.
+            The release runs first, then the box erases the <code>nvs</code>{' '}
+            <A href="/native/commands/update">partition</A> and reboots, losing the box name, every{' '}
+            <A href="/library/options">option</A>, and everything learned about devices seen,
+            including any <A href="/native/commands/patch">descriptor patch set</A>. Settings load
+            into RAM at boot, so the reboot restores the defaults.
           </p>
           <p>
-            The clone re-enumerates on the game PC. The control port stays enumerated throughout, so
-            the box goes quiet rather than away: queries time out until it answers again. Library
-            binding: <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
+            The clone re-enumerates on the game PC. The control port stays enumerated, so queries time
+            out until the box replies again. Library binding: <A href="/library/admin#factory-reset"><code>factory_reset</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>The release on its own, and the same frame carrying the flag:</p>
+          <p>Plain release, then with the flag:</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
 | A5     | 04     | 00     | 01 00  | 00     | lo hi  |
 +--------+--------+--------+--------+--------+--------+
@@ -91,8 +90,8 @@ const Admin: Component = () => {
         <Card>
           <CardHeader title="REBOOT" subtitle="Restart a chip" />
           <p>
-            <code>REBOOT</code> restarts one of the box's two chips, mainly to enter ROM download mode
-            (the chip's built-in bootloader, which accepts new firmware) for flashing.{' '}
+            <code>REBOOT</code> restarts one of the two chips, mainly into ROM download mode (the
+            built-in bootloader that accepts new firmware) for flashing.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x07</code>.
           </p>
           <pre class="api-signature">REBOOT  0x07  ·  payload 1 byte</pre>
@@ -119,8 +118,8 @@ const Admin: Component = () => {
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            Reboot-to-run (<code>2</code> or <code>3</code>) is the only software cold-reboot on this
-            board; DTR/RTS auto-reset is not wired. No reply: the chip is rebooting. See{' '}
+            Reboot-to-run (<code>2</code> or <code>3</code>) is the board's only software cold-reboot;
+            DTR/RTS auto-reset isn't wired. No reply. See{' '}
             <A href="/native/flashing">Flashing</A>. Library binding:{' '}
             <A href="/library/admin#reboot"><code>reboot</code></A>.
           </p>
@@ -138,7 +137,7 @@ const Admin: Component = () => {
         <Card>
           <CardHeader title="LOG" subtitle="Device diagnostics" />
           <p>
-            <code>LOG</code> is diagnostic text the box sends on its own, in place of an ASCII console.{' '}
+            <code>LOG</code> is unsolicited diagnostic text, in place of an ASCII console.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x08</code>.
           </p>
           <pre class="api-signature">LOG  0x08  ·  box → PC</pre>
@@ -150,7 +149,7 @@ const Admin: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>level</code></td><td><code>u8</code></td><td>severity (see below)</td></tr>
-              <tr><td>1..</td><td><code>text</code></td><td><code>UTF-8</code></td><td>the log line, not NUL-terminated, length = <code>LEN - 1</code></td></tr>
+              <tr><td>1..</td><td><code>text</code></td><td><code>UTF-8</code></td><td>log line, not NUL-terminated, length = <code>LEN - 1</code></td></tr>
             </tbody>
           </table>
           <div class="api-response-label">LEVELS</div>
@@ -169,8 +168,14 @@ const Admin: Component = () => {
           <div class="api-response-label">EFFECT</div>
           <p>
             Emitted only while a control PC is attached; logging before first contact is dropped. The
-            box's other outbound frame is <A href="/native/commands/requests#resp"><code>RESP</code></A>.
-            Library binding: <A href="/library/diagnostics#logs"><code>logs</code></A>.
+            box's other outbound frames are{' '}
+            <A href="/native/commands/requests#resp"><code>RESP</code></A>,{' '}
+            <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>,{' '}
+            <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A>, and the catch events{' '}
+            <A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A>,{' '}
+            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> and{' '}
+            <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>. Library
+            binding: <A href="/library/diagnostics#logs"><code>logs</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p><code>level = 2</code> (info), text <code>hi</code> (<code>68 69</code>):</p>

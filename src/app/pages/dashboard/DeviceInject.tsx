@@ -1,8 +1,5 @@
-// Drive the clone: move the cursor, turn the wheel, and hold any button, key, or media usage.
-//
-// The card tracks what it has pressed so it can release exactly that on unmount. Without it, a hold
-// whose pointerup never arrived (tab switch, drag off the button, navigating away mid-press) stayed
-// down on the game PC with nothing able to clear it.
+// Tracks every hold to release it on unmount: a hold whose pointerup never arrives (tab switch, drag
+// off the button, navigation) otherwise stays down on the game PC.
 
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
@@ -25,7 +22,7 @@ import { UsageChips, UsagePicker, type PickerClass } from './UsagePicker';
 import { Section } from './Section';
 import { checkColumn, chips, label, muted, row, section } from './ui';
 
-// A usage the dashboard is currently overriding, and which way.
+// A usage being overridden, and which way.
 interface Hold extends Usage {
   action: Action.Press | Action.ForceRelease;
 }
@@ -48,15 +45,13 @@ const pad = {
 const DeviceInject = () => {
   const dash = useDashboard();
   const health = () => dash.health();
-  // Both flags, because they mean different things: the clone can be configured by the game PC
-  // while carrying no mouse collection at all, and every motion and button command is then dropped
-  // by the box with no reply.
+  // Both flags: a configured clone can carry no mouse collection, and the box then drops motion and
+  // button commands with no reply.
   const mouseReady = () => health()?.cloneConfigured === true && health()?.mouseAttached === true;
   const kbdReady = () => health()?.kbdAttached === true;
 
-  // The five named buttons plus a numbered entry for each button the mouse declares past them
-  // (RESP(CAPS) n_buttons, the injection cap). The box drives any declared button; injecting one it
-  // declares but never itself wires is descriptor-faithful, so the picker offers the whole count.
+  // Every declared button (RESP(CAPS) n_buttons): injecting one the mouse declares but never wires
+  // is descriptor-faithful.
   const caps = dash.poll('caps');
   const buttons = () => buttonsUpTo(caps()?.mouse?.nButtons ?? 0);
   const classes = (): PickerClass[] => [
@@ -68,9 +63,8 @@ const DeviceInject = () => {
   const [step, setStep] = createSignal(20);
   const [detents, setDetents] = createSignal(1);
   const [pans, setPans] = createSignal(1);
-  // With movement riding on, an ordinary move waits for a real cursor report to carry it, so nothing
-  // this card sends reaches the game PC while the real mouse sits still. Bypassing sends it on the next
-  // mouse report the box sends instead, unspread and unrendered.
+  // With riding on, a move waits for physical motion to carry it. Bypass sends it on the box's next
+  // mouse report, unspread and unrendered.
   const [bypass, setBypass] = createSignal(false);
   const [pick, setPick] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [holds, setHolds] = createSignal<Hold[]>([]);
@@ -94,9 +88,8 @@ const DeviceInject = () => {
 
   const drop = (u: Usage) => setHolds((prev) => prev.filter((h) => key(h) !== key(u)));
 
-  // Recorded before the send resolves, and taken back if it fails. Waiting for the round trip
-  // instead would lose the release of a click faster than one: pointerup would find nothing held
-  // and send nothing, leaving the button down on the game PC.
+  // Recorded before the send resolves and undone on failure, so a click faster than the round trip
+  // still finds its hold at pointerup.
   const hold = (u: Usage, action: Action.Press | Action.ForceRelease) => {
     setHolds((prev) => [...prev.filter((h) => key(h) !== key(u)), { ...u, action }]);
     void send(u.cls, u.id, action).then((ok) => {
@@ -109,8 +102,7 @@ const DeviceInject = () => {
     void send(u.cls, u.id, Action.SoftRelease);
   };
 
-  // One soft-release per usage rather than a RESET, which would also drop every lock, the whole
-  // catch subscription, and a loaded clip.
+  // Soft-release per usage: a RESET would also drop every lock, the catch subscription and the clip.
   const releaseAll = () => {
     const held = holds();
     setHolds([]);
@@ -122,12 +114,8 @@ const DeviceInject = () => {
     for (const h of holds()) void l?.inject(h.cls, h.id, Action.SoftRelease)?.catch(() => {});
   });
 
-  // The box drops every injected usage after a second of control-link silence, which a backgrounded
-  // tab can cause on its own. Without this the chips keep claiming holds the box let go of.
-  //
-  // Only a true to false transition counts. The flag is read from a poll, so it is legitimately
-  // false for up to one interval after a press lands, and treating that as a drop would clear the
-  // hold the user just made.
+  // The box drops every injected usage after 1 s of control-link silence. Only true to false counts:
+  // the polled flag reads false for up to one interval after a press.
   let sawActive = false;
   createEffect(() => {
     const active = health()?.injectionActive;
@@ -144,9 +132,6 @@ const DeviceInject = () => {
     }
   });
 
-  // Hold while the pointer is down, releasing exactly what went down. Capturing the usage at
-  // pointerdown matters for the picker's button: its usage is reactive, so releasing whatever is
-  // picked at pointerup would leave the pressed one held and release an unrelated one.
   const holdWhilePressed = (u: Usage) => ({
     onPointerDown: () => void hold(u, Action.Press),
     onPointerUp: () => {
@@ -157,8 +142,7 @@ const DeviceInject = () => {
     },
   });
 
-  // The picker's hold button needs its own latch: this object is built once, so the usage captured
-  // at pointerdown survives the picker changing under a held pointer.
+  // Latched at pointerdown, so the picker changing under a held pointer releases the pressed usage.
   let picked: Usage | null = null;
   const holdPicked = {
     onPointerDown: () => {
@@ -184,13 +168,11 @@ const DeviceInject = () => {
     setMoved({ dx: 0, dy: 0 });
   };
 
-  // One delta per delivered move. The browser coalesces pointermove to the frame rate, and the box
-  // accumulates and paces what it is sent, so splitting a frame back into its coalesced points
-  // would send the same total distance in more frames.
+  // One delta per delivered move: the box accumulates and paces, so splitting coalesced points only
+  // adds frames.
   const onPadMove = (e: PointerEvent) => {
     if (!last) return;
-    // A move with no button down means capture was lost without a pointerup, which would otherwise
-    // leave the pad injecting from a passing cursor.
+    // No button down: capture was lost without a pointerup, so stop before a passing cursor injects.
     if (e.buttons === 0) {
       endDrag();
       return;
@@ -238,10 +220,10 @@ const DeviceInject = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="injection" data-search-target>
         <Card>
-          <CardHeader title="Injection" subtitle="Drive the clone's inputs from here" />
+          <CardHeader title="Injection" subtitle="Drive the clone's inputs" />
 
           <Section title="Cursor" first>
-            <Show when={mouseReady()} fallback={<p style={muted}>No mouse is cloned.</p>}>
+            <Show when={mouseReady()} fallback={<p style={muted}>No mouse cloned.</p>}>
             <div
               style={pad}
               onPointerDown={onPadDown}
@@ -250,10 +232,10 @@ const DeviceInject = () => {
               onPointerCancel={onPadUp}
               onLostPointerCapture={endDrag}
               role="application"
-              aria-label="Cursor drag pad. The buttons below move the cursor by a fixed step instead."
+              aria-label="Cursor drag pad. The buttons below move by a fixed step."
             >
               <span style={muted}>
-                <Show when={dragging()} fallback="Drag here to move the cursor">
+                <Show when={dragging()} fallback="Drag to move the cursor">
                   {moved().dx}, {moved().dy}
                 </Show>
               </span>
@@ -299,7 +281,7 @@ const DeviceInject = () => {
               </Button>
             </div>
             <p style={muted}>
-              Bypass applies to the cursor, the wheel, and pan. The buttons send or drop motion already waiting.
+              Bypass covers cursor, wheel and pan.
             </p>
 
             </Show>
@@ -366,10 +348,10 @@ const DeviceInject = () => {
           <Section title="Any input">
           <Show
             when={kbdReady() || mouseReady()}
-            fallback={<p style={muted}>Nothing is cloned to inject into.</p>}
+            fallback={<p style={muted}>Nothing cloned to inject into.</p>}
           >
             <Show when={!kbdReady()}>
-              <p style={muted}>No keyboard is attached, so the box discards key and media holds.</p>
+              <p style={muted}>No keyboard attached: the box discards key and media holds.</p>
             </Show>
             <UsagePicker
               name="inject-usage"
@@ -392,15 +374,15 @@ const DeviceInject = () => {
               </Button>
             </div>
             <p style={muted}>
-              Mask forces the input up even while it is physically held. Release clears either override.
+              Mask forces the input up, even while physically held. Release clears either override.
             </p>
           </Show>
           </Section>
 
           <Show when={dropped()}>
             <div class="callout callout--warning" style={section}>
-              The box cleared every injected hold. It does that after one second with no control frame,
-              which a backgrounded tab can cause.
+              The box cleared every injected hold after 1 s with no control frame, which a backgrounded
+              tab can cause.
             </div>
           </Show>
           <Show when={err()}>
@@ -409,7 +391,7 @@ const DeviceInject = () => {
             </div>
           </Show>
 
-          <Section title="Held now">
+          <Section title="Held">
           <Show when={holds().length > 0} fallback={<p>Nothing held.</p>}>
             <UsageChips
               items={heldItems()}

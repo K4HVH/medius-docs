@@ -10,7 +10,7 @@ const Structs: Component = () => {
         <Card>
           <CardHeader title="Structs" subtitle="Values the box reports back" />
           <p>
-            Fields are public; you get these back from queries and discovery.
+            Public fields, returned by queries and discovery.
           </p>
         </Card>
       </div>
@@ -54,8 +54,8 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
           <p>
             Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
             bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
-            <code>to_flags()</code> convert it: bits 0 to 7 are the original byte, and the{' '}
-            <A href="/library/advanced/rewrite">advanced control layer</A> opened three more in the high byte.
+            <code>to_flags()</code> convert it: bits 0 to 7 hold the first eight fields, and the high
+            byte the <A href="/library/advanced/rewrite">advanced control layer</A>'s three.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>True when</th></tr></thead>
@@ -84,11 +84,11 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
       </div>
       <div id="device-info" data-search-target>
         <Card>
-          <CardHeader title="DeviceInfo" subtitle="The cloned device's USB identity, kind, and product" />
+          <CardHeader title="DeviceInfo" subtitle="Clone's USB identity, kind, product" />
           <p>
             USB identity from{' '}
-            <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is
-            zero/empty when nothing is cloned. <code>Display</code> prints{' '}
+            <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is zero
+            or empty with nothing cloned. <code>Display</code> prints{' '}
             <code>VVVV:PPPP product</code>.
           </p>
           <table class="api-params">
@@ -119,7 +119,7 @@ assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product`}</
           <CardHeader title="Caps" subtitle="The whole device, mouse and keyboard" />
           <p>
             Everything one <A href="/library/requests#caps"><code>caps()</code></A> query returns.{' '}
-            <code>has_mouse()</code> / <code>has_keyboard()</code> tell you which are bound;{' '}
+            <code>has_mouse()</code> / <code>has_keyboard()</code> report which are bound;{' '}
             <code>is_composite()</code> is true when the device has more than one HID interface.
           </p>
           <table class="api-params">
@@ -134,7 +134,7 @@ assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product`}</
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`let caps = device.caps()?;
 if caps.has_keyboard() && caps.keyboard.has_consumer {
-    // media injection is real on this board
+    // media injection works on this device
 }
 println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
         </Card>
@@ -172,17 +172,17 @@ assert!(!c.is_composite()); // single HID interface`}</code></pre>
           <CardHeader title="Rate" subtitle="The native report rate the box tracks" />
           <p>
             Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
-            <code>native_hz()</code> converts the period to a frequency, returning <code>None</code>{' '}
-            while <code>native_period_us</code> is still <code>0</code>. On a change-driven input,{' '}
-            <code>poll_period_us</code> is the only rate there is.
+            <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
+            <code>native_period_us</code> is <code>0</code>. On a change-driven input,{' '}
+            <code>poll_period_us</code> is the only rate.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>native_period_us</code></td><td><code>u16</code></td><td>Realised native report period in µs; <code>0</code> = not learned, or change-driven.</td></tr>
               <tr><td><code>poll_period_us</code></td><td><code>u16</code></td><td>Cloned inject-endpoint poll period in µs.</td></tr>
-              <tr><td><code>confident</code></td><td><code>bool</code></td><td>The estimator window is full and the value is trustworthy.</td></tr>
-              <tr><td><code>change_driven</code></td><td><code>bool</code></td><td>The active input is event-driven (keyboard / media), so there is no continuous cadence.</td></tr>
+              <tr><td><code>confident</code></td><td><code>bool</code></td><td>The estimator window is full.</td></tr>
+              <tr><td><code>change_driven</code></td><td><code>bool</code></td><td>The active input is event-driven (keyboard / media), with no continuous cadence.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -200,12 +200,11 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             decoded from the 31-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
           </p>
           <p>
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's own input
-            slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or{' '}
-            <code>host_rx_drops</code> means it was lost between the box's two chips;{' '}
-            <code>relay_drops</code> is back-pressure on a relayed stream, which is load rather than
-            lost input. The narrowed fields saturate instead of wrapping; the three drop counts are
-            full width, and <code>session</code> wraps.
+            Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the
+            way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
+            lost between the box's two chips; <code>relay_drops</code> is load, not lost input. The
+            narrowed fields saturate instead of wrapping; the three drop counts are full width, and{' '}
+            <code>session</code> wraps.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -221,7 +220,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
               <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
-              <tr><td><code>session</code></td><td><code>u16</code></td><td>The times the box released some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; it wraps, so compare it for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>. See the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> for what counts.</td></tr>
+              <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -232,9 +231,8 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <p>
             The active set from <A href="/library/requests#query-locks"><code>query_locks()</code></A>,
             a list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across
-            every class, one per direction that is not passing untouched.
-            See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply for the
-            wire format.
+            every class, one per direction not passing untouched. The wire format is on the native{' '}
+            <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply.
           </p>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
@@ -275,14 +273,14 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
           <p>
             One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
             list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
-            for field, so what comes back is what you would send to reproduce it.
+            for field, so an entry is the frame that reproduces it.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which direction of it this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept, signed: a negative one reverses what it keeps. A momentary usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept, signed: a negative one reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it renders: never between them, never negative.</td></tr>
             </tbody>
           </table>
           <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
@@ -294,8 +292,8 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
           <pre class="api-signature">struct Bearing {'{'} window: Option&lt;Duration&gt;, mode: BearingMode {'}'}</pre>
           <p>
             The configured bearing from{' '}
-            <A href="/library/options#query-bearing"><code>query_bearing()</code></A>. See the native{' '}
-            <A href="/native/commands/lock#bearing">bearing</A> for what it does.
+            <A href="/library/options#query-bearing"><code>query_bearing()</code></A>. The native{' '}
+            <A href="/native/commands/lock#bearing">bearing</A> describes what it does.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -304,18 +302,18 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
-          <p><code>is_live()</code> is whether a bearing is held at all.</p>
+          <p><code>is_live()</code> reports whether a bearing is held.</p>
         </Card>
       </div>
       <div id="catch-filter" data-search-target>
         <Card>
-          <CardHeader title="CatchFilter" subtitle="One subscription entry: what to catch, and how much of it" />
+          <CardHeader title="CatchFilter" subtitle="What to catch, and how much" />
           <pre class="api-signature">struct CatchFilter {'{'} /* private */ {'}'}</pre>
           <p>
-            One entry in the table you hand to{' '}
+            One entry in the table passed to{' '}
             <A href="/library/catch#catch-events"><code>catch_events</code></A> or{' '}
-            <A href="/library/catch#input-events"><code>input_events</code></A>. Built with a
-            constructor rather than by hand.
+            <A href="/library/catch#input-events"><code>input_events</code></A>, built with a
+            constructor.
           </p>
           <table class="api-params">
             <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
@@ -359,9 +357,9 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             comparison; <code>==</code> compares everything.
           </p>
           <p>
-            The table holds 32 entries, and a subscription that would exceed it is refused before
-            anything is sent. See <A href="/library/types/errors"><code>Error</code></A>. So is an
-            empty subscription, and a capture on an input class.
+            The table holds 32 entries. A subscription past that, an empty one, or a capture on an
+            input class is refused before anything is sent (
+            <A href="/library/types/errors"><code>Error</code></A>).
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchFilter, Class, TrafficClass};
@@ -383,14 +381,14 @@ drop(stream);`}</code></pre>
           <p>
             The payload of a{' '}
             <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A>, read off an{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>. The real hand motion at
-            the merge point, <em>before</em> lock suppression or injection, so a locked or injected axis
-            still reports the true delta.
+            <A href="/library/catch#event-stream"><code>EventStream</code></A>. The physical delta at the
+            merge point, <em>before</em> lock suppression or injection, so a locked or injected axis still
+            reports it.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds. See <A href="/library/catch#timestamps">Catch timestamps</A> for what the clock means.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds; <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code> here: physical motion is stamped on the host chip as the real device's transfer completes.</td></tr>
               <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
               <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
@@ -421,9 +419,9 @@ if let CatchEvent::Motion(m) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds. See <A href="/library/catch#timestamps">Catch timestamps</A> for what the clock means.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds; <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code>: a held-usage snapshot is taken where the real device's report lands.</td></tr>
-              <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The currently-held usages, all of one class per event.</td></tr>
+              <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The held usages, one class per event.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -447,7 +445,7 @@ if let CatchEvent::Usages(s) = stream.recv()? {
 
       <div id="input-event" data-search-target>
         <Card>
-          <CardHeader title="InputEvent" subtitle="One decoded input edge, and when it happened" />
+          <CardHeader title="InputEvent" subtitle="Decoded input edge and its timestamp" />
           <pre class="api-signature">struct InputEvent {'{'} ts_us: u32, clock: ClockDomain, input: Input {'}'}</pre>
           <p>
             What <A href="/library/catch#input-events"><code>input_events</code></A> yields. The{' '}
@@ -487,11 +485,11 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clock</code>.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
               <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space the event came from.</td></tr>
-              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint number or interface number inside that class.</td></tr>
+              <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint or interface number within that class.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>Positive</code> = IN (device to PC), <code>Negative</code> = OUT (PC to device).</td></tr>
               <tr><td><code>flags</code></td><td><code>u8</code></td><td>Class-specific, see below; <code>0</code> for the classes that define none.</td></tr>
               <tr><td><code>true_len</code></td><td><code>u16</code></td><td>The packet's length <em>before</em> the <A href="/library/types/enums#capture"><code>Capture</code></A> cut it.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>What was actually captured, at most the entry's capture length.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>What was captured, at most the entry's capture length.</td></tr>
             </tbody>
           </table>
           <table class="api-params">
@@ -521,7 +519,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
             A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
             <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
             <code>direction</code> says which way that data went. A <code>Control</code> event is the
-            transaction the game PC received, on every control endpoint, and a request answered from the
+            transaction the game PC received, on every control endpoint, and a request served from the
             box's value cache still raises one.
           </p>
           <table class="api-params">
@@ -593,8 +591,8 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             <A href="/library/types/structs#button"><code>Button</code></A>,{' '}
             <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
             <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
-            <code>impl Into&lt;Usage&gt;</code>, so you pass one straight to any verb; build one by hand
-            with <code>Usage::new(class, id)</code>.
+            <code>impl Into&lt;Usage&gt;</code>, so any verb takes one directly;{' '}
+            <code>Usage::new(class, id)</code> builds one by hand.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -618,9 +616,10 @@ device.press(from_button)?;                         // press takes any impl Into
           <CardHeader title="Key" subtitle="A HID keyboard keycode" />
           <p>
             A newtype over a HID keyboard/keypad usage. It converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so you pass one
-            straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
-            <A href="/library/inject#inject"><code>press</code></A>. Modifiers are the usages{' '}
+            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
+            <A href="/library/inject#inject"><code>inject</code></A> and{' '}
+            <A href="/library/inject#inject"><code>press</code></A> take one directly. Modifiers are the
+            usages{' '}
             <code>0xE0</code>-<code>0xE7</code>.
           </p>
           <table class="api-params">
@@ -645,9 +644,9 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
           <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
           <p>
             A newtype over a 16-bit Consumer usage. It converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so you pass one
-            straight to <A href="/library/inject#inject"><code>inject</code></A> or{' '}
-            <A href="/library/inject#inject"><code>press</code></A>.
+            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
+            <A href="/library/inject#inject"><code>inject</code></A> and{' '}
+            <A href="/library/inject#inject"><code>press</code></A> take one directly.
           </p>
           <table class="api-params">
             <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
@@ -700,7 +699,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
             <tbody>
               <tr><td><code>table_full</code></td><td><code>bool</code></td><td>At least one entry was refused because the 32-slot table was full.</td></tr>
               <tr><td><code>dropped</code></td><td><code>u32</code></td><td>Box-wide events shed under back-pressure, across every entry.</td></tr>
-              <tr><td><code>clock</code></td><td><A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A></td><td>The measured relationship between the host chip's and device chip's timers.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A></td><td>How the host chip's and device chip's timers relate.</td></tr>
               <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#catch-entry">CatchEntry</A>&gt;</code></td><td>The live subscription table, one entry per accepted <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>. Empty = catching nothing.</td></tr>
             </tbody>
           </table>
@@ -743,7 +742,7 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
           </table>
           <p>
             The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
-            says you are losing events; this one says which. Vendor bulk drops first, by{' '}
+            shows events are being lost; this one shows which entry. Vendor bulk drops first, by{' '}
             <A href="/library/catch#event-stream">design</A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -778,7 +777,7 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
             </tbody>
           </table>
           <p>
-            <code>error_bound_us()</code> halves <code>delay_us</code> for you;{' '}
+            <code>error_bound_us()</code> is half <code>delay_us</code>;{' '}
             <code>drift_us_over(age)</code> extrapolates <code>rate_ppb</code>, returning 0 for a{' '}
             <code>None</code> rate.
           </p>
@@ -849,7 +848,7 @@ for ev in input.by_ref().take(20) {
             <tbody>
               <tr><td><code>host</code></td><td><code>Instant</code></td><td>When the event happened, on this machine's monotonic clock.</td></tr>
               <tr><td><code>box_us</code></td><td><code>u64</code></td><td>The event's own stamp, unwrapped past the 32-bit rollover.</td></tr>
-              <tr><td><code>excess</code></td><td><code>Duration</code></td><td>How much later than the measured floor this event reached you. Jitter, not latency: the constant part of the delay is unknowable from here.</td></tr>
+              <tr><td><code>excess</code></td><td><code>Duration</code></td><td>How much later than the measured floor this event arrived. Jitter, not latency: the constant part of the delay is unknowable here.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -857,12 +856,12 @@ for ev in input.by_ref().take(20) {
 
       <div id="transform" data-search-target>
         <Card>
-          <CardHeader title="Transform" subtitle="One field operation and the two fields it moves between" />
+          <CardHeader title="Transform" subtitle="One field operation and its two fields" />
           <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget {'}'}</pre>
           <p>
-            One entry in the table you hand to{' '}
+            One entry in the table passed to{' '}
             <A href="/library/transform#transform"><code>transform</code></A>. The named constructors
-            cover the common cases; <code>new</code> is the general form.
+            cover common cases; <code>new</code> is the general form.
           </p>
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
@@ -891,7 +890,7 @@ for ev in input.by_ref().take(20) {
 let swap = Transform::swap(Axis::X, Axis::Y);
 assert_eq!(swap.op, TransformOp::Swap);
 
-let wheel_drives_y = Transform::remap(Axis::Wheel, Axis::Y); // the wheel moves the cursor
+let wheel_drives_y = Transform::remap(Axis::Wheel, Axis::Y); // the wheel drives Y
 let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button types 'A'`}</code></pre>
         </Card>
       </div>
@@ -920,7 +919,7 @@ let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>table_full</code></td><td><code>bool</code></td><td>A further entry was, or would be, refused past <code>Transforms::CAPACITY</code>, the 32 the box holds.</td></tr>
-              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#transform">Transform</A>&gt;</code></td><td>One per installed transform, in installation order, which is the order the box applies them. Two that write the same field do not commute, so that order is part of the state.</td></tr>
+              <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#transform">Transform</A>&gt;</code></td><td>One per installed transform, in installation order, the order the box applies them; two that write the same field do not commute.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -952,7 +951,7 @@ for t in &table.entries {
       </div>
       <div id="emit-pace-status" data-search-target>
         <Card>
-          <CardHeader title="EmitPaceStatus" subtitle="The emit-rate pacing state and the rate the clone runs at" />
+          <CardHeader title="EmitPaceStatus" subtitle="Emit-rate pacing and clone rate" />
           <p>
             The emit-rate pacing state from{' '}
             <A href="/library/options#query-emit-pace"><code>query_emit_pace()</code></A>.
@@ -971,7 +970,7 @@ for t in &table.entries {
       </div>
       <div id="render-status" data-search-target>
         <Card>
-          <CardHeader title="RenderStatus" subtitle="The texture motion is rendered with, and whether a profile has armed" />
+          <CardHeader title="RenderStatus" subtitle="Motion texture, and whether a profile armed" />
           <p>
             The render state from{' '}
             <A href="/library/options#query-render"><code>query_render()</code></A>.
@@ -979,8 +978,8 @@ for t in &table.entries {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>The texture motion is rendered with; <code>Off</code> is the paced fill.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered by the model rather than relayed.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture; <code>Off</code> is the paced fill.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered instead of relayed.</td></tr>
               <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
             </tbody>
           </table>
@@ -988,7 +987,7 @@ for t in &table.entries {
       </div>
       <div id="spread-status" data-search-target>
         <Card>
-          <CardHeader title="SpreadStatus" subtitle="How far an injected delta is spread, and the interval in effect" />
+          <CardHeader title="SpreadStatus" subtitle="Spread percent and interval in effect" />
           <p>
             The spread state from{' '}
             <A href="/library/options#query-spread"><code>query_spread()</code></A>.
@@ -1090,7 +1089,8 @@ for t in &table.entries {
           <p>
             Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
             <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
-            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No receive method touches the wire, so cloning shares the queue. The methods and an example are on{' '}
+            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No receive method
+            touches the wire, and clones share the queue. Methods and an example are on{' '}
             <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
           </p>
         </Card>
@@ -1101,10 +1101,10 @@ for t in &table.entries {
           <CardHeader title="ClipSettings" subtitle="A clip's persistent config, read back" />
           <p>
             A clip's configuration from{' '}
-            <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>. You set
-            these with the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
+            <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>: the
+            readback of the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
             <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>,{' '}
-            <code>bind_packet</code>); this is the readback.
+            <code>bind_packet</code>).
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1113,7 +1113,7 @@ for t in &table.entries {
               <tr><td><code>loop_</code></td><td><code>bool</code></td><td>Playback restarts from the top instead of stopping at the end.</td></tr>
               <tr><td><code>retain</code></td><td><code>bool</code></td><td>The buffered content survives a stop, so a restart replays it instead of needing a fresh append.</td></tr>
               <tr><td><code>finalized</code></td><td><code>bool</code></td><td>The clip is sealed: no more appends, ready to replay as a fixed sequence.</td></tr>
-              <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's own clock.</td></tr>
+              <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's clock.</td></tr>
               <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a physical edge.</td></tr>
               <tr><td><code>packet_triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-packet-trigger-entry">ClipPacketTriggerEntry</A>&gt;</code></td><td>The bound packet triggers (up to 8), in the order the box holds them, each with its hit count.</td></tr>
             </tbody>
@@ -1217,7 +1217,7 @@ handle.bind_packet(&held)?;`}</code></pre>
 
       <div id="clip-status" data-search-target>
         <Card>
-          <CardHeader title="ClipStatus" subtitle="The buffered-clip ring and playback state" />
+          <CardHeader title="ClipStatus" subtitle="Clip ring and playback state" />
           <p>
             The clip ring depth and playback counters from{' '}
             <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
@@ -1236,7 +1236,7 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
               <tr><td><code>xfers</code></td><td><code>u16</code></td><td>Clip <A href="/library/clip#frame">transfers</A> the device completed.</td></tr>
-              <tr><td><code>xfer_errs</code></td><td><code>u16</code></td><td>Clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>u16</code></td><td>Clip transfers that ended any other way: a refusal, no reply, no room in the box's queue, or dropped behind one the device did not reply to.</td></tr>
               <tr><td><code>gated</code></td><td><code>u16</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
@@ -1325,7 +1325,7 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>request</code></td><td><code>u8</code></td><td><code>bRequest</code>: the request code.</td></tr>
               <tr><td><code>value</code></td><td><code>u16</code></td><td><code>wValue</code>: request-specific.</td></tr>
               <tr><td><code>index</code></td><td><code>u16</code></td><td><code>wIndex</code>: request-specific, often an interface or endpoint.</td></tr>
-              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the device may return fewer); for an OUT request, the length of the data you pass.</td></tr>
+              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the device may return fewer); for an OUT request, the length of the data passed.</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`  byte   0            1          2   3         4   5         6   7
@@ -1337,8 +1337,7 @@ handle.bind_packet(&held)?;`}</code></pre>
           <p>
             <code>Setup::new</code> builds one from its five fields; <code>is_in</code> reads the
             direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
-            little-endian). It is what a{' '}
-            <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries.
+            little-endian).
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Setup;
@@ -1351,7 +1350,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
       </div>
       <div id="transfer-outcome" data-search-target>
         <Card>
-          <CardHeader title="TransferOutcome" subtitle="The device's answer: status and any IN data" />
+          <CardHeader title="TransferOutcome" subtitle="The device's reply: status and any IN data" />
           <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
           <p>
             What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
@@ -1377,13 +1376,13 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
       </div>
       <div id="rewrite-rule" data-search-target>
         <Card>
-          <CardHeader title="RewriteRule" subtitle="The rewrite rule you install" />
+          <CardHeader title="RewriteRule" subtitle="The rule set_rewrite installs" />
           <pre class="api-signature">fn new(class: RewriteClass, id: u16, direction: Direction, action: RewriteAction) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
           <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
           <p>
-            One entry in the table you hand to{' '}
+            One entry in the table passed to{' '}
             <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
             chaining onto <code>new</code>.
           </p>
@@ -1409,9 +1408,9 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           <pre class="api-signature">struct RewriteTable {'{'} table_full: bool, generation: u8, entries: Vec&lt;RewriteEntry&gt; {'}'}</pre>
           <p>
             What <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>{' '}
-            returns: a summary row per rule, without its match, mask, or payload bytes. Read one rule in
-            full with{' '}
-            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+            returns: a summary row per rule, without its match, mask, or payload bytes;{' '}
+            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>{' '}
+            reads one in full.
           </p>
           <table class="api-params">
             <thead>
@@ -1455,13 +1454,13 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
       </div>
       <div id="patch" data-search-target>
         <Card>
-          <CardHeader title="Patch" subtitle="The descriptor overwrite you store" />
+          <CardHeader title="Patch" subtitle="The descriptor overwrite set_patch stores" />
           <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
           <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
           <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
           <pre class="api-signature">fn in_string(index: u8, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
           <p>
-            One entry in the set you hand to{' '}
+            One entry in the set passed to{' '}
             <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A>, with a constructor
             per section.
           </p>
@@ -1514,9 +1513,9 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           <pre class="api-signature">struct PatchEntry {'{'} section: PatchSection, cfg: u8, index: u8, offset: u16, len: u16 {'}'}</pre>
           <p>
             One patch's key and length in a{' '}
-            <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>, without its bytes. Read
-            a full patch with{' '}
-            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
+            <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>, without its bytes;{' '}
+            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A> reads
+            one in full.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>

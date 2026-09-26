@@ -1,8 +1,5 @@
-// Rewrite a matched packet in flight: match a class, an id and a direction, and run one action.
-//
-// The box drops a rule that arrives while imperfect clones are off, so the card stands its whole body
-// down rather than disabling each button. Removal keys on the match and mask bytes, which the table
-// summary does not carry, so a removed rule is read back in full first.
+// The box drops a rule while imperfect clones are off, so the controls hide then. Removal keys on
+// match and mask, which the summary lacks, so a rule is read back in full first.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -39,25 +36,22 @@ import {
   trafficIdLabel,
 } from './hex';
 
-// What each action does to a packet that matches. It reads out under its own control, the way the
-// class blurb does. On Control, Patch and Replace reach only the data an Out request carries.
+// On Control, Patch and Replace reach only an Out request's data.
 const ACTION_BLURB: Record<number, string> = {
   [RewriteAction.Pass]: 'Leaves the packet untouched.',
-  [RewriteAction.Drop]: 'The packet is not delivered.',
-  [RewriteAction.Patch]: 'Overwrites the payload bytes at the offset, keeping the length.',
+  [RewriteAction.Drop]: 'Discards the packet.',
+  [RewriteAction.Patch]: 'Writes the payload at the offset, keeping the length.',
   [RewriteAction.Replace]: 'The packet becomes the payload.',
-  [RewriteAction.Answer]: 'Answers from the payload without asking the device.',
-  [RewriteAction.Stall]: 'Refuses the request with a stall.',
-  [RewriteAction.Nak]: 'On EP0, no answer until the host gives up. On any other control endpoint, a stall.',
-  [RewriteAction.ReplyPatch]: 'Overwrites the reply to an In request at the offset, keeping the length.',
-  [RewriteAction.ReplyReplace]: 'The reply to an In request becomes the payload.',
+  [RewriteAction.Answer]: 'Replies with the payload without asking the device.',
+  [RewriteAction.Stall]: 'Stalls the request.',
+  [RewriteAction.Nak]: 'On EP0, no reply until the host gives up. On other control endpoints, a stall.',
+  [RewriteAction.ReplyPatch]: "Overwrites an In request's reply at the offset, keeping the length.",
+  [RewriteAction.ReplyReplace]: "An In request's reply becomes the payload.",
 };
 const CONTROL_ACTION_BLURB: Partial<Record<number, string>> = {
-  [RewriteAction.Patch]: 'Overwrites the data an Out request carries at the offset, keeping the length.',
-  [RewriteAction.Replace]: 'Overwrites the start of the data an Out request carries, keeping the length.',
+  [RewriteAction.Patch]: "Overwrites an Out request's data at the offset, keeping the length.",
+  [RewriteAction.Replace]: "Overwrites the start of an Out request's data, keeping the length.",
 };
-// The box recomputes the mouse's motion on any report it changes, from the report as it arrived, so a
-// motion rewrite on HID in is lost there.
 const classBlurb = (cls: number): string =>
   cls === CatchClass.HidIn
     ? `${TRAFFIC_CLASS_BLURB[cls]} Rewrite mouse motion at Emit: the box recomputes it on any report it changes.`
@@ -65,8 +59,7 @@ const classBlurb = (cls: number): string =>
 const actionBlurb = (cls: number, a: RewriteAction): string =>
   (cls === CatchClass.Control ? CONTROL_ACTION_BLURB[a] : undefined) ?? ACTION_BLURB[a];
 
-// A report surface can pass, drop, or rewrite a packet; the control class trades Drop for the answer
-// and reply actions. The box validates the pair, so this only keeps the menu honest.
+// The box validates the pair; this only filters the menu.
 const actionsFor = (cls: number): RewriteAction[] =>
   cls === CatchClass.Control
     ? [
@@ -81,7 +74,6 @@ const actionsFor = (cls: number): RewriteAction[] =>
       ]
     : [RewriteAction.Pass, RewriteAction.Drop, RewriteAction.Patch, RewriteAction.Replace];
 
-// Which actions carry a payload, and which read the offset. Pass, Drop, Stall and Nak carry neither.
 const carriesPayload = (a: RewriteAction): boolean =>
   a === RewriteAction.Patch ||
   a === RewriteAction.Replace ||
@@ -91,15 +83,14 @@ const carriesPayload = (a: RewriteAction): boolean =>
 const readsOffset = (a: RewriteAction): boolean =>
   a === RewriteAction.Patch || a === RewriteAction.ReplyPatch;
 
-// A rule names itself the way a transform does: what it does, then what it addresses. A chip is
-// capped at 250px and ellipsises past it, so the match and payload lengths stay out of the name.
+// A chip ellipsises past 250px, so match and payload lengths stay out of the name.
 const describe = (e: RewriteRuleInfo): string => {
   const where = e.id === CATCH_ID_ANY ? 'any' : e.id;
   const head = `${displayName(rewriteActionName(e.action))} ${rewriteClassName(e.cls)} ${where} ${trafficDirWord(e.dir)}`;
   return e.hits ? `${head}, ${e.hits} ${e.hits === 1 ? 'hit' : 'hits'}` : head;
 };
 
-// Combobox hands back a string or an array, and the action picker is single-select.
+// Combobox returns a string or an array; the action picker is single-select.
 const one = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
 
 const DeviceRewrite = () => {
@@ -126,8 +117,7 @@ const DeviceRewrite = () => {
   );
   const entries = () => rewrite()?.entries ?? ([] as RewriteRuleInfo[]);
 
-  // Picking a class can strand an action the new class does not offer; fall back to Pass, which every
-  // class takes, the way the lock editor falls back to Both.
+  // A new class can lack the action; fall back to Pass, which every class takes.
   const chooseClass = (v: string) => {
     setRwClass(v);
     if (!actionsFor(Number(v)).includes(action())) setRwAction(String(RewriteAction.Pass));
@@ -170,7 +160,7 @@ const DeviceRewrite = () => {
     <Show when={dash.status() === 'connected'}>
       <div id="rewrite-rules" data-search-target>
         <Card>
-          <CardHeader title="Rewrite rules" subtitle="Change the traffic the box carries" />
+          <CardHeader title="Rewrite rules" subtitle="Change relayed traffic" />
 
           <Show
             when={allowed()}
@@ -186,14 +176,14 @@ const DeviceRewrite = () => {
             <p style={{ ...muted, 'margin-top': '4px' }}>{classBlurb(cls())}</p>
 
             <div style={section}>
-              <div style={label}>Which id</div>
+              <div style={label}>Id</div>
               <RadioGroup
                 name="rw-anyid"
                 value={rwAnyId()}
                 onChange={setRwAnyId}
                 options={[
                   { value: 'any', label: 'Every id' },
-                  { value: 'one', label: 'Just one' },
+                  { value: 'one', label: 'One id' },
                 ]}
               />
               <Show when={rwAnyId() === 'one'}>
@@ -239,8 +229,8 @@ const DeviceRewrite = () => {
               </div>
             </div>
             <p style={{ ...muted, 'margin-top': '4px' }}>
-              Match and mask are the same length, {REWRITE_MATCH_MAX} bytes at most. Blank matches
-              every packet on that address.
+              Match and mask: same length, at most {REWRITE_MATCH_MAX} bytes. Blank matches every
+              packet on that address.
             </p>
 
             <Show when={carriesPayload(action())}>
@@ -268,7 +258,7 @@ const DeviceRewrite = () => {
             <Show when={rewrite()?.tableFull}>
               <div class="callout callout--warning" style={section}>
                 The box refused the last rule: it holds {REWRITE_TAB_MAX} rules and {REWRITE_POOL} bytes of
-                rule payload. Remove or shorten one, then add it again.
+                rule payload. Remove or shorten one, then retry.
               </div>
             </Show>
             <Show when={cmd.error()}>
@@ -283,7 +273,7 @@ const DeviceRewrite = () => {
               </div>
               <Show
                 when={entries().length > 0}
-                fallback={<p>Nothing rewritten.</p>}
+                fallback={<p>None.</p>}
               >
                 <div style={chips}>
                   <For each={entries()}>

@@ -1,22 +1,22 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository. This is the **Medius documentation site**, built with SolidJS and MidnightUI components.
+Guidance for Claude Code in this repository: the **Medius documentation site**, built with SolidJS and MidnightUI components.
 
-## What This Project Is
+## Project
 
 A static documentation site for Medius: replacement firmware for MAKCU-class mouse-passthrough boxes, its open binary control protocol, and the `medius` Rust library. Five sections:
 
 | Section | What |
 |---|---|
-| Native API | The binary control protocol and how the box behaves. Covers hardware, transport, the frame format, the injection model, and every command (opcodes `0x01`-`0x1E`). |
-| Rust Library | API reference for the `medius` crate: connecting, the command bindings, keepalive and reconnect, and the `async` / `mock` / `tracing` features. |
-| Bindings | The C ABI and Python bindings over the same crate. |
-| Dashboard | The in-browser box dashboard: connect, view the box, update firmware, recover, read the device log. |
-| AI Access | The docs as Markdown twins, `llms.txt`, and an MCP server. |
+| Native API | Binary control protocol and box behaviour: hardware, transport, frame format, injection model, every command (opcodes `0x01`-`0x1E`). |
+| Rust Library | `medius` crate reference: connecting, command bindings, keepalive, reconnect, and the `async` / `mock` / `tracing` features. |
+| Bindings | C ABI and Python bindings over the crate. |
+| Dashboard | In-browser box dashboard: connect, view the box, firmware update, recovery, device log. |
+| AI Access | Markdown twins, `llms.txt`, and an MCP server. |
 
-The site uses **MidnightUI** as its component library. MidnightUI components live in `src/components/` and `src/styles/` and are synced from an upstream repo. Do not modify MidnightUI component source files.
+**MidnightUI** is the component library, in `src/components/` and `src/styles/`, synced from an upstream repo. Do not modify its source files.
 
-## Tech Stack
+## Tech stack
 
 | Tool | Role |
 |---|---|
@@ -35,7 +35,7 @@ bun run build        # Production build (output: dist/)
 bun run serve        # Preview production build
 ```
 
-## Project Structure
+## Project structure
 
 ```
 src/
@@ -161,19 +161,19 @@ src/
     components/                       # MidnightUI component styles (DO NOT MODIFY)
 ```
 
-## Key Architecture
+## Architecture
 
 ### Routing
 
-All routes are defined in `App.tsx`. `DocsLayout` is the layout component for all docs pages: it provides the sidebar, titlebar, and search. The landing page (`Home.tsx`) is outside the docs layout. Bad URLs redirect to `/` via a catch-all route.
+`App.tsx` defines every route. `DocsLayout` wraps each docs page with the sidebar, titlebar, and search; the landing page (`Home.tsx`) sits outside it. A catch-all route redirects bad URLs to `/`.
 
-### Search System
+### Search
 
-Ctrl+K search is powered by MidnightUI's `CommandPalette`. The search index is a curated list in `src/app/searchIndex.ts`. **When adding or modifying pages, update the search index.** Each entry has `label`, `description`, `path` (optionally with a `#hash` anchor), `group`, `keywords`, and an optional `icon`.
+Ctrl+K search is MidnightUI's `CommandPalette` over the curated list in `src/app/searchIndex.ts`. **Update the index when adding or changing pages.** Each entry has `label`, `description`, `path` (optionally with a `#hash` anchor), `group`, `keywords`, and an optional `icon`.
 
-### Scroll Targets
+### Scroll targets
 
-Every Card is wrapped in a `<div id="..." data-search-target>`. This lets search and deep links scroll to a section and highlight it, with `scroll-margin-top` for the sticky titlebar.
+Every Card is wrapped in a `<div id="..." data-search-target>`, so search and deep links scroll to and highlight it (`scroll-margin-top` clears the sticky titlebar).
 
 ```tsx
 <div id="my-section" data-search-target>
@@ -183,17 +183,15 @@ Every Card is wrapped in a `<div id="..." data-search-target>`. This lets search
 </div>
 ```
 
-### Sidebar Navigation
+### Sidebar
 
-Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryFeatureTabs`, `libraryReferenceTabs`. Add new pages to the right array. Nav icons come from `solid-icons/bs`.
+Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeAdvancedTabs` (the advanced control commands: Raw, Transfer, Rewrite, Patch), `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryAdvancedTabs` (the advanced control layer: raw injection, control transfers, rewrite rules, descriptor patches), `libraryFeatureTabs`, `libraryGuidesTabs` (the guides: calls and input, connection, testing), `libraryReferenceTabs`, `aiAccessTabs` (the AI & LLMs page, at the foot of each code section), `dashboardTabs` (Set up, Device, Control, Advanced control, Update, Advanced, Changelog), `sectionTabs` (the four top-level sections), `bindingsSwitcherTabs` (Overview, C / C++, Python), and the per-language groups `makeBindingGroups(root)` builds (Getting Started: Install, First program; Usage: Calls & errors, Streams; Reference: API index, Types & errors; Build: Build & features). Add new pages to the right array. Nav icons come from `solid-icons/bs`.
 
-## Consistency Rules (read before editing)
+## Consistency rules (read before editing)
 
-These exist because earlier passes drifted. Hold to them.
+### One table per fact set
 
-### Single Source of Truth: Never Duplicate a Table
-
-Each fact set lives in exactly ONE place; every other page links to it, it does not re-table it.
+Each fact set lives in ONE place; other pages link to it and never re-table it.
 
 | Fact set | Lives only on | Note |
 |---|---|---|
@@ -205,7 +203,7 @@ Each fact set lives in exactly ONE place; every other page links to it, it does 
 | `RESP(PATCHES)` flags (APPLIED, PENDING, REFUSED, FULL) | `commands/Requests.tsx` (`#patches`) | Patch pages describe presentation and link the bits |
 | `TRAFFIC_EVENT` flags, the `RULE` bit, which side of the rewrite table each tap sits | `commands/Catch.tsx` (`#traffic-event`, `#rules`) | `Rewrite.tsx` links there |
 
-Library enum and struct definitions live ONCE, as proper per-type tables under `library/types/` (`Enums.tsx`, `Structs.tsx`, `Frames.tsx`, `Errors.tsx`; one row per variant or field, not a comma-list crammed in a cell). Method pages link to Types for the type and show usage in an example; they do NOT re-table variants or fields.
+Library enums and structs live ONCE, as per-type tables under `library/types/` (`Enums.tsx`, `Structs.tsx`, `Frames.tsx`, `Errors.tsx`; one row per variant or field, not a comma-list in a cell). Method pages link to Types and show usage in an example; they do NOT re-table variants or fields.
 
 | Types | Table lives only on |
 |---|---|
@@ -214,14 +212,14 @@ Library enum and struct definitions live ONCE, as proper per-type tables under `
 | `FrameType` / `DecodedFrame` | `library/types` (`#frames`) |
 | `Error` variants | `library/types` (`#errors`) |
 
-A method states what it returns in one sentence with a link to `library/types`, plus an example
-(see `library/Requests.tsx`, `library/Diagnostics.tsx`). It does not repeat the field/variant table.
+A method states what it returns in one sentence linking `library/types`, plus an example
+(see `library/Requests.tsx`, `library/Diagnostics.tsx`).
 
-If you need to reference one of these, link to it. Do not paste a second copy with different columns. That is the inconsistency this repo kept fighting. Verify with a grep that the distinctive content (e.g. `>device download<`, `<th>Mask</th>`) appears in one file.
+Link to these; never paste a second copy with different columns. Verify with a grep that distinctive content (e.g. `>device download<`, `<th>Mask</th>`) appears in one file.
 
-### Command Section Template
+### Command section template
 
-Every native opcode section uses the same element order (gold references: `commands/Move.tsx`, `commands/Admin.tsx`):
+Every native opcode section uses one element order (gold references: `commands/Move.tsx`, `commands/Admin.tsx`):
 
 `CardHeader` -> intro `<p>` (one sentence, ends "Opcode `0xNN`.") -> `pre.api-signature` -> badge `<p>` -> `PAYLOAD` label + `byte-table` (or `<p>No payload (...).</p>`) -> optional detail table (`ACTIONS`/`TARGETS`/`LEVELS`/`SELECTORS`/`FLAGS`) -> `EFFECT` label + `<p>` (ends "Library binding: ...") -> `EXAMPLE` label + `pre.diagram` byte grid.
 
@@ -235,23 +233,23 @@ Library method sections (gold reference: `library/Move.tsx`): `pre.api-signature
 - Short value/label/code cells: no trailing period.
 - `api-response-label` divs: ALL-CAPS.
 
-## Terseness (this is API reference, not a tutorial or a story)
+## Terseness
 
 The signature, the table, and the example carry the content. Prose is near zero.
 - Outside tables and code blocks, a card has AT MOST 2 short sentences (the page's first/intro card at most 3). Prefer 1, or zero when the table and example already say it.
 - Delete: narration and transitions ("you work in two halves", "first ... second ..."), second-person hand-holding ("you'll", "a junior wants", "so you can"), and any sentence that restates what a table or example already shows.
 - If you're explaining how to use something in a paragraph, you're doing it wrong: put it in the example. If you're describing fields/variants in prose, put them in a table.
-- The user has said this many times and gets angry about text blobs. When in doubt, cut.
+- When in doubt, cut.
 
-## Styling Rules
+## Styling
 
 - Use MidnightUI components (Card, CardHeader, Divider) for all layout. Avoid custom CSS.
 - Documentation-specific styles live in `src/styles/docs.css` (callouts, API badges, tables). This file is editable; `global.css` and `src/components/` / `src/styles/components/` are not.
 - No emojis except the ⚠️ on the USB3 hazard callout.
 - Terse, declarative wording. No filler, no marketing language. De-AI it: no "robust/seamless/leverage", no "**Bold**: explanation" bullets, and use contractions.
-- ASCII punctuation only. No em-dashes or en-dashes, ever (rewrite with commas, periods, parentheses, or "to" for ranges); no unicode minus (use "-"). Em-dashes are the AI tell the user calls out most. Verify with a unicode-dash scan before committing.
+- ASCII punctuation only. No em-dashes or en-dashes, ever (rewrite with commas, periods, parentheses, or "to" for ranges); no unicode minus (use "-"). Verify with a unicode-dash scan before committing.
 
-### Documentation Page Patterns
+### Page patterns
 
 | Class | Used on | For |
 |---|---|---|
@@ -272,19 +270,18 @@ The signature, the table, and the example carry the content. Prose is near zero.
 | `--responded` (blue) | Blocks | It waits for the box's reply ("Returns RESP" / "Reply" on native) |
 | `--warning` (yellow) | Unsolicited | |
 
-**Links.** Internal navigation uses the router `<A href="/...">`. Anything external (a crate, tool,
-chip, spec, std type) uses a plain `<a href="https://..." target="_blank" rel="noreferrer">` instead.
-Link the first prose mention per page; never inside a `<pre>`, never nested inside another link, and
-use a fixed URL (e.g. crates.io for a crate). When a word is already an internal `<A>` link, leave
-it; do not wrap an external `<a>` around or inside it.
+**Links.** Internal: the router `<A href="/...">`. External (crate, tool, chip, spec, std type): a
+plain `<a href="https://..." target="_blank" rel="noreferrer">`. Link the first prose mention per
+page, never inside a `<pre>` or another link, with a fixed URL (e.g. crates.io for a crate). Leave an
+existing internal `<A>` alone; never wrap an external `<a>` around or inside it.
 
-### Mobile Considerations
+### Mobile
 
 - Tables must work on mobile. Avoid 3+ column tables with long `code` content.
 - `code` elements are `white-space: nowrap` globally; long code strings in cells can overflow. Prefer plain-text descriptions in cells.
 - `pre code` blocks override with `white-space: pre`. Cards use `overflow: hidden`.
 
-## Favicon and Social Embeds
+## Favicon and social embeds
 
 The favicon lives in `public/favicon.svg` (served at `/favicon.svg`). A PNG copy at `public/favicon.png` is the Open Graph / Twitter Card preview. Embed metadata is in `src/index.html`; the preview-image and canonical URLs are placeholders (`https://medius.example/...`); set the real domain before deploying.
 
@@ -292,10 +289,10 @@ The favicon lives in `public/favicon.svg` (served at `/favicon.svg`). A PNG copy
 magick -background none -density 2048 public/favicon.svg -resize 1024x1024 public/favicon.png
 ```
 
-## Content Rules
+## Content rules
 
 - Native pages document the wire protocol and observable device behaviour, byte-exact. The authoritative source is the firmware's `docs/protocol/control-protocol.md`.
-- Library pages document the `medius` crate as it actually is (1:1 firmware bindings plus connect/keepalive/reconnect infrastructure; no input automation or gestures).
+- Library pages document the `medius` crate as it is (1:1 firmware bindings plus connect/keepalive/reconnect infrastructure; no input automation or gestures).
 - Document guarantees, not implementation tells. The firmware is closed; do not document the internal transparency/cloning mechanism (e.g. how baselines are seeded or how vendor fields are tracked), specific mouse-model quirks, or microsecond timing figures. State the guarantees (byte-identical clone, additive injection, native-equivalent idle, safety auto-clear) and the full protocol.
 - Do not invent facts. If a value isn't confirmed, leave it out.
 
@@ -303,7 +300,7 @@ magick -background none -density 2048 public/favicon.svg -resize 1024x1024 publi
 
 CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`.
 
-## Adding a New Page
+## Adding a page
 
 1. Create the component under `src/app/pages/`. Wrap every Card in `<div id="..." data-search-target>`.
 2. Add a route in `App.tsx`.
@@ -313,20 +310,18 @@ CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on 
 
 ## Conformance gate
 
-`npm run conformance` (and `npm test`, and CI) checks that every page is shaped like its siblings. It
-exists because the prose checks and the correctness checks between them could not see a card built
-unlike every other card, which is the drift that kept reaching the user.
+`npm run conformance` (also run by `npm test` and CI) checks that every page is shaped like its
+siblings, the drift that prose and correctness checks cannot see.
 
 Every rule is **derived, not asserted**. A structural rule fires only where the corpus already agrees at
-85% or better, and a punctuation rule is measured against the page's **own** majority, since a page that
-is consistently one way is consistent and two stragglers on a page that is otherwise the other way are
-the drift. Each rule prints the rate it was derived from, so changing the corpus changes the rule.
+85% or better; a punctuation rule is measured against the page's **own** majority, so only stragglers on
+an otherwise consistent page fire. Each rule prints the rate it was derived from, so changing the corpus
+changes the rule.
 
-That discipline is the point. Writing this checker against CLAUDE.md alone produced 466 "findings", of
-which 183 were one page's internally consistent style and 116 were type cards measured as if they were
-method sections. Measure first; a rule that fires on the majority is a wrong rule.
+Written against CLAUDE.md alone, the checker produced 466 "findings": 183 were one page's internally
+consistent style and 116 were type cards measured as method sections. Measure first; a rule that fires
+on the majority is wrong.
 
-When it reports something you believe is correct, the question is which of the two is wrong. If the page
-is right, the rule needs the distinction the page is making (a dispatch card whose variants carry the
-examples, a byte grid against a topology diagram), and teaching it that is the fix. Do not widen a
-threshold until the report goes quiet.
+When it flags something you believe is correct, one of the two is wrong. If the page is right, teach
+the rule the distinction the page makes (a dispatch card whose variants carry the examples, a byte grid
+against a topology diagram). Never widen a threshold to quiet the report.

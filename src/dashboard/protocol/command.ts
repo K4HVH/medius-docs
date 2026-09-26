@@ -79,8 +79,7 @@ export function movePanPayload(dpan: number, flags = 0): Uint8Array {
   return out;
 }
 
-// A JS number reaches the wire as an i16, so clamp here rather than letting DataView wrap: a
-// slider at 40000 should saturate, not come out as -25536 and fling the cursor the other way.
+// Saturate rather than let DataView wrap: 40000 would reach the wire as -25536 and reverse the cursor.
 function clampI16(v: number): number {
   return Math.max(-32768, Math.min(32767, Math.round(v || 0)));
 }
@@ -123,15 +122,14 @@ export function imperfectPayload(allow: boolean): Uint8Array {
   return new Uint8Array([OPT_IMPERFECT, allow ? 1 : 0]);
 }
 
-// OPTION(MOVE_RIDE) (§3.10): [id=1][timeout u16 LE ms] - 0 = off; N = injected motion only rides a
-// native cursor-motion report within an N ms window (no synthetic motion frames). Persisted in NVS.
+// OPTION(MOVE_RIDE) (§3.10): [id=1][timeout u16 LE ms]. 0 = off; N = injected motion rides only a
+// native cursor-motion report within N ms (no synthetic motion frames). Persisted in NVS.
 export function moveRidePayload(timeoutMs: number): Uint8Array {
   const ms = Math.max(0, Math.min(0xffff, Math.round(timeoutMs)));
   return new Uint8Array([OPT_MOVE_RIDE, ms & 0xff, (ms >> 8) & 0xff]);
 }
 
-// OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8] - what the With/Against lock
-// directions are measured against (§3.12).
+// OPTION(BEARING) (§3.10): [id=4][window u16 LE ms][mode u8], the With/Against reference (§3.12).
 export function bearingPayload(windowMs: number, mode: BearingMode): Uint8Array {
   const ms = Math.max(0, Math.min(0xffff, Math.round(windowMs)));
   return new Uint8Array([OPT_BEARING, ms & 0xff, (ms >> 8) & 0xff, mode & 0xff]);
@@ -152,8 +150,8 @@ export function emitPayload(mode: EmitMode, rateHz = 0, forceHz = 0): Uint8Array
   ]);
 }
 
-// OPTION(RENDER) (§3.10): [id=5][mode u8][full u8]. mode is the texture motion is rendered with; full puts
-// native motion through the same model rather than relaying it. Both are written every call.
+// OPTION(RENDER) (§3.10): [id=5][mode u8][full u8]. mode sets the rendered texture; full puts native
+// motion through the same model rather than relaying it. Both are written every call.
 export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
   return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
 }
@@ -352,7 +350,7 @@ export function patchClearPayload(): Uint8Array {
 }
 
 // QUERY for one full rewrite rule or descriptor patch by list index (§4.17): [what][index]. The reply
-// still leads with `what`, so it correlates on that selector like every other RESP.
+// leads with `what`, like every other RESP.
 export function queryEntryPayload(what: number, index: number): Uint8Array {
   return new Uint8Array([what, index & 0xff]);
 }

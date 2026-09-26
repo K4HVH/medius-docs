@@ -7,20 +7,19 @@ const Catch: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Catch" subtitle="Observe what passes through the box, addressed like a lock" />
+        <CardHeader title="Catch" subtitle="Observe box traffic, addressed like a lock" />
         <p>
-          <A href="/library/catch#input-events"><code>input_events</code></A> gives you press and
-          release edges;{' '}
-          <A href="/library/catch#catch-events"><code>catch_events</code></A> gives you the raw frames
-          underneath. Input is observed before any{' '}
+          <A href="/library/catch#input-events"><code>input_events</code></A> yields press and release
+          edges; <A href="/library/catch#catch-events"><code>catch_events</code></A> yields the raw
+          frames underneath. Input is observed before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
-          <A href="/library/inject">injection</A>. Drop the stream to unsubscribe.
+          <A href="/library/inject">injection</A>. Dropping the stream unsubscribes.
         </p>
         <p>
           A subscription is a table of{' '}
-          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries. Addressing doubles as
-          the filter: the control link runs at 6&nbsp;Mbaud and vendor bulk alone measures
-          ~250&nbsp;KiB/s, so a subscription has to be able to name one endpoint.
+          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries; the
+          address is the filter, down to one endpoint, since vendor bulk alone measures ~250&nbsp;KiB/s
+          on a 6&nbsp;Mbaud control link.
         </p>
       </Card>
 
@@ -31,7 +30,7 @@ const Catch: Component = () => {
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             The box sends held-usage <em>snapshots</em>; this diffs them into edges, so watching a key
-            is a match rather than a set difference.
+            is a match.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Device, CatchFilter, Input, Key};
@@ -46,8 +45,8 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
 }`}</code></pre>
           <p>
             Every filter must name an input class and cover both edges; anything else is{' '}
-            <A href="/library/types/errors">refused</A>. Without the release edge a fresh press cannot
-            be told from a chord, so match on <code>Input::Press</code> instead.
+            <A href="/library/types/errors">refused</A>. Without the release edge a fresh press can't be
+            told from a chord; to watch presses, match on <code>Input::Press</code>.
           </p>
         </Card>
       </div>
@@ -84,12 +83,12 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
 }
 // dropping \`events\` unsubscribes`}</code></pre>
           <p>
-            The keepalive re-asserts the table, and it survives a{' '}
+            The keepalive re-asserts the table; it survives a{' '}
             <A href="/library/lifecycle#reconnect">reconnect</A> and a{' '}
             <A href="/library/lifecycle#restart">session recovery</A>. The box clears it on control-PC
-            silence, on <A href="/library/admin#reset"><code>reset</code></A> (which ends the
-            stream), on link loss, when the device detaches, and on a re-clone. See the native{' '}
-            <A href="/native/commands/catch#catch"><code>CATCH</code></A> command for the wire layout.
+            silence, <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream), link
+            loss, device detach, and a re-clone. The wire layout is on the native{' '}
+            <A href="/native/commands/catch#catch"><code>CATCH</code></A> command.
           </p>
         </Card>
       </div>
@@ -99,15 +98,15 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
         <Card>
           <CardHeader title="InputStream" subtitle="Receive decoded edges" />
           <p>
-            The handle <A href="/library/catch#input-events"><code>input_events</code></A> returns. It
-            holds the per-class held sets it diffs, so it takes <code>&mut self</code> and one report
-            can yield several <A href="/library/types/enums#input"><code>Input</code></A> values. It is
-            an <code>Iterator</code>, so a <code>for</code> loop over it works.
+            Returned by <A href="/library/catch#input-events"><code>input_events</code></A>. It holds the
+            per-class held sets it diffs, so it takes <code>&mut self</code>, and one report can yield
+            several <A href="/library/types/enums#input"><code>Input</code></A> values. It is an{' '}
+            <code>Iterator</code>.
           </p>
           <p>
-            It reports only the usages <em>this</em> subscription addressed. The box holds one table,
-            the union of every subscription in the process, so its snapshots widen as soon as
-            unrelated code subscribes. The decoder filters them back down.
+            It reports only the usages <em>this</em> subscription addressed: the box's one table is the
+            union of every subscription in the process, and the decoder filters the wider snapshots back
+            down.
           </p>
           <table class="api-params">
             <thead>
@@ -119,7 +118,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
               <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature).</td></tr>
               <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
-              <tr><td><code>held(class)</code></td><td><code>&amp;[Usage]</code></td><td>What this stream currently has held for one class.</td></tr>
+              <tr><td><code>held(class)</code></td><td><code>&amp;[Usage]</code></td><td>What this stream holds for one class.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
             </tbody>
           </table>
@@ -130,8 +129,8 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
         <Card>
           <CardHeader title="EventStream" subtitle="Receive raw events" />
           <p>
-            The handle <A href="/library/catch#catch-events"><code>catch_events</code></A> returns.
-            Cloning shares the queue. When the stream and all its clones drop, the subscription ends.
+            Returned by <A href="/library/catch#catch-events"><code>catch_events</code></A>. Clones share
+            the queue; the subscription ends when the stream and every clone drop.
           </p>
           <table class="api-params">
             <thead>
@@ -144,26 +143,26 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>iter() / try_iter()</code></td><td><code>impl Iterator</code></td><td>Blocking, or drain what is buffered. The stream is itself an <code>Iterator</code>.</td></tr>
               <tr><td><code>recv_async().await</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Await the next event (<code>async</code> feature), runtime-agnostic.</td></tr>
               <tr><td><code>stream()</code></td><td><code>impl Stream</code></td><td>The same queue as a <code>futures</code> stream (<code>async</code> feature).</td></tr>
-              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering, which a <code>None</code> from the two above cannot tell you.</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; a <code>None</code> from the two above can't tell.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
             </tbody>
           </table>
           <p>
-            Each event is one <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>{' '}
-            variant. <code>class()</code>, <code>id()</code>, <code>direction()</code>,{' '}
+            Each event is a <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>{' '}
+            variant; <code>class()</code>, <code>id()</code>, <code>direction()</code>,{' '}
             <code>ts_us()</code>, <code>clock()</code> and <code>bytes()</code> read the same fields
             on any of them.
           </p>
           <div class="callout callout--info">
             <p>
               The buffer is bounded and lossy: a slow consumer drops the <em>oldest</em> events. The
-              box's own drop counts are on{' '}
-              <A href="/library/requests#query-catch"><code>query_catch</code></A>, box-wide and per
-              entry.
+              box's drop counts, box-wide and per entry, are on{' '}
+              <A href="/library/requests#query-catch"><code>query_catch</code></A>.
             </p>
           </div>
           <p>
-            The box drains through strict-priority queues. Vendor bulk can go entirely undrained under a busy mouse: bulk-plus-input is what the control link cannot carry.
+            The box drains through strict-priority queues, so under a busy mouse vendor bulk can go
+            entirely undrained: the control link can't carry bulk plus input.
           </p>
           <pre class="diagram">{`  Button Key Media Axis Bus    -->  [ queue 0 ]  --+
   HidIn HidOut                                     |
@@ -177,12 +176,11 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
 
       <div id="traffic" data-search-target>
         <Card>
-          <CardHeader title="Reading traffic" subtitle="Truncation, control transactions, bus events" />
+          <CardHeader title="Traffic" subtitle="Truncation, control transactions, bus events" />
           <p>
             A <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> carries the
-            address, the bytes, and <code>true_len</code>: the length before the capture cut it. A
-            trimmed packet and a genuinely short one are otherwise identical, so check{' '}
-            <code>truncated()</code>.
+            address, the bytes, and <code>true_len</code>, the length before capture cut it. Only{' '}
+            <code>truncated()</code> tells a trimmed packet from a short one.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
@@ -229,10 +227,11 @@ for event in &device.catch_events([filter])? {
           <p>
             Stamps are <code>u32</code> microseconds from that chip's boot, so they{' '}
             <A href="/library/types/enums#clock-domain">wrap and restart at zero on reboot</A>.{' '}
-            <A href="/library/types/structs#timeline"><code>Timeline</code></A> handles all of it and
-            returns an <code>Instant</code>, taking an{' '}
+            <A href="/library/types/structs#timeline"><code>Timeline</code></A> handles domains, wrap and
+            reboot, and turns an{' '}
             <A href="/library/types/structs#input-event"><code>InputEvent</code></A> or a raw{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> alike.
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> into an{' '}
+            <code>Instant</code>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{CatchFilter, Input, Key, Timeline};
@@ -248,7 +247,7 @@ for ev in input.by_ref().take(20) {
           <p>
             <A href="/library/requests#query-catch"><code>query_catch</code></A> returns a{' '}
             <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A>: the box's
-            own offset between its two chips, its drift rate, and the round trip bounding the error.
+            offset between its two chips, the drift rate, and the round trip bounding the error.
           </p>
         </Card>
       </div>
@@ -259,8 +258,7 @@ for ev in input.by_ref().take(20) {
           <p>
             <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
             <code>catch_events</code> and <code>input_events</code> synchronous; the streams offer{' '}
-            <code>recv_async().await</code>. <code>query_catch</code> is a future, like the other
-            queries.
+            <code>recv_async().await</code>; <code>query_catch</code> is a future.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::{AsyncDevice, CatchFilter, Key};

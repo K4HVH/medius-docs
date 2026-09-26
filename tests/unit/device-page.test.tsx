@@ -112,10 +112,10 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).toMatch(/Factory reset/i);
-      expect(text).toMatch(/Erase everything saved on the box/i);
+      expect(text).toMatch(/Erase everything saved/i);
       expect(text).toMatch(/box name/i);
       expect(text).toMatch(/learned/i);
-      expect(text).toMatch(/restarts it/i);
+      expect(text).toMatch(/then restarts/i);
       // it neither disconnects nor acknowledges: the port stays enumerated and RESET has no reply
       expect(text).not.toMatch(/reconnects on its own/i);
       expect(text).not.toMatch(/Erased\./i);

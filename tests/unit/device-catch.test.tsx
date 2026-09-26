@@ -158,7 +158,7 @@ describe('DeviceEventCatch clip transfers', () => {
     expect(log()).toContain('hid-in in 0x0 RULE [01 02]');
     expect(log()).toContain('vendor-bulk in 0x0 end RULE [aa]');
     expect(log()).toContain('emit in 0x0 [03]');
-    await findByText('RULE marks a packet one of your rewrite rules changed, dropped, answered or refused.');
+    await findByText('RULE marks a packet a rewrite rule changed, dropped, answered or refused.');
   });
 
   it('shows a capture cut inside the setup packet as the bytes it is', async () => {
@@ -177,7 +177,7 @@ describe('DeviceEventCatch clip transfers', () => {
 
   it('offers the class in the table builder, with what its id means', async () => {
     const { container, getByText, findByText } = render(() => <DeviceEventCatch />);
-    fireEvent.click(radio(container, 'Build a table'));
+    fireEvent.click(radio(container, 'Custom table'));
     await settle();
     const box = container.querySelector('[role="combobox"]') as HTMLElement;
     fireEvent.click(box);
@@ -212,9 +212,9 @@ const typeFraction = async (el: HTMLInputElement) => {
 describe('DeviceEventCatch whole-number fields', () => {
   const builder = async () => {
     const view = render(() => <DeviceEventCatch />);
-    fireEvent.click(radio(view.container, 'Build a table'));
+    fireEvent.click(radio(view.container, 'Custom table'));
     await settle();
-    fireEvent.click(radio(view.container, 'Just one'));
+    fireEvent.click(radio(view.container, 'One id'));
     await settle();
     return view;
   };

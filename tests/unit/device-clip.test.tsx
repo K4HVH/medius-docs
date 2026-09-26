@@ -375,12 +375,12 @@ describe('DeviceClip draft ticks', () => {
     const { container, queryByText } = render(() => <DeviceClip />);
     fireEvent.click(radio(container, 'Raw report'));
     await settle();
-    expect(queryByText('The report reaches the game PC.')).toBeTruthy();
-    expect(queryByText('The report reaches the device.')).toBeNull();
+    expect(queryByText('Reaches the game PC.')).toBeTruthy();
+    expect(queryByText('Reaches the device.')).toBeNull();
     fireEvent.click(radio(container, 'Out'));
     await settle();
-    expect(queryByText('The report reaches the device.')).toBeTruthy();
-    expect(queryByText('The report reaches the game PC.')).toBeNull();
+    expect(queryByText('Reaches the device.')).toBeTruthy();
+    expect(queryByText('Reaches the game PC.')).toBeNull();
   });
 
   it('reads the setup packet back in words, and the out data line follows bmRequestType', async () => {
@@ -390,13 +390,13 @@ describe('DeviceClip draft ticks', () => {
     fireEvent.click(radio(container, 'Control transfer'));
     await settle();
     expect(queryByText('Device to host, standard, to the device: GET_DESCRIPTOR.')).toBeTruthy();
-    expect(queryByText('Unused: this request reads, it does not write.')).toBeTruthy();
+    expect(queryByText('Unused: this request reads.')).toBeTruthy();
     fireEvent.input(getByLabelText('bmRequestType'), { target: { value: '0x21' } });
     fireEvent.input(getByLabelText('bRequest'), { target: { value: '9' } });
     await settle();
     expect(queryByText('Host to device, class, to an interface.')).toBeTruthy();
-    expect(queryByText('The data stage this request carries to the device.')).toBeTruthy();
-    expect(queryByText('Unused: this request reads, it does not write.')).toBeNull();
+    expect(queryByText('Data stage sent to the device.')).toBeTruthy();
+    expect(queryByText('Unused: this request reads.')).toBeNull();
     fireEvent.input(getByLabelText('bmRequestType'), { target: { value: 'zz' } });
     await settle();
     expect(queryByText('bmRequestType must be a number.')).toBeTruthy();
@@ -444,7 +444,7 @@ describe('DeviceClip draft ticks', () => {
     await settle();
 
     fireEvent.click(button(container, 'Add'));
-    expect((await findByRole('alert')).textContent).toBe('Enter the bytes to put on the endpoint.');
+    expect((await findByRole('alert')).textContent).toBe('Enter the bytes to send.');
 
     fireEvent.input(getByLabelText('Bytes (hex)'), { target: { value: '0g' } });
     fireEvent.click(button(container, 'Add'));
@@ -684,7 +684,7 @@ describe('DeviceClip packet triggers', () => {
 
   it('disables Consume the packet on Control, and says why', async () => {
     mock.setImperfect(true);
-    const why = 'A control request always reaches the device, so there is nothing to consume.';
+    const why = 'A control request always reaches the device.';
     const { container, queryByText } = await mount();
     fireEvent.click(box(container, 'Consume the packet'));
     fireEvent.click(radio(container, 'Control'));
@@ -714,12 +714,12 @@ describe('DeviceClip packet triggers', () => {
 
   it('follows the class with its blurb and its id label', async () => {
     const { container, queryByText, queryByLabelText } = await mount();
-    expect(queryByText('Reports as the device sends them, by interface, before the box changes anything.')).toBeTruthy();
-    expect(queryByLabelText('Interface number')).toBeTruthy();
+    expect(queryByText('Native reports by interface, before the box changes them.')).toBeTruthy();
+    expect(queryByLabelText('Interface')).toBeTruthy();
     fireEvent.click(radio(container, 'Control'));
     await settle();
-    expect(queryByText('Class and vendor requests on EP0, and every request on a control endpoint above it.')).toBeTruthy();
-    expect(queryByLabelText('Endpoint number (0 is EP0)')).toBeTruthy();
+    expect(queryByText('Class and vendor requests on EP0, and every request on higher control endpoints.')).toBeTruthy();
+    expect(queryByLabelText('Endpoint (0 is EP0)')).toBeTruthy();
   });
 
   it('refuses a match that is not hex, unlike its mask in length, or past 16 bytes', async () => {
@@ -758,7 +758,7 @@ describe('DeviceClip packet triggers', () => {
     await bind(container);
     expect(alert(container)).toBe(stream);
 
-    fireEvent.click(radio(container, 'Just one'));
+    fireEvent.click(radio(container, 'One id'));
     fireEvent.click(radio(container, 'Control'));
     await bind(container);
     expect(alert(container)).toBe(stream);
@@ -1177,7 +1177,7 @@ describe('DeviceClip clip status', () => {
     expect(text).toContain('This box\'s firmware sends clip status in an older layout than this dashboard reads.');
     expect(text).toContain('Update the firmware to use clip playback.');
     expect(container.querySelector('a')?.getAttribute('href')).toBe('/dashboard/update');
-    for (const empty of ['Idle', 'B free', 'B loaded', 'No triggers bound.', 'Reading status...']) {
+    for (const empty of ['Idle', 'B free', 'B loaded', 'No triggers bound.', 'Reading...']) {
       expect(text).not.toContain(empty);
     }
     expect(queryByText('Clear')).toBeNull();
@@ -1196,10 +1196,10 @@ describe('DeviceClip clip status', () => {
     expect(queryByText('Playing')).toBeTruthy();
   });
 
-  it('reads Reading status, not an idle empty clip, before the first status lands', async () => {
+  it('reads Reading, not an idle empty clip, before the first status lands', async () => {
     mock.setClip(null);
     const { container, queryByText } = render(() => <DeviceClip />);
-    expect(queryByText('Reading status...')).toBeTruthy();
+    expect(queryByText('Reading...')).toBeTruthy();
     for (const empty of ['Idle', 'B free', 'No triggers bound.']) expect(container.textContent).not.toContain(empty);
   });
 });

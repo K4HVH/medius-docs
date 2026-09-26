@@ -1,6 +1,6 @@
 /// <reference types="w3c-web-serial" />
-// The device control link over Web Serial: frame the wire protocol, correlate QUERY/RESP by SEQ and
-// selector, and run the version handshake. Mirrors the medius crate's link/correlation behavior.
+// Control link over Web Serial: framing, QUERY/RESP correlation by SEQ and selector, and the version
+// handshake, as in the medius crate.
 
 import {
   anyPending,
@@ -157,8 +157,7 @@ export class QueryTimeoutError extends Error {
   }
 }
 
-// The box answered a query and the reply is in a layout this build does not decode: firmware that
-// lays the reply out another way.
+// A reply in a layout this build doesn't decode.
 export class UnreadableReplyError extends Error {
   constructor(what: string) {
     super(`the box's reply to ${what} is in a layout this page does not read`);
@@ -182,8 +181,7 @@ const UPDATE_DOING: Record<number, string> = {
   0x04: 'Activating',
 };
 
-// Why it was refused, and what to do where that is not obvious. A status name and an arg read as a
-// code dump.
+// Why it was refused, and what to do where that isn't obvious.
 function updateReason(op: number, status: number, arg: number): string {
   switch (status) {
     case 0x10: return 'an update is already open on that chip.';
@@ -251,8 +249,7 @@ export interface SerialLinkEvents {
   onLog?: (line: LogLine) => void;
   onClose?: (reason?: Error) => void;
   onVersionHello?: (version: Version) => void;
-  // An unsolicited physical-input event (the CATCH stream); `seq` is the box's rolling event counter.
-  // The event is tagged motion (relative axes) or usages (a class-tagged held-usage snapshot).
+  // An unsolicited CATCH event; `seq` is the box's rolling event counter.
   onEvent?: (ev: CatchEvent, seq: number) => void;
 }
 
@@ -283,8 +280,7 @@ export async function requestMediusPort(): Promise<SerialPort> {
   });
 }
 
-// Ports this origin has already been granted that are a CH343. Opening one of these needs no
-// chooser, so a box that has been connected once before never asks for permission again.
+// CH343 ports this origin was already granted; opening one needs no chooser.
 export async function grantedMediusPorts(): Promise<SerialPort[]> {
   if (!isWebSerialSupported()) return [];
   const ports = await navigator.serial.getPorts();
@@ -310,11 +306,10 @@ export class SerialLink {
   private pending = new Map<number, Pending>();
   // TRANSFER_RESP waiters, keyed by the SEQ the reply echoes (§3.14).
   private transferWaiters = new Map<number, TransferWaiter>();
-  // UPDATE_RESP waiters, keyed by the op they answer. Not SEQ-correlated like a RESP: one
-  // acknowledgement answers a whole window of DATA frames and carries a rolling SEQ of its own.
+  // UPDATE_RESP waiters, keyed by op: one acknowledgement answers a window of DATA frames and carries
+  // its own rolling SEQ.
   private updateWaiters = new Map<number, (r: UpdateResp | null, cause?: Error) => void>();
-  // Replies that arrived before anyone was waiting. Discarding them loses every refusal raised
-  // inside a credit window, because the waiter is only registered once the window closes.
+  // Replies that beat their waiter; dropping them loses refusals raised inside a credit window.
   private updateBacklog: UpdateResp[] = [];
   private seq = 1;
   // CLIP_APPEND's own sequence; see `clipAppend`.
@@ -361,20 +356,16 @@ export class SerialLink {
         return version;
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
-        // A first attempt that times out often means the box's frame decoder is wedged mid-frame by a
-        // prior client that disconnected mid-write, so it swallows our QUERY while still emitting
-        // unsolicited LOGs. Flush it before retrying. (Firmware >= 2.3.0 also self-heals on its own; this
-        // covers boxes on older firmware.) Timeouts and transient unparseable replies otherwise retry;
-        // mirrors connect.rs.
+        // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
+        // retry. Firmware >= 2.3.0 self-heals; this covers older boxes, as connect.rs does.
         await this.flushPeerDecoder();
       }
     }
     throw new NoReplyError();
   }
 
-  // Write a run of 0x00 to clear a wedged box decoder: enough bytes to complete the largest possible
-  // stuck frame (FRAME_MAX_PAYLOAD 512 + overhead), which then fails CRC and is dropped, and 0x00 is
-  // never a SOF, so the decoder ends up idle and ready for the next QUERY. Harmless on a healthy box.
+  // 600 zero bytes complete the largest stuck frame (512 + overhead), which fails CRC; 0x00 is never a
+  // SOF, so the decoder ends idle. Harmless on a healthy box.
   private async flushPeerDecoder(): Promise<void> {
     try {
       await this.send(new Uint8Array(600));
@@ -425,8 +416,7 @@ export class SerialLink {
     return resp.locks;
   }
 
-  // The active CATCH table (§4.9): the box-wide drop count, the cross-chip clock estimate, and one
-  // entry per subscription with its own drop count.
+  // The CATCH table (§4.9): drop counts, the cross-chip clock estimate and the entries.
   async queryCatch(timeoutMs?: number): Promise<CatchState> {
     const resp = parseResp(await this.query(Q_CATCH, timeoutMs));
     if (resp?.kind !== 'catch') throw new Error('unexpected reply to CATCH query');
@@ -470,8 +460,7 @@ export class SerialLink {
 
   // Weigh physical input on a target and direction (§3.8).
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
-    // Only an axis has a bearing, so a relative direction elsewhere is refused rather than sent:
-    // the box does a different thing per class with it, and every other client refuses it too.
+    // Only an axis has a bearing; the box treats a relative direction differently per class elsewhere.
     if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
       return Promise.reject(new Error(`${Direction[direction]} is measured against the bearing, which only an axis has`));
     }
@@ -485,8 +474,7 @@ export class SerialLink {
     return this.scale(target, direction, LOCK_SCALE_BLOCK);
   }
 
-  // Back to passing untouched. Direction.Both clears every direction of the target, the
-  // bearing-relative pair included, so an unlock never leaves one weighing unseen.
+  // Direction.Both clears every direction of the target, With and Against included.
   unlock(target: LockTarget, direction: Direction): Promise<void> {
     return this.scale(target, direction, LOCK_SCALE_PASS);
   }
@@ -506,8 +494,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
   }
 
-  // The same two verbs with movement riding bypassed (§3.1, MV_F_NOW): the delta leaves on the next
-  // report instead of waiting for a native cursor-motion report to carry it.
+  // Movement riding bypassed (§3.1, MV_F_NOW): the delta leaves on the next report.
   moveRelNow(dx: number, dy: number): Promise<void> {
     return this.moveRel(dx, dy, MV_F_NOW);
   }
@@ -535,8 +522,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(INJ_BTN, id, action)));
   }
 
-  // Inject any momentary usage (§3.2): one call for all three classes, so a caller holding a mixed
-  // set does not have to branch on class to release it.
+  // Inject any momentary usage (§3.2), whatever its class.
   inject(cls: number, id: number, action: number): Promise<void> {
     return this.send(encode(FrameType.Inject, this.nextSeq(), injectPayload(cls, id, action)));
   }
@@ -546,8 +532,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array([0])));
   }
 
-  // The same release, and then the box erases its persistent store and reboots (§3.4). The link
-  // drops while it does; the dashboard's own reconnect brings it back.
+  // The same release, then the box erases its persistent store and reboots (§3.4), dropping the link.
   factoryReset(): Promise<void> {
     return this.send(encode(FrameType.Reset, this.nextSeq(), new Uint8Array([RST_F_NVS])));
   }
@@ -564,8 +549,7 @@ export class SerialLink {
     );
   }
 
-  // Add one entry to the CATCH subscription table (§3.9); event frames arrive on `onEvent` tagged
-  // motion, usages, or traffic.
+  // Add one CATCH table entry (§3.9); events arrive on `onEvent`.
   catch(filter: CatchFilter): Promise<void> {
     return this.send(
       encode(
@@ -576,8 +560,7 @@ export class SerialLink {
     );
   }
 
-  // Drop one entry from the table. Unsubscribing matches on (class, id, dir) alone, so the
-  // filter's capture length is carried for symmetry and ignored by the box.
+  // Matches on (class, id, dir); the box ignores the capture length.
   unsubscribeCatch(filter: CatchFilter): Promise<void> {
     return this.send(
       encode(
@@ -593,9 +576,8 @@ export class SerialLink {
     return this.unsubscribeCatch(filterEverything());
   }
 
-  // Opt into (or out of) imperfect clones and the advanced control layer (§3.10). Persisted in NVS. The
-  // device chip reboots to re-clone a device that needs the opt-in, and presents the clone again when
-  // the toggle changes the patch set it serves. Fire-and-forget.
+  // Imperfect clones and the advanced control layer (§3.10), persisted. The device chip reboots to
+  // re-clone a device that needs it, and re-presents the clone when the served patch set changes.
   allowImperfectClones(allow: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), imperfectPayload(allow)));
   }
@@ -615,28 +597,26 @@ export class SerialLink {
     return this.send(encode(FrameType.Option, this.nextSeq(), bearingPayload(windowMs, mode)));
   }
 
-  // The texture motion is rendered with (§3.10). `full` puts native motion through the same model
-  // rather than relaying it, so the latency rendering adds reaches it too; off by default.
+  // The rendered texture (§3.10). `full` puts native motion through the model too, adding its
+  // latency; off by default.
   setRender(mode: RenderMode, full: boolean): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), renderPayload(mode, full)));
   }
 
-  // What motion is rendered with, and whether the box has learned a profile for the attached device
-  // (§4.14). Nothing is rendered until it has.
+  // The render mode and whether a profile is learned (§4.14); nothing renders until one is.
   async queryRender(timeoutMs?: number): Promise<Render> {
     const resp = parseResp(await this.queryOption(OPT_RENDER, timeoutMs));
     if (resp?.kind !== 'render') throw new Error('unexpected reply to OPTIONS(RENDER) query');
     return resp.render;
   }
 
-  // The share of the interval between commands an injected delta is released across (§3.13). 0 puts
-  // the whole delta on the next report the box emits; above 100 overlaps. Persisted in NVS.
+  // Share of the command interval an injected delta is released across (§3.13). 0 = next report;
+  // above 100 overlaps. Persisted.
   setSpread(percent: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), spreadPayload(percent)));
   }
 
-  // The percent set, and the interval the box is releasing across (§4.14). The interval is 0 until
-  // the box has learned the host's command period from MOVE arrivals.
+  // The percent and the release interval (§4.14), 0 until learned from MOVE arrivals.
   async querySpread(timeoutMs?: number): Promise<Spread> {
     const resp = parseResp(await this.queryOption(OPT_SPREAD, timeoutMs));
     if (resp?.kind !== 'spread') throw new Error('unexpected reply to OPTIONS(SPREAD) query');
@@ -650,21 +630,11 @@ export class SerialLink {
     return resp.clip;
   }
 
-  // Append entries to the clip ring (§3.11). Rejects an unencodable batch rather than sending a
-  // partial one.
-  //
-  // CLIP_APPEND carries its own sequence: the box expects each append's SEQ to be exactly one past
-  // the last one it saw, and faults the engine on any gap so a dropped append cannot be played as
-  // if it were whole. That counter therefore cannot be the link's shared SEQ, which every query and
-  // command also advances, and a single health poll between two appends would look like a lost
-  // append. Appends count on their own.
-  //
-  // The ring has no backpressure: an append past the end is dropped whole and faults the engine, so
-  // check `freeBytes` from `queryClip` before sending. The box also drops an append with no reply while
-  // no clone is up, and after FINALIZE on a retained clip.
+  // CLIP_APPEND has its own SEQ: the box faults on any gap, and every query advances the shared one.
+  // No backpressure: an overflowing append faults, so check `freeBytes`. Dropped with no reply while
+  // no clone is up, and after FINALIZE on a retained clip (§3.11).
   async clipAppend(entries: ClipEntry[]): Promise<void> {
-    // Split on entry boundaries only. The ring has no framing inside it, so an entry cut across two
-    // appends misaligns everything after it rather than being rejected.
+    // Split on entry boundaries only: the ring has no framing, so a cut entry misaligns the rest.
     const batches: ClipEntry[][] = [];
     let batch: ClipEntry[] = [];
     let size = 0;
@@ -680,19 +650,17 @@ export class SerialLink {
       size += b.length;
     }
     if (batch.length > 0) batches.push(batch);
-    // Encode every batch before sending any of them, so a failure cannot leave half a clip loaded.
+    // Encode every batch first, so a failure can't leave half a clip loaded.
     const frames = batches.map(clipAppendPayload);
     if (frames.some((f) => f === null)) throw new Error('clip entries could not be encoded');
     for (const payload of frames as Uint8Array[]) {
       await this.send(encode(FrameType.ClipAppend, this.clipSeq, payload));
-      // Advanced only once the frame is away. Bumping it first would leave the box expecting a
-      // sequence number that never reached it, and the next append would read as a lost one.
+      // Advanced only once sent, or the next append would read as a lost one.
       this.clipSeq = (this.clipSeq + 1) & 0xff;
     }
   }
 
-  // Run one clip engine verb (§3.11). Ignored by the box while no clone is up: the clip is clocked by
-  // the clone's frame clock, so without one it could never advance.
+  // One clip engine verb (§3.11); ignored with no clone up, since the clone's frame clock drives it.
   clipCtrl(op: ClipOp): Promise<void> {
     return this.send(encode(FrameType.ClipCtrl, this.nextSeq(), clipCtrlPayload(op)));
   }
@@ -702,24 +670,21 @@ export class SerialLink {
     return this.send(encode(FrameType.ClipSet, this.nextSeq(), clipSetPayload(id, value)));
   }
 
-  // Add or overwrite a clip trigger binding (§3.11). Keyed by (class, id, edge), so setting one
-  // that already exists replaces it rather than adding a second.
+  // Add or overwrite a trigger binding (§3.11), keyed by (class, id, edge).
   clipTrigger(trigger: ClipTrigger): Promise<void> {
     return this.send(
       encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, true)),
     );
   }
 
-  // Remove a trigger binding. Only its (class, id, edge) key is read; action and consume are
-  // carried for symmetry and ignored.
+  // Only the (class, id, edge) key is read.
   clipUntrigger(trigger: ClipTrigger): Promise<void> {
     return this.send(
       encode(FrameType.ClipTrigger, this.nextSeq(), clipTriggerPayload(trigger, false)),
     );
   }
 
-  // Add or overwrite a packet trigger (§3.11): CLIP_TRIGGER with a traffic class. Keyed by the
-  // address and the match and mask bytes.
+  // CLIP_TRIGGER with a traffic class (§3.11), keyed by the address, match and mask.
   clipPacketTrigger(trigger: ClipPacketTrigger): Promise<void> {
     const payload = clipPacketTriggerPayload(trigger, true);
     if (!payload) return Promise.reject(new Error('the box would refuse that packet trigger'));
@@ -738,29 +703,24 @@ export class SerialLink {
     return this.send(encode(FrameType.ClipTrigger, this.nextSeq(), clearClipTriggersPayload()));
   }
 
-  // Set the box name (§3.10): 1..32 printable ASCII bytes, the readable partner to the box MAC.
-  // Persisted in NVS, no reboot. Fire-and-forget.
+  // The box name (§3.10): 1..32 printable ASCII bytes. Persisted, no reboot.
   setName(name: string): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), namePayload(name)));
   }
 
-  // Clear the box name (§3.10): reverts to the firmware-synthesised "Medius-XXXX" default. Persisted
-  // in NVS. Fire-and-forget.
+  // Reverts to the synthesised "Medius-XXXX" default (§3.10). Persisted.
   clearName(): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), clearNamePayload()));
   }
 
-  // The advanced control layer (§3.14), addressed in the CATCH (class, id, dir) space and admitted
-  // only under OPTION(IMPERFECT).
+  // Advanced control layer (§3.14), in the CATCH (class, id, dir) space, gated on OPTION(IMPERFECT).
 
-  // Put bytes verbatim on a cloned endpoint: an IN endpoint reaches the game PC, an OUT endpoint reaches
-  // the device. Fire-and-forget.
+  // Bytes verbatim on a cloned endpoint: IN reaches the game PC, OUT the device.
   raw(epNum: number, dir: number, bytes: Uint8Array): Promise<void> {
     return this.send(encode(FrameType.Raw, this.nextSeq(), rawPayload(epNum, dir, bytes)));
   }
 
-  // Run one control request against the real device and return its status and IN data. The setup
-  // packet is the 8 USB bytes; `out` carries the OUT-stage data for a host-to-device request.
+  // One control request on the device; `out` is the OUT-stage data for a host-to-device request.
   transfer(
     ep: number,
     bmRequestType: number,
@@ -791,13 +751,12 @@ export class SerialLink {
     });
   }
 
-  // Add or overwrite a rewrite rule (§3.14). Keyed by (class, id, dir, match, mask): a matching key
-  // with a new action or payload overwrites, an identical set is a no-op. Fire-and-forget.
+  // Keyed by (class, id, dir, match, mask); an identical set is a no-op (§3.14).
   setRewrite(rule: RewriteRule): Promise<void> {
     return this.send(encode(FrameType.Rewrite, this.nextSeq(), rewritePayload(rule, 1)));
   }
 
-  // Remove one rule, matched on its (class, id, dir, match, mask) key; the action and payload are ignored.
+  // Matched on the key; action and payload are ignored.
   removeRewrite(rule: RewriteRule): Promise<void> {
     return this.send(encode(FrameType.Rewrite, this.nextSeq(), rewritePayload(rule, 0)));
   }
@@ -807,15 +766,14 @@ export class SerialLink {
     return this.send(encode(FrameType.Rewrite, this.nextSeq(), clearRewritePayload()));
   }
 
-  // The rewrite table (§4.17): the full flag, the generation counter, and one summary per rule.
+  // The rewrite table (§4.17).
   async queryRewrite(timeoutMs?: number): Promise<RewriteTable> {
     const resp = parseResp(await this.query(Q_REWRITE, timeoutMs));
     if (resp?.kind !== 'rewrite') throw new Error('unexpected reply to REWRITE query');
     return resp.rewrite;
   }
 
-  // One rewrite rule in full (§4.17): the match, mask and payload bytes the summary omits. The reply
-  // replays as a set, so an edit reads the rule, changes a field, and sends it back.
+  // One rule in full (§4.17); the reply replays as a set.
   async queryRewriteEntry(index: number, timeoutMs?: number): Promise<RewriteRule> {
     const resp = parseResp(
       await this.queryRaw(
@@ -828,8 +786,7 @@ export class SerialLink {
     return resp.rule;
   }
 
-  // Overwrite bytes in a served descriptor (§3.14). Stored regardless of the opt-in, applied to the
-  // clone only under it. A zero-length `bytes` removes the patch at that key. Fire-and-forget.
+  // Stored regardless of the opt-in, applied only under it; empty `bytes` removes that key (§3.14).
   setPatch(
     section: PatchSection,
     cfg: number,
@@ -847,26 +804,24 @@ export class SerialLink {
     return this.setPatch(section, cfg, index, offset, new Uint8Array(0));
   }
 
-  // Present the clone again with the stored patch set, when it differs from the one served (one replug
-  // on the game PC). Needs the opt-in.
+  // Re-presents the clone with the stored set when it differs (a game PC replug). Needs the opt-in.
   applyPatch(): Promise<void> {
     return this.send(encode(FrameType.Patch, this.nextSeq(), patchApplyPayload()));
   }
 
-  // Erase this device's patch set. A clone serving patches is presented again without them.
+  // A clone serving patches is re-presented without them.
   clearPatch(): Promise<void> {
     return this.send(encode(FrameType.Patch, this.nextSeq(), patchClearPayload()));
   }
 
-  // The descriptor-patch set (§4.17): the applied, pending, refused and full flags, and one summary per
-  // stored patch.
+  // The descriptor-patch set (§4.17).
   async queryPatches(timeoutMs?: number): Promise<PatchSet> {
     const resp = parseResp(await this.query(Q_PATCHES, timeoutMs));
     if (resp?.kind !== 'patches') throw new Error('unexpected reply to PATCHES query');
     return resp.patches;
   }
 
-  // One descriptor patch in full (§4.17): the bytes the summary omits.
+  // One patch in full (§4.17).
   async queryPatchEntry(index: number, timeoutMs?: number): Promise<PatchEntry> {
     const resp = parseResp(
       await this.queryRaw(
@@ -879,13 +834,12 @@ export class SerialLink {
     return resp.patch;
   }
 
-  // Add or overwrite a field transform (§3.15). Keyed by (source, dest): a matching key with a new
-  // op overwrites. Transforms are faithful and ungated.
+  // Keyed by (source, dest) (§3.15). Faithful and ungated.
   setTransform(t: Transform): Promise<void> {
     return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 1)));
   }
 
-  // Remove one transform, matched on its (source, dest) key; the op is ignored.
+  // Matched on (source, dest); the op is ignored.
   removeTransform(t: Transform): Promise<void> {
     return this.send(encode(FrameType.Transform, this.nextSeq(), transformPayload(t, 0)));
   }
@@ -895,7 +849,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Transform, this.nextSeq(), clearTransformPayload()));
   }
 
-  // The transform table (§4.18): the full flag and one entry per transform, in installation order.
+  // The transform table (§4.18), in installation order.
   async queryTransforms(timeoutMs?: number): Promise<TransformTable> {
     const resp = parseResp(await this.query(Q_TRANSFORMS, timeoutMs));
     if (resp?.kind !== 'transforms') throw new Error('unexpected reply to TRANSFORMS query');
@@ -932,8 +886,7 @@ export class SerialLink {
       // already released by the read loop
     }
     this.reader = null;
-    // Not swallowed: a port that would not close is the one thing the next open() has to know about,
-    // and it is recoverable by adopting it rather than by giving up.
+    // Not swallowed: the next open() must know, and can adopt the port.
     await this.port.close();
   }
 
@@ -941,8 +894,7 @@ export class SerialLink {
     return this.queryRaw(what, queryPayload(what), timeoutMs);
   }
 
-  // QUERY(OPTIONS, id): a single persistent box option. The reply still leads with Q_OPTIONS, so it
-  // correlates on that selector (the SEQ disambiguates concurrent option reads).
+  // The reply leads with Q_OPTIONS; the SEQ tells concurrent option reads apart.
   private queryOption(id: number, timeoutMs = DEFAULT_QUERY_TIMEOUT_MS): Promise<Uint8Array> {
     return this.queryRaw(Q_OPTIONS, new Uint8Array([Q_OPTIONS, id]), timeoutMs);
   }
@@ -964,8 +916,7 @@ export class SerialLink {
     });
   }
 
-  // Serialise writes through one cached writer so concurrent callers cannot race
-  // on getWriter() or interleave frames on the wire.
+  // One cached writer, so concurrent callers can't race on getWriter() or interleave frames.
   private send(frame: Uint8Array): Promise<void> {
     const run = this.writeChain.then(() => {
       if (!this.writer) throw new Error('serial port is not writable');
@@ -1103,10 +1054,7 @@ export class SerialLink {
     }
   }
 
-  /**
-   * Write one image into a chip's spare slot. It stays inert until `activateFirmware`, so nothing
-   * boots it and a power cut brings the running image back.
-   */
+  /** Inert in the spare slot until `activateFirmware`; a power cut keeps the running image. */
   async stageFirmware(
     target: number,
     image: Uint8Array,
@@ -1140,14 +1088,12 @@ export class SerialLink {
       sent = end;
       unacked++;
       if (unacked < credit && sent < image.length) continue;
-      // No pre-arm: an acknowledgement that beats this await lands in the backlog and is picked up
-      // from there, and arming early leaked a rejected promise on every error path below.
+      // No pre-arm: an early acknowledgement waits in the backlog, and arming early leaks a rejection.
       const ack = await this.awaitUpdate(OTA_OP_DATA, UPDATE_OP_TIMEOUT_MS);
       if (ack.status !== UPD_OK && ack.status !== UPD_ACK) {
         throw new UpdateError(OTA_OP_DATA, ack.status, ack.arg);
       }
-      // The box reports the chunk it expects next. A disagreement means the two sides no longer share
-      // an offset, and writing on would put bytes in the wrong place.
+      // The chunk the box expects next; a mismatch would put bytes at the wrong offset.
       if (ack.arg !== seq) throw new UpdateError(OTA_OP_DATA, 0x13, ack.arg);
       unacked = 0;
       onProgress?.(sent, image.length);
@@ -1181,8 +1127,7 @@ export class SerialLink {
     body: Uint8Array,
     timeoutMs: number,
   ): Promise<UpdateResp> {
-    // Anything queued for THIS op answers an earlier command; served here it would read as a fresh
-    // success. The other two clients drop the same thing at the same point.
+    // Anything queued for THIS op answers an earlier command and would read as a fresh success.
     this.updateBacklog = this.updateBacklog.filter((r) => r.op !== op);
     const frame = new Uint8Array(2 + body.length);
     frame[0] = op;
@@ -1197,8 +1142,7 @@ export class SerialLink {
     const queued = this.updateBacklog.findIndex((r) => r.op === op);
     if (queued >= 0) return Promise.resolve(this.updateBacklog.splice(queued, 1)[0]);
     return new Promise<UpdateResp>((resolve, reject) => {
-      // Delete by identity, not by key: an orphaned waiter's timer firing later must not evict a
-      // live one that has since taken its place.
+      // By identity: an orphaned waiter's timer must not evict the live one that replaced it.
       const self = (r: UpdateResp | null, cause?: Error) => {
         clearTimeout(timer);
         if (this.updateWaiters.get(op) === self) this.updateWaiters.delete(op);
@@ -1226,16 +1170,15 @@ export class SerialLink {
       w.reject(err);
     }
     this.transferWaiters.clear();
-    // Update waiters too: without this an in-flight op sits out its full 20 to 60 second timeout
-    // after the port is already gone.
+    // Or an in-flight op sits out its 20 to 60 s timeout after the port is gone.
     for (const w of this.updateWaiters.values()) w(null, err);   // the real cause, not a supersession
     this.updateWaiters.clear();
     this.updateBacklog.length = 0;
   }
 }
 
-// Open and handshake at each control rate in turn. Only silence moves on to the next rate: a
-// protocol this page cannot speak, or a port that will not open, says nothing about the rate.
+// Tries each control rate; only silence moves on, since a wrong protocol or a port that won't open
+// says nothing about the rate.
 export async function attachLink(
   port: SerialPort,
   make: (port: SerialPort) => SerialLink,

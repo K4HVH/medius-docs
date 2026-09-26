@@ -7,20 +7,18 @@ const Types: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Types & errors" subtitle="Every C struct, enum, and status code, by table" />
+        <CardHeader title="Types & errors" subtitle="Every C struct, enum, and status code" />
         <p>
           The <code>Medius*</code> types and <code>MEDIUS_*</code> enumerators from{' '}
           <A href="/bindings/c"><code>medius.h</code></A>.
-          The calls that produce and consume them are on <A href="/bindings/c/api">API index</A>;
-          streams on <A href="/bindings/c/streams">Streams</A>. What each value means lives with the
-          canonical type docs in the <A href="/library">Rust Library</A> and{' '}
-          <A href="/native">Native API</A> sections.
+          Calls are on <A href="/bindings/c/api">API index</A>, streams on{' '}
+          <A href="/bindings/c/streams">Streams</A>, and each value's meaning on the canonical type
+          docs in the <A href="/library">Rust Library</A> and <A href="/native">Native API</A> sections.
         </p>
         <div class="callout callout--info">
           <p>
-            Each enum has a fixed-width backing:{' '}
-            <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> is <code>int32_t</code>;
-            every other enum is <code>uint8_t</code>.
+            Enum backing: <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> is{' '}
+            <code>int32_t</code>, every other enum <code>uint8_t</code>.
           </p>
           <p>
             On{' '}
@@ -34,14 +32,13 @@ const Types: Component = () => {
             (<code>MEDIUS_BUTTON_LEFT</code>).
           </p>
           <p>
-            Structs are plain PODs, nothing heap-allocated: pass by value, read fields directly, free
-            nothing per value. Only the opaque handles have a{' '}
-            <A href="/bindings/c/api"><code>*_free</code></A>.
+            Structs are plain PODs with no heap allocation: pass by value, read fields directly. Only
+            opaque handles have a <A href="/bindings/c/api"><code>*_free</code></A>.
           </p>
           <p>
-            Anything variable-length on the wire lands in an inline fixed-cap array with a count beside
-            it, never a pointer you own. The shapes on this page are ABI version <code>9</code>, which
-            the header declares as <code>MEDIUS_ABI_VERSION</code>; compare it with{' '}
+            Variable-length wire data lands in an inline fixed-cap array with a count, never a pointer
+            you own. These shapes are ABI version <code>9</code> (<code>MEDIUS_ABI_VERSION</code> in
+            the header); compare it with{' '}
             <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> once at{' '}
             <A href="/bindings/c#verify">start-up</A>.
           </p>
@@ -52,9 +49,8 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="Sizing constants" subtitle="Fixed-cap arrays sized to the wire limits" />
           <p>
-            The event, lock, and log PODs embed fixed-cap arrays sized to the protocol's own limits,
-            with a count field saying how many slots are live. <code>char</code> arrays are
-            NUL-terminated.
+            Event, lock and log PODs embed arrays sized to the protocol limits, with a count of live
+            slots. <code>char</code> arrays are NUL-terminated.
           </p>
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Caps</th></tr></thead>
@@ -85,8 +81,8 @@ const Types: Component = () => {
           </p>
           <p>
             <code>MEDIUS_MAX_TRAFFIC_BYTES</code> is the largest payload one traffic event carries, so
-            the inline array is never what truncates: a short <code>len</code> means the box cut the
-            packet at your <code>capture</code>.
+            the inline array never truncates: a short <code>len</code> means your <code>capture</code>{' '}
+            cut the packet.
           </p>
         </Card>
       </div>
@@ -95,12 +91,12 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="Enums" subtitle="uint8_t-backed selectors (MediusStatus is int32_t)" />
           <p>
-            Each value is a wire byte; the canonical meaning lives on{' '}
+            Each value is a wire byte; meanings are on{' '}
             <A href="/library/types/enums">Enums</A>. The <code>*Kind</code> enums (and{' '}
             <A href="/bindings/c/types#input-kind"><code>MediusClass</code></A>) tag which arm of a
             built value (<A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
             <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>,{' '}
-            <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>) is populated.
+            <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>) is set.
           </p>
         </Card>
       </div>
@@ -174,8 +170,8 @@ const Types: Component = () => {
           <CardHeader title="MediusAction" subtitle="The press / release tri-state" />
           <pre class="api-signature">{`enum MediusAction : uint8_t`}</pre>
           <p>
-            The override action shared by <A href="/library/inject">inject</A> calls, whether a
-            button, key, or media usage. See the{' '}
+            The override action of <A href="/library/inject">inject</A> calls on a button, key, or
+            media usage. See the{' '}
             <A href="/native/injection">injection model</A>.
           </p>
           <table class="api-params">
@@ -252,8 +248,7 @@ const Types: Component = () => {
           <CardHeader title="MediusDirection" subtitle="An axis sign, a usage edge, or a transfer direction" />
           <pre class="api-signature">{`enum MediusDirection : uint8_t`}</pre>
           <p>
-            One enum with three readings, picked by what it is attached to: an axis sign, a usage
-            edge, or the transfer direction on a{' '}
+            Read by what it is attached to. The transfer direction applies on a{' '}
             <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> naming a
             byte-oriented <A href="/bindings/c/types#catch-class">catch class</A>.
             See <A href="/native/commands/lock">LOCK</A> and <A href="/library/catch">Catch</A>.
@@ -271,8 +266,9 @@ const Types: Component = () => {
           <p>
             Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
             anywhere else is <code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code>. A media usage has no
-            edges: an edge named on one goes out as <code>MEDIUS_DIRECTION_BOTH</code>, which is what{' '}
-            <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it as.
+            edges: an edge named on one goes out, and reads back in{' '}
+            <A href="/bindings/c/types#locks"><code>MediusLocks</code></A>, as{' '}
+            <code>MEDIUS_DIRECTION_BOTH</code>.
           </p>
           <div class="api-response-label">UNNAMED DIRECTION BYTES</div>
           <p>
@@ -338,7 +334,7 @@ const Types: Component = () => {
         <Card>
           <CardHeader title="MediusBlanket" subtitle="A whole-group lock selector" />
           <pre class="api-signature">{`enum MediusBlanket : uint8_t`}</pre>
-          <p>A whole input group: which one <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the scope <A href="/bindings/c/api#clip"><code>medius_clip_set_autolock</code></A> auto-locks while a clip plays. See <A href="/library/lock">Lock</A>.</p>
+          <p>A whole input group: what <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the scope <A href="/bindings/c/api#clip"><code>medius_clip_set_autolock</code></A> locks while a clip plays. See <A href="/library/lock">Lock</A>.</p>
           <p>The values are ABI-local ordinals (matching the crate's <A href="/library/types/enums#blanket"><code>Blanket</code></A> order), not the <code>CLIP_LOCK_*</code> wire bits.</p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th><th>What dir picks</th></tr></thead>
@@ -361,7 +357,7 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_LED_TARGET_DEVICE</code></td><td><code>0</code></td><td>The device chip's own LED.</td></tr>
+              <tr><td><code>MEDIUS_LED_TARGET_DEVICE</code></td><td><code>0</code></td><td>The device chip's LED.</td></tr>
               <tr><td><code>MEDIUS_LED_TARGET_HOST</code></td><td><code>1</code></td><td>The host chip's LED, relayed over the inter-chip link.</td></tr>
               <tr><td><code>MEDIUS_LED_TARGET_BOTH</code></td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
             </tbody>
@@ -377,7 +373,7 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_LED_MODE_AUTO</code></td><td><code>0</code></td><td>Restore the chip's own status display.</td></tr>
+              <tr><td><code>MEDIUS_LED_MODE_AUTO</code></td><td><code>0</code></td><td>Restore the chip's status display.</td></tr>
               <tr><td><code>MEDIUS_LED_MODE_OFF</code></td><td><code>1</code></td><td>LED dark.</td></tr>
               <tr><td><code>MEDIUS_LED_MODE_SOLID</code></td><td><code>2</code></td><td>Lit steadily at <code>level</code>.</td></tr>
               <tr><td><code>MEDIUS_LED_MODE_BLINK</code></td><td><code>3</code></td><td>Blinks at <code>level</code>.</td></tr>
@@ -411,8 +407,8 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_EMIT_MODE_LEARNED</code></td><td><code>0</code></td><td>Pace to the mouse's learnt native report rate (the default).</td></tr>
-              <tr><td><code>MEDIUS_EMIT_MODE_INTERVAL</code></td><td><code>1</code></td><td>Pace to the cloned mouse's declared poll rate (its bInterval).</td></tr>
+              <tr><td><code>MEDIUS_EMIT_MODE_LEARNED</code></td><td><code>0</code></td><td>Pace to the learnt native report rate (the default).</td></tr>
+              <tr><td><code>MEDIUS_EMIT_MODE_INTERVAL</code></td><td><code>1</code></td><td>Pace to the clone's declared poll rate (its bInterval).</td></tr>
               <tr><td><code>MEDIUS_EMIT_MODE_FIXED</code></td><td><code>2</code></td><td>Pace to a fixed rate in Hz (snapped to 1000/n, capped 1 kHz).</td></tr>
             </tbody>
           </table>
@@ -434,7 +430,7 @@ const Types: Component = () => {
             <tbody>
               <tr><td><code>MEDIUS_RENDER_MODE_OFF</code></td><td><code>0</code></td><td>Even fill at the paced rate, no model.</td></tr>
               <tr><td><code>MEDIUS_RENDER_MODE_STOCK</code></td><td><code>1</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
-              <tr><td><code>MEDIUS_RENDER_MODE_DESPIKED</code></td><td><code>2</code></td><td>Render with the smoother's onset ramped rather than stepped. The box boots at this one.</td></tr>
+              <tr><td><code>MEDIUS_RENDER_MODE_DESPIKED</code></td><td><code>2</code></td><td>Render with the smoother's onset ramped rather than stepped. The boot default.</td></tr>
               <tr><td><code>MEDIUS_RENDER_MODE_UNSMOOTHED</code></td><td><code>3</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
             </tbody>
           </table>
@@ -446,12 +442,10 @@ const Types: Component = () => {
           <CardHeader title="MediusCatchEventKind" subtitle="Which arm of a MediusCatchEvent is set" />
           <pre class="api-signature">{`enum MediusCatchEventKind : uint8_t`}</pre>
           <p>
-            Tells you which member of the <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>{' '}
-            union to read. Which arms you can see follows from the{' '}
-            <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A> values you
-            subscribed to: the four input classes decode into <code>motion</code> and{' '}
-            <code>usages</code>, every byte-oriented class into <code>traffic</code>. See{' '}
-            <A href="/library/catch">Catch</A>.
+            Which member of the <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>{' '}
+            union to read; the subscribed{' '}
+            <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A> values raise
+            each. See <A href="/library/catch">Catch</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Read</th><th>Raised by</th></tr></thead>
@@ -485,17 +479,15 @@ const Types: Component = () => {
             </tbody>
           </table>
           <p>
-            Both clocks are box-local and unrelated to any PC clock. Each is a <code>uint32_t</code>{' '}
-            of microseconds: it wraps every ~71.6 minutes and returns to zero when that chip reboots.
+            Each clock is box-local: a <code>uint32_t</code> of microseconds that wraps every ~71.6
+            minutes and returns to zero when its chip reboots. A stamp below the previous one is a
+            wrap, a reboot, or a domain change.
           </p>
           <p>
-            A stamp below the previous one is a wrap, a reboot, or a domain change.
-          </p>
-          <p>
-            To put both on this machine's clock, feed events to a{' '}
-            <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>. To relate the two
-            box domains directly, read the estimate on{' '}
-            <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A>.
+            A <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A> puts both on this
+            machine's clock; the estimate on{' '}
+            <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A> relates the two
+            box domains directly.
           </p>
         </Card>
       </div>
@@ -551,7 +543,7 @@ const Types: Component = () => {
           <p>
             Classes <code>0</code> to{' '}
             <code>3</code> are the same vocabulary <A href="/library/lock">Lock</A> uses; the rest
-            address the box's USB plumbing and surface as byte-oriented traffic. See{' '}
+            address USB interfaces, endpoints and the bus, and arrive as byte-oriented traffic. See{' '}
             <A href="/library/catch">Catch</A>.
           </p>
           <table class="api-params">
@@ -599,21 +591,20 @@ const Types: Component = () => {
             The array you hand to{' '}
             <A href="/bindings/c/api#streams"><code>medius_device_catch_events</code></A> or{' '}
             <A href="/bindings/c/api#streams"><code>medius_device_input_events</code></A>. Build each
-            one with a <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A>{' '}
-            helper, then narrow it with a modifier.
+            with a <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A>{' '}
+            helper and narrow it with a modifier.
           </p>
           <p>
             Each element becomes one entry in the box's table; read the accepted set back with{' '}
-            <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>. The field is
-            spelled <code>class_</code> because <code>class</code> is a C++ keyword and the header
-            compiles as both.
+            <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>. The field is{' '}
+            <code>class_</code> because <code>class</code> is a C++ keyword.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>class_</code></td><td><A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A></td><td>Which address space this entry subscribes in.</td></tr>
               <tr><td><code>id</code></td><td><code>uint16_t</code></td><td>The id inside that class, or <code>MEDIUS_CATCH_ID_ANY</code> for every id in it.</td></tr>
-              <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>For an input class, the press/release edge exactly as for a lock. For a traffic class, the transfer direction: <code>POSITIVE</code> is IN (device to PC), <code>NEGATIVE</code> is OUT (PC to device). No class is both, so one byte carries either reading unambiguously.</td></tr>
+              <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>For an input class, the press/release edge, as for a lock. For a traffic class, the transfer direction: <code>POSITIVE</code> is IN (device to PC), <code>NEGATIVE</code> is OUT (PC to device). No class is both, so the byte is unambiguous.</td></tr>
               <tr><td><code>capture</code></td><td><code>uint8_t</code></td><td>Bytes kept per event; <code>0</code> keeps the whole packet. Traffic classes only: an input class carries no packet, and a non-zero <code>capture</code> on one is refused with <code>MEDIUS_STATUS_ERR_CAPTURE_NOT_APPLICABLE</code>.</td></tr>
             </tbody>
           </table>
@@ -621,19 +612,18 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Means</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_ID_ANY</code></td><td><code>65535</code></td><td>Every id in the class. A blanket is one table entry, not an expansion into per-id entries, matching how a blanket <A href="/library/lock">lock</A> works.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_ID_ANY</code></td><td><code>65535</code></td><td>Every id in the class, as one table entry rather than one per id, like a blanket <A href="/library/lock">lock</A>.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>255</code></td><td>Every class. A real <code>id</code> beside it addresses nothing and is refused.</td></tr>
-              <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td>Entries the box's table holds. Ask for more and the call fails with <code>MEDIUS_STATUS_ERR_CATCH_TABLE_FULL</code>.</td></tr>
+              <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td>Entries the box's table holds; more fails the call with <code>MEDIUS_STATUS_ERR_CATCH_TABLE_FULL</code>.</td></tr>
             </tbody>
           </table>
           <p>
-            The useful capture length differs between classes by orders of magnitude. A 64-byte vendor
-            interrupt report is worth having whole; a bulk pipe traced only for framing is worth 16
-            bytes. So it lives on the entry that matched, not box-wide.
+            <code>capture</code> is per entry, not box-wide: a 64-byte vendor interrupt report is worth
+            keeping whole, a bulk pipe traced for framing only 16 bytes.
           </p>
           <p>
-            The top-ranked entry is the one whose <code>capture</code> applies, so "everything at 16
-            bytes, except endpoint <code>0x83</code> in full" is two entries. The ranking is on{' '}
+            The top-ranked matching entry's <code>capture</code> applies, so "everything at 16 bytes,
+            except endpoint <code>0x83</code> in full" is two entries. Ranking:{' '}
             <A href="/native/commands/catch#matching">The table</A>.
           </p>
           <pre class="diagram">{`  a report arrives on VENDOR_INTERRUPT endpoint 0x83
@@ -647,7 +637,7 @@ const Types: Component = () => {
 MediusCatchFilter blanket =
     medius_catch_filter_with_capture(medius_catch_filter_everything(), 16);
 
-/* except this endpoint's IN traffic, which we want whole */
+/* except this endpoint's IN traffic, kept whole */
 MediusCatchFilter whole = medius_catch_filter_inbound(
     medius_catch_filter_traffic(MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT, 0x83));
 
@@ -655,10 +645,10 @@ MediusCatchFilter filters[2] = { blanket, whole };
 MediusEventStream *events = NULL;
 medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <p>
-            A malformed entry now fails the whole call with its own{' '}
-            <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>, rather than being dropped
-            with no status. Two filters naming the same table entry, whatever their captures, are what{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_catch_filter_same_address</code></A> tests.
+            A malformed entry fails the whole call with its own{' '}
+            <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.{' '}
+            <A href="/bindings/c/api#inspectors"><code>medius_catch_filter_same_address</code></A> tests
+            whether two filters name the same table entry, whatever their captures.
           </p>
         </Card>
       </div>
@@ -670,8 +660,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <p>
             A raw{' '}
             <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID keyboard usage</a>{' '}
-            passed to the <A href="/library/inject">key</A> calls. Pass any usage byte, or one of the{' '}
-            <code>MEDIUS_KEY_*</code> macros. The full set of usages is on{' '}
+            for the <A href="/library/inject">key</A> calls: any usage byte, or a{' '}
+            <code>MEDIUS_KEY_*</code> macro. Full set:{' '}
             <A href="/native/commands/usage#keycodes">Usage IDs</A>.
           </p>
           <table class="api-params">
@@ -692,8 +682,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusMediaKey" subtitle="A 16-bit HID Consumer usage" />
           <pre class="api-signature">{`typedef uint16_t MediusMediaKey;`}</pre>
           <p>
-            A raw Consumer usage passed to the <A href="/library/inject">media</A> calls. Pass any
-            16-bit usage, or a <code>MEDIUS_MEDIA_*</code> macro. The full set is on{' '}
+            A raw Consumer usage for the <A href="/library/inject">media</A> calls: any 16-bit usage,
+            or a <code>MEDIUS_MEDIA_*</code> macro. Full set:{' '}
             <A href="/native/commands/usage#consumer">Usage IDs</A>.
           </p>
           <table class="api-params">
@@ -739,8 +729,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         <Card>
           <CardHeader title="Argument structs" subtitle="Tagged values you build, then pass in" />
           <p>
-            Three small PODs you build with a helper and hand to a call. The <code>medius_*_*</code>{' '}
-            constructors set the <code>kind</code> tag and the right field for you.
+            Three PODs built with a helper and passed to a call; the <code>medius_*_*</code>{' '}
+            constructors set the <code>kind</code> tag and the matching field.
           </p>
         </Card>
       </div>
@@ -776,7 +766,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a real cursor move to carry the delta.</td></tr>
-              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Leave on the next mouse report the box sends, native or its own, whatever movement riding is set to.</td></tr>
+              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1033,7 +1023,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="stats" data-search-target>
         <Card>
           <CardHeader title="MediusStats" subtitle="Box-side delivery / telemetry counters" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's own input slipped on the way to the PC, and a nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between the box's two chips; <code>relay_drops</code> is back-pressure on a relayed stream, which is load rather than lost input.</p>
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's input slipped on the way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between the box's two chips. <code>relay_drops</code> is back-pressure on a relayed stream: load, not lost input.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1048,7 +1038,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
               <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
-              <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>The times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare it for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
+              <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>Times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1059,7 +1049,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <CardHeader title="MediusLocks & MediusLockEntry" subtitle="The active scales, as an entry list" />
           <p>
             From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>: <code>entries[0..n]</code>, one per weighed direction. Read one with{' '}
-            <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of(&amp;locks, target, dir)</code></A>, or ask whether it is blocked outright with <code>medius_locks_is_locked</code>; both count a covering whole-class <code>is_blanket</code> entry. Wire layout on the native{' '}
+            <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of(&amp;locks, target, dir)</code></A>, or test for an outright block with <code>medius_locks_is_locked</code>; both count a covering whole-class <code>is_blanket</code> entry. Wire layout on the native{' '}
             <A href="/native/commands/requests#requests">LOCKS</A> reply.
           </p>
           <table class="api-params">
@@ -1093,7 +1083,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The weighed axis or usage.</td></tr>
               <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The entry covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>Which direction of the target this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked and a negative reverses what it keeps. A momentary usage carries one bit, so the box stores the block or pass it renders, this never reads between them, and it is never negative.</td></tr>
+              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked and a negative reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it renders: never a value between, never negative.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">READBACK</div>
@@ -1104,7 +1094,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td>A media lock, blanket or specific</td><td><code>MEDIUS_DIRECTION_BOTH</code>, always.</td></tr>
               <tr><td>A relative direction under <code>MEDIUS_BEARING_MODE_VECTOR</code></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
               <tr><td>The wire cap</td><td>One reply carries 85 entries, well under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
-              <tr><td>A <code>direction</code> byte no constant names</td><td>The entry is dropped rather than trusted, and <code>n</code> moves with the drop.</td></tr>
+              <tr><td>A <code>direction</code> byte no constant names</td><td>The entry is dropped and <code>n</code> excludes it.</td></tr>
             </tbody>
           </table>
 
@@ -1135,14 +1125,14 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_BEARING_MODE_PER_AXIS</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
-              <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The delta is projected onto the injected XY vector, and the relative scale weighs only the part along it. The fixed-sign scales still reach what the projection leaves on each axis. One relative scale, the lower of X's and Y's, governs the whole aim; what <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports back is there.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it; the fixed-sign scales still reach what the projection leaves on each axis. One relative scale, the lower of X's and Y's, governs X and Y as one vector, and <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it.</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CONSTANT</div>
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_BEARING_WINDOW_DEFAULT_MS</code></td><td><code>20</code></td><td>The factory window. A box that has been set boots at its own value.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_WINDOW_DEFAULT_MS</code></td><td><code>20</code></td><td>The factory window; a box that has been set boots at its stored value.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1152,15 +1142,15 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         <Card>
           <CardHeader title="MediusCatchState & MediusCatchEntry" subtitle="The live subscription table, plus the inter-chip clock estimate" />
           <p>
-            From <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>: a header
-            followed by <code>entries[0..n]</code>, one per accepted{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>. The array is
-            inline and capped at <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_CATCH_ENTRIES</code></A>{' '}
-            (32), the box's own table size, so the reply always carries the whole table.
+            From <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>: a header,
+            then <code>entries[0..n]</code>, one per accepted{' '}
+            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>, inline and
+            capped at <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_CATCH_ENTRIES</code></A>{' '}
+            (32), the box's table size, so the reply always carries the whole table.
           </p>
           <p>
-            The order is the order the box accepted them in, not the order it matches in; matching is
-            worked out per event, by the <A href="/native/commands/catch#matching">ranking</A>.
+            Entries are in acceptance order, not match order; each event is matched by the{' '}
+            <A href="/native/commands/catch#matching">ranking</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1181,26 +1171,22 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             </tbody>
           </table>
           <p>
-            Delivery is ranked, and under a busy mouse bulk can go completely undrained; the queue
-            order is on <A href="/native/commands/catch#delivery">Delivery</A>.
-          </p>
-          <p>
-            So the count is kept twice. The header's <code>dropped</code> says you are losing events;
-            the per-entry one says <em>which subscription</em> is losing them, and those want different
-            fixes.
+            Delivery is ranked, and under a busy mouse bulk can go completely undrained (queue order:{' '}
+            <A href="/native/commands/catch#delivery">Delivery</A>). The header's <code>dropped</code>{' '}
+            says events are being lost; the per-entry one says <em>which subscription</em> loses them.
           </p>
           <div class="api-response-label">MEDIUSCLOCKESTIMATE</div>
           <p>
             The box measures the difference with a four-timestamp exchange across the inter-chip link,
-            stamping each frame as it reaches the wire rather than when it is queued. Queueing is the
-            largest and most variable delay on that link.
+            stamping each frame as it reaches the wire, not when queued: queueing is that link's
+            largest and most variable delay.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>offset_us</code></td><td><code>int32_t</code></td><td>The host chip's clock minus the device chip's. Add it to a <code>DEVICE_CHIP</code> stamp to read that stamp on the <A href="/bindings/c/types#clock-domain"><code>HOST_CHIP</code></A> timeline; subtract to go the other way.</td></tr>
-              <tr><td><code>rate_ppb</code></td><td><code>int32_t</code></td><td>Relative drift in parts per billion, for extrapolating between exchanges. <code>MEDIUS_CLOCK_RATE_NONE</code> means none was fitted, which is a different answer from a fitted <code>0</code>.</td></tr>
-              <tr><td><code>delay_us</code></td><td><code>uint16_t</code></td><td>The best round trip measured in the window; the offset is good to about half of it. This is what says whether a cross-domain comparison is worth making.</td></tr>
+              <tr><td><code>rate_ppb</code></td><td><code>int32_t</code></td><td>Relative drift in parts per billion, for extrapolating between exchanges. <code>MEDIUS_CLOCK_RATE_NONE</code> means none was fitted, unlike a fitted <code>0</code>.</td></tr>
+              <tr><td><code>delay_us</code></td><td><code>uint16_t</code></td><td>The best round trip measured in the window; the offset is good to about half of it, so it tells whether a cross-domain comparison is worth making.</td></tr>
               <tr><td><code>age_ms</code></td><td><code>uint32_t</code></td><td>How old the estimate is. <code>MEDIUS_CLOCK_AGE_NONE</code> keeps "never measured" distinct from an offset that happens to be zero; both read as <code>offset_us == 0</code> and only one is usable.</td></tr>
             </tbody>
           </table>
@@ -1263,7 +1249,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>percent</code></td><td><code>uint16_t</code></td><td>Share of the command interval a delta is released across; 0 is the whole delta on the next report.</td></tr>
-              <tr><td><code>span_us</code></td><td><code>uint32_t</code></td><td>The interval in effect, in microseconds. 0 whenever nothing is being released across an interval.</td></tr>
+              <tr><td><code>span_us</code></td><td><code>uint32_t</code></td><td>The interval in effect, in microseconds; 0 when nothing is released across an interval.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1290,7 +1276,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         <Card>
           <CardHeader title="MediusPortInfo" subtitle="A discovered medius serial port" />
           <p>
-            Filled by <A href="/bindings/c/api#connect"><code>medius_find_ports</code></A>; <code>path</code> and <code>serial</code> are NUL-terminated. Canonical
+            Filled by <A href="/bindings/c/api#connect"><code>medius_find_ports</code></A>. Canonical
             docs on <A href="/library/types/structs#port-info"><code>PortInfo</code></A>.
           </p>
           <table class="api-params">
@@ -1340,8 +1326,8 @@ for (uintptr_t i = 0; i < n; i++) {
         <Card>
           <CardHeader title="Event & log types" subtitle="Fixed-size PODs off the streams" />
           <p>
-            The values you read off the <A href="/bindings/c/streams">catch and log streams</A>.
-            Catch semantics on <A href="/library/catch">Catch</A>; canonical docs on{' '}
+            Values off the <A href="/bindings/c/streams">catch and log streams</A>. Semantics on{' '}
+            <A href="/library/catch">Catch</A>; canonical docs on{' '}
             <A href="/library/types/structs">Structs</A>.
           </p>
         </Card>
@@ -1351,16 +1337,15 @@ for (uintptr_t i = 0; i < n; i++) {
         <Card>
           <CardHeader title="MediusMotionEvent" subtitle="One physical relative-axis snapshot" />
           <p>
-            The user's real motion at the merge point, before any lock suppression or injection. Surfaces
-            as the <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
+            Physical motion at the merge point, before lock suppression or injection: the{' '}
+            <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
             raised by a <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_AXIS</code></A>{' '}
             subscription.
           </p>
           <p>
-            It carries no timestamp of its own: the enclosing event's{' '}
-            <code>ts_us</code> and <A href="/bindings/c/types#clock-domain"><code>clock</code></A> cover
-            it, and for motion the domain is always{' '}
-            <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>.
+            The enclosing event's <code>ts_us</code> and{' '}
+            <A href="/bindings/c/types#clock-domain"><code>clock</code></A> stamp it; for motion the
+            domain is always <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1384,22 +1369,22 @@ for (uintptr_t i = 0; i < n; i++) {
             <code>KEY</code>, or <code>MEDIA</code> subscription.
           </p>
           <p>
-            Like motion, it carries no timestamp of its own: it uses the enclosing event's{' '}
-            <code>ts_us</code> and <A href="/bindings/c/types#clock-domain"><code>clock</code></A>,
-            which for a usage snapshot is always <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>.
+            Like motion, it is stamped by the enclosing event's <code>ts_us</code> and{' '}
+            <A href="/bindings/c/types#clock-domain"><code>clock</code></A>, always{' '}
+            <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#input-kind"><code>MediusClass</code></A></td><td>Which class this snapshot is of. Carried here rather than read off the first entry, because the snapshot that most needs it is the one with <code>n == 0</code>.</td></tr>
+              <tr><td><code>class_</code></td><td><A href="/bindings/c/types#input-kind"><code>MediusClass</code></A></td><td>Which class this snapshot is of; carried here because an <code>n == 0</code> snapshot has no entry to read it from.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>The edge that produced it: the subscribed set grew (<code>POSITIVE</code>) or shrank (<code>NEGATIVE</code>).</td></tr>
               <tr><td><code>n</code></td><td><code>uint16_t</code></td><td>Live usages in <code>usages</code>.</td></tr>
               <tr><td><code>usages</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The held <A href="/bindings/c/types#input"><code>MediusUsage</code></A> usages (button, key, or media).</td></tr>
             </tbody>
           </table>
           <p>
-            Diffing successive snapshots into press and release edges is what the{' '}
-            <A href="/bindings/c/streams#input">decoded-input stream</A> does for you.
+            The <A href="/bindings/c/streams#input">decoded-input stream</A> diffs successive snapshots
+            into press and release edges.
           </p>
         </Card>
       </div>
@@ -1422,9 +1407,9 @@ for (uintptr_t i = 0; i < n; i++) {
             the byte-oriented <A href="/bindings/c/types#catch-class">catch classes</A>.
           </p>
           <p>
-            <code>bytes</code> is an inline array rather than a pointer, capped at{' '}
+            <code>bytes</code> is an inline array capped at{' '}
             <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_TRAFFIC_BYTES</code></A> (180), so
-            the event stays a fixed-size POD you can copy, queue, and drop with nothing to free.
+            the event is a fixed-size POD to copy, queue, and drop with nothing to free.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1439,10 +1424,9 @@ for (uintptr_t i = 0; i < n; i++) {
             </tbody>
           </table>
           <p>
-            Without <code>true_len</code>, a packet the box cut at your <code>capture</code> and a
-            genuinely short packet are indistinguishable.{' '}
+            <code>true_len</code> separates a packet cut at your <code>capture</code> from a short one;{' '}
             <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_truncated(&amp;ev)</code></A>{' '}
-            is that comparison.
+            makes that comparison.
           </p>
           <div class="api-response-label">FLAGS, BY CLASS</div>
           <table class="api-params">
@@ -1524,7 +1508,7 @@ for (uintptr_t i = 0; i < n; i++) {
     } data;
 }`}</pre>
           <p>
-            Written by <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> and friends. Read the union member named
+            Written by <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> and its variants. Read the union member named
             by <A href="/bindings/c/types#catch-event-kind"><code>kind</code></A>. See{' '}
             <A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A> for which class
             lands in which domain.
@@ -1552,8 +1536,8 @@ for (uintptr_t i = 0; i < n; i++) {
             </tbody>
           </table>
           <p>
-            An event is 1040 bytes whichever arm is live. The exact padding is the compiler's, so use{' '}
-            <code>sizeof</code> if you need the number itself.
+            An event is 1040 bytes whichever arm is live. Padding is the compiler's; use{' '}
+            <code>sizeof</code> for the exact number.
           </p>
         </Card>
       </div>
@@ -1585,8 +1569,7 @@ for (uintptr_t i = 0; i < n; i++) {
 };`}</pre>
           <p>
             Written by <A href="/bindings/c/streams#input"><code>medius_input_stream_recv</code></A> and
-            its non-blocking siblings. The box sends held-usage snapshots; the stream diffs them, so a
-            caller reads edges instead of sets.
+            its non-blocking siblings, as edges diffed from the box's held-usage snapshots.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1629,9 +1612,9 @@ for (uintptr_t i = 0; i < n; i++) {
         <Card>
           <CardHeader title="MediusClipTrigger" subtitle="One physical-input binding that drives the clip" />
           <p>
-            A managed binding you add with <A href="/bindings/c/api#clip"><code>medius_clip_bind</code></A>: when <code>on</code> hits <code>edge</code>,
-            the box runs <code>action</code> on the clip. Build the <code>on</code> usage with the{' '}
-            <A href="/bindings/c/api#builders"><code>medius_usage_*</code></A> helpers. Concept on <A href="/library/clip">Clip</A>.
+            A managed binding added with <A href="/bindings/c/api#clip"><code>medius_clip_bind</code></A>: when <code>on</code> hits <code>edge</code>,
+            the box runs <code>action</code> on the clip. Build <code>on</code> with the{' '}
+            <A href="/bindings/c/api#builders"><code>medius_usage_*</code></A> helpers. See <A href="/library/clip">Clip</A>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1639,7 +1622,7 @@ for (uintptr_t i = 0; i < n; i++) {
               <tr><td><code>on</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The physical button, key, or media usage that fires the binding.</td></tr>
               <tr><td><code>edge</code></td><td><A href="/bindings/c/types#edge"><code>MediusEdge</code></A></td><td>Which edge of <code>on</code> fires it.</td></tr>
               <tr><td><code>action</code></td><td><A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A></td><td>What it does to the clip.</td></tr>
-              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 to suppress the input so it never reaches the PC; 0 to let it pass through.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 suppresses the input before the PC; 0 passes it through.</td></tr>
             </tbody>
           </table>
         </Card>
@@ -1649,11 +1632,11 @@ for (uintptr_t i = 0; i < n; i++) {
         <Card>
           <CardHeader title="MediusClipPacketTrigger" subtitle="One packet binding that drives the clip" />
           <p>
-            A managed binding you add with <A href="/bindings/c/api#clip"><code>medius_clip_bind_packet</code></A>, keyed by{' '}
+            A managed binding added with <A href="/bindings/c/api#clip"><code>medius_clip_bind_packet</code></A>, keyed by{' '}
             <code>(class_, id, direction, match_bytes, mask)</code>: a packet on a traffic surface whose
             head matches under the mask runs <code>action</code> on the frame clock's next tick.{' '}
             <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A> reads back the same
-            shape, so a read trigger replays as a bind. Concept on{' '}
+            shape, so a read trigger replays as a bind. See{' '}
             <A href="/library/clip#packet-triggers">Clip</A>.
           </p>
           <table class="api-params">
@@ -1696,7 +1679,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
       <div id="clip-settings" data-search-target>
         <Card>
           <CardHeader title="MediusClipSettings" subtitle="The clip configuration read back from the box" />
-          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>: the auto-lock scope, the loop/retain/finalize scalars, and both kinds of trigger. Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>. See <A href="/library/clip">Clip</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1717,7 +1700,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
       <div id="clip-status" data-search-target>
         <Card>
           <CardHeader title="MediusClipStatus & MediusClipState" subtitle="Buffered-clip ring and playback state" />
-          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_status</code></A>; <code>state</code> is a <code>MediusClipState</code>. Concept on <A href="/library/clip">Clip</A>.</p>
+          <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_status</code></A>; <code>state</code> is a <code>MediusClipState</code>. See <A href="/library/clip">Clip</A>.</p>
           <div class="api-response-label">MEDIUSCLIPSTATE</div>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -1881,7 +1864,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
       <div id="transform" data-search-target>
         <Card>
           <CardHeader title="MediusTransform" subtitle="One field transform" />
-          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, and may not name the same field. To weigh a field, or reverse it, use <code>medius_device_scale</code>, whose percent is signed. See <A href="/library/transform">Transform</A>.</p>
+          <p>Passed to <A href="/bindings/c/api#transforms"><code>medius_device_transform</code></A> and returned in the query table. <code>source</code> and <code>dest</code> are <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, and may not name the same field. To weigh or reverse a field, use <code>medius_device_scale</code> (signed percent). See <A href="/library/transform">Transform</A>.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1896,7 +1879,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
       <div id="transforms" data-search-target>
         <Card>
           <CardHeader title="MediusTransforms" subtitle="The transform-table summary" />
-          <p>Filled by <A href="/bindings/c/api#transforms"><code>medius_device_query_transforms</code></A>: a full flag and one <A href="/bindings/c/types#transform"><code>MediusTransform</code></A> per entry, up to <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code> (8). No generation counter and no per-entry state.</p>
+          <p>Filled by <A href="/bindings/c/api#transforms"><code>medius_device_query_transforms</code></A>: a full flag and one <A href="/bindings/c/types#transform"><code>MediusTransform</code></A> per entry, up to <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code> (8).</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1914,8 +1897,8 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
           <pre class="api-signature">{`enum MediusStatus : int32_t   /* MEDIUS_STATUS_OK == 0; everything else is a failure */`}</pre>
           <p>
             Every fallible call returns a <code>MediusStatus</code> and writes its result through an
-            out-param. On failure the detail lives in thread-local state. Read it before the next
-            call on that thread overwrites it. Canonical mapping on{' '}
+            out-param. On failure the detail is thread-local; read it before the next call on that
+            thread overwrites it. Canonical mapping on{' '}
             <A href="/library/types/errors">Errors</A>.
           </p>
           <table class="api-params">
@@ -1940,7 +1923,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td><code>16</code></td><td>The everything filter passed to <code>medius_device_input_events</code>; it covers traffic too.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td><code>17</code></td><td>An input filter narrowed to one edge, which cannot be decoded into press and release.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_RESERVED_ID</code></td><td><code>18</code></td><td>An exact id equal to the blanket sentinel, which would address the whole class.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They are resolved against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, which is after the call is made.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code></td><td><code>19</code></td><td><code>MEDIUS_DIRECTION_WITH</code> or <code>_AGAINST</code> where only a fixed sign or edge can be addressed. They resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit time, after the call.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_RANGE</code></td><td><code>20</code></td><td>A lock scale outside <code>MEDIUS_LOCK_SCALE_MIN</code> to <code>MEDIUS_LOCK_SCALE_MAX</code>.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code></td><td><code>21</code></td><td>A negative (reversing) lock scale on a button, key or media usage, which carries one bit and has nothing to reverse.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td><code>medius_device_set_rewrite</code> or <code>medius_device_apply_patch</code> with the imperfect-clone opt-in off.</td></tr>
@@ -1962,7 +1945,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>medius_last_error_message(char *buf, uintptr_t cap)</code></td><td><code>uintptr_t</code></td><td>Copies the last error's text (NUL-terminated, truncated to <code>cap</code>); returns the full length, so you can size a buffer and retry.</td></tr>
+              <tr><td><code>medius_last_error_message(char *buf, uintptr_t cap)</code></td><td><code>uintptr_t</code></td><td>Copies the last error's text (NUL-terminated, truncated to <code>cap</code>); returns the full length, for a retry with a larger buffer.</td></tr>
               <tr><td><code>medius_last_error_proto_ver(void)</code></td><td><code>uint8_t</code></td><td>The version byte from a <code>BAD_PROTO_VER</code> error, or 0.</td></tr>
             </tbody>
           </table>

@@ -7,27 +7,25 @@ const Install: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Install" subtitle="One header and one prebuilt library" />
+        <CardHeader title="Install" subtitle="One header, one prebuilt library" />
         <p>
-          Download the archive for your platform, point the compiler at <code>include/</code> and{' '}
-          <code>lib/</code>, and link. One header (<code>medius.h</code>) and one prebuilt library
-          (<code>libmedius_capi</code>) serve{' '}
-          <a href="https://learn.microsoft.com/en-us/cpp/" target="_blank" rel="noreferrer">C and C++</a>,
-          with no <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust</a> toolchain
-          needed.
+          Download your platform's archive, point the compiler at <code>include/</code> and{' '}
+          <code>lib/</code>, and link. <code>medius.h</code> and <code>libmedius_capi</code> serve{' '}
+          <a href="https://learn.microsoft.com/en-us/cpp/" target="_blank" rel="noreferrer">C and C++</a>{' '}
+          without a <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust</a> toolchain.
         </p>
       </Card>
 
       <div id="download" data-search-target>
         <Card>
-          <CardHeader title="Download" subtitle="The release archive for your platform" />
+          <CardHeader title="Download" subtitle="Release archive per platform" />
           <p>
-            On the{' '}
-            <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">Releases page</a>,
-            download the file that matches your computer, then unzip it.
+            Download your platform's file from the{' '}
+            <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">Releases page</a>{' '}
+            and unzip it.
           </p>
           <table class="api-params">
-            <thead><tr><th>Your computer</th><th>File to download</th></tr></thead>
+            <thead><tr><th>Platform</th><th>File</th></tr></thead>
             <tbody>
               <tr><td>Windows (64-bit)</td><td><code>medius-capi-x86_64-pc-windows-msvc.tar.gz</code></td></tr>
               <tr><td>macOS (Apple Silicon, M1+)</td><td><code>medius-capi-aarch64-apple-darwin.tar.gz</code></td></tr>
@@ -42,10 +40,6 @@ const Install: Component = () => {
 │   └── medius.h
 └── lib/
     └── libmedius_capi      (.so Linux · .dylib macOS · .dll + .lib Windows · .a static)`}</pre>
-          <p>
-            <code>include/</code> holds the header you <code>#include</code>; <code>lib/</code> holds
-            the library you link.
-          </p>
         </Card>
       </div>
 
@@ -55,7 +49,7 @@ const Install: Component = () => {
 
           <div class="api-response-label">WINDOWS · VISUAL STUDIO</div>
           <p>
-            In your project's <strong>Properties</strong> (the same values for C and C++):
+            In the project's <strong>Properties</strong> (same for C and C++):
           </p>
           <ol>
             <li>Under <strong>C/C++ → General → Additional Include Directories</strong>, add the unzipped <code>include\</code> folder.</li>
@@ -63,35 +57,35 @@ const Install: Component = () => {
             <li>Under <strong>Linker → Input → Additional Dependencies</strong>, add <code>medius_capi.dll.lib</code>.</li>
             <li>Copy <code>medius_capi.dll</code> next to your built <code>.exe</code> (or onto your <code>PATH</code>).</li>
           </ol>
-          <p>Build and run as normal. To skip the DLL, add <code>medius_capi.lib</code> in step 3 instead (static, nothing to copy).</p>
+          <p>To skip the DLL, add <code>medius_capi.lib</code> in step 3 instead (static, nothing to copy).</p>
 
           <div class="api-response-label">WINDOWS · COMMAND LINE</div>
           <p>From the <strong>x64 Native Tools Command Prompt</strong>:</p>
           <pre><code class="language-bash">{`cl app.c /I include /link /LIBPATH:lib medius_capi.dll.lib
 :: C++:  cl /std:c++17 app.cpp /I include /link /LIBPATH:lib medius_capi.dll.lib
-:: then copy medius_capi.dll next to app.exe, and run:
+:: copy medius_capi.dll next to app.exe, then run:
 app.exe`}</code></pre>
 
           <div class="api-response-label">LINUX &amp; MACOS</div>
           <pre><code class="language-bash">{`# C
 cc  app.c   -I include -L lib -lmedius_capi -o app
-# C++ (same header, same library)
+# C++ (same header and library)
 g++ -std=c++17 app.cpp -I include -L lib -lmedius_capi -o app
 
-# run (tell the loader where the library is)
+# run, with the loader pointed at lib/
 LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></pre>
           <p>
-            On Linux add <code>-lpthread</code>. To avoid setting a path at run time, link the static{' '}
-            <code>libmedius_capi.a</code> instead.
+            On Linux add <code>-lpthread</code>. Link the static <code>libmedius_capi.a</code> to
+            skip the run-time path.
           </p>
 
           <div class="callout callout--info">
             <p>
-              If your platform isn't listed, build it once: install the{' '}
+              For an unlisted platform, install the{' '}
               <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>,{' '}
               <code>git clone https://github.com/K4HVH/medius</code>, then{' '}
               <code>cargo build -p medius-capi --release</code>. The library lands in{' '}
-              <code>target/release/</code> and the header is <code>medius-capi/include/medius.h</code>.
+              <code>target/release/</code>; the header is <code>medius-capi/include/medius.h</code>.
               See <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
           </div>
@@ -104,9 +98,9 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
           <p>
             <A href="/bindings/c/api#module"><code>medius_version_string</code></A> and{' '}
             <A href="/bindings/c/api#module"><code>medius_abi_version</code></A> are pure library
-            calls. A printed version means the header and library are wired in; a mismatched{' '}
-            <code>MEDIUS_ABI_VERSION</code> means call nothing else and rebuild against the header that
-            ships with the library.
+            calls. A printed version means header and library are wired in. On a{' '}
+            <code>MEDIUS_ABI_VERSION</code> mismatch, call nothing else; rebuild against the header
+            shipped with the library.
           </p>
           <pre><code class="language-c">{`// app.c
 #include <stdio.h>
@@ -129,8 +123,7 @@ int main(void) {
             <p>
               A crash on start
               (<code>cannot open shared object</code> / a missing-DLL popup) means the loader can't find
-              the library at run time. More on{' '}
-              <A href="/bindings/c/build">Build &amp; features</A>.
+              the library. See <A href="/bindings/c/build">Build &amp; features</A>.
             </p>
           </div>
         </Card>
@@ -143,8 +136,8 @@ int main(void) {
             <A href="/bindings/c/api#connect"><code>medius_device_find</code></A> opens the first{' '}
             <A href="/native/hardware">box</A> it finds and runs the{' '}
             <A href="/native/connection#handshake">handshake</A>;{' '}
-            <A href="/bindings/c/api#connect"><code>medius_device_free</code></A> closes it. Full
-            walk-through on <A href="/bindings/c/quickstart">First program</A>.
+            <A href="/bindings/c/api#connect"><code>medius_device_free</code></A> closes it. See{' '}
+            <A href="/bindings/c/quickstart">First program</A>.
           </p>
           <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) { /* see Calls & errors */ }
@@ -155,10 +148,9 @@ printf("firmware %u.%u.%u\\n", v.fw_major, v.fw_minor, v.fw_patch);
 
 medius_device_free(dev);`}</code></pre>
           <p>
-            Every call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> you
-            check; reading the failure text is on{' '}
-            <A href="/bindings/c/usage#errors">Calls &amp; errors</A>. The full call list is the{' '}
-            <A href="/bindings/c/api">API index</A>.
+            Every call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.{' '}
+            <A href="/bindings/c/usage#errors">Calls &amp; errors</A> covers the failure text; the{' '}
+            <A href="/bindings/c/api">API index</A> lists every call.
           </p>
         </Card>
       </div>

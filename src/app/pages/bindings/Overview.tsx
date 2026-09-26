@@ -7,15 +7,14 @@ const Overview: Component = () => {
   return (
     <>
       <Card>
-        <CardHeader title="Bindings" subtitle="The C, C++ and Python clients" />
+        <CardHeader title="Bindings" subtitle="C, C++ and Python clients" />
         <p>
-          A <A href="/native/hardware">medius box</A> sits inline between a mouse and a PC: the real
-          device passes through untouched, and your program{' '}
-          <A href="/native/injection">injects input</A> of its own over a{' '}
+          A <A href="/native/hardware">medius box</A> sits between a mouse and a PC: the mouse passes
+          through untouched, and your program <A href="/native/injection">injects input</A> over a{' '}
           <A href="/native/transport">USB-serial link</A>.
         </p>
         <p>
-          These bindings write that program in <A href="/bindings/c">C / C++</A> or{' '}
+          The bindings write that program in <A href="/bindings/c">C / C++</A> or{' '}
           <A href="/bindings/python">Python</A> instead of{' '}
           <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a>, with
           the same bytes on the wire.
@@ -35,8 +34,8 @@ const Overview: Component = () => {
         └─────────────────────────────┘`}</pre>
         <div class="callout callout--info">
           <p>
-            C and C++ are one binding: the C header (<A href="/bindings/c"><code>medius.h</code></A>)
-            compiles as both, so a C++ program includes it and calls the same functions. The{' '}
+            C and C++ are one binding: the header, <A href="/bindings/c"><code>medius.h</code></A>,
+            compiles as both. The{' '}
             <A href="/native/quickstart">Quickstart</A> covers what the box does; the{' '}
             <A href="/library">Rust Library</A> and <A href="/native">Native API</A> define each
             command.
@@ -49,7 +48,7 @@ const Overview: Component = () => {
           <CardHeader title="Languages" subtitle="Same capabilities, different ergonomics" />
           <table class="api-params">
             <thead>
-              <tr><th>Language</th><th>Install</th><th>Errors</th><th>Cleanup</th><th>Reach for it when</th></tr>
+              <tr><th>Language</th><th>Install</th><th>Errors</th><th>Cleanup</th><th>Use for</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -57,14 +56,14 @@ const Overview: Component = () => {
                 <td><code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code></td>
                 <td>raises <A href="/bindings/python/types#errors"><code>MediusError</code></A></td>
                 <td>automatic (<code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code> / <a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">GC</a>)</td>
-                <td>scripting, automation, fast prototyping</td>
+                <td>scripts, automation, prototyping</td>
               </tr>
               <tr>
                 <td><A href="/bindings/c"><code>C / C++</code></A></td>
                 <td>download the prebuilt library</td>
                 <td>returns <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td>
                 <td>manual (<A href="/bindings/c/api"><code>*_free</code></A>)</td>
-                <td>a C or C++ app, embedding, a base for another <a href="https://en.wikipedia.org/wiki/Foreign_function_interface" target="_blank" rel="noreferrer">FFI</a></td>
+                <td>C or C++ apps, embedding, a base for another <a href="https://en.wikipedia.org/wiki/Foreign_function_interface" target="_blank" rel="noreferrer">FFI</a></td>
               </tr>
             </tbody>
           </table>
@@ -73,7 +72,7 @@ const Overview: Component = () => {
 
       <div id="coverage" data-search-target>
         <Card>
-          <CardHeader title="Coverage" subtitle="Every box feature, in every language" />
+          <CardHeader title="Coverage" subtitle="Every feature in every language" />
           <table class="api-params">
             <thead>
               <tr><th>Capability</th><th>C / C++</th><th>Python</th></tr>
@@ -89,7 +88,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/requests">Queries (version, health, caps)</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
               <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
-              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only. Build it on the stream timeouts (see each Streams page)</td></tr>
+              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build it on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>
           <p>

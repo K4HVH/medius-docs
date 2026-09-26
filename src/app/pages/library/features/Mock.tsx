@@ -22,7 +22,7 @@ const Mock: Component = () => {
 
       <div id="create" data-search-target>
         <Card>
-          <CardHeader title="Building a MockBox" subtitle="new, and why you clone it" />
+          <CardHeader title="Building a MockBox" subtitle="new, and cloning" />
           <pre class="api-signature">fn new() -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
@@ -63,13 +63,13 @@ let device = Device::with_mock(mock.clone());
                 <td><code>with_mock</code></td>
                 <td>No</td>
                 <td><code>Device</code></td>
-                <td>Wraps the fake and returns the device directly.</td>
+                <td>Wraps the fake.</td>
               </tr>
               <tr>
                 <td><code>open_mock</code></td>
                 <td>Yes</td>
                 <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
-                <td>Also runs the version handshake, so it can fail the same way a real port can.</td>
+                <td>Also runs the version handshake, so it can fail as a real port can.</td>
               </tr>
             </tbody>
           </table>
@@ -81,7 +81,7 @@ let device = Device::open_mock(MockBox::new())?;
 device.move_rel(5, 5)?;`}</code></pre>
 
           <p>
-            See the <A href="/library/features/mock#silent">silent-box card</A> for the two ways{' '}
+            The <A href="/library/features/mock#silent">silent-box card</A> lists the two ways{' '}
             <code>open_mock</code> can fail.
           </p>
         </Card>
@@ -89,7 +89,7 @@ device.move_rel(5, 5)?;`}</code></pre>
 
       <div id="responses" data-search-target>
         <Card>
-          <CardHeader title="Scripting query replies" subtitle="Set the version, health, and device-info a query returns" />
+          <CardHeader title="Scripting query replies" subtitle="Version, health and device-info replies" />
           <pre class="api-signature">fn with_version(self, version: Version) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
@@ -119,11 +119,11 @@ device.move_rel(5, 5)?;`}</code></pre>
 
           <p>
             The <code>with_*</code> builders set what each{' '}
-            <A href="/library/requests">query</A> returns. <code>set_*</code> changes a live fake in
-            place to flip the version or health mid-test.
+            <A href="/library/requests">query</A> returns; <code>set_*</code> changes a live fake's
+            version or health mid-test.
           </p>
           <p>
-            The <A href="/library/types/structs">structs</A> they take live on the types page;{' '}
+            The <A href="/library/types/structs">structs</A> they take are on the types page;{' '}
             <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
             from the raw <code>u16</code> flags word.
           </p>
@@ -161,8 +161,8 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            All put bytes on the inbound stream as if the box emitted them; the <code>seq</code>{' '}
-            counter is shared across the three event calls, exactly as it is on the wire.
+            Each puts bytes on the inbound stream as if the box emitted them; the three event calls
+            share one <code>seq</code> counter, as on the wire.
           </p>
 
           <div class="api-response-label">METHODS</div>
@@ -194,16 +194,15 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
               <tr>
                 <td><code>push_traffic</code></td>
                 <td><code>Traffic</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
-                <td><code>true_len</code> need not agree with <code>bytes.len()</code>, which is how you exercise <code>truncated()</code> with no real capture behind it.</td>
+                <td><code>true_len</code> may differ from <code>bytes.len()</code>, to exercise <code>truncated()</code> with no real capture.</td>
               </tr>
             </tbody>
           </table>
 
           <p>
             The three event rows each name one{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. Real
-            losses do not show up here: exercise loss handling through{' '}
-            <code>CatchState::dropped</code> instead.
+            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. Losses
+            don't show here; exercise loss handling through <code>CatchState::dropped</code>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>
@@ -263,7 +262,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
               <tr>
                 <td><code>recorded</code></td>
                 <td><code>usize</code></td>
-                <td>The count of commands recorded so far.</td>
+                <td>Commands recorded so far.</td>
               </tr>
               <tr>
                 <td><code>saw</code></td>
@@ -273,7 +272,7 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
               <tr>
                 <td><code>clear_recorded</code></td>
                 <td><code>()</code></td>
-                <td>Drops the recorded history so you can assert only on the next phase.</td>
+                <td>Drops the recorded history, so later asserts see only the next phase.</td>
               </tr>
             </tbody>
           </table>
@@ -308,7 +307,7 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
 
       <div id="clip-packet" data-search-target>
         <Card>
-          <CardHeader title="Clips and packet triggers" subtitle="What the mock answers for a clip, and clip_packet" />
+          <CardHeader title="Clips and packet triggers" subtitle="Mock clip replies, and clip_packet" />
           <pre class="api-signature">fn with_clip_settings(self, settings: ClipSettings) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn set_clip_settings(&self, settings: ClipSettings)</pre>
@@ -330,7 +329,7 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               <tr>
                 <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
                 <td><code>MockBox</code>, nothing</td>
-                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> answered to <code>query_config</code>. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when they are scripted, so script the opt-in first for a consuming one.</td>
+                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> <code>query_config</code> replies with. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when scripted; script the opt-in first for a consuming one.</td>
               </tr>
               <tr>
                 <td><code>clip_packet</code></td>
@@ -339,14 +338,14 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               </tr>
             </tbody>
           </table>
-          <div class="api-response-label">WHAT THE MOCK HOLDS</div>
+          <div class="api-response-label">EFFECT</div>
           <table class="api-params">
             <thead>
               <tr><th>Call</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>query_status</code></td><td>Answers the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
-              <tr><td><code>query_config</code></td><td>Answers the scripted settings plus the packet triggers bound on the mock, each with its <code>hits</code>.</td></tr>
+              <tr><td><code>query_status</code></td><td>Replies with the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
+              <tr><td><code>query_config</code></td><td>Replies with the scripted settings plus the mock's bound packet triggers, each with its <code>hits</code>.</td></tr>
               <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, through the box's checks, the 112-byte pool and the opt-in included, in the box's order.</td></tr>
               <tr><td><code>clear_triggers</code></td><td>Clears both kinds; <code>reset</code> clears the whole clip config.</td></tr>
               <tr><td><code>set_imperfect_status</code>, <code>with_imperfect</code>, <code>allow_imperfect_clones</code></td><td>With the opt-in off, the mock drops its consuming packet triggers, as the box does.</td></tr>
@@ -377,12 +376,12 @@ assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></
 
       <div id="silent" data-search-target>
         <Card>
-          <CardHeader title="Simulating a box that never replies" subtitle="silent, and the handshake failures" />
+          <CardHeader title="Silent box" subtitle="silent, and the handshake failures" />
           <pre class="api-signature">fn silent(self) -&gt; MockBox</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            <code>silent()</code> records commands but sends no reply to a query. The two{' '}
+            <code>silent()</code> records commands and never replies to a query. The two{' '}
             <A href="/library/features/mock#wrap"><code>open_mock</code></A> failures are a silent box
             (<A href="/library/types/errors"><code>Error::NoReply</code></A>) and an unknown protocol
             version (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>).
@@ -411,7 +410,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
 
       <div id="restart" data-search-target>
         <Card>
-          <CardHeader title="Simulating a restart or a release" subtitle="restart, link_lost, detach, attach" />
+          <CardHeader title="Restart and release" subtitle="restart, link_lost, detach, attach" />
           <pre class="api-signature">fn restart(&self)</pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
           <pre class="api-signature">fn link_lost(&self)</pre>
@@ -422,15 +421,15 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
           <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
           <p>
-            Each drops the mock's session state the way the box does (locks, held input, rewrite
-            rules, transforms, the clip and its config), keeps what it stores, and draws the{' '}
-            <A href="/library/lifecycle#restart">session recovery</A> a real box draws.
+            Each drops the mock's session state as the box does (locks, held input, rewrite rules,
+            transforms, the clip and its config), keeps what it stores, and triggers the same{' '}
+            <A href="/library/lifecycle#restart">session recovery</A>.
           </p>
 
           <div class="api-response-label">METHODS</div>
           <table class="api-params">
             <thead>
-              <tr><th>Name</th><th>Simulates</th><th>How the library notices it</th></tr>
+              <tr><th>Name</th><th>Simulates</th><th>Detected by</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -471,7 +470,7 @@ let scale_x = || device.query_locks().map(|l| l.scale_of(Axis::X, Direction::Pos
 
 mock.detach(false);                 // the clone goes down, and the scale with it
 assert_eq!(scale_x()?, 100);
-mock.attach();                      // a new clone: the library puts the scale back
+mock.attach();                      // a new clone: the library re-sends the scale
 while scale_x()? != 40 {
     std::thread::sleep(Duration::from_millis(5));
 }

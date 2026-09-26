@@ -6,11 +6,7 @@ import { versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { WiringPorts } from './PortDiagram';
 
-// Connect, and after a failure the one thing to do about it. Every page that offers Connect renders
-// this, so the answer to "why won't it connect" is written once. `where` renames the ports for a
-// caller that knows which machine is which, which the end of the setup wizard does.
-// One wording for the two conditions that end the page before it starts, shared with every page
-// that gates on them, so the same problem is never described three ways.
+// Shared by every page that gates on these two conditions.
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
 export const BAD_CONTEXT = "This page isn't secure. Open it again from the link you were given.";
 
@@ -21,8 +17,8 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
   const verdict = () => dash.verdict();
   const busy = () => dash.status() === 'connecting';
 
-  // `force` asks which device to use instead of reusing one the browser remembers. The silent
-  // verdict is the one that can be about the wrong device, so its retry is the escape from it.
+  // `force` asks for a device instead of reusing the remembered one; only the silent verdict can be
+  // about the wrong device, so only its retry forces.
   const Connect = (p: { label?: string; force?: boolean }) => (
     <Button
       variant="primary"
@@ -40,8 +36,8 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
     </Button>
   );
 
-  // Every caller mounts this inside its own Card, so these two states are the card's body, not a
-  // second card. The page-level copies in Device, Advanced and Setup are the ones with card chrome.
+  // Callers mount this inside their own Card; the page-level copies in Device, Advanced and Setup
+  // carry the card chrome.
   if (!dash.supported)
     return <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>;
   if (!dash.secure)
@@ -49,9 +45,8 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
 
   return (
     <div aria-live="polite">
-      {/* Above the switch, not inside one arm: a flash or update failure has no verdict of its own,
-          and a verdict left over from an earlier connect used to hide it entirely. Not gated on
-          status either: an update whose box never came back leaves 'disconnected'. */}
+      {/* Above the switch: a flash or update failure has no verdict, and a stale verdict would hide
+          it. Ungated on status: an update whose box never came back leaves 'disconnected'. */}
       <Show when={dash.error()}>
         {(msg) => (
           <div class="callout callout--danger" role="alert">
@@ -77,7 +72,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
 
         <Match when={verdict()?.kind === 'no-port'}>
           <div class="callout callout--danger" role="alert">
-            This computer can't see your box. Plug USB2 into it, then press Try again.
+            This computer can't see your box. Plug USB2 into it.
           </div>
           <WiringPorts />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
@@ -88,21 +83,21 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
 
         <Match when={verdict()?.kind === 'needs-click'}>
           <div class="callout callout--danger" role="alert">
-            The browser wants one more click before it will ask. Press Try again.
+            The browser needs one more click before it asks.
           </div>
           <Connect label="Try again" />
         </Match>
 
         <Match when={verdict()?.kind === 'busy'}>
           <div class="callout callout--danger" role="alert">
-            Another tab has your box open. Close your other tabs, then press Try again.
+            Another tab has your box open. Close your other tabs.
           </div>
           <Connect label="Try again" />
         </Match>
 
         <Match when={verdict()?.kind === 'silent'}>
           <div class="callout callout--danger" role="alert">
-            The box is not answering. Check USB1 is plugged in too, then press Try again.
+            The box isn't answering. Check USB1 is plugged in too.
           </div>
           <WiringPorts />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
@@ -119,9 +114,9 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
               <>
                 <div class="callout callout--danger" role="alert">
                   <Show when={ver} fallback="This box is too old to update from here.">
-                    {(x) => <>This box runs v{versionString(x())}, which is too old to update from here.</>}
+                    {(x) => <>This box runs v{versionString(x())}, too old to update from here.</>}
                   </Show>{' '}
-                  Set it up once over USB and it will update in one click from then on.
+                  Set it up once over USB; after that it updates in one click.
                 </div>
                 <Button variant="primary" onClick={setup}>
                   Set up
@@ -139,9 +134,9 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
               <>
                 <div class="callout callout--danger" role="alert">
                   <Show when={ver} fallback="This box runs firmware newer than this dashboard.">
-                    {(x) => <>This box runs v{versionString(x())}, which is newer than this dashboard.</>}
+                    {(x) => <>This box runs v{versionString(x())}, newer than this dashboard.</>}
                   </Show>{' '}
-                  Reload the page to load the current dashboard, then press Connect.
+                  Reload for the current dashboard, then connect.
                 </div>
                 <Button variant="primary" onClick={() => window.location.reload()}>
                   Reload
@@ -156,7 +151,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
             const v = verdict();
             return (
               <div class="callout callout--danger" role="alert">
-                That didn't work. Unplug everything, plug it back in, then press Try again.
+                That didn't work. Unplug everything and plug it back in.
                 <div style={{ 'margin-top': '6px', 'font-size': '0.85em', opacity: '0.75' }}>
                   {v?.kind === 'other' ? v.message : ''}
                 </div>

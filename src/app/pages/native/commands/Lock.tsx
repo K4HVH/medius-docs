@@ -9,10 +9,9 @@ const Lock: Component = () => {
       <Card>
         <CardHeader title="Lock" subtitle="Weigh one physical input by class" />
         <p>
-          <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of the physical
-          device reaches the game PC on one input. Host{' '}
-          <A href="/native/injection">injection</A> drives that same input at full strength whatever
-          the scale says.
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of one physical
+          input reaches the game PC. <A href="/native/injection">Injection</A> drives that input at
+          full strength regardless of scale.
         </p>
         <pre class="diagram">{` -255   min     <==    2.55x, reversed
  -100   invert  <--    all of it, the other way round
@@ -46,7 +45,7 @@ const Lock: Component = () => {
           <p>
             A momentary usage shares{' '}
             <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s{' '}
-            <code>(class, id)</code> space, so a button locks exactly like a key.{' '}
+            <code>(class, id)</code> space, so a button locks like a key.{' '}
             <A href="/native/frame#opcodes">Opcode</A> <code>0x0A</code>.
           </p>
           <pre class="api-signature">LOCK  0x0A  ·  payload 6 bytes</pre>
@@ -57,9 +56,9 @@ const Lock: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>the input class, as the <A href="/native/commands/lock">table above</A></td></tr>
-              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>which input within the class, little-endian; <code>0xFFFF</code> = a <A href="/native/commands/lock#blanket">blanket</A></td></tr>
-              <tr><td>3</td><td><code>direction</code></td><td><code>u8</code></td><td>which sign or which edge, <A href="/native/commands/lock#direction"><code>0-4</code></A></td></tr>
+              <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>input class (<A href="/native/commands/lock">table above</A>)</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>input within the class, little-endian; <code>0xFFFF</code> = a <A href="/native/commands/lock#blanket">blanket</A></td></tr>
+              <tr><td>3</td><td><code>direction</code></td><td><code>u8</code></td><td>sign or edge, <A href="/native/commands/lock#direction"><code>0-4</code></A></td></tr>
               <tr><td>4</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <A href="/native/commands/lock#scale"><code>-255 to 255</code></A></td></tr>
             </tbody>
           </table>
@@ -72,7 +71,7 @@ const Lock: Component = () => {
               </thead>
               <tbody>
                 <tr><td>min</td><td><code>-255</code></td><td>2.55x, reversed. Anything negative reverses what it keeps.</td></tr>
-                <tr><td>invert</td><td><code>-100</code></td><td>All of it, the other way round. The inversion, exactly.</td></tr>
+                <tr><td>invert</td><td><code>-100</code></td><td>All of it, reversed: an exact inversion.</td></tr>
                 <tr><td>block</td><td><code>0</code></td><td>None of the physical value reaches the PC.</td></tr>
                 <tr><td>pass</td><td><code>100</code></td><td>All of it, byte for byte.</td></tr>
                 <tr><td>max</td><td><code>255</code></td><td>2.55x. Anything above <code>100</code> amplifies.</td></tr>
@@ -88,24 +87,24 @@ const Lock: Component = () => {
                 <tr><td>carry</td><td>A physical delta at 1 kHz is almost always <code>+/-1</code>, so the dropped fraction is banked per axis and sign: <code>40</code> on a run of <code>-1</code> emits <code>0 0 -1 0 -1</code>.</td></tr>
                 <tr><td>saturate</td><td>A weighed value clamps to the field's declared range, never wraps, and forfeits the fraction it could not carry.</td></tr>
                 <tr><td>one bit</td><td>A button, key or media usage locks below <code>100</code> and passes at <code>100</code>. The box stores that, not the number sent.</td></tr>
-                <tr><td>sign</td><td>A negative reverses what it keeps: the magnitude is weighed and the result flipped, so <code>-100</code> is an inversion with no rounding. A momentary usage carries one bit and has nothing to reverse, so a negative on one is refused.</td></tr>
+                <tr><td>sign</td><td>A negative reverses what it keeps: the magnitude is weighed and the result flipped, so <code>-100</code> is an inversion with no rounding. A negative on a momentary usage (one bit, nothing to reverse) is refused.</td></tr>
                 <tr><td>direction</td><td>The slot is picked from the sign of the delta <em>before</em> the weigh, so a directional negative does not loop: <code>-100</code> on <code>positive</code> sends rightward motion left and leaves leftward motion alone.</td></tr>
               </tbody>
             </table>
             <div class="callout callout--warning">
               <p>
-                Weighing runs before injected motion drains, so a gain that fills an axis leaves the
-                box's own motion no room. It is held, not dropped, and leaves as one report once there
-                is room.
+                Weighing runs before injected motion drains, so a gain that fills an axis leaves
+                injected motion no room. It is held, not dropped, and leaves as one report once room
+                opens.
               </p>
               <p>
                 The threshold is the field's declared maximum divided by the gain: at <code>255</code>{' '}
-                on an 8-bit axis the field fills at a physical delta of <code>50</code>, and the clamp
-                bites at <code>51</code>.
+                on an 8-bit axis the field fills at a physical delta of <code>50</code> and clamps
+                from <code>51</code>.
               </p>
               <p>
-                <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> does not bound
-                it: a moved report re-opens the ride window, and riding never governed the immediate{' '}
+                <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> doesn't bound
+                it: a moved report re-opens the ride window, and riding never gates the immediate{' '}
                 <A href="/native/injection#state">accumulator</A>.
               </p>
             </div>
@@ -131,7 +130,7 @@ const Lock: Component = () => {
               Media has no sign and no edge, so{' '}
               <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> always reports
               its direction as <code>0</code>. Every shipped client refuses <code>3</code> and{' '}
-              <code>4</code> on all three momentary classes rather than depend on the class.
+              <code>4</code> on all three momentary classes.
             </p>
             <p>
               On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to the
@@ -158,11 +157,11 @@ const Lock: Component = () => {
             </div>
             <table class="api-params">
               <thead>
-                <tr><th>Blanket</th><th>How the box holds it</th></tr>
+                <tr><th>Blanket</th><th>Storage</th></tr>
               </thead>
               <tbody>
-                <tr><td>button, axis</td><td>Expands as it lands, so a later command on one member overwrites just that member.</td></tr>
-                <tr><td>key, media</td><td>One flag, which a per-usage unlock does not lift.</td></tr>
+                <tr><td>button, axis</td><td>Expanded on arrival, so a later command on one member overwrites only that member.</td></tr>
+                <tr><td>key, media</td><td>One flag; a per-usage unlock doesn't lift it.</td></tr>
               </tbody>
             </table>
           </div>
@@ -178,16 +177,15 @@ link loss   the inter-chip link drops
 detach      the real device goes away
 re-clone    the box binds a device again`}</pre>
             <p>
-              Hold one with a keepalive if it has to outlast a second of quiet. Injection auto-clears
-              on the same events, described on{' '}
-              <A href="/native/injection#safety">Injection</A>.
+              A keepalive holds one past a second of quiet. Injection auto-clears on the same events;
+              see <A href="/native/injection#safety">Injection</A>.
             </p>
             <p>Every clear here but the unlock moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
           </div>
 
           <div class="api-response-label">EFFECT</div>
           <p>
-            Scales are PC-owned and never visible to the game PC.{' '}
+            Scales are PC-owned and invisible to the game PC.{' '}
             <A href="/native/commands/requests#locks"><code>QUERY(LOCKS)</code></A> reads the active
             set; the HEALTH{' '}
             <A href="/native/commands/requests#health"><code>LOCK_ON</code></A> bit is set while
@@ -232,12 +230,12 @@ re-clone    the box binds a device again`}</pre>
 
       <div id="bearing" data-search-target>
         <Card>
-          <CardHeader title="The bearing" subtitle="The direction the box is currently injecting" />
+          <CardHeader title="Bearing" subtitle="Current injected direction" />
           <p>
             <code>with</code> and <code>against</code> weigh a physical delta by its sign relative
             to the bearing. The box reads it at the{' '}
-            <A href="/native/injection">merge point</A>, where the pending injection and the arriving
-            report are in hand at once.
+            <A href="/native/injection">merge point</A>, where pending injection and the arriving
+            report are both present.
           </p>
           <pre class="diagram">{`  MOVE(+10)        MOVE(+10)                          idle
       |                |
@@ -247,20 +245,20 @@ re-clone    the box binds a device again`}</pre>
        bearing +X       bearing +X               no bearing`}</pre>
           <div class="api-response-label">LIFETIME</div>
           <p>
-            Each axis carries its own bearing and its own deadline, set by{' '}
+            Each axis has its own bearing and deadline, set by{' '}
             <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. A window of{' '}
-            <code>0</code> holds no bearing at all, so <code>with</code> and <code>against</code> stop
+            <code>0</code> holds no bearing, so <code>with</code> and <code>against</code> stop
             weighing without being cleared.
           </p>
           <table class="api-params">
             <thead>
-              <tr><th>Event</th><th>Effect on the bearing</th></tr>
+              <tr><th>Event</th><th>Bearing</th></tr>
             </thead>
             <tbody>
-              <tr><td>An injected delta on that axis, from a <A href="/native/commands/move#move"><code>MOVE</code></A> on either <A href="/native/injection#state">accumulator</A> or from a <A href="/native/commands/clip#entries">clip</A></td><td>Sets it, and restarts the deadline. A zero component leaves that axis standing.</td></tr>
+              <tr><td>An injected delta on that axis, from a <A href="/native/commands/move#move"><code>MOVE</code></A> on either <A href="/native/injection#state">accumulator</A> or from a <A href="/native/commands/clip#entries">clip</A></td><td>Set, and the deadline restarted; a zero component leaves that axis unchanged.</td></tr>
               <tr><td>Injected motion still owed on that axis, held for a ride or queued behind a slow <A href="/native/commands/option#emit">emit</A> gate</td><td>Keeps restarting the deadline, and points at the net pending delta rather than the last one sent.</td></tr>
               <tr><td>The window elapses</td><td>That axis has no bearing. Both relative directions stop applying and it passes at its fixed-sign scale alone.</td></tr>
-              <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared, then set again by that same command's own delta. Only a zero-delta discard leaves the axis without one.</td></tr>
+              <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared, then set again by the command's own delta; only a zero-delta discard leaves the axis without one.</td></tr>
               <tr><td>Motion held for a ride goes stale</td><td>Cleared with the held motion, on the next native move that would have carried it.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#move-ride"><code>OPTION(MOVE_RIDE)</code></A></td><td>Cleared, along with the held motion it pointed with.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A></td><td>Cleared, and the banked <A href="/native/commands/lock#scale">carry</A> with it.</td></tr>
@@ -283,7 +281,7 @@ re-clone    the box binds a device again`}</pre>
             </thead>
             <tbody>
               <tr><td>per axis</td><td><code>0</code></td><td>Each axis against its own bearing, independently.</td></tr>
-              <tr><td>vector</td><td><code>1</code></td><td>Only the part of the movement lying along the injected direction.</td></tr>
+              <tr><td>vector</td><td><code>1</code></td><td>Only the movement along the injected direction.</td></tr>
             </tbody>
           </table>
           <pre class="diagram">{`the bearing is down-right at 45 degrees, the device moves straight right
@@ -305,14 +303,14 @@ re-clone    the box binds a device again`}</pre>
             byte down to it.
           </p>
           <p>The wheel and pan are never projected; each weighs against its own bearing.</p>
-          <div class="api-response-label">THE TWO STAGES</div>
+          <div class="api-response-label">TWO STAGES</div>
           <table class="api-params">
             <thead>
               <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
             </thead>
             <tbody>
-              <tr><td>1. project</td><td>The relative pair, one number for both axes.</td><td>The part lying along the bearing. What survives is written back to both axes.</td></tr>
-              <tr><td>2. weigh</td><td>Each axis's own fixed pair, chosen by the sign now standing in the field.</td><td>What stage 1 left, not the delta the report carried.</td></tr>
+              <tr><td>1. project</td><td>The relative pair, one number for both axes.</td><td>The part along the bearing; what survives is written back to both axes.</td></tr>
+              <tr><td>2. weigh</td><td>Each axis's fixed pair, chosen by the sign now in the field.</td><td>What stage 1 left, not the delta the report carried.</td></tr>
             </tbody>
           </table>
           <p>
@@ -333,8 +331,9 @@ re-clone    the box binds a device again`}</pre>
   stage 2  scale        100     0   on the sign now in each field
   emitted                +6     0`}</pre>
           <p>
-            Per axis, stage 2 would have left Y alone: the report carried nothing there. Swap that block
-            for a scale of <code>200</code> and the same <code>-6</code> leaves as <code>-12</code>.
+            Per axis, stage 2 would leave Y alone, since the report carried nothing there. With a scale
+            of <code>200</code> instead of the block, the same <code>-6</code> leaves as{' '}
+            <code>-12</code>.
           </p>
         </Card>
       </div>
