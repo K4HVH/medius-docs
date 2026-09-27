@@ -46,7 +46,7 @@ const Introduction: Component = () => {
             </tr>
             <tr>
               <td>Safety</td>
-              <td><code>#![forbid(unsafe_code)]</code></td>
+              <td><code>#![forbid(unsafe_code)]</code>; on Windows, <code>unsafe</code> only in the serial read's comm-event wait</td>
             </tr>
           </tbody>
         </table>
