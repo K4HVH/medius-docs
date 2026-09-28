@@ -389,8 +389,8 @@ const Option: Component = () => {
               <code>full</code> is <code>1</code>.
             </p>
             <p>
-              The model emits at most 127 counts per axis per report and carries the rest as debt, so
-              motion past that rate finishes late by as long as the excess takes to emit.
+              A rendered report is bounded per axis by what the clone's cursor field holds, and by no less
+              than 127 counts. The model carries anything past that as debt into the reports after it.
             </p>
           </div>
           <div class="callout callout--info">
