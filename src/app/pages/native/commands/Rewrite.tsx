@@ -206,8 +206,12 @@ const Rewrite: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              On EP0 the table matches class and vendor requests. The clone serves standard requests
-              such as <code>GET_DESCRIPTOR</code> itself; change a descriptor with{' '}
+              On EP0 the table matches class and vendor requests, and the two standard requests the clone
+              passes to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than
+              the HID and report descriptors, and an other-speed configuration too long for the box to hold.
+            </p>
+            <p>
+              The clone serves every other standard request itself; change a descriptor with{' '}
               <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
               passes every request to the table.
             </p>

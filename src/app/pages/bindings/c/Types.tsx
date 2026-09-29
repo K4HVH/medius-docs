@@ -115,7 +115,7 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_DEVICE_KIND_UNKNOWN</code></td><td><code>0</code></td><td>Neither a Boot keyboard nor mouse.</td></tr>
+              <tr><td><code>MEDIUS_DEVICE_KIND_UNKNOWN</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/bindings/c/api#inspectors"><code>medius_device_info_is_cloned</code></A> tells them apart.</td></tr>
               <tr><td><code>MEDIUS_DEVICE_KIND_KEYBOARD</code></td><td><code>1</code></td><td>The device is a keyboard.</td></tr>
               <tr><td><code>MEDIUS_DEVICE_KIND_MOUSE</code></td><td><code>2</code></td><td>The device is a mouse.</td></tr>
             </tbody>
@@ -1037,7 +1037,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>uint16_t</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>A relayed packet the box could not carry: a vendor IN packet the PC is not draining, or an OUT packet the box could not queue or that a bus reset overtook. OUT is otherwise paced by making the PC wait, so it stays 0 there. No player input is lost.</td></tr>
               <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>Times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
@@ -1201,7 +1201,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>True (1) when</th></tr></thead>
             <tbody>
               <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed.</td></tr>
               <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>

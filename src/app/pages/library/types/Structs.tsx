@@ -222,7 +222,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>A relayed packet the box could not carry: a vendor IN packet the PC is not draining, or an OUT packet the box could not queue or that a bus reset overtook. OUT is otherwise paced by making the PC wait, so it stays 0 there. No player input is lost.</td></tr>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
@@ -946,7 +946,7 @@ for t in &table.entries {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed.</td></tr>
               <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>

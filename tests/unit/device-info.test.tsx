@@ -139,6 +139,22 @@ describe('DeviceInfo: a clone with nothing to inject into', () => {
     const { findByText, queryByText } = render(() => <DeviceInfo />);
     await findByText('No device cloned yet.');
     expect(queryByText(/no input features/)).toBeNull();
+    expect(queryByText('Full clone')).toBeNull();
+    expect(queryByText('Serial number')).toBeNull();
+  });
+
+  it('an attached device refused for capacity says so, not "yet"', async () => {
+    mock.health = health({ mouseAttached: true, cloneConfigured: false });
+    mock.mouse = { vid: 0, pid: 0, bcdDevice: 0, bcdUsb: 0, hasSerial: false, hasBos: false, kind: 0, product: '' };
+    mock.caps = none;
+    mock.rate = rate; mock.stats = stats;
+    mock.imperfect = { allowed: false, overCapacity: true, cloneImperfect: false };
+
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText(/attached but not cloned/);
+    await findByText(/over box capacity, or high speed/);
+    expect(queryByText('No device cloned yet.')).toBeNull();
+    expect(queryByText('Serial number')).toBeNull();
   });
 });
 

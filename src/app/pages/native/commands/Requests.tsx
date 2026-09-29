@@ -483,7 +483,7 @@ const Requests: Component = () => {
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
               <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
-              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>a relayed packet the box could not carry: a vendor IN packet the PC is not draining, or an OUT packet the box could not queue or that a bus reset overtook; OUT is otherwise paced by making the PC wait, so it stays 0 there</td></tr>
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
             </tbody>
           </table>
@@ -763,7 +763,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
-              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed</td></tr>
               <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
             </tbody>
           </table>

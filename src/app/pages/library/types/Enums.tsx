@@ -29,7 +29,7 @@ const Enums: Component = () => {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a Boot keyboard nor a Boot mouse.</td></tr>
+              <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/library/types/structs#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart.</td></tr>
               <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>A keyboard.</td></tr>
               <tr><td><code>Mouse</code></td><td><code>2</code></td><td>A mouse.</td></tr>
             </tbody>

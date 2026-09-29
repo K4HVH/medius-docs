@@ -66,10 +66,11 @@ const Options: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              A device the box can't clone exactly has more interrupt-IN endpoints live at once or HID
-              interfaces than the box serves, runs at high speed, has configurations the box did not
-              capture, a vendor bulk or isochronous endpoint, or has a report descriptor truncated or
-              never captured.
+              A device the box can't clone exactly has more IN endpoints live at once, or HID interfaces,
+              than the box serves; more interfaces, alternate settings or endpoints than the box reads
+              (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
+              speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
+              a report descriptor truncated or never captured.
             </p>
           </div>
           <div class="callout callout--warning">
