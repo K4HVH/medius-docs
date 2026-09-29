@@ -117,9 +117,9 @@ const Rewrite: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Drop every report the clone emits on endpoint 1: <code>cls = 9</code>,{' '}
-            <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code> (<code>DROP</code>),{' '}
-            <code>mlen = 0</code>:
+            Drop every report the clone emits on endpoint 1, the device's zero-length packets too:{' '}
+            <code>cls = 9</code>, <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code>{' '}
+            (<code>DROP</code>), <code>mlen = 0</code>, which matches every packet:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
 | A5     | 1C     | 00     | 09 00  | 09     | 01 00  |

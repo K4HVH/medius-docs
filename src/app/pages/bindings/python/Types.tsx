@@ -1028,7 +1028,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
                 <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
                 <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
-                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
+                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining or a zero-length packet on an interrupt IN endpoint it is not reading; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
                 <tr><td><code>session</code></td><td><code>int</code></td><td>times the box released some or all of the session state a host set; 0 at boot, wraps, so compare for inequality; the library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
               </tbody>
             </table>
@@ -1349,15 +1349,17 @@ for b in medius.list_boxes():
                 <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>whether a rewrite rule changed, dropped, answered or refused the packet: <code>flags</code> bit 7 on <code>HID_IN</code>, <code>HID_OUT</code>, the vendor classes, <code>CONTROL</code> and <code>EMIT</code></td></tr>
                 <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NAK</code> when no answer came) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
                 <tr><td><code>bus_event()</code></td><td><code>Optional[<A href="/bindings/python/types#busevent">BusEvent</A>]</code></td><td>the decoded lifecycle event; <code>None</code> for any class but <code>BUS</code> or an unknown kind</td></tr>
-                <tr><td><code>bulk_end_of_transfer()</code> / <code>bulk_zlp()</code></td><td><code>bool</code></td><td>the two <code>VENDOR_BULK</code> framing bits, read off <code>flags</code></td></tr>
+                <tr><td><code>zlp()</code></td><td><code>bool</code></td><td>whether the event is a zero-length packet, or on a HID endpoint a <code>HID_IN</code> or <code>EMIT</code> report one ended after its bytes: <code>flags</code> bit 1 on the packet classes</td></tr>
+                <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>whether a <code>VENDOR_BULK</code> event is the last of its transfer, <code>flags</code> bit 0</td></tr>
               </tbody>
             </table>
             <div class="api-response-label">FLAGS, BY CLASS</div>
             <table class="api-params">
               <thead><tr><th>Class</th><th>flags</th><th>Read it with</th></tr></thead>
               <tbody>
-                <tr><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code>, <code>EMIT</code></td><td>b7 a rewrite rule acted on the packet</td><td><code>rule_acted()</code></td></tr>
-                <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 a rule acted</td><td><code>bulk_end_of_transfer()</code>, <code>bulk_zlp()</code>, <code>rule_acted()</code></td></tr>
+                <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 a zero-length packet, on a HID endpoint also one that ended the report after the event's bytes; b7 a rewrite rule acted on the packet</td><td><code>zlp()</code>, <code>rule_acted()</code></td></tr>
+                <tr><td><code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code></td><td>b1 a zero-length packet, b7 a rule acted</td><td><code>zlp()</code>, <code>rule_acted()</code></td></tr>
+                <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 a rule acted</td><td><code>bulk_end_of_transfer()</code>, <code>zlp()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received, a <A href="/bindings/python/types#controlstatus"><code>ControlStatus</code></A>; b7 a rule acted</td><td><code>control_status()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>0xFE</code> when no answer came</td><td><code>transfer_status()</code></td></tr>
                 <tr><td><code>BUS</code></td><td>the <A href="/bindings/python/types#busevent"><code>BusEventKind</code></A>; the bytes hold its arguments</td><td><code>bus_event()</code></td></tr>

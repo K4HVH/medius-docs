@@ -222,7 +222,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining or a zero-length packet on an interrupt IN endpoint it is not reading; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped.</td></tr>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
@@ -501,6 +501,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether the capture or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
               <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>Whether a <A href="/library/advanced/rewrite">rewrite rule</A> at this event's class changed, dropped, answered or refused the packet. A <code>Pass</code> rule, or a <code>Patch</code> that changed nothing, leaves it false.</td></tr>
               <tr><td><code>control_status()</code></td><td><code>Option&lt;<A href="/library/types/enums#control-status">ControlStatus</A>&gt;</code></td><td>The handshake the game PC received, for a <code>Control</code> event.</td></tr>
+              <tr><td><code>zlp()</code></td><td><code>bool</code></td><td>Whether the event is a zero-length packet. An event is one packet, except a <code>HidIn</code> or <code>Emit</code> event on a HID endpoint, which carries a report of up to 64 bytes whole: there, with bytes, a zero-length packet ended the report after them.</td></tr>
+              <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>Whether a <code>VendorBulk</code> event is the last of its transfer.</td></tr>
             </tbody>
           </table>
           <p>
@@ -510,7 +512,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
           <table class="api-params">
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
-              <tr><td><code>HidIn</code>, <code>HidOut</code>, <code>VendorInterrupt</code>, <code>Emit</code></td><td>b7 = a rule acted on the packet; read it with <code>rule_acted()</code>.</td></tr>
+              <tr><td><code>HidIn</code>, <code>Emit</code></td><td>b1 = a zero-length packet, on a HID endpoint also one that ended the report after the event's bytes, read with <code>zlp()</code>; b7 = a rule acted on the packet, read with <code>rule_acted()</code>.</td></tr>
+              <tr><td><code>HidOut</code>, <code>VendorInterrupt</code></td><td>b1 = a zero-length packet; b7 = a rule acted.</td></tr>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet, b7 = a rule acted.</td></tr>
               <tr><td><code>Control</code></td><td>b0-b1 = the handshake the game PC received; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>. b7 = a rule acted.</td></tr>
               <tr><td><code>ClipTransfer</code></td><td>How the clip's transfer ended; read it with <code>transfer_status()</code>, see <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A>.</td></tr>
@@ -1399,7 +1402,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code> (IN) or <code>Negative</code> (OUT). <code>With</code> and <code>Against</code> resolve at emit time, after a rule is addressed, so either is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet. One that does not fit the class is <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
-              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address, a zero-length one included, and any other matches no zero-length packet.</td></tr>
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
             </tbody>
           </table>
