@@ -167,6 +167,16 @@ const Injection: Component = () => {
             and button changes.
           </p>
           <p>
+            A native report carrying injected motion of its own goes first instead, and the box's report
+            takes a poll of its own, so two injections don't share one report.
+          </p>
+          <p>
+            That holds while the device leaves polls free (it reports less often than every poll, no other
+            report ID has reported in the last 12 ms, and the report fits one packet) and the box's report
+            waiting matches the native one in everything but motion. With two of the box's reports already
+            waiting, the native report carries them.
+          </p>
+          <p>
             A multi-packet report of the box's own goes once the device has been still for 12 ms.
           </p>
           <p>
