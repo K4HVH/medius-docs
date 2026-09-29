@@ -125,15 +125,16 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              A device the box can't clone exactly has more interrupt-IN endpoints or HID interfaces
-              than the box serves, runs at high speed, has configurations the box did not capture, a
-              vendor bulk or isochronous endpoint, or HID alternate settings, or has a report
-              descriptor truncated or never captured.
+              A device the box can't clone exactly has more interrupt-IN endpoints live at once or HID
+              interfaces than the box serves, runs at high speed, has configurations the box did not
+              capture, a vendor bulk or isochronous endpoint, or has a report descriptor truncated or
+              never captured.
             </p>
             <p>
-              The Wooting Two HE's analog stream needs a sixth interrupt-IN endpoint, past the{' '}
-              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
-              five. Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
+              The{' '}
+              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3
+              serves four interrupt-IN endpoints live at once besides endpoint 0, numbered anything up to 6; a
+              fifth is left dead. Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
               the device chip to re-clone; otherwise the clone is presented again when the change
               alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
             </p>

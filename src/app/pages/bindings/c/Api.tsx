@@ -498,6 +498,7 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code>: a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
               <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code>: a keyboard interface is bound.</td></tr>
               <tr><td><code>medius_caps_is_composite(MediusCaps caps)</code></td><td><code>bool</code>: the clone is multi-HID-interface.</td></tr>
+              <tr><td><code>medius_device_info_is_cloned(MediusDeviceInfo info)</code></td><td><code>bool</code>: a device is cloned, one with no HID interface (<code>n_hid</code> 0) included.</td></tr>
             </tbody>
           </table>
         </Card>

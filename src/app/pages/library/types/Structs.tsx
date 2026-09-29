@@ -88,8 +88,9 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
           <p>
             USB identity from{' '}
             <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is zero
-            or empty with nothing cloned. <code>Display</code> prints{' '}
-            <code>VVVV:PPPP product</code>.
+            or empty with nothing cloned, which <code>is_cloned()</code> reads: a clone with no HID
+            interface (a vendor-class pad, <code>n_hid</code> 0 in <A href="#caps"><code>Caps</code></A>) has
+            its identity filled in all the same. <code>Display</code> prints <code>VVVV:PPPP product</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -111,7 +112,9 @@ let d = DeviceInfo {
     vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201,
     has_serial: true, has_bos: true, kind: DeviceKind::Mouse, product: "G502".into(),
 };
-assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product`}</code></pre>
+assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product
+assert!(d.is_cloned());
+assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
         </Card>
       </div>
       <div id="caps" data-search-target>
@@ -157,7 +160,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
               <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>The report carries a wheel.</td></tr>
               <tr><td><code>has_pan</code></td><td><code>bool</code></td><td>The report carries an AC Pan (horizontal scroll) axis.</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
-              <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
+              <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite, 0 with nothing cloned or for a clone with no HID interface (<A href="#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
