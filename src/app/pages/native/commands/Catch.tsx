@@ -456,7 +456,7 @@ const Catch: Component = () => {
             <tbody>
               <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and only class and vendor requests are proxied; a configuration or interface change still raises a <code>BUS</code> event</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
-              <tr><td>a request with a data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
+              <tr><td>a request with an OUT data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
               <tr><td>above endpoint 0, a request a new SETUP on that endpoint replaced, or one the box had no room to queue</td><td>the box abandons it</td></tr>
             </tbody>
           </table>
