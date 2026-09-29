@@ -136,7 +136,7 @@ const Raw: Component = () => {
               <tr><th>Aspect</th><th><code>dir = 1</code>, IN</th><th><code>dir = 2</code>, OUT</th></tr>
             </thead>
             <tbody>
-              <tr><td>Interrupt</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code> and at most 64 bytes</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code></td></tr>
+              <tr><td>Interrupt</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code> and at most 64 bytes; on a HID endpoint, one of exactly <code>wMaxPacketSize</code> is ended by a ZLP when the endpoint's largest Input report is longer, as a native report of that length is</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code></td></tr>
               <tr><td>Bulk</td><td colspan="2">split at <code>wMaxPacketSize</code></td></tr>
               <tr><td>Bulk end</td><td colspan="2">a short packet, or a zero-length packet (ZLP) when the payload is an exact multiple of <code>wMaxPacketSize</code>; an empty <code>bytes</code> sends one ZLP</td></tr>
             </tbody>
@@ -146,14 +146,19 @@ const Raw: Component = () => {
 
   bytes = 130   -->   [ 64 ] [ 64 ] [ 2 ]      the 2-byte packet ends the transfer
   bytes = 128   -->   [ 64 ] [ 64 ] [ ZLP ]    an exact multiple ends on a ZLP
-  bytes = 0     -->   [ ZLP ]`}</pre>
+  bytes = 0     -->   [ ZLP ]
+
+  HID interrupt IN, wMaxPacketSize = 8, largest Input report 20 bytes
+
+  bytes = 7     -->   [ 7 ]                    a short packet ends the transfer
+  bytes = 8     -->   [ 8 ] [ ZLP ]            a whole packet short of 20: the PC's read ends at the ZLP`}</pre>
           <div class="api-response-label">QUEUES</div>
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td>HID IN, 8 reports</td><td>drops the oldest native report when full, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
+              <tr><td>HID IN, 8 reports</td><td>drops the device's oldest zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
               <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
               <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>; at 6 queued it pauses the native bulk stream until the queue drains to 2</td></tr>
               <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
@@ -223,9 +228,9 @@ const Raw: Component = () => {
               <tr><th>When</th><th>Raises</th></tr>
             </thead>
             <tbody>
-              <tr><td>the game PC reads a non-empty <code>RAW</code> report off a HID IN endpoint</td><td><A href="/native/commands/catch#catch"><code>EMIT</code></A> (<code>9</code>), <code>dir = 1</code></td></tr>
-              <tr><td>a <code>RAW</code> packet enters a vendor IN queue</td><td><A href="/native/commands/catch#catch"><code>VEND_INTR</code></A> (<code>6</code>) or <A href="/native/commands/catch#catch"><code>VEND_BULK</code></A> (<code>7</code>), <code>dir = 1</code>, stamped <A href="/native/commands/catch#clocks"><code>clk = 1</code></A> by the device chip; bulk carries the end-of-transfer and ZLP <A href="/native/commands/catch#traffic-event">flags</A></td></tr>
-              <tr><td>the game PC reads a non-empty <code>RAW</code> packet off a vendor IN endpoint</td><td><code>EMIT</code> (<code>9</code>), <code>dir = 1</code></td></tr>
+              <tr><td>the game PC reads a <code>RAW</code> report off a HID IN endpoint</td><td><A href="/native/commands/catch#catch"><code>EMIT</code></A> (<code>9</code>), <code>dir = 1</code></td></tr>
+              <tr><td>a <code>RAW</code> packet enters a vendor IN queue</td><td><A href="/native/commands/catch#catch"><code>VEND_INTR</code></A> (<code>6</code>) or <A href="/native/commands/catch#catch"><code>VEND_BULK</code></A> (<code>7</code>), <code>dir = 1</code>, stamped <A href="/native/commands/catch#clocks"><code>clk = 1</code></A> by the device chip; an empty packet carries the ZLP <A href="/native/commands/catch#traffic-event">flag</A>, and bulk the end-of-transfer flag too</td></tr>
+              <tr><td>the game PC reads a <code>RAW</code> packet off a vendor IN endpoint, an empty one with the ZLP flag</td><td><code>EMIT</code> (<code>9</code>), <code>dir = 1</code></td></tr>
             </tbody>
           </table>
         </Card>

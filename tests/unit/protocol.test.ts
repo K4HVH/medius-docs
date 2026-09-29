@@ -86,6 +86,7 @@ import {
   trafficSetup,
   trafficControlStatus,
   trafficRuleActed,
+  trafficZlp,
   trafficTransferStatus,
   trafficTruncated,
   versionString,
@@ -1149,6 +1150,19 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     // Only a control event has a handshake.
     expect(trafficControlStatus(withClass('04', '01'))).toBeNull();
     expect(trafficControlStatus(withClass('0b', '01'))).toBeNull();
+  });
+
+  it('reads a zero-length packet on every packet class, and nowhere else', () => {
+    const withClass = (cls: string, flags: string) =>
+      parseTrafficEvent(fromHex(`00 00 00 00 01 ${cls} 01 00 01 ${flags} 00 00`))!;
+    for (const cls of ['04', '05', '06', '07', '09']) {
+      expect(trafficZlp(withClass(cls, '02'))).toBe(true);
+      expect(trafficZlp(withClass(cls, '82'))).toBe(true);
+      expect(trafficZlp(withClass(cls, '80'))).toBe(false);
+    }
+    // Bit 1 is a control event's NAK and part of a clip transfer's status byte.
+    expect(trafficZlp(withClass('08', '02'))).toBe(false);
+    expect(trafficZlp(withClass('0b', '02'))).toBe(false);
   });
 
   it('splits a CONTROL transaction into its setup packet and its data stage', () => {

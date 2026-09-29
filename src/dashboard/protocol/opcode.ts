@@ -384,9 +384,11 @@ export const CATCH_FLAG_TABLE_FULL = 0x01;
 // estimate and a true zero offset both report offset 0.
 export const CLK_AGE_NONE = 0xffff;
 
-// TRAFFIC_EVENT flags for class VEND_BULK (§4.10). Bit 7 is TRAFFIC_F_RULE.
+// TRAFFIC_EVENT flags bit 0 for class VEND_BULK (§4.10): the last of its transfer. Bit 7 is TRAFFIC_F_RULE.
 export const TRAFFIC_BULK_END = 0x01;
-export const TRAFFIC_BULK_ZLP = 0x02;
+// TRAFFIC_EVENT flags bit 1 on the packet classes (§4.10): a zero-length packet. A HID_IN or EMIT event on a HID
+// endpoint carries a report of up to 64 bytes whole, so there it can also be the one that ended the report.
+export const TRAFFIC_F_ZLP = 0x02;
 
 // TRAFFIC_EVENT flags bit 7 (§4.10), on every rewrite class: a rule changed, dropped, answered or
 // refused the packet. A Pass rule, or a Patch that changed no byte, leaves it clear.

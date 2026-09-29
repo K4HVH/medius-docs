@@ -198,7 +198,8 @@ for event in &device.catch_events([filter])? {
             What <code>flags</code> carries per class is on{' '}
             <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>;{' '}
             <code>control_status()</code>, <code>rule_acted()</code>, <code>transfer_status()</code>,
-            and <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.
+            <code>zlp()</code>, <code>bulk_end_of_transfer()</code> and{' '}
+            <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.
           </p>
           <p>
             A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}

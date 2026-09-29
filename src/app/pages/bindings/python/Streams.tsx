@@ -151,7 +151,7 @@ CatchFilter.everything()                # every class, every id, one table entry
             <tbody>
               <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
               <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape), <code>cls: Class</code>, <code>direction: Direction</code></td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
-              <tr><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td><code>catch_class: CatchClass</code>, <code>id: int</code>, <code>direction: Direction</code>, <code>flags: int</code>, <code>true_len: int</code>, <code>bytes: bytes</code></td><td><code>truncated()</code>, <code>setup()</code>, <code>data()</code>, <code>control_status()</code>, <code>transfer_status()</code>, <code>bus_event()</code>, <code>bulk_end_of_transfer()</code>, <code>bulk_zlp()</code></td></tr>
+              <tr><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td><code>catch_class: CatchClass</code>, <code>id: int</code>, <code>direction: Direction</code>, <code>flags: int</code>, <code>true_len: int</code>, <code>bytes: bytes</code></td><td><code>truncated()</code>, <code>setup()</code>, <code>data()</code>, <code>control_status()</code>, <code>transfer_status()</code>, <code>bus_event()</code>, <code>bulk_end_of_transfer()</code>, <code>zlp()</code></td></tr>
               <tr><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td><code>kind: InputKind</code>, <code>usage: Optional[Usage]</code>, <code>dx</code>/<code>dy</code>/<code>dz</code>, <code>ts_us</code>, <code>clock</code></td><td><code>is_press</code>, <code>is_release</code></td></tr>
               <tr><td><A href="/bindings/python/types#logline"><code>LogLine</code></A></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
@@ -160,8 +160,8 @@ CatchFilter.everything()                # every class, every id, one table entry
             Field meanings are on <A href="/bindings/python/types">Types &amp; errors</A>; held{' '}
             <A href="/native/commands/usage">usage ids</A> come from the{' '}
             <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>.{' '}
-            <code>flags</code> is class-specific, read by one accessor per class:{' '}
-            <code>bulk_end_of_transfer()</code> / <code>bulk_zlp()</code> on{' '}
+            <code>flags</code> is class-specific, read by one accessor per meaning:{' '}
+            <code>zlp()</code> on the packet classes, <code>bulk_end_of_transfer()</code> on{' '}
             <code>VENDOR_BULK</code>, <A href="/bindings/python/types#controlstatus"><code>control_status()</code></A>{' '}
             on <code>CONTROL</code>, <code>transfer_status()</code> on <code>CLIP_TRANSFER</code>,{' '}
             <code>bus_event()</code> on <code>BUS</code>.
