@@ -6,6 +6,7 @@ import {
   deviceKindLabel,
   hasKeyboard,
   hasMouse,
+  isCloned,
   isComposite,
   macHex,
   nativeHz,
@@ -61,6 +62,9 @@ const DeviceInfo = () => {
           <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
             {(c) => (
               <>
+                <Show when={device() && !isCloned(device()!)}>
+                  <p style={muted}>No device cloned yet.</p>
+                </Show>
                 <Show when={device()?.product}>
                   <Row label="Product">{device()!.product}</Row>
                 </Show>
@@ -83,6 +87,12 @@ const DeviceInfo = () => {
                 <Show when={dash.version?.()?.name}>
                   <Row label="Box name">
                     <code>{dash.version()!.name}</code>
+                  </Row>
+                </Show>
+
+                <Show when={device() && isCloned(device()!) && !hasMouse(c()) && !hasKeyboard(c())}>
+                  <Row label="Input">
+                    <span style={muted}>Cloned, with no input features to inject into</span>
                   </Row>
                 </Show>
 

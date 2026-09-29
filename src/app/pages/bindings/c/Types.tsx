@@ -886,7 +886,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       <div id="device-info" data-search-target>
         <Card>
           <CardHeader title="MediusDeviceInfo" subtitle="The cloned device's USB identity, kind, and product" />
-          <p>From <A href="/bindings/c/api#queries"><code>medius_device_device_info</code></A>; all-zero/empty when nothing is cloned. <code>product</code> is a NUL-terminated UTF-8 string.</p>
+          <p>From <A href="/bindings/c/api#queries"><code>medius_device_device_info</code></A>; all-zero/empty when nothing is cloned, which <A href="/bindings/c/api#inspectors"><code>medius_device_info_is_cloned</code></A> reads: a clone with no HID interface (<code>n_hid</code> 0) has its identity filled in. <code>product</code> is a NUL-terminated UTF-8 string.</p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>

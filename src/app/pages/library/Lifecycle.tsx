@@ -119,8 +119,10 @@ assert!(after > before);`}</code></pre>
   boots    ---- RESP(VERSION), SEQ 0 ----------------->  a hello it did not ask for: a restart
   release  <--- QUERY(STATS) --------------------------  on the keepalive
            ---- RESP(STATS) -------------------------->  session moved: a release
-           <--- QUERY(CAPS), repeated -----------------  until a HID interface is bound
-           ---- RESP(CAPS) --------------------------->
+           <--- QUERY(CAPS), repeated -----------------  until a HID interface is bound,
+           ---- RESP(CAPS) --------------------------->  or, with none,
+           <--- QUERY(DEVICE_INFO) --------------------  until a device is cloned
+           ---- RESP(DEVICE_INFO) -------------------->
            <--- INJECT, LOCK, CATCH -------------------  } the held state
            <--- REWRITE, TRANSFORM --------------------  }
            <--- CLIP_SET, CLIP_TRIGGER ----------------  the clip's settings and triggers

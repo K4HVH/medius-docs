@@ -915,6 +915,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>exposes a BOS descriptor</td></tr>
                 <tr><td><code>kind</code></td><td><A href="/bindings/python/types#devicekind"><code>DeviceKind</code></A></td><td>the device's primary kind (Boot-interface protocol)</td></tr>
                 <tr><td><code>product</code></td><td><code>str</code></td><td>the product string (empty when none)</td></tr>
+                <tr><td><code>is_cloned()</code></td><td><code>bool</code></td><td>a device is cloned, one with no HID interface (<code>n_hid</code> 0) included; with nothing cloned every field is zero</td></tr>
               </tbody>
             </table>
           </div>

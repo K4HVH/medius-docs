@@ -138,6 +138,12 @@ export interface DeviceInfo {
 }
 
 // vid:pid formatted as the familiar 04X:04X, e.g. "046D:C08B".
+// Whether a device is cloned: with none, the identity reads all-zero (§4.3). A clone with no HID interface
+// reads nHid 0, as nothing cloned does, so this is what tells them apart.
+export function isCloned(d: DeviceInfo): boolean {
+  return d.vid !== 0 || d.pid !== 0;
+}
+
 export function vidPid(d: DeviceInfo): string {
   const hex = (n: number) => n.toString(16).toUpperCase().padStart(4, '0');
   return `${hex(d.vid)}:${hex(d.pid)}`;
