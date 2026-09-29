@@ -63,7 +63,9 @@ const DeviceInfo = () => {
             {(c) => (
               <>
                 <Show when={device() && !isCloned(device()!)}>
-                  <p style={muted}>No device cloned yet.</p>
+                  <p style={muted}>
+                    {mouseAttached() ? 'A device is attached but not cloned; the box log says why.' : 'No device cloned yet.'}
+                  </p>
                 </Show>
                 <Show when={device()?.product}>
                   <Row label="Product">{device()!.product}</Row>
@@ -73,7 +75,7 @@ const DeviceInfo = () => {
                     <Chip variant="neutral">{deviceKindLabel(device()!.kind)}</Chip>
                   </Row>
                 </Show>
-                <Show when={device()?.vid}>
+                <Show when={device() && isCloned(device()!)}>
                   <Row label="USB ID">
                     <code>{vidPid(device()!)}</code>
                     <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
@@ -128,7 +130,7 @@ const DeviceInfo = () => {
 
                 <Show when={imperfect()}>
                   {(imp) => (
-                    <>
+                    <Show when={(device() && isCloned(device()!)) || imp().overCapacity}>
                       <Section title="Clone">
                       <Row label="Full clone">
                         <Show
@@ -140,13 +142,15 @@ const DeviceInfo = () => {
                           </Chip>
                         </Show>
                       </Row>
-                      <Row label="Serial number">
-                        <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
-                          {device()?.hasSerial ? 'Cloned' : 'None'}
-                        </Chip>
-                      </Row>
+                      <Show when={device() && isCloned(device()!)}>
+                        <Row label="Serial number">
+                          <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
+                            {device()?.hasSerial ? 'Cloned' : 'None'}
+                          </Chip>
+                        </Row>
+                      </Show>
                       </Section>
-                    </>
+                    </Show>
                   )}
                 </Show>
               </>

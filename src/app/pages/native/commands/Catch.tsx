@@ -454,9 +454,9 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and only class and vendor requests are proxied; a configuration or interface change still raises a <code>BUS</code> event</td></tr>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Two standard requests go to the device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and an other-speed configuration too long for the box to hold</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
-              <tr><td>a request with an OUT data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
+              <tr><td>on endpoint 0, a request with an OUT data stage past 2048 bytes; above endpoint 0, any data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
               <tr><td>above endpoint 0, a request a new SETUP on that endpoint replaced, or one the box had no room to queue</td><td>the box abandons it</td></tr>
             </tbody>
           </table>
