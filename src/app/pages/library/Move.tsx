@@ -167,9 +167,12 @@ device.pan(-1)?;  // pan left`}</code></pre>
           <p>
             <A href="/library/move#move-rel"><code>move_rel</code></A> with{' '}
             <code>MoveTiming::Now</code>: the delta leaves on the box's next mouse report instead of
-            waiting for a real move, and held motion stays held. The box sends its own report for it on the
-            first poll no native report can be ready for; a native report that reaches the box first
-            carries the delta instead.
+            waiting for a real move, and held motion stays held.
+          </p>
+          <p>
+            The box sends its own report for it on the first poll no native report can be ready for. A
+            native report that reaches the box first carries the delta instead, unless it carries injected
+            motion of its own while the mouse leaves polls free; then the delta takes a poll of its own.
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`device.set_movement_riding(Some(Duration::from_millis(20)))?;
