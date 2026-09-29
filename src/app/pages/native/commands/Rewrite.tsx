@@ -206,9 +206,10 @@ const Rewrite: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              On EP0 the table matches class and vendor requests, and the two standard requests the clone
-              passes to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than
-              the HID and report descriptors, and an other-speed configuration too long for the box to hold.
+              On EP0 the table matches class and vendor requests, and the standard requests the clone passes
+              to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
+              and report descriptors, and, while the clone is configured, a device qualifier or other-speed
+              configuration the box did not keep.
             </p>
             <p>
               The clone serves every other standard request itself; change a descriptor with{' '}

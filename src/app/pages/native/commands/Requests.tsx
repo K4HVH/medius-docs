@@ -265,8 +265,8 @@ const Requests: Component = () => {
               <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
               <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
-              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its Boot-interface protocol (below)</td></tr>
-              <tr><td>11..</td><td><code>product</code></td><td><code>UTF-8</code></td><td>product string, filling the rest of the payload; may be empty</td></tr>
+              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its HID report descriptors and Boot declarations: one carrying both kinds reads keyboard with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse otherwise (below)</td></tr>
+              <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII; in English when the device lists it, else in its first language; may be empty</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -448,8 +448,8 @@ const Requests: Component = () => {
             two chips.
           </p>
           <p>
-            <code>relay_drops</code> is back-pressure on a relayed stream, expected under load and
-            counted apart so a busy vendor pipe doesn't read as lost input. The eight narrowed
+            <code>relay_drops</code> is relayed traffic and commands that went no further, counted apart
+            so a vendor stream the PC is not draining doesn't read as lost native input. The eight narrowed
             counters clamp at their max instead of wrapping; the three drop counts are full width.
           </p>
           <p>
@@ -483,7 +483,7 @@ const Requests: Component = () => {
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
               <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
-              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>a relayed packet the box could not carry: a vendor IN packet the PC is not draining, or an OUT packet the box could not queue or that a bus reset overtook; OUT is otherwise paced by making the PC wait, so it stays 0 there</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
             </tbody>
           </table>

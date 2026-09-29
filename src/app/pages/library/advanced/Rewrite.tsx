@@ -32,7 +32,7 @@ const Rewrite: Component = () => {
                           ^ id = endpoint number
 
               a rule acts at the [ bracketed ] stage its class names; ANY acts at each
-              on EP0 only class and vendor requests reach [ CONTROL ]`}</pre>
+              on EP0 only the requests passed to the device reach [ CONTROL ]`}</pre>
         <p>
           A packet reaches the clip's{' '}
           <A href="/library/clip#packet-triggers">packet triggers</A> ahead of the table, and one a
