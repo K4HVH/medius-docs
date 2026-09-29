@@ -156,7 +156,7 @@ const Raw: Component = () => {
               <tr><td>HID IN, 8 reports</td><td>drops the oldest native report when full, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
               <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
               <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>; at 6 queued it pauses the native bulk stream until the queue drains to 2</td></tr>
-              <tr><td>OUT relay, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code></td></tr>
+              <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
           <div class="callout callout--warning">

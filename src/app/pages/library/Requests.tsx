@@ -181,11 +181,13 @@ match r.native_hz() {
             Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. Nonzero{' '}
             <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the way to the
             PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between
-            the box's two chips. <code>relay_drops</code> is back-pressure on a relayed stream and rises
-            under load with no input lost. The narrowed counters saturate instead of wrapping; the three
-            drop counts are full width. <code>session</code> moves each time the box releases some or all
-            of what a host set; the library watches it for{' '}
-            <A href="/library/lifecycle#restart">session recovery</A>.
+            the box's two chips.
+          </p>
+          <p>
+            <code>relay_drops</code> counts relayed traffic and commands that went no further, none of it
+            native input. The narrowed counters saturate instead of wrapping; the three drop counts are
+            full width. <code>session</code> moves each time the box releases some or all of what a host
+            set; the library watches it for <A href="/library/lifecycle#restart">session recovery</A>.
           </p>
 
           <div class="api-response-label">EXAMPLE</div>

@@ -21,7 +21,9 @@ const Enums: Component = () => {
           <p>
             The <code>kind</code> field of a{' '}
             <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, read from the
-            cloned device's USB Boot-interface <code>bInterfaceProtocol</code>. It also drives{' '}
+            cloned device's HID report descriptors and Boot declarations: one carrying both kinds reads keyboard
+            with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse
+            otherwise. It also drives{' '}
             <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A> and{' '}
             <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
             <code>Display</code> prints the lowercase name.
@@ -116,7 +118,7 @@ const Enums: Component = () => {
               <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
               <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
-              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, class and vendor requests).</td><td>every control endpoint.</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device).</td><td>every control endpoint.</td></tr>
               <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
               <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
               <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
@@ -874,7 +876,7 @@ match reply.status {
                 <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the endpoint number</td></tr>
                 <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
                 <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
-                <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply. On EP0, class and vendor requests only; a control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
+                <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply. On EP0, the requests the clone passes to the device (class and vendor ones, and a few standard ones); a control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
                 <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
                 <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every surface a packet crosses, so a report meets the rule at <code>HidIn</code> and again at <code>Emit</code>. <code>Pass</code>, <code>Patch</code> and <code>Replace</code> only, ranked below every other class.</td><td>ignored</td></tr>
               </tbody>
@@ -933,7 +935,7 @@ match reply.status {
                 <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
                 <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index, counting from 0</td></tr>
                 <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is that index, <code>index</code> the interface number</td></tr>
-                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: up to 127 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
+                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: up to 126 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
                 <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
               </tbody>
             </table>

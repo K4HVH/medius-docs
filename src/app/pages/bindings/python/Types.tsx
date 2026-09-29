@@ -491,7 +491,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
                 <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>an endpoint number</td><td>every vendor interrupt endpoint</td></tr>
                 <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>an endpoint number</td><td>every vendor bulk endpoint</td></tr>
-                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, class and vendor requests)</td><td>every control endpoint</td></tr>
+                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device)</td><td>every control endpoint</td></tr>
                 <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>the bus lifecycle</td></tr>
                 <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/bindings/python/api#clip">clip</A>'s transfer ran on</td><td>every control endpoint</td></tr>
@@ -913,7 +913,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>bcd_usb</code></td><td><code>int</code></td><td>USB spec (BCD)</td></tr>
                 <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>exposes a serial string</td></tr>
                 <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>exposes a BOS descriptor</td></tr>
-                <tr><td><code>kind</code></td><td><A href="/bindings/python/types#devicekind"><code>DeviceKind</code></A></td><td>the device's primary kind (Boot-interface protocol)</td></tr>
+                <tr><td><code>kind</code></td><td><A href="/bindings/python/types#devicekind"><code>DeviceKind</code></A></td><td>the device's primary kind, from its HID report descriptors</td></tr>
                 <tr><td><code>product</code></td><td><code>str</code></td><td>the product string (empty when none)</td></tr>
                 <tr><td><code>is_cloned()</code></td><td><code>bool</code></td><td>a device is cloned, one with no HID interface (<code>n_hid</code> 0) included; with nothing cloned every field is zero</td></tr>
               </tbody>
@@ -1028,7 +1028,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
                 <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
                 <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
-                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>back-pressure on a relayed stream, either direction; load rather than lost input</td></tr>
+                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
                 <tr><td><code>session</code></td><td><code>int</code></td><td>times the box released some or all of the session state a host set; 0 at boot, wraps, so compare for inequality; the library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
               </tbody>
             </table>

@@ -101,8 +101,8 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
               <tr><td><code>bcd_usb</code></td><td><code>u16</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
               <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>The clone serves a serial string.</td></tr>
               <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>The clone serves a BOS descriptor.</td></tr>
-              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The device's primary kind, from its Boot-interface protocol.</td></tr>
-              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves (empty when it serves none).</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The device's primary kind, from its HID report descriptors.</td></tr>
+              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves, in ASCII with <code>?</code> for each character outside it (empty when it serves none).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -205,7 +205,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <p>
             Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the
             way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
-            lost between the box's two chips; <code>relay_drops</code> is load, not lost input. The
+            lost between the box's two chips; <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input. The
             narrowed fields saturate instead of wrapping; the three drop counts are full width, and{' '}
             <code>session</code> wraps.
           </p>
@@ -222,7 +222,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>A relayed packet the box could not carry: a vendor IN packet the PC is not draining, or an OUT packet the box could not queue or that a bus reset overtook. OUT is otherwise paced by making the PC wait, so it stays 0 there. No player input is lost.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet the PC is not draining; an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped.</td></tr>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
