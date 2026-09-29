@@ -285,14 +285,15 @@ const Requests: Component = () => {
               <tr><th>Value</th><th>Kind</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td>unknown</td></tr>
+              <tr><td><code>0</code></td><td>unknown: neither a mouse nor a keyboard (a clone with no HID interface reads this), or nothing cloned</td></tr>
               <tr><td><code>1</code></td><td>keyboard</td></tr>
               <tr><td><code>2</code></td><td>mouse</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            A <code>vid</code> of <code>0</code> means nothing is attached yet. Library binding:{' '}
+            A <code>vid</code> and <code>pid</code> of <code>0</code> mean nothing is cloned yet; a clone with
+            no HID interface reads <code>primary_kind</code> 0 with its identity filled in. Library binding:{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -333,7 +334,7 @@ const Requests: Component = () => {
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
               <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
               <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
-              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite</td></tr>
+              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite, 0 with nothing cloned or for a clone with no HID interface (a vendor-class pad), which <A href="#device-info"><code>DEVICE_INFO</code></A>'s identity tells apart</td></tr>
               <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
               <tr><td>5</td><td><code>kbd_flags</code></td><td><code>u8</code></td><td>keyboard, the bits below</td></tr>
               <tr><td>6</td><td><code>change_driven</code></td><td><code>u8</code></td><td>per class: b0 mouse (continuous, 0), b1 keyboard/media (change-driven, 1 when bound)</td></tr>
