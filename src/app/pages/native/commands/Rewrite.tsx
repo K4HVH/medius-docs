@@ -117,9 +117,9 @@ const Rewrite: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Drop every report the clone emits on endpoint 1: <code>cls = 9</code>,{' '}
-            <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code> (<code>DROP</code>),{' '}
-            <code>mlen = 0</code>:
+            Drop every report the clone emits on endpoint 1, the device's zero-length packets too:{' '}
+            <code>cls = 9</code>, <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code>{' '}
+            (<code>DROP</code>), <code>mlen = 0</code>, which matches every packet:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
 | A5     | 1C     | 00     | 09 00  | 09     | 01 00  |
@@ -206,8 +206,13 @@ const Rewrite: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              On EP0 the table matches class and vendor requests. The clone serves standard requests
-              such as <code>GET_DESCRIPTOR</code> itself; change a descriptor with{' '}
+              On EP0 the table matches class and vendor requests, and the standard requests the clone passes
+              to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
+              and report descriptors, and, while the clone is configured, a device qualifier or other-speed
+              configuration the box did not keep.
+            </p>
+            <p>
+              The clone serves every other standard request itself; change a descriptor with{' '}
               <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
               passes every request to the table.
             </p>

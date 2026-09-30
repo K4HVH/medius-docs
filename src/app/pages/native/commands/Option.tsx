@@ -125,15 +125,17 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              A device the box can't clone exactly has more interrupt-IN endpoints or HID interfaces
-              than the box serves, runs at high speed, has configurations the box did not capture, a
-              vendor bulk or isochronous endpoint, or HID alternate settings, or has a report
-              descriptor truncated or never captured.
+              A device the box can't clone exactly has more IN endpoints live at once, or HID interfaces,
+              than the box serves; more interfaces, alternate settings or endpoints than the box reads
+              (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
+              speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
+              a report descriptor truncated or never captured.
             </p>
             <p>
-              The Wooting Two HE's analog stream needs a sixth interrupt-IN endpoint, past the{' '}
-              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3's
-              five. Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
+              The{' '}
+              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3
+              serves four IN endpoints live at once besides endpoint 0, numbered anything up to 6, a control
+              endpoint above 0 counting as one; a fifth is left dead. Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
               the device chip to re-clone; otherwise the clone is presented again when the change
               alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
             </p>
@@ -389,8 +391,8 @@ const Option: Component = () => {
               <code>full</code> is <code>1</code>.
             </p>
             <p>
-              The model emits at most 127 counts per axis per report and carries the rest as debt, so
-              motion past that rate finishes late by as long as the excess takes to emit.
+              A rendered report is bounded per axis by what the clone's cursor field holds, and by no less
+              than 127 counts. The model carries anything past that as debt into the reports after it.
             </p>
           </div>
           <div class="callout callout--info">

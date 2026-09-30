@@ -105,6 +105,59 @@ describe('DeviceInfo: one Capabilities card', () => {
   });
 });
 
+describe('DeviceInfo: a clone with nothing to inject into', () => {
+  const none = {
+    mouse: { nButtons: 0, hasX: false, hasY: false, hasWheel: false, hasReportId: false, nHid: 0 },
+    keyboard: { nKeys: 0, nkro: false, hasConsumer: false, hasSystem: false, hasReportId: false },
+    mouseChangeDriven: false, kbdChangeDriven: false,
+  };
+
+  it('a device with no HID interface reads as cloned, with no input features', async () => {
+    mock.health = health();
+    // kind 0 = unknown: a vendor-class pad has no HID interface at all.
+    mock.mouse = { vid: 0x045e, pid: 0x028e, bcdDevice: 0x0114, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: 0, product: 'Controller' };
+    mock.caps = none;
+    mock.rate = rate; mock.stats = stats;
+    mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
+
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText('Controller');
+    await findByText(/045E:028E/);
+    await findByText(/no input features/);
+    expect(queryByText('No device cloned yet.')).toBeNull();
+    expect(queryByText('Buttons')).toBeNull();
+    expect(queryByText('Rollover')).toBeNull();
+  });
+
+  it('nothing cloned reads as nothing cloned', async () => {
+    mock.health = health({ cloneConfigured: false });
+    mock.mouse = { vid: 0, pid: 0, bcdDevice: 0, bcdUsb: 0, hasSerial: false, hasBos: false, kind: 0, product: '' };
+    mock.caps = none;
+    mock.rate = rate; mock.stats = stats;
+    mock.imperfect = { allowed: false, overCapacity: false, cloneImperfect: false };
+
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText('No device cloned yet.');
+    expect(queryByText(/no input features/)).toBeNull();
+    expect(queryByText('Full clone')).toBeNull();
+    expect(queryByText('Serial number')).toBeNull();
+  });
+
+  it('an attached device refused for capacity says so, not "yet"', async () => {
+    mock.health = health({ mouseAttached: true, cloneConfigured: false });
+    mock.mouse = { vid: 0, pid: 0, bcdDevice: 0, bcdUsb: 0, hasSerial: false, hasBos: false, kind: 0, product: '' };
+    mock.caps = none;
+    mock.rate = rate; mock.stats = stats;
+    mock.imperfect = { allowed: false, overCapacity: true, cloneImperfect: false };
+
+    const { findByText, queryByText } = render(() => <DeviceInfo />);
+    await findByText(/attached but not cloned/);
+    await findByText(/over box capacity, or high speed/);
+    expect(queryByText('No device cloned yet.')).toBeNull();
+    expect(queryByText('Serial number')).toBeNull();
+  });
+});
+
 describe('DeviceInfo: an imperfect clone of a normal device', () => {
   it('a patch set or forced rate reads "Full clone: No" without an over-capacity device', async () => {
     mock.health = health({ mouseAttached: true });

@@ -42,6 +42,7 @@ import {
   TRAFFIC_CONTROL_OK,
   TRAFFIC_CONTROL_STALL,
   TRAFFIC_F_RULE,
+  TRAFFIC_F_ZLP,
   transferStatusFromU8,
 } from './opcode';
 
@@ -137,6 +138,12 @@ export interface DeviceInfo {
   product: string;
 }
 
+// Whether a device is cloned: with none, the identity reads all-zero (§4.3). A clone with no HID interface
+// reads nHid 0, as nothing cloned does, so this is what tells them apart.
+export function isCloned(d: DeviceInfo): boolean {
+  return d.vid !== 0 || d.pid !== 0;
+}
+
 // vid:pid formatted as the familiar 04X:04X, e.g. "046D:C08B".
 export function vidPid(d: DeviceInfo): string {
   const hex = (n: number) => n.toString(16).toUpperCase().padStart(4, '0');
@@ -224,8 +231,9 @@ export interface Stats {
   // report, a motion delta, an injected command.
   linkRxDrops: number;
   hostRxDrops: number;
-  // Relayed-stream back-pressure: a vendor IN packet the PC isn't draining, or an OUT packet past what
-  // the relay carries in one frame.
+  // A relayed packet the box could not carry: a vendor IN packet the PC isn't draining, a zero-length packet
+  // on an interrupt IN endpoint it isn't reading, or an OUT packet the box could not queue or that a bus reset
+  // overtook. OUT is otherwise paced by making the PC wait.
   relayDrops: number;
   // The times the box released state a host set. Wraps at 0xFFFF: compare for inequality.
   session: number;
@@ -592,7 +600,7 @@ export interface TrafficEvent {
   id: number;
   // In (device to PC) or Out (PC to device).
   dir: Direction;
-  // Class-specific (rule bit, bulk end/ZLP, control handshake, TransferStatus, BusEventKind); read it
+  // Class-specific (rule bit, ZLP, bulk end, control handshake, TransferStatus, BusEventKind); read it
   // through the traffic* helpers below.
   flags: number;
   // Length before capture truncation, telling a cut packet from a short one.
@@ -651,6 +659,20 @@ const RULED_CLASSES: ReadonlySet<number> = new Set([
 // Bit 7 of a ClipTransfer status or a BusEventKind is not the rule bit.
 export function trafficRuleActed(ev: TrafficEvent): boolean {
   return RULED_CLASSES.has(ev.cls) && (ev.flags & TRAFFIC_F_RULE) !== 0;
+}
+
+const PACKET_CLASSES: ReadonlySet<number> = new Set([
+  CatchClass.HidIn,
+  CatchClass.HidOut,
+  CatchClass.VendorInterrupt,
+  CatchClass.VendorBulk,
+  CatchClass.Emit,
+]);
+
+// A zero-length packet, or on a HID endpoint a HID_IN or EMIT report one ended after its bytes. Bit 1 of a
+// control event is its handshake, and of a ClipTransfer event part of its status.
+export function trafficZlp(ev: TrafficEvent): boolean {
+  return PACKET_CLASSES.has(ev.cls) && (ev.flags & TRAFFIC_F_ZLP) !== 0;
 }
 
 // A ClipTransfer event's TRANSFER status; Nak when no answer came.

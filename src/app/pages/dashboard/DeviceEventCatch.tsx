@@ -25,7 +25,6 @@ import {
   INJ_MEDIA,
   Out,
   TRAFFIC_BULK_END,
-  TRAFFIC_BULK_ZLP,
   filterTraffic,
   filterTrafficClass,
   filterWatch,
@@ -36,6 +35,7 @@ import {
   trafficControlStatus,
   trafficData,
   trafficRuleActed,
+  trafficZlp,
   trafficSetup,
   trafficTransferStatus,
   trafficTruncated,
@@ -147,12 +147,10 @@ const CONTROL_WORDS: Record<ControlStatus, string> = {
 // transfer's whole byte is its status, always named, OK included.
 const trafficFlags = (t: TrafficEvent): string => {
   let out = '';
-  if (t.cls === CatchClass.VendorBulk) {
-    const bits: string[] = [];
-    if (t.flags & TRAFFIC_BULK_END) bits.push('end');
-    if (t.flags & TRAFFIC_BULK_ZLP) bits.push('zlp');
-    if (bits.length) out = ` ${bits.join('+')}`;
-  }
+  const bits: string[] = [];
+  if (t.cls === CatchClass.VendorBulk && t.flags & TRAFFIC_BULK_END) bits.push('end');
+  if (trafficZlp(t)) bits.push('zlp');
+  if (bits.length) out = ` ${bits.join('+')}`;
   const handshake = trafficControlStatus(t);
   if (handshake !== null) out = CONTROL_WORDS[handshake];
   const status = trafficTransferStatus(t);

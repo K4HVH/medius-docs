@@ -42,8 +42,8 @@ const Structs: Component = () => {
           <div class="api-response-label">EXAMPLE</div>
           <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 9, fw_major: 3, fw_minor: 4, fw_patch: 2, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.4.2"); // Display omits proto_ver
+let v = Version { proto_ver: 9, fw_major: 3, fw_minor: 4, fw_patch: 3, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.4.3"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
         </Card>
@@ -88,8 +88,9 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
           <p>
             USB identity from{' '}
             <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is zero
-            or empty with nothing cloned. <code>Display</code> prints{' '}
-            <code>VVVV:PPPP product</code>.
+            or empty with nothing cloned, which <code>is_cloned()</code> reads: a clone with no HID
+            interface (a vendor-class pad, <code>n_hid</code> 0 in <A href="#caps"><code>Caps</code></A>) has
+            its identity filled in all the same. <code>Display</code> prints <code>VVVV:PPPP product</code>.
           </p>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -100,8 +101,8 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
               <tr><td><code>bcd_usb</code></td><td><code>u16</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
               <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>The clone serves a serial string.</td></tr>
               <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>The clone serves a BOS descriptor.</td></tr>
-              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The device's primary kind, from its Boot-interface protocol.</td></tr>
-              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves (empty when it serves none).</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The device's primary kind, from its HID report descriptors.</td></tr>
+              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves, in ASCII with <code>?</code> for each character outside it (empty when it serves none).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -111,7 +112,9 @@ let d = DeviceInfo {
     vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201,
     has_serial: true, has_bos: true, kind: DeviceKind::Mouse, product: "G502".into(),
 };
-assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product`}</code></pre>
+assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product
+assert!(d.is_cloned());
+assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
         </Card>
       </div>
       <div id="caps" data-search-target>
@@ -157,7 +160,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
               <tr><td><code>has_wheel</code></td><td><code>bool</code></td><td>The report carries a wheel.</td></tr>
               <tr><td><code>has_pan</code></td><td><code>bool</code></td><td>The report carries an AC Pan (horizontal scroll) axis.</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The mouse report sits behind a HID report ID.</td></tr>
-              <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite.</td></tr>
+              <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite, 0 with nothing cloned or for a clone with no HID interface (<A href="#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart).</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EXAMPLE</div>
@@ -202,7 +205,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           <p>
             Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the
             way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
-            lost between the box's two chips; <code>relay_drops</code> is load, not lost input. The
+            lost between the box's two chips; <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input. The
             narrowed fields saturate instead of wrapping; the three drop counts are full width, and{' '}
             <code>session</code> wraps.
           </p>
@@ -219,7 +222,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame. Expected under load.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped.</td></tr>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
@@ -498,6 +501,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether the capture or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
               <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>Whether a <A href="/library/advanced/rewrite">rewrite rule</A> at this event's class changed, dropped, answered or refused the packet. A <code>Pass</code> rule, or a <code>Patch</code> that changed nothing, leaves it false.</td></tr>
               <tr><td><code>control_status()</code></td><td><code>Option&lt;<A href="/library/types/enums#control-status">ControlStatus</A>&gt;</code></td><td>The handshake the game PC received, for a <code>Control</code> event.</td></tr>
+              <tr><td><code>zlp()</code></td><td><code>bool</code></td><td>Whether the event is a zero-length packet. An event is one packet, except a <code>HidIn</code> or <code>Emit</code> event on a HID endpoint, which carries a report of up to 64 bytes whole: there, with bytes, a zero-length packet ended the report after them.</td></tr>
+              <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>Whether a <code>VendorBulk</code> event is the last of its transfer.</td></tr>
             </tbody>
           </table>
           <p>
@@ -507,7 +512,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
           <table class="api-params">
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
-              <tr><td><code>HidIn</code>, <code>HidOut</code>, <code>VendorInterrupt</code>, <code>Emit</code></td><td>b7 = a rule acted on the packet; read it with <code>rule_acted()</code>.</td></tr>
+              <tr><td><code>HidIn</code>, <code>Emit</code></td><td>b1 = a zero-length packet, on a HID endpoint also one that ended the report after the event's bytes, read with <code>zlp()</code>; b7 = a rule acted on the packet, read with <code>rule_acted()</code>.</td></tr>
+              <tr><td><code>HidOut</code>, <code>VendorInterrupt</code></td><td>b1 = a zero-length packet; b7 = a rule acted.</td></tr>
               <tr><td><code>VendorBulk</code></td><td>b0 = end of transfer, b1 = zero-length packet, b7 = a rule acted.</td></tr>
               <tr><td><code>Control</code></td><td>b0-b1 = the handshake the game PC received; read it with <code>control_status()</code>, see <A href="/library/types/enums#control-status"><code>ControlStatus</code></A>. b7 = a rule acted.</td></tr>
               <tr><td><code>ClipTransfer</code></td><td>How the clip's transfer ended; read it with <code>transfer_status()</code>, see <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A>.</td></tr>
@@ -943,7 +949,7 @@ for t in &table.entries {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed.</td></tr>
               <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>
@@ -1396,7 +1402,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>The flow the rule matches: <code>Both</code>, <code>Positive</code> (IN) or <code>Negative</code> (OUT). <code>With</code> and <code>Against</code> resolve at emit time, after a rule is addressed, so either is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.</td></tr>
               <tr><td><code>action</code></td><td><A href="/library/types/enums#rewrite-action"><code>RewriteAction</code></A></td><td>What the rule does to a matched packet. One that does not fit the class is <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.</td></tr>
               <tr><td><code>offset</code></td><td><code>u16</code></td><td>Where a patching action writes; other actions ignore it.</td></tr>
-              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address.</td></tr>
+              <tr><td><code>match_bytes</code>, <code>mask</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The head bytes and their mask, compared over the packet head byte for byte. They are the same length, 16 bytes at most (<code>REWRITE_MATCH_MAX</code>), or the rule is an <A href="/library/types/errors#errors"><code>Error</code></A>; empty matches every packet on the address, a zero-length one included, and any other matches no zero-length packet.</td></tr>
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
             </tbody>
           </table>

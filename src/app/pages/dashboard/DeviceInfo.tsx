@@ -6,6 +6,7 @@ import {
   deviceKindLabel,
   hasKeyboard,
   hasMouse,
+  isCloned,
   isComposite,
   macHex,
   nativeHz,
@@ -61,6 +62,11 @@ const DeviceInfo = () => {
           <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
             {(c) => (
               <>
+                <Show when={device() && !isCloned(device()!)}>
+                  <p style={muted}>
+                    {mouseAttached() ? 'A device is attached but not cloned; the box log says why.' : 'No device cloned yet.'}
+                  </p>
+                </Show>
                 <Show when={device()?.product}>
                   <Row label="Product">{device()!.product}</Row>
                 </Show>
@@ -69,7 +75,7 @@ const DeviceInfo = () => {
                     <Chip variant="neutral">{deviceKindLabel(device()!.kind)}</Chip>
                   </Row>
                 </Show>
-                <Show when={device()?.vid}>
+                <Show when={device() && isCloned(device()!)}>
                   <Row label="USB ID">
                     <code>{vidPid(device()!)}</code>
                     <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
@@ -83,6 +89,12 @@ const DeviceInfo = () => {
                 <Show when={dash.version?.()?.name}>
                   <Row label="Box name">
                     <code>{dash.version()!.name}</code>
+                  </Row>
+                </Show>
+
+                <Show when={device() && isCloned(device()!) && !hasMouse(c()) && !hasKeyboard(c())}>
+                  <Row label="Input">
+                    <span style={muted}>Cloned, with no input features to inject into</span>
                   </Row>
                 </Show>
 
@@ -118,7 +130,7 @@ const DeviceInfo = () => {
 
                 <Show when={imperfect()}>
                   {(imp) => (
-                    <>
+                    <Show when={(device() && isCloned(device()!)) || imp().overCapacity}>
                       <Section title="Clone">
                       <Row label="Full clone">
                         <Show
@@ -130,13 +142,15 @@ const DeviceInfo = () => {
                           </Chip>
                         </Show>
                       </Row>
-                      <Row label="Serial number">
-                        <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
-                          {device()?.hasSerial ? 'Cloned' : 'None'}
-                        </Chip>
-                      </Row>
+                      <Show when={device() && isCloned(device()!)}>
+                        <Row label="Serial number">
+                          <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
+                            {device()?.hasSerial ? 'Cloned' : 'None'}
+                          </Chip>
+                        </Row>
+                      </Show>
                       </Section>
-                    </>
+                    </Show>
                   )}
                 </Show>
               </>

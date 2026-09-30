@@ -491,13 +491,15 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_traffic_event_rule_acted(const MediusTrafficEvent *ev)</code></td><td><code>bool</code>: a rewrite rule changed, dropped, answered or refused the packet, <code>flags</code> bit 7 on HID_IN, HID_OUT, the vendor classes, CONTROL and EMIT; <code>false</code> for any other class.</td></tr>
               <tr><td><code>medius_traffic_event_transfer_status(const MediusTrafficEvent *ev, uint8_t *out)</code></td><td><code>bool</code>: how the transfer ended, as a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> value (<code>_NAK</code> when no answer came); <code>false</code> for any class but CLIP_TRANSFER.</td></tr>
               <tr><td><code>medius_traffic_event_bus_event(const MediusTrafficEvent *ev, MediusBusEvent *out)</code></td><td><code>bool</code>: the decoded lifecycle event; <code>false</code> for any class but BUS or an unknown kind.</td></tr>
-              <tr><td><code>medius_traffic_event_bulk_end_of_transfer(ev)</code> / <code>medius_traffic_event_bulk_zlp(ev)</code></td><td><code>bool</code>: end-of-transfer / zero-length packet, for a <code>VENDOR_BULK</code> event. A ZLP carries no bytes and still terminates a transfer.</td></tr>
+              <tr><td><code>medius_traffic_event_bulk_end_of_transfer(ev)</code></td><td><code>bool</code>: the last of its transfer, for a <code>VENDOR_BULK</code> event.</td></tr>
+              <tr><td><code>medius_traffic_event_zlp(ev)</code></td><td><code>bool</code>: a zero-length packet, <code>flags</code> bit 1 on HID_IN, HID_OUT, the vendor classes and EMIT. A HID_IN or EMIT event on a HID endpoint carries a report of up to 64 bytes whole, so there the bit can mean a ZLP ended the report after the event's bytes; every other event is one packet.</td></tr>
               <tr><td><code>medius_catch_filter_same_address(MediusCatchFilter a, MediusCatchFilter b)</code></td><td><code>bool</code>: the two name the same box table entry, whatever their captures.</td></tr>
               <tr><td><code>medius_catch_class_is_input(MediusCatchClass class_)</code> / <code>_is_traffic(class_)</code></td><td><code>bool</code>: one of the four parsed-input classes, which carry no packet / one of the eight byte-oriented ones.</td></tr>
               <tr><td><code>medius_clip_status_is_held(const MediusClipStatus *status, MediusUsage usage)</code></td><td><code>bool</code>: is the clip holding that usage down.</td></tr>
               <tr><td><code>medius_caps_has_mouse(MediusCaps caps)</code></td><td><code>bool</code>: a mouse interface is bound. See <A href="/library/requests">Requests</A>.</td></tr>
               <tr><td><code>medius_caps_has_keyboard(MediusCaps caps)</code></td><td><code>bool</code>: a keyboard interface is bound.</td></tr>
               <tr><td><code>medius_caps_is_composite(MediusCaps caps)</code></td><td><code>bool</code>: the clone is multi-HID-interface.</td></tr>
+              <tr><td><code>medius_device_info_is_cloned(MediusDeviceInfo info)</code></td><td><code>bool</code>: a device is cloned, one with no HID interface (<code>n_hid</code> 0) included.</td></tr>
             </tbody>
           </table>
         </Card>

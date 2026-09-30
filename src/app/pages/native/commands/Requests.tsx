@@ -176,9 +176,9 @@ const Requests: Component = () => {
             <A href="/library/requests#version"><code>query_version</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.4.2</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+          <p>Firmware <code>3.4.3</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 09     | 03     | 04     | 02     | ...    |
+| A5     | 06     | 00     | 0F 00  | 00     | 09     | 03     | 04     | 03     | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
 +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
@@ -265,8 +265,8 @@ const Requests: Component = () => {
               <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
               <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
-              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its Boot-interface protocol (below)</td></tr>
-              <tr><td>11..</td><td><code>product</code></td><td><code>UTF-8</code></td><td>product string, filling the rest of the payload; may be empty</td></tr>
+              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its HID report descriptors and Boot declarations: one carrying both kinds reads keyboard with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse otherwise (below)</td></tr>
+              <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII; in English when the device lists it, else in its first language; may be empty</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">FLAGS</div>
@@ -285,14 +285,15 @@ const Requests: Component = () => {
               <tr><th>Value</th><th>Kind</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td>unknown</td></tr>
+              <tr><td><code>0</code></td><td>unknown: neither a mouse nor a keyboard (a clone with no HID interface reads this), or nothing cloned</td></tr>
               <tr><td><code>1</code></td><td>keyboard</td></tr>
               <tr><td><code>2</code></td><td>mouse</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">EFFECT</div>
           <p>
-            A <code>vid</code> of <code>0</code> means nothing is attached yet. Library binding:{' '}
+            A <code>vid</code> and <code>pid</code> of <code>0</code> mean nothing is cloned yet; a clone with
+            no HID interface reads <code>primary_kind</code> 0 with its identity filled in. Library binding:{' '}
             <A href="/library/requests#device-info"><code>device_info</code></A>.
           </p>
           <div class="api-response-label">EXAMPLE</div>
@@ -333,7 +334,7 @@ const Requests: Component = () => {
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
               <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
               <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
-              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite</td></tr>
+              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite, 0 with nothing cloned or for a clone with no HID interface (a vendor-class pad), which <A href="#device-info"><code>DEVICE_INFO</code></A>'s identity tells apart</td></tr>
               <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
               <tr><td>5</td><td><code>kbd_flags</code></td><td><code>u8</code></td><td>keyboard, the bits below</td></tr>
               <tr><td>6</td><td><code>change_driven</code></td><td><code>u8</code></td><td>per class: b0 mouse (continuous, 0), b1 keyboard/media (change-driven, 1 when bound)</td></tr>
@@ -447,8 +448,8 @@ const Requests: Component = () => {
             two chips.
           </p>
           <p>
-            <code>relay_drops</code> is back-pressure on a relayed stream, expected under load and
-            counted apart so a busy vendor pipe doesn't read as lost input. The eight narrowed
+            <code>relay_drops</code> is relayed traffic and commands that went no further, counted apart
+            so traffic that never carried the player's input doesn't read as lost native input. The eight narrowed
             counters clamp at their max instead of wrapping; the three drop counts are full width.
           </p>
           <p>
@@ -482,7 +483,7 @@ const Requests: Component = () => {
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
               <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
-              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>back-pressure on a relayed stream, either direction: a vendor IN packet the PC is not draining, or an OUT packet past what the relay carries in one frame</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
             </tbody>
           </table>
@@ -762,7 +763,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
-              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device needs more interrupt-IN endpoints or HID interfaces than the box serves, or runs at high speed</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed</td></tr>
               <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
             </tbody>
           </table>
@@ -1064,17 +1065,17 @@ const Requests: Component = () => {
           </p>
           <div class="api-response-label">EXAMPLE</div>
           <p>
-            Both chips on <code>3.4.2</code>, device on <code>ota_1</code>, host on{' '}
+            Both chips on <code>3.4.3</code>, device on <code>ota_1</code>, host on{' '}
             <code>ota_0</code>, both images <code>valid</code>, nothing staged:
           </p>
           <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03     | 04     | 02     |
+| A5     | 06     | 01     | 11 00  | 0B     | 03     | 04     | 03     |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | what   | devmaj | devmin | devpat |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 
 +--------+--------+--------+--------+--------+--------+--------+--------+
-| 01     | 02     | 01     | 03     | 04     | 02     | 00     | 02     |
+| 01     | 02     | 01     | 03     | 04     | 03     | 00     | 02     |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | devslt | devsta | hostpr | hstmaj | hstmin | hstpat | hstslt | hststa |
 +--------+--------+--------+--------+--------+--------+--------+--------+
