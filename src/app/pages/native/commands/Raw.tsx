@@ -164,6 +164,12 @@ const Raw: Component = () => {
               <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
+          <p>
+            The device's own reports take at most one place in an interrupt IN queue: the box polls the device
+            only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
+            <code>RAW</code> reports. They take two where the next report is fetched before the PC has the last
+            one whole, and for a few seconds after one reaches the clone too late for its poll.
+          </p>
           <div class="callout callout--warning">
             <p>
               A bulk IN transfer longer than the queue's free slots reaches the game PC truncated. At{' '}
