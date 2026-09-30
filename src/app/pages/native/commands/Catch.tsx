@@ -88,7 +88,7 @@ const Catch: Component = () => {
               <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
               <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
-              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, class and vendor requests)</td><td>every control endpoint</td></tr>
+              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device)</td><td>every control endpoint</td></tr>
               <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
               <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
@@ -417,13 +417,37 @@ const Catch: Component = () => {
               <tr><th>Class</th><th><code>flags</code></th></tr>
             </thead>
             <tbody>
-              <tr><td><code>HID_IN</code>, <code>HID_OUT</code>, <code>VEND_INTR</code>, <code>EMIT</code></td><td>b7 <A href="/native/commands/catch#rules"><code>RULE</code></A>; the rest <code>0</code></td></tr>
+              <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 zero-length packet, on a HID endpoint also one that ended the report after the event's bytes; b7 <A href="/native/commands/catch#rules"><code>RULE</code></A></td></tr>
+              <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code></td><td>b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
               <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, or no reply within 4&nbsp;s), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
             </tbody>
           </table>
+          <div class="api-response-label">ZERO-LENGTH PACKETS</div>
+          <p>
+            An event is one packet, except a <code>HID_IN</code> or <code>EMIT</code> event on a HID
+            endpoint: that one carries a report of up to 64 bytes whole, however many packets it took. A
+            longer report comes a packet at a time.
+          </p>
+          <table class="api-params">
+            <thead><tr><th>A HID endpoint's device sends</th><th>Events</th></tr></thead>
+            <tbody>
+              <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
+              <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>
+              <tr><td>a zero-length packet whose poll went to a report of the box's own</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
+              <tr><td>a zero-length packet answering a poll the PC missed: what the device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
+            </tbody>
+          </table>
+          <pre class="diagram">{`  the device sends            HID_IN              the PC takes               EMIT
+
+  [ 32 ] [ ZLP ]      -->  32 bytes, b1     [ 32 ] [ ZLP ]         -->  32 bytes, b1
+  [ 32 ] [ 32 ]       -->  64 bytes         [ 32 ] [ 32 ]          -->  64 bytes
+  [ ZLP ]             -->   0 bytes, b1     [ ZLP ]                -->   0 bytes, b1
+  [ ZLP ]             -->   0 bytes, b1     a report of the box's  -->  its bytes (b1 if it ends in one)
+
+  vendor endpoint: one event a packet, so [ 64 ] [ ZLP ] is 64 bytes, then 0 bytes with b1`}</pre>
           <div class="api-response-label">CONTROL EVENTS</div>
           <p>
             <code>CONTROL</code> carries one event per <em>completed transaction</em>:{' '}
@@ -454,10 +478,11 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and only class and vendor requests are proxied; a configuration or interface change still raises a <code>BUS</code> event</td></tr>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests go to the device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and, while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
+              <tr><td>a string the box did not keep</td><td>the clone asks the device for it directly, with no event</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
-              <tr><td>a request with a data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
-              <tr><td>above endpoint 0, a request a new SETUP on that endpoint replaced, or one the box had no room to queue</td><td>the box abandons it</td></tr>
+              <tr><td>on endpoint 0, a request with an OUT data stage past 2048 bytes; above endpoint 0, any data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
+              <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
             </tbody>
           </table>
           <div class="api-response-label">CLIP_XFER EVENTS</div>

@@ -22,7 +22,7 @@ const Introduction: Component = () => {
           <tbody>
             <tr>
               <td>Crate version</td>
-              <td><code>3.4.2</code></td>
+              <td><code>3.4.3</code></td>
             </tr>
             <tr>
               <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
@@ -46,7 +46,7 @@ const Introduction: Component = () => {
             </tr>
             <tr>
               <td>Safety</td>
-              <td><code>#![forbid(unsafe_code)]</code></td>
+              <td><code>#![forbid(unsafe_code)]</code>; on Windows, <code>unsafe</code> only in the serial read's comm-event wait</td>
             </tr>
           </tbody>
         </table>

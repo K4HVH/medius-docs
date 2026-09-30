@@ -73,7 +73,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
             <table class="api-params">
               <thead><tr><th>Endpoint type</th><th>Over the limit</th></tr></thead>
               <tbody>
-                <tr><td>Interrupt</td><td>Dropped box-side past one packet (the endpoint's <code>wMaxPacketSize</code>), <code>IN</code> or <code>OUT</code>.</td></tr>
+                <tr><td>Interrupt</td><td>Dropped box-side past one packet (the endpoint's <code>wMaxPacketSize</code>), <code>IN</code> or <code>OUT</code>. On a HID <code>IN</code> endpoint, a packet that fills <code>wMaxPacketSize</code> short of the endpoint's largest Input report is followed by a zero-length packet, as a native report of that length is, so the PC's read ends with it.</td></tr>
                 <tr><td>Bulk</td><td>Split at <code>wMaxPacketSize</code> in either direction and ended with a short packet, or a zero-length packet when the payload is an exact multiple of it.</td></tr>
               </tbody>
             </table>

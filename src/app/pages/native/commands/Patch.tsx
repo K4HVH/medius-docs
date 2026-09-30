@@ -305,7 +305,7 @@ const Patch: Component = () => {
               <tr><td>DEVICE</td><td>Writes the served identity, which <A href="/native/commands/requests#device-info"><code>QUERY(DEVICE_INFO)</code></A> then reports. The set and every learned setting stay keyed on the real VID:PID. Byte 17, <code>bNumConfigurations</code>, is set to the captured configuration count after the patch lands.</td></tr>
               <tr><td>CONFIG</td><td>Writes the served configuration, which the box then parses for its interfaces and endpoints, so a patched endpoint faces the same clone checks a native one does.</td></tr>
               <tr><td>REPORT</td><td>Writes the report descriptor before the box parses it, so <A href="/native/commands/inject"><code>INJECT</code></A>, <A href="/native/commands/lock"><code>LOCK</code></A> and the emitted report follow the patched layout.</td></tr>
-              <tr><td>STRING</td><td>Serves the bytes as the whole string, any length up to 127, one UTF-16 code unit per byte; a <code>0x00</code> byte ends it. Index <code>0</code>, the language list, is not patched.</td></tr>
+              <tr><td>STRING</td><td>Serves the bytes as the whole string, any length up to 126, one UTF-16 code unit per byte; a <code>0x00</code> byte ends it. Index <code>0</code>, the language list, is not patched.</td></tr>
               <tr><td>BOS</td><td>Writes the BOS descriptor, on a device that has one.</td></tr>
             </tbody>
           </table>
