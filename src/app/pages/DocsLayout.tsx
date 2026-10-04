@@ -18,7 +18,8 @@ import {
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
 import AiActions from '../AiActions';
-import { useDashboard } from './dashboard/context';
+import { useBoxes, useNativeFlash } from './dashboard/context';
+import { BoxList } from './dashboard/BoxList';
 import Prism from '../prism';
 import '../../styles/docs.css';
 
@@ -176,6 +177,9 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
 ];
 
+// The tabs that show one box, and so carry its name.
+const BOX_ROUTES = new Set(['/dashboard', '/dashboard/control', '/dashboard/advanced-control', '/dashboard/update']);
+
 const isMobileQuery = () =>
   typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 
@@ -185,8 +189,9 @@ const DocsLayout = (props: RouteSectionProps) => {
   const [searchOpen, setSearchOpen] = createSignal(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const dash = useDashboard();
-  const flashing = () => dash.status() === 'flashing';
+  const native = useNativeFlash();
+  const boxes = useBoxes();
+  const flashing = native.running;
   // Block in-app navigation (back/forward, links, programmatic) during a flash.
   useBeforeLeave((e) => {
     if (flashing()) e.preventDefault();
@@ -267,7 +272,9 @@ const DocsLayout = (props: RouteSectionProps) => {
 
   const pageTitle = createMemo(() => {
     const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs, ...aiAccessTabs];
-    return all.find(t => t.value === location.pathname)?.label ?? '';
+    const label = all.find(t => t.value === location.pathname)?.label ?? '';
+    const box = BOX_ROUTES.has(location.pathname) ? boxes.selected()?.session.name() : null;
+    return box ? `${label} - ${box}` : label;
   });
 
   let contentRef: HTMLDivElement | undefined;
@@ -295,6 +302,12 @@ const DocsLayout = (props: RouteSectionProps) => {
   const handlePageNav = (value: string) => {
     if (flashing()) return;
     navigate(value);
+    if (isMobile()) setPaneState('closed');
+  };
+
+  // A box picked from a page that shows none opens on Device.
+  const handleBoxPick = () => {
+    if (!BOX_ROUTES.has(location.pathname) && !flashing()) navigate('/dashboard');
     if (isMobile()) setPaneState('closed');
   };
 
@@ -467,6 +480,8 @@ const DocsLayout = (props: RouteSectionProps) => {
             />
           </Show>
           <Show when={activeSection() === 'dashboard'}>
+            <Divider spacing="compact" label="Boxes" labelAlign="start" />
+            <BoxList onPick={handleBoxPick} />
             <Divider spacing="compact" label="Dashboard" labelAlign="start" />
             <Tabs
               orientation="vertical"

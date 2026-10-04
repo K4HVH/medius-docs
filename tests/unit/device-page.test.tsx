@@ -19,6 +19,8 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     supported: mock.supported,
     secure: mock.secure,
     status: () => mock.status,
+    held: () => mock.status === 'lost',
+    present: () => true,
     updateOnly: () => mock.updateOnly,
     verdict: () => mock.verdict,
     error: () => mock.error,
@@ -135,5 +137,12 @@ describe('Device', () => {
     await waitFor(() => {
       expect(container.textContent ?? '').not.toMatch(/Factory reset/i);
     });
+  });
+
+  it('a box that stopped answering keeps its card, with the reason and a way to let it go', async () => {
+    mock.status = 'lost';
+    const { getByRole } = render(() => <Device />);
+    await waitFor(() => expect(getByRole('alert').textContent).toMatch(/isn't answering/i));
+    expect(getByRole('button', { name: /disconnect/i })).toBeTruthy();
   });
 });

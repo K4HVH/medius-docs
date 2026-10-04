@@ -1,14 +1,25 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup } from '@solidjs/testing-library';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import type { ConnectVerdict } from '../../src/dashboard/serial';
 
+const st = vi.hoisted(() => ({
+  make: () => {
+    const [status, setStatus] = createSignal<string>('disconnected');
+    const [held, setHeld] = createSignal(false);
+    const [present, setPresent] = createSignal(true);
+    return { status, setStatus, held, setHeld, present, setPresent };
+  },
+}));
+
 const mock = vi.hoisted(() => ({
+  s: null as ReturnType<(typeof st)['make']> | null,
   supported: true,
   secure: true,
   error: null as string | null,
-  status: 'disconnected' as string,
   verdict: null as ConnectVerdict | null,
   connect: vi.fn(async (_force?: boolean) => {}),
+  disconnects: 0,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -16,9 +27,17 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     supported: mock.supported,
     secure: mock.secure,
     error: () => mock.error,
-    status: () => mock.status,
+    status: () => mock.s!.status(),
+    held: () => mock.s!.held(),
+    present: () => mock.s!.present(),
     verdict: () => mock.verdict,
     connect: mock.connect,
+    // Mirrors the real one: the box is let go and nothing is held.
+    disconnect: async () => {
+      mock.disconnects += 1;
+      mock.s!.setHeld(false);
+      mock.s!.setStatus('disconnected');
+    },
   }),
 }));
 
@@ -27,10 +46,14 @@ vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
 import { ConnectPanel } from '../../src/app/pages/dashboard/ConnectPanel';
 
+beforeEach(() => {
+  mock.s = st.make();
+});
+
 afterEach(() => {
   cleanup();
   mock.verdict = null;
-  mock.status = 'disconnected';
+  mock.disconnects = 0;
   mock.supported = true;
   mock.secure = true;
   mock.error = null;
@@ -97,7 +120,7 @@ describe('ConnectPanel', () => {
   it('a held port says to close what is holding it', () => {
     mock.verdict = { kind: 'busy' };
     const { container, getAllByRole } = render(() => <ConnectPanel />);
-    expect(container.textContent).toMatch(/other tabs/i);
+    expect(container.textContent).toMatch(/another tab or program/i);
     expect(getAllByRole('button')).toHaveLength(1);
   });
 
@@ -132,7 +155,7 @@ describe('ConnectPanel', () => {
   it('an update failure is shown while merely disconnected, not only in an error state', () => {
     // An update whose box never came back leaves status 'disconnected', so gating the callout on
     // 'error' hid the one message that says what to do.
-    mock.status = 'disconnected';
+    mock.s!.setStatus('disconnected');
     mock.error = 'the box did not come back on its own';
     const { getByRole } = render(() => <ConnectPanel />);
     expect(getByRole('alert').textContent).toContain('the box did not come back on its own');
@@ -141,7 +164,7 @@ describe('ConnectPanel', () => {
   it('a flash failure is shown even when an older connect verdict is still set', () => {
     // The verdict used to win and the flash reason was dropped: connect with no box, then fail an
     // update on another tab, then come back here.
-    mock.status = 'error';
+    mock.s!.setStatus('error');
     mock.error = 'the image is too big for this box';
     mock.verdict = { kind: 'no-port' };
     const { container } = render(() => <ConnectPanel />);
@@ -171,5 +194,28 @@ describe('ConnectPanel', () => {
     getByRole('button', { name: /set up/i }).click();
     expect(onSetup).toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('a box that stopped answering says so, reconnects by itself, and can be let go', async () => {
+    mock.s!.setHeld(true);
+    mock.s!.setStatus('lost');
+    const { getByRole, queryByRole } = render(() => <ConnectPanel />);
+    expect(getByRole('alert').textContent).toMatch(/isn't answering.*USB1/i);
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+    expect((getByRole('button', { name: /reconnecting/i }) as HTMLButtonElement).disabled).toBe(true);
+    getByRole('button', { name: /disconnect/i }).click();
+    await waitFor(() => expect(getByRole('button', { name: /^connect$/i })).toBeTruthy());
+    expect(mock.disconnects).toBe(1);
+  });
+
+  it('a held box that was unplugged waits for USB2, and can be forgotten', async () => {
+    mock.s!.setHeld(true);
+    mock.s!.setPresent(false);
+    mock.s!.setStatus('lost');
+    const { getByRole, queryByRole } = render(() => <ConnectPanel />);
+    expect(getByRole('status').textContent).toMatch(/not plugged in.*USB2/i);
+    expect(queryByRole('button', { name: /reconnecting/i })).toBeNull();
+    getByRole('button', { name: /forget/i }).click();
+    await waitFor(() => expect(mock.disconnects).toBe(1));
   });
 });

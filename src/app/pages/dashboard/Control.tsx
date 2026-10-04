@@ -69,7 +69,7 @@ const Control = () => {
                     </Button>
                   </Match>
 
-                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
+                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
                     <ConnectPanel />
                   </Match>
 

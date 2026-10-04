@@ -3,6 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { versionString } from '../../../dashboard/protocol';
+import type { ConnectVerdict } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { WiringPorts } from './PortDiagram';
 
@@ -10,21 +11,31 @@ import { WiringPorts } from './PortDiagram';
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
 export const BAD_CONTEXT = "This page isn't secure. Open it again from the link you were given.";
 
-export const ConnectPanel = (props: { onSetup?: () => void }) => {
-  const dash = useDashboard();
+export interface ConnectViewProps {
+  supported: boolean;
+  secure: boolean;
+  error: string | null;
+  verdict: ConnectVerdict | null;
+  busy: boolean;
+  // `force` asks for a port instead of trying the known one.
+  connect: (force?: boolean) => void;
+  onSetup?: () => void;
+}
+
+// Connect, and what a failed connect means, for whoever is connecting.
+export const ConnectView = (props: ConnectViewProps) => {
   const navigate = useNavigate();
   const setup = () => (props.onSetup ? props.onSetup() : navigate('/dashboard/setup'));
-  const verdict = () => dash.verdict();
-  const busy = () => dash.status() === 'connecting';
+  const verdict = () => props.verdict;
+  const busy = () => props.busy;
 
-  // `force` asks for a device instead of reusing the remembered one; only the silent verdict can be
-  // about the wrong device, so only its retry forces.
+  // Only the silent verdict can be about the wrong device, so only its retry forces.
   const Connect = (p: { label?: string; force?: boolean }) => (
     <Button
       variant="primary"
       loading={busy()}
-      disabled={!dash.supported || busy()}
-      onClick={() => void dash.connect(p.force)}
+      disabled={!props.supported || busy()}
+      onClick={() => props.connect(p.force)}
     >
       {busy() ? 'Connecting...' : (p.label ?? 'Connect')}
     </Button>
@@ -38,16 +49,16 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
 
   // Callers mount this inside their own Card; the page-level copies in Device, Advanced and Setup
   // carry the card chrome.
-  if (!dash.supported)
+  if (!props.supported)
     return <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>;
-  if (!dash.secure)
+  if (!props.secure)
     return <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>;
 
   return (
     <div aria-live="polite">
       {/* Above the switch: a flash or update failure has no verdict, and a stale verdict would hide
           it. Ungated on status: an update whose box never came back leaves 'disconnected'. */}
-      <Show when={dash.error()}>
+      <Show when={props.error}>
         {(msg) => (
           <div class="callout callout--danger" role="alert">
             {msg()}
@@ -90,7 +101,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
 
         <Match when={verdict()?.kind === 'busy'}>
           <div class="callout callout--danger" role="alert">
-            Another tab has your box open. Close your other tabs.
+            Another tab or program has this box open. Close it, then try again.
           </div>
           <Connect label="Try again" />
         </Match>
@@ -162,5 +173,47 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
         </Match>
       </Switch>
     </div>
+  );
+};
+
+// The selected box: why it can't be used right now, and what to press.
+export const ConnectPanel = (props: { onSetup?: () => void }) => {
+  const dash = useDashboard();
+  return (
+    <Switch
+      fallback={
+        <ConnectView
+          supported={dash.supported}
+          secure={dash.secure}
+          error={dash.error()}
+          verdict={dash.verdict()}
+          busy={dash.status() === 'connecting'}
+          connect={(force) => void dash.connect(force)}
+          onSetup={props.onSetup}
+        />
+      }
+    >
+      <Match when={dash.held() && !dash.present()}>
+        <div class="callout callout--info" role="status">
+          Not plugged in. It reconnects when you plug USB2 in.
+        </div>
+        <Button variant="secondary" onClick={() => void dash.disconnect()}>
+          Forget
+        </Button>
+      </Match>
+      <Match when={dash.status() === 'lost'}>
+        <div class="callout callout--danger" role="alert">
+          The box isn't answering. Check USB1 is plugged in.
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+          <Button loading disabled>
+            Reconnecting...
+          </Button>
+          <Button variant="secondary" onClick={() => void dash.disconnect()}>
+            Disconnect
+          </Button>
+        </div>
+      </Match>
+    </Switch>
   );
 };

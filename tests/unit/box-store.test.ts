@@ -1,0 +1,77 @@
+import { describe, it, expect, afterEach } from 'vitest';
+import { STORE_KEY, createBoxStore } from '../../src/app/pages/dashboard/store';
+
+afterEach(() => localStorage.clear());
+
+const throwing = (): Storage =>
+  ({
+    getItem: () => {
+      throw new DOMException('denied', 'SecurityError');
+    },
+    setItem: () => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    },
+    removeItem: () => {},
+    clear: () => {},
+    key: () => null,
+    length: 0,
+  }) as Storage;
+
+describe('box store', () => {
+  it('starts empty', () => {
+    const s = createBoxStore(localStorage);
+    expect(s.selected()).toBeNull();
+    expect(s.held()).toEqual([]);
+  });
+
+  it('survives a reload: what one page writes the next reads', () => {
+    const a = createBoxStore(localStorage);
+    a.hold('aabbccddeeff', 'Desk');
+    a.setSelected('aabbccddeeff');
+    const b = createBoxStore(localStorage);
+    expect(b.held()).toEqual([{ mac: 'aabbccddeeff', name: 'Desk' }]);
+    expect(b.selected()).toBe('aabbccddeeff');
+  });
+
+  it('holding a box twice keeps one record, with the newer name', () => {
+    const s = createBoxStore(localStorage);
+    s.hold('aabbccddeeff', 'Desk');
+    s.hold('112233445566', 'Spare');
+    s.hold('aabbccddeeff', 'Left');
+    expect(s.held()).toEqual([
+      { mac: 'aabbccddeeff', name: 'Left' },
+      { mac: '112233445566', name: 'Spare' },
+    ]);
+  });
+
+  it('release forgets the box and nothing else', () => {
+    const s = createBoxStore(localStorage);
+    s.hold('aabbccddeeff', 'Desk');
+    s.hold('112233445566', 'Spare');
+    s.release('aabbccddeeff');
+    expect(createBoxStore(localStorage).held()).toEqual([{ mac: '112233445566', name: 'Spare' }]);
+  });
+
+  it('reads anything it did not write as empty', () => {
+    for (const bad of ['{', '"x"', '[1,2]', '{"held":"no","selected":7}', '{"held":[{"mac":3}]}']) {
+      localStorage.setItem(STORE_KEY, bad);
+      const s = createBoxStore(localStorage);
+      expect(s.held()).toEqual([]);
+      expect(s.selected()).toBeNull();
+    }
+  });
+
+  it('storage that throws leaves a store that works for this page', () => {
+    const s = createBoxStore(throwing());
+    s.hold('aabbccddeeff', 'Desk');
+    s.setSelected('aabbccddeeff');
+    expect(s.held()).toEqual([{ mac: 'aabbccddeeff', name: 'Desk' }]);
+    expect(s.selected()).toBe('aabbccddeeff');
+  });
+
+  it('works with no storage at all', () => {
+    const s = createBoxStore(null);
+    s.hold('aabbccddeeff', 'Desk');
+    expect(s.held()).toHaveLength(1);
+  });
+});

@@ -24,6 +24,7 @@ const st = vi.hoisted(() => ({
       deviceStaged: false,
       hostStaged: false,
     });
+    const [update, setUpdate] = createSignal<{ device: boolean; host: boolean; outcome: string } | null>(null);
     return {
       status,
       setStatus,
@@ -33,6 +34,8 @@ const st = vi.hoisted(() => ({
       setVersion,
       firmwareInfo,
       setFirmwareInfo,
+      update,
+      setUpdate,
     };
   },
 }));
@@ -44,6 +47,8 @@ const mock = vi.hoisted(() => ({
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
   outcome: 'verified' as 'verified' | 'sent' | 'failed',
+  // Holds the update in flight until released.
+  hold: null as Promise<void> | null,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -55,28 +60,36 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     error: () => mock.s!.error(),
     version: () => mock.s!.version(),
     firmwareInfo: () => mock.s!.firmwareInfo(),
-    flashProgress: () => null,
+    updateProgress: () => null,
+    update: () => mock.s!.update(),
+    clearUpdate: () => mock.s!.setUpdate(null),
+    held: () => true,
+    present: () => true,
     connect: async () => {
       mock.s!.setError(null);
       mock.s!.setStatus('connected');
     },
     disconnect: async () => {},
-    clearFlashResult: () => {},
     readFirmwareInfo: async () => null,
     // Mirrors the real one's observable effects, so the page is driven by state transitions rather
-    // than by the test asserting an answer it also supplied.
-    updateOverControl: async () => {
+    // than by the test asserting an answer it also supplied. The outcome is kept on the box.
+    updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }) => {
+      const s = mock.s!;
+      const run = { device: images.device !== undefined, host: images.host !== undefined };
       mock.updates += 1;
+      s.setUpdate({ ...run, outcome: 'running' });
+      s.setStatus('flashing');
+      if (mock.hold) await mock.hold;
+      if (mock.outcome === 'verified') s.setStatus('connected');
       if (mock.outcome === 'sent') {
-        mock.s!.setError(
-          'The update was sent, but the box did not come back on its own. Replug it, then connect.',
-        );
-        mock.s!.setStatus('disconnected');
+        s.setError('The update was sent, but the box did not come back on its own. Replug it, then connect.');
+        s.setStatus('disconnected');
       }
       if (mock.outcome === 'failed') {
-        mock.s!.setError('The box refused that.');
-        mock.s!.setStatus('error');
+        s.setError('The box refused that.');
+        s.setStatus('error');
       }
+      s.setUpdate({ ...run, outcome: mock.outcome });
       return mock.outcome;
     },
   }),
@@ -114,6 +127,7 @@ afterEach(() => {
   mock.updates = 0;
   mock.assets = [];
   mock.outcome = 'verified';
+  mock.hold = null;
   navigate.mockClear();
 });
 
@@ -230,6 +244,13 @@ describe('Update', () => {
     );
   });
 
+  it('a main-only update is judged on the main chip, whatever the mouse-side chip runs', async () => {
+    mock.assets = [dev];
+    const r = await runUpdate(/main only/i);
+    mock.s!.setFirmwareInfo(fw(reverted));
+    await waitFor(() => expect(r.container.textContent).toMatch(/updated and verified/i));
+  });
+
   it('a box that comes back on the old version is not called updated', async () => {
     mock.assets = [dev, host];
     const r = await runUpdate(/update both chips/i);
@@ -262,6 +283,24 @@ describe('Update', () => {
       expect(r.container.textContent).toMatch(/not on the version sent/i),
     );
     expect(r.container.textContent).not.toMatch(/updated and verified/i);
+  });
+
+  it('an update that ends while the page is away shows its result when the page comes back', async () => {
+    // Switching to another box, or another tab, unmounts this page while the box updates.
+    mock.assets = [dev, host];
+    let release = () => {};
+    mock.hold = new Promise<void>((r) => (release = r));
+    const r = await runUpdate(/update both chips/i);
+    await waitFor(() => expect(r.container.textContent).toMatch(/updating/i));
+    cleanup();
+    mock.s!.setFirmwareInfo(fw(onRelease));
+    release();
+    await waitFor(() => expect(mock.s!.update()?.outcome).toBe('verified'));
+    const back = render(() => <Update />);
+    await waitFor(() => expect(back.container.textContent).toMatch(/updated and verified/i));
+    back.getByRole('button', { name: /finish/i }).click();
+    expect(mock.s!.update()).toBeNull();
+    expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
 
   it('Back is a normal secondary button beside the primary, not a tiny one below it', async () => {

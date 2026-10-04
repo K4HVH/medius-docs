@@ -280,16 +280,6 @@ export async function requestMediusPort(): Promise<SerialPort> {
   });
 }
 
-// CH343 ports this origin was already granted; opening one needs no chooser.
-export async function grantedMediusPorts(): Promise<SerialPort[]> {
-  if (!isWebSerialSupported()) return [];
-  const ports = await navigator.serial.getPorts();
-  return ports.filter((p) => {
-    const info = p.getInfo();
-    return info.usbVendorId === WCH_VID && info.usbProductId === CH343_PID;
-  });
-}
-
 // Open a chooser filtered to an ESP32-S3 in ROM download mode (native USB).
 export async function requestRomPort(): Promise<SerialPort> {
   if (!isWebSerialSupported()) {
@@ -316,6 +306,8 @@ export class SerialLink {
   private clipSeq = 0;
   private opened = false;
   private closing = false;
+  // Date.now() of the last decoded frame of any kind; 0 before the first.
+  lastRxAt = 0;
 
   constructor(
     private readonly port: SerialPort,
@@ -968,6 +960,7 @@ export class SerialLink {
   }
 
   private onFrame(f: DecodedFrame): void {
+    this.lastRxAt = Date.now();
     if (f.ty === FrameType.Resp) {
       const p = this.pending.get(f.seq);
       // A solicited reply must match both SEQ and the request's selector byte.
@@ -1177,18 +1170,22 @@ export class SerialLink {
   }
 }
 
+export const bauds = (first?: number): number[] =>
+  first === undefined ? [...CTRL_BAUDS] : [first, ...CTRL_BAUDS.filter((b) => b !== first)];
+
 // Tries each control rate; only silence moves on, since a wrong protocol or a port that won't open
 // says nothing about the rate.
 export async function attachLink(
   port: SerialPort,
   make: (port: SerialPort) => SerialLink,
-): Promise<{ link: SerialLink; version: Version }> {
+  order: readonly number[] = CTRL_BAUDS,
+): Promise<{ link: SerialLink; version: Version; baud: number }> {
   let silent: unknown;
-  for (const baudRate of CTRL_BAUDS) {
+  for (const baud of order) {
     const link = make(port);
     try {
-      await link.open(baudRate);
-      return { link, version: await link.handshake() };
+      await link.open(baud);
+      return { link, version: await link.handshake(), baud };
     } catch (e) {
       await link.close().catch(() => undefined);
       if (!(e instanceof NoReplyError)) throw e;

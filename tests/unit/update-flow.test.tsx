@@ -56,6 +56,10 @@ vi.mock('../../src/dashboard/serial', async () => {
     await vi.importActual<typeof import('../../src/dashboard/serial/connect')>(
       '../../src/dashboard/serial/connect',
     );
+  const probe =
+    await vi.importActual<typeof import('../../src/dashboard/serial/probe')>(
+      '../../src/dashboard/serial/probe',
+    );
   const chip = (v: typeof mock.version, state: number) => ({
     major: v.fwMajor,
     minor: v.fwMinor,
@@ -72,6 +76,7 @@ vi.mock('../../src/dashboard/serial', async () => {
   });
   class FakeLink {
     serialPort = {} as SerialPort;
+    lastRxAt = 0;
     private baud = 0;
     constructor(
       _port: unknown,
@@ -153,19 +158,29 @@ vi.mock('../../src/dashboard/serial', async () => {
     async queryHealth() {
       return null;
     }
+    async queryDeviceInfo() {
+      return null;
+    }
   }
   return {
     ...link,
     ...connect,
+    ...probe,
     SerialLink: FakeLink,
+    probePort: (p: SerialPort) => probe.probePort(p, (pp) => new FakeLink(pp) as never),
     isWebSerialSupported: () => true,
     isSecureContextOk: () => true,
-    grantedMediusPorts: async () => [{} as SerialPort],
     requestMediusPort: async () => ({}) as SerialPort,
   };
 });
 
-import { DashboardProvider, useDashboard } from '../../src/app/pages/dashboard/context';
+// No port is granted yet: Connect goes straight to the chooser, which offers the one box.
+Object.defineProperty(navigator, 'serial', {
+  configurable: true,
+  value: { getPorts: async () => [], addEventListener: () => {}, removeEventListener: () => {} },
+});
+
+import { BoxScope, DashboardProvider, useDashboard } from '../../src/app/pages/dashboard/context';
 
 type Api = ReturnType<typeof useDashboard>;
 let api: Api;
@@ -176,7 +191,9 @@ const Probe = () => {
 const mountProvider = () =>
   render(() => (
     <DashboardProvider>
-      <Probe />
+      <BoxScope>
+        <Probe />
+      </BoxScope>
     </DashboardProvider>
   ));
 
@@ -238,6 +255,8 @@ describe('updateOverControl', () => {
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('verified');
     expect(api.error()).toBeNull();
+    // Kept on the box, not the page, so it is there after a tab change or a box switch.
+    expect(api.update()).toEqual({ device: true, host: false, outcome: 'verified' });
   }, 20000);
 
   it('a box that never comes back is "sent", and says so in the SHARED error', async () => {
@@ -255,6 +274,9 @@ describe('updateOverControl', () => {
     expect(api.error()).not.toMatch(/installed|verified/i);
     expect(api.firmwareInfo()).toBeNull();
     expect(api.status()).toBe('disconnected');
+    expect(api.update()?.outcome).toBe('sent');
+    // Still held, so a replug or a reload reconnects it.
+    expect(api.held()).toBe(true);
   }, 20000);
 
   it('only what was actually staged is disarmed', async () => {
@@ -274,6 +296,7 @@ describe('updateOverControl', () => {
     expect(mock.aborted.map((a) => a.target)).toEqual([1, 0]);
     expect(mock.aborted.every((a) => a.timeout === 3000)).toBe(true);
     expect(api.error()).toBeTruthy();
+    expect(api.update()).toEqual({ device: true, host: true, outcome: 'failed' });
   });
 
   it('stages the mouse-side image first, while the chip that relays it is still running its old firmware', async () => {
@@ -488,7 +511,8 @@ describe('control link rate', () => {
     mock.baud = 4_000_000;
     mock.version = V3_3_4;
     await connected();
-    expect(mock.opens).toEqual([6_000_000, 4_000_000]);
+    // The probe walks the rates once; the connect goes straight to the one that answered.
+    expect(mock.opens).toEqual([6_000_000, 4_000_000, 4_000_000]);
     expect(api.updateOnly()).toBe(true);
   });
 

@@ -14,7 +14,7 @@ import {
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
-import { useDashboard } from './context';
+import { useBoxes, useNativeFlash } from './context';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
 import { InstallPorts, WiringPorts } from './PortDiagram';
 import '../../../styles/docs.css';
@@ -25,7 +25,8 @@ const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-second
 
 // Manual ROM-download flasher: any chip, app or factory, release or upload. Works on a dead box.
 const Advanced = () => {
-  const dash = useDashboard();
+  const native = useNativeFlash();
+  const boxes = useBoxes();
   const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
   const [chip, setChip] = createSignal<FlashChip>('device');
@@ -73,7 +74,7 @@ const Advanced = () => {
     return img ? looksLikeWrongKind(img, kind()) : false;
   };
   const pct = () => {
-    const p = dash.flashProgress();
+    const p = native.progress();
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
@@ -109,7 +110,7 @@ const Advanced = () => {
   const flash = async () => {
     setErr(null);
     setFileErr(null);
-    dash.clearFlashResult();
+    native.clear();
     // Captured before the awaits so the image and its offset come from one reading.
     const target = { chip: chip(), kind: kind() };
     setBusy(true);
@@ -120,9 +121,9 @@ const Advanced = () => {
       const a = latest()?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
       const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
-      const ok = await dash.flashNative(port, img, target.kind);
+      const ok = await native.flash(port, img, target.kind);
       if (ok) setDone(true);
-      else setErr(dash.error() ?? 'That did not finish.');
+      else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {
       setErr(isUserCancel(e) ? 'Nothing to flash.' : (e as Error).message);
     } finally {
@@ -132,7 +133,7 @@ const Advanced = () => {
 
   return (
     <>
-      <Show when={!dash.supported}>
+      <Show when={!boxes.supported}>
         <div id="unsupported" data-search-target>
           <Card>
             <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
@@ -140,7 +141,7 @@ const Advanced = () => {
           </Card>
         </div>
       </Show>
-      <Show when={dash.supported && !dash.secure}>
+      <Show when={boxes.supported && !boxes.secure}>
         <div id="insecure" data-search-target>
           <Card>
             <CardHeader title="Page not secure" subtitle="No box access from this page" />
@@ -149,7 +150,7 @@ const Advanced = () => {
         </div>
       </Show>
 
-      <Show when={dash.status() === 'flashing'}>
+      <Show when={native.running()}>
         <div id="flashing" data-search-target>
           <Card>
             <CardHeader title="Flashing" subtitle="Don't unplug or leave this page" />
@@ -158,7 +159,7 @@ const Advanced = () => {
         </div>
       </Show>
 
-      <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
+      <Show when={boxes.supported && boxes.secure && !native.running()}>
         <div id="advanced" data-search-target>
           <Card>
             <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
