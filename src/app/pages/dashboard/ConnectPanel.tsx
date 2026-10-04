@@ -203,7 +203,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
       </Match>
       <Match when={dash.status() === 'lost'}>
         <div class="callout callout--danger" role="alert">
-          The box isn't answering. Check USB1 is plugged in.
+          The box isn't answering. Check USB1 is plugged in too.
         </div>
         <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
           <Button loading disabled>

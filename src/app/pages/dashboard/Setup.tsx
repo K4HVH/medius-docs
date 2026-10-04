@@ -7,7 +7,7 @@ import { Chip } from '../../../components/display/Chip';
 import { Progress } from '../../../components/feedback/Progress';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
-import { type BoxEntry, useBoxes, useNativeFlash } from './context';
+import { type BoxEntry, type Snapshot, useBoxes, useNativeFlash } from './context';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
 import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
 import '../../../styles/docs.css';
@@ -31,8 +31,8 @@ const Setup = () => {
   const [installed, setInstalled] = createSignal<BoxEntry | null>(null);
   const [finding, setFinding] = createSignal(false);
   const [found, setFound] = createSignal<ConnectVerdict | null>(null);
-  // The boxes that answered before the first install; the one installed is the one that answers after.
-  let before: Set<string> | null = null;
+  // What answered before the first install; the box installed is the one that answers after.
+  let before: Snapshot | null = null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
   // one unguarded read freezes the page.
@@ -55,7 +55,7 @@ const Setup = () => {
   const install = async (assetName: string, next: Step) => {
     setErr(null);
     native.clear();
-    before ??= boxes.answeringKeys();
+    before ??= boxes.snapshot();
     setBusy(true);
     try {
       let asset: FirmwareAsset | null = null;
@@ -84,7 +84,11 @@ const Setup = () => {
   const find = async (force?: boolean) => {
     setFinding(true);
     setFound(null);
-    const v = force ? await boxes.add() : await boxes.connectNew(before ?? new Set());
+    let v: ConnectVerdict | null;
+    if (force) {
+      const r = await boxes.add();
+      v = r.ok ? (r.entry.session.status() === 'connected' ? null : r.entry.session.verdict()) : r.verdict;
+    } else v = await boxes.connectNew(before ?? boxes.snapshot());
     setFound(v);
     setInstalled(v ? null : boxes.selected());
     setFinding(false);

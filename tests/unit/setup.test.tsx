@@ -38,15 +38,15 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
   useBoxes: () => ({
     supported: mock.supported,
     secure: true,
-    answeringKeys: () => new Set(mock.answering),
+    snapshot: () => ({ answering: new Set(mock.answering), all: new Set(mock.answering) }),
     // Mirrors the real one: the box that answers now and did not before is selected and connected.
-    connectNew: async (before: ReadonlySet<string>) => {
-      mock.befores.push([...before]);
+    connectNew: async (before: { answering: ReadonlySet<string> }) => {
+      mock.befores.push([...before.answering]);
       if (mock.findVerdict) return mock.findVerdict;
       mock.s!.setFound('connected');
       return null;
     },
-    add: async () => ({ kind: 'no-port' }),
+    add: async () => ({ ok: false, verdict: { kind: 'no-port' } }),
     selected: () => ({
       key: 'bbbbbbbbbbbb',
       session: {

@@ -359,4 +359,48 @@ describe('dashboard poller', () => {
       dispose();
     });
   });
+
+  it('reports only the keepalive, however many other values are read', async () => {
+    let failLocks = false;
+    const link = {
+      queryHealth: async () => ({ linkUp: true }) as never,
+      queryLocks: async () => {
+        if (failLocks) throw new QueryTimeoutError();
+        return { entries: [] } as never;
+      },
+    } as unknown as SerialLink;
+    const seen: boolean[] = [];
+    await createRoot(async (dispose) => {
+      const poller = createPoller(() => link, { onKeepalive: (ok) => seen.push(ok) });
+      poller.subscribe('locks', 100);
+      await vi.advanceTimersByTimeAsync(300);
+      failLocks = true;
+      await vi.advanceTimersByTimeAsync(150);
+      // One health read in 450 ms; the locks reads, answered or not, say nothing about liveness.
+      expect(seen).toEqual([true]);
+      dispose();
+    });
+  });
+
+  it('a reply to a read the poller has since restarted reports nothing', async () => {
+    let fail: ((e: Error) => void) | null = null;
+    const link = {
+      queryHealth: () =>
+        new Promise((_, reject) => {
+          fail = reject;
+        }),
+    } as unknown as SerialLink;
+    const seen: boolean[] = [];
+    await createRoot(async (dispose) => {
+      const poller = createPoller(() => link, { onKeepalive: (ok) => seen.push(ok) });
+      await settle();
+      const stale = fail!;
+      poller.reset();
+      await settle();
+      stale(new QueryTimeoutError());
+      await settle();
+      expect(seen).toEqual([]);
+      dispose();
+    });
+  });
 });

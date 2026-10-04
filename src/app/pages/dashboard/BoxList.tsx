@@ -25,7 +25,7 @@ const DOT: Record<Tone, { background: string; border: string }> = {
 };
 
 export function rowView(s: BoxSession): RowView {
-  const name = s.name() ?? 'Box';
+  const name = s.name() ?? 'Unknown device';
   const row = (detail: string, tone: Tone, canIdentify = false): RowView => ({ name, detail, tone, canIdentify });
   if (!s.present()) return row('Not plugged in', 'muted');
   switch (s.status()) {
@@ -50,7 +50,7 @@ export function rowView(s: BoxSession): RowView {
     case undefined:
       return row('Checking...', 'neutral');
     case 'box':
-      return row(speaksCurrentWire(p.version) ? `v${versionString(p.version)}` : 'Update needed', 'hollow', true);
+      return row(speaksCurrentWire(p.version) ? `v${versionString(p.version)}` : 'Update needed', 'hollow', !s.held());
     case 'old-firmware':
       return row('Needs setup', 'warning');
     case 'new-firmware':
@@ -64,7 +64,7 @@ export function rowView(s: BoxSession): RowView {
   }
 }
 
-const Row = (props: { entry: BoxEntry; active: boolean; onSelect: () => void }) => {
+const Row = (props: { entry: BoxEntry; active: boolean; disabled: boolean; onSelect: () => void }) => {
   const v = () => rowView(props.entry.session);
   return (
     <div style={{ display: 'flex', 'align-items': 'center', gap: 'var(--g-spacing-xs)' }}>
@@ -73,6 +73,7 @@ const Row = (props: { entry: BoxEntry; active: boolean; onSelect: () => void }) 
         class={`tabs__tab${props.active ? ' tabs__tab--active' : ''}`}
         style={{ flex: '1', 'min-width': '0' }}
         aria-current={props.active ? 'true' : undefined}
+        disabled={props.disabled}
         onClick={() => props.onSelect()}
       >
         <span class="tabs__tab-icon" aria-hidden="true" style={{ width: '1em' }}>
@@ -98,8 +99,9 @@ const Row = (props: { entry: BoxEntry; active: boolean; onSelect: () => void }) 
           variant="subtle"
           size="compact"
           icon={BsLightbulb}
-          aria-label="Identify"
+          aria-label={`Identify ${v().name}`}
           title="Blink its light"
+          disabled={props.disabled}
           loading={props.entry.session.identifying()}
           onClick={() => void props.entry.session.identify()}
         />
@@ -108,8 +110,9 @@ const Row = (props: { entry: BoxEntry; active: boolean; onSelect: () => void }) 
   );
 };
 
-export const BoxList = (props: { onPick?: () => void }) => {
+export const BoxList = (props: { onPick?: () => void; disabled?: boolean }) => {
   const boxes = useBoxes();
+  const pick = () => props.onPick?.();
   return (
     <div class="tabs tabs--subtle tabs--vertical">
       <For each={boxes.entries()}>
@@ -117,19 +120,27 @@ export const BoxList = (props: { onPick?: () => void }) => {
           <Row
             entry={e}
             active={boxes.selected()?.key === e.key}
+            disabled={!!props.disabled}
             onSelect={() => {
               boxes.select(e.key);
-              props.onPick?.();
+              pick();
             }}
           />
         )}
       </For>
-      <button type="button" class="tabs__tab" onClick={() => void boxes.add()}>
-        <span class="tabs__tab-icon">
-          <BsPlus />
-        </span>
-        <span class="tabs__tab-label">Add a box</span>
-      </button>
+      <Show when={boxes.supported && boxes.secure}>
+        <button
+          type="button"
+          class="tabs__tab"
+          disabled={props.disabled}
+          onClick={() => void boxes.add().then(pick)}
+        >
+          <span class="tabs__tab-icon">
+            <BsPlus />
+          </span>
+          <span class="tabs__tab-label">Add a box</span>
+        </button>
+      </Show>
     </div>
   );
 };

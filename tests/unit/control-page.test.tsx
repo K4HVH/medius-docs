@@ -177,6 +177,12 @@ describe('Control page', () => {
     expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
   });
 
+  it('while this box updates, the card offers its progress rather than a dead button', async () => {
+    const { findByRole } = mount(stub({ status: () => 'flashing', health: () => null }));
+    const go = (await findByRole('button', { name: /go to update/i })) as HTMLButtonElement;
+    expect(go.disabled).toBe(false);
+  });
+
   it('names the safety clear by everything it drops, not just injection', async () => {
     // It is the box-wide clear: locks, the catch table and the loaded clip go with it. A button
     // labelled "release the keys" would be a trap next to a live event stream.
