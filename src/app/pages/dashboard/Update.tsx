@@ -70,7 +70,7 @@ const Update = () => {
     const r = dash.update();
     return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
   };
-  // The result lives on the box, so it is here after a tab change or a box switch.
+  // Read from the box, so a tab change or a box switch keeps it.
   const view = (): Step => {
     const outcome = dash.update()?.outcome;
     return outcome === 'verified' ? 'done' : outcome === 'sent' ? 'sent' : step();

@@ -9,6 +9,7 @@ import DeviceInfo from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
+import { row } from './ui';
 import '../../../styles/docs.css';
 
 const healthItems = (h: Health) => [
@@ -85,7 +86,14 @@ const Device = () => {
                           </p>
                         )}
                       </Show>
-                      <Button variant="secondary" onClick={() => void dash.disconnect()}>Disconnect</Button>
+                      <div style={row}>
+                        <Button variant="secondary" onClick={() => void dash.disconnect()}>
+                          Disconnect
+                        </Button>
+                        <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
+                          Identify
+                        </Button>
+                      </div>
                     </Match>
 
                     <Match when={dash.status() === 'connecting'}>

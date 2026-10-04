@@ -6,6 +6,7 @@ import { PROTO_VER } from '../../src/dashboard/protocol';
 // The dashboard's landing page had no test file, so its browser-support wording could drift from
 // every other page's without anything noticing.
 const mock = vi.hoisted(() => ({
+  identifies: 0,
   supported: true,
   secure: true,
   status: 'disconnected' as string,
@@ -32,6 +33,10 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     health: () => null,
     connect: async () => {},
     disconnect: async () => {},
+    identify: async () => {
+      mock.identifies += 1;
+    },
+    identifying: () => false,
     deviceLog: () => [],
     clearDeviceLog: () => {},
     poll: () => () => null,
@@ -155,5 +160,13 @@ describe('Device', () => {
     expect(go.disabled).toBe(false);
     go.click();
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
+  });
+
+  it('a connected box can be told apart on the desk from its card', () => {
+    mock.status = 'connected';
+    const { getByRole } = render(() => <Device />);
+    expect(getByRole('button', { name: 'Disconnect' })).toBeTruthy();
+    getByRole('button', { name: 'Identify' }).click();
+    expect(mock.identifies).toBe(1);
   });
 });

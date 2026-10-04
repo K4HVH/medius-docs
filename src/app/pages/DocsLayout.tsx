@@ -177,7 +177,6 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
 ];
 
-// The tabs that show one box, and so carry its name.
 const BOX_ROUTES = new Set(['/dashboard', '/dashboard/control', '/dashboard/advanced-control', '/dashboard/update']);
 
 const isMobileQuery = () =>
@@ -305,14 +304,12 @@ const DocsLayout = (props: RouteSectionProps) => {
     if (isMobile()) setPaneState('closed');
   };
 
-  // A box picked from a page that shows none opens on Device; Setup keeps its wizard.
   const handleBoxPick = () => {
     const p = location.pathname;
     if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
     if (isMobile()) setPaneState('closed');
   };
 
-  // No port is touched until the dashboard is opened.
   createEffect(() => {
     if (activeSection() === 'dashboard') boxes.start();
   });

@@ -31,7 +31,7 @@ const Setup = () => {
   const [installed, setInstalled] = createSignal<BoxEntry | null>(null);
   const [finding, setFinding] = createSignal(false);
   const [found, setFound] = createSignal<ConnectVerdict | null>(null);
-  // What answered before the first install; the box installed is the one that answers after.
+  // Taken at the first install: the box installed is one that answers after it.
   let before: Snapshot | null = null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
@@ -80,15 +80,10 @@ const Setup = () => {
     }
   };
 
-  // `force` is the chooser, for a USB2 this page has never been given.
-  const find = async (force?: boolean) => {
+  const find = async () => {
     setFinding(true);
     setFound(null);
-    let v: ConnectVerdict | null;
-    if (force) {
-      const r = await boxes.add();
-      v = r.ok ? (r.entry.session.status() === 'connected' ? null : r.entry.session.verdict()) : r.verdict;
-    } else v = await boxes.connectNew(before ?? boxes.snapshot());
+    const v = await boxes.connectNew(before ?? boxes.snapshot());
     setFound(v);
     setInstalled(v ? null : boxes.selected());
     setFinding(false);
@@ -202,7 +197,7 @@ const Setup = () => {
                       error={null}
                       verdict={found()}
                       busy={finding()}
-                      connect={(force) => void find(force)}
+                      connect={() => void find()}
                       onSetup={go('main')}
                     />
                   }

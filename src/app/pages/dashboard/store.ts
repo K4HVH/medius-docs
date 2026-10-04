@@ -1,5 +1,3 @@
-// Which boxes this browser holds, and which one is selected, across reloads.
-
 export interface HeldBox {
   mac: string;
   name: string;
@@ -42,8 +40,7 @@ function read(storage: Storage | null): Saved | null {
   }
 }
 
-// Storage can be missing or throw (private windows, blocked site data); this page's copy still works.
-// Every read and change starts from what is stored now, so tabs don't undo each other.
+// Each read and change starts from storage, so tabs don't undo each other; without it, memory.
 export function createBoxStore(storage: Storage | null): BoxStore {
   let saved: Saved = read(storage) ?? { selected: null, held: [] };
   const current = () => {

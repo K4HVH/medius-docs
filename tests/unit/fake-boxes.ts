@@ -1,9 +1,5 @@
-// Boxes behind fake ports, for the session and registry suites, failing the way Chromium does:
-// - a port is opened once per page; a second link over a port this page holds fails as SerialLink
-//   does when it adopts an open port (its writer is locked), and that is counted, since it is a bug;
-// - another tab or program holding the device makes open() reject with NetworkError;
-// - a failed read loop leaves the port open, writer locked, until the link is closed;
-// - an unplugged device is gone: its port object never opens again.
+// Boxes behind fake ports that fail the way Chromium does: one open per port per page, NetworkError
+// for a port another tab or program holds, a failed read loop keeps the port until closed.
 
 import {
   BadProtoVerError,
@@ -44,7 +40,7 @@ export class FakeBox {
   active: FakeLink | null = null;
   opens: number[] = [];
   closes = 0;
-  // Second links over a port this page already holds: always a bug in the code under test.
+  // A second link over a port this page holds: always a bug in the code under test.
   doubleOpens = 0;
   leds: [number, number, number][] = [];
   healthQueries = 0;

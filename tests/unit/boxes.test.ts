@@ -47,6 +47,12 @@ const ready = async () => {
   await vi.advanceTimersByTimeAsync(0);
   await settle();
 };
+// A box picked in the list, then Connect on its card.
+const pick = async (b: Boxes, key: string) => {
+  b.select(key);
+  await b.entries().find((e) => e.key === key)!.session.connect();
+  await ready();
+};
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -77,8 +83,7 @@ describe('box registry', () => {
     const [anon] = keys(boxes);
     expect(anon).toMatch(/^port:/);
     a.alive = true;
-    boxes.select(anon);
-    await ready();
+    await pick(boxes, anon);
     expect(keys(boxes)).toEqual([a.mac]);
     expect(entry(boxes, a.mac).session.status()).toBe('connected');
     expect(boxes.selected()?.key).toBe(a.mac);
@@ -93,8 +98,7 @@ describe('box registry', () => {
     await ready();
     const anon = keys(boxes)[1];
     b.alive = true;
-    boxes.select(anon);
-    await ready();
+    await pick(boxes, anon);
     expect(boxes.selected()?.key).toBe(b.mac);
     expect(store.selected()).toBe(b.mac);
   });
@@ -109,17 +113,35 @@ describe('box registry', () => {
     expect(entry(boxes, a.mac).session.status()).toBe('disconnected');
   });
 
-  it('selecting an answering box connects it; selection on load does not', async () => {
+  it('selecting a box opens nothing; Connect on its card does', async () => {
     const [a, b] = [box(1), box(2)];
     const boxes = mount(new FakeSerial(portsOf(a, b)));
     await ready();
     expect(boxes.selected()?.key).toBe(a.mac);
-    expect(a.isOpen || b.isOpen).toBe(false);
+    a.opens.length = 0;
+    b.opens.length = 0;
     boxes.select(b.mac);
+    await ready();
+    expect(boxes.scope()).toBe(entry(boxes, b.mac).session);
+    expect(b.opens).toEqual([]);
+    await boxes.scope().connect();
     await ready();
     expect(entry(boxes, b.mac).session.status()).toBe('connected');
     expect(entry(boxes, a.mac).session.status()).toBe('disconnected');
-    expect(boxes.scope()).toBe(entry(boxes, b.mac).session);
+  });
+
+  it('selection on its own never lands on a port that never answered', async () => {
+    const [sim, a] = [box(9), box(1)];
+    sim.alive = false;
+    const boxes = mount(new FakeSerial(portsOf(sim, a)));
+    await ready();
+    expect(boxes.selected()?.key).toBe(a.mac);
+    const lone = box(8);
+    lone.alive = false;
+    const only = mount(new FakeSerial(portsOf(lone)));
+    await ready();
+    expect(only.selected()).toBeNull();
+    expect(only.scope().present()).toBe(false);
   });
 
   it('selection restores the stored box, else the first held, else the first answering', async () => {
@@ -149,8 +171,7 @@ describe('box registry', () => {
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
     await ready();
-    boxes.select(b.mac);
-    await ready();
+    await pick(boxes, b.mac);
     serial.unplug(ports[0]);
     serial.unplug(ports[1]);
     await ready();
@@ -165,8 +186,7 @@ describe('box registry', () => {
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
     await ready();
-    boxes.select(b.mac);
-    await ready();
+    await pick(boxes, b.mac);
     serial.unplug(ports[1]);
     await ready();
     const moved = new FakePort(b);
@@ -198,8 +218,7 @@ describe('box registry', () => {
     const ports = portsOf(a);
     const boxes = mount(new FakeSerial(ports));
     await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, a.mac);
     probes.length = 0;
     window.dispatchEvent(new Event('focus'));
     await boxes.rescan();
@@ -213,10 +232,8 @@ describe('box registry', () => {
     const ports = portsOf(a, b);
     const first = mount(new FakeSerial(ports));
     await ready();
-    first.select(a.mac);
-    await ready();
-    first.select(b.mac);
-    await ready();
+    await pick(first, a.mac);
+    await pick(first, b.mac);
     const second = mount(new FakeSerial(otherTab(ports)));
     await ready();
     window.dispatchEvent(new Event('focus'));
@@ -238,8 +255,7 @@ describe('box registry', () => {
     const a = box(1);
     const boxes = mount(new FakeSerial(portsOf(a)), createBoxStore(storage));
     await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, a.mac);
     expect(entry(boxes, a.mac).session.status()).toBe('connected');
   });
 
@@ -293,8 +309,7 @@ describe('box registry', () => {
     const boxes = mount(new FakeSerial(portsOf(first, second)));
     await ready();
     expect(keys(boxes)).toEqual([first.mac]);
-    boxes.select(first.mac);
-    await ready();
+    await pick(boxes, first.mac);
     expect(first.isOpen).toBe(true);
     expect(second.isOpen).toBe(false);
   });
@@ -327,13 +342,14 @@ describe('box registry', () => {
     expect(entry(boxes, a.mac).session.verdict()).toBeNull();
   });
 
-  it('never probes a port while its session attaches, identifies, or reattaches', async () => {
+  it('never probes a port while its session attaches or reattaches', async () => {
     const a = box(1);
     const boxes = mount(new FakeSerial(portsOf(a)));
     await ready();
     const s = entry(boxes, a.mac).session;
     const release = a.hold();
     boxes.select(a.mac);
+    void s.connect();
     await ready();
     probes.length = 0;
     window.dispatchEvent(new Event('focus'));
@@ -387,20 +403,10 @@ describe('box registry', () => {
     const s = boxes.entries()[0].session;
     expect(s.verdict()).toEqual({ kind: 'silent' });
     a.alive = true;
-    serial.chosen = ports[0];
-    await s.connect(true);
+    await s.connect();
     await ready();
     expect(entry(boxes, a.mac).session.status()).toBe('connected');
-  });
-
-  it('a chooser closed without a pick leaves the row as it was', async () => {
-    const a = box(1);
-    a.alive = false;
-    const boxes = mount(new FakeSerial(portsOf(a)));
-    await ready();
-    const s = boxes.entries()[0].session;
-    await s.connect(true);
-    expect(s.verdict()).toEqual({ kind: 'silent' });
+    expect(serial.chooserCalls).toBe(0);
   });
 
   it('adding a box selects it and keeps it selected over a box already held', async () => {
@@ -426,10 +432,8 @@ describe('box registry', () => {
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
     await ready();
-    boxes.select(b.mac);
-    await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, b.mac);
+    await pick(boxes, a.mac);
     serial.unplug(ports[1]);
     await ready();
     const moved = new FakePort(a);
@@ -463,8 +467,7 @@ describe('box registry', () => {
     await ready();
     const row = boxes.entries()[0];
     a.alive = true;
-    boxes.select(row.key);
-    await ready();
+    await pick(boxes, row.key);
     expect(boxes.entries()[0]).toBe(row);
     expect(row.key).toBe(a.mac);
   });
@@ -476,10 +479,8 @@ describe('box registry', () => {
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
     await ready();
-    boxes.select(b.mac);
-    await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, b.mac);
+    await pick(boxes, a.mac);
     serial.unplug(ports[1]);
     await ready();
     a.alive = false;
@@ -560,8 +561,7 @@ describe('box registry', () => {
     const ports = portsOf(a, b);
     const boxes = mount(new FakeSerial(ports));
     await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, a.mac);
     setFlashing(true);
     const queries = a.healthQueries;
     probes.length = 0;
@@ -587,8 +587,7 @@ describe('box registry', () => {
     } as unknown as Storage;
     const first = mount(new FakeSerial(ports), createBoxStore(storage), { locks });
     await ready();
-    first.select(a.mac);
-    await ready();
+    await pick(first, a.mac);
     const theirs = otherTab(ports);
     const second = mount(new FakeSerial(theirs), createBoxStore(storage), { locks });
     await ready();
@@ -607,8 +606,7 @@ describe('box registry', () => {
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
     await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, a.mac);
     serial.unplug(ports[0]);
     await ready();
     a.alive = false;
@@ -639,8 +637,7 @@ describe('box registry', () => {
     const store = createBoxStore(null);
     const boxes = mount(serial, store);
     await ready();
-    boxes.select(a.mac);
-    await ready();
+    await pick(boxes, a.mac);
     serial.unplug(ports[0]);
     await ready();
     await entry(boxes, a.mac).session.disconnect();
@@ -653,10 +650,8 @@ describe('box registry', () => {
     const [a, b] = [box(1), box(2)];
     const boxes = mount(new FakeSerial(portsOf(a, b)));
     await ready();
-    boxes.select(a.mac);
-    await ready();
-    boxes.select(b.mac);
-    await ready();
+    await pick(boxes, a.mac);
+    await pick(boxes, b.mac);
     expect(boxes.anyUpdating()).toBe(false);
     const release = a.hold();
     void entry(boxes, a.mac).session.updateOverControl({ device: new Uint8Array([0xe9]) });

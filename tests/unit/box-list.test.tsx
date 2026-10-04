@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
-import { BoxList, rowView } from '../../src/app/pages/dashboard/BoxList';
+import { BsArrowRepeat, BsBoxSeam, BsBoxSeamFill, BsExclamationCircle } from 'solid-icons/bs';
+import { BoxList, boxIcon } from '../../src/app/pages/dashboard/BoxList';
 import { BoxesContext, type BoxEntry, type Boxes, type BoxSession } from '../../src/app/pages/dashboard/context';
 import { PROTO_VER, MIN_PROTO_VER, type Version } from '../../src/dashboard/protocol';
 import type { Probe } from '../../src/dashboard/serial';
@@ -22,8 +23,6 @@ interface State {
   probe: Probe | null;
   version: Version | null;
   name: string | null;
-  progress: { phase: string; written?: number; total?: number } | null;
-  identifying: boolean;
 }
 
 // Real signals, so a row re-renders on a state change the way it does against a real session.
@@ -35,11 +34,8 @@ const session = (over: Partial<State> = {}) => {
     probe: null,
     version: null,
     name: null,
-    progress: null,
-    identifying: false,
     ...over,
   });
-  const identify = vi.fn(async () => {});
   const s = {
     status: () => st().status,
     present: () => st().present,
@@ -48,38 +44,32 @@ const session = (over: Partial<State> = {}) => {
     version: () => st().version,
     name: () => st().name,
     updateOnly: () => st().status === 'connected' && st().version !== null && st().version!.protoVer !== PROTO_VER,
-    updateProgress: () => st().progress,
-    identifying: () => st().identifying,
-    identify,
   } as unknown as BoxSession;
-  return { s, set: (o: Partial<State>) => set((p) => ({ ...p, ...o })), identify };
+  return { s, set: (o: Partial<State>) => set((p) => ({ ...p, ...o })) };
 };
 
 const box = (protoVer = PROTO_VER): Probe => ({ kind: 'box', version: version(protoVer), device: null, baud: 6_000_000 });
 
-describe('rowView', () => {
-  const cases: [string, Partial<State>, { name: string; detail: string; tone: string; canIdentify: boolean }][] = [
-    ['a remembered box that is unplugged', { held: true, present: false, status: 'lost', name: 'Desk' }, { name: 'Desk', detail: 'Not plugged in', tone: 'muted', canIdentify: false }],
-    ['an update in progress', { status: 'flashing', name: 'Desk', progress: { phase: 'writing', written: 42, total: 100 } }, { name: 'Desk', detail: 'Updating 42%', tone: 'primary', canIdentify: false }],
-    ['an update between writes', { status: 'flashing', name: 'Desk', progress: { phase: 'connecting' } }, { name: 'Desk', detail: 'Updating', tone: 'primary', canIdentify: false }],
-    ['connecting', { status: 'connecting' }, { name: 'Unknown device', detail: 'Connecting...', tone: 'neutral', canIdentify: false }],
-    ['a held box that stopped answering', { status: 'lost', held: true, name: 'Desk' }, { name: 'Desk', detail: 'Not answering', tone: 'danger', canIdentify: false }],
-    ['a held box on the current wire', { status: 'connected', held: true, version: version(), name: 'Desk' }, { name: 'Desk', detail: 'v3.4.4', tone: 'success', canIdentify: true }],
-    ['a held box on an older wire', { status: 'connected', held: true, version: version(MIN_PROTO_VER), name: 'Desk' }, { name: 'Desk', detail: 'Update needed', tone: 'warning', canIdentify: true }],
-    ['an update that failed with the link open', { status: 'error', held: true, name: 'Desk' }, { name: 'Desk', detail: 'Update failed', tone: 'danger', canIdentify: false }],
-    ['a port still being probed', {}, { name: 'Unknown device', detail: 'Checking...', tone: 'neutral', canIdentify: false }],
-    ['a held box an update left disconnected', { held: true, probe: box(), name: 'Desk' }, { name: 'Desk', detail: 'v3.4.4', tone: 'hollow', canIdentify: false }],
-    ['an answering box nobody holds', { probe: box(), name: 'Desk' }, { name: 'Desk', detail: 'v3.4.4', tone: 'hollow', canIdentify: true }],
-    ['an answering box on an older wire', { probe: box(MIN_PROTO_VER), name: 'Desk' }, { name: 'Desk', detail: 'Update needed', tone: 'hollow', canIdentify: true }],
-    ['a box below the oldest this page opens', { probe: { kind: 'old-firmware', version: version(4) }, name: 'Desk' }, { name: 'Desk', detail: 'Needs setup', tone: 'warning', canIdentify: false }],
-    ['a box newer than this page', { probe: { kind: 'new-firmware', version: version(99) }, name: 'Desk' }, { name: 'Desk', detail: 'Reload needed', tone: 'warning', canIdentify: false }],
-    ['a port another program holds', { probe: { kind: 'busy' } }, { name: 'Unknown device', detail: 'In use', tone: 'warning', canIdentify: false }],
-    ['a port that never answered', { probe: { kind: 'silent' } }, { name: 'Unknown device', detail: 'Not answering', tone: 'hollow', canIdentify: false }],
-    ['a port that would not open for another reason', { probe: { kind: 'other', message: 'x' } }, { name: 'Unknown device', detail: "Can't open", tone: 'warning', canIdentify: false }],
+describe('boxIcon', () => {
+  const cases: [string, Partial<State>, unknown][] = [
+    ['a connected box on the current wire', { status: 'connected', held: true, version: version() }, BsBoxSeamFill],
+    ['a box nobody holds that answers', { probe: box() }, BsBoxSeam],
+    ['a box nobody holds on an older wire', { probe: box(MIN_PROTO_VER) }, BsExclamationCircle],
+    ['a port still being checked', {}, BsBoxSeam],
+    ['a box connecting', { status: 'connecting' }, BsArrowRepeat],
+    ['a box updating', { status: 'flashing', held: true }, BsArrowRepeat],
+    ['a connected box on an older wire', { status: 'connected', held: true, version: version(MIN_PROTO_VER) }, BsExclamationCircle],
+    ['a held box not answering', { status: 'lost', held: true }, BsExclamationCircle],
+    ['a remembered box unplugged', { held: true, present: false, status: 'lost' }, BsExclamationCircle],
+    ['an update that failed', { status: 'error', held: true }, BsExclamationCircle],
+    ['a box another tab holds', { probe: { kind: 'busy' } }, BsExclamationCircle],
+    ['a box below the oldest this page opens', { probe: { kind: 'old-firmware', version: version(4) } }, BsExclamationCircle],
+    ['a box newer than this page', { probe: { kind: 'new-firmware', version: version(99) } }, BsExclamationCircle],
+    ['a box an update left silent', { held: true, probe: { kind: 'silent' } }, BsExclamationCircle],
   ];
-  for (const [what, state, want] of cases) {
-    it(`shows ${what}`, () => {
-      expect(rowView(session(state).s)).toEqual(want);
+  for (const [what, state, icon] of cases) {
+    it(`marks ${what}`, () => {
+      expect(boxIcon(session(state).s)).toBe(icon);
     });
   }
 });
@@ -102,70 +92,88 @@ const stand = (initial: BoxEntry[], opts: { supported?: boolean } = {}) => {
 
 afterEach(cleanup);
 
+const tabs = (r: ReturnType<typeof render>) => [...r.container.querySelectorAll('[role="tab"]')] as HTMLButtonElement[];
+
 describe('BoxList', () => {
-  const mount = (boxes: Boxes, onPick?: () => void) =>
+  const mount = (boxes: Boxes, props: { onPick?: () => void; disabled?: boolean } = {}) =>
     render(() => (
       <BoxesContext.Provider value={boxes}>
-        <BoxList onPick={onPick} />
+        <BoxList {...props} />
       </BoxesContext.Provider>
     ));
 
-  it('lists each box by name and state, and marks the one selected', () => {
+  it('lists each box by name as a tab, and marks the one selected', () => {
     const a = session({ status: 'connected', held: true, version: version(), name: 'Left' });
-    const b = session({ probe: { kind: 'busy' } });
+    const b = session({ probe: box(), name: 'Right' });
     const { boxes } = stand([
-      { key: 'a', session: a.s },
-      { key: 'b', session: b.s },
+      { key: 'aa', session: a.s },
+      { key: 'bb', session: b.s },
     ]);
     const r = mount(boxes);
-    const rows = [...r.container.querySelectorAll('.tabs__tab')].filter((x) => !/add a box/i.test(x.textContent ?? ''));
-    expect(rows.map((x) => x.textContent)).toEqual(['Leftv3.4.4', 'Unknown deviceIn use']);
-    expect(rows[0].classList.contains('tabs__tab--active')).toBe(true);
-    expect(rows[1].classList.contains('tabs__tab--active')).toBe(false);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Right']);
+    expect(tabs(r).map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false']);
   });
 
-  it('a click selects the box, and moves the mark', () => {
+  it('leaves out ports that never answered as a box', () => {
+    const a = session({ probe: box(), name: 'Left' });
+    const sim = session({ probe: { kind: 'silent' } });
+    const { boxes } = stand([
+      { key: 'port:1', session: sim.s },
+      { key: 'aa', session: a.s },
+    ]);
+    const r = mount(boxes);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left']);
+  });
+
+  it('a click selects the box and moves the mark, nothing more', () => {
     const a = session({ probe: box(), name: 'Left' });
     const b = session({ probe: box(), name: 'Right' });
-    const { boxes, select } = stand([
-      { key: 'a', session: a.s },
-      { key: 'b', session: b.s },
+    const onPick = vi.fn();
+    const { boxes, select, add } = stand([
+      { key: 'aa', session: a.s },
+      { key: 'bb', session: b.s },
     ]);
-    const r = mount(boxes);
-    fireEvent.click(r.getByRole('button', { name: /^right/i }));
-    expect(select).toHaveBeenCalledWith('b');
-    expect(r.getByRole('button', { name: /^right/i }).classList.contains('tabs__tab--active')).toBe(true);
+    const r = mount(boxes, { onPick });
+    fireEvent.click(tabs(r)[1]);
+    expect(select).toHaveBeenCalledWith('bb');
+    expect(onPick).toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
+    expect(tabs(r)[1].getAttribute('aria-selected')).toBe('true');
   });
 
-  it('Identify blinks that box, and only boxes that can be opened offer it', () => {
-    const a = session({ probe: box(), name: 'Left' });
-    const b = session({ probe: { kind: 'busy' } });
-    const { boxes, select } = stand([
-      { key: 'a', session: a.s },
-      { key: 'b', session: b.s },
-    ]);
-    const r = mount(boxes);
-    const identify = r.getAllByRole('button', { name: /identify/i });
-    expect(identify).toHaveLength(1);
-    expect(identify[0].getAttribute('aria-label')).toBe('Identify Left');
-    fireEvent.click(identify[0]);
-    expect(a.identify).toHaveBeenCalled();
-    expect(select).not.toHaveBeenCalled();
-  });
-
-  it('a row follows its box: a box that stops answering says so at once', () => {
+  it('a row follows its box as it changes', () => {
     const a = session({ status: 'connected', held: true, version: version(), name: 'Left' });
-    const { boxes } = stand([{ key: 'a', session: a.s }]);
+    const { boxes } = stand([{ key: 'aa', session: a.s }]);
     const r = mount(boxes);
+    const row = tabs(r)[0];
+    const before = row.innerHTML;
     a.set({ status: 'lost' });
-    expect(r.getByRole('button', { name: /^left/i }).textContent).toContain('Not answering');
+    expect(tabs(r)[0].innerHTML).not.toBe(before);
+    a.set({ name: 'Desk' });
+    expect(tabs(r)[0].textContent).toBe('Desk');
   });
 
-  it('Add a box opens the chooser, then hands over like a picked row', async () => {
+  it('a box plugged in appears, and one taken away leaves', () => {
+    const a = session({ probe: box(), name: 'Left' });
+    const b = session({ probe: box(), name: 'Right' });
+    const { boxes, setEntries } = stand([{ key: 'aa', session: a.s }]);
+    const first = { key: 'aa', session: a.s };
+    setEntries([first]);
+    const r = mount(boxes);
+    const row = tabs(r)[0];
+    setEntries([first, { key: 'bb', session: b.s }]);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Right']);
+    // Left keeps its element, so keyboard focus on it survives another box arriving.
+    expect(tabs(r)[0]).toBe(row);
+    setEntries([{ key: 'bb', session: b.s }]);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Right']);
+  });
+
+  it('Add a box opens the chooser, then hands over like a picked box', async () => {
     const { boxes, add } = stand([]);
     const onPick = vi.fn();
-    const r = mount(boxes, onPick);
-    fireEvent.click(r.getByRole('button', { name: /add a box/i }));
+    const r = mount(boxes, { onPick });
+    fireEvent.click(r.getByRole('button', { name: 'Add a box' }));
     expect(add).toHaveBeenCalled();
     await Promise.resolve();
     await Promise.resolve();
@@ -175,18 +183,15 @@ describe('BoxList', () => {
   it('offers no Add a box where the browser cannot reach a port', () => {
     const { boxes } = stand([], { supported: false });
     const r = mount(boxes);
-    expect(r.queryByRole('button', { name: /add a box/i })).toBeNull();
+    expect(r.queryByRole('button', { name: 'Add a box' })).toBeNull();
   });
 
-  it('a box plugged in appears in the list, and one taken away leaves it', () => {
+  it('locks every row and Add a box while disabled', () => {
     const a = session({ probe: box(), name: 'Left' });
-    const b = session({ probe: box(), name: 'Right' });
-    const { boxes, setEntries } = stand([{ key: 'a', session: a.s }]);
-    const r = mount(boxes);
-    expect(r.queryByRole('button', { name: /right/i })).toBeNull();
-    setEntries([{ key: 'a', session: a.s }, { key: 'b', session: b.s }]);
-    expect(r.getByRole('button', { name: /^right/i })).toBeTruthy();
-    setEntries([{ key: 'b', session: b.s }]);
-    expect(r.queryByRole('button', { name: /^left/i })).toBeNull();
+    const { boxes, select } = stand([{ key: 'aa', session: a.s }]);
+    const r = mount(boxes, { disabled: true });
+    fireEvent.click(tabs(r)[0]);
+    expect(select).not.toHaveBeenCalled();
+    expect((r.getByRole('button', { name: 'Add a box' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

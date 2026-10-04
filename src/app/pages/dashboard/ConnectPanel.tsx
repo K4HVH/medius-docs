@@ -17,25 +17,22 @@ export interface ConnectViewProps {
   error: string | null;
   verdict: ConnectVerdict | null;
   busy: boolean;
-  // `force` asks for a port instead of trying the known one.
-  connect: (force?: boolean) => void;
+  connect: () => void;
   onSetup?: () => void;
 }
 
-// Connect, and what a failed connect means, for whoever is connecting.
 export const ConnectView = (props: ConnectViewProps) => {
   const navigate = useNavigate();
   const setup = () => (props.onSetup ? props.onSetup() : navigate('/dashboard/setup'));
   const verdict = () => props.verdict;
   const busy = () => props.busy;
 
-  // Only the silent verdict can be about the wrong device, so only its retry forces.
-  const Connect = (p: { label?: string; force?: boolean }) => (
+  const Connect = (p: { label?: string }) => (
     <Button
       variant="primary"
       loading={busy()}
       disabled={!props.supported || busy()}
-      onClick={() => props.connect(p.force)}
+      onClick={() => props.connect()}
     >
       {busy() ? 'Connecting...' : (p.label ?? 'Connect')}
     </Button>
@@ -101,7 +98,7 @@ export const ConnectView = (props: ConnectViewProps) => {
 
         <Match when={verdict()?.kind === 'busy'}>
           <div class="callout callout--danger" role="alert">
-            Another tab or program has this box open. Close it, then try again.
+            Another tab or program has this box open.
           </div>
           <Connect label="Try again" />
         </Match>
@@ -112,7 +109,7 @@ export const ConnectView = (props: ConnectViewProps) => {
           </div>
           <WiringPorts />
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-            <Connect label="Try again" force />
+            <Connect label="Try again" />
             <NeverInstalled />
           </div>
         </Match>
@@ -176,7 +173,6 @@ export const ConnectView = (props: ConnectViewProps) => {
   );
 };
 
-// The selected box: why it can't be used right now, and what to press.
 export const ConnectPanel = (props: { onSetup?: () => void }) => {
   const dash = useDashboard();
   return (
@@ -188,14 +184,14 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
           error={dash.error()}
           verdict={dash.verdict()}
           busy={dash.status() === 'connecting'}
-          connect={(force) => void dash.connect(force)}
+          connect={() => void dash.connect()}
           onSetup={props.onSetup}
         />
       }
     >
       <Match when={dash.held() && !dash.present()}>
         <div class="callout callout--info" role="status">
-          Not plugged in. It reconnects when you plug USB2 in.
+          This computer can't see this box. Plug USB2 into it.
         </div>
         <Button variant="secondary" onClick={() => void dash.disconnect()}>
           Forget

@@ -59,12 +59,14 @@ describe('BoxScope', () => {
       </BoxesContext.Provider>
     ));
     boxes.select(a.mac);
+    await boxes.scope().connect();
     await ready();
     await vi.advanceTimersByTimeAsync(500);
     expect(getByTestId('name').textContent).toBe('Left');
     expect(a.locksQueries).toBeGreaterThan(0);
 
     boxes.select(b.mac);
+    await boxes.scope().connect();
     await ready();
     const aBefore = a.locksQueries;
     await vi.advanceTimersByTimeAsync(1000);
@@ -93,10 +95,12 @@ describe('BoxScope', () => {
       </MemoryRouter>
     ));
     boxes.select(a.mac);
+    await boxes.scope().connect();
     await ready();
     await vi.advanceTimersByTimeAsync(500);
     expect((await findByTestId('name')).textContent).toBe('Left');
     boxes.select(b.mac);
+    await boxes.scope().connect();
     await ready();
     const aBefore = a.locksQueries;
     await vi.advanceTimersByTimeAsync(1000);

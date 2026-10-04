@@ -274,4 +274,16 @@ describe('Setup', () => {
     expect(r.container.textContent).toMatch(/Chrome/);
     expect(r.queryByRole('button')).toBeNull();
   });
+
+  it('Try again after a box that is not answering looks again, without the chooser', async () => {
+    mock.findVerdict = { kind: 'silent' };
+    const r = await walk();
+    await waitFor(() => r.getByRole('button', { name: /^connect$/i }));
+    r.getByRole('button', { name: /^connect$/i }).click();
+    await r.findByRole('alert');
+    mock.findVerdict = null;
+    r.getByRole('button', { name: /try again/i }).click();
+    await waitFor(() => expect(r.container.textContent).toMatch(/installed\./i));
+    expect(mock.befores).toHaveLength(2);
+  });
 });
