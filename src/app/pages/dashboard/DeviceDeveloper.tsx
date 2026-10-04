@@ -50,7 +50,7 @@ const DeviceDeveloper = () => {
 
                   <Match when={dash.status() === 'flashing'}>
                     <p>Updating.</p>
-                    <Button variant="primary" disabled onClick={() => navigate('/dashboard/update')}>
+                    <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
                       Go to Update
                     </Button>
                   </Match>

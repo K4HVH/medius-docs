@@ -39,8 +39,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
   }),
 }));
 
+const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigate,
   A: (p: { children: unknown }) => p.children,
 }));
 
@@ -141,8 +142,18 @@ describe('Device', () => {
 
   it('a box that stopped answering keeps its card, with the reason and a way to let it go', async () => {
     mock.status = 'lost';
-    const { getByRole } = render(() => <Device />);
-    await waitFor(() => expect(getByRole('alert').textContent).toMatch(/isn't answering/i));
+    const { getByRole, queryByRole } = render(() => <Device />);
+    expect(getByRole('alert').textContent).toMatch(/isn't answering/i);
     expect(getByRole('button', { name: /disconnect/i })).toBeTruthy();
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+  });
+
+  it('while this box updates, the card takes you to its progress', async () => {
+    mock.status = 'flashing';
+    const { getByRole } = render(() => <Device />);
+    const go = getByRole('button', { name: /go to update/i }) as HTMLButtonElement;
+    expect(go.disabled).toBe(false);
+    go.click();
+    expect(navigate).toHaveBeenCalledWith('/dashboard/update');
   });
 });

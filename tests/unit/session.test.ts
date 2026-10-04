@@ -285,7 +285,7 @@ describe('box session', () => {
     const blank = createBoxSession({ port: null }, { supported: true, secure: true, nativeFlashing: () => false, acquire });
     sessions.push(blank.ctl);
     await blank.api.connect();
-    expect(acquire).toHaveBeenCalledWith(false);
+    expect(acquire).toHaveBeenCalledTimes(1);
     expect(blank.api.verdict()).toEqual({ kind: 'no-port' });
     expect(blank.api.status()).toBe('disconnected');
   });
@@ -295,7 +295,68 @@ describe('box session', () => {
     const box = new FakeBox();
     const { api } = open(box, { hooks: { acquire } });
     await api.connect(true);
-    expect(acquire).toHaveBeenCalledWith(true);
+    expect(acquire).toHaveBeenCalledTimes(1);
     expect(box.opens).toEqual([]);
+  });
+
+  it('Disconnect during a reattach handshake stays disconnected, and closes what that handshake opened', async () => {
+    const box = new FakeBox();
+    const { api } = open(box);
+    await api.connect();
+    box.alive = false;
+    await keepalives(3);
+    expect(api.status()).toBe('lost');
+    box.alive = true;
+    const release = box.hold();
+    await vi.advanceTimersByTimeAsync(REATTACH_MS);
+    expect(box.isOpen).toBe(true);
+    await api.disconnect();
+    release();
+    await settle();
+    expect(api.status()).toBe('disconnected');
+    expect(api.held()).toBe(false);
+    expect(box.isOpen).toBe(false);
+  });
+
+  it('a held box that comes back on a protocol this page cannot speak stops being retried, and says why', async () => {
+    const box = new FakeBox();
+    const { api } = open(box);
+    await api.connect();
+    box.alive = false;
+    await keepalives(3);
+    box.version = { ...box.version, protoVer: 4 };
+    box.alive = true;
+    await vi.advanceTimersByTimeAsync(REATTACH_MS * 2);
+    expect(api.status()).toBe('disconnected');
+    expect(api.verdict()).toMatchObject({ kind: 'old-firmware' });
+    const tries = box.opens.length;
+    await vi.advanceTimersByTimeAsync(REATTACH_MS * 5);
+    expect(box.opens.length).toBe(tries);
+  });
+
+  it('identify on a held box blinks for the whole time, not part of it', async () => {
+    const box = new FakeBox();
+    const { api } = open(box);
+    await api.connect();
+    void api.identify();
+    await vi.advanceTimersByTimeAsync(IDENTIFY_MS - 1);
+    expect(box.leds).toEqual([[LedTarget.Both, LedMode.Blink, 255]]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(box.leds.at(-1)).toEqual([LedTarget.Both, LedMode.Auto, 0]);
+  });
+
+  it('two connects asked for while an identify holds the port make one attach', async () => {
+    const box = new FakeBox();
+    const { api } = open(box, { probe: probed(box) });
+    void api.identify();
+    await settle();
+    const one = api.connect();
+    const two = api.connect();
+    expect(api.status()).toBe('connecting');
+    await vi.advanceTimersByTimeAsync(IDENTIFY_MS);
+    await Promise.all([one, two]);
+    expect(api.status()).toBe('connected');
+    expect(api.verdict()).toBeNull();
+    expect(box.doubleOpens).toBe(0);
   });
 });

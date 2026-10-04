@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   BadProtoVerError,
   NoReplyError,
+  probeFromError,
   probePort,
   probeVerdict,
   type Probe,
@@ -120,5 +121,10 @@ describe('probeVerdict', () => {
     expect(probeVerdict({ kind: 'old-firmware', version: version(4) })).toEqual({ kind: 'old-firmware', version: version(4) });
     expect(probeVerdict({ kind: 'new-firmware', version: version(99) })).toEqual({ kind: 'new-firmware', version: version(99) });
     expect(probeVerdict({ kind: 'other', message: 'x' })).toEqual({ kind: 'other', message: 'x' });
+  });
+
+  it('a port that went away or wants another click is other, never busy or silent', () => {
+    expect(probeFromError(new DOMException('No port selected.', 'NotFoundError'))).toEqual({ kind: 'other', message: 'The port went away' });
+    expect(probeFromError(new DOMException('Must be handling a user gesture.', 'SecurityError'))).toEqual({ kind: 'other', message: 'The port went away' });
   });
 });

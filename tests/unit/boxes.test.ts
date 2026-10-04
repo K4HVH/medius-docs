@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createRoot } from 'solid-js';
+import { createRoot, createSignal } from 'solid-js';
 import { type Boxes, createBoxes } from '../../src/app/pages/dashboard/boxes';
 import { REATTACH_MS } from '../../src/app/pages/dashboard/session';
 import { createBoxStore } from '../../src/app/pages/dashboard/store';
 import { probePort } from '../../src/dashboard/serial';
-import { FakeBox, FakePort, FakeSerial, asPort, makeFakeLink, settle } from './fake-boxes';
+import { FakeBox, FakeLocks, FakePort, FakeSerial, asPort, makeFakeLink, otherTab, settle } from './fake-boxes';
 
 const probes: SerialPort[] = [];
 const fakeProbe = (p: SerialPort) => {
@@ -13,19 +13,27 @@ const fakeProbe = (p: SerialPort) => {
 };
 
 const roots: (() => void)[] = [];
-const mount = (serial: FakeSerial, store = createBoxStore(null)): Boxes =>
+const [flashing, setFlashing] = createSignal(false);
+const mount = (
+  serial: FakeSerial,
+  store = createBoxStore(null),
+  opts: { start?: boolean; locks?: FakeLocks } = {},
+): Boxes =>
   createRoot((dispose) => {
     roots.push(dispose);
-    return createBoxes({
+    const b = createBoxes({
       serial,
       store,
       supported: true,
       secure: true,
-      nativeFlashing: () => false,
+      nativeFlashing: flashing,
       probe: fakeProbe,
       makeLink: makeFakeLink,
       choose: () => serial.choose(),
+      locks: opts.locks,
     });
+    if (opts.start !== false) b.start();
+    return b;
   });
 
 const mac = (n: number) => [0x58, 0x8c, 0x81, 0xe0, 0x82, n];
@@ -46,6 +54,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   while (roots.length) roots.pop()!();
+  setFlashing(false);
   vi.useRealTimers();
 });
 
@@ -208,7 +217,7 @@ describe('box registry', () => {
     await ready();
     first.select(b.mac);
     await ready();
-    const second = mount(new FakeSerial(ports));
+    const second = mount(new FakeSerial(otherTab(ports)));
     await ready();
     window.dispatchEvent(new Event('focus'));
     await ready();
@@ -269,8 +278,8 @@ describe('box registry', () => {
     b.alive = false;
     const boxes = mount(new FakeSerial(portsOf(a, b)));
     await ready();
-    const before = boxes.answeringKeys();
-    expect([...before]).toEqual([a.mac]);
+    const before = boxes.snapshot();
+    expect([...before.answering]).toEqual([a.mac]);
     b.alive = true;
     expect(await boxes.connectNew(before)).toBeNull();
     await ready();
@@ -300,5 +309,359 @@ describe('box registry', () => {
     await boxes.add();
     await ready();
     expect(boxes.entries()).toHaveLength(1);
+  });
+
+  it('waits on the probe page load started before connecting the same port, so the two never collide', async () => {
+    const a = box(1);
+    const release = a.hold();
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    const s = boxes.entries()[0].session;
+    const connecting = s.connect();
+    await ready();
+    release();
+    await connecting;
+    await ready();
+    expect(a.doubleOpens).toBe(0);
+    expect(entry(boxes, a.mac).session.status()).toBe('connected');
+    expect(entry(boxes, a.mac).session.verdict()).toBeNull();
+  });
+
+  it('never probes a port while its session attaches, identifies, or reattaches', async () => {
+    const a = box(1);
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    const s = entry(boxes, a.mac).session;
+    const release = a.hold();
+    boxes.select(a.mac);
+    await ready();
+    probes.length = 0;
+    window.dispatchEvent(new Event('focus'));
+    void boxes.rescan();
+    await ready();
+    expect(probes).toEqual([]);
+    release();
+    await ready();
+    expect(s.status()).toBe('connected');
+    a.alive = false;
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(s.status()).toBe('lost');
+    void boxes.rescan();
+    await ready();
+    expect(probes).toEqual([]);
+    expect(a.doubleOpens).toBe(0);
+  });
+
+  it('two probes asked for at once open the port once', async () => {
+    const a = box(1);
+    a.alive = false;
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    a.opens.length = 0;
+    await Promise.all([boxes.rescan(), boxes.rescan()]);
+    expect(a.opens).toEqual([6_000_000, 4_000_000]);
+  });
+
+  it('a row that is not answering explains itself, and a fresh answer clears the old reason', async () => {
+    const a = box(1);
+    a.busy = true;
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    const s = boxes.entries()[0].session;
+    expect(s.verdict()).toEqual({ kind: 'busy' });
+    await s.connect();
+    expect(s.verdict()).toEqual({ kind: 'busy' });
+    a.busy = false;
+    window.dispatchEvent(new Event('focus'));
+    await ready();
+    expect(boxes.entries()[0].session.verdict()).toBeNull();
+  });
+
+  it('Try again on a silent box retries that box, and connects once it answers', async () => {
+    const a = box(1);
+    a.alive = false;
+    const ports = portsOf(a);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    const s = boxes.entries()[0].session;
+    expect(s.verdict()).toEqual({ kind: 'silent' });
+    a.alive = true;
+    serial.chosen = ports[0];
+    await s.connect(true);
+    await ready();
+    expect(entry(boxes, a.mac).session.status()).toBe('connected');
+  });
+
+  it('a chooser closed without a pick leaves the row as it was', async () => {
+    const a = box(1);
+    a.alive = false;
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    const s = boxes.entries()[0].session;
+    await s.connect(true);
+    expect(s.verdict()).toEqual({ kind: 'silent' });
+  });
+
+  it('adding a box selects it and keeps it selected over a box already held', async () => {
+    const [a, b] = [box(1), box(2)];
+    const ports = portsOf(a, b);
+    const serial = new FakeSerial([ports[0]]);
+    const store = createBoxStore(null);
+    store.hold(a.mac, 'Box 1');
+    const boxes = mount(serial, store);
+    await ready();
+    expect(entry(boxes, a.mac).session.status()).toBe('connected');
+    serial.chosen = ports[1];
+    await boxes.add();
+    await ready();
+    expect(boxes.selected()?.key).toBe(b.mac);
+    expect(store.selected()).toBe(b.mac);
+  });
+
+  it('adding a remembered box on a new port selects that box, with no second row', async () => {
+    const [a, b] = [box(1), box(2)];
+    // b is held and listed first, so a selection that fell back would land on b.
+    const ports = portsOf(b, a);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    boxes.select(b.mac);
+    await ready();
+    boxes.select(a.mac);
+    await ready();
+    serial.unplug(ports[1]);
+    await ready();
+    const moved = new FakePort(a);
+    serial.chosen = moved;
+    const added = await boxes.add();
+    await vi.advanceTimersByTimeAsync(REATTACH_MS);
+    await ready();
+    expect(added.ok && added.entry.key).toBe(a.mac);
+    expect(keys(boxes)).toEqual([b.mac, a.mac]);
+    expect(boxes.selected()?.key).toBe(a.mac);
+    expect(entry(boxes, a.mac).session.status()).toBe('connected');
+  });
+
+  it('selecting a box stores it, and never stores a port that has no MAC', async () => {
+    const [a, b] = [box(1), box(2)];
+    b.alive = false;
+    const store = createBoxStore(null);
+    const boxes = mount(new FakeSerial(portsOf(a, b)), store);
+    await ready();
+    boxes.select(a.mac);
+    expect(store.selected()).toBe(a.mac);
+    boxes.select(keys(boxes)[1]);
+    await ready();
+    expect(store.selected()).toBe(a.mac);
+  });
+
+  it('a row keeps its identity when its port first answers, so its button keeps focus', async () => {
+    const a = box(1);
+    a.alive = false;
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    const row = boxes.entries()[0];
+    a.alive = true;
+    boxes.select(row.key);
+    await ready();
+    expect(boxes.entries()[0]).toBe(row);
+    expect(row.key).toBe(a.mac);
+  });
+
+  it('a selected port that turns out to be a remembered box moves the selection to that box', async () => {
+    const [a, b] = [box(1), box(2)];
+    // b is listed first, so falling back to the first held box would pick the wrong one.
+    const ports = portsOf(b, a);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    boxes.select(b.mac);
+    await ready();
+    boxes.select(a.mac);
+    await ready();
+    serial.unplug(ports[1]);
+    await ready();
+    a.alive = false;
+    const moved = new FakePort(a);
+    serial.plug(moved);
+    await ready();
+    const anon = keys(boxes).find((k) => k.startsWith('port:'))!;
+    boxes.select(anon);
+    a.alive = true;
+    window.dispatchEvent(new Event('focus'));
+    await boxes.rescan();
+    await vi.advanceTimersByTimeAsync(REATTACH_MS);
+    await ready();
+    expect(boxes.selected()?.key).toBe(a.mac);
+  });
+
+  it('only a box answering after the install counts as the one installed', async () => {
+    const [a, b] = [box(1), box(2)];
+    b.alive = false;
+    const store = createBoxStore(null);
+    store.hold(a.mac, 'Box 1');
+    const serial = new FakeSerial(portsOf(a, b));
+    const boxes = mount(serial, store);
+    await ready();
+    const before = boxes.snapshot();
+    // Nothing new answers: the box already connected is not the one installed, so the chooser asks.
+    expect(await boxes.connectNew(before)).toEqual({ kind: 'no-port' });
+    expect(serial.chooserCalls).toBe(1);
+  });
+
+  it('a remembered box still connecting after the install is the one installed', async () => {
+    const a = box(1);
+    a.alive = false;
+    const store = createBoxStore(null);
+    const serial = new FakeSerial(portsOf(a));
+    const boxes = mount(serial, store);
+    await ready();
+    const before = boxes.snapshot();
+    store.hold(a.mac, 'Box 1');
+    a.alive = true;
+    const release = a.hold();
+    const found = boxes.connectNew(before);
+    await ready();
+    release();
+    expect(await found).toBeNull();
+    expect(boxes.selected()?.key).toBe(a.mac);
+    expect(serial.chooserCalls).toBe(0);
+  });
+
+  it('a single port that appeared during the install and is not answering reports why, without the chooser', async () => {
+    const serial = new FakeSerial([]);
+    const boxes = mount(serial);
+    await ready();
+    const before = boxes.snapshot();
+    const a = box(1);
+    a.alive = false;
+    serial.plug(new FakePort(a));
+    await ready();
+    expect(await boxes.connectNew(before)).toEqual({ kind: 'silent' });
+    expect(serial.chooserCalls).toBe(0);
+  });
+
+  it('touches no port until the dashboard is opened', async () => {
+    const a = box(1);
+    const boxes = mount(new FakeSerial(portsOf(a)), createBoxStore(null), { start: false });
+    await ready();
+    expect(a.opens).toEqual([]);
+    expect(boxes.entries()).toEqual([]);
+    boxes.start();
+    boxes.start();
+    await ready();
+    expect(keys(boxes)).toEqual([a.mac]);
+    expect(a.opens).toEqual([6_000_000]);
+  });
+
+  it('writes to no box while a chip is flashed over its own USB', async () => {
+    const [a, b] = [box(1), box(2)];
+    const ports = portsOf(a, b);
+    const boxes = mount(new FakeSerial(ports));
+    await ready();
+    boxes.select(a.mac);
+    await ready();
+    setFlashing(true);
+    const queries = a.healthQueries;
+    probes.length = 0;
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(a.healthQueries).toBe(queries);
+    boxes.select(b.mac);
+    await boxes.rescan();
+    await entry(boxes, b.mac).session.identify();
+    await ready();
+    expect(probes).toEqual([]);
+    expect(b.opens).toEqual([6_000_000]);
+    expect(entry(boxes, a.mac).session.status()).toBe('connected');
+  });
+
+  it("a box another tab holds is in use there, even in the moment that tab's port is closed", async () => {
+    const a = box(1);
+    const ports = portsOf(a);
+    const locks = new FakeLocks();
+    const shared = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => shared.get(k) ?? null,
+      setItem: (k: string, v: string) => void shared.set(k, v),
+    } as unknown as Storage;
+    const first = mount(new FakeSerial(ports), createBoxStore(storage), { locks });
+    await ready();
+    first.select(a.mac);
+    await ready();
+    const theirs = otherTab(ports);
+    const second = mount(new FakeSerial(theirs), createBoxStore(storage), { locks });
+    await ready();
+    expect(second.entries()[0].session.verdict()).toEqual({ kind: 'busy' });
+    // The first tab lets go of the port for a moment, as an update does between activate and reconnect.
+    await entry(first, a.mac).session.link()!.close();
+    window.dispatchEvent(new Event('focus'));
+    await ready();
+    expect(second.entries()[0].session.status()).not.toBe('connected');
+    expect(second.entries()[0].session.verdict()).toEqual({ kind: 'busy' });
+  });
+
+  it('a held box replugged while it still boots is found when it starts answering', async () => {
+    const a = box(1);
+    const ports = portsOf(a);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    boxes.select(a.mac);
+    await ready();
+    serial.unplug(ports[0]);
+    await ready();
+    a.alive = false;
+    serial.plug(new FakePort(a));
+    await ready();
+    a.alive = true;
+    await vi.advanceTimersByTimeAsync(8000);
+    await ready();
+    expect(keys(boxes)).toEqual([a.mac]);
+    expect(entry(boxes, a.mac).session.status()).toBe('connected');
+  });
+
+  it('a port that is not a control adapter is never listed or probed', async () => {
+    const rom = new FakePort(box(9), { usbVendorId: 0x303a, usbProductId: 0x0009 });
+    const serial = new FakeSerial([rom]);
+    const boxes = mount(serial);
+    await ready();
+    serial.plug(new FakePort(box(8), { usbVendorId: 0x303a, usbProductId: 0x0009 }));
+    await ready();
+    expect(boxes.entries()).toEqual([]);
+    expect(probes).toEqual([]);
+  });
+
+  it('Forget on a box that is not plugged in takes its row away', async () => {
+    const a = box(1);
+    const ports = portsOf(a);
+    const serial = new FakeSerial(ports);
+    const store = createBoxStore(null);
+    const boxes = mount(serial, store);
+    await ready();
+    boxes.select(a.mac);
+    await ready();
+    serial.unplug(ports[0]);
+    await ready();
+    await entry(boxes, a.mac).session.disconnect();
+    await ready();
+    expect(boxes.entries()).toEqual([]);
+    expect(store.held()).toEqual([]);
+  });
+
+  it('knows when any box, selected or not, is mid-update', async () => {
+    const [a, b] = [box(1), box(2)];
+    const boxes = mount(new FakeSerial(portsOf(a, b)));
+    await ready();
+    boxes.select(a.mac);
+    await ready();
+    boxes.select(b.mac);
+    await ready();
+    expect(boxes.anyUpdating()).toBe(false);
+    const release = a.hold();
+    void entry(boxes, a.mac).session.updateOverControl({ device: new Uint8Array([0xe9]) });
+    await ready();
+    expect(boxes.anyUpdating()).toBe(true);
+    release();
   });
 });

@@ -24,6 +24,7 @@ const mock = vi.hoisted(() => ({
   applied: 0,
   cleared: 0,
   transferReply: { ep: 0, status: 0, data: new Uint8Array() },
+  status: 'connected',
   poll: {} as Record<string, unknown>,
   // Tells the card the polled values moved, as a fresh poll reply would.
   polled: () => {},
@@ -77,7 +78,14 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   };
   return {
     useDashboard: () => ({
-      status: () => 'connected',
+      supported: true,
+      secure: true,
+      status: () => mock.status,
+      held: () => true,
+      present: () => true,
+      verdict: () => null,
+      error: () => null,
+      disconnect: async () => {},
       updateOnly: () => false,
       link: () => link,
       poll: (key: string) => () => {
@@ -111,6 +119,7 @@ afterEach(() => {
   mock.applied = 0;
   mock.cleared = 0;
   mock.transferReply = { ep: 0, status: 0, data: new Uint8Array() };
+  mock.status = 'connected';
   mock.poll = {};
 });
 
@@ -745,5 +754,13 @@ describe('whole-number fields on the advanced control cards', () => {
     fireEvent.click(button(root, 'Add rule'));
     await settle();
     expect(mock.rewrites.map((r) => (r as unknown as { off: number }).off)).toEqual([3]);
+  });
+
+  it('a box that stopped answering shows that, not the layer or a Connect button', () => {
+    mock.status = 'lost';
+    const { getByRole, queryByRole, queryByText } = render(() => <DeviceDeveloper />);
+    expect(getByRole('alert').textContent).toMatch(/isn't answering/i);
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+    expect(queryByText('Rewrite rules')).toBeNull();
   });
 });

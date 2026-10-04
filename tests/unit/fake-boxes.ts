@@ -1,5 +1,9 @@
-// Boxes behind fake ports, for the session and registry suites. A port is an identity token; the box
-// behind it answers only while alive, only at its own rate, and refuses a second open as Chromium does.
+// Boxes behind fake ports, for the session and registry suites, failing the way Chromium does:
+// - a port is opened once per page; a second link over a port this page holds fails as SerialLink
+//   does when it adopts an open port (its writer is locked), and that is counted, since it is a bug;
+// - another tab or program holding the device makes open() reject with NetworkError;
+// - a failed read loop leaves the port open, writer locked, until the link is closed;
+// - an unplugged device is gone: its port object never opens again.
 
 import {
   BadProtoVerError,
@@ -33,16 +37,21 @@ export class FakeBox {
   version: Version;
   baud: number;
   alive = true;
-  // Held by another tab or program.
+  // Held by another program.
   busy = false;
-  isOpen = false;
+  // The port object, in whichever page, that has the device open.
+  openedBy: FakePort | null = null;
   active: FakeLink | null = null;
   opens: number[] = [];
   closes = 0;
+  // Second links over a port this page already holds: always a bug in the code under test.
+  doubleOpens = 0;
   leds: [number, number, number][] = [];
   healthQueries = 0;
   locksQueries = 0;
   device: DeviceInfo | null = DEVICE;
+  // While set, a handshake waits for it, so a test can act mid-attach.
+  gate: Promise<void> | null = null;
 
   constructor(o: BoxOpts = {}) {
     this.version = {
@@ -60,13 +69,27 @@ export class FakeBox {
     return this.version.mac.map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
+  get isOpen(): boolean {
+    return this.openedBy !== null;
+  }
+
   rename(name: string): void {
     this.version = { ...this.version, name };
   }
 
-  // The read loop fails, as when USB2 is pulled.
+  // The read loop fails; the port stays open until the link is closed.
   drop(): void {
-    this.active?.drop();
+    this.active?.fail();
+  }
+
+  // Holds every handshake until the returned function is called.
+  hold(): () => void {
+    let release = () => {};
+    this.gate = new Promise<void>((r) => (release = r));
+    return () => {
+      this.gate = null;
+      release();
+    };
   }
 }
 
@@ -74,9 +97,14 @@ let ports = 0;
 
 export class FakePort {
   readonly id = ++ports;
-  constructor(public box: FakeBox | null) {}
+  // Open in this page; real ports refuse a second open while this is set.
+  open = false;
+  constructor(
+    public box: FakeBox | null,
+    readonly info = { usbVendorId: 0x1a86, usbProductId: 0x55d3 },
+  ) {}
   getInfo() {
-    return { usbVendorId: 0x1a86, usbProductId: 0x55d3 };
+    return this.info;
   }
 }
 
@@ -110,8 +138,15 @@ export class FakeLink {
   async open(baud: number): Promise<void> {
     const b = this.box;
     b.opens.push(baud);
-    if (b.busy || b.isOpen) throw new DOMException('The port is already open.', 'InvalidStateError');
-    b.isOpen = true;
+    if (this.port.open) {
+      b.doubleOpens++;
+      throw new TypeError('Failed to execute getWriter: Cannot create writer when WritableStream is locked');
+    }
+    if (b.busy || (b.openedBy && b.openedBy !== this.port)) {
+      throw new DOMException('Failed to open serial port.', 'NetworkError');
+    }
+    this.port.open = true;
+    b.openedBy = this.port;
     b.active = this;
     this.open_ = true;
     this.baud = baud;
@@ -119,7 +154,8 @@ export class FakeLink {
 
   async handshake(): Promise<Version> {
     const b = this.box;
-    if (!b.alive || this.baud !== b.baud) throw new NoReplyError();
+    if (b.gate) await b.gate;
+    if (!this.open_ || !b.alive || this.baud !== b.baud) throw new NoReplyError();
     this.rx();
     if (b.version.protoVer < MIN_PROTO_VER || b.version.protoVer > PROTO_VER) throw new BadProtoVerError(b.version);
     return b.version;
@@ -153,29 +189,40 @@ export class FakeLink {
     });
   }
 
+  async queryFirmware() {
+    return this.answer(() => {
+      const chip = { major: 3, minor: 4, patch: 4, slot: 0, state: 2 };
+      return { device: chip, host: chip, slotSize: 983040, deviceStaged: false, hostStaged: false };
+    });
+  }
+
+  // Staging waits on the gate, so a test can hold an update in flight.
+  async stageFirmware(): Promise<void> {
+    const b = this.box;
+    if (b.gate) await b.gate;
+  }
+
   async led(target: number, mode: number, level: number): Promise<void> {
     if (!this.open_) throw new Error('link closed');
     this.box.leds.push([target, mode, level]);
   }
 
   async close(): Promise<void> {
-    if (!this.open_) return;
+    const wasOpen = this.port.open && (this.open_ || this.port.box?.active === this || !this.port.box);
     this.open_ = false;
+    if (!wasOpen) return;
+    this.port.open = false;
     const b = this.port.box;
-    if (b && b.active === this) {
-      b.isOpen = false;
+    if (b && b.openedBy === this.port) {
+      b.openedBy = null;
       b.active = null;
       b.closes++;
     }
   }
 
-  drop(): void {
+  // The read loop ended with an error: SerialLink reports it and keeps the port until closed.
+  fail(): void {
     this.open_ = false;
-    const b = this.port.box;
-    if (b && b.active === this) {
-      b.isOpen = false;
-      b.active = null;
-    }
     this.events.onClose?.(new Error('The device has been lost.'));
   }
 }
@@ -193,6 +240,7 @@ type Listener = (ev: Event) => void;
 export class FakeSerial implements SerialLike {
   private listeners = new Map<string, Set<Listener>>();
   chosen: FakePort | null = null;
+  chooserCalls = 0;
   getPortsFails = false;
   constructor(public ports: FakePort[]) {}
   async getPorts() {
@@ -200,6 +248,7 @@ export class FakeSerial implements SerialLike {
     return this.ports.map(asPort);
   }
   async choose() {
+    this.chooserCalls++;
     if (!this.chosen) throw new DOMException('No port selected.', 'NotFoundError');
     if (!this.ports.includes(this.chosen)) this.ports.push(this.chosen);
     return asPort(this.chosen);
@@ -218,10 +267,30 @@ export class FakeSerial implements SerialLike {
     this.ports.push(port);
     this.emit('connect', port);
   }
+  // The device leaves: its link's read loop fails, and the port object is dead for good.
   unplug(port: FakePort) {
     this.ports = this.ports.filter((p) => p !== port);
-    port.box?.drop();
+    const b = port.box;
+    if (b && b.openedBy === port) {
+      b.openedBy = null;
+      b.active?.fail();
+      b.active = null;
+    }
+    port.box = null;
     this.emit('disconnect', port);
   }
 }
 
+// Another tab: its own port objects for the same devices.
+export const otherTab = (ports: FakePort[]) => ports.map((p) => new FakePort(p.box, p.info));
+
+// Web Locks as Chromium runs them: held until the callback's promise settles, refused to a second
+// holder when asked ifAvailable.
+export class FakeLocks {
+  held = new Set<string>();
+  request(name: string, _opts: { ifAvailable: true }, cb: (lock: unknown) => unknown): Promise<unknown> {
+    if (this.held.has(name)) return Promise.resolve(cb(null));
+    this.held.add(name);
+    return Promise.resolve(cb({ name })).finally(() => this.held.delete(name));
+  }
+}

@@ -23,10 +23,12 @@ import {
   type Probe,
   SerialLink,
   type SerialLinkEvents,
+  BadProtoVerError,
   attachLink,
   bauds,
   classifyConnectError,
   probeFromError,
+  probeVerdict,
   speaksCurrentWire,
 } from '../../../dashboard/serial';
 import type { FlashProgress } from '../../../dashboard/flash';
@@ -97,8 +99,12 @@ export interface SessionHooks {
   secure: boolean;
   nativeFlashing: Accessor<boolean>;
   makeLink?: (port: SerialPort, events: SerialLinkEvents) => SerialLink;
-  // How a session with no port, or a forced connect, finds one.
-  acquire?: (force: boolean) => Promise<ConnectVerdict | null>;
+  // Opens the chooser for a session with no port, or a forced connect; null once a port is picked.
+  acquire?: () => Promise<ConnectVerdict | null>;
+  // Runs `fn` alone on `port`: nothing else in this page opens it meanwhile.
+  exclusive?: <T>(port: SerialPort, fn: () => Promise<T>) => Promise<T>;
+  // Claims a box for this tab; null while another tab holds it. Call the result to let go.
+  claim?: (mac: string) => Promise<(() => void) | null>;
   // What a port answered; false when the box on it belongs to another entry.
   seen?: (port: SerialPort, probe: Probe) => boolean;
   held?: (mac: string, name: string) => void;
@@ -112,6 +118,8 @@ export interface SessionControl {
   setProbe: (probe: Probe | null) => void;
   // Connected on return; throws what the attach threw.
   attach: () => Promise<Version>;
+  // Settles when a connect in flight ends.
+  settled: () => Promise<void>;
   dispose: () => void;
 }
 
@@ -147,6 +155,14 @@ type Verdict = 'ok' | 'gone' | 'host';
 // An image marked invalid is about to reboot into the other one, so it is no verdict either.
 const decided = (c: ChipFirmware) =>
   c.state !== ImageState.PendingVerify && c.state !== ImageState.Invalid && c.state !== ImageState.Aborted;
+
+// A connect given up because Disconnect came first, or because another box answered on the port.
+class AttachCancelled extends Error {}
+class ForeignBoxError extends Error {
+  constructor() {
+    super('Another box answered on this port.');
+  }
+}
 
 const versionOf = (p: Probe | null): Version | null => (p && 'version' in p ? p.version : null);
 
@@ -187,6 +203,13 @@ export function createBoxSession(
     let misses = 0;
     let mark = 0;
     let identifyRun: Promise<void> | null = null;
+    let attachRun: Promise<unknown> | null = null;
+    let releaseClaim: (() => void) | null = null;
+    const exclusive = <T,>(p: SerialPort, fn: () => Promise<T>) => (hooks.exclusive ? hooks.exclusive(p, fn) : fn());
+    const letGo = () => {
+      releaseClaim?.();
+      releaseClaim = null;
+    };
 
     const onKeepalive = (answered: boolean) => {
       if (answered) {
@@ -207,8 +230,10 @@ export function createBoxSession(
       }
     };
 
-    // Fed a derived link so an update silences every readback in one place.
-    const poller = createPoller(() => (status() === 'flashing' ? null : link()), { onKeepalive });
+    // Fed a derived link so an update, or a chip flashed over its own USB, silences every readback.
+    const poller = createPoller(() => (status() === 'flashing' || hooks.nativeFlashing() ? null : link()), {
+      onKeepalive,
+    });
     // The poller already polls health as the keepalive; this only reads it.
     const health = poller.subscribe('health');
     const polledVersion = poller.peek('version');
@@ -290,23 +315,32 @@ export function createBoxSession(
         // Nothing writes to a box whose chip may be in ROM download.
         if (!p || hooks.nativeFlashing()) continue;
         try {
-          const { link: nl, version: v, baud } = await attachLink(p, makeLink, bauds(lastBaud));
-          if (disposed || gen !== lostGen || status() !== 'lost') {
-            await nl.close().catch(() => undefined);
-            return;
-          }
-          if (!claim(p, { kind: 'box', version: v, device: null, baud })) {
-            await nl.close().catch(() => undefined);
+          const found = await exclusive(p, async () => {
+            const { link: nl, version: v, baud } = await attachLink(p, makeLink, bauds(lastBaud));
+            if (disposed || gen !== lostGen || status() !== 'lost' || !claim(p, { kind: 'box', version: v, device: null, baud })) {
+              await nl.close().catch(() => undefined);
+              return null;
+            }
+            return { nl, v, baud };
+          });
+          if (!found) {
+            if (disposed || gen !== lostGen || status() !== 'lost') return;
             continue;
           }
-          lastBaud = baud;
-          setVersion(v);
-          setLink(nl);
+          lastBaud = found.baud;
+          setVersion(found.v);
+          setLink(found.nl);
           poller.reset();
           setStatus('connected');
           return;
-        } catch {
-          // Not back yet.
+        } catch (e) {
+          // A box back on a protocol this page can't speak won't answer differently next time.
+          if (e instanceof BadProtoVerError) {
+            setProbe(probeFromError(e));
+            setVerdict(classifyConnectError(e));
+            setStatus('disconnected');
+            return;
+          }
         }
       }
     };
@@ -314,71 +348,105 @@ export function createBoxSession(
     const attach = async (): Promise<Version> => {
       const p = port();
       if (!p) throw new DOMException('No port selected.', 'NotFoundError');
-      if (identifyRun) await identifyRun;
       ++lostGen;
       setError(null);
       setVerdict(null);
       setUpdateProgress(null);
-      setDeviceLog([]);
-      setInputEvents([]);
       setStatus('connecting');
-      // A failed update's link still holds the writer lock, and a second link over it throws
-      // unrecoverably.
-      const stale = link();
-      if (stale) {
-        resetView();
-        await stale.close().catch(() => undefined);
-      }
-      try {
-        const { link: nl, version: v, baud } = await attachLink(p, makeLink, bauds(lastBaud));
-        const prev = probe();
-        const found: Probe = { kind: 'box', version: v, device: prev?.kind === 'box' ? prev.device : null, baud };
-        if (disposed || !claim(p, found)) {
-          await nl.close().catch(() => undefined);
-          throw new Error('Another box answered on this port.');
+      const run = (async () => {
+        if (identifyRun) await identifyRun;
+        // A failed update's link still holds the writer lock, and a second link over it throws
+        // unrecoverably.
+        const stale = link();
+        if (stale) {
+          resetView();
+          await stale.close().catch(() => undefined);
         }
-        lastBaud = baud;
-        setMac(boxId(v) ?? mac());
-        setProbe(found);
-        setVersion(v);
-        setLink(nl);
-        // Reset before the cards mount, so each slot is queried once.
-        poller.reset();
-        setStatus('connected');
-        setHeld(true);
-        return v;
-      } catch (e) {
-        const found = probeFromError(e);
-        setProbe(found);
-        if ('version' in found) hooks.seen?.(p, found);
-        if (status() === 'connecting') setStatus('disconnected');
-        throw e;
+        setDeviceLog([]);
+        setInputEvents([]);
+        try {
+          const { nl, v, baud } = await exclusive(p, async () => {
+            const a = await attachLink(p, makeLink, bauds(lastBaud));
+            return { nl: a.link, v: a.version, baud: a.baud };
+          });
+          const prev = probe();
+          const found: Probe = { kind: 'box', version: v, device: prev?.kind === 'box' ? prev.device : null, baud };
+          if (disposed || status() !== 'connecting') {
+            await nl.close().catch(() => undefined);
+            throw new AttachCancelled();
+          }
+          if (!claim(p, found)) {
+            await nl.close().catch(() => undefined);
+            throw new ForeignBoxError();
+          }
+          const id = boxId(v);
+          if (id && !releaseClaim && hooks.claim) {
+            releaseClaim = await hooks.claim(id);
+            if (!releaseClaim) {
+              await nl.close().catch(() => undefined);
+              throw new DOMException('Another tab has this box open.', 'InvalidStateError');
+            }
+          }
+          lastBaud = baud;
+          setMac(id ?? mac());
+          setProbe(found);
+          setVersion(v);
+          setLink(nl);
+          // Reset before the cards mount, so each slot is queried once.
+          poller.reset();
+          setStatus('connected');
+          setHeld(true);
+          return v;
+        } catch (e) {
+          if (!(e instanceof AttachCancelled) && !(e instanceof ForeignBoxError)) {
+            const found = probeFromError(e);
+            setProbe(found);
+            if ('version' in found) hooks.seen?.(p, found);
+          }
+          if (status() === 'connecting') setStatus('disconnected');
+          throw e;
+        }
+      })();
+      attachRun = run;
+      try {
+        return await run;
+      } finally {
+        if (attachRun === run) attachRun = null;
       }
     };
 
     const connect = async (force = false) => {
       const s = status();
       if (s === 'connecting' || s === 'connected' || s === 'flashing' || s === 'lost') return;
+      if (hooks.nativeFlashing()) return;
       if (force || !port()) {
         if (!hooks.acquire) return;
-        setError(null);
-        setVerdict(null);
-        setStatus('connecting');
+        const blank = !port();
+        if (blank) {
+          setError(null);
+          setVerdict(null);
+          setStatus('connecting');
+        }
         let v: ConnectVerdict | null;
         try {
-          v = await hooks.acquire(force);
+          v = await hooks.acquire();
         } catch (e) {
           // Nothing may escape, or the page sticks on "Connecting..." until a reload.
           v = classifyConnectError(e);
         }
-        if (status() === 'connecting') setStatus('disconnected');
-        setVerdict(v);
+        if (blank) {
+          if (status() === 'connecting') setStatus('disconnected');
+          setVerdict(v);
+        } else if (v && v.kind !== 'no-port') {
+          // A chooser closed without a pick says nothing new about this box.
+          setVerdict(v);
+        }
         return;
       }
       try {
         await attach();
       } catch (e) {
-        setVerdict(classifyConnectError(e));
+        if (!(e instanceof AttachCancelled)) setVerdict(classifyConnectError(e));
       }
     };
 
@@ -394,16 +462,18 @@ export function createBoxSession(
       setUpdateProgress(null);
       setUpdate(null);
       setHeld(false);
+      letGo();
       if (m) hooks.released?.(m);
       if (l) await l.close().catch(() => undefined);
     };
 
     const identify = (): Promise<void> => {
       if (identifyRun) return identifyRun;
+      if (hooks.nativeFlashing()) return Promise.resolve();
       const p = port();
       const l = link();
       const heldLink = status() === 'connected' ? l : null;
-      if (!heldLink && (held() || !p || probe()?.kind !== 'box')) return Promise.resolve();
+      if (!heldLink && (held() || !p || status() !== 'disconnected' || probe()?.kind !== 'box')) return Promise.resolve();
       setIdentifying(true);
       const run = (async () => {
         if (heldLink) {
@@ -413,17 +483,19 @@ export function createBoxSession(
           return;
         }
         // Held only for the blink; the box returns the light to its status after 1 s of silence.
-        const { link: tl } = await attachLink(p!, (pp) => build(pp, {}), bauds(lastBaud));
-        try {
-          await tl.led(LedTarget.Both, LedMode.Blink, 255);
-          const end = Date.now() + IDENTIFY_MS;
-          for (let left = IDENTIFY_MS; left > 0; left = end - Date.now()) {
-            await sleep(Math.min(IDENTIFY_KEEPALIVE_MS, left));
-            await tl.queryHealth().catch(() => undefined);
+        await exclusive(p!, async () => {
+          const { link: tl } = await attachLink(p!, (pp) => build(pp, {}), bauds(lastBaud));
+          try {
+            await tl.led(LedTarget.Both, LedMode.Blink, 255);
+            const end = Date.now() + IDENTIFY_MS;
+            for (let left = IDENTIFY_MS; left > 0; left = end - Date.now()) {
+              await sleep(Math.min(IDENTIFY_KEEPALIVE_MS, left));
+              await tl.queryHealth().catch(() => undefined);
+            }
+          } finally {
+            await tl.close().catch(() => undefined);
           }
-        } finally {
-          await tl.close().catch(() => undefined);
-        }
+        });
       })()
         .catch(() => undefined)
         .finally(() => {
@@ -459,7 +531,7 @@ export function createBoxSession(
       await sleep(2000);
       for (let attempt = 0; attempt < 4; attempt++) {
         try {
-          const { link: nl, version: v, baud } = await attachLink(p, makeLink);
+          const { link: nl, version: v, baud } = await exclusive(p, () => attachLink(p, makeLink));
           lastBaud = baud;
           setVersion(v);
           setLink(nl);
@@ -612,7 +684,8 @@ export function createBoxSession(
       updateOnly,
       health,
       error,
-      verdict,
+      // A port nobody holds is explained by what it last answered.
+      verdict: () => verdict() ?? (status() === 'disconnected' && !held() ? probeVerdict(probe()) : null),
       link,
       name: seenName,
       present: () => port() !== null,
@@ -644,13 +717,18 @@ export function createBoxSession(
       setPort,
       setProbe: (p) => {
         setProbe(p);
+        setVerdict(null);
         if (p?.kind === 'box') lastBaud = p.baud;
         if (mac() === null) setMac(boxId(versionOf(p)));
       },
       attach,
+      settled: async () => {
+        await attachRun?.catch(() => undefined);
+      },
       dispose: () => {
         disposed = true;
         ++lostGen;
+        letGo();
         // Never close the port mid-update; the box would time the session out with a half-written slot.
         if (status() !== 'flashing') void link()?.close().catch(() => undefined);
         disposeRoot();

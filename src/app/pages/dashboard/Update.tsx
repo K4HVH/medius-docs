@@ -156,7 +156,7 @@ const Update = () => {
       <Show when={dash.status() === 'flashing'}>
         <div id="updating" data-search-target>
           <Card>
-            <CardHeader title="Updating" subtitle="Don't unplug or leave this page" />
+            <CardHeader title="Updating" subtitle="Don't unplug or close this tab" />
             <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
           </Card>
         </div>

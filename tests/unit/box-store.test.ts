@@ -74,4 +74,16 @@ describe('box store', () => {
     s.hold('aabbccddeeff', 'Desk');
     expect(s.held()).toHaveLength(1);
   });
+
+  it("two tabs keep each other's boxes: each change is made to what is stored now", () => {
+    const a = createBoxStore(localStorage);
+    const b = createBoxStore(localStorage);
+    a.hold('aabbccddeeff', 'Desk');
+    b.hold('112233445566', 'Spare');
+    b.setSelected('112233445566');
+    expect(a.held().map((h) => h.mac)).toEqual(['aabbccddeeff', '112233445566']);
+    a.release('112233445566');
+    expect(b.held().map((h) => h.mac)).toEqual(['aabbccddeeff']);
+    expect(a.selected()).toBe('112233445566');
+  });
 });

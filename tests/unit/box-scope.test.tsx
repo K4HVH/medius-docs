@@ -13,7 +13,7 @@ let disposeBoxes: (() => void) | null = null;
 const mountBoxes = (serial: FakeSerial): Boxes =>
   createRoot((dispose) => {
     disposeBoxes = dispose;
-    return createBoxes({
+    const b = createBoxes({
       serial,
       store: createBoxStore(null),
       supported: true,
@@ -22,6 +22,8 @@ const mountBoxes = (serial: FakeSerial): Boxes =>
       probe: (p) => probePort(p, (pp) => makeFakeLink(pp, {})),
       makeLink: makeFakeLink,
     });
+    b.start();
+    return b;
   });
 
 const ready = async () => {

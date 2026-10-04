@@ -305,11 +305,17 @@ const DocsLayout = (props: RouteSectionProps) => {
     if (isMobile()) setPaneState('closed');
   };
 
-  // A box picked from a page that shows none opens on Device.
+  // A box picked from a page that shows none opens on Device; Setup keeps its wizard.
   const handleBoxPick = () => {
-    if (!BOX_ROUTES.has(location.pathname) && !flashing()) navigate('/dashboard');
+    const p = location.pathname;
+    if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
     if (isMobile()) setPaneState('closed');
   };
+
+  // No port is touched until the dashboard is opened.
+  createEffect(() => {
+    if (activeSection() === 'dashboard') boxes.start();
+  });
 
   return (
     <>
@@ -481,7 +487,7 @@ const DocsLayout = (props: RouteSectionProps) => {
           </Show>
           <Show when={activeSection() === 'dashboard'}>
             <Divider spacing="compact" label="Boxes" labelAlign="start" />
-            <BoxList onPick={handleBoxPick} />
+            <BoxList onPick={handleBoxPick} disabled={flashing()} />
             <Divider spacing="compact" label="Dashboard" labelAlign="start" />
             <Tabs
               orientation="vertical"

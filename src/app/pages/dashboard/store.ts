@@ -26,9 +26,11 @@ const isHeld = (h: unknown): h is HeldBox =>
   typeof (h as HeldBox).mac === 'string' &&
   typeof (h as HeldBox).name === 'string';
 
-function read(storage: Storage | null): Saved {
+function read(storage: Storage | null): Saved | null {
   try {
-    const raw: unknown = JSON.parse(storage?.getItem(STORE_KEY) ?? 'null');
+    const text = storage?.getItem(STORE_KEY);
+    if (text === undefined) return null;
+    const raw: unknown = JSON.parse(text ?? 'null');
     if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return { selected: null, held: [] };
     const r = raw as Record<string, unknown>;
     return {
@@ -36,38 +38,47 @@ function read(storage: Storage | null): Saved {
       held: Array.isArray(r.held) && r.held.every(isHeld) ? r.held.map((h) => ({ mac: h.mac, name: h.name })) : [],
     };
   } catch {
-    return { selected: null, held: [] };
+    return null;
   }
 }
 
 // Storage can be missing or throw (private windows, blocked site data); this page's copy still works.
+// Every read and change starts from what is stored now, so tabs don't undo each other.
 export function createBoxStore(storage: Storage | null): BoxStore {
-  const saved = read(storage);
-  const write = () => {
+  let saved: Saved = read(storage) ?? { selected: null, held: [] };
+  const current = () => {
+    saved = read(storage) ?? saved;
+    return saved;
+  };
+  const change = (fn: (s: Saved) => boolean) => {
+    const s = current();
+    if (!fn(s)) return;
     try {
-      storage?.setItem(STORE_KEY, JSON.stringify(saved));
+      storage?.setItem(STORE_KEY, JSON.stringify(s));
     } catch {
       /* this page's copy stands */
     }
   };
   return {
-    selected: () => saved.selected,
-    setSelected: (key) => {
-      saved.selected = key;
-      write();
-    },
-    held: () => saved.held.map((h) => ({ ...h })),
-    hold: (mac, name) => {
-      const h = saved.held.find((x) => x.mac === mac);
-      if (h) {
-        if (h.name === name) return;
-        h.name = name;
-      } else saved.held.push({ mac, name });
-      write();
-    },
-    release: (mac) => {
-      saved.held = saved.held.filter((h) => h.mac !== mac);
-      write();
-    },
+    selected: () => current().selected,
+    setSelected: (key) =>
+      change((s) => {
+        s.selected = key;
+        return true;
+      }),
+    held: () => current().held.map((h) => ({ ...h })),
+    hold: (mac, name) =>
+      change((s) => {
+        const h = s.held.find((x) => x.mac === mac);
+        if (h?.name === name) return false;
+        if (h) h.name = name;
+        else s.held.push({ mac, name });
+        return true;
+      }),
+    release: (mac) =>
+      change((s) => {
+        s.held = s.held.filter((h) => h.mac !== mac);
+        return true;
+      }),
   };
 }

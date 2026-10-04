@@ -1,5 +1,6 @@
 /// <reference types="w3c-web-serial" />
 import {
+  type Accessor,
   type ParentComponent,
   Show,
   createContext,
@@ -8,14 +9,14 @@ import {
   useContext,
 } from 'solid-js';
 import { isSecureContextOk, isWebSerialSupported } from '../../../dashboard/serial';
-import { type Boxes, createBoxes } from './boxes';
+import { type Boxes, type LocksLike, createBoxes } from './boxes';
 import { type NativeFlash, createNativeFlash } from './nativeFlash';
 import type { BoxSession } from './session';
 import { createBoxStore } from './store';
 
 export type { ConnectVerdict } from '../../../dashboard/serial';
 export type { BoxSession, ConnectionStatus, InputEventEntry, UpdateRun } from './session';
-export type { BoxEntry, Boxes } from './boxes';
+export type { AddResult, BoxEntry, Boxes, Snapshot } from './boxes';
 export type { NativeFlash } from './nativeFlash';
 export type DashboardContextValue = BoxSession;
 
@@ -32,6 +33,19 @@ const localStore = (): Storage | null => {
   }
 };
 
+// Asks before the tab closes while `busy`: a flash or an update doesn't survive it.
+export function guardUnload(busy: Accessor<boolean>): void {
+  createEffect(() => {
+    if (!busy()) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    onCleanup(() => window.removeEventListener('beforeunload', handler));
+  });
+}
+
 export const DashboardProvider: ParentComponent = (props) => {
   const supported = isWebSerialSupported();
   const secure = isSecureContextOk();
@@ -42,18 +56,9 @@ export const DashboardProvider: ParentComponent = (props) => {
     supported,
     secure,
     nativeFlashing: native.running,
+    locks: typeof navigator !== 'undefined' && navigator.locks ? (navigator.locks as LocksLike) : undefined,
   });
-
-  // Block tab close / refresh during a flash or an update; neither survives it.
-  createEffect(() => {
-    if (!native.running() && !boxes.anyUpdating()) return;
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handler);
-    onCleanup(() => window.removeEventListener('beforeunload', handler));
-  });
+  guardUnload(() => native.running() || boxes.anyUpdating());
 
   return (
     <NativeFlashContext.Provider value={native}>
