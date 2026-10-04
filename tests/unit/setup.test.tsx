@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
+import type { ConnectVerdict } from '../../src/dashboard/serial';
 
 // Real signals, not plain-object accessors: a stub that cannot notify leaves mutations that break
 // whole screens green.
 const st = vi.hoisted(() => ({
   make: () => {
-    const [status, setStatus] = createSignal<string>('disconnected');
+    const [running, setRunning] = createSignal(false);
     const [error, setError] = createSignal<string | null>(null);
-    return { status, setStatus, error, setError };
+    const [found, setFound] = createSignal<string>('disconnected');
+    return { running, setRunning, error, setError, found, setFound };
   },
 }));
 
@@ -19,9 +21,13 @@ const mock = vi.hoisted(() => ({
   flashError: 'That port is still held by an earlier session.',
   chooserEmpty: false,
   releasesThrow: false,
-  disconnects: 0,
   flashed: [] as string[],
   romCalls: 0,
+  // Boxes answering on the current wire, as the registry reports them now.
+  answering: ['aaaaaaaaaaaa'] as string[],
+  befores: [] as string[][],
+  disconnects: 0,
+  findVerdict: null as ConnectVerdict | null,
   assets: [
     { name: 'medius_device-factory.bin', size: 1, url: 'd' },
     { name: 'medius_host-factory.bin', size: 1, url: 'h' },
@@ -29,24 +35,37 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
-  useDashboard: () => ({
+  useBoxes: () => ({
     supported: mock.supported,
     secure: true,
-    status: () => mock.s!.status(),
-    verdict: () => null,
-    error: () => mock.s!.error(),
-    // A 3.2.0 box on protocol 5, the release the stand-in offers below.
-    version: () => ({ protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }),
-    flashProgress: () => null,
-    connect: async () => mock.s!.setStatus('connected'),
-    disconnect: async () => {
-      mock.disconnects += 1;
-      // The real one nulls `error` before its first await, which is what ate the reason.
-      mock.s!.setError(null);
+    answeringKeys: () => new Set(mock.answering),
+    // Mirrors the real one: the box that answers now and did not before is selected and connected.
+    connectNew: async (before: ReadonlySet<string>) => {
+      mock.befores.push([...before]);
+      if (mock.findVerdict) return mock.findVerdict;
+      mock.s!.setFound('connected');
+      return null;
     },
-    clearFlashResult: () => {},
-    flashNative: async (_port: unknown, image: Uint8Array) => {
+    add: async () => ({ kind: 'no-port' }),
+    selected: () => ({
+      key: 'bbbbbbbbbbbb',
+      session: {
+        status: () => mock.s!.found(),
+        disconnect: async () => {
+          mock.disconnects += 1;
+        },
+      },
+    }),
+  }),
+  useNativeFlash: () => ({
+    progress: () => null,
+    log: () => [],
+    error: () => mock.s!.error(),
+    running: () => mock.s!.running(),
+    clear: () => {},
+    flash: async (_port: unknown, image: Uint8Array) => {
       mock.flashed.push(new TextDecoder().decode(image));
+      mock.s!.setError(null);
       if (!mock.flashOk) mock.s!.setError(mock.flashError);
       return mock.flashOk;
     },
@@ -63,7 +82,6 @@ vi.mock('../../src/dashboard/firmware', () => ({
 }));
 
 vi.mock('../../src/dashboard/serial', () => ({
-  grantedMediusPorts: async () => [],
   requestRomPort: async () => {
     mock.romCalls += 1;
     if (mock.chooserEmpty) throw new DOMException('No port selected', 'NotFoundError');
@@ -78,6 +96,7 @@ import Setup from '../../src/app/pages/dashboard/Setup';
 
 const mount = () => {
   mock.s = st.make();
+  mock.s.setFound('disconnected');
   return render(() => <Setup />);
 };
 
@@ -87,7 +106,10 @@ afterEach(() => {
   mock.flashOk = true;
   mock.chooserEmpty = false;
   mock.releasesThrow = false;
+  mock.answering = ['aaaaaaaaaaaa'];
+  mock.befores = [];
   mock.disconnects = 0;
+  mock.findVerdict = null;
   mock.flashed = [];
   mock.romCalls = 0;
   mock.assets = [
@@ -203,9 +225,38 @@ describe('Setup', () => {
     expect(r.queryByRole('button', { name: /^connect$/i })).toBeNull();
   });
 
-  it('drops the link after each install, so a stale one cannot answer for the new firmware', async () => {
+  it('remembers which boxes answered before the install, and looks for one that answers after', async () => {
+    const r = mount();
+    await waitFor(() => r.getByRole('button', { name: /^install$/i }));
+    install(r);
+    await waitFor(() => r.getByRole('button', { name: /^done$/i }));
+    // A box that starts answering while the wizard runs is still not one that answered before.
+    mock.answering = ['aaaaaaaaaaaa', 'bbbbbbbbbbbb'];
+    r.getByRole('button', { name: /^done$/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /^install$/i }));
+    install(r);
+    await waitFor(() => r.getByRole('button', { name: /^done$/i }));
+    r.getByRole('button', { name: /^done$/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /^connect$/i }));
+    r.getByRole('button', { name: /^connect$/i }).click();
+    await waitFor(() => expect(mock.befores).toEqual([['aaaaaaaaaaaa']]));
+  });
+
+  it('an install leaves every box this page holds alone', async () => {
     await walk();
-    await waitFor(() => expect(mock.disconnects).toBe(2));
+    expect(mock.flashed).toHaveLength(2);
+    expect(mock.disconnects).toBe(0);
+  });
+
+  it('a connect that finds no box says why, and offers it again', async () => {
+    mock.findVerdict = { kind: 'silent' };
+    const r = await walk();
+    await waitFor(() => r.getByRole('button', { name: /^connect$/i }));
+    r.getByRole('button', { name: /^connect$/i }).click();
+    const alert = await r.findByRole('alert');
+    expect(alert.textContent).toMatch(/isn't answering/i);
+    expect(r.container.textContent).not.toMatch(/installed\./i);
+    expect(r.getByRole('button', { name: /try again/i })).toBeTruthy();
   });
 
   it('ends on connect, and says so once the box answers', async () => {

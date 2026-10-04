@@ -93,10 +93,8 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     }),
     connect: async () => {},
     disconnect: async () => {},
-    flashProgress: () => null,
-    flashLog: () => [],
-    flashNative: async () => true,
-    clearFlashResult: () => {},
+    held: () => true,
+    present: () => true,
     deviceLog: () => [],
     clearDeviceLog: () => {},
     inputEvents: () => [],
@@ -170,6 +168,13 @@ describe('Control page', () => {
     await findByText('Controls');
     expect(queryByText('Injection')).toBeNull();
     expect(queryByText('Clip playback')).toBeNull();
+  });
+
+  it('a box that stopped answering shows that, not the controls or a Connect button', async () => {
+    const { findByText, queryByText, queryByRole } = mount(stub({ status: () => 'lost', health: () => null }));
+    await findByText(/isn't answering/i);
+    expect(queryByText('Injection')).toBeNull();
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
   });
 
   it('names the safety clear by everything it drops, not just injection', async () => {

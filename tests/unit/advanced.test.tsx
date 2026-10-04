@@ -1,10 +1,18 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 
 // This page had no tests at all, which is how a rejected release fetch froze it and how "Flash
 // another" walked straight past the cable gate: both survived three review rounds.
+const st = vi.hoisted(() => ({
+  make: () => {
+    const [running, setRunning] = createSignal(false);
+    return { running, setRunning };
+  },
+}));
+
 const mock = vi.hoisted(() => ({
-  status: 'disconnected' as string,
+  s: null as ReturnType<(typeof st)['make']> | null,
   releasesThrow: false,
   flashOk: true,
   flashes: 0,
@@ -12,17 +20,18 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
-  useDashboard: () => ({
-    supported: true,
-    secure: true,
-    status: () => mock.status,
-    verdict: () => null,
+  useBoxes: () => ({ supported: true, secure: true }),
+  useNativeFlash: () => ({
+    progress: () => null,
+    log: () => [],
     error: () => null,
-    flashProgress: () => null,
-    clearFlashResult: () => {},
-    flashNative: async () => {
+    running: () => mock.s!.running(),
+    clear: () => {},
+    flash: async () => {
       mock.flashes += 1;
+      mock.s!.setRunning(true);
       if (mock.holdFlash) await new Promise(() => {});
+      mock.s!.setRunning(false);
       return mock.flashOk;
     },
   }),
@@ -45,7 +54,6 @@ vi.mock('../../src/dashboard/firmware', () => ({
 }));
 
 vi.mock('../../src/dashboard/serial', () => ({
-  grantedMediusPorts: async () => [],
   requestRomPort: async () => ({}) as SerialPort,
 }));
 
@@ -54,9 +62,12 @@ vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
 import Advanced from '../../src/app/pages/dashboard/Advanced';
 
+beforeEach(() => {
+  mock.s = st.make();
+});
+
 afterEach(() => {
   cleanup();
-  mock.status = 'disconnected';
   mock.releasesThrow = false;
   mock.flashOk = true;
   mock.flashes = 0;

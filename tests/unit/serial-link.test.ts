@@ -5,6 +5,7 @@ import {
   QueryTimeoutError,
   SerialLink,
   attachLink,
+  bauds,
   classifyConnectError,
   speaksCurrentWire,
 } from '../../src/dashboard/serial';
@@ -284,6 +285,28 @@ describe('SerialLink', () => {
       mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
       name: '',
     });
+    await link.close();
+  });
+
+  it('records when the last frame of any kind arrived, and ignores a corrupt one', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    expect(link.lastRxAt).toBe(0);
+    const before = Date.now();
+    mock.push(encode(FrameType.Log, 0, new Uint8Array([2, 0x68, 0x69])));
+    await new Promise((r) => setTimeout(r, 10));
+    const afterLog = link.lastRxAt;
+    expect(afterLog).toBeGreaterThanOrEqual(before);
+    await new Promise((r) => setTimeout(r, 5));
+    const bad = encode(FrameType.Log, 0, new Uint8Array([2, 0x68]));
+    bad[bad.length - 1] ^= 0xff;
+    mock.push(bad);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(link.lastRxAt).toBe(afterLog);
+    mock.push(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 1, 2, 3, 4, 5, 6])));
+    await new Promise((r) => setTimeout(r, 10));
+    expect(link.lastRxAt).toBeGreaterThan(afterLog);
     await link.close();
   });
 
@@ -794,6 +817,20 @@ describe('attachLink', () => {
     await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(BadProtoVerError);
     expect(port.opens).toEqual([6_000_000]);
     expect(port.readable).toBeNull();
+  });
+
+  it('tries the rates in the order given, and says which one answered', async () => {
+    const port = new RatedPort(4_000_000, 6);
+    const { link, baud } = await attachLink(asSerial(port), make, bauds(4_000_000));
+    expect(port.opens).toEqual([4_000_000]);
+    expect(baud).toBe(4_000_000);
+    await link.close();
+  });
+
+  it('puts a known rate first and keeps the rest in their usual order', () => {
+    expect(bauds()).toEqual([6_000_000, 4_000_000]);
+    expect(bauds(4_000_000)).toEqual([4_000_000, 6_000_000]);
+    expect(bauds(6_000_000)).toEqual([6_000_000, 4_000_000]);
   });
 
   it('a port that will not open is not retried at another rate', async () => {

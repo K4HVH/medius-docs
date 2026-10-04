@@ -116,6 +116,8 @@ interface Slot {
 export interface Poller {
   // Subscribe for the lifetime of the calling component. Returns null until the first reply lands.
   subscribe<K extends PollKey>(key: K, everyMs?: number): Accessor<PollValues[K] | null>;
+  // The last value a subscriber read, without asking for it.
+  peek<K extends PollKey>(key: K): Accessor<PollValues[K] | null>;
   // True when the box replies in a layout this build can't decode; the value then stays null.
   unreadable(key: PollKey): Accessor<boolean>;
   // Re-read now; call after a write.
@@ -124,7 +126,11 @@ export interface Poller {
   reset(): void;
 }
 
-export function createPoller(link: Accessor<SerialLink | null>): Poller {
+// `onKeepalive` hears whether each keepalive read got a reply from the link it was sent on.
+export function createPoller(
+  link: Accessor<SerialLink | null>,
+  opts: { onKeepalive?: (answered: boolean) => void } = {},
+): Poller {
   const slots = new Map<PollKey, Slot>();
 
   const slotFor = (key: PollKey): Slot => {
@@ -156,9 +162,13 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
         if (s.gen !== gen || link() !== l) return;
         s.write(v);
         s.setUnreadable(false);
+        if (key === 'health') opts.onKeepalive?.(true);
       } catch (e) {
         // A transient miss is fine; the next tick tries again. A real drop closes the link.
-        if (e instanceof UnreadableReplyError && s.gen === gen && link() === l) s.setUnreadable(true);
+        if (s.gen === gen && link() === l) {
+          if (e instanceof UnreadableReplyError) s.setUnreadable(true);
+          if (key === 'health') opts.onKeepalive?.(e instanceof UnreadableReplyError);
+        }
       }
     }
     // Only avoids arming a timer the top check would reject.
@@ -223,5 +233,8 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
 
   const unreadable = (key: PollKey): Accessor<boolean> => slotFor(key).unreadable;
 
-  return { subscribe, unreadable, refresh, reset };
+  const peek = <K extends PollKey>(key: K): Accessor<PollValues[K] | null> =>
+    slotFor(key).read as Accessor<PollValues[K] | null>;
+
+  return { subscribe, peek, unreadable, refresh, reset };
 }

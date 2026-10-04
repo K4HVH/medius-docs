@@ -67,13 +67,17 @@ const Update = () => {
   // A reverted chip still completes the handshake; only the version each ASKED chip reports proves
   // the update.
   const landed = () => {
-    if (which() === 'main') return deviceOnRelease();
-    if (which() === 'mouse') return hostOnRelease();
-    return deviceOnRelease() && hostOnRelease();
+    const r = dash.update();
+    return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
+  };
+  // The result lives on the box, so it is here after a tab change or a box switch.
+  const view = (): Step => {
+    const outcome = dash.update()?.outcome;
+    return outcome === 'verified' ? 'done' : outcome === 'sent' ? 'sent' : step();
   };
   const upToDate = () => deviceOnRelease();
   const pct = () => {
-    const p = dash.flashProgress();
+    const p = dash.updateProgress();
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
@@ -99,16 +103,22 @@ const Update = () => {
 
   const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
-    dash.clearFlashResult();
+    dash.clearUpdate();
     setWhich(mode);
     setStep('update');
+  };
+
+  const finish = () => {
+    dash.clearUpdate();
+    setStep('choose');
+    navigate('/dashboard');
   };
 
   // Over the connected control port: each chip writes its spare slot and boots it, and the box
   // reverts anything that won't run. The mouse-side image is relayed over the inter-chip link.
   const runUpdate = async () => {
     setErr(null);
-    dash.clearFlashResult();
+    dash.clearUpdate();
     const wantDevice = which() !== 'mouse';
     const wantHost = which() !== 'main';
     setBusy(true);
@@ -133,9 +143,7 @@ const Update = () => {
       if (wantDevice && da) images.device = await downloadAsset(da);
       if (wantHost && ha) images.host = await downloadAsset(ha);
       const outcome = await dash.updateOverControl(images);
-      if (outcome === 'verified') setStep('done');
-      else if (outcome === 'sent') setStep('sent');
-      else if (!dash.error()) setErr("That didn't finish. The box kept its running firmware.");
+      if (outcome === 'failed' && !dash.error()) setErr("That didn't finish. The box kept its running firmware.");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -163,7 +171,7 @@ const Update = () => {
             </Show>
 
             <Switch>
-              <Match when={step() === 'choose'}>
+              <Match when={view() === 'choose'}>
                 <Switch>
                   <Match when={dash.status() !== 'connected'}>
                     <ConnectPanel />
@@ -196,7 +204,7 @@ const Update = () => {
                 </Switch>
               </Match>
 
-              <Match when={step() === 'update'}>
+              <Match when={view() === 'update'}>
                 <p>
                   Runs over the current connection. The mouse stops working for a few seconds.
                 </p>
@@ -223,7 +231,7 @@ const Update = () => {
                 </div>
               </Match>
 
-              <Match when={step() === 'sent'}>
+              <Match when={view() === 'sent'}>
                 {/* Transfer and activate went through, then nothing replied, so the running version is
                     unknown. The instruction is in the shared error that ConnectPanel renders. */}
                 <Show
@@ -231,19 +239,16 @@ const Update = () => {
                   fallback={<ConnectPanel />}
                 >
                   <Landed />
-                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                  <Button variant="primary" onClick={finish}>
                     Finish
                   </Button>
                 </Show>
               </Match>
 
-              <Match when={step() === 'done'}>
+              <Match when={view() === 'done'}>
                 <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                   <Landed />
-                  <Button
-                    variant="primary"
-                    onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}
-                  >
+                  <Button variant="primary" onClick={finish}>
                     Finish
                   </Button>
                 </Show>

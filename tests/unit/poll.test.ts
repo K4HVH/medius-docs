@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createRoot, createSignal } from 'solid-js';
 import { KEEPALIVE_MS, SILENCE_CLEAR_MS, createPoller } from '../../src/app/pages/dashboard/poll';
-import { type SerialLink, UnreadableReplyError } from '../../src/dashboard/serial';
+import { QueryTimeoutError, type SerialLink, UnreadableReplyError } from '../../src/dashboard/serial';
 
 // A link stub that counts calls per query and resolves on demand, so a test can drive the poller's
 // scheduling without a serial port.
@@ -281,6 +281,81 @@ describe('dashboard poller', () => {
       // 100 ms regardless would be 20.
       expect(starts).toBeLessThanOrEqual(6);
       expect(starts).toBeGreaterThan(1);
+      dispose();
+    });
+  });
+
+  it('reports each keepalive read: a reply is answered, a timeout is not', async () => {
+    let fail = false;
+    const link = {
+      queryHealth: async () => {
+        if (fail) throw new QueryTimeoutError();
+        return { linkUp: true } as never;
+      },
+    } as unknown as SerialLink;
+    const seen: boolean[] = [];
+    await createRoot(async (dispose) => {
+      createPoller(() => link, { onKeepalive: (ok) => seen.push(ok) });
+      await settle();
+      fail = true;
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS);
+      await settle();
+      expect(seen).toEqual([true, false]);
+      dispose();
+    });
+  });
+
+  it('a reply in a layout this page cannot read still counts as answered', async () => {
+    const link = {
+      queryHealth: async () => {
+        throw new UnreadableReplyError('HEALTH');
+      },
+    } as unknown as SerialLink;
+    const seen: boolean[] = [];
+    await createRoot(async (dispose) => {
+      createPoller(() => link, { onKeepalive: (ok) => seen.push(ok) });
+      await settle();
+      expect(seen).toEqual([true]);
+      dispose();
+    });
+  });
+
+  it('reports nothing without a link, or for a reply that lands after the link changed', async () => {
+    let failA: ((e: Error) => void) | null = null;
+    const linkA = {
+      queryHealth: () =>
+        new Promise((_, reject) => {
+          failA = reject;
+        }),
+    } as unknown as SerialLink;
+    const [which, setWhich] = createSignal<SerialLink | null>(null);
+    const seen: boolean[] = [];
+    await createRoot(async (dispose) => {
+      const poller = createPoller(() => which(), { onKeepalive: (ok) => seen.push(ok) });
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS * 2);
+      expect(seen).toEqual([]);
+      setWhich(linkA);
+      poller.reset();
+      await settle();
+      setWhich(null);
+      failA?.(new QueryTimeoutError());
+      await settle();
+      expect(seen).toEqual([]);
+      dispose();
+    });
+  });
+
+  it('peek reads a value without asking for it, and sees what a subscriber reads', async () => {
+    const { calls, link } = makeLink();
+    await createRoot(async (dispose) => {
+      const poller = createPoller(() => link);
+      const locks = poller.peek('locks');
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(calls.locks).toBe(0);
+      expect(locks()).toBeNull();
+      poller.subscribe('locks', 1000);
+      await settle();
+      expect(locks()).toEqual({ entries: [] });
       dispose();
     });
   });

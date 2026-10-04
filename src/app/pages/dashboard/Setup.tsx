@@ -6,9 +6,9 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { Progress } from '../../../components/feedback/Progress';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
-import { requestRomPort } from '../../../dashboard/serial';
-import { useDashboard } from './context';
-import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
+import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
+import { type BoxEntry, useBoxes, useNativeFlash } from './context';
+import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
 import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
 import '../../../styles/docs.css';
 
@@ -21,12 +21,18 @@ const HAZARD = 'USB1 and USB3 in one computer can kill it.';
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Setup = () => {
-  const dash = useDashboard();
+  const native = useNativeFlash();
+  const boxes = useBoxes();
   const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
   const [step, setStep] = createSignal<Step>('main');
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
+  const [installed, setInstalled] = createSignal<BoxEntry | null>(null);
+  const [finding, setFinding] = createSignal(false);
+  const [found, setFound] = createSignal<ConnectVerdict | null>(null);
+  // The boxes that answered before the first install; the one installed is the one that answers after.
+  let before: Set<string> | null = null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
   // one unguarded read freezes the page.
@@ -39,7 +45,7 @@ const Setup = () => {
   };
   const counter = () => `Step ${STEPS.indexOf(step()) + 1} of ${STEPS.length}`;
   const pct = () => {
-    const p = dash.flashProgress();
+    const p = native.progress();
     return p?.phase === 'writing' && p.total
       ? Math.round(((p.written ?? 0) / p.total) * 100)
       : undefined;
@@ -48,7 +54,8 @@ const Setup = () => {
   // Only one chip's USB is plugged in with its button held, so only that chip answers.
   const install = async (assetName: string, next: Step) => {
     setErr(null);
-    dash.clearFlashResult();
+    native.clear();
+    before ??= boxes.answeringKeys();
     setBusy(true);
     try {
       let asset: FirmwareAsset | null = null;
@@ -63,23 +70,24 @@ const Setup = () => {
       }
       const port = await requestRomPort();
       const image = await downloadAsset(asset);
-      if (await dash.flashNative(port, image, 'factory')) {
-        // The chip was just rewritten, so any open link is stale.
-        void dash.disconnect().catch(() => undefined);
-        setStep(next);
-      } else {
-        // Read the reason BEFORE disconnect(), which nulls `error` synchronously; a retry can't fix
-        // what it says.
-        const why = dash.error();
-        void dash.disconnect().catch(() => undefined);
-        setErr(why ?? 'That did not finish.');
-      }
+      if (await native.flash(port, image, 'factory')) setStep(next);
+      else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {
       // A cancel and an empty chooser throw the same DOMException; the second is likelier.
       setErr(isUserCancel(e) ? 'Nothing to install to.' : (e as Error).message);
     } finally {
       setBusy(false);
     }
+  };
+
+  // `force` is the chooser, for a USB2 this page has never been given.
+  const find = async (force?: boolean) => {
+    setFinding(true);
+    setFound(null);
+    const v = force ? await boxes.add() : await boxes.connectNew(before ?? new Set());
+    setFound(v);
+    setInstalled(v ? null : boxes.selected());
+    setFinding(false);
   };
 
   const go = (to: Step) => () => {
@@ -89,7 +97,7 @@ const Setup = () => {
 
   return (
     <>
-      <Show when={!dash.supported}>
+      <Show when={!boxes.supported}>
         <div id="unsupported" data-search-target>
           <Card>
             <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
@@ -97,7 +105,7 @@ const Setup = () => {
           </Card>
         </div>
       </Show>
-      <Show when={dash.supported && !dash.secure}>
+      <Show when={boxes.supported && !boxes.secure}>
         <div id="insecure" data-search-target>
           <Card>
             <CardHeader title="Page not secure" subtitle="No box access from this page" />
@@ -106,7 +114,7 @@ const Setup = () => {
         </div>
       </Show>
 
-      <Show when={dash.status() === 'flashing'}>
+      <Show when={native.running()}>
         <div id="installing" data-search-target>
           <Card>
             <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
@@ -115,7 +123,7 @@ const Setup = () => {
         </div>
       </Show>
 
-      <Show when={dash.supported && dash.secure && dash.status() !== 'flashing'}>
+      <Show when={boxes.supported && boxes.secure && !native.running()}>
         <div id="install" data-search-target>
           <Card>
             <CardHeader title="Install Medius" subtitle="Ports are numbered on the box" />
@@ -182,8 +190,18 @@ const Setup = () => {
 
               <Match when={step() === 'cables'}>
                 <Show
-                  when={dash.status() === 'connected'}
-                  fallback={<ConnectPanel onSetup={go('main')} />}
+                  when={installed()?.session.status() === 'connected'}
+                  fallback={
+                    <ConnectView
+                      supported={boxes.supported}
+                      secure={boxes.secure}
+                      error={null}
+                      verdict={found()}
+                      busy={finding()}
+                      connect={(force) => void find(force)}
+                      onSetup={go('main')}
+                    />
+                  }
                 >
                   <div class="callout callout--info">Installed.</div>
                   <Button variant="primary" onClick={() => navigate('/dashboard')}>
