@@ -763,7 +763,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
-              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed</td></tr>
               <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
             </tbody>
           </table>
