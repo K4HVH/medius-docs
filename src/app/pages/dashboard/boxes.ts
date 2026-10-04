@@ -1,8 +1,4 @@
 /// <reference types="w3c-web-serial" />
-// Every box on this PC: which port each is behind, which ones this page holds, and which one the
-// tabs show. A box is known by its MAC; a port that never answered is known by its order of first
-// sight.
-
 import { type Accessor, createMemo, createSignal, onCleanup } from 'solid-js';
 import type { Version } from '../../../dashboard/protocol';
 import {
@@ -33,7 +29,6 @@ interface Entry extends BoxEntry {
 
 export type AddResult = { ok: true; entry: BoxEntry } | { ok: false; verdict: ConnectVerdict };
 
-// What answered when an install began, so its last step can tell the box it installed.
 export interface Snapshot {
   answering: ReadonlySet<string>;
   all: ReadonlySet<string>;
@@ -42,17 +37,15 @@ export interface Snapshot {
 export interface Boxes {
   supported: boolean;
   secure: boolean;
-  // Lists and probes ports from the first call on; the docs pages never touch a port.
   start: () => void;
   entries: Accessor<BoxEntry[]>;
   selected: Accessor<BoxEntry | null>;
-  // The selected box's session, or the blank one when nothing is listed.
+  // The selected session, else a blank one whose Connect opens the chooser.
   scope: Accessor<BoxSession>;
   select: (key: string) => void;
   add: () => Promise<AddResult>;
   rescan: () => Promise<void>;
   snapshot: () => Snapshot;
-  // Selects and connects the box answering now that wasn't before `snapshot`, or asks for its port.
   connectNew: (before: Snapshot) => Promise<ConnectVerdict | null>;
   anyUpdating: Accessor<boolean>;
 }
@@ -73,7 +66,6 @@ export interface BoxesDeps {
   supported: boolean;
   secure: boolean;
   nativeFlashing: Accessor<boolean>;
-  // Shared by this origin's tabs, so two tabs never hold one box.
   locks?: LocksLike;
   probe?: (port: SerialPort) => Promise<Probe>;
   makeLink?: (port: SerialPort, events: SerialLinkEvents) => SerialLink;
@@ -95,7 +87,6 @@ const answersCurrent = (s: BoxSession): boolean => {
   return s.status() === 'disconnected' && p?.kind === 'box' && speaksCurrentWire(p.version);
 };
 
-// A box that boots after its port appears answers within this many tries of a doubling wait.
 const REPLUG_TRIES = 4;
 const REPLUG_FIRST_MS = 1000;
 
@@ -123,7 +114,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const busyWith = (e: Entry) => e.session.status() !== 'disconnected' || e.session.identifying();
   const remembered = (mac: string) => deps.store.held().some((h) => h.mac === mac);
 
-  // Every open of a port in this page runs alone: a probe, a connect, a reattach, a blink.
+  // Opens of one port run one at a time: probe, attach, reattach, update reconnect.
   const exclusive = <T,>(port: SerialPort, fn: () => Promise<T>): Promise<T> => {
     const run = (chains.get(port) ?? Promise.resolve()).then(fn);
     const tail = run.catch(() => undefined);
@@ -159,7 +150,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     e.ctl.dispose();
   };
 
-  // The entry keeps its identity, so its row, and the focus on it, survive.
+  // In place: the list's row, and its focus, belong to this object.
   const rekey = (e: Entry, key: string) => {
     for (const [p, k] of portKeys) if (k === e.key) portKeys.set(p, key);
     const wasSelected = selKey() === e.key;
@@ -168,14 +159,13 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     setEntries((list) => [...list]);
   };
 
-  // A port that turns out to be a remembered box: the box's entry takes it, and its selection.
   const absorb = (e: Entry, into: Entry) => {
     const wasSelected = selKey() === e.key;
     remove(e);
     if (wasSelected) choosing(into.key);
   };
 
-  // What a session's own attach found on its port. False hands the port to whoever owns that box.
+  // False hands the port to whichever entry owns the box that answered on it.
   const seen = (s: BoxSession, port: SerialPort, pr: Probe): boolean => {
     const self = bySession(s);
     const mac = boxId(versionOf(pr));
@@ -238,7 +228,6 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     return e;
   };
 
-  // Files a probe under the box that answered, merging into a remembered entry for it.
   const place = (port: SerialPort, pr: Probe) => {
     if (disposed || !present.has(port)) return;
     const mac = boxId(versionOf(pr));
@@ -248,7 +237,6 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       return;
     }
     if (e && e.key !== mac && e.ctl.mac() !== null) {
-      // The port's last box is gone from it.
       e.ctl.setPort(null);
       portKeys.delete(port);
       if (!e.session.held()) remove(e);
@@ -298,7 +286,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
 
   const heldWithoutPort = () => entries().some((e) => e.session.held() && !e.ctl.port());
 
-  // A held box replugged while it boots is silent at first; retry its new port for a while.
+  // A held box replugged while it boots is silent at first.
   const retryNew = (port: SerialPort, left = REPLUG_TRIES, wait = REPLUG_FIRST_MS) => {
     const t = setTimeout(() => {
       timers.delete(t);
@@ -321,11 +309,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     if (s.probe()?.kind === 'box') await s.connect();
   };
 
-  const select = (key: string) => {
-    choosing(key);
-    const e = byKey(key);
-    if (e) void open(e.session);
-  };
+  const select = (key: string) => choosing(key);
 
   const add = async (): Promise<AddResult> => {
     if (!deps.serial) return { ok: false, verdict: { kind: 'unsupported' } };
@@ -388,7 +372,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       (k !== null ? list.find((e) => e.key === k) : undefined) ??
       list.find((e) => e.session.held()) ??
       list.find((e) => e.session.probe()?.kind === 'box') ??
-      list[0] ??
+      list.find((e) => !isPortKey(e.key)) ??
       null
     );
   });
@@ -424,8 +408,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     if (e.session.held()) e.ctl.setPort(null);
     else remove(e);
   };
-  // Another program may have let go of a busy port; a silent one is only retried on request, since a
-  // probe writes to whatever is behind the adapter.
+  // Silent ports wait for a user action: a probe writes to whatever is behind the adapter.
   const onFocus = () => {
     for (const e of entries()) {
       const p = e.ctl.port();

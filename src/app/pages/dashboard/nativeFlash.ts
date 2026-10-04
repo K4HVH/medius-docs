@@ -1,6 +1,4 @@
 /// <reference types="w3c-web-serial" />
-// A chip in ROM download on its own USB, flashed by esptool. No box session is involved.
-
 import { type Accessor, createSignal } from 'solid-js';
 import type { FlashKind, FlashProgress } from '../../../dashboard/flash';
 import { flashErrorText } from './session';

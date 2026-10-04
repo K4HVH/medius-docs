@@ -292,7 +292,7 @@ describe('Update', () => {
     mock.hold = new Promise<void>((r) => (release = r));
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/updating/i));
-    // Other tabs and boxes are open to you meanwhile; only closing the tab ends it.
+    // Other tabs and boxes stay usable meanwhile; closing the tab ends the update.
     expect(r.container.textContent).toContain("Don't unplug or close this tab");
     cleanup();
     mock.s!.setFirmwareInfo(fw(onRelease));

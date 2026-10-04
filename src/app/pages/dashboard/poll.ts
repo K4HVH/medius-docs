@@ -126,7 +126,6 @@ export interface Poller {
   reset(): void;
 }
 
-// `onKeepalive` hears whether each keepalive read got a reply from the link it was sent on.
 export function createPoller(
   link: Accessor<SerialLink | null>,
   opts: { onKeepalive?: (answered: boolean) => void } = {},

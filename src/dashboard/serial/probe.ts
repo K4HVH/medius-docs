@@ -1,6 +1,4 @@
 /// <reference types="w3c-web-serial" />
-// What is behind a port: open, handshake, read the cloned device, close.
-
 import type { DeviceInfo, Version } from '../protocol';
 import { type ConnectVerdict, classifyConnectError } from './connect';
 import { SerialLink, attachLink, speaksCurrentWire } from './link';

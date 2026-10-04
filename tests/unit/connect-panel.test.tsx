@@ -18,7 +18,7 @@ const mock = vi.hoisted(() => ({
   s: null as ReturnType<(typeof st)['make']> | null,
   supported: true,
   secure: true,
-  connect: vi.fn(async (_force?: boolean) => {}),
+  connect: vi.fn(async () => {}),
   disconnects: 0,
 }));
 
@@ -118,7 +118,8 @@ describe('ConnectPanel', () => {
   it('a held port says to close what is holding it', () => {
     mock.s!.setVerdict({ kind: 'busy' });
     const { container, getAllByRole } = render(() => <ConnectPanel />);
-    expect(container.textContent).toMatch(/another tab or program/i);
+    expect(container.textContent).toContain('Another tab or program has this box open.');
+    expect(container.textContent).not.toMatch(/try again\./i);
     expect(getAllByRole('button')).toHaveLength(1);
   });
 
@@ -178,13 +179,6 @@ describe('ConnectPanel', () => {
     expect(getByRole('button', { name: /try again/i })).toBeTruthy();
   });
 
-  it('the retry on a silent box asks which device, so a remembered wrong one is escapable', () => {
-    mock.s!.setVerdict({ kind: 'silent' });
-    const { getByRole } = render(() => <ConnectPanel />);
-    getByRole('button', { name: /try again/i }).click();
-    expect(mock.connect).toHaveBeenCalledWith(true);
-  });
-
   it('a setup handler given by the page wins over the route', () => {
     mock.s!.setVerdict({ kind: 'old-firmware', version });
     const onSetup = vi.fn();
@@ -211,11 +205,10 @@ describe('ConnectPanel', () => {
     mock.s!.setPresent(false);
     mock.s!.setStatus('lost');
     const { getByRole, queryByRole } = render(() => <ConnectPanel />);
-    expect(getByRole('status').textContent).toMatch(/not plugged in.*USB2/i);
+    expect(getByRole('status').textContent?.trim()).toBe("This computer can't see this box. Plug USB2 into it.");
     expect(queryByRole('button', { name: /reconnecting/i })).toBeNull();
     getByRole('button', { name: /forget/i }).click();
     expect(mock.disconnects).toBe(1);
-    // Let go, the panel offers to connect again, without the waiting message.
     await waitFor(() => expect(queryByRole('status')).toBeNull());
     expect(getByRole('button', { name: /^connect$/i })).toBeTruthy();
   });
@@ -228,5 +221,13 @@ describe('ConnectPanel', () => {
     mock.s!.setError('the image is too big for this box');
     const alerts = [...document.querySelectorAll('[role="alert"]')].map((a) => a.textContent);
     expect(alerts.some((t) => t?.includes('the image is too big for this box'))).toBe(true);
+  });
+
+  it('Try again on a box that is not answering retries that box, without the chooser', () => {
+    mock.s!.setVerdict({ kind: 'silent' });
+    const { getByRole } = render(() => <ConnectPanel />);
+    getByRole('button', { name: /try again/i }).click();
+    expect(mock.connect).toHaveBeenCalledTimes(1);
+    expect(mock.connect.mock.calls[0]).toEqual([]);
   });
 });

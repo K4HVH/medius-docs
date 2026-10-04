@@ -1,6 +1,4 @@
 /// <reference types="w3c-web-serial" />
-// One box: its link, keepalive, log, catch stream and update, in a reactive root of its own.
-
 import { type Accessor, createEffect, createRoot, createSignal } from 'solid-js';
 import {
   type CatchEvent,
@@ -61,14 +59,11 @@ export interface BoxSession {
   verdict: Accessor<ConnectVerdict | null>;
   link: Accessor<SerialLink | null>;
   name: Accessor<string | null>;
-  // The box's port is plugged in.
   present: Accessor<boolean>;
-  // Connected and not disconnected since, so it reconnects whenever it is found.
+  // Connected and not disconnected since: it reconnects whenever it is found.
   held: Accessor<boolean>;
-  // What the port answered the last time this page opened it.
   probe: Accessor<Probe | null>;
-  // `force` asks for another port instead of this one.
-  connect: (force?: boolean) => Promise<void>;
+  connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   identify: () => Promise<void>;
   identifying: Accessor<boolean>;
@@ -99,13 +94,11 @@ export interface SessionHooks {
   secure: boolean;
   nativeFlashing: Accessor<boolean>;
   makeLink?: (port: SerialPort, events: SerialLinkEvents) => SerialLink;
-  // Opens the chooser for a session with no port, or a forced connect; null once a port is picked.
+  // The chooser, for a session with no port.
   acquire?: () => Promise<ConnectVerdict | null>;
-  // Runs `fn` alone on `port`: nothing else in this page opens it meanwhile.
   exclusive?: <T>(port: SerialPort, fn: () => Promise<T>) => Promise<T>;
-  // Claims a box for this tab; null while another tab holds it. Call the result to let go.
+  // Null while another tab holds the box; call the result to let go.
   claim?: (mac: string) => Promise<(() => void) | null>;
-  // What a port answered; false when the box on it belongs to another entry.
   seen?: (port: SerialPort, probe: Probe) => boolean;
   held?: (mac: string, name: string) => void;
   released?: (mac: string) => void;
@@ -116,9 +109,7 @@ export interface SessionControl {
   mac: Accessor<string | null>;
   setPort: (port: SerialPort | null) => void;
   setProbe: (probe: Probe | null) => void;
-  // Connected on return; throws what the attach threw.
   attach: () => Promise<Version>;
-  // Settles when a connect in flight ends.
   settled: () => Promise<void>;
   dispose: () => void;
 }
@@ -126,7 +117,6 @@ export interface SessionControl {
 export const LOST_AFTER_MISSES = 3;
 export const REATTACH_MS = 1000;
 export const IDENTIFY_MS = 3000;
-const IDENTIFY_KEEPALIVE_MS = 400;
 
 function formatLogLine(line: LogLine): string {
   return `[${LogLevel[line.level]}] ${line.text}`;
@@ -156,7 +146,6 @@ type Verdict = 'ok' | 'gone' | 'host';
 const decided = (c: ChipFirmware) =>
   c.state !== ImageState.PendingVerify && c.state !== ImageState.Invalid && c.state !== ImageState.Aborted;
 
-// A connect given up because Disconnect came first, or because another box answered on the port.
 class AttachCancelled extends Error {}
 class ForeignBoxError extends Error {
   constructor() {
@@ -166,7 +155,6 @@ class ForeignBoxError extends Error {
 
 const versionOf = (p: Probe | null): Version | null => (p && 'version' in p ? p.version : null);
 
-// The MAC hex a box is known by, or null for a reply that carries none.
 export const boxId = (v: Version | null): string | null =>
   v && v.mac.length === 6 && v.mac.some((b) => b !== 0) ? macHex(v) : null;
 
@@ -284,8 +272,7 @@ export function createBoxSession(
       return nl;
     };
 
-    // The box on a port is ours only if its MAC is the one this session knows, and the registry
-    // agrees; a different box keeps the port and this session lets it go.
+    // Another MAC on this port is another box: it keeps the port and this session lets go.
     const claim = (p: SerialPort, pr: Probe & { version: Version }): boolean => {
       const known = mac();
       const id = boxId(pr.version);
@@ -354,7 +341,6 @@ export function createBoxSession(
       setUpdateProgress(null);
       setStatus('connecting');
       const run = (async () => {
-        if (identifyRun) await identifyRun;
         // A failed update's link still holds the writer lock, and a second link over it throws
         // unrecoverably.
         const stale = link();
@@ -415,18 +401,15 @@ export function createBoxSession(
       }
     };
 
-    const connect = async (force = false) => {
+    const connect = async () => {
       const s = status();
       if (s === 'connecting' || s === 'connected' || s === 'flashing' || s === 'lost') return;
       if (hooks.nativeFlashing()) return;
-      if (force || !port()) {
+      if (!port()) {
         if (!hooks.acquire) return;
-        const blank = !port();
-        if (blank) {
-          setError(null);
-          setVerdict(null);
-          setStatus('connecting');
-        }
+        setError(null);
+        setVerdict(null);
+        setStatus('connecting');
         let v: ConnectVerdict | null;
         try {
           v = await hooks.acquire();
@@ -434,13 +417,8 @@ export function createBoxSession(
           // Nothing may escape, or the page sticks on "Connecting..." until a reload.
           v = classifyConnectError(e);
         }
-        if (blank) {
-          if (status() === 'connecting') setStatus('disconnected');
-          setVerdict(v);
-        } else if (v && v.kind !== 'no-port') {
-          // A chooser closed without a pick says nothing new about this box.
-          setVerdict(v);
-        }
+        if (status() === 'connecting') setStatus('disconnected');
+        setVerdict(v);
         return;
       }
       try {
@@ -468,34 +446,13 @@ export function createBoxSession(
     };
 
     const identify = (): Promise<void> => {
-      if (identifyRun) return identifyRun;
-      if (hooks.nativeFlashing()) return Promise.resolve();
-      const p = port();
       const l = link();
-      const heldLink = status() === 'connected' ? l : null;
-      if (!heldLink && (held() || !p || status() !== 'disconnected' || probe()?.kind !== 'box')) return Promise.resolve();
+      if (identifyRun || !l || status() !== 'connected') return identifyRun ?? Promise.resolve();
       setIdentifying(true);
       const run = (async () => {
-        if (heldLink) {
-          await heldLink.led(LedTarget.Both, LedMode.Blink, 255);
-          await sleep(IDENTIFY_MS);
-          if (link() === heldLink) await heldLink.led(LedTarget.Both, LedMode.Auto, 0);
-          return;
-        }
-        // Held only for the blink; the box returns the light to its status after 1 s of silence.
-        await exclusive(p!, async () => {
-          const { link: tl } = await attachLink(p!, (pp) => build(pp, {}), bauds(lastBaud));
-          try {
-            await tl.led(LedTarget.Both, LedMode.Blink, 255);
-            const end = Date.now() + IDENTIFY_MS;
-            for (let left = IDENTIFY_MS; left > 0; left = end - Date.now()) {
-              await sleep(Math.min(IDENTIFY_KEEPALIVE_MS, left));
-              await tl.queryHealth().catch(() => undefined);
-            }
-          } finally {
-            await tl.close().catch(() => undefined);
-          }
-        });
+        await l.led(LedTarget.Both, LedMode.Blink, 255);
+        await sleep(IDENTIFY_MS);
+        if (link() === l) await l.led(LedTarget.Both, LedMode.Auto, 0);
       })()
         .catch(() => undefined)
         .finally(() => {
@@ -684,7 +641,6 @@ export function createBoxSession(
       updateOnly,
       health,
       error,
-      // A port nobody holds is explained by what it last answered.
       verdict: () => verdict() ?? (status() === 'disconnected' && !held() ? probeVerdict(probe()) : null),
       link,
       name: seenName,

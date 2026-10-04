@@ -222,39 +222,15 @@ describe('box session', () => {
     expect(api.identifying()).toBe(false);
   });
 
-  it('identify on a box nobody holds opens it only for the blink, and keeps it from going silent', async () => {
+  it('identify does nothing on a box that is not connected', async () => {
     const box = new FakeBox();
     const { api } = open(box, { probe: probed(box) });
     const run = api.identify();
-    await settle();
-    expect(box.isOpen).toBe(true);
-    expect(box.leds).toEqual([[LedTarget.Both, LedMode.Blink, 255]]);
-    await vi.advanceTimersByTimeAsync(IDENTIFY_MS);
+    expect(api.identifying()).toBe(false);
     await run;
-    expect(box.healthQueries).toBeGreaterThanOrEqual(IDENTIFY_MS / 1000 * 2);
-    expect(box.isOpen).toBe(false);
-    expect(api.status()).toBe('disconnected');
-    expect(api.held()).toBe(false);
-  });
-
-  it('identify does nothing on a box that is busy or never answered', async () => {
-    const box = new FakeBox();
-    const { api } = open(box, { probe: { kind: 'busy' } });
-    await api.identify();
     expect(box.opens).toEqual([]);
+    expect(box.leds).toEqual([]);
   });
-
-  it('connect waits for an identify that holds the port', async () => {
-    const box = new FakeBox();
-    const { api } = open(box, { probe: probed(box) });
-    void api.identify();
-    await settle();
-    const connecting = api.connect();
-    await vi.advanceTimersByTimeAsync(IDENTIFY_MS);
-    await connecting;
-    expect(api.status()).toBe('connected');
-  });
-
   it('the name follows the box, so a rename shows without reconnecting', async () => {
     const box = new FakeBox({ name: 'Desk' });
     const { api, held } = open(box);
@@ -290,13 +266,13 @@ describe('box session', () => {
     expect(blank.api.status()).toBe('disconnected');
   });
 
-  it('a forced connect asks the registry for another port even when this one is known', async () => {
+  it('a box with a port is connected on that port, never through the chooser', async () => {
     const acquire = vi.fn(async () => null);
     const box = new FakeBox();
     const { api } = open(box, { hooks: { acquire } });
-    await api.connect(true);
-    expect(acquire).toHaveBeenCalledTimes(1);
-    expect(box.opens).toEqual([]);
+    await api.connect();
+    expect(acquire).not.toHaveBeenCalled();
+    expect(api.status()).toBe('connected');
   });
 
   it('Disconnect during a reattach handshake stays disconnected, and closes what that handshake opened', async () => {
@@ -345,18 +321,18 @@ describe('box session', () => {
     expect(box.leds.at(-1)).toEqual([LedTarget.Both, LedMode.Auto, 0]);
   });
 
-  it('two connects asked for while an identify holds the port make one attach', async () => {
+  it('two connects asked for at once make one attach', async () => {
     const box = new FakeBox();
     const { api } = open(box, { probe: probed(box) });
-    void api.identify();
-    await settle();
+    const release = box.hold();
     const one = api.connect();
     const two = api.connect();
     expect(api.status()).toBe('connecting');
-    await vi.advanceTimersByTimeAsync(IDENTIFY_MS);
+    release();
     await Promise.all([one, two]);
     expect(api.status()).toBe('connected');
     expect(api.verdict()).toBeNull();
+    expect(box.opens).toEqual([6_000_000]);
     expect(box.doubleOpens).toBe(0);
   });
 });

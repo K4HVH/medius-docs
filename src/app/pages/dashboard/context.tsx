@@ -33,7 +33,7 @@ const localStore = (): Storage | null => {
   }
 };
 
-// Asks before the tab closes while `busy`: a flash or an update doesn't survive it.
+// A flash or an update doesn't survive the tab closing.
 export function guardUnload(busy: Accessor<boolean>): void {
   createEffect(() => {
     if (!busy()) return;
@@ -67,7 +67,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   );
 };
 
-// The selected box for everything inside; a switch remounts it, so every poll moves to the new box.
+// Keyed on the session, so a box switch remounts the pages and moves every poll.
 export const BoxScope: ParentComponent = (props) => {
   const boxes = useBoxes();
   return (
