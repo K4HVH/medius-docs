@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
-import { BsArrowRepeat, BsBoxSeam, BsBoxSeamFill, BsExclamationCircle } from 'solid-icons/bs';
+import { BsBoxSeam, BsBoxSeamFill, BsExclamationCircle } from 'solid-icons/bs';
 import { BoxList, boxIcon } from '../../src/app/pages/dashboard/BoxList';
+import { NEW_BOX } from '../../src/app/pages/dashboard/boxes';
 import { BoxesContext, type BoxEntry, type Boxes, type BoxSession } from '../../src/app/pages/dashboard/context';
 import { PROTO_VER, MIN_PROTO_VER, type Version } from '../../src/dashboard/protocol';
 import type { Probe } from '../../src/dashboard/serial';
@@ -25,7 +26,6 @@ interface State {
   name: string | null;
 }
 
-// Real signals, so a row re-renders on a state change the way it does against a real session.
 const session = (over: Partial<State> = {}) => {
   const [st, set] = createSignal<State>({
     status: 'disconnected',
@@ -56,8 +56,8 @@ describe('boxIcon', () => {
     ['a box nobody holds that answers', { probe: box() }, BsBoxSeam],
     ['a box nobody holds on an older wire', { probe: box(MIN_PROTO_VER) }, BsExclamationCircle],
     ['a port still being checked', {}, BsBoxSeam],
-    ['a box connecting', { status: 'connecting' }, BsArrowRepeat],
-    ['a box updating', { status: 'flashing', held: true }, BsArrowRepeat],
+    ['a box connecting', { status: 'connecting' }, BsBoxSeam],
+    ['a box updating', { status: 'flashing', held: true }, BsBoxSeamFill],
     ['a connected box on an older wire', { status: 'connected', held: true, version: version(MIN_PROTO_VER) }, BsExclamationCircle],
     ['a held box not answering', { status: 'lost', held: true }, BsExclamationCircle],
     ['a remembered box unplugged', { held: true, present: false, status: 'lost' }, BsExclamationCircle],
@@ -83,7 +83,7 @@ const stand = (initial: BoxEntry[], opts: { supported?: boolean } = {}) => {
     supported: opts.supported ?? true,
     secure: true,
     entries,
-    selected: () => entries().find((e) => e.key === sel()) ?? null,
+    selected: () => (sel() === NEW_BOX ? null : (entries().find((e) => e.key === sel()) ?? null)),
     select,
     add,
   } as unknown as Boxes;
@@ -110,8 +110,8 @@ describe('BoxList', () => {
       { key: 'bb', session: b.s },
     ]);
     const r = mount(boxes);
-    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Right']);
-    expect(tabs(r).map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false']);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Right', 'Add box']);
+    expect(tabs(r).map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
   });
 
   it('leaves out ports that never answered as a box', () => {
@@ -122,10 +122,10 @@ describe('BoxList', () => {
       { key: 'aa', session: a.s },
     ]);
     const r = mount(boxes);
-    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left']);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Add box']);
   });
 
-  it('a click selects the box and moves the mark, nothing more', () => {
+  it('a click selects the box and opens nothing', () => {
     const a = session({ probe: box(), name: 'Left' });
     const b = session({ probe: box(), name: 'Right' });
     const onPick = vi.fn();
@@ -162,36 +162,45 @@ describe('BoxList', () => {
     const r = mount(boxes);
     const row = tabs(r)[0];
     setEntries([first, { key: 'bb', session: b.s }]);
-    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Right']);
-    // Left keeps its element, so keyboard focus on it survives another box arriving.
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Left', 'Right', 'Add box']);
+    // Same element, so focus survives.
     expect(tabs(r)[0]).toBe(row);
     setEntries([{ key: 'bb', session: b.s }]);
-    expect(tabs(r).map((t) => t.textContent)).toEqual(['Right']);
+    expect(tabs(r).map((t) => t.textContent)).toEqual(['Right', 'Add box']);
   });
 
-  it('Add a box opens the chooser, then hands over like a picked box', async () => {
-    const { boxes, add } = stand([]);
+  it('Add box shows the card for a new box, and opens no chooser by itself', () => {
+    const a = session({ probe: box(), name: 'Left' });
     const onPick = vi.fn();
+    const { boxes, select, add } = stand([{ key: 'aa', session: a.s }]);
     const r = mount(boxes, { onPick });
-    fireEvent.click(r.getByRole('button', { name: 'Add a box' }));
-    expect(add).toHaveBeenCalled();
-    await Promise.resolve();
-    await Promise.resolve();
+    fireEvent.click(r.getByRole('tab', { name: 'Add box' }));
+    expect(select).toHaveBeenCalledWith(NEW_BOX);
     expect(onPick).toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
+    expect(r.getByRole('tab', { name: 'Add box' }).getAttribute('aria-selected')).toBe('true');
   });
 
-  it('offers no Add a box where the browser cannot reach a port', () => {
+  it('Add box is marked while nothing listed is selected', () => {
+    const sim = session({ probe: { kind: 'silent' } });
+    const { boxes } = stand([{ key: 'port:1', session: sim.s }]);
+    const r = mount(boxes);
+    expect(tabs(r).map((t) => t.getAttribute('aria-selected'))).toEqual(['true']);
+  });
+
+  it('offers no Add box where the browser cannot reach a port', () => {
     const { boxes } = stand([], { supported: false });
     const r = mount(boxes);
-    expect(r.queryByRole('button', { name: 'Add a box' })).toBeNull();
+    expect(r.queryByRole('tab', { name: 'Add box' })).toBeNull();
   });
 
-  it('locks every row and Add a box while disabled', () => {
+  it('locks every row while disabled', () => {
     const a = session({ probe: box(), name: 'Left' });
     const { boxes, select } = stand([{ key: 'aa', session: a.s }]);
     const r = mount(boxes, { disabled: true });
     fireEvent.click(tabs(r)[0]);
+    fireEvent.click(r.getByRole('tab', { name: 'Add box' }));
     expect(select).not.toHaveBeenCalled();
-    expect((r.getByRole('button', { name: 'Add a box' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(tabs(r).every((t) => t.disabled)).toBe(true);
   });
 });

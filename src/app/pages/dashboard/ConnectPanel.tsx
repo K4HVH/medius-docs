@@ -6,6 +6,7 @@ import { versionString } from '../../../dashboard/protocol';
 import type { ConnectVerdict } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { WiringPorts } from './PortDiagram';
+import { row } from './ui';
 
 // Shared by every page that gates on these two conditions.
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
@@ -98,7 +99,7 @@ export const ConnectView = (props: ConnectViewProps) => {
 
         <Match when={verdict()?.kind === 'busy'}>
           <div class="callout callout--danger" role="alert">
-            Another tab or program has this box open.
+            Another tab or program has this box open. Close it.
           </div>
           <Connect label="Try again" />
         </Match>
@@ -190,8 +191,8 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
       }
     >
       <Match when={dash.held() && !dash.present()}>
-        <div class="callout callout--info" role="status">
-          This computer can't see this box. Plug USB2 into it.
+        <div class="callout callout--danger" role="alert">
+          This computer can't see your box. Plug USB2 into it.
         </div>
         <Button variant="secondary" onClick={() => void dash.disconnect()}>
           Forget
@@ -201,7 +202,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
         <div class="callout callout--danger" role="alert">
           The box isn't answering. Check USB1 is plugged in too.
         </div>
-        <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+        <div style={row}>
           <Button loading disabled>
             Reconnecting...
           </Button>

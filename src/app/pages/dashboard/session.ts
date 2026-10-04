@@ -97,7 +97,7 @@ export interface SessionHooks {
   // The chooser, for a session with no port.
   acquire?: () => Promise<ConnectVerdict | null>;
   exclusive?: <T>(port: SerialPort, fn: () => Promise<T>) => Promise<T>;
-  // Null while another tab holds the box; call the result to let go.
+  // Null while another tab holds the box; call the result to release it.
   claim?: (mac: string) => Promise<(() => void) | null>;
   seen?: (port: SerialPort, probe: Probe) => boolean;
   held?: (mac: string, name: string) => void;
@@ -186,7 +186,7 @@ export function createBoxSession(
     let updating = false;
     let disposed = false;
     let lastBaud = init.probe?.kind === 'box' ? init.probe.baud : undefined;
-    // Bumped to strand a reattach loop.
+    // Bumped to stop a running reattach loop.
     let lostGen = 0;
     let misses = 0;
     let mark = 0;
@@ -272,7 +272,7 @@ export function createBoxSession(
       return nl;
     };
 
-    // Another MAC on this port is another box: it keeps the port and this session lets go.
+    // Another MAC on this port is another box; this session drops the port.
     const claim = (p: SerialPort, pr: Probe & { version: Version }): boolean => {
       const known = mac();
       const id = boxId(pr.version);
@@ -424,7 +424,8 @@ export function createBoxSession(
       try {
         await attach();
       } catch (e) {
-        if (!(e instanceof AttachCancelled)) setVerdict(classifyConnectError(e));
+        // A port handed to another box's entry says nothing about this box.
+        if (!(e instanceof AttachCancelled) && !(e instanceof ForeignBoxError)) setVerdict(classifyConnectError(e));
       }
     };
 

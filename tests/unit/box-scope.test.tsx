@@ -73,11 +73,10 @@ describe('BoxScope', () => {
     expect(getByTestId('name').textContent).toBe('Right');
     expect(b.locksQueries).toBeGreaterThan(0);
     expect(a.locksQueries).toBe(aBefore);
-    // Box A is still held and kept alive while the tabs show B.
     expect(boxes.entries()[0].session.status()).toBe('connected');
   });
 
-  it('as the layout route around the box tabs, a switch remounts the page under it', async () => {
+  it('a box switch remounts the routed page', async () => {
     const a = new FakeBox({ mac: [1, 1, 1, 1, 1, 1], name: 'Left' });
     const b = new FakeBox({ mac: [2, 2, 2, 2, 2, 2], name: 'Right' });
     const boxes = mountBoxes(new FakeSerial([new FakePort(a), new FakePort(b)]));

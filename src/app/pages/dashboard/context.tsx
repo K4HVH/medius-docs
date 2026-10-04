@@ -10,6 +10,8 @@ import {
 } from 'solid-js';
 import { isSecureContextOk, isWebSerialSupported } from '../../../dashboard/serial';
 import { type Boxes, type LocksLike, createBoxes } from './boxes';
+
+export { NEW_BOX } from './boxes';
 import { type NativeFlash, createNativeFlash } from './nativeFlash';
 import type { BoxSession } from './session';
 import { createBoxStore } from './store';

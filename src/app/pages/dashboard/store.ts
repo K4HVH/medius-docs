@@ -40,7 +40,7 @@ function read(storage: Storage | null): Saved | null {
   }
 }
 
-// Each read and change starts from storage, so tabs don't undo each other; without it, memory.
+// Rereads storage on every call, so tabs don't undo each other.
 export function createBoxStore(storage: Storage | null): BoxStore {
   let saved: Saved = read(storage) ?? { selected: null, held: [] };
   const current = () => {
@@ -52,9 +52,7 @@ export function createBoxStore(storage: Storage | null): BoxStore {
     if (!fn(s)) return;
     try {
       storage?.setItem(STORE_KEY, JSON.stringify(s));
-    } catch {
-      /* this page's copy stands */
-    }
+    } catch {}
   };
   return {
     selected: () => current().selected,

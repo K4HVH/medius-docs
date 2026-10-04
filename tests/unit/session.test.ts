@@ -42,7 +42,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// Health is read every KEEPALIVE_MS; a dead box fails each read at once.
+// A dead box fails each read at once.
 const keepalives = (n: number) => vi.advanceTimersByTimeAsync(KEEPALIVE_MS * n);
 
 describe('box session', () => {
@@ -208,7 +208,7 @@ describe('box session', () => {
     expect(api.status()).toBe('disconnected');
   });
 
-  it('identify on a held box blinks both chips, then hands the light back', async () => {
+  it('identify on a held box blinks both chips, then returns the LED to auto', async () => {
     const box = new FakeBox();
     const { api } = open(box);
     await api.connect();
@@ -236,7 +236,7 @@ describe('box session', () => {
     const { api, held } = open(box);
     await api.connect();
     expect(api.name()).toBe('Desk');
-    // The Options card reads the version, and refreshes it after a rename.
+    // As the Options card does.
     const card = createRoot((dispose) => {
       api.poll('version');
       return dispose;
@@ -310,7 +310,7 @@ describe('box session', () => {
     expect(box.opens.length).toBe(tries);
   });
 
-  it('identify on a held box blinks for the whole time, not part of it', async () => {
+  it('identify blinks for the full IDENTIFY_MS', async () => {
     const box = new FakeBox();
     const { api } = open(box);
     await api.connect();
@@ -334,5 +334,14 @@ describe('box session', () => {
     expect(api.verdict()).toBeNull();
     expect(box.opens).toEqual([6_000_000]);
     expect(box.doubleOpens).toBe(0);
+  });
+
+  it('another box answering on the port gives it up without blaming the cables', async () => {
+    const box = new FakeBox();
+    const { api, port } = open(box, { probe: probed(box) });
+    port.box = new FakeBox({ mac: [1, 2, 3, 4, 5, 6] });
+    await api.connect();
+    expect(api.present()).toBe(false);
+    expect(api.verdict()).toBeNull();
   });
 });

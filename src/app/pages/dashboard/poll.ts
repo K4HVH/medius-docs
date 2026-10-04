@@ -116,7 +116,7 @@ interface Slot {
 export interface Poller {
   // Subscribe for the lifetime of the calling component. Returns null until the first reply lands.
   subscribe<K extends PollKey>(key: K, everyMs?: number): Accessor<PollValues[K] | null>;
-  // The last value a subscriber read, without asking for it.
+  // The last value read, without querying.
   peek<K extends PollKey>(key: K): Accessor<PollValues[K] | null>;
   // True when the box replies in a layout this build can't decode; the value then stays null.
   unreadable(key: PollKey): Accessor<boolean>;
