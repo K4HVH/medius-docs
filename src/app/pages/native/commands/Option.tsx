@@ -125,8 +125,8 @@ const Option: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              A device the box can't clone exactly has more IN endpoints live at once, or HID interfaces,
-              than the box serves; more interfaces, alternate settings or endpoints than the box reads
+              A device the box can't clone exactly has more than four IN endpoints live at once, or more
+              than six HID interfaces; more interfaces, alternate settings or endpoints than the box reads
               (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
               speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
               a report descriptor truncated or never captured.
@@ -134,8 +134,16 @@ const Option: Component = () => {
             <p>
               The{' '}
               <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3
-              serves four IN endpoints live at once besides endpoint 0, numbered anything up to 6, a control
-              endpoint above 0 counting as one; a fifth is left dead. Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
+              has four transmit FIFOs for the IN endpoints besides endpoint 0, numbered anything up to 6, a
+              control endpoint above 0 counting as one.
+            </p>
+            <p>
+              With more live at once, the ones the box binds as mouse, keyboard and media keep a FIFO each, and
+              the rest share the others: a report on one of those can go a poll or more late while every shared
+              FIFO is in use.
+            </p>
+            <p>
+              Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
               the device chip to re-clone; otherwise the clone is presented again when the change
               alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
             </p>
