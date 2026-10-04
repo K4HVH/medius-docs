@@ -70,7 +70,7 @@ const Update = () => {
     const r = dash.update();
     return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
   };
-  // Read from the box, so a tab change or a box switch keeps it.
+  // From the session, so it survives a tab change or box switch.
   const view = (): Step => {
     const outcome = dash.update()?.outcome;
     return outcome === 'verified' ? 'done' : outcome === 'sent' ? 'sent' : step();

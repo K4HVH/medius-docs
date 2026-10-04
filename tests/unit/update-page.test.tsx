@@ -47,7 +47,6 @@ const mock = vi.hoisted(() => ({
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
   outcome: 'verified' as 'verified' | 'sent' | 'failed',
-  // Holds the update in flight until released.
   hold: null as Promise<void> | null,
 }));
 
@@ -72,7 +71,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     disconnect: async () => {},
     readFirmwareInfo: async () => null,
     // Mirrors the real one's observable effects, so the page is driven by state transitions rather
-    // than by the test asserting an answer it also supplied. The outcome is kept on the box.
+    // than by the test asserting an answer it also supplied.
     updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }) => {
       const s = mock.s!;
       const run = { device: images.device !== undefined, host: images.host !== undefined };
@@ -292,7 +291,6 @@ describe('Update', () => {
     mock.hold = new Promise<void>((r) => (release = r));
     const r = await runUpdate(/update both chips/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/updating/i));
-    // Other tabs and boxes stay usable meanwhile; closing the tab ends the update.
     expect(r.container.textContent).toContain("Don't unplug or close this tab");
     cleanup();
     mock.s!.setFirmwareInfo(fw(onRelease));

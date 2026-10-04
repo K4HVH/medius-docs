@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createRoot, createSignal } from 'solid-js';
-import { type Boxes, createBoxes } from '../../src/app/pages/dashboard/boxes';
+import { createMemo, createRoot, createSignal } from 'solid-js';
+import { type Boxes, NEW_BOX, createBoxes } from '../../src/app/pages/dashboard/boxes';
 import { REATTACH_MS } from '../../src/app/pages/dashboard/session';
 import { createBoxStore } from '../../src/app/pages/dashboard/store';
 import { probePort } from '../../src/dashboard/serial';
@@ -326,7 +326,7 @@ describe('box registry', () => {
     expect(boxes.entries()).toHaveLength(1);
   });
 
-  it('waits on the probe page load started before connecting the same port, so the two never collide', async () => {
+  it('a connect waits for the startup probe of its port', async () => {
     const a = box(1);
     const release = a.hold();
     const boxes = mount(new FakeSerial(portsOf(a)));
@@ -427,7 +427,7 @@ describe('box registry', () => {
 
   it('adding a remembered box on a new port selects that box, with no second row', async () => {
     const [a, b] = [box(1), box(2)];
-    // b is held and listed first, so a selection that fell back would land on b.
+    // b first, so a fallback would pick b.
     const ports = portsOf(b, a);
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
@@ -474,7 +474,7 @@ describe('box registry', () => {
 
   it('a selected port that turns out to be a remembered box moves the selection to that box', async () => {
     const [a, b] = [box(1), box(2)];
-    // b is listed first, so falling back to the first held box would pick the wrong one.
+    // b first, so a fallback would pick b.
     const ports = portsOf(b, a);
     const serial = new FakeSerial(ports);
     const boxes = mount(serial);
@@ -506,7 +506,6 @@ describe('box registry', () => {
     const boxes = mount(serial, store);
     await ready();
     const before = boxes.snapshot();
-    // Nothing new answers: the box already connected is not the one installed, so the chooser asks.
     expect(await boxes.connectNew(before)).toEqual({ kind: 'no-port' });
     expect(serial.chooserCalls).toBe(1);
   });
@@ -530,7 +529,7 @@ describe('box registry', () => {
     expect(serial.chooserCalls).toBe(0);
   });
 
-  it('a single port that appeared during the install and is not answering reports why, without the chooser', async () => {
+  it('one silent port new since the install reports its verdict', async () => {
     const serial = new FakeSerial([]);
     const boxes = mount(serial);
     await ready();
@@ -592,7 +591,7 @@ describe('box registry', () => {
     const second = mount(new FakeSerial(theirs), createBoxStore(storage), { locks });
     await ready();
     expect(second.entries()[0].session.verdict()).toEqual({ kind: 'busy' });
-    // The first tab lets go of the port for a moment, as an update does between activate and reconnect.
+    // As an update does between activate and reconnect.
     await entry(first, a.mac).session.link()!.close();
     window.dispatchEvent(new Event('focus'));
     await ready();
@@ -658,5 +657,39 @@ describe('box registry', () => {
     await ready();
     expect(boxes.anyUpdating()).toBe(true);
     release();
+  });
+
+  it('Add box shows the blank card without forgetting the stored box, and its Connect adds one', async () => {
+    const [a, b] = [box(1), box(2)];
+    const ports = portsOf(a, b);
+    const serial = new FakeSerial([ports[0]]);
+    const store = createBoxStore(null);
+    const boxes = mount(serial, store);
+    await ready();
+    await pick(boxes, a.mac);
+    boxes.select(NEW_BOX);
+    expect(boxes.selected()).toBeNull();
+    expect(boxes.scope().present()).toBe(false);
+    expect(store.selected()).toBe(a.mac);
+    serial.chosen = ports[1];
+    await boxes.scope().connect();
+    await ready();
+    expect(boxes.selected()?.key).toBe(b.mac);
+    expect(entry(boxes, b.mac).session.status()).toBe('connected');
+  });
+
+  it('a selected port that answers as a box moves every view of the selection to its MAC', async () => {
+    const a = box(1);
+    a.alive = false;
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    const anon = keys(boxes)[0];
+    boxes.select(anon);
+    const seen = createRoot(() => createMemo(() => boxes.selected()?.key));
+    expect(seen()).toBe(anon);
+    a.alive = true;
+    await boxes.scope().connect();
+    await ready();
+    expect(seen()).toBe(a.mac);
   });
 });

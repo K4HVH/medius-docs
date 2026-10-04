@@ -285,7 +285,7 @@ describe('dashboard poller', () => {
     });
   });
 
-  it('reports each keepalive read: a reply is answered, a timeout is not', async () => {
+  it('reports each keepalive: a reply as answered, a timeout as missed', async () => {
     let fail = false;
     const link = {
       queryHealth: async () => {
@@ -376,7 +376,7 @@ describe('dashboard poller', () => {
       await vi.advanceTimersByTimeAsync(300);
       failLocks = true;
       await vi.advanceTimersByTimeAsync(150);
-      // One health read in 450 ms; the locks reads, answered or not, say nothing about liveness.
+      // One health read in 450 ms.
       expect(seen).toEqual([true]);
       dispose();
     });

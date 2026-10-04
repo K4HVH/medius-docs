@@ -23,7 +23,6 @@ const mock = vi.hoisted(() => ({
   releasesThrow: false,
   flashed: [] as string[],
   romCalls: 0,
-  // Boxes answering on the current wire, as the registry reports them now.
   answering: ['aaaaaaaaaaaa'] as string[],
   befores: [] as string[][],
   disconnects: 0,
@@ -39,7 +38,6 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     supported: mock.supported,
     secure: true,
     snapshot: () => ({ answering: new Set(mock.answering), all: new Set(mock.answering) }),
-    // Mirrors the real one: the box that answers now and did not before is selected and connected.
     connectNew: async (before: { answering: ReadonlySet<string> }) => {
       mock.befores.push([...before.answering]);
       if (mock.findVerdict) return mock.findVerdict;

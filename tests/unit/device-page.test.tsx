@@ -7,6 +7,7 @@ import { PROTO_VER } from '../../src/dashboard/protocol';
 // every other page's without anything noticing.
 const mock = vi.hoisted(() => ({
   identifies: 0,
+  identifying: false,
   supported: true,
   secure: true,
   status: 'disconnected' as string,
@@ -36,7 +37,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     identify: async () => {
       mock.identifies += 1;
     },
-    identifying: () => false,
+    identifying: () => mock.identifying,
     deviceLog: () => [],
     clearDeviceLog: () => {},
     poll: () => () => null,
@@ -145,7 +146,7 @@ describe('Device', () => {
     });
   });
 
-  it('a box that stopped answering keeps its card, with the reason and a way to let it go', async () => {
+  it('a box that stopped answering keeps its card, with the reason and Disconnect', async () => {
     mock.status = 'lost';
     const { getByRole, queryByRole } = render(() => <Device />);
     expect(getByRole('alert').textContent).toMatch(/isn't answering/i);
@@ -162,11 +163,20 @@ describe('Device', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
   });
 
-  it('a connected box can be told apart on the desk from its card', () => {
+  it('Identify on the card blinks the box, beside Disconnect', () => {
     mock.status = 'connected';
-    const { getByRole } = render(() => <Device />);
-    expect(getByRole('button', { name: 'Disconnect' })).toBeTruthy();
+    const { getAllByRole, getByRole } = render(() => <Device />);
+    const names = getAllByRole('button').map((b) => b.textContent?.trim());
+    expect(names.indexOf('Identify')).toBe(names.indexOf('Disconnect') - 1);
     getByRole('button', { name: 'Identify' }).click();
     expect(mock.identifies).toBe(1);
+  });
+
+  it('says it is identifying while the light blinks', () => {
+    mock.status = 'connected';
+    mock.identifying = true;
+    const { getByRole } = render(() => <Device />);
+    expect(getByRole('button', { name: /identifying\.\.\./i })).toBeTruthy();
+    mock.identifying = false;
   });
 });

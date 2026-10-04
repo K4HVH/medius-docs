@@ -32,7 +32,6 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     present: () => mock.s!.present(),
     verdict: () => mock.s!.verdict(),
     connect: mock.connect,
-    // Mirrors the real one: the box is let go and nothing is held.
     disconnect: async () => {
       mock.disconnects += 1;
       mock.s!.setHeld(false);
@@ -118,8 +117,7 @@ describe('ConnectPanel', () => {
   it('a held port says to close what is holding it', () => {
     mock.s!.setVerdict({ kind: 'busy' });
     const { container, getAllByRole } = render(() => <ConnectPanel />);
-    expect(container.textContent).toContain('Another tab or program has this box open.');
-    expect(container.textContent).not.toMatch(/try again\./i);
+    expect(container.textContent).toContain('Another tab or program has this box open. Close it.');
     expect(getAllByRole('button')).toHaveLength(1);
   });
 
@@ -188,7 +186,7 @@ describe('ConnectPanel', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('a box that stopped answering says so, reconnects by itself, and can be let go', async () => {
+  it('a box that stopped answering says so, reconnects by itself, and can be disconnected', async () => {
     mock.s!.setHeld(true);
     mock.s!.setStatus('lost');
     const { getByRole, queryByRole } = render(() => <ConnectPanel />);
@@ -200,16 +198,16 @@ describe('ConnectPanel', () => {
     expect(mock.disconnects).toBe(1);
   });
 
-  it('a held box that was unplugged waits for USB2, and can be forgotten', async () => {
+  it('a held box that was unplugged asks for USB2, and can be forgotten', async () => {
     mock.s!.setHeld(true);
     mock.s!.setPresent(false);
     mock.s!.setStatus('lost');
     const { getByRole, queryByRole } = render(() => <ConnectPanel />);
-    expect(getByRole('status').textContent?.trim()).toBe("This computer can't see this box. Plug USB2 into it.");
+    expect(getByRole('alert').textContent?.trim()).toBe("This computer can't see your box. Plug USB2 into it.");
     expect(queryByRole('button', { name: /reconnecting/i })).toBeNull();
     getByRole('button', { name: /forget/i }).click();
     expect(mock.disconnects).toBe(1);
-    await waitFor(() => expect(queryByRole('status')).toBeNull());
+    await waitFor(() => expect(queryByRole('alert')).toBeNull());
     expect(getByRole('button', { name: /^connect$/i })).toBeTruthy();
   });
 

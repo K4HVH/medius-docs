@@ -255,7 +255,7 @@ describe('updateOverControl', () => {
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
     expect(outcome).toBe('verified');
     expect(api.error()).toBeNull();
-    // Kept on the box, not the page, so it is there after a tab change or a box switch.
+    // On the session, so a tab change or box switch keeps it.
     expect(api.update()).toEqual({ device: true, host: false, outcome: 'verified' });
   }, 20000);
 

@@ -46,7 +46,6 @@ export class FakeBox {
   healthQueries = 0;
   locksQueries = 0;
   device: DeviceInfo | null = DEVICE;
-  // While set, a handshake waits for it, so a test can act mid-attach.
   gate: Promise<void> | null = null;
 
   constructor(o: BoxOpts = {}) {
@@ -73,7 +72,6 @@ export class FakeBox {
     this.version = { ...this.version, name };
   }
 
-  // The read loop fails; the port stays open until the link is closed.
   drop(): void {
     this.active?.fail();
   }
@@ -93,7 +91,6 @@ let ports = 0;
 
 export class FakePort {
   readonly id = ++ports;
-  // Open in this page; real ports refuse a second open while this is set.
   open = false;
   constructor(
     public box: FakeBox | null,
@@ -216,7 +213,6 @@ export class FakeLink {
     }
   }
 
-  // The read loop ended with an error: SerialLink reports it and keeps the port until closed.
   fail(): void {
     this.open_ = false;
     this.events.onClose?.(new Error('The device has been lost.'));

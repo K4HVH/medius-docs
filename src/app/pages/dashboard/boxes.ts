@@ -17,13 +17,16 @@ import {
 import { type BoxSession, type SessionControl, boxId, createBoxSession } from './session';
 import type { BoxStore } from './store';
 
+// The selection for a box not listed yet: its card connects one through the chooser.
+export const NEW_BOX = 'new';
+
 export interface BoxEntry {
   readonly key: string;
   session: BoxSession;
 }
 
 interface Entry extends BoxEntry {
-  key: string;
+  setKey: (key: string) => void;
   ctl: SessionControl;
 }
 
@@ -114,7 +117,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const busyWith = (e: Entry) => e.session.status() !== 'disconnected' || e.session.identifying();
   const remembered = (mac: string) => deps.store.held().some((h) => h.mac === mac);
 
-  // Opens of one port run one at a time: probe, attach, reattach, update reconnect.
+  // One open per port at a time.
   const exclusive = <T,>(port: SerialPort, fn: () => Promise<T>): Promise<T> => {
     const run = (chains.get(port) ?? Promise.resolve()).then(fn);
     const tail = run.catch(() => undefined);
@@ -141,7 +144,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
 
   const choosing = (key: string) => {
     setSelKey(key);
-    if (!isPortKey(key)) deps.store.setSelected(key);
+    if (!isPortKey(key) && key !== NEW_BOX) deps.store.setSelected(key);
   };
 
   const remove = (e: Entry) => {
@@ -154,9 +157,8 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const rekey = (e: Entry, key: string) => {
     for (const [p, k] of portKeys) if (k === e.key) portKeys.set(p, key);
     const wasSelected = selKey() === e.key;
-    e.key = key;
+    e.setKey(key);
     if (wasSelected) choosing(key);
-    setEntries((list) => [...list]);
   };
 
   const absorb = (e: Entry, into: Entry) => {
@@ -179,7 +181,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     const other = byKey(mac);
     if (other) {
       const op = other.ctl.port();
-      // One box on two ports can't happen; keep the first.
+      // Same MAC on two ports: keep the first.
       if (op && op !== port) return false;
       const wasSelected = selKey() === other.key;
       remove(other);
@@ -215,7 +217,15 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       },
     );
     api = made.api;
-    return { key, session: made.api, ctl: made.ctl };
+    const [k, setKey] = createSignal(key);
+    return {
+      get key() {
+        return k();
+      },
+      setKey,
+      session: made.api,
+      ctl: made.ctl,
+    };
   };
 
   const listPort = (port: SerialPort): Entry => {
@@ -323,9 +333,9 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     present.add(port);
     listPort(port);
     await probe(port);
-    // A probe can merge the port into a remembered entry, so look it up again.
+    // The probe may have merged it into a remembered entry.
     const e = byPort(port);
-    if (!e) return { ok: false, verdict: { kind: 'other', message: 'That port went away.' } };
+    if (!e) return { ok: false, verdict: { kind: 'other', message: 'The port went away' } };
     choosing(e.key);
     await open(e.session);
     return { ok: true, entry: e };
@@ -368,6 +378,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const selected = createMemo<BoxEntry | null>(() => {
     const list = entries();
     const k = selKey();
+    if (k === NEW_BOX) return null;
     return (
       (k !== null ? list.find((e) => e.key === k) : undefined) ??
       list.find((e) => e.session.held()) ??
@@ -408,7 +419,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     if (e.session.held()) e.ctl.setPort(null);
     else remove(e);
   };
-  // Silent ports wait for a user action: a probe writes to whatever is behind the adapter.
+  // Busy ports only: a probe writes to whatever is behind the adapter.
   const onFocus = () => {
     for (const e of entries()) {
       const p = e.ctl.port();

@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-serial" />
-// What a failed connect means, as one verdict.
+// A failed connect, as one verdict.
 
 import { PROTO_VER, type Version } from '../protocol';
 import { BadProtoVerError, NoReplyError } from './link';

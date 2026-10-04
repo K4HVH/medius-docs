@@ -18,7 +18,6 @@ beforeAll(() => {
   Element.prototype.scrollTo ??= () => {};
 });
 
-// Real signals, so the layout re-renders on every change a real registry or flash makes.
 const world = () => {
   const [running, setRunning] = createSignal(false);
   const [status, setStatus] = createSignal('connected');

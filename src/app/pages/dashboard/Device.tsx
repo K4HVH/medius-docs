@@ -87,11 +87,11 @@ const Device = () => {
                         )}
                       </Show>
                       <div style={row}>
+                        <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
+                          {dash.identifying() ? 'Identifying...' : 'Identify'}
+                        </Button>
                         <Button variant="secondary" onClick={() => void dash.disconnect()}>
                           Disconnect
-                        </Button>
-                        <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
-                          Identify
                         </Button>
                       </div>
                     </Match>

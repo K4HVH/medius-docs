@@ -306,7 +306,7 @@ export class SerialLink {
   private clipSeq = 0;
   private opened = false;
   private closing = false;
-  // Date.now() of the last decoded frame of any kind; 0 before the first.
+  // Date.now() of the last frame; 0 before any.
   lastRxAt = 0;
 
   constructor(
