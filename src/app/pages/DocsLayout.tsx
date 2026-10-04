@@ -483,8 +483,10 @@ const DocsLayout = (props: RouteSectionProps) => {
             />
           </Show>
           <Show when={activeSection() === 'dashboard'}>
-            <Divider spacing="compact" label="Boxes" labelAlign="start" />
-            <BoxList onPick={handleBoxPick} disabled={flashing()} />
+            <Show when={boxes.supported && boxes.secure}>
+              <Divider spacing="compact" label="Boxes" labelAlign="start" />
+              <BoxList onPick={handleBoxPick} disabled={flashing()} />
+            </Show>
             <Divider spacing="compact" label="Dashboard" labelAlign="start" />
             <Tabs
               orientation="vertical"

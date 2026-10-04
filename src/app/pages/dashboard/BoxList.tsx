@@ -51,6 +51,7 @@ export const BoxList = (props: { onPick?: () => void; disabled?: boolean }) => {
 
   return (
     <Tabs
+      class="box-tabs"
       orientation="vertical"
       variant="subtle"
       options={all()}

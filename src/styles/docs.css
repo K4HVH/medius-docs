@@ -319,3 +319,13 @@ pre code[class*="language-"] {
 .table-scroll > table {
   margin-bottom: 0;
 }
+
+/* Box names run to 32 characters; the sidebar tabs were sized for short labels. */
+.box-tabs .tabs__tab {
+  min-width: 0;
+}
+
+.box-tabs .tabs__tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

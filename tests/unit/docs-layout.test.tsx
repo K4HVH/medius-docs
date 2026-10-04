@@ -18,7 +18,7 @@ beforeAll(() => {
   Element.prototype.scrollTo ??= () => {};
 });
 
-const world = () => {
+const world = (opts: { supported?: boolean } = {}) => {
   const [running, setRunning] = createSignal(false);
   const [status, setStatus] = createSignal('connected');
   const session = {
@@ -36,7 +36,7 @@ const world = () => {
   const start = vi.fn();
   const select = vi.fn();
   const boxes = {
-    supported: true,
+    supported: opts.supported ?? true,
     secure: true,
     start,
     entries: () => [{ key: 'a', session }],
@@ -119,5 +119,12 @@ describe('DocsLayout and the boxes', () => {
     expect((row(r) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(row(r));
     expect(r.select).not.toHaveBeenCalled();
+  });
+
+  it('shows no Boxes section where the browser cannot reach a port', async () => {
+    const r = mount('/dashboard', world({ supported: false }));
+    await waitFor(() => expect(r.container.textContent).toContain('device page'));
+    expect(r.container.textContent).not.toContain('Boxes');
+    expect(row(r)).toBeUndefined();
   });
 });
