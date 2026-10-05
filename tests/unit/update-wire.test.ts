@@ -164,6 +164,27 @@ describe('the stable update path', () => {
     expect(new UpdateError(OTA_OP_END, 0x1a, 1200).message).not.toContain('op 1200');
   });
 
+  it('a write to a port that went away leaves no reply wait behind to time out unheard', async () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (r: unknown) => unhandled.push(r);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      const mock = new MockSerialPort();
+      mock.writable = new WritableStream<Uint8Array>({
+        write: () => {
+          throw new DOMException('The device has been lost.', 'NetworkError');
+        },
+      });
+      const link = new SerialLink(mock as unknown as PortArg);
+      await link.open();
+      await expect(link.abortUpdate(OTA_TGT_DEVICE, 50)).rejects.toBeTruthy();
+      await new Promise((r) => setTimeout(r, 150));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+  });
+
   it('reads a status it does not know as a refusal', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {

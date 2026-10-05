@@ -411,6 +411,20 @@ describe('Advanced over USB2', () => {
     await waitFor(() => expect(r.container.textContent).toContain('connect panel: The box refused that.'));
   });
 
+  it('a failed run whose box is back says why above the form', async () => {
+    mock.s!.setUpdate({ device: true, host: false, page: 'advanced', outcome: 'failed' } satisfies Run);
+    mock.s!.setError('The box went away partway through.');
+    const r = mount();
+    await waitFor(() => expect(r.getByRole('alert').textContent).toBe('The box went away partway through.'));
+    expect(flashButton(r)).toBeTruthy();
+  });
+
+  it('a failed run whose reason went with a reconnect still says it did not finish', async () => {
+    mock.s!.setUpdate({ device: true, host: false, page: 'advanced', outcome: 'failed' } satisfies Run);
+    const r = mount();
+    await waitFor(() => expect(r.getByRole('alert').textContent).toBe("That flash didn't finish."));
+  });
+
   it('Flash another goes back to the form, and Go to my box to Device', async () => {
     const r = mount();
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());

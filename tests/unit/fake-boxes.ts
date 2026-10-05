@@ -49,6 +49,8 @@ export class FakeBox {
   locksQueries = 0;
   device: DeviceInfo | null = DEVICE;
   gate: Promise<void> | null = null;
+  // Holds staging alone, so a reconnect can finish while an update is stuck in it.
+  stageGate: Promise<void> | null = null;
 
   constructor(o: BoxOpts = {}) {
     this.version = {
@@ -196,6 +198,9 @@ export class FakeLink {
   async stageFirmware(): Promise<void> {
     const b = this.box;
     if (b.gate) await b.gate;
+    if (b.stageGate) await b.stageGate;
+    // A write after the port went away fails, as Chromium's does.
+    if (!this.open_) throw new DOMException('The device has been lost.', 'NetworkError');
   }
 
   async led(target: number, mode: number, level: number): Promise<void> {

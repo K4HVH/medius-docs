@@ -1133,7 +1133,14 @@ export class SerialLink {
     frame[1] = target;
     frame.set(body, 2);
     const wait = this.awaitUpdate(op, timeoutMs);
-    await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+    try {
+      await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+    } catch (e) {
+      // Nothing will answer a frame that never went out: end the wait now, or it times out unheard.
+      wait.catch(() => undefined);
+      this.updateWaiters.get(op)?.(null, e as Error);
+      throw e;
+    }
     return wait;
   }
 
