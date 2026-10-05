@@ -1,4 +1,4 @@
-import { type Component, For, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Component, For, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import {
   BsBoxSeam,
@@ -73,19 +73,6 @@ export const BoxList = (props: { onPick?: () => void; disabled?: boolean }) => {
         const at = row.findIndex((b) => b === document.activeElement);
         row[(at + by + row.length) % row.length]?.focus();
       };
-      // Menu's own anchoring keeps measuring a closed menu, so it is off and the menu closes instead.
-      createEffect(() => {
-        if (!open()) return;
-        const away = (ev: Event) => {
-          if (ev.type === 'resize' || (ev.target instanceof Node && ev.target.contains(hit))) hide();
-        };
-        window.addEventListener('scroll', away, true);
-        window.addEventListener('resize', away);
-        onCleanup(() => {
-          window.removeEventListener('scroll', away, true);
-          window.removeEventListener('resize', away);
-        });
-      });
       onMount(() => {
         const t = tab();
         if (!t) return;
@@ -111,9 +98,8 @@ export const BoxList = (props: { onPick?: () => void; disabled?: boolean }) => {
         >
           <Menu
             open={open()}
-            onOpenChange={(o) => (o ? show() : open() && hide())}
+            onOpenChange={(o) => (o ? show() : hide())}
             openOn="click"
-            anchored={false}
             closeOnContentClick={false}
             class="box-icon-menu"
             trigger={
