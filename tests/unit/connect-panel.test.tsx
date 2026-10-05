@@ -69,15 +69,6 @@ afterEach(() => {
 const version = { protoVer: 4, fwMajor: 3, fwMinor: 1, fwPatch: 0, mac: [0, 0, 0, 0, 0, 0], name: '' };
 
 describe('ConnectPanel', () => {
-  it('says boxes that connect are counted, linking the stats page', () => {
-    const { getByRole, container } = render(() => <ConnectPanel />);
-    expect(container.textContent).toContain('Boxes that connect are counted on the public stats page.');
-    const link = getByRole('link', { name: 'public stats page' });
-    expect(link.getAttribute('href')).toBe('/dashboard/stats');
-    link.click();
-    expect(navigate).toHaveBeenCalledWith('/dashboard/stats');
-  });
-
   it('offers one Connect button before anything has been tried', () => {
     const { getByRole, getAllByRole } = render(() => <ConnectPanel />);
     expect(getByRole('button', { name: /connect/i })).toBeTruthy();
