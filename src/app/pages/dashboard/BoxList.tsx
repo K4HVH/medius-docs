@@ -11,6 +11,8 @@ import {
   BsMouse2,
   BsMouse2Fill,
   BsPlusLg,
+  BsUsbDrive,
+  BsUsbDriveFill,
 } from 'solid-icons/bs';
 import type { IconTypes } from 'solid-icons';
 import { Menu, MenuItem } from '../../../components/navigation/Menu';
@@ -24,6 +26,7 @@ const ICONS: Record<BoxIcon, { label: string; idle: IconTypes; connected: IconTy
   mouse: { label: 'Mouse', idle: BsMouse2, connected: BsMouse2Fill },
   keyboard: { label: 'Keyboard', idle: BsKeyboard, connected: BsKeyboardFill },
   controller: { label: 'Controller', idle: BsDpad, connected: BsDpadFill },
+  usb: { label: 'USB device', idle: BsUsbDrive, connected: BsUsbDriveFill },
 };
 
 export function boxIcon(s: BoxSession, icon: BoxIcon = 'box'): Component {

@@ -78,11 +78,11 @@ describe('box store', () => {
   it('keeps an icon per box across a reload, and Box puts the default back', () => {
     const a = createBoxStore(localStorage);
     a.setIcon('aabbccddeeff', 'mouse');
-    a.setIcon('112233445566', 'keyboard');
+    a.setIcon('112233445566', 'usb');
     const b = createBoxStore(localStorage);
-    expect(b.icons()).toEqual({ aabbccddeeff: 'mouse', '112233445566': 'keyboard' });
+    expect(b.icons()).toEqual({ aabbccddeeff: 'mouse', '112233445566': 'usb' });
     b.setIcon('aabbccddeeff', 'box');
-    expect(createBoxStore(localStorage).icons()).toEqual({ '112233445566': 'keyboard' });
+    expect(createBoxStore(localStorage).icons()).toEqual({ '112233445566': 'usb' });
     expect(localStorage.getItem(STORE_KEY)).not.toContain('aabbccddeeff');
   });
 

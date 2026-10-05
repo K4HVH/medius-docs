@@ -10,6 +10,8 @@ import {
   BsKeyboardFill,
   BsMouse2,
   BsMouse2Fill,
+  BsUsbDrive,
+  BsUsbDriveFill,
 } from 'solid-icons/bs';
 import { BoxList, boxIcon } from '../../src/app/pages/dashboard/BoxList';
 import { NEW_BOX } from '../../src/app/pages/dashboard/boxes';
@@ -89,6 +91,8 @@ describe('boxIcon', () => {
     ['a mouse box connecting in outline', { status: 'connecting' }, 'mouse', BsMouse2],
     ['a keyboard box updating filled', { status: 'flashing', held: true }, 'keyboard', BsKeyboardFill],
     ['a controller box still being checked in outline', {}, 'controller', BsDpad],
+    ['a connected USB box filled', { status: 'connected', held: true, version: version() }, 'usb', BsUsbDriveFill],
+    ['a USB box nobody holds in outline', { probe: box() }, 'usb', BsUsbDrive],
     ['a mouse box not answering with the warning', { status: 'lost', held: true }, 'mouse', BsExclamationCircle],
     ['a mouse box on an older wire with the warning', { probe: box(MIN_PROTO_VER) }, 'mouse', BsExclamationCircle],
   ];
@@ -240,7 +244,7 @@ describe('BoxList', () => {
     const r = mount(boxes, { onPick });
     fireEvent.click(iconOf(tabs(r)[1]));
     expect(menu()).not.toBeNull();
-    expect(names()).toEqual(['Box', 'Mouse', 'Keyboard', 'Controller']);
+    expect(names()).toEqual(['Box', 'Mouse', 'Keyboard', 'Controller', 'USB device']);
     expect(items().every((i) => i.childElementCount === 1 && i.firstElementChild!.tagName === 'svg')).toBe(true);
     expect(select).not.toHaveBeenCalled();
     expect(onPick).not.toHaveBeenCalled();
@@ -280,7 +284,7 @@ describe('BoxList', () => {
     boxes.setIcon('aa', 'keyboard');
     const r = mount(boxes);
     fireEvent.click(iconOf(tabs(r)[0]));
-    expect(items().map((i) => i.classList.contains('box-icon-menu__current'))).toEqual([false, false, true, false]);
+    expect(items().map((i) => i.classList.contains('box-icon-menu__current'))).toEqual([false, false, true, false, false]);
   });
 
   it('right-click or the menu key on a box opens its menu at the icon in use, and Escape goes back to the box', () => {
@@ -383,7 +387,7 @@ describe('BoxList', () => {
     expect(document.activeElement).toBe(item('Mouse'));
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
-    expect(document.activeElement).toBe(item('Controller'));
+    expect(document.activeElement).toBe(item('USB device'));
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(item('Box'));
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });

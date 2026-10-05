@@ -3,7 +3,7 @@ export interface HeldBox {
   name: string;
 }
 
-export const BOX_ICONS = ['box', 'mouse', 'keyboard', 'controller'] as const;
+export const BOX_ICONS = ['box', 'mouse', 'keyboard', 'controller', 'usb'] as const;
 export type BoxIcon = (typeof BOX_ICONS)[number];
 
 export interface BoxStore {
