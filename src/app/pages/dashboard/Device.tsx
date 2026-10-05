@@ -3,7 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { type Health, versionString } from '../../../dashboard/protocol';
+import { type Health, PROTO_VER, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
@@ -116,15 +116,38 @@ const Device = () => {
             </div>
 
             <Show when={dash.updateOnly()}>
-              <div id="update-needed" data-search-target>
-                <Card>
-                  <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
-                  <p>Update it to use the rest of the dashboard.</p>
-                  <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                    Update
-                  </Button>
-                </Card>
-              </div>
+              <Show
+                when={(dash.version()?.protoVer ?? 0) > PROTO_VER}
+                fallback={
+                  <div id="update-needed" data-search-target>
+                    <Card>
+                      <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
+                      <p>Update it to use the rest of the dashboard.</p>
+                      <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                        Update
+                      </Button>
+                    </Card>
+                  </div>
+                }
+              >
+                <div id="newer-firmware" data-search-target>
+                  <Card>
+                    <CardHeader title="Newer firmware" subtitle="This box speaks a newer protocol" />
+                    <p>
+                      This box speaks protocol {dash.version()?.protoVer} and this page protocol {PROTO_VER}.
+                      Reload to check for a newer page. It can still be flashed from Update or Advanced.
+                    </p>
+                    <div style={row}>
+                      <Button variant="primary" onClick={() => window.location.reload()}>
+                        Reload
+                      </Button>
+                      <Button variant="secondary" onClick={() => navigate('/dashboard/advanced')}>
+                        Advanced
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              </Show>
             </Show>
 
             <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
