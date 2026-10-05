@@ -1,10 +1,8 @@
-// The totals behind the stats page, from the server's /api/stats.
-
 import type { StatsSummary } from '../../../server/stats/types';
 
 const FAILED = "Couldn't load the stats.";
 
-// Enough of the shape that the page can draw it; anything else is a failed read, not a frozen page.
+// Enough of the shape for the page to draw. Anything less would freeze it, so it reads as a failed load.
 const isSummary = (v: unknown): v is StatsSummary => {
   const s = v as StatsSummary | null;
   return (

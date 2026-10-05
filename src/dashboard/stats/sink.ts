@@ -1,5 +1,4 @@
-// Sends what the dashboard sees to the public stats. Never awaited and never thrown from: counting
-// must not get in the way of a connect or a flash.
+// Never awaited and never throws: counting must not get in the way of a connect or a flash.
 
 import type { BoxEvent, DeviceEvent, FlashEvent } from '../../../server/stats/types';
 import { readEnv } from './env';

@@ -103,7 +103,7 @@ const hostname = (h: string | null | undefined): string | undefined => {
 };
 
 // A browser on another site may post too. A proxy in front may rewrite Host, so the forwarded one counts,
-// and so does the browser's own word that the request is same-origin.
+// and so does Sec-Fetch-Site: same-origin.
 const sameSite = (req: Request): boolean => {
   const origin = req.headers.get('origin');
   if (!origin) return true;

@@ -1,5 +1,4 @@
-// The system the dashboard runs on, reduced to the few names the stats page counts. Web Serial is
-// Chromium-only, so every browser here is one of its builds.
+// Web Serial is Chromium-only, so every browser counted here is a Chromium build.
 
 import type { Browser, Os } from '../../../server/stats/types';
 

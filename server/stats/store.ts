@@ -135,10 +135,6 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
       db.get<{ n: number }>('SELECT count(DISTINCT id) AS n FROM box_days WHERE day >= ?', from(n))!.n;
     const ACTIVE30 = 'id IN (SELECT id FROM box_days WHERE day >= ?)';
 
-    const first = db.get<{ t: number | null }>(
-      'SELECT min(t) AS t FROM (SELECT min(first_seen) AS t FROM boxes UNION ALL SELECT min(first_seen) FROM devices UNION ALL SELECT min(at) FROM flashes)',
-    )?.t;
-
     const perWeek = new Map<string, WeekFlashes>(
       weeks.map((week) => [week, { week, verified: 0, reverted: 0, sent: 0, failed: 0, written: 0 }]),
     );
@@ -152,8 +148,6 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
 
     const flashTotal = db.get<{ n: number }>('SELECT count(*) AS n FROM flashes')!.n;
     return {
-      generatedAt: new Date(ms).toISOString(),
-      since: first == null ? null : dayOf(first * 1000),
       boxes: {
         total: db.get<{ n: number }>('SELECT count(*) AS n FROM boxes')!.n,
         active7: activeSince(7),
@@ -169,10 +163,6 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
       },
       firmware: {
         versions: counts(`SELECT fw AS key, count(*) AS n FROM boxes WHERE ${ACTIVE30} GROUP BY fw ${RANKED}`, from(30)),
-        split: db.get<{ n: number }>(
-          `SELECT count(*) AS n FROM boxes WHERE ${ACTIVE30} AND host_fw IS NOT NULL AND host_fw != fw`,
-          from(30),
-        )!.n,
       },
       devices: {
         unique: db.get<{ n: number }>('SELECT count(*) AS n FROM (SELECT DISTINCT vid, pid FROM devices)')!.n,

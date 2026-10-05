@@ -4,7 +4,6 @@ import { type FlashChip, type FlashKind, type FlashProgress, imageVersion } from
 import type { FlashPage, FlashSource, StatsSink } from '../../../dashboard/stats';
 import { flashErrorText } from './session';
 
-// Where a ROM download run came from, for the public stats.
 export interface RomFlashMeta {
   page: Exclude<FlashPage, 'update'>;
   chip: FlashChip;
@@ -55,7 +54,7 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
     if (meta && report) {
       const version = imageVersion(image, kind);
       try {
-        // A box is known by its main chip's MAC; the mouse-side chip has a different one.
+        // A box is known by its main chip's MAC.
         report({
           type: 'flash',
           mac: meta.chip === 'device' ? mac : null,
