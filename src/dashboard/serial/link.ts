@@ -356,7 +356,8 @@ export class SerialLink {
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
         // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
-        // retry. Firmware 2.3.0 to 3.3.x drops a stale partial frame by itself; from 3.4.0 only this does.
+        // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0 to 3.4.3, where only
+        // this flush clears it.
         await this.flushPeerDecoder();
       }
     }
