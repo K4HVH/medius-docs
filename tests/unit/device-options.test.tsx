@@ -138,11 +138,13 @@ describe('DeviceOptions', () => {
 
   // The percent reads back set while the box is still releasing a delta whole: it releases nothing
   // across an interval until it has learned the host's command period. Showing an interval there
-  // would read as spreading when nothing is.
+  // would read as spreading when nothing is. Waiting is the normal state until the host's software sends,
+  // so the chip is neutral.
   it('says it is waiting while no command period has been learned', async () => {
     mock.spread = { percent: 100, spanUs: 0 };
     const waiting = render(() => <DeviceOptions />);
-    await waiting.findByText('Waiting for injection');
+    const chip = (await waiting.findByText('Waiting for injection')).closest('.chip')!;
+    expect(chip.classList.contains('chip--neutral')).toBe(true);
     cleanup();
 
     mock.spread = { percent: 100, spanUs: 8002 };
@@ -151,7 +153,7 @@ describe('DeviceOptions', () => {
     expect(learned.queryByText('Waiting for injection')).toBeNull();
   });
 
-  // Off is not "waiting": there is no interval to wait for, and a warning chip there reads as a fault.
+  // Off is not "waiting": there is no interval to wait for.
   it('shows no interval chip at all with spreading off', async () => {
     mock.spread = { percent: 0, spanUs: 0 };
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
@@ -162,11 +164,13 @@ describe('DeviceOptions', () => {
   });
 
   // Nothing is rendered until the box has learned a profile, so a box set to a mode and a box rendering
-  // with it are different states and the card has to say which one it is looking at.
+  // with it are different states and the card has to say which one it is looking at. Neither is a fault,
+  // so the chip is neutral.
   it('says the mouse has to move while no profile has armed', async () => {
     mock.render = { mode: RenderMode.Despiked, full: false, ready: false };
     const unarmed = render(() => <DeviceOptions />);
-    await unarmed.findByText('Move the mouse to start');
+    const chip = (await unarmed.findByText('Move the mouse to start')).closest('.chip')!;
+    expect(chip.classList.contains('chip--neutral')).toBe(true);
     cleanup();
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
