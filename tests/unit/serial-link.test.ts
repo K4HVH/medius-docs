@@ -211,7 +211,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('refuses a box newer than the page, which speaks a wire it cannot know', async () => {
+  it('connects a box newer than the page, for updating: the update path keeps its shape', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
@@ -221,11 +221,9 @@ describe('SerialLink', () => {
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
-    const err = await link.handshake().then(
-      () => null,
-      (e: unknown) => e,
-    );
-    expect(err).toBeInstanceOf(BadProtoVerError);
+    const version = await link.handshake();
+    expect(version).toMatchObject({ protoVer: PROTO_VER + 1, fwMajor: 3, fwMinor: 5, fwPatch: 0 });
+    expect(speaksCurrentWire(version)).toBe(false);
     await link.close();
   });
 
@@ -237,7 +235,8 @@ describe('SerialLink', () => {
     [6, [3, 3, 4], 'update-only'],
     [7, [3, 4, 0], 'update-only'],
     [PROTO_VER, [3, 4, 2], 'full'],
-    [PROTO_VER + 1, [3, 5, 0], 'refused as new firmware'],
+    [PROTO_VER + 1, [3, 5, 0], 'update-only'],
+    [PROTO_VER + 7, [4, 0, 0], 'update-only'],
   ])('a box on protocol %i (firmware %j) is %s', async (proto, fw, outcome) => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
@@ -252,11 +251,7 @@ describe('SerialLink', () => {
       (e: unknown) => {
         expect(e).toBeInstanceOf(BadProtoVerError);
         const verdict = classifyConnectError(e);
-        return verdict.kind === 'old-firmware'
-          ? 'refused as old firmware'
-          : verdict.kind === 'new-firmware'
-            ? 'refused as new firmware'
-            : verdict.kind;
+        return verdict.kind === 'old-firmware' ? 'refused as old firmware' : verdict.kind;
       },
     );
     expect(got).toBe(outcome);

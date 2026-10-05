@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   BadProtoVerError,
   NoReplyError,
+  canUpdate,
   probeFromError,
   probePort,
   probeVerdict,
@@ -49,7 +50,7 @@ class FakeLink {
   async handshake() {
     const v = this.box.version;
     if (!v || this.baud !== this.box.baud) throw new NoReplyError();
-    if (v.protoVer < MIN_PROTO_VER || v.protoVer > PROTO_VER) throw new BadProtoVerError(v);
+    if (!canUpdate(v)) throw new BadProtoVerError(v);
     return v;
   }
   async queryDeviceInfo() {
@@ -90,9 +91,11 @@ describe('probePort', () => {
     expect(await probe(box)).toEqual({ kind: 'old-firmware', version: version(MIN_PROTO_VER - 1) });
   });
 
-  it('above the page is new-firmware with its version', async () => {
-    const box: Box = { baud: 6_000_000, version: version(PROTO_VER + 1), log: [] };
-    expect(await probe(box)).toEqual({ kind: 'new-firmware', version: version(PROTO_VER + 1) });
+  it('above the page is a box, asked nothing past its version', async () => {
+    const box: Box = { baud: 6_000_000, version: version(PROTO_VER + 1), device, log: [] };
+    expect(await probe(box)).toEqual({ kind: 'box', version: version(PROTO_VER + 1), device: null, baud: 6_000_000 });
+    expect(box.log).not.toContain('deviceInfo');
+    expect(box.log.at(-1)).toBe('close');
   });
 
   it('a port that will not open is busy', async () => {
@@ -119,7 +122,6 @@ describe('probeVerdict', () => {
     expect(probeVerdict({ kind: 'busy' })).toEqual({ kind: 'busy' });
     expect(probeVerdict({ kind: 'silent' })).toEqual({ kind: 'silent' });
     expect(probeVerdict({ kind: 'old-firmware', version: version(4) })).toEqual({ kind: 'old-firmware', version: version(4) });
-    expect(probeVerdict({ kind: 'new-firmware', version: version(99) })).toEqual({ kind: 'new-firmware', version: version(99) });
     expect(probeVerdict({ kind: 'other', message: 'x' })).toEqual({ kind: 'other', message: 'x' });
   });
 

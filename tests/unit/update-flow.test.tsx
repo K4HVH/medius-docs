@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { PROTO_VER } from '../../src/dashboard/protocol';
 
 // `updateOverControl` has produced two of this branch's worst defects (claiming a verification that
 // never ran, and losing the one instruction that fixes a box that did not come back) and every page
@@ -89,6 +90,7 @@ vi.mock('../../src/dashboard/serial', async () => {
     async close() {}
     async handshake() {
       if (!mock.comesBack || this.baud !== mock.baud) throw new link.NoReplyError();
+      if (!link.canUpdate(mock.version)) throw new link.BadProtoVerError(mock.version);
       return mock.version;
     }
     async queryVersion() {
@@ -231,6 +233,8 @@ const img = (tag: number) => new Uint8Array([0xe9, tag, 2, 3]);
 const V3_3_4 = { protoVer: 6, fwMajor: 3, fwMinor: 3, fwPatch: 4, mac: [], name: '' };
 const V3_4_0 = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' };
 const V3_4_2 = { protoVer: 9, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' };
+// A test build on the protocol after this page's.
+const V_NEWER = { protoVer: PROTO_VER + 1, fwMajor: 3, fwMinor: 5, fwPatch: 0, mac: [], name: '' };
 
 const connected = async () => {
   mountProvider();
@@ -453,6 +457,17 @@ describe('updateOverControl', () => {
     expect(mock.opens).toEqual([6_000_000]);
     expect(api.version()).toEqual(V3_4_2);
     expect(api.updateOnly()).toBe(false);
+  }, 20000);
+
+  it('an image on a newer protocol than the page is verified, and the box stays connected for updating', async () => {
+    mock.version = V3_4_2;
+    await connected();
+    mock.after = { baud: 6_000_000, version: V_NEWER };
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    expect(outcome).toBe('verified');
+    expect(api.status()).toBe('connected');
+    expect(api.version()!.protoVer).toBe(PROTO_VER + 1);
+    expect(api.updateOnly()).toBe(true);
   }, 20000);
 
   it('still reports what runs after a same-rate revert when the version replies are lost', async () => {

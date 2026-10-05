@@ -76,7 +76,7 @@ describe('boxIcon', () => {
     ['an update that failed', { status: 'error', held: true }, BsExclamationCircle],
     ['a box another tab holds', { probe: { kind: 'busy' } }, BsExclamationCircle],
     ['a box below the oldest this page opens', { probe: { kind: 'old-firmware', version: version(4) } }, BsExclamationCircle],
-    ['a box newer than this page', { probe: { kind: 'new-firmware', version: version(99) } }, BsExclamationCircle],
+    ['a box nobody holds on a newer wire', { probe: box(PROTO_VER + 1) }, BsExclamationCircle],
     ['a box an update left silent', { held: true, probe: { kind: 'silent' } }, BsExclamationCircle],
   ];
   for (const [what, state, icon] of cases) {

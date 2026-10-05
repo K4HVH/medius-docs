@@ -1,7 +1,7 @@
 /// <reference types="w3c-web-serial" />
 // A failed connect, as one verdict.
 
-import { PROTO_VER, type Version } from '../protocol';
+import type { Version } from '../protocol';
 import { BadProtoVerError, NoReplyError } from './link';
 
 export type ConnectVerdict =
@@ -12,7 +12,6 @@ export type ConnectVerdict =
   | { kind: 'silent' }
   | { kind: 'needs-click' }
   | { kind: 'old-firmware'; version: Version }
-  | { kind: 'new-firmware'; version: Version }
   | { kind: 'other'; message: string };
 
 const nameOf = (e: unknown): string =>
@@ -28,10 +27,7 @@ export function classifyConnectError(e: unknown): ConnectVerdict {
 }
 
 function classify(e: unknown): ConnectVerdict {
-  if (e instanceof BadProtoVerError) {
-    const kind = e.version.protoVer > PROTO_VER ? 'new-firmware' : 'old-firmware';
-    return { kind, version: e.version };
-  }
+  if (e instanceof BadProtoVerError) return { kind: 'old-firmware', version: e.version };
   if (e instanceof NoReplyError) return { kind: 'silent' };
   // Keyed on `name`: a browser DOMException's message is bare text, so only the name survives.
   const name = nameOf(e);

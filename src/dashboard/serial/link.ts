@@ -233,11 +233,15 @@ const UPDATE_BACKLOG_MAX = 64;
 export class BadProtoVerError extends Error {
   constructor(readonly version: Version) {
     super(
-      `unsupported protocol version ${version.protoVer} ` +
-        `(this page speaks ${MIN_PROTO_VER}..${PROTO_VER})`,
+      `unsupported protocol version ${version.protoVer} (updates need ${MIN_PROTO_VER} or later)`,
     );
     this.name = 'BadProtoVerError';
   }
+}
+
+/** Whether this page can reach a box at all: from MIN_PROTO_VER on, the update path keeps its shape (§2.3). */
+export function canUpdate(version: Version): boolean {
+  return version.protoVer >= MIN_PROTO_VER;
 }
 
 /** Whether a box speaks the current wire, or only enough of it to be updated. */
@@ -340,11 +344,9 @@ export class SerialLink {
     for (let i = 0; i < HANDSHAKE_ATTEMPTS; i++) {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
-        // Below MIN_PROTO_VER there is no UPDATE opcode to reach, and above PROTO_VER the box speaks
-        // a wire this page cannot know. Between them it connects, for updating.
-        if (version.protoVer < MIN_PROTO_VER || version.protoVer > PROTO_VER) {
-          throw new BadProtoVerError(version);
-        }
+        // Below MIN_PROTO_VER there is no UPDATE to reach. From it on a box connects, for updating
+        // unless it speaks this page's wire.
+        if (!canUpdate(version)) throw new BadProtoVerError(version);
         return version;
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
