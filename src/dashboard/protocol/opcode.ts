@@ -416,6 +416,7 @@ export const UPD_OK = 0x00;
 export const UPD_READY = 0x01;
 export const UPD_ACK = 0x02;
 export const UPD_STAGED = 0x03;
+export const UPD_BUSY = 0x10;
 export const UPD_NAMES: Record<number, string> = {
   0x00: 'ok',
   0x01: 'ready',
