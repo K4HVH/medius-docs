@@ -1,5 +1,6 @@
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
+import { handleStatsApi } from "./server/stats";
 import { handleAgentDocs, DOC_CACHE } from "./server/agent";
 import { handleMcp } from "./server/mcp";
 
@@ -18,9 +19,12 @@ function cacheHeaders(pathname: string): Record<string, string> | undefined {
 
 Bun.serve({
   port: PORT,
-  async fetch(req) {
+  async fetch(req, server) {
     const api = await handleFirmwareApi(req);
     if (api) return api;
+
+    const stats = await handleStatsApi(req, server.requestIP(req)?.address);
+    if (stats) return stats;
 
     const mcp = await handleMcp(req);
     if (mcp) return mcp;
