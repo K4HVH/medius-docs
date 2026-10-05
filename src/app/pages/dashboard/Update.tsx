@@ -6,16 +6,13 @@ import { Progress } from '../../../components/feedback/Progress';
 import { Chip } from '../../../components/display/Chip';
 import { versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import { parseVersion } from '../../../dashboard/flash';
 import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { WiringPorts } from './PortDiagram';
 import '../../../styles/docs.css';
 
 type Step = 'choose' | 'update' | 'done' | 'sent';
-const parseTag = (tag?: string) => {
-  const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
-  return m ? { major: +m[1], minor: +m[2], patch: +m[3] } : null;
-};
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Update = () => {
@@ -52,7 +49,7 @@ const Update = () => {
       return null;
     }
   };
-  const lv = () => parseTag(latest()?.tag);
+  const lv = () => parseVersion(latest()?.tag);
   const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
   const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
   const matches = (c: { major: number; minor: number; patch: number } | null | undefined) => {
