@@ -178,9 +178,9 @@ const App: Component = () => {
             <Route path="/dashboard/control" component={DashboardControl} />
             <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
             <Route path="/dashboard/update" component={DashboardUpdate} />
+            <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           </Route>
           <Route path="/dashboard/setup" component={DashboardSetup} />
-          <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />

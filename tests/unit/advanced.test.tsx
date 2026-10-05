@@ -7,7 +7,9 @@ import { createSignal } from 'solid-js';
 const st = vi.hoisted(() => ({
   make: () => {
     const [running, setRunning] = createSignal(false);
-    return { running, setRunning };
+    const [status, setStatus] = createSignal('disconnected');
+    const [progress, setProgress] = createSignal<{ phase: string; written?: number; total?: number } | null>(null);
+    return { running, setRunning, status, setStatus, progress, setProgress };
   },
 }));
 
@@ -21,6 +23,11 @@ const mock = vi.hoisted(() => ({
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   useBoxes: () => ({ supported: true, secure: true }),
+  useDashboard: () => ({
+    status: () => mock.s!.status(),
+    name: () => 'Desk',
+    updateProgress: () => mock.s!.progress(),
+  }),
   useNativeFlash: () => ({
     progress: () => null,
     log: () => [],
@@ -57,6 +64,16 @@ vi.mock('../../src/dashboard/serial', () => ({
   requestRomPort: async () => ({}) as SerialPort,
 }));
 
+// The USB2 side has its own suite; here it only has to be the one shown.
+vi.mock('../../src/app/pages/dashboard/AdvancedUsb2', () => ({
+  Usb2Flash: (p: { via: () => unknown }) => (
+    <div>
+      {p.via() as never}
+      <p>usb2 form</p>
+    </div>
+  ),
+}));
+
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
@@ -77,7 +94,7 @@ afterEach(() => {
 
 // Switch SOURCE to the upload path and return the real file input.
 const openUpload = async (r: ReturnType<typeof render>) => {
-  const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+  const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
   fireEvent.click(source);
   fireEvent.keyDown(source, { key: 'Enter' });
   await new Promise((res) => setTimeout(res, 20));
@@ -117,7 +134,7 @@ describe('Advanced', () => {
     expect(r.container.textContent).not.toMatch(/button next to USB3/i);
 
     // Switch to the mouse-side chip and the badge must follow the socket, not stay put.
-    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -136,7 +153,7 @@ describe('Advanced', () => {
     // unconditionally erased the reason in the same tick it was set.
     const r = render(() => <Advanced />);
     await openGate(r);
-    const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+    const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
     fireEvent.click(source);
     fireEvent.keyDown(source, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -168,7 +185,7 @@ describe('Advanced', () => {
     r.getByRole('button', { name: /^flash$/i }).click();
     const alert = await r.findByRole('alert');
     expect(alert.textContent).toMatch(/did not finish/i);
-    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -189,8 +206,8 @@ describe('Advanced', () => {
     r.getByRole('button', { name: /^flash$/i }).click();
     await waitFor(() => {
       const boxes = [...r.container.querySelectorAll('.combobox--disabled')];
-      // Chip, image and source: all three were live across the two awaits.
-      expect(boxes).toHaveLength(3);
+      // Via, chip, image and source: all four were live across the two awaits.
+      expect(boxes).toHaveLength(4);
     });
   });
 
@@ -225,12 +242,12 @@ describe('Advanced', () => {
     mock.holdFlash = true;
     const r = render(() => <Advanced />);
     await openGate(r);
-    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
     r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(3));
+    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(4));
     const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
       /mouse-side/i.test(o.textContent ?? ''),
     );
@@ -270,8 +287,8 @@ describe('Advanced', () => {
     await openGate(r);
 
     // The option list renders through a portal, so it is read off the document, and it only exists
-    // once the combobox is open. SOURCE is the third one on the page.
-    const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+    // once the combobox is open. SOURCE is the fourth one on the page.
+    const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
     fireEvent.click(source);
     fireEvent.keyDown(source, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -311,5 +328,63 @@ describe('Advanced', () => {
     await waitFor(() => expect(r.container.textContent).toMatch(/could not be read/i));
     // The first file's bytes must not still be armed under the second file's name.
     expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
+  });
+
+  it('starts on the chip\'s own USB while the box is not connected', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    expect(via.textContent).toContain("Chip's own USB (USB1 or USB3)");
+    expect(r.container.textContent).not.toContain('usb2 form');
+  });
+
+  it('starts on the control port, naming the box, while it is connected', async () => {
+    mock.s!.setStatus('connected');
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
+    const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    expect(via.textContent).toContain('Control port, USB2 (Desk)');
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
+  });
+
+  it("refuses a medius file built for the other chip, and takes anyone else's firmware", async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const drop = (bytes: Uint8Array<ArrayBuffer>, name: string) => {
+      const f = new File([bytes], name);
+      Object.defineProperty(f, 'arrayBuffer', { value: () => Promise.resolve(bytes.buffer as ArrayBuffer) });
+      Object.defineProperty(input, 'files', { value: [f], configurable: true });
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    // A factory image is the default IMAGE: its application starts at 0x10000.
+    const factory = (project: string | null) => {
+      const b = new Uint8Array(0x11000);
+      b[0] = 0xe9;
+      b[0x8000] = 0xaa;
+      b[0x8001] = 0x50;
+      b[0x10000] = 0xe9;
+      if (project) {
+        new DataView(b.buffer).setUint32(0x10000 + 32, 0xabcd5432, true);
+        new TextEncoder().encodeInto(project, b.subarray(0x10000 + 80));
+      }
+      return b;
+    };
+    drop(factory('medius_host'), 'host.bin');
+    await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
+    expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
+    drop(factory(null), 'other.bin');
+    await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).not.toBeDisabled());
+    expect(r.container.textContent).not.toContain("chip's image");
+  });
+
+  it('while the box updates over USB2, shows its progress and no form', async () => {
+    mock.s!.setStatus('flashing');
+    mock.s!.setProgress({ phase: 'writing', written: 50, total: 100 });
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toMatch(/Flashing/));
+    expect(r.container.textContent).toContain('50%');
+    expect(r.container.textContent).not.toContain('usb2 form');
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 });
