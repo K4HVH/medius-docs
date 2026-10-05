@@ -12,6 +12,8 @@ const mock = vi.hoisted(() => ({
   secure: true,
   status: 'disconnected' as string,
   updateOnly: false,
+  // The protocol an update-only box speaks.
+  protoVer: 5,
   verdict: null as ConnectVerdict | null,
   error: null as string | null,
 }));
@@ -26,10 +28,11 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     updateOnly: () => mock.updateOnly,
     verdict: () => mock.verdict,
     error: () => mock.error,
-    // Update-only is a 3.2.0 box on protocol 5; the full page is a 3.4.2 box on the current wire.
+    // Update-only is a 3.2.0 box on protocol 5 unless a test says otherwise; the full page is a 3.4.2
+    // box on the current wire.
     version: () =>
       mock.updateOnly
-        ? { protoVer: 5, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }
+        ? { protoVer: mock.protoVer, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }
         : { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' },
     health: () => null,
     connect: async () => {},
@@ -59,6 +62,7 @@ afterEach(() => {
   mock.secure = true;
   mock.status = 'disconnected';
   mock.updateOnly = false;
+  mock.protoVer = 5;
   mock.verdict = null;
   mock.error = null;
 });
@@ -99,6 +103,30 @@ describe('Device', () => {
       // the live-health panel belongs to the current wire and must not be offered
       expect(text).not.toMatch(/Live device health/i);
     });
+  });
+
+  it('a box newer than the page is called newer and pointed at Reload and Advanced, never told to update', async () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.protoVer = PROTO_VER + 1;
+    const reload = vi.fn();
+    const real = window.location;
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...real, reload } });
+    try {
+      const { container, getByRole } = render(() => <Device />);
+      await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
+      const text = container.textContent ?? '';
+      expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
+      expect(text).toContain('It can still be flashed from Update or Advanced.');
+      expect(text).not.toMatch(/Update needed/i);
+      expect(text).not.toMatch(/Live device health/i);
+      getByRole('button', { name: 'Advanced' }).click();
+      expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+      getByRole('button', { name: /reload/i }).click();
+      expect(reload).toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: real });
+    }
   });
 
   it('a box on the current wire keeps the whole page', async () => {
