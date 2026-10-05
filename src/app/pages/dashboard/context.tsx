@@ -54,7 +54,7 @@ export const DashboardProvider: ParentComponent = (props) => {
   const secure = isSecureContextOk();
   // Unit tests mount this provider; their fake boxes must not be counted.
   const stats = import.meta.env.MODE === 'test' ? undefined : createStatsSink();
-  const native = createNativeFlash();
+  const native = createNativeFlash(stats);
   const boxes = createBoxes({
     serial: supported && secure ? navigator.serial : null,
     store: createBoxStore(localStore()),

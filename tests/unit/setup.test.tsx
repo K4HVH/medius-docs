@@ -22,6 +22,7 @@ const mock = vi.hoisted(() => ({
   chooserEmpty: false,
   releasesThrow: false,
   flashed: [] as string[],
+  metas: [] as unknown[],
   romCalls: 0,
   answering: ['aaaaaaaaaaaa'] as string[],
   befores: [] as string[][],
@@ -61,8 +62,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     error: () => mock.s!.error(),
     running: () => mock.s!.running(),
     clear: () => {},
-    flash: async (_port: unknown, image: Uint8Array) => {
+    flash: async (_port: unknown, image: Uint8Array, _kind: string, meta: unknown) => {
       mock.flashed.push(new TextDecoder().decode(image));
+      mock.metas.push(meta);
       mock.s!.setError(null);
       if (!mock.flashOk) mock.s!.setError(mock.flashError);
       return mock.flashOk;
@@ -109,6 +111,7 @@ afterEach(() => {
   mock.disconnects = 0;
   mock.findVerdict = null;
   mock.flashed = [];
+  mock.metas = [];
   mock.romCalls = 0;
   mock.assets = [
     { name: 'medius_device-factory.bin', size: 1, url: 'd' },
@@ -208,6 +211,10 @@ describe('Setup', () => {
     await waitFor(() =>
       expect(mock.flashed).toEqual(['medius_device-factory.bin', 'medius_host-factory.bin']),
     );
+    expect(mock.metas).toEqual([
+      { page: 'setup', chip: 'device', source: 'release' },
+      { page: 'setup', chip: 'host', source: 'release' },
+    ]);
   });
 
   it('gates USB3 behind taking USB1 out, and the finish behind taking USB3 out', async () => {

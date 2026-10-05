@@ -6,6 +6,7 @@ import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { Progress } from '../../../components/feedback/Progress';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import type { FlashChip } from '../../../dashboard/flash';
 import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
 import { type BoxEntry, type Snapshot, useBoxes, useNativeFlash } from './context';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
@@ -52,7 +53,8 @@ const Setup = () => {
   };
 
   // Only one chip's USB is plugged in with its button held, so only that chip answers.
-  const install = async (assetName: string, next: Step) => {
+  const install = async (chip: FlashChip, next: Step) => {
+    const assetName = `medius_${chip}-factory.bin`;
     setErr(null);
     native.clear();
     before ??= boxes.snapshot();
@@ -70,7 +72,7 @@ const Setup = () => {
       }
       const port = await requestRomPort();
       const image = await downloadAsset(asset);
-      if (await native.flash(port, image, 'factory')) setStep(next);
+      if (await native.flash(port, image, 'factory', { page: 'setup', chip, source: 'release' })) setStep(next);
       else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {
       // A cancel and an empty chooser throw the same DOMException; the second is likelier.
@@ -143,7 +145,7 @@ const Setup = () => {
                 <Button
                   variant="primary"
                   disabled={busy() || releases.loading}
-                  onClick={() => void install('medius_device-factory.bin', 'unplug')}
+                  onClick={() => void install('device', 'unplug')}
                 >
                   {busy() ? 'Installing...' : 'Install'}
                 </Button>
@@ -169,7 +171,7 @@ const Setup = () => {
                   <Button
                     variant="primary"
                     disabled={busy() || releases.loading}
-                    onClick={() => void install('medius_host-factory.bin', 'unplug3')}
+                    onClick={() => void install('host', 'unplug3')}
                   >
                     {busy() ? 'Installing...' : 'Install'}
                   </Button>

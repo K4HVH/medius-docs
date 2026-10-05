@@ -20,6 +20,7 @@ const mock = vi.hoisted(() => ({
   flashOk: true,
   flashes: 0,
   holdFlash: false,
+  metas: [] as unknown[],
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -41,8 +42,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     error: () => null,
     running: () => mock.s!.running(),
     clear: () => {},
-    flash: async () => {
+    flash: async (_port: unknown, _image: Uint8Array, _kind: string, meta: unknown) => {
       mock.flashes += 1;
+      mock.metas.push(meta);
       mock.s!.setRunning(true);
       if (mock.holdFlash) await new Promise(() => {});
       mock.s!.setRunning(false);
@@ -97,6 +99,7 @@ afterEach(() => {
   mock.releasesThrow = false;
   mock.flashOk = true;
   mock.flashes = 0;
+  mock.metas = [];
   mock.holdFlash = false;
   navigate.mockClear();
 });
@@ -274,6 +277,22 @@ describe('Advanced', () => {
     await waitFor(() => r.getByRole('button', { name: /go to my box/i }));
     r.getByRole('button', { name: /go to my box/i }).click();
     expect(navigate).toHaveBeenCalledWith('/dashboard');
+    expect(mock.metas).toEqual([{ page: 'advanced', chip: 'device', source: 'release' }]);
+  });
+
+  it('a flash of an uploaded file tells the stats it was a file', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const bytes = new Uint8Array(2048);
+    bytes[0] = 0xe9;
+    const file = new File([bytes], 'own.bin');
+    Object.defineProperty(file, 'arrayBuffer', { value: () => Promise.resolve(bytes.buffer as ArrayBuffer) });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).not.toBeDisabled());
+    r.getByRole('button', { name: /^flash$/i }).click();
+    await waitFor(() => expect(mock.metas).toEqual([{ page: 'advanced', chip: 'device', source: 'file' }]));
   });
 
   it('a failed flash says the reason, and leaves the instruction to the badge', async () => {
