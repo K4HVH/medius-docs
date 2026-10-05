@@ -43,7 +43,12 @@ export interface InputEventEntry {
 export interface UpdateRun {
   device: boolean;
   host: boolean;
+  // The page that started it; each shows only its own result.
+  page: 'update' | 'advanced';
   outcome: 'running' | 'verified' | 'sent' | 'failed';
+  // Per chip sent, once verified: whether it decided on the other slot. A revert lands back on the slot
+  // it ran, whatever the versions say.
+  landed?: { device?: boolean; host?: boolean };
 }
 
 export interface BoxSession {
@@ -82,7 +87,10 @@ export interface BoxSession {
   readFirmwareInfo: () => Promise<FirmwareInfo | null>;
   // 'verified' only when the box came back and replied; 'sent' means transfer and activate succeeded
   // but nothing confirmed the running version.
-  updateOverControl: (images: { device?: Uint8Array; host?: Uint8Array }) => Promise<'verified' | 'sent' | 'failed'>;
+  updateOverControl: (
+    images: { device?: Uint8Array; host?: Uint8Array },
+    page: UpdateRun['page'],
+  ) => Promise<'verified' | 'sent' | 'failed'>;
   deviceLog: Accessor<string[]>;
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
@@ -556,25 +564,33 @@ export function createBoxSession(
 
     // Each chip writes its spare slot and the box reverts anything that won't boot. The host image is
     // relayed over the inter-chip link.
-    const updateOverControl = async (images: {
-      device?: Uint8Array;
-      host?: Uint8Array;
-    }): Promise<'verified' | 'sent' | 'failed'> => {
+    const updateOverControl = async (
+      images: { device?: Uint8Array; host?: Uint8Array },
+      page: UpdateRun['page'],
+    ): Promise<'verified' | 'sent' | 'failed'> => {
       const l = link();
       if (!l) {
         setError('Connect to the box first.');
         return 'failed';
       }
       if (!images.device && !images.host) return 'failed';
-      const run = { device: images.device !== undefined, host: images.host !== undefined };
-      const finish = <O extends 'verified' | 'sent' | 'failed'>(outcome: O): O => {
-        setUpdate({ ...run, outcome });
+      const run = { device: images.device !== undefined, host: images.host !== undefined, page };
+      const finish = <O extends 'verified' | 'sent' | 'failed'>(outcome: O, landed?: UpdateRun['landed']): O => {
+        setUpdate({ ...run, outcome, ...(landed ? { landed } : {}) });
         return outcome;
       };
       setError(null);
       setUpdate({ ...run, outcome: 'running' });
       setStatus('flashing');
       const ctrlPort = l.serialPort;
+      const read = () => l.queryFirmware().catch(() => null);
+      // Where each chip runs now: one that lands decides on the other slot.
+      const before = (await read()) ?? (await read());
+      if (!before) {
+        setError("The box didn't answer. Check USB2, then try again.");
+        setStatus('error');
+        return finish('failed');
+      }
       try {
         // Host first: the device chip's running firmware relays its image.
         if (images.host) {
@@ -590,7 +606,6 @@ export function createBoxSession(
           );
         }
         // A mouse-side chip that answered before the activate has to answer after it, whatever was sent.
-        const read = () => l.queryFirmware().catch(() => null);
         const hostBefore = ((await read()) ?? (await read()))?.host != null;
         setUpdateProgress({ phase: 'connecting' });
         updating = true;
@@ -613,7 +628,14 @@ export function createBoxSession(
           return finish('sent');
         }
         setStatus('connected');
-        return finish('verified');
+        // The decided read the verdict ended on.
+        const after = firmwareInfo();
+        const moved = (a: ChipFirmware | null | undefined, b: ChipFirmware | null | undefined) =>
+          !!a && !!b && a.slot !== b.slot;
+        return finish('verified', {
+          ...(images.device ? { device: moved(before.device, after?.device) } : {}),
+          ...(images.host ? { host: moved(before.host, after?.host) } : {}),
+        });
       } catch (e) {
         // Disarm what is staged, host first, or the next activate commits it alone and splits the chips'
         // versions. One try per target, on a short timeout: an answering box replies at once.

@@ -695,7 +695,7 @@ describe('box registry', () => {
     await pick(boxes, b.mac);
     expect(boxes.anyUpdating()).toBe(false);
     const release = a.hold();
-    void entry(boxes, a.mac).session.updateOverControl({ device: new Uint8Array([0xe9]) });
+    void entry(boxes, a.mac).session.updateOverControl({ device: new Uint8Array([0xe9]) }, 'update');
     await ready();
     expect(boxes.anyUpdating()).toBe(true);
     release();

@@ -64,12 +64,16 @@ const Update = () => {
   // A reverted chip still completes the handshake; only the version each ASKED chip reports proves
   // the update.
   const landed = () => {
-    const r = dash.update();
+    const r = run();
     return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
   };
-  // From the session, so it survives a tab change or box switch.
+  // From the session, so it survives a tab change or box switch. Advanced's runs are its own.
+  const run = () => {
+    const r = dash.update();
+    return r?.page === 'update' ? r : null;
+  };
   const view = (): Step => {
-    const outcome = dash.update()?.outcome;
+    const outcome = run()?.outcome;
     return outcome === 'verified' ? 'done' : outcome === 'sent' ? 'sent' : step();
   };
   const upToDate = () => deviceOnRelease();
@@ -139,7 +143,7 @@ const Update = () => {
       const images: { device?: Uint8Array; host?: Uint8Array } = {};
       if (wantDevice && da) images.device = await downloadAsset(da);
       if (wantHost && ha) images.host = await downloadAsset(ha);
-      const outcome = await dash.updateOverControl(images);
+      const outcome = await dash.updateOverControl(images, 'update');
       if (outcome === 'failed' && !dash.error()) setErr("That didn't finish. The box kept its running firmware.");
     } catch (e) {
       setErr((e as Error).message);
