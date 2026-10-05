@@ -84,6 +84,7 @@ import DashboardDeveloper from './pages/dashboard/DeviceDeveloper';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
+import DashboardStats from './pages/dashboard/Stats';
 import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
 const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
@@ -182,6 +183,7 @@ const App: Component = () => {
           <Route path="/dashboard/setup" component={DashboardSetup} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
+          <Route path="/dashboard/stats" component={DashboardStats} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
         </Router>
