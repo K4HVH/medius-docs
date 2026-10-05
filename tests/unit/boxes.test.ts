@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMemo, createRoot, createSignal } from 'solid-js';
 import { type Boxes, NEW_BOX, createBoxes } from '../../src/app/pages/dashboard/boxes';
-import { REATTACH_MS } from '../../src/app/pages/dashboard/session';
+import { REATTACH_MS, flashErrorText } from '../../src/app/pages/dashboard/session';
 import { STORE_KEY, createBoxStore } from '../../src/app/pages/dashboard/store';
 import { probePort } from '../../src/dashboard/serial';
 import { PROTO_VER } from '../../src/dashboard/protocol';
@@ -257,6 +257,12 @@ describe('box registry', () => {
     await ready();
     expect(s.status()).toBe('connected');
     expect(s.update()).toMatchObject({ page: 'advanced', outcome: 'failed' });
+  });
+
+  it("words only the browser's own held-port error as a held port", () => {
+    expect(flashErrorText(new DOMException('The port is already open.', 'InvalidStateError'))).toMatch(/still held/);
+    const busy = new Error('Starting the transfer failed: an update is already open on that chip.');
+    expect(flashErrorText(busy)).toBe(busy.message);
   });
 
   it('focus re-probes busy ports only; a silent one waits for a click', async () => {

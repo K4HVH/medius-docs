@@ -136,6 +136,7 @@ import {
   UPD_READY,
   UPD_RESP_LEN,
   UPD_STAGED,
+  UPD_BUSY,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
 
@@ -1067,7 +1068,13 @@ export class SerialLink {
     const begin = new Uint8Array(4 + digest.length);
     new DataView(begin.buffer).setUint32(0, image.length, true);
     begin.set(digest, 4);
-    const ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    let ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    // Only one client holds the port, so a session already open on this target was left by one that went
+    // away mid-transfer (a pulled cable), and the box would hold it for its 10 s idle timer. Drop it.
+    if (ready.status === UPD_BUSY) {
+      await this.abortUpdate(target).catch(() => undefined);
+      ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    }
     if (ready.status !== UPD_READY) throw new UpdateError(OTA_OP_BEGIN, ready.status, ready.arg);
 
     const credit = ready.arg || OTA_CREDIT;

@@ -185,6 +185,37 @@ describe('the stable update path', () => {
     }
   });
 
+  it('a session a dropped client left open on the box is aborted, and the transfer starts again', async () => {
+    // Only one client holds the port, so BUSY at our own BEGIN is a session nobody will finish.
+    const mock = new MockSerialPort();
+    const ops: number[] = [];
+    let busy = true;
+    const image = new Uint8Array(100).fill(7);
+    const resp = (seq: number, op: number, target: number, status: number, arg: number) =>
+      mock.push(encode(FrameType.UpdateResp, seq, new Uint8Array([op, target, status, arg & 0xff, (arg >> 8) & 0xff, 0, 0])));
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === Q_FIRMWARE) {
+        const chip = [3, 4, 4, 0, 2];
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([Q_FIRMWARE, ...chip, 1, ...chip, 0x00, 0x00, 0x0f, 0x00, 0])));
+        return;
+      }
+      if (f.ty !== FrameType.Update) return;
+      const [op, target] = f.payload;
+      ops.push(op);
+      if (op === OTA_OP_BEGIN) resp(f.seq, op, target, busy ? 0x10 : UPD_READY, busy ? 0 : 16);
+      else if (op === OTA_OP_ABORT) {
+        busy = false;
+        resp(f.seq, op, target, UPD_OK, 0);
+      } else if (op === OTA_OP_DATA) resp(0, op, target, UPD_ACK, 1);
+      else if (op === OTA_OP_END) resp(f.seq, op, target, UPD_STAGED, image.length);
+    };
+    const link = new SerialLink(mock as unknown as PortArg);
+    await link.open();
+    await link.stageFirmware(OTA_TGT_DEVICE, image);
+    expect(ops).toEqual([OTA_OP_BEGIN, OTA_OP_ABORT, OTA_OP_BEGIN, OTA_OP_DATA, OTA_OP_END]);
+    await link.close();
+  });
+
   it('reads a status it does not know as a refusal', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
