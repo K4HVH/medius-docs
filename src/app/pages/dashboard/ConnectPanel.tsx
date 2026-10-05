@@ -194,7 +194,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
         <div class="callout callout--danger" role="alert">
           This computer can't see your box. Plug USB2 into it.
         </div>
-        <Button variant="secondary" onClick={() => void dash.disconnect()}>
+        <Button variant="secondary" onClick={() => void dash.forget()}>
           Forget
         </Button>
       </Match>

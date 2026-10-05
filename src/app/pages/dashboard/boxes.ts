@@ -15,7 +15,7 @@ import {
   speaksCurrentWire,
 } from '../../../dashboard/serial';
 import { type BoxSession, type SessionControl, boxId, createBoxSession } from './session';
-import type { BoxStore } from './store';
+import { type BoxIcon, type BoxStore, STORE_KEY } from './store';
 
 // The selection for a box not listed yet: its card connects one through the chooser.
 export const NEW_BOX = 'new';
@@ -51,6 +51,8 @@ export interface Boxes {
   snapshot: () => Snapshot;
   connectNew: (before: Snapshot) => Promise<ConnectVerdict | null>;
   anyUpdating: Accessor<boolean>;
+  icon: (key: string) => BoxIcon;
+  setIcon: (key: string, icon: BoxIcon) => void;
 }
 
 export interface SerialLike {
@@ -99,6 +101,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const choose = deps.choose ?? requestMediusPort;
   const [entries, setEntries] = createSignal<Entry[]>([]);
   const [selKey, setSelKey] = createSignal<string | null>(deps.store.selected());
+  const [icons, setIcons] = createSignal(deps.store.icons());
   const portKeys = new Map<SerialPort, string>();
   const present = new Set<SerialPort>();
   const probing = new Map<SerialPort, Promise<void>>();
@@ -116,6 +119,10 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const bySession = (s: BoxSession) => entries().find((e) => e.session === s);
   const busyWith = (e: Entry) => e.session.status() !== 'disconnected' || e.session.identifying();
   const remembered = (mac: string) => deps.store.held().some((h) => h.mac === mac);
+  const setIcon = (key: string, icon: BoxIcon) => {
+    deps.store.setIcon(key, icon);
+    setIcons(deps.store.icons());
+  };
 
   // One open per port at a time.
   const exclusive = <T,>(port: SerialPort, fn: () => Promise<T>): Promise<T> => {
@@ -214,6 +221,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
           const e = bySession(api);
           if (e && !e.ctl.port()) remove(e);
         },
+        forgotten: (mac) => setIcon(mac, 'box'),
       },
     );
     api = made.api;
@@ -429,6 +437,9 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   const onVisible = () => {
     if (!document.hidden) onFocus();
   };
+  const onStorage = (ev: StorageEvent) => {
+    if (ev.key === STORE_KEY || ev.key === null) setIcons(deps.store.icons());
+  };
 
   const start = () => {
     if (started || disposed) return;
@@ -436,6 +447,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     deps.serial?.addEventListener('connect', onConnect);
     deps.serial?.addEventListener('disconnect', onDisconnect);
     window.addEventListener('focus', onFocus);
+    window.addEventListener('storage', onStorage);
     document.addEventListener('visibilitychange', onVisible);
     void (async () => {
       let ports: SerialPort[] = [];
@@ -461,6 +473,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       deps.serial?.removeEventListener('connect', onConnect);
       deps.serial?.removeEventListener('disconnect', onDisconnect);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('storage', onStorage);
       document.removeEventListener('visibilitychange', onVisible);
     }
     for (const e of entries()) e.ctl.dispose();
@@ -480,5 +493,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     snapshot,
     connectNew,
     anyUpdating: () => entries().some((e) => e.session.status() === 'flashing'),
+    icon: (key) => icons()[key] ?? 'box',
+    setIcon,
   };
 }

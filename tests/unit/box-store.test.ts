@@ -75,6 +75,59 @@ describe('box store', () => {
     expect(s.held()).toHaveLength(1);
   });
 
+  it('keeps an icon per box across a reload, and Box puts the default back', () => {
+    const a = createBoxStore(localStorage);
+    a.setIcon('aabbccddeeff', 'mouse');
+    a.setIcon('112233445566', 'keyboard');
+    const b = createBoxStore(localStorage);
+    expect(b.icons()).toEqual({ aabbccddeeff: 'mouse', '112233445566': 'keyboard' });
+    b.setIcon('aabbccddeeff', 'box');
+    expect(createBoxStore(localStorage).icons()).toEqual({ '112233445566': 'keyboard' });
+    expect(localStorage.getItem(STORE_KEY)).not.toContain('aabbccddeeff');
+  });
+
+  it('holding, releasing and selecting a box keep every icon', () => {
+    const s = createBoxStore(localStorage);
+    s.setIcon('aabbccddeeff', 'controller');
+    s.hold('aabbccddeeff', 'Desk');
+    s.setSelected('aabbccddeeff');
+    s.release('aabbccddeeff');
+    expect(createBoxStore(localStorage).icons()).toEqual({ aabbccddeeff: 'controller' });
+  });
+
+  it('reads icons it did not write as none, and keeps the boxes beside them', () => {
+    for (const icons of ['"x"', '[1]', '{"aabbccddeeff":"toaster"}', '{"aabbccddeeff":3}', '{"aabbccddeeff":"box"}']) {
+      localStorage.setItem(STORE_KEY, `{"selected":"aabbccddeeff","held":[{"mac":"aabbccddeeff","name":"Desk"}],"icons":${icons}}`);
+      const s = createBoxStore(localStorage);
+      expect(s.icons()).toEqual({});
+      expect(s.held()).toEqual([{ mac: 'aabbccddeeff', name: 'Desk' }]);
+    }
+    localStorage.setItem(STORE_KEY, '{"icons":{"aabbccddeeff":"mouse","112233445566":"toaster"}}');
+    expect(createBoxStore(localStorage).icons()).toEqual({ aabbccddeeff: 'mouse' });
+  });
+
+  it('an icon set with storage that throws lasts for this page', () => {
+    const s = createBoxStore(throwing());
+    s.setIcon('aabbccddeeff', 'mouse');
+    expect(s.icons()).toEqual({ aabbccddeeff: 'mouse' });
+  });
+
+  it('storage that reads but will not write keeps what this page set', () => {
+    const full = {
+      getItem: (k: string) => localStorage.getItem(k),
+      setItem: () => {
+        throw new DOMException('quota', 'QuotaExceededError');
+      },
+    } as unknown as Storage;
+    localStorage.setItem(STORE_KEY, '{"held":[{"mac":"aabbccddeeff","name":"Desk"}]}');
+    const s = createBoxStore(full);
+    s.setIcon('aabbccddeeff', 'mouse');
+    s.setSelected('aabbccddeeff');
+    expect(s.icons()).toEqual({ aabbccddeeff: 'mouse' });
+    expect(s.selected()).toBe('aabbccddeeff');
+    expect(s.held()).toEqual([{ mac: 'aabbccddeeff', name: 'Desk' }]);
+  });
+
   it("two tabs keep each other's boxes: each change is made to what is stored now", () => {
     const a = createBoxStore(localStorage);
     const b = createBoxStore(localStorage);

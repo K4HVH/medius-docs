@@ -177,6 +177,23 @@ describe('box session', () => {
     expect(box.opens.length).toBe(before);
   });
 
+  it('Forget disconnects and forgets the box for good; Disconnect forgets only the connection', async () => {
+    const box = new FakeBox();
+    const forgotten = vi.fn();
+    const { api, released } = open(box, { hooks: { forgotten } });
+    await api.connect();
+    await api.disconnect();
+    expect(released).toHaveBeenCalledWith(box.mac);
+    expect(forgotten).not.toHaveBeenCalled();
+    await api.connect();
+    box.drop();
+    await settle();
+    await api.forget();
+    expect(api.status()).toBe('disconnected');
+    expect(api.held()).toBe(false);
+    expect(forgotten).toHaveBeenCalledWith(box.mac);
+  });
+
   it('a lost box replugged on a new port is picked up there', async () => {
     const box = new FakeBox();
     const { api, ctl } = open(box);
