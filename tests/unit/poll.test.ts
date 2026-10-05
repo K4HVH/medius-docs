@@ -177,6 +177,53 @@ describe('dashboard poller', () => {
     });
   });
 
+  it('moves the keepalive onto version when the box turns out to be on another wire', async () => {
+    const calls = { health: 0, version: 0 };
+    const link = {
+      queryHealth: async () => {
+        calls.health++;
+        return { linkUp: true } as never;
+      },
+      queryVersion: async () => {
+        calls.version++;
+        return { protoVer: 10 } as never;
+      },
+    } as unknown as SerialLink;
+    await createRoot(async (dispose) => {
+      const [key, setKey] = createSignal<'health' | 'version'>('health');
+      createPoller(() => link, { keepalive: key });
+      await settle();
+      setKey('version');
+      await settle();
+      const healths = calls.health;
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS * 3);
+      await settle();
+      expect(calls.version).toBeGreaterThan(2);
+      expect(calls.health).toBe(healths);
+      dispose();
+    });
+  });
+
+  it('a keepalive that keeps its key restarts nothing when what it is read from changes', async () => {
+    const calls = { health: 0 };
+    const link = {
+      queryHealth: async () => {
+        calls.health++;
+        return { linkUp: true } as never;
+      },
+    } as unknown as SerialLink;
+    await createRoot(async (dispose) => {
+      const [v, setV] = createSignal(0);
+      createPoller(() => link, { keepalive: () => (v() >= 0 ? 'health' : 'version') });
+      await settle();
+      const first = calls.health;
+      for (let i = 1; i <= 5; i++) setV(i);
+      await settle();
+      expect(calls.health).toBe(first);
+      dispose();
+    });
+  });
+
   it('moves the keepalive when the box it reads changes wire', async () => {
     const calls = { health: 0, version: 0 };
     const link = {

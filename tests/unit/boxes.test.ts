@@ -4,6 +4,7 @@ import { type Boxes, NEW_BOX, createBoxes } from '../../src/app/pages/dashboard/
 import { REATTACH_MS } from '../../src/app/pages/dashboard/session';
 import { STORE_KEY, createBoxStore } from '../../src/app/pages/dashboard/store';
 import { probePort } from '../../src/dashboard/serial';
+import { PROTO_VER } from '../../src/dashboard/protocol';
 import { FakeBox, FakeLocks, FakePort, FakeSerial, asPort, makeFakeLink, otherTab, settle } from './fake-boxes';
 
 const probes: SerialPort[] = [];
@@ -502,6 +503,35 @@ describe('box registry', () => {
     await vi.advanceTimersByTimeAsync(REATTACH_MS);
     await ready();
     expect(boxes.selected()?.key).toBe(a.mac);
+  });
+
+  it('a box installed on a newer protocol than the page is connected for updating, without the chooser', async () => {
+    const a = box(1);
+    const b = new FakeBox({ mac: mac(2), name: 'Box 2', protoVer: PROTO_VER + 1 });
+    b.alive = false;
+    const serial = new FakeSerial(portsOf(a, b));
+    const boxes = mount(serial);
+    await ready();
+    const before = boxes.snapshot();
+    b.alive = true;
+    expect(await boxes.connectNew(before)).toBeNull();
+    await ready();
+    expect(serial.chooserCalls).toBe(0);
+    expect(entry(boxes, b.mac).session.status()).toBe('connected');
+    expect(entry(boxes, b.mac).session.updateOnly()).toBe(true);
+  });
+
+  it('a newer box already there before the install is not taken for the one installed', async () => {
+    const a = new FakeBox({ mac: mac(1), name: 'Box 1', protoVer: PROTO_VER + 1 });
+    const b = box(2);
+    b.alive = false;
+    const boxes = mount(new FakeSerial(portsOf(a, b)));
+    await ready();
+    const before = boxes.snapshot();
+    b.alive = true;
+    expect(await boxes.connectNew(before)).toBeNull();
+    await ready();
+    expect(boxes.selected()?.key).toBe(b.mac);
   });
 
   it('only a box answering after the install counts as the one installed', async () => {

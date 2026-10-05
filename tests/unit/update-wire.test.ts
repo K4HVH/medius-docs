@@ -107,6 +107,63 @@ describe('the stable update path', () => {
     expect(parseResp(new Uint8Array([...body, 9, 9, 9]))).toEqual(want);
   });
 
+  it('stages an image the way every box from protocol 5 takes it', async () => {
+    // A box asking for 3 chunks a window, as a relayed target may: the page must read the credit, not
+    // assume 16.
+    const mock = new MockSerialPort();
+    const data: { seq: number; len: number; target: number }[] = [];
+    const ops: number[] = [];
+    let since = 0;
+    let next = 0;
+    const image = new Uint8Array(OTA_CHUNK * 7 + 100).map((_, i) => i & 0xff);
+    const resp = (seq: number, op: number, target: number, status: number, arg: number) =>
+      mock.push(
+        encode(FrameType.UpdateResp, seq, new Uint8Array([op, target, status, arg & 0xff, (arg >> 8) & 0xff, (arg >> 16) & 0xff, arg >>> 24])),
+      );
+    mock.responder = (f) => {
+      if (f.ty === FrameType.Query && f.payload[0] === Q_FIRMWARE) {
+        const chip = [3, 4, 4, 0, 2];
+        mock.push(encode(FrameType.Resp, f.seq, new Uint8Array([Q_FIRMWARE, ...chip, 1, ...chip, 0x00, 0x00, 0x0f, 0x00, 0])));
+        return;
+      }
+      if (f.ty !== FrameType.Update) return;
+      const [op, target] = f.payload;
+      ops.push(op);
+      if (op === OTA_OP_BEGIN) {
+        expect(f.payload.length).toBe(2 + 36);
+        expect(new DataView(f.payload.buffer, f.payload.byteOffset).getUint32(2, true)).toBe(image.length);
+        resp(f.seq, op, target, UPD_READY, 3);
+      } else if (op === OTA_OP_DATA) {
+        const seq = f.payload[2] | (f.payload[3] << 8);
+        expect(seq).toBe(next);
+        const bytes = f.payload.subarray(4);
+        expect([...bytes]).toEqual([...image.subarray(seq * OTA_CHUNK, seq * OTA_CHUNK + bytes.length)]);
+        data.push({ seq, len: bytes.length, target });
+        next++;
+        if (++since === 3 || next * OTA_CHUNK >= image.length) {
+          since = 0;
+          resp(0, op, target, UPD_ACK, next);
+        }
+      } else if (op === OTA_OP_END) resp(f.seq, op, target, UPD_STAGED, image.length);
+    };
+    const link = new SerialLink(mock as unknown as PortArg);
+    await link.open();
+    await link.stageFirmware(OTA_TGT_HOST, image);
+    expect(ops[0]).toBe(OTA_OP_BEGIN);
+    expect(ops.at(-1)).toBe(OTA_OP_END);
+    expect(data.map((d) => d.seq)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(data.every((d) => d.target === OTA_TGT_HOST)).toBe(true);
+    expect(data.map((d) => d.len)).toEqual([504, 504, 504, 504, 504, 504, 504, 100]);
+    await link.close();
+  });
+
+  it("says what an out-of-order refusal's arg is, whichever it carries", () => {
+    expect(new UpdateError(OTA_OP_DATA, 0x1a, OTA_OP_BEGIN).message).toContain('The box wanted op 0.');
+    // A chunk of the wrong length carries 504, a short END the bytes still missing: neither is an op.
+    expect(new UpdateError(OTA_OP_DATA, 0x1a, 504).message).not.toContain('op 504');
+    expect(new UpdateError(OTA_OP_END, 0x1a, 1200).message).not.toContain('op 1200');
+  });
+
   it('reads a status it does not know as a refusal', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {

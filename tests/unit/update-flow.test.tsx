@@ -51,6 +51,8 @@ const mock = vi.hoisted(() => {
     hostSlot: 0,
     // Firmware reads lost before anything is staged.
     startLostFor: 0,
+    // Staging waits on this, so a test can hold a run in flight.
+    holdStage: null as Promise<void> | null,
   };
 });
 
@@ -108,6 +110,7 @@ vi.mock('../../src/dashboard/serial', async () => {
       return mock.version;
     }
     async stageFirmware(target: number, image: Uint8Array) {
+      if (mock.holdStage) await mock.holdStage;
       mock.staged.push({ target, tag: image[1] });
     }
     async activateFirmware() {
@@ -240,6 +243,7 @@ afterEach(() => {
   mock.deviceSlot = 0;
   mock.hostSlot = 0;
   mock.startLostFor = 0;
+  mock.holdStage = null;
 });
 
 // The second byte tags which image this is, so the fake can prove WHICH bytes went where.
@@ -272,6 +276,21 @@ const pastDeadlineAfter = (read: number) => {
 };
 
 describe('updateOverControl', () => {
+  it('a second run while one is in flight is refused, and leaves the first alone', async () => {
+    await connected();
+    let release = () => {};
+    mock.holdStage = new Promise<void>((r) => (release = r));
+    const first = api.updateOverControl({ device: img(DEVICE_TAG) }, 'advanced');
+    await waitFor(() => expect(api.status()).toBe('flashing'));
+    const second = await api.updateOverControl({ host: img(HOST_TAG) }, 'update');
+    expect(second).toBe('failed');
+    expect(api.update()).toMatchObject({ page: 'advanced', outcome: 'running' });
+    release();
+    expect(await first).toBe('verified');
+    expect(mock.staged.map((s) => s.target)).toEqual([0]);
+    expect(api.update()).toMatchObject({ page: 'advanced', outcome: 'verified', landed: { device: true } });
+  }, 20000);
+
   it('reports verified only when the box actually came back and answered', async () => {
     await connected();
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');

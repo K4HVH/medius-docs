@@ -12,7 +12,6 @@ import {
   probeFromError,
   probePort,
   requestMediusPort,
-  speaksCurrentWire,
 } from '../../../dashboard/serial';
 import { type BoxSession, type SessionControl, boxId, createBoxSession } from './session';
 import { type BoxIcon, type BoxStore, STORE_KEY } from './store';
@@ -86,10 +85,11 @@ const isPortKey = (key: string) => key.startsWith('port:');
 
 const versionOf = (p: Probe | null): Version | null => (p && 'version' in p ? p.version : null);
 
-const answersCurrent = (s: BoxSession): boolean => {
-  if (s.status() === 'connected') return !s.updateOnly();
+// Connected, or answered a probe on any protocol this page can reach, a newer one included.
+const answers = (s: BoxSession): boolean => {
+  if (s.status() === 'connected') return true;
   const p = s.probe();
-  return s.status() === 'disconnected' && p?.kind === 'box' && speaksCurrentWire(p.version);
+  return s.status() === 'disconnected' && p?.kind === 'box';
 };
 
 const REPLUG_TRIES = 4;
@@ -354,13 +354,13 @@ export function createBoxes(deps: BoxesDeps): Boxes {
   };
 
   const snapshot = (): Snapshot => ({
-    answering: new Set(entries().filter((e) => answersCurrent(e.session)).map((e) => e.key)),
+    answering: new Set(entries().filter((e) => answers(e.session)).map((e) => e.key)),
     all: new Set(entries().map((e) => e.key)),
   });
 
   const connectNew = async (before: Snapshot): Promise<ConnectVerdict | null> => {
     await rescan();
-    const now = (e: Entry) => answersCurrent(e.session) || e.session.status() === 'connecting';
+    const now = (e: Entry) => answers(e.session) || e.session.status() === 'connecting';
     const fresh = entries().find((e) => !before.answering.has(e.key) && now(e));
     if (fresh) {
       choosing(fresh.key);

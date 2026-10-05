@@ -1,7 +1,7 @@
 // One poller for the dashboard: shared timers, deduplicated subscribers, and a query stops once
 // nothing watches it.
 
-import { type Accessor, createRenderEffect, createSignal, onCleanup, untrack } from 'solid-js';
+import { type Accessor, createMemo, createRenderEffect, createSignal, onCleanup, untrack } from 'solid-js';
 import type {
   Bearing,
   Caps,
@@ -131,7 +131,7 @@ export function createPoller(
   opts: { onKeepalive?: (answered: boolean) => void; keepalive?: Accessor<'health' | 'version'> } = {},
 ): Poller {
   const slots = new Map<PollKey, Slot>();
-  const keepalive = opts.keepalive ?? (() => 'health' as const);
+  const keepalive = createMemo(opts.keepalive ?? (() => 'health' as const));
 
   const slotFor = (key: PollKey): Slot => {
     let s = slots.get(key);
