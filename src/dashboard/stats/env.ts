@@ -29,14 +29,12 @@ const BRANDS: [string, Browser][] = [
   ['Microsoft Edge', 'edge'],
   ['Opera', 'opera'],
   ['Brave', 'brave'],
-  ['Vivaldi', 'vivaldi'],
   ['Google Chrome', 'chrome'],
 ];
 
 const UA_BROWSER: [RegExp, Browser][] = [
   [/Edg\//, 'edge'],
   [/OPR\//, 'opera'],
-  [/Vivaldi\//, 'vivaldi'],
 ];
 
 export function readEnv(nav: Navigator | undefined = globalThis.navigator): { os: Os; browser: Browser } {

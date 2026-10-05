@@ -309,9 +309,9 @@ The dashboard reports each box it connects, the box's cloned device, and every f
 | Piece | Where |
 |---|---|
 | Database | SQLite at `STATS_DB` (default `data/stats.db`, ignored by git). `bun:sqlite` in production, `node:sqlite` under vite and vitest |
-| Box identity | A keyed hash of the MAC; the key is made once and kept in the database. The raw MAC is never stored |
+| Box identity | A keyed hash of the MAC; the key is made once and kept in the database. The raw MAC is never stored. Only a box event marks a box active |
 | Country | Cloudflare's `CF-IPCountry`; no IP address is stored |
-| Limits | 2 KB a body, 60 events a minute per address, foreign `Origin` refused; totals cached a minute |
+| Limits | 2 KB a body (read no further), 60 events a minute per client (an IPv6 /64 is one), 1200 a minute in all, foreign `Origin` refused; totals cached a minute |
 | Production | The compose file's `medius-stats` volume at `/app/data`. Redeploy the stack with it, or every restart starts the counts again |
 
 Unit tests never count: the provider builds no sink under vitest. A dev server writes to `data/stats.db` in the checkout, so delete that file to start the counts at zero.

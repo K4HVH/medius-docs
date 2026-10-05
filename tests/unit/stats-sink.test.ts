@@ -33,7 +33,8 @@ describe('readEnv', () => {
     expect(ua('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/130.0 OPR/115.0')).toEqual({ os: 'macos', browser: 'opera' });
     expect(ua('Mozilla/5.0 (Linux; Android 14) Chrome/130.0 Mobile')).toEqual({ os: 'android', browser: 'chromium' });
     expect(ua('Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) Chrome/130.0')).toEqual({ os: 'chromeos', browser: 'chromium' });
-    expect(ua('Mozilla/5.0 (X11; Linux x86_64) Chrome/130.0 Vivaldi/7.0')).toEqual({ os: 'linux', browser: 'vivaldi' });
+    // Vivaldi sends Chrome's user agent and no brand of its own, so it is not told apart.
+    expect(ua('Mozilla/5.0 (X11; Linux x86_64) Chrome/130.0 Vivaldi/7.0')).toEqual({ os: 'linux', browser: 'chromium' });
     expect(ua('')).toEqual({ os: 'other', browser: 'chromium' });
   });
 

@@ -14,3 +14,4 @@ services:
 
 volumes:
   medius-stats:
+    name: medius-stats                                      # Not prefixed with the stack's name

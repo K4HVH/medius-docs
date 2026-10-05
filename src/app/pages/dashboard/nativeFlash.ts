@@ -32,7 +32,7 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
     setLog([]);
     setProgress({ phase: 'connecting' });
     setRunning(true);
-    const started = Date.now();
+    const started = performance.now();
     let mac: string | null = null;
     let ok = false;
     try {
@@ -67,7 +67,7 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
           to: { device: meta.chip === 'device' ? version : null, host: meta.chip === 'host' ? version : null },
           from: { device: null, host: null },
           result: ok ? 'written' : 'failed',
-          ms: Date.now() - started,
+          ms: Math.min(3_600_000, Math.max(0, Math.round(performance.now() - started))),
         });
       } catch {
         /* counting must not break a connect or a flash */

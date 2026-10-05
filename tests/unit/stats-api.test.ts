@@ -50,6 +50,23 @@ describe('POST /api/stats/event', () => {
     expect((await post({ ...BOX, pad: 'x'.repeat(2100) }))!.status).toBe(413);
   });
 
+  it('stops reading a body with no length once it passes 2 KB', async () => {
+    let pulled = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(c) {
+        pulled += 1024;
+        if (pulled > 100 * 1024) return c.close();
+        c.enqueue(new Uint8Array(1024).fill(0x20));
+      },
+    });
+    const r = await handleStatsApi(
+      new Request(`${SITE}/api/stats/event`, { method: 'POST', body, duplex: 'half' } as RequestInit),
+      '10.0.0.1',
+    );
+    expect(r!.status).toBe(413);
+    expect(pulled).toBeLessThan(10 * 1024);
+  });
+
   it('answers 405 to anything but POST', async () => {
     const r = await handleStatsApi(new Request(`${SITE}/api/stats/event`), '10.0.0.1');
     expect(r!.status).toBe(405);
@@ -63,9 +80,45 @@ describe('POST /api/stats/event', () => {
     expect((await post(BOX))!.status).toBe(204);
   });
 
+  it('counts an IPv6 client by its /64, as one home network hands out many addresses', async () => {
+    for (let i = 1; i <= 60; i++) expect((await post(BOX, { 'cf-connecting-ip': `2001:db8:1:2::${i.toString(16)}` }))!.status).toBe(204);
+    expect((await post(BOX, { 'cf-connecting-ip': '2001:0db8:0001:0002:ffff:1:2:3' }))!.status).toBe(429);
+    expect((await post(BOX, { 'cf-connecting-ip': '2001:db8:1:3::1' }))!.status).toBe(204);
+  });
+
+  it('refuses new addresses while the table is full, and frees it a window later', async () => {
+    resetStatsForTests({ path: ':memory:', now: () => now, limits: { addresses: 3 } });
+    for (const ip of ['10.0.0.1', '10.0.0.2', '10.0.0.3']) expect((await post(BOX, {}, ip))!.status).toBe(204);
+    expect((await post(BOX, {}, '10.0.0.4'))!.status).toBe(429);
+    expect((await post(BOX, {}, '10.0.0.1'))!.status).toBe(204);
+    now += 60_000;
+    expect((await post(BOX, {}, '10.0.0.4'))!.status).toBe(204);
+  });
+
+  it('caps every address together per minute', async () => {
+    resetStatsForTests({ path: ':memory:', now: () => now, limits: { total: 5 } });
+    for (let i = 1; i <= 5; i++) expect((await post(BOX, {}, `10.0.3.${i}`))!.status).toBe(204);
+    expect((await post(BOX, {}, '10.0.3.6'))!.status).toBe(429);
+    now += 60_000;
+    expect((await post(BOX, {}, '10.0.3.6'))!.status).toBe(204);
+  });
+
   it("limits by Cloudflare's client address before the socket's", async () => {
     for (let i = 0; i < 60; i++) await post(BOX, { 'cf-connecting-ip': '203.0.113.9' }, `10.0.1.${i}`);
     expect((await post(BOX, { 'cf-connecting-ip': '203.0.113.9' }, '10.0.2.1'))!.status).toBe(429);
+  });
+
+  it('takes a same-origin browser behind a proxy that rewrote Host, or forwarded it with a port', async () => {
+    const via = (headers: Record<string, string>) =>
+      handleStatsApi(
+        new Request('http://medius-docs:3000/api/stats/event', { method: 'POST', headers, body: JSON.stringify(BOX) }),
+        '10.0.0.1',
+      );
+    expect((await via({ origin: SITE, 'sec-fetch-site': 'same-origin' }))!.status).toBe(204);
+    expect((await via({ origin: SITE, 'x-forwarded-host': 'medius.k4tech.net:443' }))!.status).toBe(204);
+    expect((await via({ origin: SITE }))!.status).toBe(403);
+    expect((await via({ origin: 'null' }))!.status).toBe(403);
+    expect((await via({ origin: 'https://evil.example', 'sec-fetch-site': 'cross-site' }))!.status).toBe(403);
   });
 
   it('refuses a foreign Origin, and takes one matching Host or X-Forwarded-Host', async () => {

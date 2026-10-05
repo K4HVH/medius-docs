@@ -71,6 +71,7 @@ describe('parseEvent', () => {
   it('refuses enum values it does not list', () => {
     refused({ ...box, os: 'beos' });
     refused({ ...box, browser: 'firefox' });
+    refused({ ...box, browser: 'vivaldi' });
     refused({ ...flash, page: 'control' });
     refused({ ...flash, route: 'usb3' });
     refused({ ...flash, chips: 'all' });
@@ -91,6 +92,10 @@ describe('parseEvent', () => {
     expect(p('  G502\u0000 HERO\n ')).toBe('G502 HERO');
     expect(p('x'.repeat(300))).toBe('x'.repeat(126));
     expect(p('   ')).toBeNull();
+    // Bidi overrides and zero-width characters are format characters, not text.
+    expect(p('\u202eevil\u200b mouse')).toBe('evil mouse');
+    // Cut by characters, never through one.
+    expect(p('\u{1F5B1}'.repeat(130))).toBe('\u{1F5B1}'.repeat(126));
     expect(p(null)).toBeNull();
     refused({ ...device, product: 42 });
   });

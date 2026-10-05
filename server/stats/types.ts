@@ -2,7 +2,7 @@
 // `import type`, since the server is not part of its bundle.
 
 export const OSES = ['windows', 'macos', 'linux', 'chromeos', 'android', 'other'] as const;
-export const BROWSERS = ['chrome', 'edge', 'opera', 'brave', 'vivaldi', 'chromium'] as const;
+export const BROWSERS = ['chrome', 'edge', 'opera', 'brave', 'chromium'] as const;
 export const PAGES = ['setup', 'update', 'advanced'] as const;
 export const ROUTES = ['usb2', 'rom'] as const;
 export const CHIPS = ['device', 'host', 'both'] as const;

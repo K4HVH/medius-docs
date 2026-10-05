@@ -251,7 +251,8 @@ export class FakeLink {
       b.firmware.device = land(b.firmware.device, b.next.device);
       b.version = { ...b.version, fwMajor: b.firmware.device.major, fwMinor: b.firmware.device.minor, fwPatch: b.firmware.device.patch };
     }
-    if (staged.includes(1) && b.firmware.host) b.firmware.host = land(b.firmware.host, b.next.host);
+    // A mouse-side chip that wasn't answering before boots its image like any other.
+    if (staged.includes(1)) b.firmware.host = land(b.firmware.host ?? { major: 0, minor: 0, patch: 0, slot: 0, state: 2 }, b.next.host);
   }
 
   async abortUpdate(): Promise<void> {

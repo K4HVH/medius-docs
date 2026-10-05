@@ -30,7 +30,6 @@ const BROWSER: Record<string, string> = {
   edge: 'Edge',
   opera: 'Opera',
   brave: 'Brave',
-  vivaldi: 'Vivaldi',
   chromium: 'Other Chromium',
 };
 const RESULT: Record<keyof Omit<WeekFlashes, 'week'>, string> = {
@@ -253,7 +252,10 @@ const Summary = (props: { s: StatsSummary }) => {
             </Show>
           </Section>
           <Section title="Most used">
-            <Show when={s().devices.top.length > 0} fallback={<Empty />}>
+            <Show
+              when={s().devices.top.length > 0}
+              fallback={s().devices.unique ? <p class="stat-empty">No device is on two boxes yet.</p> : <Empty />}
+            >
               <table class="api-params">
                 <thead>
                   <tr>
