@@ -23,8 +23,8 @@ const mock = vi.hoisted(() => {
     // What the box runs once an activate that includes the main chip reboots it.
     after: null as { baud: number; version: typeof VERSION } | null,
     opens: [] as number[],
-    // Whether the mouse-side chip answered before the update, and how many firmware reads before the
-    // activate are lost.
+    // Whether the mouse-side chip answered before the update, and how many firmware reads between
+    // staging and the activate are lost.
     hostBefore: true,
     preLostFor: 0,
     activated: false,
@@ -45,6 +45,12 @@ const mock = vi.hoisted(() => {
     closeAfter: 0,
     firmwareQueries: 0,
     onFirmwareQuery: null as (() => void) | null,
+    // The slot each chip runs: an activate moves a chip it staged to the other, a revert moves the main
+    // chip back.
+    deviceSlot: 0,
+    hostSlot: 0,
+    // Firmware reads lost before anything is staged.
+    startLostFor: 0,
   };
 });
 
@@ -61,16 +67,16 @@ vi.mock('../../src/dashboard/serial', async () => {
     await vi.importActual<typeof import('../../src/dashboard/serial/probe')>(
       '../../src/dashboard/serial/probe',
     );
-  const chip = (v: typeof mock.version, state: number) => ({
+  const chip = (v: typeof mock.version, state: number, slot: number) => ({
     major: v.fwMajor,
     minor: v.fwMinor,
     patch: v.fwPatch,
-    slot: 0,
+    slot,
     state,
   });
   const info = (v: typeof mock.version, device: number, host: number | null) => ({
-    device: chip(v, device),
-    host: host === null ? null : chip(v, host),
+    device: chip(v, device, mock.deviceSlot),
+    host: host === null ? null : chip(v, host, mock.hostSlot),
     slotSize: 983040,
     deviceStaged: false,
     hostStaged: false,
@@ -107,6 +113,10 @@ vi.mock('../../src/dashboard/serial', async () => {
     async activateFirmware() {
       if (mock.activateThrows) throw mock.activateThrows;
       mock.activated = true;
+      for (const s of mock.staged) {
+        if (s.target === 0) mock.deviceSlot ^= 1;
+        else mock.hostSlot ^= 1;
+      }
       // The main chip reboots only when its own image was part of the update.
       if (mock.after && mock.staged.some((s) => s.target === 0)) {
         mock.baud = mock.after.baud;
@@ -118,8 +128,12 @@ vi.mock('../../src/dashboard/serial', async () => {
     }
     async queryFirmware() {
       if (!mock.activated) {
-        if (!mock.comesBack || this.baud !== mock.baud) throw new link.QueryTimeoutError();
-        if (mock.preLostFor > 0) {
+        if (this.baud !== mock.baud) throw new link.QueryTimeoutError();
+        if (mock.startLostFor > 0 && mock.staged.length === 0) {
+          mock.startLostFor--;
+          throw new link.QueryTimeoutError();
+        }
+        if (mock.preLostFor > 0 && mock.staged.length > 0) {
           mock.preLostFor--;
           throw new link.QueryTimeoutError();
         }
@@ -138,6 +152,7 @@ vi.mock('../../src/dashboard/serial', async () => {
         if (mock.firmwareQueries < r.at + (r.silent ?? 0)) throw new link.QueryTimeoutError();
         mock.baud = r.baud;
         mock.version = r.version;
+        mock.deviceSlot ^= 1;
         mock.devicePendingFor = 0;
         mock.revert = null;
       }
@@ -222,6 +237,9 @@ afterEach(() => {
   mock.closeAfter = 0;
   mock.firmwareQueries = 0;
   mock.onFirmwareQuery = null;
+  mock.deviceSlot = 0;
+  mock.hostSlot = 0;
+  mock.startLostFor = 0;
 });
 
 // The second byte tags which image this is, so the fake can prove WHICH bytes went where.
@@ -256,11 +274,11 @@ const pastDeadlineAfter = (read: number) => {
 describe('updateOverControl', () => {
   it('reports verified only when the box actually came back and answered', async () => {
     await connected();
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(api.error()).toBeNull();
     // On the session, so a tab change or box switch keeps it.
-    expect(api.update()).toEqual({ device: true, host: false, outcome: 'verified' });
+    expect(api.update()).toEqual({ device: true, host: false, page: 'update', outcome: 'verified', landed: { device: true } });
   }, 20000);
 
   it('a box that never comes back is "sent", and says so in the SHARED error', async () => {
@@ -270,7 +288,7 @@ describe('updateOverControl', () => {
     await api.readFirmwareInfo();
     expect(api.firmwareInfo()).not.toBeNull();
     mock.comesBack = false;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('sent');
     expect(api.error()).toMatch(/did not come back on its own/i);
     expect(api.error()).toMatch(/replug it, then connect/i);
@@ -286,26 +304,26 @@ describe('updateOverControl', () => {
   it('only what was actually staged is disarmed', async () => {
     await connected();
     mock.activateThrows = new Error('the box refused');
-    await api.updateOverControl({ device: img(DEVICE_TAG) });
+    await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(mock.aborted.map((a) => a.target)).toEqual([0]);
   });
 
   it('a refused activate is "failed", and disarms what was staged so the chips cannot diverge', async () => {
     await connected();
     mock.activateThrows = new Error('the box refused');
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('failed');
     // Host first, the order it was staged in, and each on the short timeout: the usual reason for
     // being here is a box that has stopped answering, and two full op timeouts is a frozen minute.
     expect(mock.aborted.map((a) => a.target)).toEqual([1, 0]);
     expect(mock.aborted.every((a) => a.timeout === 3000)).toBe(true);
     expect(api.error()).toBeTruthy();
-    expect(api.update()).toEqual({ device: true, host: true, outcome: 'failed' });
+    expect(api.update()).toEqual({ device: true, host: true, page: 'update', outcome: 'failed' });
   });
 
   it('stages the mouse-side image first, while the chip that relays it is still running its old firmware', async () => {
     await connected();
-    await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     // OTA_TGT_HOST is 1, OTA_TGT_DEVICE is 0, and each target must get ITS OWN image.
     expect(mock.staged).toEqual([
       { target: 1, tag: HOST_TAG },
@@ -313,9 +331,56 @@ describe('updateOverControl', () => {
     ]);
   }, 20000);
 
+  it('records each chip it sent landing on the other slot, and the page that asked', async () => {
+    await connected();
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'advanced');
+    expect(outcome).toBe('verified');
+    expect(api.update()).toEqual({
+      device: true,
+      host: true,
+      page: 'advanced',
+      outcome: 'verified',
+      landed: { device: true, host: true },
+    });
+  }, 20000);
+
+  it('a main chip that reverts onto the version it had is verified but not landed', async () => {
+    // The image and the running firmware share a version, as two test builds can: only the slot
+    // shows the box went back.
+    await connected();
+    mock.after = { baud: 6_000_000, version: mock.VERSION };
+    mock.devicePendingFor = 5;
+    mock.revert = { at: 4, baud: 6_000_000, version: mock.VERSION };
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'advanced');
+    expect(outcome).toBe('verified');
+    expect(api.update()?.landed).toEqual({ device: false });
+  }, 20000);
+
+  it('a mouse-side only run records only the mouse-side chip', async () => {
+    await connected();
+    await api.updateOverControl({ host: img(HOST_TAG) }, 'advanced');
+    expect(api.update()?.landed).toEqual({ host: true });
+  }, 20000);
+
+  it('a box that does not answer before anything is sent fails, with nothing staged', async () => {
+    await connected();
+    mock.startLostFor = 2;
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'advanced');
+    expect(outcome).toBe('failed');
+    expect(mock.staged).toEqual([]);
+    expect(api.error()).toBe("The box didn't answer. Check USB2, then try again.");
+    expect(api.update()).toEqual({ device: true, host: false, page: 'advanced', outcome: 'failed' });
+  });
+
+  it('one lost reply before anything is sent is retried', async () => {
+    await connected();
+    mock.startLostFor = 1;
+    expect(await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update')).toBe('verified');
+  }, 20000);
+
   it('refuses with no link rather than pretending', async () => {
     mountProvider();
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('failed');
     expect(api.error()).toMatch(/connect to the box/i);
   });
@@ -325,7 +390,7 @@ describe('updateOverControl', () => {
     const statuses: string[] = [];
     mock.onFirmwareQuery = () => statuses.push(api.status());
     mock.devicePendingFor = 3;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(4);
     expect(statuses).toEqual(['flashing', 'flashing', 'flashing', 'flashing']);
@@ -335,7 +400,7 @@ describe('updateOverControl', () => {
   it('waits for a mouse-side chip that reports late', async () => {
     await connected();
     mock.hostSilentFor = 3;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(4);
     const info = api.firmwareInfo();
@@ -346,7 +411,7 @@ describe('updateOverControl', () => {
   it('waits for a mouse-side chip still on probation', async () => {
     await connected();
     mock.hostPendingFor = 3;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(4);
   }, 20000);
@@ -355,7 +420,7 @@ describe('updateOverControl', () => {
     await connected();
     mock.hostPendingFor = 2;
     mock.opens = [];
-    const outcome = await api.updateOverControl({ host: img(HOST_TAG) });
+    const outcome = await api.updateOverControl({ host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(3);
     expect(mock.opens).toEqual([6_000_000]);
@@ -364,7 +429,7 @@ describe('updateOverControl', () => {
   it('waits for a mouse-side chip that was there before, even when only the main chip was sent', async () => {
     await connected();
     mock.hostSilentFor = 3;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(4);
   }, 20000);
@@ -373,7 +438,7 @@ describe('updateOverControl', () => {
     await connected();
     mock.preLostFor = 1;
     mock.hostSilentFor = 3;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(4);
   }, 20000);
@@ -382,7 +447,7 @@ describe('updateOverControl', () => {
     await connected();
     mock.hostBefore = false;
     mock.hostSilentFor = 100;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.firmwareQueries).toBe(1);
   }, 20000);
@@ -392,7 +457,7 @@ describe('updateOverControl', () => {
     const restore = pastDeadlineAfter(2);
     try {
       mock.devicePendingFor = 1000;
-      const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+      const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
       expect(outcome).toBe('sent');
       expect(api.error()).toMatch(/did not come back on its own/i);
       expect(api.status()).toBe('disconnected');
@@ -409,7 +474,7 @@ describe('updateOverControl', () => {
     const restore = pastDeadlineAfter(2);
     try {
       mock.hostSilentFor = 1000;
-      const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+      const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
       expect(outcome).toBe('sent');
       expect(api.error()).toMatch(/mouse-side chip/i);
       expect(api.error()).not.toMatch(/did not come back on its own/i);
@@ -425,7 +490,7 @@ describe('updateOverControl', () => {
     try {
       mock.hostSilentFor = 1000;
       mock.lostFrom = 2;
-      const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+      const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
       expect(outcome).toBe('sent');
       expect(api.error()).toMatch(/mouse-side chip/i);
       expect(api.error()).not.toMatch(/did not come back on its own/i);
@@ -440,7 +505,7 @@ describe('updateOverControl', () => {
     mock.after = { baud: 6_000_000, version: V3_4_2 };
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 6_000_000, version: V3_4_0 };
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(api.version()).toEqual(V3_4_0);
     expect(api.updateOnly()).toBe(true);
@@ -452,7 +517,7 @@ describe('updateOverControl', () => {
     expect(api.updateOnly()).toBe(true);
     mock.after = { baud: 6_000_000, version: V3_4_2 };
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000]);
     expect(api.version()).toEqual(V3_4_2);
@@ -463,7 +528,7 @@ describe('updateOverControl', () => {
     mock.version = V3_4_2;
     await connected();
     mock.after = { baud: 6_000_000, version: V_NEWER };
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(api.status()).toBe('connected');
     expect(api.version()!.protoVer).toBe(PROTO_VER + 1);
@@ -477,7 +542,7 @@ describe('updateOverControl', () => {
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 6_000_000, version: V3_4_0 };
     mock.versionLostFor = 10;
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(api.version()).toMatchObject({ fwMajor: 3, fwMinor: 4, fwPatch: 0 });
   }, 20000);
@@ -489,7 +554,7 @@ describe('updateOverControl', () => {
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 6_000_000, version: V3_4_0, silent: 2 };
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000, 6_000_000]);
     expect(api.version()).toEqual(V3_4_0);
@@ -502,7 +567,7 @@ describe('updateOverControl', () => {
     mock.devicePendingFor = 4;
     mock.closeAt = 2;
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000, 6_000_000]);
     expect(statuses.every((s) => s === 'flashing')).toBe(true);
@@ -514,7 +579,7 @@ describe('updateOverControl', () => {
     mock.devicePendingFor = 4;
     mock.closeAfter = 2;
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000, 6_000_000]);
     expect(api.status()).toBe('connected');
@@ -537,7 +602,7 @@ describe('control link rate', () => {
     await connected();
     mock.after = { baud: 6_000_000, version: V3_4_2 };
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000]);
     expect(api.version()).toEqual(V3_4_2);
@@ -550,7 +615,7 @@ describe('control link rate', () => {
     await connected();
     mock.after = { baud: 4_000_000, version: V3_3_4 };
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000, 4_000_000]);
     // What reverted is visible in the version, which is what the Update page compares.
@@ -566,7 +631,7 @@ describe('control link rate', () => {
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 4_000_000, version: V3_3_4 };
     mock.opens = [];
-    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) });
+    const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000, 6_000_000, 4_000_000]);
     expect(api.version()).toEqual(V3_3_4);

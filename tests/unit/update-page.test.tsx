@@ -24,7 +24,7 @@ const st = vi.hoisted(() => ({
       deviceStaged: false,
       hostStaged: false,
     });
-    const [update, setUpdate] = createSignal<{ device: boolean; host: boolean; outcome: string } | null>(null);
+    const [update, setUpdate] = createSignal<{ device: boolean; host: boolean; page: string; outcome: string } | null>(null);
     return {
       status,
       setStatus,
@@ -72,9 +72,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     readFirmwareInfo: async () => null,
     // Mirrors the real one's observable effects, so the page is driven by state transitions rather
     // than by the test asserting an answer it also supplied.
-    updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }) => {
+    updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }, page: string) => {
       const s = mock.s!;
-      const run = { device: images.device !== undefined, host: images.host !== undefined };
+      const run = { device: images.device !== undefined, host: images.host !== undefined, page };
       mock.updates += 1;
       s.setUpdate({ ...run, outcome: 'running' });
       s.setStatus('flashing');
@@ -301,6 +301,17 @@ describe('Update', () => {
     back.getByRole('button', { name: /finish/i }).click();
     expect(mock.s!.update()).toBeNull();
     expect(navigate).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('asks for its runs as the Update page, and shows no result from a flash Advanced ran', async () => {
+    mock.assets = [dev, host];
+    await runUpdate(/update both chips/i);
+    await waitFor(() => expect(mock.s!.update()).toMatchObject({ page: 'update', outcome: 'verified' }));
+    cleanup();
+    mock.s!.setUpdate({ device: true, host: false, page: 'advanced', outcome: 'verified' });
+    const r = render(() => <Update />);
+    await waitFor(() => expect(r.getByRole('button', { name: /update both chips/i })).toBeTruthy());
+    expect(r.container.textContent).not.toMatch(/verified|came back/i);
   });
 
   it('Back is a normal secondary button beside the primary, not a tiny one below it', async () => {
