@@ -519,10 +519,3 @@ pre code[class*="language-"] {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--g-spacing-lg) calc(var(--g-spacing) * 2);
 }
-
-/* Under a connect view's buttons. */
-.connect-note {
-  margin: var(--g-spacing-sm) 0 0;
-  font-size: var(--font-size-xs);
-  color: var(--g-text-muted);
-}

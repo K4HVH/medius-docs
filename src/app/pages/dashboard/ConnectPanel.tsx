@@ -39,13 +39,6 @@ export const ConnectView = (props: ConnectViewProps) => {
     </Button>
   );
 
-  // A plain click stays in the page; a modified one opens a tab as any link does.
-  const statsLink = (e: MouseEvent) => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    e.preventDefault();
-    navigate('/dashboard/stats');
-  };
-
   const NeverInstalled = () => (
     <Button variant="subtle" size="compact" onClick={setup}>
       Set up a new box
@@ -164,13 +157,6 @@ export const ConnectView = (props: ConnectViewProps) => {
           <Connect label="Try again" />
         </Match>
       </Switch>
-      <p class="connect-note">
-        Boxes that connect are counted on the{' '}
-        <a href="/dashboard/stats" onClick={statsLink}>
-          public stats page
-        </a>
-        .
-      </p>
     </div>
   );
 };
