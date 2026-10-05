@@ -9,6 +9,7 @@ import DeviceInfo from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
+import UpdateOnlyCard from './UpdateOnlyCard';
 import { row } from './ui';
 import '../../../styles/docs.css';
 
@@ -87,9 +88,12 @@ const Device = () => {
                         )}
                       </Show>
                       <div style={row}>
-                        <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
-                          {dash.identifying() ? 'Identifying...' : 'Identify'}
-                        </Button>
+                        {/* LED isn't on the stable update path, so a newer box isn't sent it. */}
+                        <Show when={(dash.version()?.protoVer ?? 0) <= PROTO_VER}>
+                          <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
+                            {dash.identifying() ? 'Identifying...' : 'Identify'}
+                          </Button>
+                        </Show>
                         <Button variant="secondary" onClick={() => void dash.disconnect()}>
                           Disconnect
                         </Button>
@@ -102,9 +106,18 @@ const Device = () => {
 
                     <Match when={dash.status() === 'flashing'}>
                       <p>Updating.</p>
-                      <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                        Go to Update
-                      </Button>
+                      <Show
+                        when={dash.update()?.page === 'advanced'}
+                        fallback={
+                          <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                            Go to Update
+                          </Button>
+                        }
+                      >
+                        <Button variant="primary" onClick={() => navigate('/dashboard/advanced')}>
+                          Go to Advanced
+                        </Button>
+                      </Show>
                     </Match>
 
                     <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
@@ -116,38 +129,7 @@ const Device = () => {
             </div>
 
             <Show when={dash.updateOnly()}>
-              <Show
-                when={(dash.version()?.protoVer ?? 0) > PROTO_VER}
-                fallback={
-                  <div id="update-needed" data-search-target>
-                    <Card>
-                      <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
-                      <p>Update it to use the rest of the dashboard.</p>
-                      <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                        Update
-                      </Button>
-                    </Card>
-                  </div>
-                }
-              >
-                <div id="newer-firmware" data-search-target>
-                  <Card>
-                    <CardHeader title="Newer firmware" subtitle="This box speaks a newer protocol" />
-                    <p>
-                      This box speaks protocol {dash.version()?.protoVer} and this page protocol {PROTO_VER}.
-                      Reload to check for a newer page. It can still be flashed from Update or Advanced.
-                    </p>
-                    <div style={row}>
-                      <Button variant="primary" onClick={() => window.location.reload()}>
-                        Reload
-                      </Button>
-                      <Button variant="secondary" onClick={() => navigate('/dashboard/advanced')}>
-                        Advanced
-                      </Button>
-                    </div>
-                  </Card>
-                </div>
-              </Show>
+              <UpdateOnlyCard use="the rest of the dashboard" />
             </Show>
 
             <Show when={dash.status() === 'connected' && !dash.updateOnly()}>

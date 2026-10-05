@@ -358,6 +358,17 @@ describe('Update', () => {
     expect(r.getByRole('button', { name: /^update$/i })).toBeDisabled();
   });
 
+  it("choosing an update leaves a result Advanced is still showing alone", async () => {
+    const r = mount();
+    mock.s!.setStatus('connected');
+    mock.s!.setUpdate({ device: true, host: false, page: 'advanced', outcome: 'verified' });
+    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
+    r.getByRole('button', { name: /update both chips/i }).click();
+    await waitFor(() => r.getByRole('button', { name: /^back$/i }));
+    r.getByRole('button', { name: /^back$/i }).click();
+    expect(mock.s!.update()).toMatchObject({ page: 'advanced', outcome: 'verified' });
+  });
+
   it('a connected box gets the three update choices and nothing about cables', async () => {
     const r = mount();
     mock.s!.setStatus('connected');

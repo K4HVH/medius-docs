@@ -15,6 +15,8 @@ const mock = vi.hoisted(() => ({
   // The protocol an update-only box speaks.
   protoVer: 5,
   verdict: null as ConnectVerdict | null,
+  // The page that started the update in flight.
+  runPage: 'update',
   error: null as string | null,
 }));
 
@@ -41,6 +43,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
       mock.identifies += 1;
     },
     identifying: () => mock.identifying,
+    update: () => ({ device: true, host: true, page: mock.runPage, outcome: 'running' }),
     deviceLog: () => [],
     clearDeviceLog: () => {},
     poll: () => () => null,
@@ -63,6 +66,7 @@ afterEach(() => {
   mock.status = 'disconnected';
   mock.updateOnly = false;
   mock.protoVer = 5;
+  mock.runPage = 'update';
   mock.verdict = null;
   mock.error = null;
 });
@@ -117,7 +121,7 @@ describe('Device', () => {
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
       expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
-      expect(text).toContain('It can still be flashed from Update or Advanced.');
+      expect(text).toContain('It can still be flashed from Advanced.');
       expect(text).not.toMatch(/Update needed/i);
       expect(text).not.toMatch(/Live device health/i);
       getByRole('button', { name: 'Advanced' }).click();
@@ -189,6 +193,31 @@ describe('Device', () => {
     expect(go.disabled).toBe(false);
     go.click();
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
+  });
+
+  it('while Advanced flashes this box, the card takes you to Advanced', async () => {
+    mock.status = 'flashing';
+    mock.runPage = 'advanced';
+    const { getByRole } = render(() => <Device />);
+    getByRole('button', { name: /go to advanced/i }).click();
+    expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+  });
+
+  it('offers no Identify for a box newer than the page: the light command may have changed', () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.protoVer = PROTO_VER + 1;
+    const { queryByRole, getByRole } = render(() => <Device />);
+    expect(queryByRole('button', { name: 'Identify' })).toBeNull();
+    expect(getByRole('button', { name: 'Disconnect' })).toBeTruthy();
+  });
+
+  it('an older box still gets Identify: the light command is the same from protocol 5 on', () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.protoVer = 5;
+    const { getByRole } = render(() => <Device />);
+    expect(getByRole('button', { name: 'Identify' })).toBeTruthy();
   });
 
   it('Identify on the card blinks the box, beside Disconnect', () => {
