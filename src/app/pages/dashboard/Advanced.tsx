@@ -26,8 +26,8 @@ const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'No
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
-// Manual flash of the selected box over USB2, or of any chip in ROM download over its own USB, which
-// works on a dead box.
+// Manual flash of the selected box over USB2, or of either chip in ROM download over USB1 or USB3,
+// which works on a dead box.
 const Advanced = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
@@ -124,7 +124,7 @@ const Advanced = () => {
       <Combobox
         options={[
           { value: 'usb2', label: dash().name() ? `Control port, USB2 (${dash().name()})` : 'Control port, USB2' },
-          { value: 'rom', label: "Chip's own USB (USB1 or USB3)" },
+          { value: 'rom', label: 'ROM download, USB1 or USB3' },
         ]}
         value={via()}
         disabled={busy() || usb2Busy()}

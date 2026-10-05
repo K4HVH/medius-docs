@@ -81,7 +81,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
       if (mock.hold) await mock.hold;
       if (mock.outcome === 'verified') s.setStatus('connected');
       if (mock.outcome === 'sent') {
-        s.setError('The update was sent, but the box did not come back on its own. Replug it, then connect.');
+        s.setError('The update was sent, but the box did not come back. Replug it, then connect.');
         s.setStatus('disconnected');
       }
       if (mock.outcome === 'failed') {
@@ -264,7 +264,7 @@ describe('Update', () => {
     mock.assets = [dev, host];
     mock.outcome = 'sent';
     const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
+    await waitFor(() => expect(r.container.textContent).toMatch(/box did not come back/i));
     expect(r.container.textContent).not.toMatch(/verified/i);
     expect(r.container.textContent).toMatch(/replug it, then connect/i);
   });
@@ -275,7 +275,7 @@ describe('Update', () => {
     mock.assets = [dev, host];
     mock.outcome = 'sent';
     const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/did not come back on its own/i));
+    await waitFor(() => expect(r.container.textContent).toMatch(/box did not come back/i));
     mock.s!.setVersion(REVERTED);
     r.getByRole('button', { name: /^connect$/i }).click();
     await waitFor(() =>

@@ -102,7 +102,7 @@ const Update = () => {
     </Show>
   );
 
-  // A result Advanced is still showing is its own.
+  // A result of Advanced's stays for Advanced to show.
   const clearOwn = () => {
     if (dash.update()?.page === 'update') dash.clearUpdate();
   };

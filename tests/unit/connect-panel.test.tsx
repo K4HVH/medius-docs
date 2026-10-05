@@ -148,9 +148,9 @@ describe('ConnectPanel', () => {
     // An update whose box never came back leaves status 'disconnected', so gating the callout on
     // 'error' hid the one message that says what to do.
     mock.s!.setStatus('disconnected');
-    mock.s!.setError('the box did not come back on its own');
+    mock.s!.setError('the box did not come back');
     const { getByRole } = render(() => <ConnectPanel />);
-    expect(getByRole('alert').textContent).toContain('the box did not come back on its own');
+    expect(getByRole('alert').textContent).toContain('the box did not come back');
   });
 
   it('a flash failure is shown even when an older connect verdict is still set', () => {

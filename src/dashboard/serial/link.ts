@@ -253,7 +253,7 @@ export class BadProtoVerError extends Error {
   }
 }
 
-/** Whether this page can reach a box at all: from MIN_PROTO_VER on, the update path keeps its shape (§2.3). */
+/** Whether this page can reach a box at all: from MIN_PROTO_VER on, the update path is fixed (§2.3). */
 export function canUpdate(version: Version): boolean {
   return version.protoVer >= MIN_PROTO_VER;
 }

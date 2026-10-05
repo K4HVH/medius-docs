@@ -111,7 +111,7 @@ const Admin: Component = () => {
             </thead>
             <tbody>
               <tr><td>device download</td><td><code>0</code></td><td>Device chip enters ROM download, then flash over the <A href="/native/transport">CH343 link</A>.</td></tr>
-              <tr><td>host download</td><td><code>1</code></td><td>Device relays a download reboot to the host chip; the host flashes over its own USB.</td></tr>
+              <tr><td>host download</td><td><code>1</code></td><td>Device relays a download reboot to the host chip; the host flashes over USB3.</td></tr>
               <tr><td>device run</td><td><code>2</code></td><td>Device chip reboots to run firmware.</td></tr>
               <tr><td>host run</td><td><code>3</code></td><td>Device relays a run reboot to the host chip.</td></tr>
             </tbody>

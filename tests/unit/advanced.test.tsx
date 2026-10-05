@@ -71,7 +71,8 @@ vi.mock('../../src/dashboard/serial', () => ({
   requestRomPort: async () => ({}) as SerialPort,
 }));
 
-// The USB2 side has its own suite; here it only has to be the one shown, and say when it is busy.
+// The USB2 form is tested in advanced-usb2.test.tsx; here it only has to be the one shown, and say when
+// it is busy.
 vi.mock('../../src/app/pages/dashboard/AdvancedUsb2', () => ({
   Usb2Flash: (p: { via: () => unknown; onBusy?: (b: boolean) => void }) => (
     <div>
@@ -338,11 +339,11 @@ describe('Advanced', () => {
     expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
   });
 
-  it('starts on the chip\'s own USB while the box is not connected', async () => {
+  it('starts on ROM download while the box is not connected', async () => {
     const r = render(() => <Advanced />);
     await openGate(r);
     const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
-    expect(via.textContent).toContain("Chip's own USB (USB1 or USB3)");
+    expect(via.textContent).toContain('ROM download, USB1 or USB3');
     expect(r.container.textContent).not.toContain('usb2 form');
   });
 
@@ -396,7 +397,7 @@ describe('Advanced', () => {
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 
-  it('comes back on the control port for a result of its own, whatever the box is doing now', async () => {
+  it('comes back on the control port for a result Advanced started, whatever the box is doing now', async () => {
     mock.s!.setStatus('disconnected');
     mock.s!.setUpdate({ page: 'advanced', outcome: 'sent' });
     const r = render(() => <Advanced />);

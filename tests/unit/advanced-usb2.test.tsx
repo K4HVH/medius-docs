@@ -80,7 +80,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
           };
           s.setUpdate({ ...run, outcome: 'verified', landed });
         } else if (mock.outcome === 'sent') {
-          s.setError('The update was sent, but the box did not come back on its own. Replug it, then connect.');
+          s.setError('The update was sent, but the box did not come back. Replug it, then connect.');
           s.setStatus('disconnected');
           s.setUpdate({ ...run, outcome: 'sent' });
         } else {
@@ -373,7 +373,7 @@ describe('Advanced over USB2', () => {
     flashButton(r).click();
     await waitFor(() =>
       expect(r.container.textContent).toContain(
-        "The main chip came back on the firmware it had. It reverts an image that won't run, so it still works.",
+        "The new image didn't run, so the main chip went back to the firmware it had. The box works as before.",
       ),
     );
     expect(r.container.textContent).not.toMatch(/verified/i);

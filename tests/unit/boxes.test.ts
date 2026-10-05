@@ -138,7 +138,7 @@ describe('box registry', () => {
     expect(entry(boxes, a.mac).session.status()).toBe('disconnected');
   });
 
-  it('selection on its own never lands on a port that never answered', async () => {
+  it('selecting alone never lands on a port that never answered', async () => {
     const [sim, a] = [box(9), box(1)];
     sim.alive = false;
     const boxes = mount(new FakeSerial(portsOf(sim, a)));
@@ -259,7 +259,7 @@ describe('box registry', () => {
     expect(s.update()).toMatchObject({ page: 'advanced', outcome: 'failed' });
   });
 
-  it("words only the browser's own held-port error as a held port", () => {
+  it("words only Web Serial's held-port error as a held port", () => {
     expect(flashErrorText(new DOMException('The port is already open.', 'InvalidStateError'))).toMatch(/still held/);
     const busy = new Error('Starting the transfer failed: an update is already open on that chip.');
     expect(flashErrorText(busy)).toBe(busy.message);
@@ -668,7 +668,7 @@ describe('box registry', () => {
     expect(a.opens).toEqual([6_000_000]);
   });
 
-  it('writes to no box while a chip is flashed over its own USB', async () => {
+  it('writes to no box while a chip is in ROM download', async () => {
     const [a, b] = [box(1), box(2)];
     const ports = portsOf(a, b);
     const boxes = mount(new FakeSerial(ports));

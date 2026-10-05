@@ -220,7 +220,7 @@ export function createPoller(
   };
 
   // The keepalive lives here rather than in a card. A box on another protocol keeps alive on VERSION,
-  // which keeps its shape (§2.3).
+  // which no protocol changes (§2.3).
   createRenderEffect(() => {
     const key = keepalive();
     untrack(() => subscribe(key, KEEPALIVE_MS));

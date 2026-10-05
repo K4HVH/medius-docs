@@ -309,7 +309,7 @@ describe('updateOverControl', () => {
     mock.comesBack = false;
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
     expect(outcome).toBe('sent');
-    expect(api.error()).toMatch(/did not come back on its own/i);
+    expect(api.error()).toMatch(/box did not come back/i);
     expect(api.error()).toMatch(/replug it, then connect/i);
     // It must not claim anything about what is running now, nor leave the old firmware read to compare.
     expect(api.error()).not.toMatch(/installed|verified/i);
@@ -478,7 +478,7 @@ describe('updateOverControl', () => {
       mock.devicePendingFor = 1000;
       const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
       expect(outcome).toBe('sent');
-      expect(api.error()).toMatch(/did not come back on its own/i);
+      expect(api.error()).toMatch(/box did not come back/i);
       expect(api.status()).toBe('disconnected');
       expect(api.link()).toBeNull();
       expect(api.version()).toBeNull();
@@ -496,7 +496,7 @@ describe('updateOverControl', () => {
       const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
       expect(outcome).toBe('sent');
       expect(api.error()).toMatch(/mouse-side chip/i);
-      expect(api.error()).not.toMatch(/did not come back on its own/i);
+      expect(api.error()).not.toMatch(/box did not come back/i);
       expect(api.status()).toBe('disconnected');
     } finally {
       restore();
@@ -512,7 +512,7 @@ describe('updateOverControl', () => {
       const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
       expect(outcome).toBe('sent');
       expect(api.error()).toMatch(/mouse-side chip/i);
-      expect(api.error()).not.toMatch(/did not come back on its own/i);
+      expect(api.error()).not.toMatch(/box did not come back/i);
     } finally {
       restore();
     }

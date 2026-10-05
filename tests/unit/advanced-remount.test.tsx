@@ -59,7 +59,7 @@ it('a ROM flash half set up keeps its choices when USB2 is unplugged, as its dia
     );
   });
   await waitFor(() => expect(boxes.selected()?.session.name()).toBe('Desk'), { timeout: 3000 });
-  // Not connected, so Via starts on the chip's own USB: CHIP is the second dropdown.
+  // Not connected, so Via starts on ROM download: CHIP is the second dropdown.
   const chip = () => r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
   await waitFor(() => expect(chip()).toBeTruthy());
   fireEvent.click(chip());

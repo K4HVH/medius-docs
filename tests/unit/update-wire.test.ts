@@ -27,7 +27,7 @@ import {
   parseResp,
 } from '../../src/dashboard/protocol';
 
-// This page's half of the update path that keeps its shape from protocol 5 on (control-protocol.md
+// This page's half of the update path fixed from protocol 5 on (control-protocol.md
 // §2.3; the firmware's half is tests/host/test_update_wire.c). Every published dashboard updates boxes
 // newer than itself through these.
 

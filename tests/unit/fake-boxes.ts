@@ -285,7 +285,7 @@ export class FakeSerial implements SerialLike {
   }
 }
 
-// Another tab: its own port objects for the same devices.
+// Another tab: new port objects for the same devices.
 export const otherTab = (ports: FakePort[]) => ports.map((p) => new FakePort(p.box, p.info));
 
 // Web Locks as Chromium runs them: held until the callback's promise settles, refused to a second
