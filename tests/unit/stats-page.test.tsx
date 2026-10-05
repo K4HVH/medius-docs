@@ -83,7 +83,7 @@ afterEach(() => {
 });
 
 describe('Stats page', () => {
-  it('shows the headline figures and when counting began', async () => {
+  it('shows the totals and when counting began', async () => {
     answer(FULL);
     const r = render(() => <Stats />);
     const figures = await r.findByTestId('figures');

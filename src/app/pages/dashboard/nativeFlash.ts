@@ -55,7 +55,7 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
     if (meta && report) {
       const version = imageVersion(image, kind);
       try {
-        // The mouse-side chip's MAC is its own, not the box's.
+        // A box is known by its main chip's MAC; the mouse-side chip has a different one.
         report({
           type: 'flash',
           mac: meta.chip === 'device' ? mac : null,
@@ -70,7 +70,7 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
           ms: Date.now() - started,
         });
       } catch {
-        /* a lost count is never worth an error */
+        /* counting must not break a connect or a flash */
       }
     }
     return ok;

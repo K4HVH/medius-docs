@@ -118,7 +118,7 @@ const Columns = (props: {
         viewBox={`0 0 ${props.keys.length * w} 100`}
         preserveAspectRatio="none"
         role="img"
-        aria-label={`${props.what}, ${props.label(props.keys[0])} to ${props.label(props.keys[props.keys.length - 1])}, at most ${num(max())}`}
+        aria-label={`${props.what}, ${props.label(props.keys[0])} to ${props.label(props.keys[props.keys.length - 1])}, peak ${num(max())}`}
       >
         <For each={props.keys}>
           {(key, i) => {
@@ -141,7 +141,7 @@ const Columns = (props: {
       </svg>
       <div class="stat-axis">
         <span>{props.label(props.keys[0])}</span>
-        <span>Most {num(max())}</span>
+        <span>Peak {num(max())}</span>
         <span>{props.label(props.keys[props.keys.length - 1])}</span>
       </div>
     </Show>
@@ -189,6 +189,7 @@ const Summary = (props: { s: StatsSummary }) => {
           <CardHeader title="Usage stats" subtitle="Every box the dashboard has connected" />
           <div class="stat-figures" data-testid="figures">
             <Figure value={num(s().boxes.total)} label="Unique boxes" />
+            <Figure value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} label="New this week" />
             <Figure value={num(s().boxes.active7)} label="Active in 7 days" />
             <Figure value={num(s().boxes.active30)} label="Active in 30 days" />
             <Figure value={num(s().devices.unique)} label="Unique devices" />
@@ -212,7 +213,7 @@ const Summary = (props: { s: StatsSummary }) => {
 
       <div id="firmware" data-search-target>
         <Card>
-          <CardHeader title="Firmware in the field" subtitle="Boxes seen in the last 30 days" />
+          <CardHeader title="Firmware in use" subtitle="Boxes seen in the last 30 days" />
           <Section title="Main chip" first>
             <Bars rows={rows(s().firmware.versions, (v) => `v${v}`)} />
           </Section>
@@ -306,7 +307,7 @@ const Summary = (props: { s: StatsSummary }) => {
               </div>
             </Show>
           </Section>
-          <Section title="Breakdown">
+          <Section>
             <div class="stat-split">
               <Group title="Result">
                 <Bars rows={rows(s().flashes.byResult, (k) => RESULT[k as keyof typeof RESULT] ?? k)} />
@@ -328,20 +329,22 @@ const Summary = (props: { s: StatsSummary }) => {
         </Card>
       </div>
 
-      <div id="where" data-search-target>
+      <div id="countries" data-search-target>
         <Card>
-          <CardHeader title="Where and on what" subtitle="Boxes by country, and the systems the dashboard ran on" />
-          <div class="stat-split">
-            <Group title="Country">
-              <Bars rows={rows(s().countries, country)} />
-            </Group>
-            <Group title="System">
-              <Bars rows={rows(s().os, (k) => OS[k] ?? k)} />
-            </Group>
-            <Group title="Browser">
-              <Bars rows={rows(s().browsers, (k) => BROWSER[k] ?? k)} />
-            </Group>
-          </div>
+          <CardHeader title="Countries and systems" subtitle="Boxes by country, and the systems the dashboard ran on" />
+          <Section first>
+            <div class="stat-split">
+              <Group title="Country">
+                <Bars rows={rows(s().countries, country)} />
+              </Group>
+              <Group title="System">
+                <Bars rows={rows(s().os, (k) => OS[k] ?? k)} />
+              </Group>
+              <Group title="Browser">
+                <Bars rows={rows(s().browsers, (k) => BROWSER[k] ?? k)} />
+              </Group>
+            </div>
+          </Section>
         </Card>
       </div>
     </>
@@ -351,7 +354,7 @@ const Summary = (props: { s: StatsSummary }) => {
 const Collected = () => (
   <div id="collected" data-search-target>
     <Card>
-      <CardHeader title="What is collected" subtitle="Sent by the dashboard, always on" />
+      <CardHeader title="Data collected" subtitle="Sent by the dashboard, always on" />
       <table class="api-params">
         <thead>
           <tr>

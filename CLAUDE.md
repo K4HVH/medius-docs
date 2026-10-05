@@ -314,7 +314,7 @@ The dashboard reports each box it connects, the box's cloned device, and every f
 | Limits | 2 KB a body, 60 events a minute per address, foreign `Origin` refused; totals cached a minute |
 | Production | The compose file's `medius-stats` volume at `/app/data`. Redeploy the stack with it, or every restart starts the counts again |
 
-Unit tests never count: the provider builds no sink under vitest. A dev server writes to `data/stats.db` in the checkout, so delete that file to start clean.
+Unit tests never count: the provider builds no sink under vitest. A dev server writes to `data/stats.db` in the checkout, so delete that file to start the counts at zero.
 
 ## Adding a page
 
