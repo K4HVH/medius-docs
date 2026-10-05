@@ -208,6 +208,57 @@ describe('box registry', () => {
     expect((s.link() as unknown as { port: FakePort }).port).toBe(moved);
   });
 
+  it('a box whose update died with its unplugged port reconnects when it is plugged back', async () => {
+    const b = box(1);
+    const ports = portsOf(b);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    await pick(boxes, b.mac);
+    const s = entry(boxes, b.mac).session;
+    const release = b.hold();
+    const run = s.updateOverControl({ device: new Uint8Array([0xe9]) }, 'advanced');
+    await ready();
+    expect(s.status()).toBe('flashing');
+    serial.unplug(ports[0]);
+    release();
+    expect(await run).toBe('failed');
+    expect(s.error()).toBe('The box went away partway through.');
+    serial.plug(new FakePort(b));
+    await ready();
+    await vi.advanceTimersByTimeAsync(REATTACH_MS);
+    await ready();
+    expect(s.status()).toBe('connected');
+  });
+
+  it('a port back before the failed update has settled keeps the reconnect it started', async () => {
+    const b = box(1);
+    const ports = portsOf(b);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    await pick(boxes, b.mac);
+    const s = entry(boxes, b.mac).session;
+    let release = () => {};
+    b.stageGate = new Promise<void>((r) => (release = r));
+    const run = s.updateOverControl({ device: new Uint8Array([0xe9]) }, 'advanced');
+    await ready();
+    expect(s.status()).toBe('flashing');
+    serial.unplug(ports[0]);
+    await ready();
+    serial.plug(new FakePort(b));
+    await ready();
+    await vi.advanceTimersByTimeAsync(REATTACH_MS);
+    await ready();
+    expect(s.status()).toBe('connected');
+    // Only now does the old run's write fail.
+    release();
+    expect(await run).toBe('failed');
+    await ready();
+    expect(s.status()).toBe('connected');
+    expect(s.update()).toMatchObject({ page: 'advanced', outcome: 'failed' });
+  });
+
   it('focus re-probes busy ports only; a silent one waits for a click', async () => {
     const [busy, silent] = [box(1), box(2)];
     busy.busy = true;

@@ -135,6 +135,9 @@ function formatLogLine(line: LogLine): string {
 
 // Flash and update failures only: a failed CONNECT is a verdict, not a string.
 export function flashErrorText(e: unknown): string {
+  // A DOMException isn't an Error everywhere, so the port's own words are matched on its message.
+  const message = typeof e === 'object' && e !== null && 'message' in e ? String((e as { message: unknown }).message) : '';
+  if (/device has been lost/i.test(message)) return 'The box went away partway through.';
   if (e instanceof Error) {
     // Web Serial's wording says nothing about what to do.
     if (/already open/i.test(e.message)) {
@@ -652,7 +655,8 @@ export function createBoxSession(
           }
         }
         setError(flashErrorText(e));
-        setStatus('error');
+        // A port back before this settled has already started a fresh connect, which owns the status.
+        if (status() !== 'connecting' && status() !== 'connected') setStatus('error');
         return finish('failed');
       } finally {
         updating = false;
@@ -667,8 +671,8 @@ export function createBoxSession(
     const setPort = (p: SerialPort | null) => {
       if (p === port()) return;
       setPortSig(p);
-      // A lost session's loop finds the new port by itself.
-      if (p && held() && status() === 'disconnected') void connect();
+      // A lost session's loop finds the new port by itself; one whose update died with the port reconnects here.
+      if (p && held() && (status() === 'disconnected' || status() === 'error')) void connect();
     };
 
     const api: BoxSession = {

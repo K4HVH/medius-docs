@@ -328,7 +328,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
             </div>
           </Show>
 
-          <Show when={err()}>
+          <Show when={err() ?? (run()?.outcome === 'failed' ? (dash.error() ?? "That flash didn't finish.") : null)}>
             {(m) => (
               <div class="callout callout--danger" role="alert" style={section}>
                 {m()}
