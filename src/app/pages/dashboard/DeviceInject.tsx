@@ -280,9 +280,6 @@ const DeviceInject = () => {
                 Drop held motion
               </Button>
             </div>
-            <p style={muted}>
-              Bypass covers cursor, wheel and pan.
-            </p>
 
             </Show>
           </Section>
@@ -373,9 +370,6 @@ const DeviceInject = () => {
                 Release
               </Button>
             </div>
-            <p style={muted}>
-              Mask forces the input up, even while physically held. Release clears either override.
-            </p>
           </Show>
           </Section>
 

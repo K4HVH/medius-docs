@@ -320,15 +320,6 @@ describe('DeviceDeveloper', () => {
     expect(cardButton(card, 'Clear all').disabled).toBe(true);
   });
 
-  it('says what Apply and Clear all cost, with no reboot', () => {
-    on();
-    const { container } = render(() => <DeviceDeveloper />);
-    const text = patchCard(container).textContent ?? '';
-    expect(text).toContain('Apply re-clones the device with the stored set.');
-    expect(text).toContain('A re-clone is a replug on the game PC');
-    expect(text).not.toMatch(/reboot/i);
-  });
-
   it('reads a full flag on either table as the last add refused for room', () => {
     mock.poll = {
       imperfect: { allowed: true, overCapacity: false, cloneImperfect: false },

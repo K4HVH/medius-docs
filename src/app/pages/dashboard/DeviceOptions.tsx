@@ -240,7 +240,7 @@ const DeviceOptions = () => {
 
           <Section title="Box name" first>
           <p>
-            Up to {NAME_MAX} letters, numbers and symbols. Unset, the box derives one from its id.
+            Up to {NAME_MAX} letters, numbers and symbols.
           </p>
           <div style={controls}>
             <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
@@ -401,7 +401,6 @@ const DeviceOptions = () => {
             <Section title="Render">
             <p>
               Emits injected motion with native report texture, and picks which motion is rendered.
-              One Apply saves both.
             </p>
             <RadioGroup
               name="render-mode"
@@ -519,7 +518,7 @@ const DeviceOptions = () => {
           <div id="emit-rate" data-search-target>
             <Section title="Emit rate">
             <p>
-              Paces injected motion as a ceiling, and sets the clone's wire rate. One Apply saves both.
+              Paces injected motion as a ceiling, and sets the clone's wire rate.
             </p>
             <RadioGroup
               name="emit-mode"

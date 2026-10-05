@@ -167,11 +167,6 @@ const DevicePatch = () => {
               Clear all
             </Button>
           </div>
-          <p style={{ ...muted, 'margin-top': '4px' }}>
-            Apply re-clones the device with the stored set. Clear all erases the set, re-cloning without
-            it if the clone carries patches. A re-clone is a replug on the game PC and drops the
-            session: injection, locks, rules, the clip and catch subscriptions.
-          </p>
           <Show when={!allowed()}>
             <div class="callout callout--info" style={section}>
               A patch is stored now and applied once imperfect clones are on, on the Device tab.

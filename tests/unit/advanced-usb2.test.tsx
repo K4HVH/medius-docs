@@ -374,7 +374,7 @@ describe('Advanced over USB2', () => {
     flashButton(r).click();
     await waitFor(() =>
       expect(r.container.textContent).toContain(
-        "The new image didn't run, so the main chip went back to the firmware it had. The box works as before.",
+        "The new image didn't run, so the main chip went back to the firmware it had.",
       ),
     );
     expect(r.container.textContent).not.toMatch(/verified/i);

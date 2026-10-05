@@ -166,8 +166,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
       <For each={reverted()}>
         {(c) => (
           <div class="callout callout--warning">
-            The new image didn't run, so the {NAME[c].toLowerCase()} went back to the firmware it had. The box
-            works as before.
+            The new image didn't run, so the {NAME[c].toLowerCase()} went back to the firmware it had.
           </div>
         )}
       </For>
