@@ -88,8 +88,7 @@ const Update = () => {
       when={landed()}
       fallback={
         <div class="callout callout--warning">
-          The box came back, but not on the version sent. It reverts anything that won't run, so it
-          still works. Try the update again.
+          The box came back, but not on the version sent. Try the update again.
         </div>
       }
     >
@@ -211,9 +210,6 @@ const Update = () => {
               </Match>
 
               <Match when={view() === 'update'}>
-                <p>
-                  Runs over the current connection. The mouse stops working for a few seconds.
-                </p>
                 <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                   <WiringPorts />
                 </Show>

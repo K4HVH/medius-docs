@@ -307,9 +307,7 @@ const Advanced = () => {
                     </div>
                     <Show when={kind() === 'app'}>
                       <div class="callout callout--info" style={note}>
-                        An application image keeps the chip's partition layout. A box that never had
-                        the factory image needs it first: with one app slot it can't update over the
-                        control port.
+                        A box that never had the factory image needs it first.
                       </div>
                     </Show>
                     <Show when={validationError()}>

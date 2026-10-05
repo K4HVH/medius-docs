@@ -672,7 +672,6 @@ const DeviceClip = () => {
                 <Chip variant="warning">{plural(delta((s) => s.gated), 'discarded item')}</Chip>
               </Show>
             </div>
-            <p style={{ ...muted, 'margin-top': '4px' }}>Counts since this clip loaded.</p>
 
             <Show when={state() === ClipState.Faulted}>
               <div class="callout callout--danger" role="alert">
@@ -708,9 +707,6 @@ const DeviceClip = () => {
                 Clear
               </Button>
             </div>
-            <p style={muted}>
-              Start resumes a paused clip.
-            </p>
 
             </Section>
 
@@ -755,7 +751,6 @@ const DeviceClip = () => {
                   )}
                 </For>
               </div>
-              <p style={{ ...muted, 'margin-top': '4px' }}>Applies from the next start.</p>
             </div>
 
             </Section>
@@ -916,8 +911,7 @@ const DeviceClip = () => {
               </Show>
               <Show when={wontFit()}>
                 <div class="callout callout--warning">
-                  More than the ring has free. A long clip goes out as several frames: the box would take
-                  the first few, drop the overflowing one and fault with a partial clip loaded.
+                  More than the ring has free.
                 </div>
               </Show>
               <div style={{ ...section, ...row }}>
@@ -945,9 +939,6 @@ const DeviceClip = () => {
             </Section>
 
             <Section title="Triggers">
-            <p style={muted}>
-              Up to {CLIP_TRIG_MAX} input bindings and {CLIP_PKT_TRIG_MAX} packet triggers.
-            </p>
             <Show
               when={(clip()?.triggers.length ?? 0) + packets().length > 0}
               fallback={<p>No triggers bound.</p>}
@@ -968,8 +959,7 @@ const DeviceClip = () => {
               </Show>
               <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
                 <p style={muted}>
-                  Removing the any-input binding clears every trigger, packet triggers included: that
-                  address is the clear-all.
+                  Removing the any-input binding clears every trigger, packet triggers included.
                 </p>
               </Show>
               <Show when={packets().length > 0}>

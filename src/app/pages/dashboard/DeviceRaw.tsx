@@ -81,9 +81,6 @@ const DeviceRaw = () => {
                 Send
               </Button>
             </div>
-            <p style={{ ...muted, 'margin-top': '4px' }}>
-              The box drops a report for an endpoint no clone serves.
-            </p>
             <Show when={cmd.error()}>
               <div class="callout callout--danger" role="alert" style={section}>
                 {cmd.error()}

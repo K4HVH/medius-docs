@@ -25,7 +25,7 @@ const DeviceFactoryReset = () => {
           <CardHeader title="Factory reset" subtitle="Erase everything saved" />
           <p>
             Clears the box name, every option above and everything learned about devices, then
-            restarts. The box stops responding for a moment.
+            restarts.
           </p>
           <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
             <Button variant="danger" disabled={cmd.busy()} onClick={factoryReset}>

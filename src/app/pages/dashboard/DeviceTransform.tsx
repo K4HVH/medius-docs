@@ -176,10 +176,6 @@ const DeviceTransform = () => {
             />
           </div>
 
-          <Show when={buttonSource()}>
-            <p>A button is one bit, so it arrives whole or not at all.</p>
-          </Show>
-
           <div style={{ ...section, ...row }}>
             <Button variant="primary" disabled={cmd.busy()} onClick={apply}>
               Apply

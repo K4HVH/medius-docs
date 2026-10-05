@@ -596,8 +596,7 @@ const DeviceEventCatch = () => {
                 </pre>
               </Show>
               <p style={{ ...muted, 'margin-top': '4px' }}>
-                H is the host chip's clock, D the device chip's. Times count from the earliest held event
-                on that clock and compare only within one clock.
+                H is the host chip's clock, D the device chip's.
               </p>
               <Show when={events().some((e) => e.ev.kind === 'traffic' && trafficRuleActed(e.ev.traffic))}>
                 <p style={{ ...muted, 'margin-top': '4px' }}>

@@ -161,14 +161,6 @@ const DeviceLock = () => {
             usageLabel="Input"
           />
 
-          <Show when={!isAxis()}>
-            <p>A button, key or media usage is one bit, so it only locks or unlocks.</p>
-          </Show>
-
-          <Show when={isMedia()}>
-            <p>A media usage has no press and release edges, so the box suppresses it whole.</p>
-          </Show>
-
           <div style={section}>
             <div style={label}>Direction</div>
             <RadioGroup
@@ -193,12 +185,6 @@ const DeviceLock = () => {
                 step={5}
                 onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
               />
-            </div>
-          </Show>
-
-          <Show when={isAxis() && dir() === Direction.Both}>
-            <div class="callout callout--info" style={section}>
-              Both applies whether or not the box is injecting. Both at 100% clears every direction.
             </div>
           </Show>
 
