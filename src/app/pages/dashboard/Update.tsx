@@ -67,7 +67,7 @@ const Update = () => {
     const r = run();
     return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
   };
-  // From the session, so it survives a tab change or box switch. Advanced's runs are its own.
+  // From the session, so it survives a tab change or box switch. A run Advanced started shows there.
   const run = () => {
     const r = dash.update();
     return r?.page === 'update' ? r : null;

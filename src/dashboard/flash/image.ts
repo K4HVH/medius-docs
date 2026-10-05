@@ -4,7 +4,7 @@ import { APP_FLASH_ADDR, type FlashChip, type FlashKind, hasPartitionTable, vali
 
 const S3_CHIP_ID = 9;
 const APP_DESC_MAGIC = 0xabcd5432;
-// A spare slot (OTA_SLOT_SIZE).
+// Bytes in a spare slot (OTA_SLOT_SIZE).
 export const SLOT_BYTES = 0xf0000;
 const PROJECTS: Record<string, FlashChip> = { medius_device: 'device', medius_host: 'host' };
 
