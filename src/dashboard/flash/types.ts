@@ -44,7 +44,7 @@ export function validateImage(image: Uint8Array, kind: FlashKind): string | null
   return null;
 }
 
-function hasPartitionTable(image: Uint8Array): boolean {
+export function hasPartitionTable(image: Uint8Array): boolean {
   return (
     image.length > PARTITION_TABLE_OFFSET + 1 &&
     image[PARTITION_TABLE_OFFSET] === 0xaa &&
