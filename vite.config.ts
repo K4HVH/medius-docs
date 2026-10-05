@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import devtools from 'solid-devtools/vite';
 import { handleFirmwareApi } from './server/firmware';
+import { handleStatsApi } from './server/stats';
 import { agentDocsDev } from './server/agentDevMiddleware';
 
 // Serve the firmware proxy under the dev server, mirroring serve.ts in prod.
@@ -20,6 +21,38 @@ function firmwareApi(): Plugin {
             res.end(Buffer.from(await response.arrayBuffer()));
           })
           .catch(() => next());
+      });
+    },
+  };
+}
+
+// The stats routes under the dev server, on a database in data/ beside the checkout.
+function statsApi(): Plugin {
+  return {
+    name: 'stats-api',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url || !(req.url === '/api/stats' || req.url.startsWith('/api/stats/'))) return next();
+        const chunks: Buffer[] = [];
+        req.on('data', (c: Buffer) => chunks.push(c));
+        req.on('end', () => {
+          const headers = new Headers();
+          for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v);
+          const body = req.method === 'POST' ? Buffer.concat(chunks) : undefined;
+          const request = new Request(`http://${req.headers.host ?? 'localhost'}${req.url}`, {
+            method: req.method,
+            headers,
+            body,
+          });
+          handleStatsApi(request, req.socket.remoteAddress)
+            .then(async (response) => {
+              if (!response) return next();
+              res.statusCode = response.status;
+              response.headers.forEach((v, k) => res.setHeader(k, v));
+              res.end(Buffer.from(await response.arrayBuffer()));
+            })
+            .catch(() => next());
+        });
       });
     },
   };
@@ -47,7 +80,7 @@ export default defineConfig(({ mode }) => {
   process.env.GITHUB_REPO = process.env.GITHUB_REPO ?? env.GITHUB_REPO;
 
   return {
-    plugins: [firmwareApi(), agentDocs(), devtools(), solidPlugin()],
+    plugins: [firmwareApi(), statsApi(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
     server: {
