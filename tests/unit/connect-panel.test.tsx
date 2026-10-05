@@ -83,6 +83,13 @@ describe('ConnectPanel', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/setup');
   });
 
+  it('a port the browser cannot read says to replug USB2', () => {
+    mock.s!.setVerdict({ kind: 'unreadable' });
+    const { container, getByRole } = render(() => <ConnectPanel />);
+    expect(container.textContent).toContain("This computer can't read from the box. Unplug USB2 and plug it back in.");
+    expect(getByRole('button', { name: /try again/i })).toBeTruthy();
+  });
+
   it('no port names the cable and the computer', () => {
     mock.s!.setVerdict({ kind: 'no-port' });
     const { getByRole } = render(() => <ConnectPanel />);

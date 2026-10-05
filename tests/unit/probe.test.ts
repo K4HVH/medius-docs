@@ -121,6 +121,7 @@ describe('probeVerdict', () => {
     expect(probeVerdict({ kind: 'box', version: version(PROTO_VER), device: null, baud: 6_000_000 })).toBeNull();
     expect(probeVerdict({ kind: 'busy' })).toEqual({ kind: 'busy' });
     expect(probeVerdict({ kind: 'silent' })).toEqual({ kind: 'silent' });
+    expect(probeVerdict({ kind: 'unreadable' })).toEqual({ kind: 'unreadable' });
     expect(probeVerdict({ kind: 'old-firmware', version: version(4) })).toEqual({ kind: 'old-firmware', version: version(4) });
     expect(probeVerdict({ kind: 'other', message: 'x' })).toEqual({ kind: 'other', message: 'x' });
   });

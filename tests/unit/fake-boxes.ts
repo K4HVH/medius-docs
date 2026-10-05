@@ -5,6 +5,7 @@ import {
   BadProtoVerError,
   NoReplyError,
   QueryTimeoutError,
+  UnreadablePortError,
   canUpdate,
   type SerialLink,
   type SerialLinkEvents,
@@ -49,6 +50,8 @@ export class FakeBox {
   locksQueries = 0;
   device: DeviceInfo | null = DEVICE;
   gate: Promise<void> | null = null;
+  // Opens, but every read fails: Chromium after another program left the tty's read minimum at 0.
+  unreadable = false;
   // Holds staging alone, so a reconnect can finish while an update is stuck in it.
   stageGate: Promise<void> | null = null;
 
@@ -152,6 +155,7 @@ export class FakeLink {
   async handshake(): Promise<Version> {
     const b = this.box;
     if (b.gate) await b.gate;
+    if (b.unreadable) throw new UnreadablePortError();
     if (!this.open_ || !b.alive || this.baud !== b.baud) throw new NoReplyError();
     this.rx();
     if (!canUpdate(b.version)) throw new BadProtoVerError(b.version);

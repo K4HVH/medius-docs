@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-serial" />
-import { type Accessor, createMemo, createSignal, onCleanup } from 'solid-js';
+import { type Accessor, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import type { Version } from '../../../dashboard/protocol';
 import {
   CH343_PID,
@@ -408,6 +408,17 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       },
     },
   );
+  // With nothing listed, the blank card says why a plugged-in port isn't a box yet. Not plain silence: a
+  // CH343 that isn't a box (the sim's adapter) is silent too.
+  createEffect(() => {
+    const none = entries().every((e) => isPortKey(e.key));
+    const stuck = none
+      ? (entries()
+          .map((e) => e.session.probe())
+          .find((p) => p?.kind === 'unreadable' || p?.kind === 'busy') ?? null)
+      : null;
+    untrack(() => blank.ctl.setProbe(stuck));
+  });
 
   const onConnect = (ev: Event) => {
     const p = ev.target as SerialPort;

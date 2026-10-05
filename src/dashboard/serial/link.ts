@@ -166,6 +166,15 @@ export class UnreadableReplyError extends Error {
   }
 }
 
+// The port opens but every read fails at once, as Chromium does after another program (pyserial) left the
+// tty's read minimum at 0. Only a replug clears it from the browser.
+export class UnreadablePortError extends Error {
+  constructor() {
+    super('the port opens but cannot be read');
+    this.name = 'UnreadablePortError';
+  }
+}
+
 export class NoReplyError extends Error {
   constructor(what = 'the version handshake') {
     super(`no reply to ${what}`);
@@ -317,6 +326,8 @@ export class SerialLink {
   private closing = false;
   // Date.now() of the last frame; 0 before any.
   lastRxAt = 0;
+  // Set when the read loop died on an error rather than a close.
+  private readFailed = false;
 
   constructor(
     private readonly port: SerialPort,
@@ -355,6 +366,8 @@ export class SerialLink {
         return version;
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
+        // No later attempt reads anything either.
+        if (this.readFailed) throw new UnreadablePortError();
         // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
         // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0 to 3.4.3, where only
         // this flush clears it.
@@ -951,6 +964,7 @@ export class SerialLink {
         }
       } catch (e) {
         dropErr = e as Error;
+        this.readFailed = true;
         break;
       } finally {
         try {

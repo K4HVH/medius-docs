@@ -4,6 +4,7 @@ import {
   NoReplyError,
   QueryTimeoutError,
   SerialLink,
+  UnreadablePortError,
   attachLink,
   bauds,
   classifyConnectError,
@@ -715,6 +716,8 @@ class RatedPort {
     private readonly boxBaud: number,
     private readonly protoVer = PROTO_VER,
     private readonly openError: Error | null = null,
+    // Opens, but every read fails at once: Chromium after pyserial left the tty's read minimum at 0.
+    private readonly unreadable = false,
   ) {}
 
   // As in Chromium, an open port hands out a fresh readable once the previous one was cancelled.
@@ -724,6 +727,7 @@ class RatedPort {
       this.rs = new ReadableStream<Uint8Array>({
         start: (c) => {
           this.controller = c;
+          if (this.unreadable) c.error(new DOMException('The device has been lost.', 'NetworkError'));
         },
         cancel: () => {
           this.rs = null;
@@ -798,6 +802,12 @@ describe('attachLink', () => {
     expect(port.closes).toBe(1);
     await link.close();
   }, 10000);
+
+  it('a port that opens but cannot be read is unreadable, and is not tried at another rate', async () => {
+    const port = new RatedPort(6_000_000, PROTO_VER, null, true);
+    await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(UnreadablePortError);
+    expect(port.opens).toEqual([6_000_000]);
+  });
 
   it('a box silent at every rate is NoReplyError, and leaves the port closed', async () => {
     const port = new RatedPort(115_200);

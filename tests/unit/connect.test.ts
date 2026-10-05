@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   BadProtoVerError,
   NoReplyError,
+  UnreadablePortError,
   classifyConnectError,
 } from '../../src/dashboard/serial';
 import { PROTO_VER, type Version } from '../../src/dashboard/protocol';
@@ -27,6 +28,10 @@ describe('classifyConnectError', () => {
       kind: 'old-firmware',
       version: version(4),
     });
+  });
+
+  it('a port that opens but cannot be read is unreadable', () => {
+    expect(classifyConnectError(new UnreadablePortError())).toEqual({ kind: 'unreadable' });
   });
 
   it('an unanswered handshake is silent', () => {

@@ -8,12 +8,13 @@ export type Probe =
   | { kind: 'old-firmware'; version: Version }
   | { kind: 'busy' }
   | { kind: 'silent' }
+  | { kind: 'unreadable' }
   | { kind: 'other'; message: string };
 
 export function probeFromError(e: unknown): Probe {
   const v = classifyConnectError(e);
   if (v.kind === 'old-firmware') return v;
-  if (v.kind === 'busy' || v.kind === 'silent') return { kind: v.kind };
+  if (v.kind === 'busy' || v.kind === 'silent' || v.kind === 'unreadable') return { kind: v.kind };
   return { kind: 'other', message: v.kind === 'other' ? v.message : 'The port went away' };
 }
 
@@ -35,5 +36,5 @@ export async function probePort(
 
 export function probeVerdict(p: Probe | null): ConnectVerdict | null {
   if (!p || p.kind === 'box') return null;
-  return p.kind === 'busy' || p.kind === 'silent' ? { kind: p.kind } : p;
+  return p.kind === 'busy' || p.kind === 'silent' || p.kind === 'unreadable' ? { kind: p.kind } : p;
 }
