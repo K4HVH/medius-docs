@@ -8,6 +8,8 @@ import '../../../styles/docs.css';
 // Longer lists end in one row summing the rest.
 const MAX_ROWS = 12;
 
+const SUBTITLE = 'Boxes, devices and flashes the dashboard has counted';
+
 const num = (n: number) => n.toLocaleString();
 
 // Series and dates are UTC days, so they are shown in UTC: a reader west of it would see the day before.
@@ -43,7 +45,7 @@ const PAGE: Record<string, string> = { update: 'Update', advanced: 'Advanced', s
 const ROUTE: Record<string, string> = { usb2: 'USB2', rom: 'ROM download' };
 const CHIPS: Record<string, string> = { both: 'Both chips', device: 'Main chip', host: 'Mouse-side chip' };
 const SOURCE: Record<string, string> = { release: 'Release', file: 'File' };
-const KIND: Record<number, string> = { 2: 'Mouse', 1: 'Keyboard', 0: 'Other' };
+const KIND: Record<number, string> = { 2: 'Mouse', 1: 'Keyboard', 0: 'Unknown' };
 
 const route = (key: string) => {
   const [page, via] = key.split(' ');
@@ -66,21 +68,26 @@ const hex4 = (n: number) => n.toString(16).toUpperCase().padStart(4, '0');
 interface Row {
   label: string;
   n: number;
+  // The row summing the rest, which doesn't set the scale.
+  rest?: boolean;
 }
 
 const rows = (counts: Count[], label: (key: string) => string): Row[] => {
   const all = counts.map((c) => ({ label: label(c.key), n: c.n }));
   if (all.length <= MAX_ROWS) return all;
   const rest = all.slice(MAX_ROWS - 1);
-  return [...all.slice(0, MAX_ROWS - 1), { label: `Others (${rest.length})`, n: rest.reduce((a, r) => a + r.n, 0) }];
+  return [
+    ...all.slice(0, MAX_ROWS - 1),
+    { label: `Others (${rest.length})`, n: rest.reduce((a, r) => a + r.n, 0), rest: true },
+  ];
 };
 
-const Empty = () => <p class="stat-empty">Nothing counted yet.</p>;
+const Empty = (props: { text?: string }) => <p class="stat-empty">{props.text ?? 'Nothing counted yet.'}</p>;
 
-const Bars = (props: { rows: Row[] }) => {
-  const max = () => Math.max(0, ...props.rows.map((r) => r.n));
+const Bars = (props: { rows: Row[]; empty?: string }) => {
+  const max = () => Math.max(0, ...props.rows.filter((r) => !r.rest).map((r) => r.n));
   return (
-    <Show when={max() > 0} fallback={<Empty />}>
+    <Show when={max() > 0} fallback={<Empty text={props.empty} />}>
       <div class="stat-bars">
         <For each={props.rows}>
           {(r) => (
@@ -89,7 +96,7 @@ const Bars = (props: { rows: Row[] }) => {
                 {r.label}
               </span>
               <span class="stat-bars__track">
-                <span class="stat-bars__fill" style={{ width: `${(r.n / max()) * 100}%` }} />
+                <span class="stat-bars__fill" style={{ width: `${Math.min(100, (r.n / max()) * 100)}%` }} />
               </span>
               <span class="stat-bars__value">{num(r.n)}</span>
             </>
@@ -100,12 +107,14 @@ const Bars = (props: { rows: Row[] }) => {
   );
 };
 
-// One column per entry, oldest first, each split into stacked parts.
+// One column per entry, oldest first, each split into stacked parts. The last is still counting, so it
+// is drawn fainter and named by `now`.
 const Columns = (props: {
   keys: string[];
   parts: { name: string; cls: string; values: number[] }[];
   label: (key: string) => string;
   what: string;
+  now: string;
 }) => {
   const totals = () => props.keys.map((_, i) => props.parts.reduce((a, p) => a + p.values[i], 0));
   const max = () => Math.max(0, ...totals());
@@ -117,17 +126,23 @@ const Columns = (props: {
         viewBox={`0 0 ${props.keys.length * w} 100`}
         preserveAspectRatio="none"
         role="img"
-        aria-label={`${props.what}, ${props.label(props.keys[0])} to ${props.label(props.keys[props.keys.length - 1])}, peak ${num(max())}`}
+        aria-label={`${props.what}, ${props.label(props.keys[0])} to ${props.now.toLowerCase()}, peak ${num(max())}`}
       >
         <For each={props.keys}>
           {(key, i) => {
             let y = 100;
+            const split = () =>
+              props.parts.length > 1
+                ? ` (${props.parts.filter((p) => p.values[i()] > 0).map((p) => `${p.name} ${num(p.values[i()])}`).join(', ')})`
+                : '';
             return (
-              <g>
-                <title>{`${props.label(key)}: ${num(totals()[i()])}`}</title>
+              <g class={i() === props.keys.length - 1 ? 'stat-col--now' : undefined}>
+                <title>{`${i() === props.keys.length - 1 ? props.now : props.label(key)}: ${num(totals()[i()])}${totals()[i()] ? split() : ''}`}</title>
                 <For each={props.parts}>
                   {(p) => {
-                    const h = (p.values[i()] / max()) * 100;
+                    // A count too small for the scale still shows.
+                    const n = p.values[i()];
+                    const h = n > 0 ? Math.max(1.5, (n / max()) * 100) : 0;
                     y -= h;
                     return <rect class={p.cls} x={i() * w + 1} y={y} width={w - 2} height={h} />;
                   }}
@@ -141,18 +156,19 @@ const Columns = (props: {
       <div class="stat-axis">
         <span>{props.label(props.keys[0])}</span>
         <span>Peak {num(max())}</span>
-        <span>{props.label(props.keys[props.keys.length - 1])}</span>
+        <span>{props.now}</span>
       </div>
     </Show>
   );
 };
 
-const series = (counts: Count[], what: string) => (
+const series = (counts: Count[], what: string, now: string) => (
   <Columns
     keys={counts.map((c) => c.key)}
     parts={[{ name: what, cls: 'stat-fill--primary', values: counts.map((c) => c.n) }]}
     label={shortDate}
     what={what}
+    now={now}
   />
 );
 
@@ -164,9 +180,12 @@ const RESULT_PARTS: { key: keyof typeof RESULT; cls: string }[] = [
   { key: 'failed', cls: 'stat-fill--danger' },
 ];
 
+// Line height 1, as Section's label has.
 const Group = (props: { title: string; children: JSX.Element }) => (
   <div>
-    <div class="api-response-label">{props.title}</div>
+    <div class="api-response-label" style={{ 'line-height': '1' }}>
+      {props.title}
+    </div>
     {props.children}
   </div>
 );
@@ -180,12 +199,14 @@ const Figure = (props: { value: string; label: string }) => (
 
 const Summary = (props: { s: StatsSummary }) => {
   const s = () => props.s;
-  const rate = () => (s().flashes.total ? `${Math.round((s().flashes.succeeded / s().flashes.total) * 100)}%` : '0');
+  // Rounded down, so 199 of 200 is not 100%.
+  const rate = () => (s().flashes.total ? `${Math.floor((s().flashes.succeeded / s().flashes.total) * 100)}%` : 'None');
+  const split = () => s().firmware.split;
   return (
     <>
       <div id="stats" data-search-target>
         <Card>
-          <CardHeader title="Usage stats" subtitle="Every box the dashboard has connected" />
+          <CardHeader title="Usage stats" subtitle={SUBTITLE} />
           <div class="stat-figures" data-testid="figures">
             <Figure value={num(s().boxes.total)} label="Unique boxes" />
             <Figure value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} label="New this week" />
@@ -193,10 +214,10 @@ const Summary = (props: { s: StatsSummary }) => {
             <Figure value={num(s().boxes.active30)} label="Active in 30 days" />
             <Figure value={num(s().devices.unique)} label="Unique devices" />
             <Figure value={num(s().flashes.total)} label="Flashes" />
-            <Figure value={rate()} label="Flashes that worked" />
+            <Figure value={rate()} label="Success rate" />
             <Figure value={num(s().countries.filter((c) => c.key !== 'unknown').length)} label="Countries" />
           </div>
-          <Show when={s().since}>{(d) => <p class="stat-note">Counted since {date(d())}. The totals refresh every minute.</p>}</Show>
+          <Show when={s().since}>{(d) => <p class="stat-note">Counted since {date(d())}. The server recounts every minute.</p>}</Show>
         </Card>
       </div>
 
@@ -204,9 +225,9 @@ const Summary = (props: { s: StatsSummary }) => {
         <Card>
           <CardHeader title="Boxes over time" subtitle="New boxes per week, and boxes active per day" />
           <Section title="New per week" first>
-            {series(s().boxes.newPerWeek, 'New boxes per week')}
+            {series(s().boxes.newPerWeek, 'New boxes per week', 'This week')}
           </Section>
-          <Section title="Active per day">{series(s().boxes.activePerDay, 'Active boxes per day')}</Section>
+          <Section title="Active per day">{series(s().boxes.activePerDay, 'Active boxes per day', 'Today')}</Section>
         </Card>
       </div>
 
@@ -214,11 +235,15 @@ const Summary = (props: { s: StatsSummary }) => {
         <Card>
           <CardHeader title="Firmware in use" subtitle="Boxes seen in the last 30 days" />
           <Section title="Main chip" first>
-            <Bars rows={rows(s().firmware.versions, (v) => `v${v}`)} />
+            <Bars
+              rows={rows(s().firmware.versions, (v) => `v${v}`)}
+              empty={s().boxes.total ? 'No box seen in the last 30 days.' : undefined}
+            />
           </Section>
           <Show when={s().firmware.versions.length > 0}>
             <p class="stat-note">
-              {s().firmware.split ? num(s().firmware.split) : 'None'} of them run different versions on the two chips.
+              {split() ? num(split()) : 'None'} of them {split() === 1 ? 'runs' : 'run'} different versions on the two
+              chips.
             </p>
           </Show>
         </Card>
@@ -241,7 +266,7 @@ const Summary = (props: { s: StatsSummary }) => {
                   <For each={s().devices.byKind}>
                     {(k) => (
                       <tr>
-                        <td>{KIND[k.kind] ?? 'Other'}</td>
+                        <td>{KIND[k.kind] ?? 'Unknown'}</td>
                         <td>{num(k.devices)}</td>
                         <td>{num(k.boxes)}</td>
                       </tr>
@@ -268,9 +293,9 @@ const Summary = (props: { s: StatsSummary }) => {
                   <For each={s().devices.top}>
                     {(d) => (
                       <tr>
-                        <td>
+                        <td class="stat-wrap">
                           {d.product ?? 'Unnamed'}
-                          <div class="stat-sub">{KIND[d.kind] ?? 'Other'}</div>
+                          <div class="stat-sub">{KIND[d.kind] ?? 'Unknown'}</div>
                         </td>
                         <td>
                           {hex4(d.vid)}:{hex4(d.pid)}
@@ -295,6 +320,7 @@ const Summary = (props: { s: StatsSummary }) => {
               parts={RESULT_PARTS.map((p) => ({ name: RESULT[p.key], cls: p.cls, values: s().flashes.perWeek.map((w) => w[p.key]) }))}
               label={shortDate}
               what="Flashes per week"
+              now="This week"
             />
             <Show when={s().flashes.total > 0}>
               <div class="stat-legend">
@@ -320,7 +346,7 @@ const Summary = (props: { s: StatsSummary }) => {
               <Group title="Chips">
                 <Bars rows={rows(s().flashes.byChips, (k) => CHIPS[k] ?? k)} />
               </Group>
-              <Group title="Image">
+              <Group title="Source">
                 <Bars rows={rows(s().flashes.bySource, (k) => SOURCE[k] ?? k)} />
               </Group>
               <Group title="Version flashed">
@@ -368,18 +394,18 @@ const Collected = () => (
         <tbody>
           <tr>
             <td>Box</td>
-            <td>Each connect</td>
+            <td>When a box connects</td>
             <td>MAC, both chips' versions, protocol, OS, browser</td>
           </tr>
           <tr>
             <td>Device</td>
-            <td>Each cloned device seen</td>
+            <td>When a cloned device is first seen, or changes</td>
             <td>MAC, VID:PID, kind, product name</td>
           </tr>
           <tr>
             <td>Flash</td>
-            <td>Each flash's end</td>
-            <td>MAC (main chip only), page, route, chips, release or file, versions, result, time taken</td>
+            <td>When a flash ends</td>
+            <td>MAC (none for a mouse-side chip's ROM download), page, route, chips, release or file, image kind, versions, result, time taken</td>
           </tr>
         </tbody>
       </table>
@@ -403,11 +429,20 @@ const Stats = () => {
   };
   return (
     <>
-      <Switch>
-        <Match when={summary.error}>
+      <Switch
+        fallback={
           <div id="stats" data-search-target>
             <Card>
-              <CardHeader title="Usage stats" subtitle="Every box the dashboard has connected" />
+              <CardHeader title="Usage stats" subtitle={SUBTITLE} />
+              <p>Loading...</p>
+            </Card>
+          </div>
+        }
+      >
+        <Match when={summary.state === 'errored'}>
+          <div id="stats" data-search-target>
+            <Card>
+              <CardHeader title="Usage stats" subtitle={SUBTITLE} />
               <div class="callout callout--warning" role="alert">
                 {(summary.error as Error).message}
               </div>
@@ -418,14 +453,6 @@ const Stats = () => {
           </div>
         </Match>
         <Match when={value()}>{(s) => <Summary s={s()} />}</Match>
-        <Match when={summary.loading}>
-          <div id="stats" data-search-target>
-            <Card>
-              <CardHeader title="Usage stats" subtitle="Every box the dashboard has connected" />
-              <p>Loading...</p>
-            </Card>
-          </div>
-        </Match>
       </Switch>
       <Collected />
     </>

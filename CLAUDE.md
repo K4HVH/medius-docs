@@ -11,7 +11,7 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 | Native API | Binary control protocol and box behaviour: hardware, transport, frame format, injection model, every command (opcodes `0x01`-`0x1E`). |
 | Rust Library | `medius` crate reference: connecting, command bindings, keepalive, reconnect, and the `async` / `mock` / `tracing` features. |
 | Bindings | C ABI and Python bindings over the crate. |
-| Dashboard | In-browser box dashboard: connect, view the box, firmware update, recovery, device log. |
+| Dashboard | In-browser box dashboard: connect, view the box, firmware update, recovery, device log, public usage stats. |
 | AI Access | Markdown twins, `llms.txt`, and an MCP server. |
 
 **MidnightUI** is the component library, in `src/components/` and `src/styles/`, synced from an upstream repo. Do not modify its source files.
@@ -302,7 +302,7 @@ magick -background none -density 2048 public/favicon.svg -resize 1024x1024 publi
 
 CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`.
 
-### Usage stats
+## Usage stats
 
 The dashboard reports each box it connects, the box's cloned device, and every flash to `POST /api/stats/event`; `GET /api/stats` serves the totals the Stats page draws. Both live in `server/stats/` and run under `serve.ts` and the vite dev server alike.
 

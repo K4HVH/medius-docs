@@ -91,7 +91,8 @@ describe('Stats page', () => {
     expect(figures.textContent).toContain('Unique boxes');
     expect(figures.textContent).toContain('412');
     expect(figures.textContent).toContain('3,881');
-    expect(figures.textContent).toContain('98%');
+    // 3,800 of 3,881 is 97.9%, rounded down.
+    expect(figures.textContent).toContain('97%');
     expect(r.container.textContent).toMatch(/Counted since (28 Aug|Aug 28,) 2026\./);
   });
 
@@ -127,6 +128,53 @@ describe('Stats page', () => {
     expect(card.textContent).toMatch(/keyed hash/);
     expect(card.textContent).toMatch(/No IP address is stored/);
     expect(card.querySelectorAll('tbody tr')).toHaveLength(3);
+    expect(card.textContent).toContain(
+      "MAC (none for a mouse-side chip's ROM download), page, route, chips, release or file, image kind, versions, result, time taken",
+    );
+  });
+
+  it('rounds the success rate down, says None with no flashes, and words one split box', async () => {
+    answer({ ...FULL, flashes: { ...FULL.flashes, total: 200, succeeded: 199 }, firmware: { ...FULL.firmware, split: 1 } });
+    const r = render(() => <Stats />);
+    const figures = await r.findByTestId('figures');
+    expect(figures.textContent).toContain('99%');
+    expect(figures.textContent).toContain('Success rate');
+    expect(r.container.textContent).toContain('1 of them runs different versions on the two chips.');
+    expect(r.container.textContent).toContain('The server recounts every minute.');
+    cleanup();
+    answer({ ...EMPTY, boxes: { ...EMPTY.boxes, total: 3 } });
+    const e = render(() => <Stats />);
+    const f2 = await e.findByTestId('figures');
+    expect(f2.textContent).toContain('None');
+    expect(e.container.querySelector('#firmware')!.textContent).toContain('No box seen in the last 30 days.');
+  });
+
+  it('names release or file as the source, as Advanced does, and kind 0 as Unknown', async () => {
+    answer(FULL);
+    const r = render(() => <Stats />);
+    await r.findByTestId('figures');
+    expect(r.container.querySelector('#flashes')!.textContent).toContain('Source');
+    expect(r.container.querySelector('#flashes')!.textContent).not.toMatch(/\bImage\b/);
+    expect(r.container.querySelector('#devices')!.textContent).toContain('Unknown');
+  });
+
+  it('scales the bars to the largest named row, not to Others', async () => {
+    const countries = [{ key: 'AU', n: 100 }, ...Array.from({ length: 30 }, (_, i) => ({ key: `Z${String.fromCharCode(65 + (i % 26))}${i}`, n: 90 }))];
+    answer({ ...FULL, countries });
+    const r = render(() => <Stats />);
+    await r.findByTestId('figures');
+    const fills = [...r.container.querySelector('#countries .stat-bars')!.querySelectorAll('.stat-bars__fill')] as HTMLElement[];
+    expect(fills[0].style.width).toBe('100%');
+    expect(fills.at(-1)!.style.width).toBe('100%');
+  });
+
+  it('gives each week the split by result in its tooltip', async () => {
+    const perWeek = FULL.flashes.perWeek.map((w, i) => (i === 25 ? { ...w, verified: 20, written: 9, failed: 2 } : w));
+    answer({ ...FULL, flashes: { ...FULL.flashes, perWeek } });
+    const r = render(() => <Stats />);
+    await r.findByTestId('figures');
+    const titles = [...r.container.querySelectorAll('#flashes svg title')].map((t) => t.textContent);
+    expect(titles.at(-1)).toMatch(/: 31 \(Verified 20, Written \(ROM download\) 9, Failed 2\)$/);
   });
 
   it('shows zeros and an empty note for each chart with nothing counted', async () => {
@@ -146,11 +194,20 @@ describe('Stats page', () => {
     expect(r.container.querySelector('#devices')!.textContent).toContain('No device is on two boxes yet.');
   });
 
-  it('a failed read says so, and Retry reads again', async () => {
-    const f = answer(500, FULL);
+  it('a failed read says so, and Retry shows it reading again', async () => {
+    let release = () => {};
+    const f = vi.fn(async () => {
+      if (f.mock.calls.length === 1) return new Response('{}', { status: 500 });
+      await new Promise<void>((r) => (release = r));
+      return new Response(JSON.stringify(FULL), { status: 200 });
+    });
+    vi.stubGlobal('fetch', f);
     const r = render(() => <Stats />);
     await waitFor(() => expect(r.getByRole('alert').textContent).toContain("Couldn't load the stats (500)."));
     fireEvent.click(r.getByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(r.container.textContent).toContain('Loading...'));
+    expect(r.queryByRole('alert')).toBeNull();
+    release();
     await r.findByTestId('figures');
     expect(f).toHaveBeenCalledTimes(2);
   });

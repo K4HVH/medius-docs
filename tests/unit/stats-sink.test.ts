@@ -93,8 +93,18 @@ describe('createStatsSink', () => {
 
 describe('fetchStats', () => {
   it('returns the summary', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ since: null }), { status: 200 })));
-    expect(await fetchStats()).toEqual({ since: null });
+    const summary = { since: null, boxes: { newPerWeek: [], activePerDay: [] }, firmware: { versions: [] }, devices: { byKind: [], top: [] }, flashes: { perWeek: [] }, countries: [], os: [], browsers: [] };
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(summary), { status: 200 })));
+    expect(await fetchStats()).toEqual(summary);
+  });
+
+  it('turns a network failure, a page that is not JSON, or a body that is not a summary into one message', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+    await expect(fetchStats()).rejects.toThrow("Couldn't load the stats.");
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<!doctype html>', { status: 200 })));
+    await expect(fetchStats()).rejects.toThrow("Couldn't load the stats.");
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"x"}', { status: 200 })));
+    await expect(fetchStats()).rejects.toThrow("Couldn't load the stats.");
   });
 
   it('says why when the server has no stats', async () => {

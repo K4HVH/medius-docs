@@ -415,21 +415,25 @@ pre code[class*="language-"] {
   color: var(--g-text-muted);
 }
 
+.stat-wrap {
+  overflow-wrap: anywhere;
+}
+
 .stat-sub {
   font-size: var(--font-size-xs);
   color: var(--g-text-muted);
 }
 
+/* One label width, so the tracks of groups side by side start together. */
 .stat-bars {
   display: grid;
-  grid-template-columns: minmax(0, max-content) minmax(48px, 1fr) max-content;
+  grid-template-columns: 10rem minmax(48px, 1fr) max-content;
   gap: 6px var(--g-spacing-sm);
   align-items: center;
   font-size: var(--font-size-sm);
 }
 
 .stat-bars__label {
-  max-width: 14rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -461,7 +465,18 @@ pre code[class*="language-"] {
   display: block;
   width: 100%;
   height: 120px;
-  margin-top: var(--g-spacing-sm);
+}
+
+/* A thin gap between stacked parts, so neighbours of close brightness stay apart. */
+.stat-columns rect {
+  stroke: var(--color-gray-800);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The week or day still being counted. */
+.stat-col--now {
+  opacity: 0.55;
 }
 
 .stat-columns__base {
@@ -478,12 +493,13 @@ pre code[class*="language-"] {
   color: var(--g-text-muted);
 }
 
+/* Each at 3:1 or more against the card, and apart in hue where close in brightness. */
 .stat-fill--primary { fill: var(--color-primary); }
-.stat-fill--success { fill: var(--color-success); background: var(--color-success); }
-.stat-fill--written { fill: var(--color-green-700); background: var(--color-green-700); }
-.stat-fill--warning { fill: var(--color-warning); background: var(--color-warning); }
-.stat-fill--muted { fill: var(--color-gray-400); background: var(--color-gray-400); }
-.stat-fill--danger { fill: var(--color-danger); background: var(--color-danger); }
+.stat-fill--success { fill: var(--color-green-400); background: var(--color-green-400); }
+.stat-fill--written { fill: var(--color-blue-400); background: var(--color-blue-400); }
+.stat-fill--warning { fill: var(--color-yellow-400); background: var(--color-yellow-400); }
+.stat-fill--muted { fill: var(--color-gray-300); background: var(--color-gray-300); }
+.stat-fill--danger { fill: var(--color-red-500); background: var(--color-red-500); }
 
 .stat-legend {
   display: flex;
@@ -511,8 +527,13 @@ pre code[class*="language-"] {
 
 /* Under the home page's section cards. */
 .home-stats {
+  align-self: center;
   font-size: var(--font-size-sm);
-  color: var(--g-text-secondary);
+  color: var(--g-text-link);
+}
+
+.home-stats:hover {
+  text-decoration: underline;
 }
 
 /* Under a connect view's buttons. */
