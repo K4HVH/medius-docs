@@ -1,7 +1,7 @@
 // A rule above each later section: at even spacing, a section's last readout read as part of the
 // next section's title.
 
-import type { JSX } from 'solid-js';
+import { type JSX, Show } from 'solid-js';
 
 const first = { 'margin-top': 'var(--g-spacing-sm)' } as const;
 
@@ -18,11 +18,14 @@ const later = {
 // descenders.
 const heading = { 'line-height': '1' } as const;
 
-export const Section = (props: { title: string; first?: boolean; children: JSX.Element }) => (
+// Without a title it is the spacing and the rule alone, for content labelled inside it.
+export const Section = (props: { title?: string; first?: boolean; children: JSX.Element }) => (
   <div style={props.first ? first : later}>
-    <div class="api-response-label" style={heading}>
-      {props.title}
-    </div>
+    <Show when={props.title}>
+      <div class="api-response-label" style={heading}>
+        {props.title}
+      </div>
+    </Show>
     {props.children}
   </div>
 );

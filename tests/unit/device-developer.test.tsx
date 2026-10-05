@@ -24,6 +24,9 @@ const mock = vi.hoisted(() => ({
   applied: 0,
   cleared: 0,
   transferReply: { ep: 0, status: 0, data: new Uint8Array() },
+  status: 'connected',
+  updateOnly: false,
+  protoVer: 9,
   poll: {} as Record<string, unknown>,
   // Tells the card the polled values moved, as a fresh poll reply would.
   polled: () => {},
@@ -77,8 +80,16 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   };
   return {
     useDashboard: () => ({
-      status: () => 'connected',
-      updateOnly: () => false,
+      supported: true,
+      secure: true,
+      status: () => mock.status,
+      held: () => true,
+      present: () => true,
+      verdict: () => null,
+      error: () => null,
+      disconnect: async () => {},
+      updateOnly: () => mock.updateOnly,
+      version: () => ({ protoVer: mock.protoVer, fwMajor: 3, fwMinor: 5, fwPatch: 0, mac: [], name: '' }),
       link: () => link,
       poll: (key: string) => () => {
         polls();
@@ -111,10 +122,24 @@ afterEach(() => {
   mock.applied = 0;
   mock.cleared = 0;
   mock.transferReply = { ep: 0, status: 0, data: new Uint8Array() };
+  mock.status = 'connected';
   mock.poll = {};
 });
 
 describe('DeviceDeveloper', () => {
+  it('a box newer than the page is called newer, never told it speaks an older protocol', async () => {
+    mock.updateOnly = true;
+    mock.protoVer = 10;
+    try {
+      const { findByText, queryByText } = render(() => <DeviceDeveloper />);
+      expect(await findByText('Newer firmware')).toBeTruthy();
+      expect(queryByText('Update needed')).toBeNull();
+    } finally {
+      mock.updateOnly = false;
+      mock.protoVer = 9;
+    }
+  });
+
   it('renders every card of the advanced control layer', () => {
     on();
     const { getByText } = render(() => <DeviceDeveloper />);
@@ -745,5 +770,13 @@ describe('whole-number fields on the advanced control cards', () => {
     fireEvent.click(button(root, 'Add rule'));
     await settle();
     expect(mock.rewrites.map((r) => (r as unknown as { off: number }).off)).toEqual([3]);
+  });
+
+  it('a box that stopped answering shows that, not the layer or a Connect button', () => {
+    mock.status = 'lost';
+    const { getByRole, queryByRole, queryByText } = render(() => <DeviceDeveloper />);
+    expect(getByRole('alert').textContent).toMatch(/isn't answering/i);
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+    expect(queryByText('Rewrite rules')).toBeNull();
   });
 });

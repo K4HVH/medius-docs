@@ -1,7 +1,7 @@
 // One poller for the dashboard: shared timers, deduplicated subscribers, and a query stops once
 // nothing watches it.
 
-import { type Accessor, createSignal, onCleanup } from 'solid-js';
+import { type Accessor, createMemo, createRenderEffect, createSignal, onCleanup, untrack } from 'solid-js';
 import type {
   Bearing,
   Caps,
@@ -116,6 +116,8 @@ interface Slot {
 export interface Poller {
   // Subscribe for the lifetime of the calling component. Returns null until the first reply lands.
   subscribe<K extends PollKey>(key: K, everyMs?: number): Accessor<PollValues[K] | null>;
+  // The last value read, without querying.
+  peek<K extends PollKey>(key: K): Accessor<PollValues[K] | null>;
   // True when the box replies in a layout this build can't decode; the value then stays null.
   unreadable(key: PollKey): Accessor<boolean>;
   // Re-read now; call after a write.
@@ -124,8 +126,12 @@ export interface Poller {
   reset(): void;
 }
 
-export function createPoller(link: Accessor<SerialLink | null>): Poller {
+export function createPoller(
+  link: Accessor<SerialLink | null>,
+  opts: { onKeepalive?: (answered: boolean) => void; keepalive?: Accessor<'health' | 'version'> } = {},
+): Poller {
   const slots = new Map<PollKey, Slot>();
+  const keepalive = createMemo(opts.keepalive ?? (() => 'health' as const));
 
   const slotFor = (key: PollKey): Slot => {
     let s = slots.get(key);
@@ -156,9 +162,13 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
         if (s.gen !== gen || link() !== l) return;
         s.write(v);
         s.setUnreadable(false);
+        if (key === keepalive()) opts.onKeepalive?.(true);
       } catch (e) {
         // A transient miss is fine; the next tick tries again. A real drop closes the link.
-        if (e instanceof UnreadableReplyError && s.gen === gen && link() === l) s.setUnreadable(true);
+        if (s.gen === gen && link() === l) {
+          if (e instanceof UnreadableReplyError) s.setUnreadable(true);
+          if (key === keepalive()) opts.onKeepalive?.(e instanceof UnreadableReplyError);
+        }
       }
     }
     // Only avoids arming a timer the top check would reject.
@@ -209,8 +219,12 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
     }
   };
 
-  // The keepalive lives here rather than in a card.
-  subscribe('health', KEEPALIVE_MS);
+  // The keepalive lives here rather than in a card. A box on another protocol keeps alive on VERSION,
+  // which no protocol changes (§2.3).
+  createRenderEffect(() => {
+    const key = keepalive();
+    untrack(() => subscribe(key, KEEPALIVE_MS));
+  });
 
   if (typeof document !== 'undefined') {
     // On tab return, re-read everything rather than wait out a clamped interval.
@@ -223,5 +237,8 @@ export function createPoller(link: Accessor<SerialLink | null>): Poller {
 
   const unreadable = (key: PollKey): Accessor<boolean> => slotFor(key).unreadable;
 
-  return { subscribe, unreadable, refresh, reset };
+  const peek = <K extends PollKey>(key: K): Accessor<PollValues[K] | null> =>
+    slotFor(key).read as Accessor<PollValues[K] | null>;
+
+  return { subscribe, peek, unreadable, refresh, reset };
 }

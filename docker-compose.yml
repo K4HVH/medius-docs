@@ -8,3 +8,10 @@ services:
     environment:
       #- PUBLIC_DIR=./dist                                  # Default: ./dist
       #- PORT=3000                                          # Default: 3000
+      - STATS_DB=/app/data/stats.db                         # The usage stats database
+    volumes:
+      - medius-stats:/app/data                              # Keeps the stats across redeploys
+
+volumes:
+  medius-stats:
+    name: medius-stats                                      # Not prefixed with the stack's name

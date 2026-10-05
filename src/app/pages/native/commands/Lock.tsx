@@ -89,6 +89,7 @@ const Lock: Component = () => {
                 <tr><td>one bit</td><td>A button, key or media usage locks below <code>100</code> and passes at <code>100</code>. The box stores that, not the number sent.</td></tr>
                 <tr><td>sign</td><td>A negative reverses what it keeps: the magnitude is weighed and the result flipped, so <code>-100</code> is an inversion with no rounding. A negative on a momentary usage (one bit, nothing to reverse) is refused.</td></tr>
                 <tr><td>direction</td><td>The slot is picked from the sign of the delta <em>before</em> the weigh, so a directional negative does not loop: <code>-100</code> on <code>positive</code> sends rightward motion left and leaves leftward motion alone.</td></tr>
+                <tr><td>order</td><td>A scale is in force before the box acts on anything sent after it, a <A href="/native/commands/clip#set">clip's auto-lock</A> included: once a later command's effect reaches the PC, no physical input passes at the old scale.</td></tr>
               </tbody>
             </table>
             <div class="callout callout--warning">

@@ -84,7 +84,8 @@ import DashboardDeveloper from './pages/dashboard/DeviceDeveloper';
 import DashboardUpdate from './pages/dashboard/Update';
 import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
-import { DashboardProvider } from './pages/dashboard/context';
+import DashboardStats from './pages/dashboard/Stats';
+import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
 const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
   <>
@@ -173,13 +174,16 @@ const App: Component = () => {
           <Route path="/bindings/python/api" component={PyApi} />
           <Route path="/bindings/python/types" component={PyTypes} />
           <Route path="/bindings/python/build" component={PyBuild} />
-          <Route path="/dashboard" component={DashboardDevice} />
+          <Route path="/" component={BoxScope}>
+            <Route path="/dashboard" component={DashboardDevice} />
+            <Route path="/dashboard/control" component={DashboardControl} />
+            <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
+            <Route path="/dashboard/update" component={DashboardUpdate} />
+          </Route>
           <Route path="/dashboard/setup" component={DashboardSetup} />
-          <Route path="/dashboard/control" component={DashboardControl} />
-          <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
-          <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
+          <Route path="/dashboard/stats" component={DashboardStats} />
         </Route>
         <Route path="*" component={() => <Navigate href="/" />} />
         </Router>

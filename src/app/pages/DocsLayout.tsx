@@ -10,7 +10,7 @@ import { CommandPalette } from '../../components/navigation/CommandPalette';
 import {
   BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsDownload,
-  BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
+  BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat, BsBarChart,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
   BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
@@ -18,7 +18,8 @@ import {
 import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
 import AiActions from '../AiActions';
-import { useDashboard } from './dashboard/context';
+import { useBoxes, useNativeFlash } from './dashboard/context';
+import { BoxList } from './dashboard/BoxList';
 import Prism from '../prism';
 import '../../styles/docs.css';
 
@@ -174,7 +175,16 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
+  { value: '/dashboard/stats', label: 'Stats', icon: BsBarChart },
 ];
+
+const BOX_ROUTES = new Set([
+  '/dashboard',
+  '/dashboard/control',
+  '/dashboard/advanced-control',
+  '/dashboard/update',
+  '/dashboard/advanced',
+]);
 
 const isMobileQuery = () =>
   typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
@@ -185,8 +195,9 @@ const DocsLayout = (props: RouteSectionProps) => {
   const [searchOpen, setSearchOpen] = createSignal(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const dash = useDashboard();
-  const flashing = () => dash.status() === 'flashing';
+  const native = useNativeFlash();
+  const boxes = useBoxes();
+  const flashing = native.running;
   // Block in-app navigation (back/forward, links, programmatic) during a flash.
   useBeforeLeave((e) => {
     if (flashing()) e.preventDefault();
@@ -267,7 +278,9 @@ const DocsLayout = (props: RouteSectionProps) => {
 
   const pageTitle = createMemo(() => {
     const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs, ...aiAccessTabs];
-    return all.find(t => t.value === location.pathname)?.label ?? '';
+    const label = all.find(t => t.value === location.pathname)?.label ?? '';
+    const box = BOX_ROUTES.has(location.pathname) ? boxes.selected()?.session.name() : null;
+    return box ? `${label} - ${box}` : label;
   });
 
   let contentRef: HTMLDivElement | undefined;
@@ -297,6 +310,16 @@ const DocsLayout = (props: RouteSectionProps) => {
     navigate(value);
     if (isMobile()) setPaneState('closed');
   };
+
+  const handleBoxPick = () => {
+    const p = location.pathname;
+    if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
+    if (isMobile()) setPaneState('closed');
+  };
+
+  createEffect(() => {
+    if (activeSection() === 'dashboard') boxes.start();
+  });
 
   return (
     <>
@@ -467,6 +490,10 @@ const DocsLayout = (props: RouteSectionProps) => {
             />
           </Show>
           <Show when={activeSection() === 'dashboard'}>
+            <Show when={boxes.supported && boxes.secure}>
+              <Divider spacing="compact" label="Boxes" labelAlign="start" />
+              <BoxList onPick={handleBoxPick} disabled={flashing()} />
+            </Show>
             <Divider spacing="compact" label="Dashboard" labelAlign="start" />
             <Tabs
               orientation="vertical"

@@ -2,18 +2,15 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   BadProtoVerError,
   NoReplyError,
-  type ConnectDeps,
-  attemptConnect,
+  UnreadablePortError,
   classifyConnectError,
 } from '../../src/dashboard/serial';
 import { PROTO_VER, type Version } from '../../src/dashboard/protocol';
 
-// Each protocol with the firmware that reports it: 3.1.0 is protocol 4, 3.4.2 is the current wire,
-// and 3.5.0 stands for a later release on the protocol after it.
+// Each protocol with the firmware that reports it: 3.1.0 is protocol 4 and 3.4.2 the current wire.
 const FW: Record<number, [number, number, number]> = {
   4: [3, 1, 0],
   [PROTO_VER]: [3, 4, 2],
-  [PROTO_VER + 1]: [3, 5, 0],
 };
 const version = (protoVer: number): Version => ({
   protoVer,
@@ -24,20 +21,6 @@ const version = (protoVer: number): Version => ({
   name: 'Medius-1E28',
 });
 const cancel = () => new DOMException('No port selected', 'NotFoundError');
-const port = (tag: string) => ({ tag }) as unknown as SerialPort;
-
-const deps = (over: Partial<ConnectDeps<'L'>> = {}): ConnectDeps<'L'> => ({
-  supported: () => true,
-  secure: () => true,
-  granted: async () => [],
-  choose: async () => {
-    throw cancel();
-  },
-  attach: async () => {
-    throw new NoReplyError();
-  },
-  ...over,
-});
 
 describe('classifyConnectError', () => {
   it('a refused protocol version is old firmware, and carries the version', () => {
@@ -47,11 +30,8 @@ describe('classifyConnectError', () => {
     });
   });
 
-  it('a refused protocol above the page is new firmware, not old', () => {
-    expect(classifyConnectError(new BadProtoVerError(version(PROTO_VER + 1)))).toEqual({
-      kind: 'new-firmware',
-      version: version(PROTO_VER + 1),
-    });
+  it('a port that opens but cannot be read is unreadable', () => {
+    expect(classifyConnectError(new UnreadablePortError())).toEqual({ kind: 'unreadable' });
   });
 
   it('an unanswered handshake is silent', () => {
@@ -108,174 +88,5 @@ describe('classifyConnectError', () => {
   it('anything else keeps its own message', () => {
     expect(classifyConnectError(new Error('boom'))).toEqual({ kind: 'other', message: 'boom' });
     expect(classifyConnectError('boom')).toEqual({ kind: 'other', message: 'boom' });
-  });
-});
-
-describe('attemptConnect', () => {
-  it('refuses before touching a port when the browser cannot reach one', async () => {
-    const choose = vi.fn();
-    const r = await attemptConnect(deps({ supported: () => false, choose }));
-    expect(r).toEqual({ ok: false, verdict: { kind: 'unsupported' } });
-    expect(choose).not.toHaveBeenCalled();
-  });
-
-  it('refuses an insecure context before touching a port', async () => {
-    const choose = vi.fn();
-    const r = await attemptConnect(deps({ secure: () => false, choose }));
-    expect(r).toEqual({ ok: false, verdict: { kind: 'insecure' } });
-    expect(choose).not.toHaveBeenCalled();
-  });
-
-  it('opens a port already granted without asking for it again', async () => {
-    const p = port('granted');
-    const choose = vi.fn();
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [p],
-        choose,
-        attach: async () => ({ link: 'L', version: version(PROTO_VER) }),
-      }),
-    );
-    expect(r).toEqual({ ok: true, port: p, link: 'L', version: version(PROTO_VER) });
-    expect(choose).not.toHaveBeenCalled();
-  });
-
-  it('a granted port that will not open falls through to the chooser', async () => {
-    const stale = port('stale');
-    const picked = port('picked');
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [stale],
-        choose: async () => picked,
-        attach: async (p) => {
-          if (p === stale) throw new Error('Failed to open serial port.');
-          return { link: 'L', version: version(PROTO_VER) };
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(PROTO_VER) });
-  });
-
-  it('a granted port that opens and stays silent is the answer, not a reason to ask again', async () => {
-    const choose = vi.fn();
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [port('a')],
-        choose,
-        attach: async () => {
-          throw new NoReplyError();
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: false, verdict: { kind: 'silent' } });
-    expect(choose).not.toHaveBeenCalled();
-  });
-
-  it('tries every granted port before falling through', async () => {
-    const a = port('a');
-    const b = port('b');
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [a, b],
-        attach: async (p) => {
-          if (p === a) throw new Error('Failed to open serial port.');
-          return { link: 'L', version: version(PROTO_VER) };
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: true, port: b, link: 'L', version: version(PROTO_VER) });
-  });
-
-  it('an empty chooser is no-port', async () => {
-    expect(await attemptConnect(deps())).toEqual({ ok: false, verdict: { kind: 'no-port' } });
-  });
-
-  it('a box on an older protocol reports the version that answered', async () => {
-    const r = await attemptConnect(
-      deps({
-        choose: async () => port('p'),
-        attach: async () => {
-          throw new BadProtoVerError(version(4));
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: false, verdict: { kind: 'old-firmware', version: version(4) } });
-  });
-
-  it('a granted box on a newer protocol answers for itself, without the chooser', async () => {
-    const choose = vi.fn();
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [port('p')],
-        choose,
-        attach: async () => {
-          throw new BadProtoVerError(version(PROTO_VER + 1));
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: false, verdict: { kind: 'new-firmware', version: version(PROTO_VER + 1) } });
-    expect(choose).not.toHaveBeenCalled();
-  });
-
-  it('keeps looking past a granted port that is the wrong box', async () => {
-    const wrong = port('wrong');
-    const right = port('right');
-    const choose = vi.fn();
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [wrong, right],
-        choose,
-        attach: async (p) => {
-          if (p === wrong) throw new NoReplyError();
-          return { link: 'L', version: version(PROTO_VER) };
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: true, port: right, link: 'L', version: version(PROTO_VER) });
-    expect(choose).not.toHaveBeenCalled();
-  });
-
-  it('skipGranted ignores what the browser remembers and asks, which is how a retry escapes', async () => {
-    const remembered = port('remembered');
-    const picked = port('picked');
-    const granted = vi.fn(async () => [remembered]);
-    const r = await attemptConnect(
-      deps({
-        granted,
-        choose: async () => picked,
-        attach: async (p) => {
-          if (p === remembered) throw new NoReplyError();
-          return { link: 'L', version: version(PROTO_VER) };
-        },
-      }),
-      { skipGranted: true },
-    );
-    expect(r).toEqual({ ok: true, port: picked, link: 'L', version: version(PROTO_VER) });
-    expect(granted).not.toHaveBeenCalled();
-  });
-
-  it('a cancelled chooser keeps the better answer a granted port already gave', async () => {
-    const r = await attemptConnect(
-      deps({
-        granted: async () => [port('held')],
-        attach: async () => {
-          throw new Error('Failed to open serial port.');
-        },
-      }),
-    );
-    expect(r).toEqual({ ok: false, verdict: { kind: 'busy' } });
-  });
-
-  it('a listing that rejects falls through to the chooser instead of escaping', async () => {
-    const r = await attemptConnect(
-      deps({
-        granted: async () => {
-          throw new Error('the document is not fully active');
-        },
-        choose: async () => port('p'),
-        attach: async () => ({ link: 'L', version: version(PROTO_VER) }),
-      }),
-    );
-    expect(r).toEqual({ ok: true, port: port('p'), link: 'L', version: version(PROTO_VER) });
   });
 });

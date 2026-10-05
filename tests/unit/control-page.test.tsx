@@ -93,10 +93,8 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     }),
     connect: async () => {},
     disconnect: async () => {},
-    flashProgress: () => null,
-    flashLog: () => [],
-    flashNative: async () => true,
-    clearFlashResult: () => {},
+    held: () => true,
+    present: () => true,
     deviceLog: () => [],
     clearDeviceLog: () => {},
     inputEvents: () => [],
@@ -121,6 +119,13 @@ const mount = (value = stub()) =>
 afterEach(cleanup);
 
 describe('Control page', () => {
+  it('a box newer than the page is called newer, never told it speaks an older protocol', async () => {
+    const newer = { ...(VALUES.version as object), protoVer: PROTO_VER + 1 };
+    const { findByText, queryByText } = mount(stub({ updateOnly: () => true, version: () => newer as never }));
+    expect(await findByText('Newer firmware')).toBeTruthy();
+    expect(queryByText('Update needed')).toBeNull();
+  });
+
   // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
   // the Connect button again and said nothing. It says why now, through the shared panel.
   it('says why a connect failed rather than offering a bare Connect button', async () => {
@@ -170,6 +175,19 @@ describe('Control page', () => {
     await findByText('Controls');
     expect(queryByText('Injection')).toBeNull();
     expect(queryByText('Clip playback')).toBeNull();
+  });
+
+  it('a box that stopped answering shows that, not the controls or a Connect button', async () => {
+    const { findByText, queryByText, queryByRole } = mount(stub({ status: () => 'lost', health: () => null }));
+    await findByText(/isn't answering/i);
+    expect(queryByText('Injection')).toBeNull();
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+  });
+
+  it('while this box updates, the card offers its progress rather than a dead button', async () => {
+    const { findByRole } = mount(stub({ status: () => 'flashing', health: () => null }));
+    const go = (await findByRole('button', { name: /go to update/i })) as HTMLButtonElement;
+    expect(go.disabled).toBe(false);
   });
 
   it('names the safety clear by everything it drops, not just injection', async () => {

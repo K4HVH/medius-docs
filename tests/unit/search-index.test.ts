@@ -42,7 +42,7 @@ describe('dashboard search index', () => {
       'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceEventCatch.tsx',
       'DeviceClip.tsx', 'DeviceLed.tsx', 'DeviceOptions.tsx', 'DeviceInfo.tsx', 'Device.tsx',
       'DeviceTransform.tsx', 'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx',
-      'DeviceRaw.tsx', 'DeviceTransfer.tsx', 'DeviceFactoryReset.tsx',
+      'DeviceRaw.tsx', 'DeviceTransfer.tsx', 'DeviceFactoryReset.tsx', 'UpdateOnlyCard.tsx',
     ];
     const titles = new Set<string>();
     for (const f of files) {
@@ -67,6 +67,9 @@ describe('dashboard search index', () => {
   it('finds each card by the words on its own controls', () => {
     const cases: [string, string][] = [
       ['consume', 'Clip playback'],
+      ['test firmware', 'Advanced'],
+      ['flash over usb2', 'Advanced'],
+      ['newer protocol', 'Newer firmware'],
       ['mark complete', 'Clip playback'],
       ['replayable', 'Clip playback'],
       ['autolock', 'Clip playback'],

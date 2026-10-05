@@ -4,7 +4,9 @@ import {
   NoReplyError,
   QueryTimeoutError,
   SerialLink,
+  UnreadablePortError,
   attachLink,
+  bauds,
   classifyConnectError,
   speaksCurrentWire,
 } from '../../src/dashboard/serial';
@@ -210,7 +212,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('refuses a box newer than the page, which speaks a wire it cannot know', async () => {
+  it('connects a box newer than the page, for updating: the update path is fixed', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {
@@ -220,11 +222,9 @@ describe('SerialLink', () => {
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
-    const err = await link.handshake().then(
-      () => null,
-      (e: unknown) => e,
-    );
-    expect(err).toBeInstanceOf(BadProtoVerError);
+    const version = await link.handshake();
+    expect(version).toMatchObject({ protoVer: PROTO_VER + 1, fwMajor: 3, fwMinor: 5, fwPatch: 0 });
+    expect(speaksCurrentWire(version)).toBe(false);
     await link.close();
   });
 
@@ -236,7 +236,8 @@ describe('SerialLink', () => {
     [6, [3, 3, 4], 'update-only'],
     [7, [3, 4, 0], 'update-only'],
     [PROTO_VER, [3, 4, 2], 'full'],
-    [PROTO_VER + 1, [3, 5, 0], 'refused as new firmware'],
+    [PROTO_VER + 1, [3, 5, 0], 'update-only'],
+    [PROTO_VER + 7, [4, 0, 0], 'update-only'],
   ])('a box on protocol %i (firmware %j) is %s', async (proto, fw, outcome) => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
@@ -251,11 +252,7 @@ describe('SerialLink', () => {
       (e: unknown) => {
         expect(e).toBeInstanceOf(BadProtoVerError);
         const verdict = classifyConnectError(e);
-        return verdict.kind === 'old-firmware'
-          ? 'refused as old firmware'
-          : verdict.kind === 'new-firmware'
-            ? 'refused as new firmware'
-            : verdict.kind;
+        return verdict.kind === 'old-firmware' ? 'refused as old firmware' : verdict.kind;
       },
     );
     expect(got).toBe(outcome);
@@ -284,6 +281,28 @@ describe('SerialLink', () => {
       mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
       name: '',
     });
+    await link.close();
+  });
+
+  it('records when the last frame of any kind arrived, and ignores a corrupt one', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    expect(link.lastRxAt).toBe(0);
+    const before = Date.now();
+    mock.push(encode(FrameType.Log, 0, new Uint8Array([2, 0x68, 0x69])));
+    await new Promise((r) => setTimeout(r, 10));
+    const afterLog = link.lastRxAt;
+    expect(afterLog).toBeGreaterThanOrEqual(before);
+    await new Promise((r) => setTimeout(r, 5));
+    const bad = encode(FrameType.Log, 0, new Uint8Array([2, 0x68]));
+    bad[bad.length - 1] ^= 0xff;
+    mock.push(bad);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(link.lastRxAt).toBe(afterLog);
+    mock.push(encode(FrameType.Resp, 0, new Uint8Array([0, 1, 0, 1, 0, 1, 2, 3, 4, 5, 6])));
+    await new Promise((r) => setTimeout(r, 10));
+    expect(link.lastRxAt).toBeGreaterThan(afterLog);
     await link.close();
   });
 
@@ -697,6 +716,8 @@ class RatedPort {
     private readonly boxBaud: number,
     private readonly protoVer = PROTO_VER,
     private readonly openError: Error | null = null,
+    // Opens, but every read fails at once: Chromium after pyserial left the tty's read minimum at 0.
+    private readonly unreadable = false,
   ) {}
 
   // As in Chromium, an open port hands out a fresh readable once the previous one was cancelled.
@@ -706,6 +727,7 @@ class RatedPort {
       this.rs = new ReadableStream<Uint8Array>({
         start: (c) => {
           this.controller = c;
+          if (this.unreadable) c.error(new DOMException('The device has been lost.', 'NetworkError'));
         },
         cancel: () => {
           this.rs = null;
@@ -781,6 +803,12 @@ describe('attachLink', () => {
     await link.close();
   }, 10000);
 
+  it('a port that opens but cannot be read is unreadable, and is not tried at another rate', async () => {
+    const port = new RatedPort(6_000_000, PROTO_VER, null, true);
+    await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(UnreadablePortError);
+    expect(port.opens).toEqual([6_000_000]);
+  });
+
   it('a box silent at every rate is NoReplyError, and leaves the port closed', async () => {
     const port = new RatedPort(115_200);
     await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(NoReplyError);
@@ -794,6 +822,20 @@ describe('attachLink', () => {
     await expect(attachLink(asSerial(port), make)).rejects.toBeInstanceOf(BadProtoVerError);
     expect(port.opens).toEqual([6_000_000]);
     expect(port.readable).toBeNull();
+  });
+
+  it('tries the rates in the order given, and says which one answered', async () => {
+    const port = new RatedPort(4_000_000, 6);
+    const { link, baud } = await attachLink(asSerial(port), make, bauds(4_000_000));
+    expect(port.opens).toEqual([4_000_000]);
+    expect(baud).toBe(4_000_000);
+    await link.close();
+  });
+
+  it('puts a known rate first and keeps the rest in their usual order', () => {
+    expect(bauds()).toEqual([6_000_000, 4_000_000]);
+    expect(bauds(4_000_000)).toEqual([4_000_000, 6_000_000]);
+    expect(bauds(6_000_000)).toEqual([6_000_000, 4_000_000]);
   });
 
   it('a port that will not open is not retried at another rate', async () => {
