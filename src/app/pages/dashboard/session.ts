@@ -13,7 +13,9 @@ import {
   LogLevel,
   OTA_TGT_DEVICE,
   OTA_TGT_HOST,
+  isCloned,
   macHex,
+  versionString,
 } from '../../../dashboard/protocol';
 import {
   CONFIRM_TIMEOUT_MS,
@@ -29,7 +31,8 @@ import {
   probeVerdict,
   speaksCurrentWire,
 } from '../../../dashboard/serial';
-import type { FlashProgress } from '../../../dashboard/flash';
+import { type FlashProgress, imageVersion } from '../../../dashboard/flash';
+import type { FlashSource, StatsReport, StatsSink } from '../../../dashboard/stats';
 import { type Poller, createPoller } from './poll';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'lost' | 'flashing' | 'error';
@@ -90,6 +93,7 @@ export interface BoxSession {
   updateOverControl: (
     images: { device?: Uint8Array; host?: Uint8Array },
     page: UpdateRun['page'],
+    source?: FlashSource,
   ) => Promise<'verified' | 'sent' | 'failed'>;
   deviceLog: Accessor<string[]>;
   clearDeviceLog: () => void;
@@ -113,6 +117,8 @@ export interface SessionHooks {
   held?: (mac: string, name: string) => void;
   released?: (mac: string) => void;
   forgotten?: (mac: string) => void;
+  // The public stats: the box on each connect, its cloned device, and each update's result.
+  report?: StatsSink;
 }
 
 export interface SessionControl {
@@ -126,6 +132,8 @@ export interface SessionControl {
 }
 
 export const LOST_AFTER_MISSES = 3;
+// How often a connected box's cloned device is read for the stats, when no card reads it faster.
+export const DEVICE_REPORT_MS = 5000;
 export const REATTACH_MS = 1000;
 export const IDENTIFY_MS = 3000;
 
@@ -170,6 +178,8 @@ class ForeignBoxError extends Error {
 
 const versionOf = (p: Probe | null): Version | null => (p && 'version' in p ? p.version : null);
 
+const chipVersion = (c: ChipFirmware | null | undefined) => (c ? `${c.major}.${c.minor}.${c.patch}` : null);
+
 export const boxId = (v: Version | null): string | null =>
   v && v.mac.length === 6 && v.mac.some((b) => b !== 0) ? macHex(v) : null;
 
@@ -212,6 +222,17 @@ export function createBoxSession(
     const letGo = () => {
       releaseClaim?.();
       releaseClaim = null;
+    };
+    const report = (r: StatsReport) => {
+      try {
+        hooks.report?.(r);
+      } catch {
+        /* a lost count is never worth an error */
+      }
+    };
+    const reportBox = (v: Version, info: FirmwareInfo | null) => {
+      const id = boxId(v);
+      if (id) report({ type: 'box', mac: id, fw: versionString(v), hostFw: chipVersion(info?.host), proto: v.protoVer });
     };
 
     const onKeepalive = (answered: boolean) => {
@@ -401,6 +422,12 @@ export function createBoxSession(
           poller.reset();
           setStatus('connected');
           setHeld(true);
+          if (hooks.report) {
+            void nl
+              .queryFirmware()
+              .catch(() => null)
+              .then((info) => reportBox(v, info));
+          }
           return v;
         } catch (e) {
           if (!(e instanceof AttachCancelled) && !(e instanceof ForeignBoxError)) {
@@ -571,6 +598,7 @@ export function createBoxSession(
     const updateOverControl = async (
       images: { device?: Uint8Array; host?: Uint8Array },
       page: UpdateRun['page'],
+      source: FlashSource = 'release',
     ): Promise<'verified' | 'sent' | 'failed'> => {
       // One run at a time: a second would interleave sessions on the box and overwrite the first's result.
       if (updating || status() === 'flashing') return 'failed';
@@ -581,8 +609,24 @@ export function createBoxSession(
       }
       if (!images.device && !images.host) return 'failed';
       const run = { device: images.device !== undefined, host: images.host !== undefined, page };
+      const started = Date.now();
+      // Where each chip runs now: one that lands decides on the other slot.
+      let before: FirmwareInfo | null = null;
       const finish = <O extends 'verified' | 'sent' | 'failed'>(outcome: O, landed?: UpdateRun['landed']): O => {
         setUpdate({ ...run, outcome, ...(landed ? { landed } : {}) });
+        report({
+          type: 'flash',
+          mac: mac(),
+          page,
+          route: 'usb2',
+          chips: run.device && run.host ? 'both' : run.device ? 'device' : 'host',
+          source,
+          kind: null,
+          to: { device: imageVersion(images.device, 'app'), host: imageVersion(images.host, 'app') },
+          from: { device: chipVersion(before?.device), host: chipVersion(before?.host) },
+          result: landed && Object.values(landed).includes(false) ? 'reverted' : outcome,
+          ms: Date.now() - started,
+        });
         return outcome;
       };
       setError(null);
@@ -590,8 +634,7 @@ export function createBoxSession(
       setStatus('flashing');
       const ctrlPort = l.serialPort;
       const read = () => l.queryFirmware().catch(() => null);
-      // Where each chip runs now: one that lands decides on the other slot.
-      const before = (await read()) ?? (await read());
+      before = (await read()) ?? (await read());
       if (!before) {
         setError("The box didn't answer. Check USB2, then try again.");
         setStatus('error');
@@ -638,10 +681,13 @@ export function createBoxSession(
         const after = firmwareInfo();
         const moved = (a: ChipFirmware | null | undefined, b: ChipFirmware | null | undefined) =>
           !!a && !!b && a.slot !== b.slot;
-        return finish('verified', {
+        const done = finish('verified', {
           ...(images.device ? { device: moved(before.device, after?.device) } : {}),
           ...(images.host ? { host: moved(before.host, after?.host) } : {}),
         });
+        const v = version();
+        if (v) reportBox(v, after);
+        return done;
       } catch (e) {
         // Disarm what is staged, host first, or the next activate commits it alone and splits the chips'
         // versions. One try per target, on a short timeout: an answering box replies at once.
@@ -668,6 +714,22 @@ export function createBoxSession(
       const v = version();
       return status() === 'connected' && v !== null && !speaksCurrentWire(v);
     };
+
+    // A box connected only to be updated may not know DEVICE_INFO.
+    if (hooks.report) {
+      createEffect(() => {
+        const id = mac();
+        if (status() !== 'connected' || updateOnly() || !id) return;
+        const device = poller.subscribe('deviceInfo', DEVICE_REPORT_MS);
+        let last = '';
+        createEffect(() => {
+          const d = device();
+          if (!d || !isCloned(d) || `${d.vid}:${d.pid}` === last) return;
+          last = `${d.vid}:${d.pid}`;
+          report({ type: 'device', mac: id, vid: d.vid, pid: d.pid, kind: d.kind, product: d.product || null });
+        });
+      });
+    }
 
     const setPort = (p: SerialPort | null) => {
       if (p === port()) return;

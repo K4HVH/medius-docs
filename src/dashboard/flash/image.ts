@@ -43,6 +43,13 @@ export function parseVersion(s: string | null | undefined): Semver | null {
 
 export const mediusChip = (h: AppHeader | null): FlashChip | null => (h?.project && PROJECTS[h.project]) || null;
 
+// A medius image's version as major.minor.patch; null for any other image.
+export function imageVersion(image: Uint8Array | null | undefined, kind: FlashKind): string | null {
+  const h = image ? readAppHeader(image, kind) : null;
+  const v = mediusChip(h) ? parseVersion(h?.version) : null;
+  return v && Math.max(v.major, v.minor, v.patch) < 256 ? `${v.major}.${v.minor}.${v.patch}` : null;
+}
+
 const socket = (chip: FlashChip) => (chip === 'host' ? 'USB3' : 'USB1');
 const otherChip = (chip: FlashChip) =>
   chip === 'host' ? "This is the main chip's image." : "This is the mouse-side chip's image.";

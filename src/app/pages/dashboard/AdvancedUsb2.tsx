@@ -136,7 +136,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
         if (why) return setErr(why);
         sent[c] = img;
       }
-      await dash.updateOverControl(sent, 'advanced');
+      await dash.updateOverControl(sent, 'advanced', source() === 'upload' ? 'file' : 'release');
     } catch (e) {
       setErr((e as Error).message);
     } finally {

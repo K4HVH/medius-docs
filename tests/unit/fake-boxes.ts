@@ -13,6 +13,18 @@ import {
 import type { SerialLike } from '../../src/app/pages/dashboard/boxes';
 import { DeviceKind, PROTO_VER, type DeviceInfo, type Health, type Version } from '../../src/dashboard/protocol';
 
+export interface FakeChip {
+  major: number;
+  minor: number;
+  patch: number;
+  slot: number;
+  state: number;
+}
+
+// What an activate does: the chips staged boot their new images; they revert to the slot they ran; the
+// box never answers again; the box refuses it.
+export type ActivateOutcome = 'lands' | 'reverts' | 'gone' | 'throws';
+
 export interface BoxOpts {
   mac?: number[];
   name?: string;
@@ -48,12 +60,24 @@ export class FakeBox {
   healthQueries = 0;
   versionQueries = 0;
   locksQueries = 0;
+  deviceQueries = 0;
+  firmwareQueries = 0;
   device: DeviceInfo | null = DEVICE;
   gate: Promise<void> | null = null;
   // Opens, but every read fails: Chromium after another program left the tty's read minimum at 0.
   unreadable = false;
   // Holds staging alone, so a reconnect can finish while an update is stuck in it.
   stageGate: Promise<void> | null = null;
+  firmware: { device: FakeChip; host: FakeChip | null } = {
+    device: { major: 3, minor: 4, patch: 4, slot: 0, state: 2 },
+    host: { major: 3, minor: 4, patch: 4, slot: 0, state: 2 },
+  };
+  // A FIRMWARE read goes unanswered.
+  firmwareSilent = false;
+  staged: number[] = [];
+  onActivate: ActivateOutcome = 'lands';
+  // The version a chip staged boots into when its activate lands.
+  next: { device?: [number, number, number]; host?: [number, number, number] } = {};
 
   constructor(o: BoxOpts = {}) {
     this.version = {
@@ -185,6 +209,7 @@ export class FakeLink {
   }
 
   async queryDeviceInfo(): Promise<DeviceInfo> {
+    this.box.deviceQueries++;
     return this.answer(() => {
       if (!this.box.device) throw new QueryTimeoutError();
       return this.box.device;
@@ -192,19 +217,45 @@ export class FakeLink {
   }
 
   async queryFirmware() {
+    this.box.firmwareQueries++;
     return this.answer(() => {
-      const chip = { major: 3, minor: 4, patch: 4, slot: 0, state: 2 };
-      return { device: chip, host: chip, slotSize: 983040, deviceStaged: false, hostStaged: false };
+      const b = this.box;
+      if (b.firmwareSilent) throw new QueryTimeoutError();
+      return { device: { ...b.firmware.device }, host: b.firmware.host && { ...b.firmware.host }, slotSize: 983040, deviceStaged: false, hostStaged: false };
     });
   }
 
   // Staging waits on the gate, so a test can hold an update in flight.
-  async stageFirmware(): Promise<void> {
+  async stageFirmware(target: number): Promise<void> {
     const b = this.box;
     if (b.gate) await b.gate;
     if (b.stageGate) await b.stageGate;
     // A write after the port went away fails, as Chromium's does.
     if (!this.open_) throw new DOMException('The device has been lost.', 'NetworkError');
+    b.staged.push(target);
+  }
+
+  async activateFirmware(): Promise<void> {
+    const b = this.box;
+    if (b.onActivate === 'throws') throw new Error('The box refused the activate.');
+    const staged = b.staged;
+    b.staged = [];
+    if (b.onActivate === 'gone') {
+      b.alive = false;
+      return;
+    }
+    if (b.onActivate === 'reverts') return;
+    const land = (c: FakeChip, v?: [number, number, number]): FakeChip =>
+      v ? { major: v[0], minor: v[1], patch: v[2], slot: c.slot ^ 1, state: 2 } : { ...c, slot: c.slot ^ 1 };
+    if (staged.includes(0)) {
+      b.firmware.device = land(b.firmware.device, b.next.device);
+      b.version = { ...b.version, fwMajor: b.firmware.device.major, fwMinor: b.firmware.device.minor, fwPatch: b.firmware.device.patch };
+    }
+    if (staged.includes(1) && b.firmware.host) b.firmware.host = land(b.firmware.host, b.next.host);
+  }
+
+  async abortUpdate(): Promise<void> {
+    this.box.staged = [];
   }
 
   async led(target: number, mode: number, level: number): Promise<void> {

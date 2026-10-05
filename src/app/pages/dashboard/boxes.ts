@@ -13,6 +13,7 @@ import {
   probePort,
   requestMediusPort,
 } from '../../../dashboard/serial';
+import type { StatsSink } from '../../../dashboard/stats';
 import { type BoxSession, type SessionControl, boxId, createBoxSession } from './session';
 import { type BoxIcon, type BoxStore, STORE_KEY } from './store';
 
@@ -74,6 +75,7 @@ export interface BoxesDeps {
   probe?: (port: SerialPort) => Promise<Probe>;
   makeLink?: (port: SerialPort, events: SerialLinkEvents) => SerialLink;
   choose?: () => Promise<SerialPort>;
+  stats?: StatsSink;
 }
 
 const isControlPort = (p: SerialPort) => {
@@ -222,6 +224,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
           if (e && !e.ctl.port()) remove(e);
         },
         forgotten: (mac) => setIcon(mac, 'box'),
+        report: deps.stats,
       },
     );
     api = made.api;
