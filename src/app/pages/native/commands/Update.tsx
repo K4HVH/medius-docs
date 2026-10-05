@@ -423,9 +423,9 @@ const Update: Component = () => {
         </Card>
       </div>
 
-      <div id="unchanging" data-search-target>
+      <div id="stable" data-search-target>
         <Card>
-          <CardHeader title="What never changes" subtitle="The update path, from protocol 5 on" />
+          <CardHeader title="Stable update path" subtitle="The same from protocol 5 on" />
           <p>
             A client that can update one box can update every later one. From protocol 5 (v3.2.0) on,
             these keep their shape whatever else a protocol changes:
