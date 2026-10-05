@@ -3,21 +3,21 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { type Count, type StatsSummary, type WeekFlashes, fetchStats } from '../../../dashboard/stats';
 import { Section } from './Section';
+import { field, muted } from './ui';
 import '../../../styles/docs.css';
 
 // Longer lists end in one row summing the rest.
 const MAX_ROWS = 12;
 
-const SUBTITLE = 'Boxes, devices and flashes the dashboard has counted';
+const SCOPE = 'All boxes, all time';
 
 const num = (n: number) => n.toLocaleString();
 
-// Series and dates are UTC days, so they are shown in UTC: a reader west of it would see the day before.
-const date = (day: string, o: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }) => {
+// Series are UTC days, so they are shown in UTC: a reader west of it would see the day before.
+const shortDate = (day: string) => {
   const d = new Date(`${day}T00:00:00Z`);
-  return Number.isNaN(d.getTime()) ? day : d.toLocaleDateString(undefined, { ...o, timeZone: 'UTC' });
+  return Number.isNaN(d.getTime()) ? day : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
 };
-const shortDate = (day: string) => date(day, { day: 'numeric', month: 'short' });
 
 const OS: Record<string, string> = {
   windows: 'Windows',
@@ -82,12 +82,12 @@ const rows = (counts: Count[], label: (key: string) => string): Row[] => {
   ];
 };
 
-const Empty = (props: { text?: string }) => <p class="stat-empty">{props.text ?? 'Nothing counted yet.'}</p>;
+const Empty = () => <p class="stat-empty">None.</p>;
 
-const Bars = (props: { rows: Row[]; empty?: string }) => {
+const Bars = (props: { rows: Row[] }) => {
   const max = () => Math.max(0, ...props.rows.filter((r) => !r.rest).map((r) => r.n));
   return (
-    <Show when={max() > 0} fallback={<Empty text={props.empty} />}>
+    <Show when={max() > 0} fallback={<Empty />}>
       <div class="stat-bars">
         <For each={props.rows}>
           {(r) => (
@@ -190,10 +190,11 @@ const Group = (props: { title: string; children: JSX.Element }) => (
   </div>
 );
 
-const Figure = (props: { value: string; label: string }) => (
-  <div class="stat-figure">
-    <div class="stat-figure__value">{props.value}</div>
-    <div class="stat-figure__label">{props.label}</div>
+// Label left, value right, as the dashboard's other readouts.
+const Row = (props: { label: string; value: string }) => (
+  <div style={field}>
+    <span style={muted}>{props.label}</span>
+    <span>{props.value}</span>
   </div>
 );
 
@@ -201,29 +202,27 @@ const Summary = (props: { s: StatsSummary }) => {
   const s = () => props.s;
   // Rounded down, so 199 of 200 is not 100%.
   const rate = () => (s().flashes.total ? `${Math.floor((s().flashes.succeeded / s().flashes.total) * 100)}%` : 'None');
-  const split = () => s().firmware.split;
   return (
     <>
       <div id="stats" data-search-target>
         <Card>
-          <CardHeader title="Usage stats" subtitle={SUBTITLE} />
-          <div class="stat-figures" data-testid="figures">
-            <Figure value={num(s().boxes.total)} label="Unique boxes" />
-            <Figure value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} label="New this week" />
-            <Figure value={num(s().boxes.active7)} label="Active in 7 days" />
-            <Figure value={num(s().boxes.active30)} label="Active in 30 days" />
-            <Figure value={num(s().devices.unique)} label="Unique devices" />
-            <Figure value={num(s().flashes.total)} label="Flashes" />
-            <Figure value={rate()} label="Success rate" />
-            <Figure value={num(s().countries.filter((c) => c.key !== 'unknown').length)} label="Countries" />
+          <CardHeader title="Usage stats" subtitle={SCOPE} />
+          <div data-testid="figures">
+            <Row label="Unique boxes" value={num(s().boxes.total)} />
+            <Row label="New this week" value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} />
+            <Row label="Active in 7 days" value={num(s().boxes.active7)} />
+            <Row label="Active in 30 days" value={num(s().boxes.active30)} />
+            <Row label="Unique devices" value={num(s().devices.unique)} />
+            <Row label="Flashes" value={num(s().flashes.total)} />
+            <Row label="Success rate" value={rate()} />
+            <Row label="Countries" value={num(s().countries.filter((c) => c.key !== 'unknown').length)} />
           </div>
-          <Show when={s().since}>{(d) => <p class="stat-note">Counted since {date(d())}. The server recounts every minute.</p>}</Show>
         </Card>
       </div>
 
       <div id="boxes-over-time" data-search-target>
         <Card>
-          <CardHeader title="Boxes over time" subtitle="New boxes per week, and boxes active per day" />
+          <CardHeader title="Boxes over time" subtitle="Last 26 weeks and 90 days" />
           <Section title="New per week" first>
             {series(s().boxes.newPerWeek, 'New boxes per week', 'This week')}
           </Section>
@@ -233,25 +232,16 @@ const Summary = (props: { s: StatsSummary }) => {
 
       <div id="firmware" data-search-target>
         <Card>
-          <CardHeader title="Firmware in use" subtitle="Boxes seen in the last 30 days" />
+          <CardHeader title="Firmware in use" subtitle="Last 30 days" />
           <Section title="Main chip" first>
-            <Bars
-              rows={rows(s().firmware.versions, (v) => `v${v}`)}
-              empty={s().boxes.total ? 'No box seen in the last 30 days.' : undefined}
-            />
+            <Bars rows={rows(s().firmware.versions, (v) => `v${v}`)} />
           </Section>
-          <Show when={s().firmware.versions.length > 0}>
-            <p class="stat-note">
-              {split() ? num(split()) : 'None'} of them {split() === 1 ? 'runs' : 'run'} different versions on the two
-              chips.
-            </p>
-          </Show>
         </Card>
       </div>
 
       <div id="devices" data-search-target>
         <Card>
-          <CardHeader title="Devices" subtitle="What the boxes clone" />
+          <CardHeader title="Devices" subtitle="Cloned by the boxes" />
           <Section title="By kind" first>
             <Show when={s().devices.byKind.length > 0} fallback={<Empty />}>
               <table class="api-params">
@@ -277,10 +267,7 @@ const Summary = (props: { s: StatsSummary }) => {
             </Show>
           </Section>
           <Section title="Most used">
-            <Show
-              when={s().devices.top.length > 0}
-              fallback={s().devices.unique ? <p class="stat-empty">No device is on two boxes yet.</p> : <Empty />}
-            >
+            <Show when={s().devices.top.length > 0} fallback={<Empty />}>
               <table class="api-params">
                 <thead>
                   <tr>
@@ -313,7 +300,7 @@ const Summary = (props: { s: StatsSummary }) => {
 
       <div id="flashes" data-search-target>
         <Card>
-          <CardHeader title="Flashes" subtitle="Every flash the dashboard has run" />
+          <CardHeader title="Flashes" subtitle="Update, Advanced and Set up" />
           <Section title="Per week" first>
             <Columns
               keys={s().flashes.perWeek.map((w) => w.week)}
@@ -359,7 +346,7 @@ const Summary = (props: { s: StatsSummary }) => {
 
       <div id="countries" data-search-target>
         <Card>
-          <CardHeader title="Countries and systems" subtitle="Boxes by country, and the systems the dashboard ran on" />
+          <CardHeader title="Countries and systems" subtitle="Each box as last seen" />
           <Section first>
             <div class="stat-split">
               <Group title="Country">
@@ -379,44 +366,6 @@ const Summary = (props: { s: StatsSummary }) => {
   );
 };
 
-const Collected = () => (
-  <div id="collected" data-search-target>
-    <Card>
-      <CardHeader title="Data collected" subtitle="Sent by the dashboard, always on" />
-      <table class="api-params">
-        <thead>
-          <tr>
-            <th>Event</th>
-            <th>Sent</th>
-            <th>Fields</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Box</td>
-            <td>When a box connects</td>
-            <td>MAC, both chips' versions, protocol, OS, browser</td>
-          </tr>
-          <tr>
-            <td>Device</td>
-            <td>When a cloned device is first seen, or changes</td>
-            <td>MAC, VID:PID, kind, product name</td>
-          </tr>
-          <tr>
-            <td>Flash</td>
-            <td>When a flash ends</td>
-            <td>MAC (none for a mouse-side chip's ROM download), page, route, chips, release or file, image kind, versions, result, time taken</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="stat-note">
-        The server swaps the MAC for a keyed hash before storing anything, and keeps the country Cloudflare
-        reports. No IP address is stored.
-      </p>
-    </Card>
-  </div>
-);
-
 const Stats = () => {
   const [summary, { refetch }] = createResource(fetchStats);
   // A rejected resource re-throws on every read, render included.
@@ -433,7 +382,7 @@ const Stats = () => {
         fallback={
           <div id="stats" data-search-target>
             <Card>
-              <CardHeader title="Usage stats" subtitle={SUBTITLE} />
+              <CardHeader title="Usage stats" subtitle={SCOPE} />
               <p>Loading...</p>
             </Card>
           </div>
@@ -442,7 +391,7 @@ const Stats = () => {
         <Match when={summary.state === 'errored'}>
           <div id="stats" data-search-target>
             <Card>
-              <CardHeader title="Usage stats" subtitle={SUBTITLE} />
+              <CardHeader title="Usage stats" subtitle={SCOPE} />
               <div class="callout callout--warning" role="alert">
                 {(summary.error as Error).message}
               </div>
@@ -454,7 +403,6 @@ const Stats = () => {
         </Match>
         <Match when={value()}>{(s) => <Summary s={s()} />}</Match>
       </Switch>
-      <Collected />
     </>
   );
 };

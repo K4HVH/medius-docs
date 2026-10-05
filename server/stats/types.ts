@@ -92,8 +92,6 @@ export interface KindCount {
 
 // Days are YYYY-MM-DD in UTC; weeks are named by their Monday. Series are filled, oldest first.
 export interface StatsSummary {
-  generatedAt: string;
-  since: string | null;
   boxes: {
     total: number;
     active7: number;
@@ -103,7 +101,6 @@ export interface StatsSummary {
   };
   firmware: {
     versions: Count[];
-    split: number;
   };
   devices: {
     unique: number;

@@ -117,7 +117,6 @@ export interface SessionHooks {
   held?: (mac: string, name: string) => void;
   released?: (mac: string) => void;
   forgotten?: (mac: string) => void;
-  // The public stats: the box on each connect, its cloned device, and each update's result.
   report?: StatsSink;
 }
 
@@ -132,7 +131,7 @@ export interface SessionControl {
 }
 
 export const LOST_AFTER_MISSES = 3;
-// How often a connected box's cloned device is read for the stats, when no card reads it faster.
+// The stats' DEVICE_INFO interval, when no card reads it faster.
 export const DEVICE_REPORT_MS = 5000;
 export const REATTACH_MS = 1000;
 export const IDENTIFY_MS = 3000;

@@ -172,7 +172,6 @@ describe('ingest', () => {
 describe('summary', () => {
   it('reads zeros and filled, empty series with nothing stored', () => {
     const s = store.summary();
-    expect(s.since).toBeNull();
     expect(s.boxes).toMatchObject({ total: 0, active7: 0, active30: 0 });
     expect(s.boxes.newPerWeek).toHaveLength(26);
     expect(s.boxes.newPerWeek.every((w) => w.n === 0)).toBe(true);
@@ -182,7 +181,7 @@ describe('summary', () => {
     expect(s.devices).toEqual({ unique: 0, byKind: [], top: [] });
     expect(s.flashes.total).toBe(0);
     expect(s.flashes.perWeek).toHaveLength(26);
-    expect(s.firmware).toEqual({ versions: [], split: 0 });
+    expect(s.firmware).toEqual({ versions: [] });
     expect(s.countries).toEqual([]);
   });
 
@@ -197,13 +196,12 @@ describe('summary', () => {
     store.ingest(box({ mac: MAC_B, fw: '3.4.4', hostFw: '3.4.2', os: 'windows' }), null);
     now = T0;
     const s = store.summary();
-    expect(s.since).toBe('2026-08-28');
     expect(s.boxes).toMatchObject({ total: 2, active7: 1, active30: 2 });
     expect(s.boxes.newPerWeek.reduce((a, w) => a + w.n, 0)).toBe(2);
     expect(s.boxes.newPerWeek.find((w) => w.key === '2026-09-21')!.n).toBe(1);
     expect(s.boxes.activePerDay.at(-1)!.n).toBe(1);
     expect(s.boxes.activePerDay.find((d) => d.key === '2026-09-27')!.n).toBe(1);
-    expect(s.firmware).toEqual({ versions: [{ key: '3.4.4', n: 2 }], split: 1 });
+    expect(s.firmware).toEqual({ versions: [{ key: '3.4.4', n: 2 }] });
     // The versions cover exactly the boxes active in 30 days.
     expect(s.firmware.versions.reduce((a, v) => a + v.n, 0)).toBe(s.boxes.active30);
     expect(s.countries).toEqual([
@@ -252,7 +250,7 @@ describe('summary', () => {
     expect(s.devices.top).toEqual([{ vid: 0x046d, pid: 0xc08b, kind: 2, product: null, boxes: 2 }]);
   });
 
-  it('names a device and its kind by what most boxes reported, each on its own count', () => {
+  it('names a device by the product most boxes reported, and its kind by the kind most reported', () => {
     // X from four boxes under two kinds, Y from three under one.
     const macs = ['000000000001', '000000000002', '000000000003', '000000000004', '000000000005', '000000000006', '000000000007'];
     macs.slice(0, 2).forEach((mac) => store.ingest(device({ mac, kind: 2, product: 'X' }), null));

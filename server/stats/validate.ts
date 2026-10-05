@@ -1,5 +1,4 @@
-// One posted event, checked field by field. Anything not listed is dropped, so a client can't store
-// more than the page says is collected.
+// One posted event, checked field by field. Fields not listed here are dropped.
 
 import {
   BROWSERS,

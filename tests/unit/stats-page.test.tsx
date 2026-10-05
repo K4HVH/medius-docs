@@ -7,8 +7,6 @@ const weeks = (n: number, at: (i: number) => number = () => 0) =>
   Array.from({ length: 26 }, (_, i) => ({ key: `2026-04-${String(i + 1).padStart(2, '0')}`, n: i < n ? at(i) : 0 }));
 
 const EMPTY: StatsSummary = {
-  generatedAt: '2026-10-07T12:00:00.000Z',
-  since: null,
   boxes: {
     total: 0,
     active7: 0,
@@ -16,7 +14,7 @@ const EMPTY: StatsSummary = {
     newPerWeek: weeks(0),
     activePerDay: Array.from({ length: 90 }, (_, i) => ({ key: `d${i}`, n: 0 })),
   },
-  firmware: { versions: [], split: 0 },
+  firmware: { versions: [] },
   devices: { unique: 0, byKind: [], top: [] },
   flashes: {
     total: 0,
@@ -35,9 +33,8 @@ const EMPTY: StatsSummary = {
 
 const FULL: StatsSummary = {
   ...EMPTY,
-  since: '2026-08-28',
   boxes: { ...EMPTY.boxes, total: 1204, active7: 310, active30: 822, newPerWeek: weeks(26, (i) => i * 3) },
-  firmware: { versions: [{ key: '3.4.4', n: 700 }, { key: '3.4.2', n: 122 }], split: 9 },
+  firmware: { versions: [{ key: '3.4.4', n: 700 }, { key: '3.4.2', n: 122 }] },
   devices: {
     unique: 412,
     byKind: [
@@ -83,7 +80,7 @@ afterEach(() => {
 });
 
 describe('Stats page', () => {
-  it('shows the totals and when counting began', async () => {
+  it('shows the totals', async () => {
     answer(FULL);
     const r = render(() => <Stats />);
     const figures = await r.findByTestId('figures');
@@ -93,7 +90,6 @@ describe('Stats page', () => {
     expect(figures.textContent).toContain('3,881');
     // 3,800 of 3,881 is 97.9%, rounded down.
     expect(figures.textContent).toContain('97%');
-    expect(r.container.textContent).toMatch(/Counted since (28 Aug|Aug 28,) 2026\./);
   });
 
   it('draws each breakdown with its labels and numbers', async () => {
@@ -103,7 +99,6 @@ describe('Stats page', () => {
     const text = r.container.textContent!;
     for (const s of [
       'v3.4.4',
-      '9 of them run different versions on the two chips.',
       'Mouse',
       'Keyboard',
       'G502 HERO Gaming Mouse',
@@ -120,33 +115,53 @@ describe('Stats page', () => {
       expect(text).toContain(s);
   });
 
-  it('lists every field collected, and says how the MAC is kept', async () => {
+  it('carries no notes and no list of what is collected, and each subtitle names a scope', async () => {
     answer(FULL);
     const r = render(() => <Stats />);
     await r.findByTestId('figures');
-    const card = r.container.querySelector('#collected')!;
-    expect(card.textContent).toMatch(/keyed hash/);
-    expect(card.textContent).toMatch(/No IP address is stored/);
-    expect(card.querySelectorAll('tbody tr')).toHaveLength(3);
-    expect(card.textContent).toContain(
-      "MAC (none for a mouse-side chip's ROM download), page, route, chips, release or file, image kind, versions, result, time taken",
-    );
+    expect(r.container.querySelector('#collected')).toBeNull();
+    expect(r.container.textContent).not.toMatch(/Counted since|recounts|different versions|Data collected/);
+    const subtitles = [...r.container.querySelectorAll('.card__header small')].map((e) => e.textContent);
+    expect(subtitles).toEqual([
+      'All boxes, all time',
+      'Last 26 weeks and 90 days',
+      'Last 30 days',
+      'Cloned by the boxes',
+      'Update, Advanced and Set up',
+      'Each box as last seen',
+    ]);
   });
 
-  it('rounds the success rate down, says None with no flashes, and words one split box', async () => {
-    answer({ ...FULL, flashes: { ...FULL.flashes, total: 200, succeeded: 199 }, firmware: { ...FULL.firmware, split: 1 } });
+  it('shows the totals as the dashboard shows readouts: a label and its value per row', async () => {
+    answer(FULL);
+    const r = render(() => <Stats />);
+    const figures = await r.findByTestId('figures');
+    const rows = [...figures.children].map((row) => [...row.children].map((c) => c.textContent));
+    expect(rows[0]).toEqual(['Unique boxes', '1,204']);
+    expect(rows.map((x) => x[0])).toEqual([
+      'Unique boxes',
+      'New this week',
+      'Active in 7 days',
+      'Active in 30 days',
+      'Unique devices',
+      'Flashes',
+      'Success rate',
+      'Countries',
+    ]);
+  });
+
+  it('rounds the success rate down, and says None with no flashes', async () => {
+    answer({ ...FULL, flashes: { ...FULL.flashes, total: 200, succeeded: 199 } });
     const r = render(() => <Stats />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('99%');
     expect(figures.textContent).toContain('Success rate');
-    expect(r.container.textContent).toContain('1 of them runs different versions on the two chips.');
-    expect(r.container.textContent).toContain('The server recounts every minute.');
     cleanup();
     answer({ ...EMPTY, boxes: { ...EMPTY.boxes, total: 3 } });
     const e = render(() => <Stats />);
     const f2 = await e.findByTestId('figures');
     expect(f2.textContent).toContain('None');
-    expect(e.container.querySelector('#firmware')!.textContent).toContain('No box seen in the last 30 days.');
+    expect(e.container.querySelector('#firmware')!.textContent).toContain('None.');
   });
 
   it('names release or file as the source, as Advanced does, and kind 0 as Unknown', async () => {
@@ -183,15 +198,14 @@ describe('Stats page', () => {
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('0');
     expect(figures.textContent).not.toContain('NaN');
-    expect(r.container.textContent).not.toMatch(/Counted since/);
-    expect(r.getAllByText('Nothing counted yet.').length).toBeGreaterThanOrEqual(5);
+    expect(r.getAllByText('None.').length).toBeGreaterThanOrEqual(5);
   });
 
-  it('says why the most used list is empty while devices are counted', async () => {
+  it('an empty most used list says None', async () => {
     answer({ ...FULL, devices: { ...FULL.devices, top: [] } });
     const r = render(() => <Stats />);
     await r.findByTestId('figures');
-    expect(r.container.querySelector('#devices')!.textContent).toContain('No device is on two boxes yet.');
+    expect(r.container.querySelector('#devices')!.textContent).toContain('None.');
   });
 
   it('a failed read says so, and Retry shows it reading again', async () => {
