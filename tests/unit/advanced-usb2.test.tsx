@@ -39,7 +39,7 @@ const st = vi.hoisted(() => ({
 
 const mock = vi.hoisted(() => ({
   s: null as ReturnType<(typeof st)['make']> | null,
-  sent: [] as { images: { device?: Uint8Array; host?: Uint8Array }; page: string }[],
+  sent: [] as { images: { device?: Uint8Array; host?: Uint8Array }; page: string; source?: string }[],
   outcome: 'verified' as 'verified' | 'sent' | 'failed',
   landed: undefined as { device?: boolean; host?: boolean } | undefined,
   // What the box runs once a verified run ends.
@@ -65,8 +65,8 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
         return s.firmwareInfo();
       },
       // Mirrors the real one's observable effects.
-      updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }, page: string) => {
-        mock.sent.push({ images, page });
+      updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }, page: string, source?: string) => {
+        mock.sent.push({ images, page, source });
         const run = { device: images.device !== undefined, host: images.host !== undefined, page };
         s.setUpdate({ ...run, outcome: 'running' });
         s.setStatus('flashing');
@@ -314,6 +314,7 @@ describe('Advanced over USB2', () => {
     await waitFor(() => expect(mock.sent).toHaveLength(1));
     expect(mock.sent[0].images).toEqual({ device: DEVICE_345 });
     expect(mock.sent[0].page).toBe('advanced');
+    expect(mock.sent[0].source).toBe('file');
   });
 
   it('a flash that would split the chips warns, and goes only once ticked', async () => {
@@ -342,7 +343,7 @@ describe('Advanced over USB2', () => {
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
     flashButton(r).click();
     await waitFor(() => expect(mock.sent).toHaveLength(1));
-    expect(mock.sent[0]).toEqual({ images: { device: DEVICE_345, host: HOST_345 }, page: 'advanced' });
+    expect(mock.sent[0]).toEqual({ images: { device: DEVICE_345, host: HOST_345 }, page: 'advanced', source: 'release' });
   });
 
   it('reads a release image like a file, and sends nothing when one is for the wrong chip', async () => {

@@ -9,6 +9,7 @@ import {
   useContext,
 } from 'solid-js';
 import { isSecureContextOk, isWebSerialSupported } from '../../../dashboard/serial';
+import { createStatsSink } from '../../../dashboard/stats';
 import { type Boxes, type LocksLike, createBoxes } from './boxes';
 
 export { NEW_BOX } from './boxes';
@@ -51,6 +52,8 @@ export function guardUnload(busy: Accessor<boolean>): void {
 export const DashboardProvider: ParentComponent = (props) => {
   const supported = isWebSerialSupported();
   const secure = isSecureContextOk();
+  // Unit tests mount this provider; their fake boxes must not be counted.
+  const stats = import.meta.env.MODE === 'test' ? undefined : createStatsSink();
   const native = createNativeFlash();
   const boxes = createBoxes({
     serial: supported && secure ? navigator.serial : null,
@@ -59,6 +62,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     secure,
     nativeFlashing: native.running,
     locks: typeof navigator !== 'undefined' && navigator.locks ? (navigator.locks as LocksLike) : undefined,
+    stats,
   });
   guardUnload(() => native.running() || boxes.anyUpdating());
 
