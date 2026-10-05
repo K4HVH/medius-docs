@@ -41,6 +41,11 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S bunuser -u 1001
 
+# The stats database's directory. A new named volume mounted here takes this owner, so the server can
+# write to it.
+RUN mkdir -p /app/data && chown bunuser:nodejs /app/data
+ENV STATS_DB=/app/data/stats.db
+
 # Copy the enriched dist/ (SPA + prerendered .html/.md + agent artifacts).
 COPY --from=prerender --chown=bunuser:nodejs /app/dist /app/dist
 

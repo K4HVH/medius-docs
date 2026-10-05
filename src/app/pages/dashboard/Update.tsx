@@ -6,16 +6,13 @@ import { Progress } from '../../../components/feedback/Progress';
 import { Chip } from '../../../components/display/Chip';
 import { versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import { parseVersion } from '../../../dashboard/flash';
 import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { WiringPorts } from './PortDiagram';
 import '../../../styles/docs.css';
 
 type Step = 'choose' | 'update' | 'done' | 'sent';
-const parseTag = (tag?: string) => {
-  const m = tag?.match(/(\d+)\.(\d+)\.(\d+)/);
-  return m ? { major: +m[1], minor: +m[2], patch: +m[3] } : null;
-};
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Update = () => {
@@ -52,7 +49,7 @@ const Update = () => {
       return null;
     }
   };
-  const lv = () => parseTag(latest()?.tag);
+  const lv = () => parseVersion(latest()?.tag);
   const deviceAsset = () => latest()?.assets.find((a) => a.name === 'medius_device.bin') ?? null;
   const hostAsset = () => latest()?.assets.find((a) => a.name === 'medius_host.bin') ?? null;
   const matches = (c: { major: number; minor: number; patch: number } | null | undefined) => {
@@ -67,13 +64,21 @@ const Update = () => {
   // A reverted chip still completes the handshake; only the version each ASKED chip reports proves
   // the update.
   const landed = () => {
-    if (which() === 'main') return deviceOnRelease();
-    if (which() === 'mouse') return hostOnRelease();
-    return deviceOnRelease() && hostOnRelease();
+    const r = run();
+    return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
+  };
+  // From the session, so it survives a tab change or box switch. A run Advanced started shows there.
+  const run = () => {
+    const r = dash.update();
+    return r?.page === 'update' ? r : null;
+  };
+  const view = (): Step => {
+    const outcome = run()?.outcome;
+    return outcome === 'verified' ? 'done' : outcome === 'sent' ? 'sent' : step();
   };
   const upToDate = () => deviceOnRelease();
   const pct = () => {
-    const p = dash.flashProgress();
+    const p = dash.updateProgress();
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
 
@@ -97,18 +102,29 @@ const Update = () => {
     </Show>
   );
 
+  // A result of Advanced's stays for Advanced to show.
+  const clearOwn = () => {
+    if (dash.update()?.page === 'update') dash.clearUpdate();
+  };
+
   const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
-    dash.clearFlashResult();
+    clearOwn();
     setWhich(mode);
     setStep('update');
+  };
+
+  const finish = () => {
+    clearOwn();
+    setStep('choose');
+    navigate('/dashboard');
   };
 
   // Over the connected control port: each chip writes its spare slot and boots it, and the box
   // reverts anything that won't run. The mouse-side image is relayed over the inter-chip link.
   const runUpdate = async () => {
     setErr(null);
-    dash.clearFlashResult();
+    clearOwn();
     const wantDevice = which() !== 'mouse';
     const wantHost = which() !== 'main';
     setBusy(true);
@@ -132,10 +148,8 @@ const Update = () => {
       const images: { device?: Uint8Array; host?: Uint8Array } = {};
       if (wantDevice && da) images.device = await downloadAsset(da);
       if (wantHost && ha) images.host = await downloadAsset(ha);
-      const outcome = await dash.updateOverControl(images);
-      if (outcome === 'verified') setStep('done');
-      else if (outcome === 'sent') setStep('sent');
-      else if (!dash.error()) setErr("That didn't finish. The box kept its running firmware.");
+      const outcome = await dash.updateOverControl(images, 'update');
+      if (outcome === 'failed' && !dash.error()) setErr("That didn't finish. The box kept its running firmware.");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -148,7 +162,7 @@ const Update = () => {
       <Show when={dash.status() === 'flashing'}>
         <div id="updating" data-search-target>
           <Card>
-            <CardHeader title="Updating" subtitle="Don't unplug or leave this page" />
+            <CardHeader title="Updating" subtitle="Don't unplug or close this tab" />
             <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
           </Card>
         </div>
@@ -163,7 +177,7 @@ const Update = () => {
             </Show>
 
             <Switch>
-              <Match when={step() === 'choose'}>
+              <Match when={view() === 'choose'}>
                 <Switch>
                   <Match when={dash.status() !== 'connected'}>
                     <ConnectPanel />
@@ -196,7 +210,7 @@ const Update = () => {
                 </Switch>
               </Match>
 
-              <Match when={step() === 'update'}>
+              <Match when={view() === 'update'}>
                 <p>
                   Runs over the current connection. The mouse stops working for a few seconds.
                 </p>
@@ -223,7 +237,7 @@ const Update = () => {
                 </div>
               </Match>
 
-              <Match when={step() === 'sent'}>
+              <Match when={view() === 'sent'}>
                 {/* Transfer and activate went through, then nothing replied, so the running version is
                     unknown. The instruction is in the shared error that ConnectPanel renders. */}
                 <Show
@@ -231,19 +245,16 @@ const Update = () => {
                   fallback={<ConnectPanel />}
                 >
                   <Landed />
-                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                  <Button variant="primary" onClick={finish}>
                     Finish
                   </Button>
                 </Show>
               </Match>
 
-              <Match when={step() === 'done'}>
+              <Match when={view() === 'done'}>
                 <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
                   <Landed />
-                  <Button
-                    variant="primary"
-                    onClick={() => { dash.clearFlashResult(); setStep('choose'); navigate('/dashboard'); }}
-                  >
+                  <Button variant="primary" onClick={finish}>
                     Finish
                   </Button>
                 </Show>

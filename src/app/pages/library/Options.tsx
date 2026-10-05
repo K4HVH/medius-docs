@@ -35,7 +35,7 @@ const Options: Component = () => {
           <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
           <p>
             By default the box refuses a device it can't clone exactly; <code>true</code> clones it
-            anyway, every interface the box can serve byte-faithful. Changing it with such a device{' '}
+            anyway, as close to the device as the box can make it. Changing it with such a device{' '}
             <em>attached</em>, or a forced rate pending, reboots the device chip to re-clone.
             Otherwise the clone re-presents only when the change alters the{' '}
             <A href="/library/advanced/patch">patch set</A> it serves: turned on, a stored set the box
@@ -66,8 +66,8 @@ const Options: Component = () => {
           </table>
           <div class="callout callout--info">
             <p>
-              A device the box can't clone exactly has more IN endpoints live at once, or HID interfaces,
-              than the box serves; more interfaces, alternate settings or endpoints than the box reads
+              A device the box can't clone exactly has more than four IN endpoints live at once, or more
+              than six HID interfaces; more interfaces, alternate settings or endpoints than the box reads
               (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
               speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
               a report descriptor truncated or never captured.

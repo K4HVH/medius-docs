@@ -459,7 +459,7 @@ const DeviceOptions = () => {
                     </Chip>
                   </Show>
                   <Show when={r().mode !== RenderMode.Off && !r().ready}>
-                    <Chip variant="warning">Move the mouse to start</Chip>
+                    <Chip variant="neutral">Move the mouse to start</Chip>
                   </Show>
                   <Show when={renderDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
@@ -505,7 +505,7 @@ const DeviceOptions = () => {
                   <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
                   {/* The box learns the interval from injection, so nothing spreads until some arrives. */}
                   <Show when={sp().percent > 0 && sp().spanUs === 0}>
-                    <Chip variant="warning">Waiting for injection</Chip>
+                    <Chip variant="neutral">Waiting for injection</Chip>
                   </Show>
                   <Show when={spreadDirty()}>
                     <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>

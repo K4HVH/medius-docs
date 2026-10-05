@@ -393,7 +393,7 @@ const Types: Component = () => {
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_REBOOT_TARGET_DEVICE_DOWNLOAD</code></td><td><code>0</code></td><td>Device chip into ROM download mode (flash over the serial link).</td></tr>
-              <tr><td><code>MEDIUS_REBOOT_TARGET_HOST_DOWNLOAD</code></td><td><code>1</code></td><td>Host chip into ROM download mode (flash over its own USB).</td></tr>
+              <tr><td><code>MEDIUS_REBOOT_TARGET_HOST_DOWNLOAD</code></td><td><code>1</code></td><td>Host chip into ROM download mode (flash over USB3).</td></tr>
               <tr><td><code>MEDIUS_REBOOT_TARGET_DEVICE_RUN</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
               <tr><td><code>MEDIUS_REBOOT_TARGET_HOST_RUN</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
             </tbody>
@@ -1203,7 +1203,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>True (1) when</th></tr></thead>
             <tbody>
               <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device has more IN endpoints live at once, or HID interfaces, than the box serves, or runs at high speed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed.</td></tr>
               <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>

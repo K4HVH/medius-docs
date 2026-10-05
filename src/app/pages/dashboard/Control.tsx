@@ -3,6 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
+import UpdateOnlyCard from './UpdateOnlyCard';
 import { ConnectPanel } from './ConnectPanel';
 import { createCommand } from './action';
 import DeviceInject from './DeviceInject';
@@ -41,17 +42,7 @@ const Control = () => {
       fallback={
         <Show
           when={!dash.updateOnly()}
-          fallback={
-            <div id="update-needed" data-search-target>
-              <Card>
-                <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
-                <p>Update it to use these controls.</p>
-                <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                  Update
-                </Button>
-              </Card>
-            </div>
-          }
+          fallback={<UpdateOnlyCard use="these controls" />}
         >
           <div id="controls" data-search-target>
             <Card>
@@ -64,12 +55,12 @@ const Control = () => {
 
                   <Match when={dash.status() === 'flashing'}>
                     <p>Updating.</p>
-                    <Button variant="primary" disabled onClick={() => navigate('/dashboard/update')}>
+                    <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
                       Go to Update
                     </Button>
                   </Match>
 
-                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected'}>
+                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
                     <ConnectPanel />
                   </Match>
 

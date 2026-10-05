@@ -20,6 +20,14 @@ export interface FlashNativeParams {
   kind: FlashKind;
   onProgress?: (p: FlashProgress) => void;
   onLog?: (line: string) => void;
+  // The chip's factory MAC, once the ROM answers; null if it can't be read.
+  onMac?: (mac: string | null) => void;
+}
+
+// esptool's "58:8c:81:e0:82:44" in the form a box id takes: "588c81e08244".
+export function romMac(s: string): string | null {
+  const hex = s.replace(/:/g, '').toLowerCase();
+  return /^[0-9a-f]{12}$/.test(hex) && hex !== '000000000000' ? hex : null;
 }
 
 export type FlashChip = 'device' | 'host';
@@ -44,7 +52,7 @@ export function validateImage(image: Uint8Array, kind: FlashKind): string | null
   return null;
 }
 
-function hasPartitionTable(image: Uint8Array): boolean {
+export function hasPartitionTable(image: Uint8Array): boolean {
   return (
     image.length > PARTITION_TABLE_OFFSET + 1 &&
     image[PARTITION_TABLE_OFFSET] === 0xaa &&

@@ -76,8 +76,9 @@ export const Menu: Component<MenuProps> = (props) => {
   const [finalPlacement, setFinalPlacement] = createSignal(placement());
   const [isPositioned, setIsPositioned] = createSignal(false);
 
+  // menuRef outlives a close, and a removed menu measures 0x0, which reschedules this every frame.
   const updatePosition = () => {
-    if (!triggerRef || !menuRef) return;
+    if (!isOpen() || !triggerRef || !menuRef) return;
 
     const actualTriggerElement = triggerRef.firstElementChild || triggerRef;
     const triggerRect = actualTriggerElement.getBoundingClientRect();
@@ -190,7 +191,7 @@ export const Menu: Component<MenuProps> = (props) => {
   };
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (!menuRef || !triggerRef) return;
+    if (!isOpen() || !menuRef || !triggerRef) return;
     const target = e.target as Node;
     const clickedInMenu = menuRef.contains(target);
     const clickedInTrigger = triggerRef.contains(target);

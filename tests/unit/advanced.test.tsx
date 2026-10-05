@@ -1,28 +1,53 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 
 // This page had no tests at all, which is how a rejected release fetch froze it and how "Flash
 // another" walked straight past the cable gate: both survived three review rounds.
+const st = vi.hoisted(() => ({
+  make: () => {
+    const [running, setRunning] = createSignal(false);
+    const [status, setStatus] = createSignal('disconnected');
+    const [progress, setProgress] = createSignal<{ phase: string; written?: number; total?: number } | null>(null);
+    const [update, setUpdate] = createSignal<{ page: string; outcome: string } | null>(null);
+    return { running, setRunning, status, setStatus, progress, setProgress, update, setUpdate };
+  },
+}));
+
 const mock = vi.hoisted(() => ({
-  status: 'disconnected' as string,
+  s: null as ReturnType<(typeof st)['make']> | null,
   releasesThrow: false,
   flashOk: true,
   flashes: 0,
   holdFlash: false,
+  metas: [] as unknown[],
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
-  useDashboard: () => ({
+  // The selected box's session, read through the registry: Advanced is not inside BoxScope.
+  useBoxes: () => ({
     supported: true,
     secure: true,
-    status: () => mock.status,
-    verdict: () => null,
+    scope: () => ({
+      status: () => mock.s!.status(),
+      name: () => 'Desk',
+      updateProgress: () => mock.s!.progress(),
+      update: () => mock.s!.update(),
+    }),
+  }),
+  BoxScope: (p: { children: unknown }) => p.children,
+  useNativeFlash: () => ({
+    progress: () => null,
+    log: () => [],
     error: () => null,
-    flashProgress: () => null,
-    clearFlashResult: () => {},
-    flashNative: async () => {
+    running: () => mock.s!.running(),
+    clear: () => {},
+    flash: async (_port: unknown, _image: Uint8Array, _kind: string, meta: unknown) => {
       mock.flashes += 1;
+      mock.metas.push(meta);
+      mock.s!.setRunning(true);
       if (mock.holdFlash) await new Promise(() => {});
+      mock.s!.setRunning(false);
       return mock.flashOk;
     },
   }),
@@ -45,8 +70,19 @@ vi.mock('../../src/dashboard/firmware', () => ({
 }));
 
 vi.mock('../../src/dashboard/serial', () => ({
-  grantedMediusPorts: async () => [],
   requestRomPort: async () => ({}) as SerialPort,
+}));
+
+// The USB2 form is tested in advanced-usb2.test.tsx; here it only has to be the one shown, and say when
+// it is busy.
+vi.mock('../../src/app/pages/dashboard/AdvancedUsb2', () => ({
+  Usb2Flash: (p: { via: () => unknown; onBusy?: (b: boolean) => void }) => (
+    <div>
+      {p.via() as never}
+      <p>usb2 form</p>
+      <button onClick={() => p.onBusy?.(true)}>usb2 busy</button>
+    </div>
+  ),
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
@@ -54,19 +90,23 @@ vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
 import Advanced from '../../src/app/pages/dashboard/Advanced';
 
+beforeEach(() => {
+  mock.s = st.make();
+});
+
 afterEach(() => {
   cleanup();
-  mock.status = 'disconnected';
   mock.releasesThrow = false;
   mock.flashOk = true;
   mock.flashes = 0;
+  mock.metas = [];
   mock.holdFlash = false;
   navigate.mockClear();
 });
 
 // Switch SOURCE to the upload path and return the real file input.
 const openUpload = async (r: ReturnType<typeof render>) => {
-  const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+  const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
   fireEvent.click(source);
   fireEvent.keyDown(source, { key: 'Enter' });
   await new Promise((res) => setTimeout(res, 20));
@@ -106,7 +146,7 @@ describe('Advanced', () => {
     expect(r.container.textContent).not.toMatch(/button next to USB3/i);
 
     // Switch to the mouse-side chip and the badge must follow the socket, not stay put.
-    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -125,7 +165,7 @@ describe('Advanced', () => {
     // unconditionally erased the reason in the same tick it was set.
     const r = render(() => <Advanced />);
     await openGate(r);
-    const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+    const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
     fireEvent.click(source);
     fireEvent.keyDown(source, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -157,7 +197,7 @@ describe('Advanced', () => {
     r.getByRole('button', { name: /^flash$/i }).click();
     const alert = await r.findByRole('alert');
     expect(alert.textContent).toMatch(/did not finish/i);
-    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -178,8 +218,8 @@ describe('Advanced', () => {
     r.getByRole('button', { name: /^flash$/i }).click();
     await waitFor(() => {
       const boxes = [...r.container.querySelectorAll('.combobox--disabled')];
-      // Chip, image and source: all three were live across the two awaits.
-      expect(boxes).toHaveLength(3);
+      // Via, chip, image and source: all four were live across the two awaits.
+      expect(boxes).toHaveLength(4);
     });
   });
 
@@ -214,12 +254,12 @@ describe('Advanced', () => {
     mock.holdFlash = true;
     const r = render(() => <Advanced />);
     await openGate(r);
-    const chip = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
     fireEvent.click(chip);
     fireEvent.keyDown(chip, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
     r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(3));
+    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(4));
     const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
       /mouse-side/i.test(o.textContent ?? ''),
     );
@@ -237,6 +277,22 @@ describe('Advanced', () => {
     await waitFor(() => r.getByRole('button', { name: /go to my box/i }));
     r.getByRole('button', { name: /go to my box/i }).click();
     expect(navigate).toHaveBeenCalledWith('/dashboard');
+    expect(mock.metas).toEqual([{ page: 'advanced', chip: 'device', source: 'release' }]);
+  });
+
+  it('a flash of an uploaded file tells the stats it was a file', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const bytes = new Uint8Array(2048);
+    bytes[0] = 0xe9;
+    const file = new File([bytes], 'own.bin');
+    Object.defineProperty(file, 'arrayBuffer', { value: () => Promise.resolve(bytes.buffer as ArrayBuffer) });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).not.toBeDisabled());
+    r.getByRole('button', { name: /^flash$/i }).click();
+    await waitFor(() => expect(mock.metas).toEqual([{ page: 'advanced', chip: 'device', source: 'file' }]));
   });
 
   it('a failed flash says the reason, and leaves the instruction to the badge', async () => {
@@ -259,8 +315,8 @@ describe('Advanced', () => {
     await openGate(r);
 
     // The option list renders through a portal, so it is read off the document, and it only exists
-    // once the combobox is open. SOURCE is the third one on the page.
-    const source = r.container.querySelectorAll('[role="combobox"]')[2] as HTMLElement;
+    // once the combobox is open. SOURCE is the fourth one on the page.
+    const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
     fireEvent.click(source);
     fireEvent.keyDown(source, { key: 'Enter' });
     await new Promise((res) => setTimeout(res, 20));
@@ -299,6 +355,102 @@ describe('Advanced', () => {
     drop(bad);
     await waitFor(() => expect(r.container.textContent).toMatch(/could not be read/i));
     // The first file's bytes must not still be armed under the second file's name.
+    expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
+  });
+
+  it('starts on ROM download while the box is not connected', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    expect(via.textContent).toContain('ROM download, USB1 or USB3');
+    expect(r.container.textContent).not.toContain('usb2 form');
+  });
+
+  it('starts on the control port, naming the box, while it is connected', async () => {
+    mock.s!.setStatus('connected');
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
+    const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
+    expect(via.textContent).toContain('Control port, USB2 (Desk)');
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
+  });
+
+  it("refuses a medius file built for the other chip, and takes anyone else's firmware", async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const drop = (bytes: Uint8Array<ArrayBuffer>, name: string) => {
+      const f = new File([bytes], name);
+      Object.defineProperty(f, 'arrayBuffer', { value: () => Promise.resolve(bytes.buffer as ArrayBuffer) });
+      Object.defineProperty(input, 'files', { value: [f], configurable: true });
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    // A factory image is the default IMAGE: its application starts at 0x10000.
+    const factory = (project: string | null) => {
+      const b = new Uint8Array(0x11000);
+      b[0] = 0xe9;
+      b[0x8000] = 0xaa;
+      b[0x8001] = 0x50;
+      b[0x10000] = 0xe9;
+      if (project) {
+        new DataView(b.buffer).setUint32(0x10000 + 32, 0xabcd5432, true);
+        new TextEncoder().encodeInto(project, b.subarray(0x10000 + 80));
+      }
+      return b;
+    };
+    drop(factory('medius_host'), 'host.bin');
+    await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
+    expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
+    drop(factory(null), 'other.bin');
+    await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).not.toBeDisabled());
+    expect(r.container.textContent).not.toContain("chip's image");
+  });
+
+  it('while the box updates over USB2, shows its progress and no form', async () => {
+    mock.s!.setStatus('flashing');
+    mock.s!.setProgress({ phase: 'writing', written: 50, total: 100 });
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toMatch(/Flashing/));
+    expect(r.container.textContent).toContain('50%');
+    expect(r.container.textContent).not.toContain('usb2 form');
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
+  });
+
+  it('comes back on the control port for a result Advanced started, whatever the box is doing now', async () => {
+    mock.s!.setStatus('disconnected');
+    mock.s!.setUpdate({ page: 'advanced', outcome: 'sent' });
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
+  });
+
+  it("keeps the Via choice still while the control port's flash is busy", async () => {
+    mock.s!.setStatus('connected');
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
+    expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(0);
+    r.getByRole('button', { name: 'usb2 busy' }).click();
+    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(1));
+  });
+
+  it("says don't close the tab while the box updates over the control port", async () => {
+    mock.s!.setStatus('flashing');
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain("Don't unplug or close this tab"));
+  });
+
+  it('refuses an application image of the other chip even with Image left on Factory', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const b = new Uint8Array(4096);
+    b[0] = 0xe9;
+    new DataView(b.buffer).setUint32(32, 0xabcd5432, true);
+    new TextEncoder().encodeInto('medius_host', b.subarray(80));
+    const f = new File([b], 'medius_host.bin');
+    Object.defineProperty(f, 'arrayBuffer', { value: () => Promise.resolve(b.buffer) });
+    Object.defineProperty(input, 'files', { value: [f], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
     expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
   });
 });

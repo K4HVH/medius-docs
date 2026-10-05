@@ -6,6 +6,9 @@ dist
 .vinxi
 app.config.timestamp_*.js
 
+# The stats database (STATS_DB)
+/data
+
 # Environment
 .env
 .env*.local

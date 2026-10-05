@@ -8,6 +8,7 @@ import {
   type FlashKind,
   type FlashNativeParams,
   type FlashProgress,
+  romMac,
   validateImage,
 } from './types';
 
@@ -29,6 +30,7 @@ async function runEsptool(
   address: number,
   onProgress?: (p: FlashProgress) => void,
   onLog?: (line: string) => void,
+  onMac?: (mac: string | null) => void,
 ): Promise<void> {
   const terminal: IEspLoaderTerminal = {
     clean: () => {},
@@ -40,6 +42,7 @@ async function runEsptool(
   try {
     onProgress?.({ phase: 'connecting' });
     await loader.main('no_reset');
+    onMac?.(romMac(await loader.chip.readMac(loader).catch(() => '')));
     onProgress?.({ phase: 'writing', written: 0, total: image.length });
     const flashOptions: FlashOptions = {
       fileArray: [{ data: image, address }],
@@ -74,8 +77,8 @@ async function runEsptool(
 
 // Flash a chip already in ROM download on its native USB port.
 export async function flashNativePort(params: FlashNativeParams): Promise<void> {
-  const { port, image, kind, onProgress, onLog } = params;
+  const { port, image, kind, onProgress, onLog, onMac } = params;
   const invalid = validateImage(image, kind);
   if (invalid) throw new Error(invalid);
-  await runEsptool(port, image, addressFor(kind), onProgress, onLog);
+  await runEsptool(port, image, addressFor(kind), onProgress, onLog, onMac);
 }

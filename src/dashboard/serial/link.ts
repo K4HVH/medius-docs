@@ -136,6 +136,7 @@ import {
   UPD_READY,
   UPD_RESP_LEN,
   UPD_STAGED,
+  UPD_BUSY,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
 
@@ -162,6 +163,15 @@ export class UnreadableReplyError extends Error {
   constructor(what: string) {
     super(`the box's reply to ${what} is in a layout this page does not read`);
     this.name = 'UnreadableReplyError';
+  }
+}
+
+// The port opens but every read fails at once, as Chromium does after another program (pyserial) left the
+// tty's read minimum at 0. Only a replug clears it from the browser.
+export class UnreadablePortError extends Error {
+  constructor() {
+    super('the port opens but cannot be read');
+    this.name = 'UnreadablePortError';
   }
 }
 
@@ -196,7 +206,11 @@ function updateReason(op: number, status: number, arg: number): string {
       ? 'the mouse-side chip did not come back. Power cycle the box.'
       : 'the box stopped answering and dropped the transfer.';
     case 0x19: return 'nothing is staged.';
-    case 0x1a: return `out of order. The box wanted op ${arg}.`;
+    // Usually the op the box expected; a short END carries the bytes missing, a bad chunk its limit.
+    case 0x1a:
+      if (op === 0x02 && arg > 0) return `the image ended ${arg} bytes short.`;
+      if (op === 0x01 && arg === OTA_CHUNK) return `a chunk was not 1 to ${arg} bytes.`;
+      return `out of order. The box wanted op ${arg}.`;
     case 0x1b: return 'a chip is still verifying its new firmware. Try again in a few seconds.';
     case 0x1c: return 'refused before writing, so anything staged is untouched.';
     default: return `${UPD_NAMES[status] ?? status} (arg ${arg}).`;
@@ -233,11 +247,15 @@ const UPDATE_BACKLOG_MAX = 64;
 export class BadProtoVerError extends Error {
   constructor(readonly version: Version) {
     super(
-      `unsupported protocol version ${version.protoVer} ` +
-        `(this page speaks ${MIN_PROTO_VER}..${PROTO_VER})`,
+      `unsupported protocol version ${version.protoVer} (updates need ${MIN_PROTO_VER} or later)`,
     );
     this.name = 'BadProtoVerError';
   }
+}
+
+/** Whether this page can reach a box at all: from MIN_PROTO_VER on, the update path is fixed (§2.3). */
+export function canUpdate(version: Version): boolean {
+  return version.protoVer >= MIN_PROTO_VER;
 }
 
 /** Whether a box speaks the current wire, or only enough of it to be updated. */
@@ -280,16 +298,6 @@ export async function requestMediusPort(): Promise<SerialPort> {
   });
 }
 
-// CH343 ports this origin was already granted; opening one needs no chooser.
-export async function grantedMediusPorts(): Promise<SerialPort[]> {
-  if (!isWebSerialSupported()) return [];
-  const ports = await navigator.serial.getPorts();
-  return ports.filter((p) => {
-    const info = p.getInfo();
-    return info.usbVendorId === WCH_VID && info.usbProductId === CH343_PID;
-  });
-}
-
 // Open a chooser filtered to an ESP32-S3 in ROM download mode (native USB).
 export async function requestRomPort(): Promise<SerialPort> {
   if (!isWebSerialSupported()) {
@@ -316,6 +324,10 @@ export class SerialLink {
   private clipSeq = 0;
   private opened = false;
   private closing = false;
+  // Date.now() of the last frame; 0 before any.
+  lastRxAt = 0;
+  // Set when the read loop died on an error rather than a close.
+  private readFailed = false;
 
   constructor(
     private readonly port: SerialPort,
@@ -348,16 +360,17 @@ export class SerialLink {
     for (let i = 0; i < HANDSHAKE_ATTEMPTS; i++) {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
-        // Below MIN_PROTO_VER there is no UPDATE opcode to reach, and above PROTO_VER the box speaks
-        // a wire this page cannot know. Between them it connects, for updating.
-        if (version.protoVer < MIN_PROTO_VER || version.protoVer > PROTO_VER) {
-          throw new BadProtoVerError(version);
-        }
+        // Below MIN_PROTO_VER there is no UPDATE to reach. From it on a box connects, for updating
+        // unless it speaks this page's wire.
+        if (!canUpdate(version)) throw new BadProtoVerError(version);
         return version;
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
+        // No later attempt reads anything either.
+        if (this.readFailed) throw new UnreadablePortError();
         // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
-        // retry. Firmware >= 2.3.0 self-heals; this covers older boxes, as connect.rs does.
+        // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0 to 3.4.3, where only
+        // this flush clears it.
         await this.flushPeerDecoder();
       }
     }
@@ -951,6 +964,7 @@ export class SerialLink {
         }
       } catch (e) {
         dropErr = e as Error;
+        this.readFailed = true;
         break;
       } finally {
         try {
@@ -968,6 +982,7 @@ export class SerialLink {
   }
 
   private onFrame(f: DecodedFrame): void {
+    this.lastRxAt = Date.now();
     if (f.ty === FrameType.Resp) {
       const p = this.pending.get(f.seq);
       // A solicited reply must match both SEQ and the request's selector byte.
@@ -1068,7 +1083,13 @@ export class SerialLink {
     const begin = new Uint8Array(4 + digest.length);
     new DataView(begin.buffer).setUint32(0, image.length, true);
     begin.set(digest, 4);
-    const ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    let ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    // Only one client holds the port, so a session already open on this target was left by one that went
+    // away mid-transfer (a pulled cable), and the box would hold it for its 10 s idle timer. Drop it.
+    if (ready.status === UPD_BUSY) {
+      await this.abortUpdate(target).catch(() => undefined);
+      ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
+    }
     if (ready.status !== UPD_READY) throw new UpdateError(OTA_OP_BEGIN, ready.status, ready.arg);
 
     const credit = ready.arg || OTA_CREDIT;
@@ -1134,7 +1155,14 @@ export class SerialLink {
     frame[1] = target;
     frame.set(body, 2);
     const wait = this.awaitUpdate(op, timeoutMs);
-    await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+    try {
+      await this.send(encode(FrameType.Update, this.nextSeq(), frame));
+    } catch (e) {
+      // Nothing will answer a frame that never went out: end the wait now, or it times out unheard.
+      wait.catch(() => undefined);
+      this.updateWaiters.get(op)?.(null, e as Error);
+      throw e;
+    }
     return wait;
   }
 
@@ -1177,18 +1205,22 @@ export class SerialLink {
   }
 }
 
+export const bauds = (first?: number): number[] =>
+  first === undefined ? [...CTRL_BAUDS] : [first, ...CTRL_BAUDS.filter((b) => b !== first)];
+
 // Tries each control rate; only silence moves on, since a wrong protocol or a port that won't open
 // says nothing about the rate.
 export async function attachLink(
   port: SerialPort,
   make: (port: SerialPort) => SerialLink,
-): Promise<{ link: SerialLink; version: Version }> {
+  order: readonly number[] = CTRL_BAUDS,
+): Promise<{ link: SerialLink; version: Version; baud: number }> {
   let silent: unknown;
-  for (const baudRate of CTRL_BAUDS) {
+  for (const baud of order) {
     const link = make(port);
     try {
-      await link.open(baudRate);
-      return { link, version: await link.handshake() };
+      await link.open(baud);
+      return { link, version: await link.handshake(), baud };
     } catch (e) {
       await link.close().catch(() => undefined);
       if (!(e instanceof NoReplyError)) throw e;
