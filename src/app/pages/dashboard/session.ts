@@ -65,6 +65,8 @@ export interface BoxSession {
   probe: Accessor<Probe | null>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  // Disconnect, and drop what this browser keeps about the box.
+  forget: () => Promise<void>;
   identify: () => Promise<void>;
   identifying: Accessor<boolean>;
   // Subscribe a card to a readback while mounted; cards share one query per value.
@@ -102,6 +104,7 @@ export interface SessionHooks {
   seen?: (port: SerialPort, probe: Probe) => boolean;
   held?: (mac: string, name: string) => void;
   released?: (mac: string) => void;
+  forgotten?: (mac: string) => void;
 }
 
 export interface SessionControl {
@@ -446,6 +449,12 @@ export function createBoxSession(
       if (l) await l.close().catch(() => undefined);
     };
 
+    const forget = async () => {
+      const m = mac();
+      await disconnect();
+      if (m) hooks.forgotten?.(m);
+    };
+
     const identify = (): Promise<void> => {
       const l = link();
       if (identifyRun || !l || status() !== 'connected') return identifyRun ?? Promise.resolve();
@@ -650,6 +659,7 @@ export function createBoxSession(
       probe,
       connect,
       disconnect,
+      forget,
       identify,
       identifying,
       poll: poller.subscribe,

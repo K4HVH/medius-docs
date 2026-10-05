@@ -44,6 +44,8 @@ const world = (opts: { supported?: boolean } = {}) => {
     select,
     add: async () => ({ ok: false, verdict: { kind: 'no-port' } }),
     anyUpdating: () => status() === 'flashing',
+    icon: () => 'box',
+    setIcon: () => {},
   } as unknown as Boxes;
   const native = { running, progress: () => null, log: () => [], error: () => null, flash: async () => true, clear: () => {} } as unknown as NativeFlash;
   return { boxes, native, setRunning, setStatus, start, select };

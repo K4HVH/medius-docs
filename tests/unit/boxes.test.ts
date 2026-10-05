@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMemo, createRoot, createSignal } from 'solid-js';
 import { type Boxes, NEW_BOX, createBoxes } from '../../src/app/pages/dashboard/boxes';
 import { REATTACH_MS } from '../../src/app/pages/dashboard/session';
-import { createBoxStore } from '../../src/app/pages/dashboard/store';
+import { STORE_KEY, createBoxStore } from '../../src/app/pages/dashboard/store';
 import { probePort } from '../../src/dashboard/serial';
 import { FakeBox, FakeLocks, FakePort, FakeSerial, asPort, makeFakeLink, otherTab, settle } from './fake-boxes';
 
@@ -61,8 +61,15 @@ beforeEach(() => {
 afterEach(() => {
   while (roots.length) roots.pop()!();
   setFlashing(false);
+  localStorage.clear();
   vi.useRealTimers();
 });
+
+const watch = <T,>(fn: () => T) =>
+  createRoot((dispose) => {
+    roots.push(dispose);
+    return createMemo(fn);
+  });
 
 describe('box registry', () => {
   it('lists every granted port by the name its box answers with, in order of first sight', async () => {
@@ -639,10 +646,45 @@ describe('box registry', () => {
     await pick(boxes, a.mac);
     serial.unplug(ports[0]);
     await ready();
-    await entry(boxes, a.mac).session.disconnect();
+    await entry(boxes, a.mac).session.forget();
     await ready();
     expect(boxes.entries()).toEqual([]);
     expect(store.held()).toEqual([]);
+  });
+
+  it('a chosen icon follows its box through Disconnect, and Forget clears it', async () => {
+    const a = box(1);
+    const ports = portsOf(a);
+    const serial = new FakeSerial(ports);
+    const store = createBoxStore(null);
+    const boxes = mount(serial, store);
+    await ready();
+    const icon = watch(() => boxes.icon(a.mac));
+    expect(icon()).toBe('box');
+    await pick(boxes, a.mac);
+    boxes.setIcon(a.mac, 'mouse');
+    expect(icon()).toBe('mouse');
+    await entry(boxes, a.mac).session.disconnect();
+    await ready();
+    expect(icon()).toBe('mouse');
+    expect(store.icons()).toEqual({ [a.mac]: 'mouse' });
+    await pick(boxes, a.mac);
+    serial.unplug(ports[0]);
+    await ready();
+    await entry(boxes, a.mac).session.forget();
+    await ready();
+    expect(icon()).toBe('box');
+    expect(store.icons()).toEqual({});
+  });
+
+  it("an icon another tab stores shows here at once", async () => {
+    const a = box(1);
+    const boxes = mount(new FakeSerial(portsOf(a)), createBoxStore(localStorage));
+    await ready();
+    const icon = watch(() => boxes.icon(a.mac));
+    createBoxStore(localStorage).setIcon(a.mac, 'keyboard');
+    window.dispatchEvent(new StorageEvent('storage', { key: STORE_KEY }));
+    expect(icon()).toBe('keyboard');
   });
 
   it('knows when any box, selected or not, is mid-update', async () => {

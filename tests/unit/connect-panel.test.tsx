@@ -20,6 +20,7 @@ const mock = vi.hoisted(() => ({
   secure: true,
   connect: vi.fn(async () => {}),
   disconnects: 0,
+  forgets: 0,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
@@ -34,6 +35,11 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     connect: mock.connect,
     disconnect: async () => {
       mock.disconnects += 1;
+      mock.s!.setHeld(false);
+      mock.s!.setStatus('disconnected');
+    },
+    forget: async () => {
+      mock.forgets += 1;
       mock.s!.setHeld(false);
       mock.s!.setStatus('disconnected');
     },
@@ -52,6 +58,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   mock.disconnects = 0;
+  mock.forgets = 0;
   mock.supported = true;
   mock.secure = true;
   mock.connect.mockClear();
@@ -206,7 +213,8 @@ describe('ConnectPanel', () => {
     expect(getByRole('alert').textContent?.trim()).toBe("This computer can't see your box. Plug USB2 into it.");
     expect(queryByRole('button', { name: /reconnecting/i })).toBeNull();
     getByRole('button', { name: /forget/i }).click();
-    expect(mock.disconnects).toBe(1);
+    expect(mock.forgets).toBe(1);
+    expect(mock.disconnects).toBe(0);
     await waitFor(() => expect(queryByRole('alert')).toBeNull());
     expect(getByRole('button', { name: /^connect$/i })).toBeTruthy();
   });
