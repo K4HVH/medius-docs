@@ -45,6 +45,7 @@ export class FakeBox {
   doubleOpens = 0;
   leds: [number, number, number][] = [];
   healthQueries = 0;
+  versionQueries = 0;
   locksQueries = 0;
   device: DeviceInfo | null = DEVICE;
   gate: Promise<void> | null = null;
@@ -163,6 +164,7 @@ export class FakeLink {
   }
 
   async queryVersion(): Promise<Version> {
+    this.box.versionQueries++;
     return this.answer(() => this.box.version);
   }
 
