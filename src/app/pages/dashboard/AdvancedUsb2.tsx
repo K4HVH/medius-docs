@@ -151,7 +151,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   const sentChips = () => ORDER.filter((c) => run()?.[c]);
   const reverted = () => sentChips().filter((c) => run()?.landed?.[c] === false);
   const landed = () => sentChips().filter((c) => run()?.landed?.[c] !== false);
-  // "The main chip runs v3.4.4 and the mouse-side chip v3.4.4."
+  // "The main chip runs v3.4.5 and the mouse-side chip v3.4.5."
   const runs = (cs: FlashChip[]) =>
     cs.length === 2
       ? `The main chip runs ${fmt(current('device'))} and the mouse-side chip ${fmt(current('host'))}.`
