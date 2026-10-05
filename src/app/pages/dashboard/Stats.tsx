@@ -3,7 +3,6 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { type Count, type StatsSummary, type WeekFlashes, fetchStats } from '../../../dashboard/stats';
 import { Section } from './Section';
-import { field, muted } from './ui';
 import '../../../styles/docs.css';
 
 // Longer lists end in one row summing the rest.
@@ -38,7 +37,7 @@ const RESULT: Record<keyof Omit<WeekFlashes, 'week'>, string> = {
   verified: 'Verified',
   written: 'Written (ROM download)',
   reverted: 'Reverted',
-  sent: "Didn't come back",
+  sent: 'Unconfirmed',
   failed: 'Failed',
 };
 const PAGE: Record<string, string> = { update: 'Update', advanced: 'Advanced', setup: 'Set up' };
@@ -190,11 +189,10 @@ const Group = (props: { title: string; children: JSX.Element }) => (
   </div>
 );
 
-// Label left, value right, as the dashboard's other readouts.
-const Row = (props: { label: string; value: string }) => (
-  <div style={field}>
-    <span style={muted}>{props.label}</span>
-    <span>{props.value}</span>
+const Figure = (props: { value: string; label: string }) => (
+  <div class="stat-figure">
+    <div class="stat-figure__value">{props.value}</div>
+    <div class="stat-figure__label">{props.label}</div>
   </div>
 );
 
@@ -207,15 +205,15 @@ const Summary = (props: { s: StatsSummary }) => {
       <div id="stats" data-search-target>
         <Card>
           <CardHeader title="Usage stats" subtitle={SCOPE} />
-          <div data-testid="figures">
-            <Row label="Unique boxes" value={num(s().boxes.total)} />
-            <Row label="New this week" value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} />
-            <Row label="Active in 7 days" value={num(s().boxes.active7)} />
-            <Row label="Active in 30 days" value={num(s().boxes.active30)} />
-            <Row label="Unique devices" value={num(s().devices.unique)} />
-            <Row label="Flashes" value={num(s().flashes.total)} />
-            <Row label="Success rate" value={rate()} />
-            <Row label="Countries" value={num(s().countries.filter((c) => c.key !== 'unknown').length)} />
+          <div class="stat-figures" data-testid="figures">
+            <Figure value={num(s().boxes.total)} label="Unique boxes" />
+            <Figure value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} label="New this week" />
+            <Figure value={num(s().boxes.active7)} label="Active in 7 days" />
+            <Figure value={num(s().boxes.active30)} label="Active in 30 days" />
+            <Figure value={num(s().devices.unique)} label="Unique devices" />
+            <Figure value={num(s().flashes.total)} label="Flashes" />
+            <Figure value={rate()} label="Success rate" />
+            <Figure value={num(s().countries.filter((c) => c.key !== 'unknown').length)} label="Countries" />
           </div>
         </Card>
       </div>
@@ -281,8 +279,10 @@ const Summary = (props: { s: StatsSummary }) => {
                     {(d) => (
                       <tr>
                         <td class="stat-wrap">
-                          {d.product ?? 'Unnamed'}
-                          <div class="stat-sub">{KIND[d.kind] ?? 'Unknown'}</div>
+                          <Show when={d.product} fallback={KIND[d.kind] ?? 'Unknown'}>
+                            {d.product}
+                            <div class="stat-sub">{KIND[d.kind] ?? 'Unknown'}</div>
+                          </Show>
                         </td>
                         <td>
                           {hex4(d.vid)}:{hex4(d.pid)}

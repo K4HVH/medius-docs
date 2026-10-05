@@ -103,7 +103,7 @@ describe('Stats page', () => {
       'Keyboard',
       'G502 HERO Gaming Mouse',
       '046D:C08B',
-      "Didn't come back",
+      'Unconfirmed',
       'Update, USB2',
       'Set up, ROM download',
       'Mouse-side chip',
@@ -132,13 +132,16 @@ describe('Stats page', () => {
     ]);
   });
 
-  it('shows the totals as the dashboard shows readouts: a label and its value per row', async () => {
+  it('shows the totals as tiles, each a value over its label', async () => {
     answer(FULL);
     const r = render(() => <Stats />);
     const figures = await r.findByTestId('figures');
-    const rows = [...figures.children].map((row) => [...row.children].map((c) => c.textContent));
-    expect(rows[0]).toEqual(['Unique boxes', '1,204']);
-    expect(rows.map((x) => x[0])).toEqual([
+    const tiles = [...figures.querySelectorAll('.stat-figure')].map((t) => [
+      t.querySelector('.stat-figure__value')!.textContent,
+      t.querySelector('.stat-figure__label')!.textContent,
+    ]);
+    expect(tiles[0]).toEqual(['1,204', 'Unique boxes']);
+    expect(tiles.map((x) => x[1])).toEqual([
       'Unique boxes',
       'New this week',
       'Active in 7 days',
@@ -199,6 +202,16 @@ describe('Stats page', () => {
     expect(figures.textContent).toContain('0');
     expect(figures.textContent).not.toContain('NaN');
     expect(r.getAllByText('None.').length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('names a device with no product string by its kind, and no label says what something lacks', async () => {
+    answer({ ...FULL, devices: { ...FULL.devices, top: [{ vid: 0x1915, pid: 0xaf28, kind: 1, product: null, boxes: 2 }] } });
+    const r = render(() => <Stats />);
+    await r.findByTestId('figures');
+    // The second table, Most used; the first is By kind.
+    const cell = r.container.querySelectorAll('#devices table')[1].querySelector('tbody td')!;
+    expect(cell.textContent).toBe('Keyboard');
+    expect(r.container.textContent).not.toMatch(/Unnamed|Didn't come back/);
   });
 
   it('an empty most used list says None', async () => {
