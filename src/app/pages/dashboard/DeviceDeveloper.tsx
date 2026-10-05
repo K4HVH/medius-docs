@@ -6,6 +6,7 @@ import { useNavigate } from '@solidjs/router';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
+import UpdateOnlyCard from './UpdateOnlyCard';
 import { ConnectPanel } from './ConnectPanel';
 import DeviceRewrite from './DeviceRewrite';
 import DevicePatch from './DevicePatch';
@@ -24,17 +25,7 @@ const DeviceDeveloper = () => {
       fallback={
         <Show
           when={!dash.updateOnly()}
-          fallback={
-            <div id="update-needed" data-search-target>
-              <Card>
-                <CardHeader title="Update needed" subtitle="This box speaks an older protocol" />
-                <p>Update it to use the advanced control layer.</p>
-                <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                  Update
-                </Button>
-              </Card>
-            </div>
-          }
+          fallback={<UpdateOnlyCard use="the advanced control layer" />}
         >
           <div id="advanced-control-layer" data-search-target>
             <Card>

@@ -102,15 +102,20 @@ const Update = () => {
     </Show>
   );
 
+  // A result Advanced is still showing is its own.
+  const clearOwn = () => {
+    if (dash.update()?.page === 'update') dash.clearUpdate();
+  };
+
   const choose = (mode: 'both' | 'main' | 'mouse') => {
     setErr(null);
-    dash.clearUpdate();
+    clearOwn();
     setWhich(mode);
     setStep('update');
   };
 
   const finish = () => {
-    dash.clearUpdate();
+    clearOwn();
     setStep('choose');
     navigate('/dashboard');
   };
@@ -119,7 +124,7 @@ const Update = () => {
   // reverts anything that won't run. The mouse-side image is relayed over the inter-chip link.
   const runUpdate = async () => {
     setErr(null);
-    dash.clearUpdate();
+    clearOwn();
     const wantDevice = which() !== 'mouse';
     const wantHost = which() !== 'main';
     setBusy(true);

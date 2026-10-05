@@ -25,6 +25,8 @@ const mock = vi.hoisted(() => ({
   cleared: 0,
   transferReply: { ep: 0, status: 0, data: new Uint8Array() },
   status: 'connected',
+  updateOnly: false,
+  protoVer: 9,
   poll: {} as Record<string, unknown>,
   // Tells the card the polled values moved, as a fresh poll reply would.
   polled: () => {},
@@ -86,7 +88,8 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       verdict: () => null,
       error: () => null,
       disconnect: async () => {},
-      updateOnly: () => false,
+      updateOnly: () => mock.updateOnly,
+      version: () => ({ protoVer: mock.protoVer, fwMajor: 3, fwMinor: 5, fwPatch: 0, mac: [], name: '' }),
       link: () => link,
       poll: (key: string) => () => {
         polls();
@@ -124,6 +127,19 @@ afterEach(() => {
 });
 
 describe('DeviceDeveloper', () => {
+  it('a box newer than the page is called newer, never told it speaks an older protocol', async () => {
+    mock.updateOnly = true;
+    mock.protoVer = 10;
+    try {
+      const { findByText, queryByText } = render(() => <DeviceDeveloper />);
+      expect(await findByText('Newer firmware')).toBeTruthy();
+      expect(queryByText('Update needed')).toBeNull();
+    } finally {
+      mock.updateOnly = false;
+      mock.protoVer = 9;
+    }
+  });
+
   it('renders every card of the advanced control layer', () => {
     on();
     const { getByText } = render(() => <DeviceDeveloper />);

@@ -119,6 +119,13 @@ const mount = (value = stub()) =>
 afterEach(cleanup);
 
 describe('Control page', () => {
+  it('a box newer than the page is called newer, never told it speaks an older protocol', async () => {
+    const newer = { ...(VALUES.version as object), protoVer: PROTO_VER + 1 };
+    const { findByText, queryByText } = mount(stub({ updateOnly: () => true, version: () => newer as never }));
+    expect(await findByText('Newer firmware')).toBeTruthy();
+    expect(queryByText('Update needed')).toBeNull();
+  });
+
   // A failed connect used to fall into the same fallback as a clean disconnect, so the page showed
   // the Connect button again and said nothing. It says why now, through the shared panel.
   it('says why a connect failed rather than offering a bare Connect button', async () => {
