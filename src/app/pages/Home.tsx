@@ -65,9 +65,6 @@ const Home: Component = () => {
               </Card>
             </A>
           </div>
-          <A href="/dashboard/stats" class="home-stats">
-            Public usage stats
-          </A>
         </div>
       </div>
     </div>

@@ -525,17 +525,6 @@ pre code[class*="language-"] {
   gap: var(--g-spacing-lg) calc(var(--g-spacing) * 2);
 }
 
-/* Under the home page's section cards. */
-.home-stats {
-  align-self: center;
-  font-size: var(--font-size-sm);
-  color: var(--g-text-link);
-}
-
-.home-stats:hover {
-  text-decoration: underline;
-}
-
 /* Under a connect view's buttons. */
 .connect-note {
   margin: var(--g-spacing-sm) 0 0;
