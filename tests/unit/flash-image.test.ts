@@ -106,12 +106,27 @@ describe('usb2Refusal', () => {
 
 describe('romRefusal', () => {
   it('takes any firmware except medius built for the other chip', () => {
-    expect(romRefusal(app({ project: 'stock_fw' }), 'app', 'device')).toBeNull();
-    expect(romRefusal(app({ magic: 0 }), 'app', 'device')).toBeNull();
-    expect(romRefusal(app({ project: 'medius_device' }), 'app', 'device')).toBeNull();
-    expect(romRefusal(app({ factory: true, project: 'medius_host' }), 'factory', 'device')).toBe(
+    expect(romRefusal(app({ project: 'stock_fw' }), 'device')).toBeNull();
+    expect(romRefusal(app({ magic: 0 }), 'device')).toBeNull();
+    expect(romRefusal(app({ project: 'medius_device' }), 'device')).toBeNull();
+    expect(romRefusal(app({ factory: true, project: 'medius_host' }), 'device')).toBe(
       "This is the mouse-side chip's image.",
     );
-    expect(romRefusal(app({ project: 'medius_device' }), 'app', 'host')).toBe("This is the main chip's image.");
+    expect(romRefusal(app({ project: 'medius_device' }), 'host')).toBe("This is the main chip's image.");
+  });
+
+  it('reads the file where its own shape puts the app, whatever Image says', () => {
+    // An application image picked with Image left on Factory, and the reverse.
+    expect(romRefusal(real(HOST_HEAD), 'device')).toBe("This is the mouse-side chip's image.");
+    expect(romRefusal(app({ factory: true, project: 'medius_device' }), 'host')).toBe("This is the main chip's image.");
+  });
+});
+
+describe('usb2Refusal on a padded factory image', () => {
+  it('names it a factory image, not a size problem at an offset that means nothing here', () => {
+    const big = app({ factory: true, size: 4 * 1024 * 1024 - 1024 });
+    expect(usb2Refusal(big, 'device')).toBe(
+      'This is a factory image. Choose the application image, or flash it over USB1.',
+    );
   });
 });

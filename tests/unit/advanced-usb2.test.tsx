@@ -45,6 +45,7 @@ const mock = vi.hoisted(() => ({
   // What the box runs once a verified run ends.
   after: null as unknown,
   releasesThrow: false,
+  firmwareReads: 0,
   assets: [] as { name: string; size: number; url: string }[],
   bytes: {} as Record<string, Uint8Array>,
 }));
@@ -59,7 +60,10 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
       firmwareInfo: () => s.firmwareInfo(),
       update: () => s.update(),
       clearUpdate: () => s.setUpdate(null),
-      readFirmwareInfo: async () => s.firmwareInfo(),
+      readFirmwareInfo: async () => {
+        mock.firmwareReads += 1;
+        return s.firmwareInfo();
+      },
       // Mirrors the real one's observable effects.
       updateOverControl: async (images: { device?: Uint8Array; host?: Uint8Array }, page: string) => {
         mock.sent.push({ images, page });
@@ -142,6 +146,7 @@ afterEach(() => {
   mock.landed = undefined;
   mock.after = null;
   mock.releasesThrow = false;
+  mock.firmwareReads = 0;
 });
 
 const mount = () => render(() => <Usb2Flash via={() => <p>via field</p>} />);
@@ -204,6 +209,32 @@ describe('Advanced over USB2', () => {
     const opts = await options(combos(r)[0]);
     const disabled = opts.filter((o) => o.getAttribute('aria-disabled') === 'true').map((o) => o.textContent);
     expect(disabled).toEqual(['Both chips', 'Mouse-side chip']);
+    fireEvent.keyDown(combos(r)[0], { key: 'Escape' });
+    await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
+    flashButton(r).click();
+    await waitFor(() => expect(mock.sent).toHaveLength(1));
+    expect(mock.sent[0].images).toEqual({ device: DEVICE_345 });
+  });
+
+  it('a mouse-side chip that comes back is offered again, from a read the form repeats', async () => {
+    mock.s!.setFirmwareInfo(info('3.4.2', null));
+    const r = mount();
+    await waitFor(() => expect(r.container.textContent).toContain("The mouse-side chip isn't answering."));
+    await waitFor(() => expect(mock.firmwareReads).toBeGreaterThan(1), { timeout: 4000 });
+    mock.s!.setFirmwareInfo(info('3.4.2', '3.4.2'));
+    await waitFor(() => expect(r.container.textContent).not.toContain("The mouse-side chip isn't answering."));
+    const disabled = (await options(combos(r)[0])).filter((o) => o.getAttribute('aria-disabled') === 'true');
+    expect(disabled).toEqual([]);
+  });
+
+  it("waits for the box's firmware before it can judge a flash, then allows it", async () => {
+    mock.s!.setFirmwareInfo(null);
+    const r = mount();
+    await waitFor(() => expect(r.container.textContent).toContain("Reading the box's firmware..."));
+    expect(flashButton(r)).toBeDisabled();
+    mock.s!.setFirmwareInfo(info('3.4.2', '3.4.2'));
+    await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
+    expect(r.container.textContent).not.toContain('Reading');
   });
 
   it('names each release file it will send, with its size and tag', async () => {
@@ -212,6 +243,15 @@ describe('Advanced over USB2', () => {
     expect(r.container.textContent).toContain('medius_device.bin (483 KB) from v3.4.5');
     expect(r.container.textContent).toContain('medius_host.bin (399 KB) from v3.4.5');
     expect(flashButton(r)).not.toBeDisabled();
+  });
+
+  it('a release file that is missing is not counted as a version to come', async () => {
+    mock.assets = mock.assets.filter((a) => a.name !== 'medius_host.bin');
+    const r = mount();
+    await chips(r, /^Mouse-side chip$/);
+    await waitFor(() => expect(r.container.textContent).toContain('No medius_host.bin in the latest release.'));
+    // That warning alone: no split is judged against a file that isn't there.
+    expect(r.container.querySelectorAll('.callout--warning')).toHaveLength(1);
   });
 
   it('a release missing a chip it needs says so, and Flash waits', async () => {
@@ -252,11 +292,9 @@ describe('Advanced over USB2', () => {
     dropOn(main, HOST_345);
     dropOn(mouse, app('stock_fw', '3.4.5'));
     await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
-    expect(r.container.textContent).not.toMatch(/different versions/);
+    expect(r.container.textContent).not.toMatch(/would run/);
     expect(r.container.textContent).toContain("This isn't medius firmware. Flash it over USB3.");
     expect(flashButton(r)).toBeDisabled();
-    // A file that won't be sent says nothing about the version to come.
-    expect(r.container.textContent).toContain('Main chip: v3.4.2Mouse-side chip: v3.4.2');
   });
 
   it('a refused mouse-side file stops blocking once only the main chip is chosen, and is never sent', async () => {
@@ -278,22 +316,14 @@ describe('Advanced over USB2', () => {
     expect(mock.sent[0].page).toBe('advanced');
   });
 
-  it("shows each chip's version now and after", async () => {
-    const r = mount();
-    await waitFor(() => expect(r.container.textContent).toContain('Main chip: v3.4.2 to v3.4.5'));
-    expect(r.container.textContent).toContain('Mouse-side chip: v3.4.2 to v3.4.5');
-    await chips(r, /^Main chip$/);
-    await waitFor(() => expect(r.container.textContent).toContain('Mouse-side chip: v3.4.2, unchanged'));
-  });
-
   it('a flash that would split the chips warns, and goes only once ticked', async () => {
     const r = mount();
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
-    expect(r.container.textContent).not.toMatch(/different versions/);
+    expect(r.container.textContent).not.toMatch(/would run/);
     await chips(r, /^Main chip$/);
     await waitFor(() =>
       expect(r.container.textContent).toContain(
-        "The chips would be on different versions, v3.4.5 and v3.4.2. If they can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over USB3.",
+        "The main chip would run v3.4.5 and the mouse-side chip v3.4.2. If they can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over USB3.",
       ),
     );
     expect(flashButton(r)).toBeDisabled();
@@ -330,7 +360,7 @@ describe('Advanced over USB2', () => {
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
     flashButton(r).click();
     await waitFor(() =>
-      expect(r.container.textContent).toContain('Flashed and verified. Main chip on v3.4.5, mouse-side chip on v3.4.5.'),
+      expect(r.container.textContent).toContain('Flashed and verified. The main chip runs v3.4.5 and the mouse-side chip v3.4.5.'),
     );
     expect(r.container.textContent).not.toMatch(/protocol/);
   });
@@ -347,7 +377,7 @@ describe('Advanced over USB2', () => {
       ),
     );
     expect(r.container.textContent).not.toMatch(/verified/i);
-    expect(r.container.textContent).toContain('Mouse-side chip on v3.4.5.');
+    expect(r.container.textContent).toContain('The mouse-side chip runs v3.4.5.');
   });
 
   it('a box now on another protocol says the page can flash it but not control it', async () => {
@@ -363,12 +393,13 @@ describe('Advanced over USB2', () => {
     );
   });
 
-  it('a box that did not come back gets the connect panel and its instruction', async () => {
+  it('a box that did not come back gets the connect panel and its instruction, and Via to go another way', async () => {
     mock.outcome = 'sent';
     const r = mount();
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
     flashButton(r).click();
     await waitFor(() => expect(r.container.textContent).toContain('connect panel: The update was sent'));
+    expect(r.container.textContent).toContain('via field');
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 

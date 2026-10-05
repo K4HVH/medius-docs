@@ -15,10 +15,11 @@ import {
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
-import { useBoxes, useDashboard, useNativeFlash } from './context';
+import { BoxScope, useBoxes, useNativeFlash } from './context';
 import { Usb2Flash } from './AdvancedUsb2';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
 import { InstallPorts, WiringPorts } from './PortDiagram';
+import { note, row, section } from './ui';
 import '../../../styles/docs.css';
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
@@ -30,10 +31,15 @@ const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-second
 const Advanced = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
-  const dash = useDashboard();
+  // The selected box, read through the registry: inside BoxScope a box coming or going would remount the
+  // page and lose a ROM flash half set up, which unplugging USB2 for it does.
+  const dash = () => boxes.scope();
   const [via, setVia] = createSignal<'usb2' | 'rom'>(
-    dash.status() === 'connected' || dash.status() === 'flashing' ? 'usb2' : 'rom',
+    dash().update()?.page === 'advanced' || dash().status() === 'connected' || dash().status() === 'flashing'
+      ? 'usb2'
+      : 'rom',
   );
+  const [usb2Busy, setUsb2Busy] = createSignal(false);
   const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
   const [chip, setChip] = createSignal<FlashChip>('device');
@@ -74,17 +80,17 @@ const Advanced = () => {
   const asset = () => latest()?.assets.find((a) => a.name === assetName()) ?? null;
   const validationError = () => {
     const img = image();
-    return img ? (validateImage(img, kind()) ?? romRefusal(img, kind(), chip())) : null;
+    return img ? (validateImage(img, kind()) ?? romRefusal(img, chip())) : null;
   };
   const mismatch = () => {
     const img = image();
     return img ? looksLikeWrongKind(img, kind()) : false;
   };
   const pct = () => {
-    const p = native.running() ? native.progress() : dash.updateProgress();
+    const p = native.running() ? native.progress() : dash().updateProgress();
     return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
   };
-  const updating = () => dash.status() === 'flashing';
+  const updating = () => dash().status() === 'flashing';
 
   // Tags each read with its selection, so a slow earlier read can't arm its bytes under a newer
   // file's name.
@@ -117,11 +123,11 @@ const Advanced = () => {
       <div class="api-response-label">VIA</div>
       <Combobox
         options={[
-          { value: 'usb2', label: dash.name() ? `Control port, USB2 (${dash.name()})` : 'Control port, USB2' },
+          { value: 'usb2', label: dash().name() ? `Control port, USB2 (${dash().name()})` : 'Control port, USB2' },
           { value: 'rom', label: "Chip's own USB (USB1 or USB3)" },
         ]}
         value={via()}
-        disabled={busy()}
+        disabled={busy() || usb2Busy()}
         onChange={(v) => setVia(v as 'usb2' | 'rom')}
       />
     </>
@@ -176,7 +182,10 @@ const Advanced = () => {
       <Show when={native.running() || updating()}>
         <div id="flashing" data-search-target>
           <Card>
-            <CardHeader title="Flashing" subtitle="Don't unplug or leave this page" />
+            <CardHeader
+              title="Flashing"
+              subtitle={native.running() ? "Don't unplug or leave this page" : "Don't unplug or close this tab"}
+            />
             <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
           </Card>
         </div>
@@ -186,7 +195,14 @@ const Advanced = () => {
         <div id="advanced" data-search-target>
           <Card>
             <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
-            <Show when={via() === 'rom'} fallback={<Usb2Flash via={viaField} />}>
+            <Show
+              when={via() === 'rom'}
+              fallback={
+                <BoxScope>
+                  <Usb2Flash via={viaField} onBusy={setUsb2Busy} />
+                </BoxScope>
+              }
+            >
               <Show when={err() ?? fileErr()}>
                 {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
               </Show>
@@ -195,7 +211,7 @@ const Advanced = () => {
                 <Match when={done()}>
                   <div class="callout callout--info">Done.</div>
                   <WiringPorts />
-                  <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+                  <div style={{ ...section, ...row }}>
                     <Button variant="primary" onClick={() => navigate('/dashboard')}>
                       Go to my box
                     </Button>
@@ -212,7 +228,7 @@ const Advanced = () => {
 
                 <Match when={!done()}>
                   {viaField()}
-                  <div class="api-response-label">CHIP</div>
+                  <div class="api-response-label" style={section}>CHIP</div>
                   <Combobox
                     options={[
                       { value: 'device', label: 'Main chip (USB1 + USB2)' },
@@ -223,7 +239,7 @@ const Advanced = () => {
                     onChange={(v) => setChip(v as FlashChip)}
                   />
 
-                  <div class="api-response-label">IMAGE</div>
+                  <div class="api-response-label" style={section}>IMAGE</div>
                   <Combobox
                     options={[
                       { value: 'factory', label: 'Factory (full image at 0x0)' },
@@ -234,7 +250,7 @@ const Advanced = () => {
                     onChange={(v) => setKind(v as FlashKind)}
                   />
 
-                  <div class="api-response-label">SOURCE</div>
+                  <div class="api-response-label" style={section}>SOURCE</div>
                   <Combobox
                     options={[
                       { value: 'release', label: 'Latest release' },
@@ -251,7 +267,7 @@ const Advanced = () => {
                         <p>Loading releases...</p>
                       </Match>
                       <Match when={releases.error}>
-                        <div class="callout callout--warning">
+                        <div class="callout callout--warning" style={note}>
                           Couldn't reach the firmware downloads. Choose Upload a file.
                         </div>
                       </Match>
@@ -263,7 +279,7 @@ const Advanced = () => {
                         )}
                       </Match>
                       <Match when={!asset()}>
-                        <div class="callout callout--warning">
+                        <div class="callout callout--warning" style={note}>
                           No <code>{assetName()}</code> in the latest release. Upload one.
                         </div>
                       </Match>
@@ -271,44 +287,52 @@ const Advanced = () => {
                   </Show>
 
                   <Show when={source() === 'upload'}>
-                    <FileUpload
-                      accept=".bin"
-                      maxSize={FLASH_SIZE_BYTES}
-                      value={files()}
-                      disabled={busy()}
-                      onChange={onFiles}
-                      onError={(m: string) => {
-                        rejectedThisPick = true;
-                        setFileErr(m);
-                      }}
-                      label="Firmware .bin"
-                    />
+                    <div style={section}>
+                      <FileUpload
+                        accept=".bin"
+                        maxSize={FLASH_SIZE_BYTES}
+                        value={files()}
+                        disabled={busy()}
+                        onChange={onFiles}
+                        onError={(m: string) => {
+                          rejectedThisPick = true;
+                          setFileErr(m);
+                        }}
+                        label="Firmware .bin"
+                      />
+                    </div>
                     <Show when={kind() === 'app'}>
-                      <div class="callout callout--info">
+                      <div class="callout callout--info" style={note}>
                         An application image keeps the chip's partition layout. A box that never had
                         the factory image needs it first: with one app slot it can't update over the
                         control port.
                       </div>
                     </Show>
                     <Show when={validationError()}>
-                      <div class="callout callout--danger" role="alert">{validationError()}</div>
+                      <div class="callout callout--danger" role="alert" style={note}>
+                        {validationError()}
+                      </div>
                     </Show>
                     <Show when={mismatch()}>
-                      <div class="callout callout--warning">
-                        This file looks like a {kind() === 'app' ? 'factory' : 'application'} image.
+                      <div class="callout callout--warning" style={note}>
+                        This file looks like {kind() === 'app' ? 'a factory' : 'an application'} image.
                       </div>
                     </Show>
                   </Show>
 
-                  <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
+                  <div style={section}>
+                    <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
+                  </div>
                   <Show when={chip() === 'host'}>
-                    <div class="callout callout--danger">
+                    <div class="callout callout--danger" style={note}>
                       Never plug USB1 and USB3 into the same computer.
                     </div>
                   </Show>
-                  <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
-                    Flash
-                  </Button>
+                  <div style={{ ...section, ...row }}>
+                    <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
+                      Flash
+                    </Button>
+                  </div>
                 </Match>
               </Switch>
             </Show>

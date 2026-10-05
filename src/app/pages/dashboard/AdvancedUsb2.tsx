@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createResource, createSignal, on, type JSX } from 'solid-js';
+import { For, Match, Show, Switch, createEffect, createResource, createSignal, on, onCleanup, type JSX } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
@@ -16,7 +16,7 @@ import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { PROTO_VER } from '../../../dashboard/protocol';
 import { ConnectPanel } from './ConnectPanel';
 import { useDashboard } from './context';
-import { checkColumn, row, section } from './ui';
+import { checkColumn, note, row, section } from './ui';
 
 type Chips = 'both' | FlashChip;
 const NAME: Record<FlashChip, string> = { device: 'Main chip', host: 'Mouse-side chip' };
@@ -29,7 +29,7 @@ const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)}
 const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
 // The selected box over its control port: the same update as the Update page, with any medius image.
-export const Usb2Flash = (props: { via: () => JSX.Element }) => {
+export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boolean) => void }) => {
   const dash = useDashboard();
   const navigate = useNavigate();
   const [releases] = createResource(fetchReleases);
@@ -39,12 +39,22 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
   const [images, setImages] = createSignal<Partial<Record<FlashChip, Uint8Array>>>({});
   const [pickErr, setPickErr] = createSignal<Partial<Record<FlashChip, string>>>({});
   const [anyway, setAnyway] = createSignal(false);
-  const [busy, setBusy] = createSignal(false);
+  const [busy, setBusyHere] = createSignal(false);
+  const setBusy = (b: boolean) => {
+    setBusyHere(b);
+    props.onBusy?.(b);
+  };
   const [err, setErr] = createSignal<string | null>(null);
 
+  // Read again every 2 s, so a lost reply is retried and a mouse-side chip coming or going shows.
   createEffect(() => {
-    if (dash.status() === 'connected') void dash.readFirmwareInfo();
+    if (dash.status() !== 'connected') return;
+    void dash.readFirmwareInfo();
+    const t = setInterval(() => void dash.readFirmwareInfo(), 2000);
+    onCleanup(() => clearInterval(t));
   });
+  // Without it neither chip's version is known, so a split can't be judged.
+  const known = () => dash.firmwareInfo() !== null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
   // one unguarded read freezes the page.
@@ -75,7 +85,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
   };
   // Null until there is something that will be sent.
   const incoming = (c: FlashChip): Semver | null => {
-    if (source() === 'release') return parseVersion(latest()?.tag);
+    if (source() === 'release') return asset(c) ? parseVersion(latest()?.tag) : null;
     const img = images()[c];
     return img && !refusal(c) ? parseVersion(readAppHeader(img, 'app')?.version) : null;
   };
@@ -88,7 +98,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
   const ready = (c: FlashChip) =>
     source() === 'release' ? !!asset(c) && !releases.loading : !!images()[c] && !refusal(c);
   const canFlash = () =>
-    dash.status() === 'connected' && !busy() && wanted().every(ready) && (!split() || anyway());
+    dash.status() === 'connected' && known() && !busy() && wanted().every(ready) && (!split() || anyway());
 
   // Tags each read with its selection, so a slow earlier read can't arm its bytes under a newer file.
   const picks: Record<FlashChip, number> = { device: 0, host: 0 };
@@ -141,8 +151,11 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
   const sentChips = () => ORDER.filter((c) => run()?.[c]);
   const reverted = () => sentChips().filter((c) => run()?.landed?.[c] === false);
   const landed = () => sentChips().filter((c) => run()?.landed?.[c] !== false);
+  // "The main chip runs v3.4.4 and the mouse-side chip v3.4.4."
   const runs = (cs: FlashChip[]) =>
-    `${cs.map((c, i) => `${i ? NAME[c].toLowerCase() : NAME[c]} on ${fmt(current(c))}`).join(', ')}.`;
+    cs.length === 2
+      ? `The main chip runs ${fmt(current('device'))} and the mouse-side chip ${fmt(current('host'))}.`
+      : `The ${NAME[cs[0]].toLowerCase()} runs ${fmt(current(cs[0]))}.`;
   const otherWire = () => {
     const v = dash.version();
     return v && v.protoVer !== PROTO_VER ? v.protoVer : null;
@@ -190,15 +203,32 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
       </Match>
 
       <Match when={run()?.outcome === 'sent'}>
-        <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
+        <Show
+          when={dash.status() === 'connected'}
+          fallback={
+            <>
+              {props.via()}
+              <div style={section}>
+                <ConnectPanel />
+              </div>
+            </>
+          }
+        >
           <Outcome lead="The box is back. " />
         </Show>
       </Match>
 
       <Match when={true}>
         {props.via()}
-        <Show when={dash.status() === 'connected'} fallback={<ConnectPanel />}>
-          <div class="api-response-label">CHIP</div>
+        <Show
+          when={dash.status() === 'connected'}
+          fallback={
+            <div style={section}>
+              <ConnectPanel />
+            </div>
+          }
+        >
+          <div class="api-response-label" style={section}>CHIP</div>
           <Combobox
             options={[
               { value: 'both', label: 'Both chips', disabled: hostMissing() },
@@ -213,7 +243,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
             <p style={muted}>The mouse-side chip isn't answering. Flash it over USB3.</p>
           </Show>
 
-          <div class="api-response-label">SOURCE</div>
+          <div class="api-response-label" style={section}>SOURCE</div>
           <Combobox
             options={[
               { value: 'release', label: 'Latest release' },
@@ -230,7 +260,9 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
                 <p>Loading releases...</p>
               </Match>
               <Match when={releases.error}>
-                <div class="callout callout--warning">Couldn't reach the firmware downloads. Choose Upload a file.</div>
+                <div class="callout callout--warning" style={note}>
+                  Couldn't reach the firmware downloads. Choose Upload a file.
+                </div>
               </Match>
               <Match when={true}>
                 <For each={wanted()}>
@@ -238,7 +270,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
                     <Show
                       when={asset(c)}
                       fallback={
-                        <div class="callout callout--warning">
+                        <div class="callout callout--warning" style={note}>
                           No <code>{ASSET[c]}</code> in the latest release. Upload one.
                         </div>
                       }
@@ -259,21 +291,23 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
             <For each={wanted()}>
               {(c) => (
                 <>
-                  <FileUpload
-                    accept=".bin"
-                    maxSize={FLASH_SIZE_BYTES}
-                    value={files()[c]}
-                    disabled={busy()}
-                    onChange={(fs) => onFiles(c, fs)}
-                    onError={(m: string) => {
-                      rejected[c] = true;
-                      setPickErr((p) => ({ ...p, [c]: m }));
-                    }}
-                    label={`${NAME[c]} .bin`}
-                  />
+                  <div style={section}>
+                    <FileUpload
+                      accept=".bin"
+                      maxSize={FLASH_SIZE_BYTES}
+                      value={files()[c]}
+                      disabled={busy()}
+                      onChange={(fs) => onFiles(c, fs)}
+                      onError={(m: string) => {
+                        rejected[c] = true;
+                        setPickErr((p) => ({ ...p, [c]: m }));
+                      }}
+                      label={`${NAME[c]} .bin`}
+                    />
+                  </div>
                   <Show when={pickErr()[c] ?? refusal(c)}>
                     {(m) => (
-                      <div class="callout callout--danger" role="alert">
+                      <div class="callout callout--danger" role="alert" style={note}>
                         {m()}
                       </div>
                     )}
@@ -283,19 +317,9 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
             </For>
           </Show>
 
-          <div class="api-response-label">VERSIONS</div>
-          <For each={ORDER.filter((c) => c === 'device' || !hostMissing())}>
-            {(c) => (
-              <p style={muted}>
-                {NAME[c]}: {fmt(current(c))}
-                {!wanted().includes(c) ? ', unchanged' : incoming(c) ? ` to ${fmt(incoming(c))}` : ''}
-              </p>
-            )}
-          </For>
-
           <Show when={split()}>
-            <div class="callout callout--warning">
-              The chips would be on different versions, {fmt(after('device'))} and {fmt(after('host'))}. If they
+            <div class="callout callout--warning" style={section}>
+              The main chip would run {fmt(after('device'))} and the mouse-side chip {fmt(after('host'))}. If they
               can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over
               USB3.
             </div>
@@ -306,10 +330,13 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
 
           <Show when={err()}>
             {(m) => (
-              <div class="callout callout--danger" role="alert">
+              <div class="callout callout--danger" role="alert" style={section}>
                 {m()}
               </div>
             )}
+          </Show>
+          <Show when={!known()}>
+            <p style={muted}>Reading the box's firmware...</p>
           </Show>
           <div style={{ ...section, ...row }}>
             <Button variant="primary" disabled={!canFlash()} onClick={() => void flash()}>
