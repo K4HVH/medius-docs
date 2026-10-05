@@ -139,6 +139,13 @@ describe('Stats page', () => {
     expect(r.getAllByText('Nothing counted yet.').length).toBeGreaterThanOrEqual(5);
   });
 
+  it('says why the most used list is empty while devices are counted', async () => {
+    answer({ ...FULL, devices: { ...FULL.devices, top: [] } });
+    const r = render(() => <Stats />);
+    await r.findByTestId('figures');
+    expect(r.container.querySelector('#devices')!.textContent).toContain('No device is on two boxes yet.');
+  });
+
   it('a failed read says so, and Retry reads again', async () => {
     const f = answer(500, FULL);
     const r = render(() => <Stats />);

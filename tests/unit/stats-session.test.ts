@@ -8,6 +8,7 @@ import type { StatsReport } from '../../src/dashboard/stats';
 import { FakeBox, FakePort, FakeSerial, makeFakeLink, settle } from './fake-boxes';
 
 const roots: (() => void)[] = [];
+const [flashing, setFlashing] = createSignal(false);
 let reports: StatsReport[];
 let sinkThrows = false;
 const sink = (r: StatsReport) => {
@@ -18,7 +19,6 @@ const sink = (r: StatsReport) => {
 const mount = (serial: FakeSerial, stats: ((r: StatsReport) => void) | null = sink): Boxes =>
   createRoot((dispose) => {
     roots.push(dispose);
-    const [flashing] = createSignal(false);
     const b = createBoxes({
       serial,
       store: createBoxStore(null),
@@ -104,6 +104,18 @@ describe('box reports', () => {
     expect(of('box')).toEqual([{ type: 'box', mac: MAC_HEX, fw: '3.4.4', hostFw: null, proto: PROTO_VER }]);
   });
 
+  it('a box back from lost is reported again, on what it runs now', async () => {
+    const b = new FakeBox({ mac: MAC });
+    const s = await connected(b);
+    b.version = { ...b.version, fwPatch: 5 };
+    b.drop();
+    await ready();
+    expect(s.status()).toBe('lost');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(s.status()).toBe('connected');
+    expect(of('box').map((r) => r.fw)).toEqual(['3.4.4', '3.4.5']);
+  });
+
   it('a box whose MAC reads all zero sends nothing', async () => {
     await connected(new FakeBox({ mac: [0, 0, 0, 0, 0, 0] }));
     await vi.advanceTimersByTimeAsync(10_000);
@@ -138,6 +150,20 @@ describe('device reports', () => {
     await ready();
     await vi.advanceTimersByTimeAsync(10_000);
     expect(of('device')).toHaveLength(3);
+  });
+
+  it('a ROM download starting and ending elsewhere sends the device no second time', async () => {
+    const b = new FakeBox({ mac: MAC });
+    await connected(b);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(of('device')).toHaveLength(1);
+    for (let i = 0; i < 3; i++) {
+      setFlashing(true);
+      await vi.advanceTimersByTimeAsync(6000);
+      setFlashing(false);
+      await vi.advanceTimersByTimeAsync(6000);
+    }
+    expect(of('device')).toHaveLength(1);
   });
 
   it('nothing cloned sends none', async () => {
@@ -202,6 +228,33 @@ describe('flash reports over USB2', () => {
     expect(await run(s.updateOverControl({ host: HOST_IMG }, 'update'))).toBe('sent');
     expect(of('flash')).toEqual([{ ...flash, chips: 'host', to: { device: null, host: '3.4.5' }, result: 'sent', ms: expect.any(Number) }]);
     expect(of('box')).toEqual([]);
+  });
+
+  it("a mouse-side chip that answers only after the run, on the image sent, landed", async () => {
+    const b = new FakeBox({ mac: MAC });
+    b.firmware.host = null;
+    b.next = { device: [3, 4, 5], host: [3, 4, 5] };
+    const s = await connected(b);
+    reports = [];
+    expect(await run(s.updateOverControl({ device: DEVICE_IMG, host: HOST_IMG }, 'update'))).toBe('verified');
+    expect(s.update()?.landed).toEqual({ device: true, host: true });
+    expect(of('flash')[0]).toMatchObject({ result: 'verified', from: { device: '3.4.4', host: null } });
+  });
+
+  it('a clock stepped back mid-run still gives a duration from zero to an hour', async () => {
+    const b = new FakeBox({ mac: MAC });
+    const s = await connected(b);
+    reports = [];
+    let release = () => {};
+    b.stageGate = new Promise<void>((r) => (release = r));
+    const p = s.updateOverControl({ device: DEVICE_IMG }, 'update');
+    await ready();
+    vi.setSystemTime(Date.now() - 60_000);
+    release();
+    await run(p);
+    const ms = of('flash')[0].ms;
+    expect(ms).toBeGreaterThanOrEqual(0);
+    expect(ms).toBeLessThanOrEqual(3_600_000);
   });
 
   it('a refused activate is failed', async () => {

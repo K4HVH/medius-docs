@@ -1,5 +1,6 @@
 // The counts behind the public stats page. A box is known by a keyed hash of its MAC; the key lives in
-// the database, so the raw MAC is never written anywhere.
+// the database, so the raw MAC is never written anywhere. Only a box event marks a box active: a flash or
+// a device can come from a MAC that never connects.
 
 import { createHmac, randomBytes } from 'node:crypto';
 import type { Db } from './db';
@@ -9,6 +10,12 @@ const DAY_MS = 86_400_000;
 const WEEKS = 26;
 const DAYS = 90;
 const TOP = 25;
+
+// The kind most boxes reported for each VID:PID.
+const KIND_OF = `SELECT vid, pid, kind FROM (SELECT vid, pid, kind, row_number() OVER (PARTITION BY vid, pid
+  ORDER BY count(*) DESC, kind DESC) AS rk FROM devices GROUP BY vid, pid, kind) WHERE rk = 1`;
+// A device is listed once two boxes have it, and named only by a name two boxes reported.
+const SHARED = 2;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL);
@@ -66,6 +73,17 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
     db.run('INSERT OR IGNORE INTO box_days (id, day) VALUES (?, ?)', id, dayOf(ms));
 
   const ingest = (e: StatsEvent, country: string | null) => {
+    db.exec('BEGIN');
+    try {
+      write(e, country);
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  };
+
+  const write = (e: StatsEvent, country: string | null) => {
     const ms = now();
     const at = Math.floor(ms / 1000);
     switch (e.type) {
@@ -90,7 +108,6 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
              last_seen = excluded.last_seen`,
           id, e.vid, e.pid, e.kind, e.product, at, at,
         );
-        markDay(id, ms);
         return;
       }
       case 'flash': {
@@ -101,7 +118,6 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
           at, id, e.page, e.route, e.chips, e.source, e.kind, e.to.device, e.to.host, e.from.device,
           e.from.host, e.result, e.ms, country,
         );
-        if (id) markDay(id, ms);
         return;
       }
     }
@@ -114,9 +130,10 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
     const today = dayOf(ms);
     const days = series(ms, DAYS, DAY_MS);
     const weeks = series(mondayOf(ms), WEEKS, 7 * DAY_MS);
-    const since30 = Math.floor((ms - 30 * DAY_MS) / 1000);
+    const from = (n: number) => dayOf(ms - (n - 1) * DAY_MS);
     const activeSince = (n: number) =>
-      db.get<{ n: number }>('SELECT count(DISTINCT id) AS n FROM box_days WHERE day >= ?', dayOf(ms - (n - 1) * DAY_MS))!.n;
+      db.get<{ n: number }>('SELECT count(DISTINCT id) AS n FROM box_days WHERE day >= ?', from(n))!.n;
+    const ACTIVE30 = 'id IN (SELECT id FROM box_days WHERE day >= ?)';
 
     const first = db.get<{ t: number | null }>(
       'SELECT min(t) AS t FROM (SELECT min(first_seen) AS t FROM boxes UNION ALL SELECT min(first_seen) FROM devices UNION ALL SELECT min(at) FROM flashes)',
@@ -151,25 +168,28 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
         ),
       },
       firmware: {
-        versions: counts(`SELECT fw AS key, count(*) AS n FROM boxes WHERE last_seen >= ? GROUP BY fw ${RANKED}`, since30),
+        versions: counts(`SELECT fw AS key, count(*) AS n FROM boxes WHERE ${ACTIVE30} GROUP BY fw ${RANKED}`, from(30)),
         split: db.get<{ n: number }>(
-          'SELECT count(*) AS n FROM boxes WHERE last_seen >= ? AND host_fw IS NOT NULL AND host_fw != fw',
-          since30,
+          `SELECT count(*) AS n FROM boxes WHERE ${ACTIVE30} AND host_fw IS NOT NULL AND host_fw != fw`,
+          from(30),
         )!.n,
       },
       devices: {
         unique: db.get<{ n: number }>('SELECT count(*) AS n FROM (SELECT DISTINCT vid, pid FROM devices)')!.n,
         byKind: db.all(
-          `SELECT kind, count(DISTINCT vid * 65536 + pid) AS devices, count(DISTINCT box) AS boxes
-           FROM devices GROUP BY kind ORDER BY devices DESC, kind DESC`,
+          `WITH k AS (${KIND_OF})
+           SELECT k.kind, count(DISTINCT d.vid * 65536 + d.pid) AS devices, count(DISTINCT d.box) AS boxes
+           FROM devices d JOIN k USING (vid, pid) GROUP BY k.kind ORDER BY devices DESC, k.kind DESC`,
         ),
-        // Named by the product string and kind most boxes reported for that VID:PID.
         top: db.all(
-          `WITH per AS (SELECT vid, pid, count(DISTINCT box) AS boxes FROM devices GROUP BY vid, pid),
-           names AS (SELECT vid, pid, kind, product, row_number() OVER (PARTITION BY vid, pid
-             ORDER BY count(*) DESC, product IS NULL, product) AS rk FROM devices GROUP BY vid, pid, kind, product)
-           SELECT per.vid, per.pid, names.kind, names.product, per.boxes FROM per JOIN names USING (vid, pid)
-           WHERE rk = 1 ORDER BY per.boxes DESC, per.vid, per.pid LIMIT ${TOP}`,
+          `WITH per AS (SELECT vid, pid, count(*) AS boxes FROM devices GROUP BY vid, pid),
+           k AS (${KIND_OF}),
+           names AS (SELECT vid, pid, product, n FROM (SELECT vid, pid, product, count(*) AS n, row_number()
+             OVER (PARTITION BY vid, pid ORDER BY count(*) DESC, product) AS rk
+             FROM devices WHERE product IS NOT NULL GROUP BY vid, pid, product) WHERE rk = 1)
+           SELECT per.vid, per.pid, k.kind, CASE WHEN names.n >= ${SHARED} THEN names.product END AS product, per.boxes
+           FROM per JOIN k USING (vid, pid) LEFT JOIN names USING (vid, pid)
+           WHERE per.boxes >= ${SHARED} ORDER BY per.boxes DESC, per.vid, per.pid LIMIT ${TOP}`,
         ),
       },
       flashes: {
@@ -180,7 +200,7 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
         byChips: counts(`SELECT chips AS key, count(*) AS n FROM flashes GROUP BY key ${RANKED}`),
         bySource: counts(`SELECT source AS key, count(*) AS n FROM flashes GROUP BY key ${RANKED}`),
         byVersion: counts(
-          `SELECT coalesce(to_device, to_host) AS key, count(*) AS n FROM flashes WHERE key IS NOT NULL GROUP BY key ${RANKED}`,
+          `SELECT to_device AS key, count(*) AS n FROM flashes WHERE to_device IS NOT NULL GROUP BY key ${RANKED}`,
         ),
         perWeek: [...perWeek.values()],
       },

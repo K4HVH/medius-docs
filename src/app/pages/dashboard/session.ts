@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-serial" />
-import { type Accessor, createEffect, createRoot, createSignal } from 'solid-js';
+import { type Accessor, createEffect, createRoot, createSignal, untrack } from 'solid-js';
 import {
   type CatchEvent,
   type ChipFirmware,
@@ -180,6 +180,9 @@ const versionOf = (p: Probe | null): Version | null => (p && 'version' in p ? p.
 
 const chipVersion = (c: ChipFirmware | null | undefined) => (c ? `${c.major}.${c.minor}.${c.patch}` : null);
 
+// A run's length for the stats, on a clock no system time change moves.
+const elapsed = (since: number) => Math.min(3_600_000, Math.max(0, Math.round(performance.now() - since)));
+
 export const boxId = (v: Version | null): string | null =>
   v && v.mac.length === 6 && v.mac.some((b) => b !== 0) ? macHex(v) : null;
 
@@ -233,6 +236,14 @@ export function createBoxSession(
     const reportBox = (v: Version, info: FirmwareInfo | null) => {
       const id = boxId(v);
       if (id) report({ type: 'box', mac: id, fw: versionString(v), hostFw: chipVersion(info?.host), proto: v.protoVer });
+    };
+    // The mouse-side chip's version comes from one FIRMWARE read.
+    const announce = (l: SerialLink, v: Version) => {
+      if (!hooks.report) return;
+      void l
+        .queryFirmware()
+        .catch(() => null)
+        .then((info) => reportBox(v, info));
     };
 
     const onKeepalive = (answered: boolean) => {
@@ -359,6 +370,7 @@ export function createBoxSession(
           setLink(found.nl);
           poller.reset();
           setStatus('connected');
+          announce(found.nl, found.v);
           return;
         } catch (e) {
           // A box back on firmware too old to update won't answer differently next time.
@@ -422,12 +434,7 @@ export function createBoxSession(
           poller.reset();
           setStatus('connected');
           setHeld(true);
-          if (hooks.report) {
-            void nl
-              .queryFirmware()
-              .catch(() => null)
-              .then((info) => reportBox(v, info));
-          }
+          announce(nl, v);
           return v;
         } catch (e) {
           if (!(e instanceof AttachCancelled) && !(e instanceof ForeignBoxError)) {
@@ -609,7 +616,7 @@ export function createBoxSession(
       }
       if (!images.device && !images.host) return 'failed';
       const run = { device: images.device !== undefined, host: images.host !== undefined, page };
-      const started = Date.now();
+      const started = performance.now();
       // Where each chip runs now: one that lands decides on the other slot.
       let before: FirmwareInfo | null = null;
       const finish = <O extends 'verified' | 'sent' | 'failed'>(outcome: O, landed?: UpdateRun['landed']): O => {
@@ -625,7 +632,7 @@ export function createBoxSession(
           to: { device: imageVersion(images.device, 'app'), host: imageVersion(images.host, 'app') },
           from: { device: chipVersion(before?.device), host: chipVersion(before?.host) },
           result: landed && Object.values(landed).includes(false) ? 'reverted' : outcome,
-          ms: Date.now() - started,
+          ms: elapsed(started),
         });
         return outcome;
       };
@@ -679,11 +686,12 @@ export function createBoxSession(
         setStatus('connected');
         // The decided read the verdict ended on.
         const after = firmwareInfo();
-        const moved = (a: ChipFirmware | null | undefined, b: ChipFirmware | null | undefined) =>
-          !!a && !!b && a.slot !== b.slot;
+        // A chip that answered only after the run has no slot to compare: it landed if it runs the image.
+        const moved = (a: ChipFirmware | null | undefined, b: ChipFirmware | null | undefined, image?: Uint8Array) =>
+          !!b && (a ? a.slot !== b.slot : chipVersion(b) === imageVersion(image, 'app'));
         const done = finish('verified', {
-          ...(images.device ? { device: moved(before.device, after?.device) } : {}),
-          ...(images.host ? { host: moved(before.host, after?.host) } : {}),
+          ...(images.device ? { device: moved(before.device, after?.device, images.device) } : {}),
+          ...(images.host ? { host: moved(before.host, after?.host, images.host) } : {}),
         });
         const v = version();
         if (v) reportBox(v, after);
@@ -720,7 +728,8 @@ export function createBoxSession(
       createEffect(() => {
         const id = mac();
         if (status() !== 'connected' || updateOnly() || !id) return;
-        const device = poller.subscribe('deviceInfo', DEVICE_REPORT_MS);
+        // Untracked: a subscribe's first read follows the poller's link, and a ROM download elsewhere moves it.
+        const device = untrack(() => poller.subscribe('deviceInfo', DEVICE_REPORT_MS));
         let last = '';
         createEffect(() => {
           const d = device();

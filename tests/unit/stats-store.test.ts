@@ -134,7 +134,7 @@ describe('ingest', () => {
     ]);
   });
 
-  it('upserts a device per box and marks the day', () => {
+  it('upserts a device per box, and leaves the days to box events', () => {
     store.ingest(device({ product: 'G502' }), null);
     now += DAY;
     store.ingest(device({ product: 'G502 HERO' }), null);
@@ -142,7 +142,7 @@ describe('ingest', () => {
     const d = rows<Record<string, unknown>>('SELECT * FROM devices ORDER BY first_seen, box');
     expect(d).toHaveLength(2);
     expect(d[0]).toMatchObject({ product: 'G502 HERO', first_seen: Math.floor(T0 / 1000) });
-    expect(rows('SELECT * FROM box_days')).toHaveLength(3);
+    expect(rows('SELECT * FROM box_days')).toHaveLength(0);
   });
 
   it('stores a flash with or without a box', () => {
@@ -152,7 +152,20 @@ describe('ingest', () => {
     expect(f[0]).toMatchObject({ page: 'update', route: 'usb2', chips: 'both', to_device: '3.4.4', from_host: '3.4.2', result: 'verified', ms: 40_000, country: 'AU' });
     expect(f[0].box).toMatch(/^[0-9a-f]{16}$/);
     expect(f[1]).toMatchObject({ box: null, kind: 'factory', result: 'written' });
-    expect(rows('SELECT * FROM box_days')).toHaveLength(1);
+    expect(rows('SELECT * FROM box_days')).toHaveLength(0);
+  });
+
+  it('a flash or a device from a box that never connected is no active box', () => {
+    store.ingest(flash({ mac: '112233445566', route: 'rom', page: 'setup', result: 'failed' }), null);
+    store.ingest(device({ mac: '112233445566' }), null);
+    const s = store.summary();
+    expect(s.boxes).toMatchObject({ total: 0, active7: 0, active30: 0 });
+  });
+
+  it('writes a box and its day together, or neither', () => {
+    db.exec("CREATE TRIGGER no_days BEFORE INSERT ON box_days BEGIN SELECT RAISE(ABORT, 'refused'); END");
+    expect(() => store.ingest(box(), null)).toThrow();
+    expect(rows('SELECT * FROM boxes')).toHaveLength(0);
   });
 });
 
@@ -191,6 +204,8 @@ describe('summary', () => {
     expect(s.boxes.activePerDay.at(-1)!.n).toBe(1);
     expect(s.boxes.activePerDay.find((d) => d.key === '2026-09-27')!.n).toBe(1);
     expect(s.firmware).toEqual({ versions: [{ key: '3.4.4', n: 2 }], split: 1 });
+    // The versions cover exactly the boxes active in 30 days.
+    expect(s.firmware.versions.reduce((a, v) => a + v.n, 0)).toBe(s.boxes.active30);
     expect(s.countries).toEqual([
       { key: 'AU', n: 1 },
       { key: 'unknown', n: 1 },
@@ -215,13 +230,38 @@ describe('summary', () => {
       { kind: 1, devices: 1, boxes: 1 },
     ]);
     expect(s.devices.top[0]).toEqual({ vid: 0x046d, pid: 0xc08b, kind: 2, product: 'G502 HERO', boxes: 3 });
-    expect(s.devices.top).toHaveLength(3);
+    // The others are on one box each.
+    expect(s.devices.top).toHaveLength(1);
   });
 
   it('lists at most 25 top devices', () => {
-    for (let i = 1; i <= 30; i++) store.ingest(device({ pid: i }), null);
+    for (let i = 1; i <= 30; i++) {
+      store.ingest(device({ pid: i }), null);
+      store.ingest(device({ mac: MAC_B, pid: i }), null);
+    }
     expect(store.summary().devices.top).toHaveLength(25);
     expect(store.summary().devices.unique).toBe(30);
+  });
+
+  it('lists only devices on two boxes or more, and names one only by a name two boxes reported', () => {
+    store.ingest(device({ vid: 0x1234, pid: 0x0001, product: "Sam's Custom Mouse" }), null);
+    store.ingest(device({ vid: 0x046d, pid: 0xc08b, product: 'Sam renamed it' }), null);
+    store.ingest(device({ mac: MAC_B, vid: 0x046d, pid: 0xc08b, product: null }), null);
+    const s = store.summary();
+    expect(s.devices.unique).toBe(2);
+    expect(s.devices.top).toEqual([{ vid: 0x046d, pid: 0xc08b, kind: 2, product: null, boxes: 2 }]);
+  });
+
+  it('names a device and its kind by what most boxes reported, each on its own count', () => {
+    // X from four boxes under two kinds, Y from three under one.
+    const macs = ['000000000001', '000000000002', '000000000003', '000000000004', '000000000005', '000000000006', '000000000007'];
+    macs.slice(0, 2).forEach((mac) => store.ingest(device({ mac, kind: 2, product: 'X' }), null));
+    macs.slice(2, 4).forEach((mac) => store.ingest(device({ mac, kind: 0, product: 'X' }), null));
+    macs.slice(4).forEach((mac) => store.ingest(device({ mac, kind: 2, product: 'Y' }), null));
+    const s = store.summary();
+    expect(s.devices.top).toEqual([{ vid: 0x046d, pid: 0xc08b, kind: 2, product: 'X', boxes: 7 }]);
+    // One VID:PID is one device, under the kind most boxes reported.
+    expect(s.devices.byKind).toEqual([{ kind: 2, devices: 1, boxes: 7 }]);
   });
 
   it('counts flashes by every dimension and by week', () => {
@@ -255,8 +295,9 @@ describe('summary', () => {
       { key: 'release', n: 4 },
       { key: 'file', n: 1 },
     ]);
+    // The main chip's version only: the mouse-side chip's flash to 3.4.4 is not one.
     expect(s.flashes.byVersion).toEqual([
-      { key: '3.4.4', n: 3 },
+      { key: '3.4.4', n: 2 },
       { key: '3.4.2', n: 1 },
     ]);
     const thisWeek = s.flashes.perWeek.at(-1)!;

@@ -54,7 +54,9 @@ const oneOf = <T extends string>(list: readonly T[], v: unknown, field: string):
 const product = (v: unknown): string | null => {
   if (v === null || v === undefined) return null;
   if (typeof v !== 'string') return refuse('product: not a string');
-  const s = v.replace(/[\u0000-\u001f\u007f-\u009f]/g, '').trim().slice(0, PRODUCT_MAX).trim();
+  // Control and format characters (bidi overrides, zero-width marks) are dropped; the cut is by
+  // characters, so it never splits one.
+  const s = Array.from(v.replace(/[\p{Cc}\p{Cf}]/gu, '').trim()).slice(0, PRODUCT_MAX).join('').trim();
   return s === '' ? null : s;
 };
 
