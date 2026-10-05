@@ -265,6 +265,25 @@ describe('box registry', () => {
     expect(flashErrorText(busy)).toBe(busy.message);
   });
 
+  it('with nothing listed, the blank card says why a plugged-in port is no box yet', async () => {
+    const b = box(1);
+    b.unreadable = true;
+    const boxes = mount(new FakeSerial(portsOf(b)));
+    await ready();
+    expect(keys(boxes).filter((k) => !k.startsWith('port:'))).toEqual([]);
+    expect(boxes.scope().verdict()).toEqual({ kind: 'unreadable' });
+  });
+
+  it('a box listed beside an unreadable port leaves the blank card alone', async () => {
+    const [a, b] = [box(1), box(2)];
+    b.unreadable = true;
+    const boxes = mount(new FakeSerial(portsOf(a, b)));
+    await ready();
+    expect(keys(boxes)).toContain(a.mac);
+    boxes.select(NEW_BOX);
+    expect(boxes.scope().verdict()).toBeNull();
+  });
+
   it('focus re-probes busy ports only; a silent one waits for a click', async () => {
     const [busy, silent] = [box(1), box(2)];
     busy.busy = true;

@@ -2,7 +2,7 @@
 // A failed connect, as one verdict.
 
 import type { Version } from '../protocol';
-import { BadProtoVerError, NoReplyError } from './link';
+import { BadProtoVerError, NoReplyError, UnreadablePortError } from './link';
 
 export type ConnectVerdict =
   | { kind: 'unsupported' }
@@ -10,6 +10,7 @@ export type ConnectVerdict =
   | { kind: 'no-port' }
   | { kind: 'busy' }
   | { kind: 'silent' }
+  | { kind: 'unreadable' }
   | { kind: 'needs-click' }
   | { kind: 'old-firmware'; version: Version }
   | { kind: 'other'; message: string };
@@ -29,6 +30,7 @@ export function classifyConnectError(e: unknown): ConnectVerdict {
 function classify(e: unknown): ConnectVerdict {
   if (e instanceof BadProtoVerError) return { kind: 'old-firmware', version: e.version };
   if (e instanceof NoReplyError) return { kind: 'silent' };
+  if (e instanceof UnreadablePortError) return { kind: 'unreadable' };
   // Keyed on `name`: a browser DOMException's message is bare text, so only the name survives.
   const name = nameOf(e);
   const message = e instanceof Error ? e.message : String(e);

@@ -104,6 +104,13 @@ export const ConnectView = (props: ConnectViewProps) => {
           <Connect label="Try again" />
         </Match>
 
+        <Match when={verdict()?.kind === 'unreadable'}>
+          <div class="callout callout--danger" role="alert">
+            This computer can't read from the box. Unplug USB2 and plug it back in.
+          </div>
+          <Connect label="Try again" />
+        </Match>
+
         <Match when={verdict()?.kind === 'silent'}>
           <div class="callout callout--danger" role="alert">
             The box isn't answering. Check USB1 is plugged in too.
