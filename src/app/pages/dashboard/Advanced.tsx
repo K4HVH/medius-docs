@@ -141,16 +141,20 @@ const Advanced = () => {
     setFileErr(null);
     native.clear();
     // Captured before the awaits so the image and its offset come from one reading.
-    const target = { chip: chip(), kind: kind() };
+    const target = { chip: chip(), kind: kind(), source: source() };
     setBusy(true);
     try {
       // ROM download over each chip's native USB: device chip on USB1, host chip on USB3, entered by
       // holding the button beside that socket while plugging in.
       const port = await requestRomPort();
       const a = latest()?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
-      const img = source() === 'upload' ? image() : a ? await downloadAsset(a) : null;
+      const img = target.source === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
-      const ok = await native.flash(port, img, target.kind);
+      const ok = await native.flash(port, img, target.kind, {
+        page: 'advanced',
+        chip: target.chip,
+        source: target.source === 'upload' ? 'file' : 'release',
+      });
       if (ok) setDone(true);
       else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {

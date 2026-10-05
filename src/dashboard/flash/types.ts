@@ -20,6 +20,14 @@ export interface FlashNativeParams {
   kind: FlashKind;
   onProgress?: (p: FlashProgress) => void;
   onLog?: (line: string) => void;
+  // The chip's factory MAC, once the ROM answers; null if it can't be read.
+  onMac?: (mac: string | null) => void;
+}
+
+// esptool's "58:8c:81:e0:82:44" as the box's id is written, "588c81e08244".
+export function romMac(s: string): string | null {
+  const hex = s.replace(/:/g, '').toLowerCase();
+  return /^[0-9a-f]{12}$/.test(hex) && hex !== '000000000000' ? hex : null;
 }
 
 export type FlashChip = 'device' | 'host';

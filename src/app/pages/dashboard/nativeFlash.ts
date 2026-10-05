@@ -1,10 +1,18 @@
 /// <reference types="w3c-web-serial" />
 import { type Accessor, createSignal } from 'solid-js';
-import type { FlashKind, FlashProgress } from '../../../dashboard/flash';
+import { type FlashChip, type FlashKind, type FlashProgress, imageVersion } from '../../../dashboard/flash';
+import type { FlashPage, FlashSource, StatsSink } from '../../../dashboard/stats';
 import { flashErrorText } from './session';
 
+// Where a ROM download run came from, for the public stats.
+export interface RomFlashMeta {
+  page: Exclude<FlashPage, 'update'>;
+  chip: FlashChip;
+  source: FlashSource;
+}
+
 export interface NativeFlash {
-  flash: (port: SerialPort, image: Uint8Array, kind: FlashKind) => Promise<boolean>;
+  flash: (port: SerialPort, image: Uint8Array, kind: FlashKind, meta?: RomFlashMeta) => Promise<boolean>;
   progress: Accessor<FlashProgress | null>;
   log: Accessor<string[]>;
   error: Accessor<string | null>;
@@ -12,18 +20,21 @@ export interface NativeFlash {
   clear: () => void;
 }
 
-export function createNativeFlash(): NativeFlash {
+export function createNativeFlash(report?: StatsSink): NativeFlash {
   const [progress, setProgress] = createSignal<FlashProgress | null>(null);
   const [log, setLog] = createSignal<string[]>([]);
   const [error, setError] = createSignal<string | null>(null);
   const [running, setRunning] = createSignal(false);
 
-  const flash = async (port: SerialPort, image: Uint8Array, kind: FlashKind): Promise<boolean> => {
+  const flash = async (port: SerialPort, image: Uint8Array, kind: FlashKind, meta?: RomFlashMeta): Promise<boolean> => {
     if (running()) return false;
     setError(null);
     setLog([]);
     setProgress({ phase: 'connecting' });
     setRunning(true);
+    const started = Date.now();
+    let mac: string | null = null;
+    let ok = false;
     try {
       const { flashNativePort } = await import('../../../dashboard/flash/flasher');
       await flashNativePort({
@@ -32,15 +43,37 @@ export function createNativeFlash(): NativeFlash {
         kind,
         onProgress: (p) => setProgress(p),
         onLog: (line) => setLog((prev) => [...prev, line].slice(-500)),
+        onMac: (m) => (mac = m),
       });
       setProgress({ phase: 'done' });
-      return true;
+      ok = true;
     } catch (e) {
       setError(flashErrorText(e));
-      return false;
     } finally {
       setRunning(false);
     }
+    if (meta && report) {
+      const version = imageVersion(image, kind);
+      try {
+        // The mouse-side chip's MAC is its own, not the box's.
+        report({
+          type: 'flash',
+          mac: meta.chip === 'device' ? mac : null,
+          page: meta.page,
+          route: 'rom',
+          chips: meta.chip,
+          source: meta.source,
+          kind,
+          to: { device: meta.chip === 'device' ? version : null, host: meta.chip === 'host' ? version : null },
+          from: { device: null, host: null },
+          result: ok ? 'written' : 'failed',
+          ms: Date.now() - started,
+        });
+      } catch {
+        /* a lost count is never worth an error */
+      }
+    }
+    return ok;
   };
 
   return { flash, progress, log, error, running, clear: () => setProgress(null) };
