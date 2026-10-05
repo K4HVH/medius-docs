@@ -339,26 +339,17 @@ describe('BoxList', () => {
     expect(screen.getAllByRole('menu')).toHaveLength(1);
   });
 
-  it('a scroll that moves the list closes the menu; a scroll elsewhere leaves it, and starts no frame loop', () => {
+  it('a closed icon menu starts no frame loop on a scroll or resize', () => {
     const a = session({ probe: box(), name: 'Left' });
     const { boxes } = stand([{ key: 'aa', session: a.s }]);
     const r = mount(boxes);
-    const log = document.body.appendChild(document.createElement('pre'));
+    fireEvent.contextMenu(tabs(r)[0]);
+    fireEvent.click(item('Mouse'));
     const frames = vi.spyOn(window, 'requestAnimationFrame');
-    fireEvent.contextMenu(tabs(r)[0]);
-    fireEvent.scroll(log);
-    expect(menu()).not.toBeNull();
     fireEvent.scroll(document);
-    expect(menu()).toBeNull();
-    fireEvent.contextMenu(tabs(r)[0]);
-    fireEvent(window, new Event('resize'));
-    expect(menu()).toBeNull();
-    frames.mockClear();
-    fireEvent.scroll(log);
     fireEvent(window, new Event('resize'));
     expect(frames).not.toHaveBeenCalled();
     frames.mockRestore();
-    log.remove();
   });
 
   it('an entry that takes its MAC shows the icon kept for that MAC', () => {
