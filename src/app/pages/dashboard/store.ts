@@ -60,7 +60,7 @@ function read(storage: Storage | null): Saved | null {
 // Rereads storage on every call, so tabs don't undo each other.
 export function createBoxStore(storage: Storage | null): BoxStore {
   let saved: Saved = read(storage) ?? { selected: null, held: [], icons: {} };
-  // Once a write fails, rereading would undo this page's own changes.
+  // Once a write fails, rereading would undo this page's changes.
   let writable = true;
   const current = () => {
     if (writable) saved = read(storage) ?? saved;

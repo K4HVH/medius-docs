@@ -66,8 +66,8 @@ export function usb2Refusal(image: Uint8Array, chip: FlashChip): string | null {
   return null;
 }
 
-// Any firmware goes over a chip's own USB, except medius built for the other chip. Read where the file's
-// own shape puts the app, not where the Image choice says it should be.
+// ROM download takes any firmware but medius built for the other chip. The app is read where the file's
+// layout puts it, not where the Image choice says it should be.
 export function romRefusal(image: Uint8Array, chip: FlashChip): string | null {
   const mine = mediusChip(readAppHeader(image, hasPartitionTable(image) ? 'factory' : 'app'));
   return mine && mine !== chip ? otherChip(chip) : null;

@@ -212,7 +212,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('connects a box newer than the page, for updating: the update path keeps its shape', async () => {
+  it('connects a box newer than the page, for updating: the update path is fixed', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Query && f.payload[0] === 0) {

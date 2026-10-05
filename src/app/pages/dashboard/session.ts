@@ -43,7 +43,7 @@ export interface InputEventEntry {
 export interface UpdateRun {
   device: boolean;
   host: boolean;
-  // The page that started it; each shows only its own result.
+  // The page that started the run, and the only one that shows its result.
   page: 'update' | 'advanced';
   outcome: 'running' | 'verified' | 'sent' | 'failed';
   // Per chip sent, once verified: whether it decided on the other slot. A revert lands back on the slot
@@ -95,7 +95,7 @@ export interface BoxSession {
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
   clearInputEvents: () => void;
-  // A raw catch-stream tap for a consumer keeping its own buffer; returns an unsubscribe.
+  // A raw catch-stream tap for a consumer that buffers events itself; returns an unsubscribe.
   subscribeEvents: (fn: (ev: CatchEvent, seq: number) => void) => () => void;
 }
 
@@ -135,10 +135,10 @@ function formatLogLine(line: LogLine): string {
 
 // Flash and update failures only: a failed CONNECT is a verdict, not a string.
 export function flashErrorText(e: unknown): string {
-  // A DOMException isn't an Error everywhere, so the port's own words are matched on its message.
+  // A DOMException isn't an Error everywhere, so Web Serial's wording is matched on the message.
   const message = typeof e === 'object' && e !== null && 'message' in e ? String((e as { message: unknown }).message) : '';
   if (/device has been lost/i.test(message)) return 'The box went away partway through.';
-  // Web Serial's wording says nothing about what to do. Its own words only: the box's BUSY says "already
+  // Web Serial's wording says nothing about what to do. Matched exactly: the box's BUSY says "already
   // open" too, about an update session.
   if (/port is already open/i.test(message)) {
     return 'That port is still held by an earlier session. Reload the page, or replug the control cable.';
@@ -197,7 +197,7 @@ export function createBoxSession(
     const [seenName, setSeenName] = createSignal<string | null>(versionOf(init.probe ?? null)?.name ?? null);
     const eventTaps = new Set<(ev: CatchEvent, seq: number) => void>();
 
-    // An update waiting for its verdict reattaches on its own, and owns the status until it ends.
+    // An update waiting for its verdict reattaches without a connect, and owns the status until it ends.
     let updating = false;
     let disposed = false;
     let lastBaud = init.probe?.kind === 'box' ? init.probe.baud : undefined;
@@ -233,7 +233,7 @@ export function createBoxSession(
       }
     };
 
-    // Fed a derived link so an update, or a chip flashed over its own USB, silences every readback.
+    // Fed a derived link so an update, or a chip in ROM download, silences every readback.
     const poller = createPoller(() => (status() === 'flashing' || hooks.nativeFlashing() ? null : link()), {
       onKeepalive,
       keepalive: () => {
@@ -627,7 +627,7 @@ export function createBoxSession(
           setError(
             result === 'host'
               ? "The update was sent, but the mouse-side chip isn't answering. Replug the box, then connect. If it still isn't answering, open Set up."
-              : 'The update was sent, but the box did not come back on its own. Replug it, then connect.',
+              : 'The update was sent, but the box did not come back. Replug it, then connect.',
           );
           if (result === 'gone') setProbe({ kind: 'silent' });
           setStatus('disconnected');
@@ -652,7 +652,7 @@ export function createBoxSession(
           try {
             await l.abortUpdate(t, 3000);
           } catch {
-            /* the activate's own error is the one worth reporting */
+            /* the activate's error is the one to report */
           }
         }
         setError(flashErrorText(e));

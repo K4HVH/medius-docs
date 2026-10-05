@@ -393,7 +393,7 @@ const Types: Component = () => {
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_REBOOT_TARGET_DEVICE_DOWNLOAD</code></td><td><code>0</code></td><td>Device chip into ROM download mode (flash over the serial link).</td></tr>
-              <tr><td><code>MEDIUS_REBOOT_TARGET_HOST_DOWNLOAD</code></td><td><code>1</code></td><td>Host chip into ROM download mode (flash over its own USB).</td></tr>
+              <tr><td><code>MEDIUS_REBOOT_TARGET_HOST_DOWNLOAD</code></td><td><code>1</code></td><td>Host chip into ROM download mode (flash over USB3).</td></tr>
               <tr><td><code>MEDIUS_REBOOT_TARGET_DEVICE_RUN</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
               <tr><td><code>MEDIUS_REBOOT_TARGET_HOST_RUN</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
             </tbody>

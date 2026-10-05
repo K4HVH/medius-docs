@@ -28,7 +28,7 @@ const same = (a: Semver | null, b: Semver | null) =>
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
-// The selected box over its control port: the same update as the Update page, with any medius image.
+// Flashes the selected box over USB2: the Update page's update, with any medius image.
 export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boolean) => void }) => {
   const dash = useDashboard();
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
     const t = setInterval(() => void dash.readFirmwareInfo(), 2000);
     onCleanup(() => clearInterval(t));
   });
-  // Without it neither chip's version is known, so a split can't be judged.
+  // Until RESP(FIRMWARE) answers, neither chip's version is known and a split can't be judged.
   const known = () => dash.firmwareInfo() !== null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
@@ -92,7 +92,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   const after = (c: FlashChip) => (wanted().includes(c) ? incoming(c) : current(c));
   const split = () =>
     !hostMissing() && !!after('device') && !!after('host') && !same(after('device'), after('host'));
-  // Each pair of versions gets its own tick.
+  // A new pair of versions clears Flash anyway.
   createEffect(on(() => `${fmt(after('device'))} ${fmt(after('host'))}`, () => setAnyway(false), { defer: true }));
 
   const ready = (c: FlashChip) =>
@@ -166,8 +166,8 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
       <For each={reverted()}>
         {(c) => (
           <div class="callout callout--warning">
-            The {NAME[c].toLowerCase()} came back on the firmware it had. It reverts an image that won't run, so
-            it still works.
+            The new image didn't run, so the {NAME[c].toLowerCase()} went back to the firmware it had. The box
+            works as before.
           </div>
         )}
       </For>

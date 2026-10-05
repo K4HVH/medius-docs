@@ -78,7 +78,7 @@ describe('parseVersion', () => {
 });
 
 describe('usb2Refusal', () => {
-  it('passes the real builds on their own chips', () => {
+  it('passes the real builds on the chips they are built for', () => {
     expect(usb2Refusal(real(DEVICE_HEAD), 'device')).toBeNull();
     expect(usb2Refusal(real(HOST_HEAD), 'host')).toBeNull();
   });
@@ -115,7 +115,7 @@ describe('romRefusal', () => {
     expect(romRefusal(app({ project: 'medius_device' }), 'host')).toBe("This is the main chip's image.");
   });
 
-  it('reads the file where its own shape puts the app, whatever Image says', () => {
+  it('reads the app where the file layout puts it, whatever Image says', () => {
     // An application image picked with Image left on Factory, and the reverse.
     expect(romRefusal(real(HOST_HEAD), 'device')).toBe("This is the mouse-side chip's image.");
     expect(romRefusal(app({ factory: true, project: 'medius_device' }), 'host')).toBe("This is the main chip's image.");
@@ -123,7 +123,7 @@ describe('romRefusal', () => {
 });
 
 describe('usb2Refusal on a padded factory image', () => {
-  it('names it a factory image, not a size problem at an offset that means nothing here', () => {
+  it('names a padded factory image as one, not a size problem at an offset USB2 never writes', () => {
     const big = app({ factory: true, size: 4 * 1024 * 1024 - 1024 });
     expect(usb2Refusal(big, 'device')).toBe(
       'This is a factory image. Choose the application image, or flash it over USB1.',
