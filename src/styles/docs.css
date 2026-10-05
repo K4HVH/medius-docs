@@ -422,7 +422,7 @@ pre code[class*="language-"] {
 /* One label width, so the tracks of groups side by side start together. */
 .stat-bars {
   display: grid;
-  grid-template-columns: 10rem minmax(48px, 1fr) max-content;
+  grid-template-columns: 11.5rem minmax(48px, 1fr) max-content;
   gap: 6px var(--g-spacing-sm);
   align-items: center;
   font-size: var(--font-size-sm);
