@@ -10,7 +10,7 @@ import { CommandPalette } from '../../components/navigation/CommandPalette';
 import {
   BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
   BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsDownload,
-  BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat,
+  BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat, BsBarChart,
   BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
   BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
@@ -175,6 +175,7 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
   { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
+  { value: '/dashboard/stats', label: 'Stats', icon: BsBarChart },
 ];
 
 const BOX_ROUTES = new Set([

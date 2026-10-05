@@ -147,11 +147,13 @@ src/
         Update.tsx                    # /dashboard/update: one-click update
         Advanced.tsx                  # /dashboard/advanced: manual flash
         Changelog.tsx                 # /dashboard/changelog: release history
+        Stats.tsx                     # /dashboard/stats: public usage stats
   dashboard/                          # dashboard logic, not pages
     protocol/                         # opcodes, wire constants, payload builders, response parsers
     serial/                           # SerialLink, port discovery, connect verdicts
     flash/                            # image validation and flashing over Web Serial
     firmware/                         # release listing and asset download
+    stats/                            # the stats sink, OS and browser reading, the totals fetch
   components/                         # MidnightUI components (DO NOT MODIFY)
   contexts/                           # form context (DO NOT MODIFY)
   utils/                              # shared helpers (DO NOT MODIFY)
@@ -185,7 +187,7 @@ Every Card is wrapped in a `<div id="..." data-search-target>`, so search and de
 
 ### Sidebar
 
-Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeAdvancedTabs` (the advanced control commands: Raw, Transfer, Rewrite, Patch), `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryAdvancedTabs` (the advanced control layer: raw injection, control transfers, rewrite rules, descriptor patches), `libraryFeatureTabs`, `libraryGuidesTabs` (the guides: calls and input, connection, testing), `libraryReferenceTabs`, `aiAccessTabs` (the AI & LLMs page, at the foot of each code section), `dashboardTabs` (Set up, Device, Control, Advanced control, Update, Advanced, Changelog), `sectionTabs` (the four top-level sections), `bindingsSwitcherTabs` (Overview, C / C++, Python), and the per-language groups `makeBindingGroups(root)` builds (Getting Started: Install, First program; Usage: Calls & errors, Streams; Reference: API index, Types & errors; Build: Build & features). Add new pages to the right array. Nav icons come from `solid-icons/bs`.
+Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeAdvancedTabs` (the advanced control commands: Raw, Transfer, Rewrite, Patch), `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryAdvancedTabs` (the advanced control layer: raw injection, control transfers, rewrite rules, descriptor patches), `libraryFeatureTabs`, `libraryGuidesTabs` (the guides: calls and input, connection, testing), `libraryReferenceTabs`, `aiAccessTabs` (the AI & LLMs page, at the foot of each code section), `dashboardTabs` (Set up, Device, Control, Advanced control, Update, Advanced, Changelog, Stats), `sectionTabs` (the four top-level sections), `bindingsSwitcherTabs` (Overview, C / C++, Python), and the per-language groups `makeBindingGroups(root)` builds (Getting Started: Install, First program; Usage: Calls & errors, Streams; Reference: API index, Types & errors; Build: Build & features). Add new pages to the right array. Nav icons come from `solid-icons/bs`.
 
 ## Consistency rules (read before editing)
 
@@ -299,6 +301,20 @@ magick -background none -density 2048 public/favicon.svg -resize 1024x1024 publi
 ## Deployment
 
 CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`.
+
+### Usage stats
+
+The dashboard reports each box it connects, the box's cloned device, and every flash to `POST /api/stats/event`; `GET /api/stats` serves the totals the Stats page draws. Both live in `server/stats/` and run under `serve.ts` and the vite dev server alike.
+
+| Piece | Where |
+|---|---|
+| Database | SQLite at `STATS_DB` (default `data/stats.db`, ignored by git). `bun:sqlite` in production, `node:sqlite` under vite and vitest |
+| Box identity | A keyed hash of the MAC; the key is made once and kept in the database. The raw MAC is never stored |
+| Country | Cloudflare's `CF-IPCountry`; no IP address is stored |
+| Limits | 2 KB a body, 60 events a minute per address, foreign `Origin` refused; totals cached a minute |
+| Production | The compose file's `medius-stats` volume at `/app/data`. Redeploy the stack with it, or every restart starts the counts again |
+
+Unit tests never count: the provider builds no sink under vitest. A dev server writes to `data/stats.db` in the checkout, so delete that file to start clean.
 
 ## Adding a page
 

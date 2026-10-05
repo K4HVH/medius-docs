@@ -3,7 +3,7 @@ import type { CommandPaletteItem } from '../components/navigation/CommandPalette
 import {
   BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode, BsDownload,
   BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsBoxArrowInDown,
-  BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText, BsActivity,
+  BsExclamationTriangle, BsArrowRepeat, BsStars, BsWrench, BsJournalText, BsActivity, BsBarChart,
   BsLightbulb, BsSliders, BsLock, BsKeyboard, BsHash, BsPuzzle, BsDiscord,
   BsBoxes, BsFiletypePy, BsTag, BsUsbPlug, BsCodeSlash,
 } from 'solid-icons/bs';
@@ -59,6 +59,8 @@ export const entries: SearchEntry[] = [
   { label: "Can't connect", description: 'Why a connect failed, and what to do', path: '/dashboard/setup', group: 'Dashboard', icon: BsUsbPlug, keywords: ['cannot connect', "can't connect", 'no port', 'not answering', 'no reply', 'wrong pc', 'control pc', 'usb2', 'protocol', 'unsupported', 'old firmware', 'chrome', 'port busy', 'in use'] },
   { label: 'Advanced', description: 'Manual flash over USB2 or ROM download: either chip or both, release or file, recover a bricked box', path: '/dashboard/advanced', group: 'Dashboard', icon: BsBoxArrowInDown, keywords: ['advanced', 'manual', 'flash', 'recover', 'recovery', 'brick', 'bricked', 'device chip', 'host chip', 'factory', 'boot button', 'upload', 'usb2', 'flash over usb2', 'control port', 'both chips', 'test firmware', 'newer protocol', 'flash back', 'test build'] },
   { label: 'Changelog', description: 'Firmware releases', path: '/dashboard/changelog', group: 'Dashboard', icon: BsJournalText, keywords: ['changelog', 'releases', 'history', 'versions', 'whats new', 'notes', 'commits'] },
+  { label: 'Usage stats', description: 'Boxes, devices and flashes, counted by every dashboard', path: '/dashboard/stats', group: 'Dashboard', icon: BsBarChart, keywords: ['stats', 'statistics', 'usage', 'analytics', 'tracking', 'count', 'unique boxes', 'active boxes', 'devices', 'device kind', 'mouse', 'keyboard', 'flashes', 'success rate', 'firmware versions', 'countries', 'browser', 'os', 'public'] },
+  { label: 'What is collected', description: 'The fields each dashboard report carries, the hashed MAC, no IP', path: '/dashboard/stats#collected', group: 'Dashboard', icon: BsBarChart, keywords: ['privacy', 'collected', 'telemetry', 'tracking', 'mac', 'hash', 'ip', 'country', 'cloudflare', 'always on', 'opt out'] },
 
   // Native API
   { label: 'Introduction', description: 'What Medius is and how to read the native docs', path: '/native', group: 'Native API', icon: BsInfoCircle, keywords: ['native', 'overview', 'start', 'protocol', 'medius'] },
