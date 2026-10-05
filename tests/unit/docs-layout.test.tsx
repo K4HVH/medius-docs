@@ -68,6 +68,7 @@ const mount = (path: string, w = world()) => {
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
+        <Route path="/dashboard/advanced" component={() => <p>advanced page</p>} />
       </Route>
     </MemoryRouter>
   ));
@@ -86,6 +87,14 @@ describe('DocsLayout and the boxes', () => {
     r.history.set({ value: '/dashboard/setup' });
     await waitFor(() => expect(r.container.textContent).toContain('setup page'));
     expect(r.container.textContent).not.toContain('Set up - Desk');
+  });
+
+  it('names the box on Advanced, and a box picked there stays on Advanced', async () => {
+    const r = mount('/dashboard/advanced');
+    await waitFor(() => expect(r.container.textContent).toContain('Advanced - Desk'));
+    fireEvent.click(row(r));
+    await new Promise((res) => setTimeout(res, 20));
+    expect(r.container.textContent).toContain('advanced page');
   });
 
   it('starts looking for boxes only once the dashboard is open', async () => {

@@ -177,7 +177,13 @@ const dashboardTabs: TabOption[] = [
   { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
 ];
 
-const BOX_ROUTES = new Set(['/dashboard', '/dashboard/control', '/dashboard/advanced-control', '/dashboard/update']);
+const BOX_ROUTES = new Set([
+  '/dashboard',
+  '/dashboard/control',
+  '/dashboard/advanced-control',
+  '/dashboard/update',
+  '/dashboard/advanced',
+]);
 
 const isMobileQuery = () =>
   typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
