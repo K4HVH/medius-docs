@@ -196,7 +196,11 @@ function updateReason(op: number, status: number, arg: number): string {
       ? 'the mouse-side chip did not come back. Power cycle the box.'
       : 'the box stopped answering and dropped the transfer.';
     case 0x19: return 'nothing is staged.';
-    case 0x1a: return `out of order. The box wanted op ${arg}.`;
+    // Usually the op the box expected; a short END carries the bytes missing, a bad chunk its limit.
+    case 0x1a:
+      if (op === 0x02 && arg > 0) return `the image ended ${arg} bytes short.`;
+      if (op === 0x01 && arg === OTA_CHUNK) return `a chunk was not 1 to ${arg} bytes.`;
+      return `out of order. The box wanted op ${arg}.`;
     case 0x1b: return 'a chip is still verifying its new firmware. Try again in a few seconds.';
     case 0x1c: return 'refused before writing, so anything staged is untouched.';
     default: return `${UPD_NAMES[status] ?? status} (arg ${arg}).`;
@@ -351,7 +355,7 @@ export class SerialLink {
       } catch (e) {
         if (e instanceof BadProtoVerError) throw e;
         // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
-        // retry. Firmware >= 2.3.0 self-heals; this covers older boxes, as connect.rs does.
+        // retry. Firmware 2.3.0 to 3.3.x drops a stale partial frame by itself; from 3.4.0 only this does.
         await this.flushPeerDecoder();
       }
     }

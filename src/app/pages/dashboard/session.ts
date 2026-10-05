@@ -568,6 +568,8 @@ export function createBoxSession(
       images: { device?: Uint8Array; host?: Uint8Array },
       page: UpdateRun['page'],
     ): Promise<'verified' | 'sent' | 'failed'> => {
+      // One run at a time: a second would interleave sessions on the box and overwrite the first's result.
+      if (updating || status() === 'flashing') return 'failed';
       const l = link();
       if (!l) {
         setError('Connect to the box first.');
