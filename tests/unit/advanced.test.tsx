@@ -9,7 +9,8 @@ const st = vi.hoisted(() => ({
     const [running, setRunning] = createSignal(false);
     const [status, setStatus] = createSignal('disconnected');
     const [progress, setProgress] = createSignal<{ phase: string; written?: number; total?: number } | null>(null);
-    return { running, setRunning, status, setStatus, progress, setProgress };
+    const [update, setUpdate] = createSignal<{ page: string; outcome: string } | null>(null);
+    return { running, setRunning, status, setStatus, progress, setProgress, update, setUpdate };
   },
 }));
 
@@ -22,12 +23,18 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
-  useBoxes: () => ({ supported: true, secure: true }),
-  useDashboard: () => ({
-    status: () => mock.s!.status(),
-    name: () => 'Desk',
-    updateProgress: () => mock.s!.progress(),
+  // The selected box's session, read through the registry: Advanced is not inside BoxScope.
+  useBoxes: () => ({
+    supported: true,
+    secure: true,
+    scope: () => ({
+      status: () => mock.s!.status(),
+      name: () => 'Desk',
+      updateProgress: () => mock.s!.progress(),
+      update: () => mock.s!.update(),
+    }),
   }),
+  BoxScope: (p: { children: unknown }) => p.children,
   useNativeFlash: () => ({
     progress: () => null,
     log: () => [],
@@ -64,12 +71,13 @@ vi.mock('../../src/dashboard/serial', () => ({
   requestRomPort: async () => ({}) as SerialPort,
 }));
 
-// The USB2 side has its own suite; here it only has to be the one shown.
+// The USB2 side has its own suite; here it only has to be the one shown, and say when it is busy.
 vi.mock('../../src/app/pages/dashboard/AdvancedUsb2', () => ({
-  Usb2Flash: (p: { via: () => unknown }) => (
+  Usb2Flash: (p: { via: () => unknown; onBusy?: (b: boolean) => void }) => (
     <div>
       {p.via() as never}
       <p>usb2 form</p>
+      <button onClick={() => p.onBusy?.(true)}>usb2 busy</button>
     </div>
   ),
 }));
@@ -386,5 +394,43 @@ describe('Advanced', () => {
     expect(r.container.textContent).toContain('50%');
     expect(r.container.textContent).not.toContain('usb2 form');
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
+  });
+
+  it('comes back on the control port for a result of its own, whatever the box is doing now', async () => {
+    mock.s!.setStatus('disconnected');
+    mock.s!.setUpdate({ page: 'advanced', outcome: 'sent' });
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
+  });
+
+  it("keeps the Via choice still while the control port's flash is busy", async () => {
+    mock.s!.setStatus('connected');
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
+    expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(0);
+    r.getByRole('button', { name: 'usb2 busy' }).click();
+    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(1));
+  });
+
+  it("says don't close the tab while the box updates over the control port", async () => {
+    mock.s!.setStatus('flashing');
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain("Don't unplug or close this tab"));
+  });
+
+  it('refuses an application image of the other chip even with Image left on Factory', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const b = new Uint8Array(4096);
+    b[0] = 0xe9;
+    new DataView(b.buffer).setUint32(32, 0xabcd5432, true);
+    new TextEncoder().encodeInto('medius_host', b.subarray(80));
+    const f = new File([b], 'medius_host.bin');
+    Object.defineProperty(f, 'arrayBuffer', { value: () => Promise.resolve(b.buffer) });
+    Object.defineProperty(input, 'files', { value: [f], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
+    expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
   });
 });

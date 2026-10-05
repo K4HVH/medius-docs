@@ -48,8 +48,8 @@ const otherChip = (chip: FlashChip) =>
   chip === 'host' ? "This is the main chip's image." : "This is the mouse-side chip's image.";
 
 export function usb2Refusal(image: Uint8Array, chip: FlashChip): string | null {
-  const invalid = validateImage(image, 'app');
-  if (invalid) return invalid;
+  // Size and magic only: validateImage's other check is room at a flash offset, which USB2 never writes.
+  if (image.length < 1024 || image[0] !== 0xe9) return validateImage(image, 'app');
   if (hasPartitionTable(image)) {
     return `This is a factory image. Choose the application image, or flash it over ${socket(chip)}.`;
   }
@@ -66,8 +66,9 @@ export function usb2Refusal(image: Uint8Array, chip: FlashChip): string | null {
   return null;
 }
 
-// Any firmware goes over a chip's own USB, except medius built for the other chip.
-export function romRefusal(image: Uint8Array, kind: FlashKind, chip: FlashChip): string | null {
-  const mine = mediusChip(readAppHeader(image, kind));
+// Any firmware goes over a chip's own USB, except medius built for the other chip. Read where the file's
+// own shape puts the app, not where the Image choice says it should be.
+export function romRefusal(image: Uint8Array, chip: FlashChip): string | null {
+  const mine = mediusChip(readAppHeader(image, hasPartitionTable(image) ? 'factory' : 'app'));
   return mine && mine !== chip ? otherChip(chip) : null;
 }

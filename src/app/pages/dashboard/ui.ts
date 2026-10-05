@@ -33,6 +33,9 @@ export const section = { 'margin-top': 'var(--g-spacing)' } as const;
 
 export const status = { 'margin-top': 'var(--g-spacing-sm)' } as const;
 
+// A note or message under the field it belongs to.
+export const note = { 'margin-top': 'var(--g-spacing-sm)' } as const;
+
 // One column of a two-column card.
 export const col = {
   flex: '1 1 420px',
