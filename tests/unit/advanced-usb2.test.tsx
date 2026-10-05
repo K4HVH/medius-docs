@@ -255,6 +255,8 @@ describe('Advanced over USB2', () => {
     expect(r.container.textContent).not.toMatch(/different versions/);
     expect(r.container.textContent).toContain("This isn't medius firmware. Flash it over USB3.");
     expect(flashButton(r)).toBeDisabled();
+    // A file that won't be sent says nothing about the version to come.
+    expect(r.container.textContent).toContain('Main chip: v3.4.2Mouse-side chip: v3.4.2');
   });
 
   it('a refused mouse-side file stops blocking once only the main chip is chosen, and is never sent', async () => {

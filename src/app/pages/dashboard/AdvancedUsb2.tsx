@@ -16,7 +16,7 @@ import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { PROTO_VER } from '../../../dashboard/protocol';
 import { ConnectPanel } from './ConnectPanel';
 import { useDashboard } from './context';
-import { row } from './ui';
+import { checkColumn, row, section } from './ui';
 
 type Chips = 'both' | FlashChip;
 const NAME: Record<FlashChip, string> = { device: 'Main chip', host: 'Mouse-side chip' };
@@ -46,7 +46,8 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
     if (dash.status() === 'connected') void dash.readFirmwareInfo();
   });
 
-  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary.
+  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
+  // one unguarded read freezes the page.
   const latest = () => {
     try {
       return releases()?.[0] ?? null;
@@ -68,14 +69,15 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
     const f = c === 'device' ? i?.device : i?.host;
     return f ? { major: f.major, minor: f.minor, patch: f.patch } : null;
   };
-  const incoming = (c: FlashChip): Semver | null => {
-    if (source() === 'release') return parseVersion(latest()?.tag);
-    const img = images()[c];
-    return img ? parseVersion(readAppHeader(img, 'app')?.version) : null;
-  };
   const refusal = (c: FlashChip) => {
     const img = images()[c];
     return img ? usb2Refusal(img, c) : null;
+  };
+  // Null until there is something that will be sent.
+  const incoming = (c: FlashChip): Semver | null => {
+    if (source() === 'release') return parseVersion(latest()?.tag);
+    const img = images()[c];
+    return img && !refusal(c) ? parseVersion(readAppHeader(img, 'app')?.version) : null;
   };
   const after = (c: FlashChip) => (wanted().includes(c) ? incoming(c) : current(c));
   const split = () =>
@@ -286,7 +288,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
             {(c) => (
               <p style={muted}>
                 {NAME[c]}: {fmt(current(c))}
-                {wanted().includes(c) ? ` to ${fmt(incoming(c))}` : ', unchanged'}
+                {!wanted().includes(c) ? ', unchanged' : incoming(c) ? ` to ${fmt(incoming(c))}` : ''}
               </p>
             )}
           </For>
@@ -297,7 +299,9 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
               can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over
               USB3.
             </div>
-            <Checkbox checked={anyway()} disabled={busy()} onChange={setAnyway} label="Flash anyway" />
+            <div style={checkColumn}>
+              <Checkbox checked={anyway()} disabled={busy()} onChange={setAnyway} label="Flash anyway" />
+            </div>
           </Show>
 
           <Show when={err()}>
@@ -307,9 +311,11 @@ export const Usb2Flash = (props: { via: () => JSX.Element }) => {
               </div>
             )}
           </Show>
-          <Button variant="primary" disabled={!canFlash()} onClick={() => void flash()}>
-            Flash
-          </Button>
+          <div style={{ ...section, ...row }}>
+            <Button variant="primary" disabled={!canFlash()} onClick={() => void flash()}>
+              Flash
+            </Button>
+          </div>
         </Show>
       </Match>
     </Switch>
