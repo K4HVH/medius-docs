@@ -135,26 +135,6 @@ export const ConnectView = (props: ConnectViewProps) => {
           })()}
         </Match>
 
-        <Match when={verdict()?.kind === 'new-firmware'}>
-          {(() => {
-            const v = verdict();
-            const ver = v?.kind === 'new-firmware' ? v.version : null;
-            return (
-              <>
-                <div class="callout callout--danger" role="alert">
-                  <Show when={ver} fallback="This box runs firmware newer than this dashboard.">
-                    {(x) => <>This box runs v{versionString(x())}, newer than this dashboard.</>}
-                  </Show>{' '}
-                  Reload for the current dashboard, then connect.
-                </div>
-                <Button variant="primary" onClick={() => window.location.reload()}>
-                  Reload
-                </Button>
-              </>
-            );
-          })()}
-        </Match>
-
         <Match when={verdict()?.kind === 'other'}>
           {(() => {
             const v = verdict();

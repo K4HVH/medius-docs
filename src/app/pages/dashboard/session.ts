@@ -324,7 +324,7 @@ export function createBoxSession(
           setStatus('connected');
           return;
         } catch (e) {
-          // A box back on a protocol this page can't speak won't answer differently next time.
+          // A box back on firmware too old to update won't answer differently next time.
           if (e instanceof BadProtoVerError) {
             setProbe(probeFromError(e));
             setVerdict(classifyConnectError(e));

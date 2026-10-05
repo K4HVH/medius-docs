@@ -83,25 +83,6 @@ describe('ConnectPanel', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/setup');
   });
 
-  it('a newer box is named and sent to a reload, never to the install', () => {
-    // 3.5.0 stands for a later release on the protocol after this page's.
-    mock.s!.setVerdict({ kind: 'new-firmware', version: { ...version, protoVer: 10, fwMinor: 5 } });
-    const reload = vi.fn();
-    const real = window.location;
-    Object.defineProperty(window, 'location', { configurable: true, value: { ...real, reload } });
-    try {
-      const { getByRole, queryByRole, container } = render(() => <ConnectPanel />);
-      expect(container.textContent).toContain('v3.5.0, newer than this dashboard');
-      expect(container.textContent).not.toMatch(/too old/i);
-      expect(queryByRole('button', { name: /set up/i })).toBeNull();
-      getByRole('button', { name: /reload/i }).click();
-      expect(reload).toHaveBeenCalled();
-      expect(navigate).not.toHaveBeenCalled();
-    } finally {
-      Object.defineProperty(window, 'location', { configurable: true, value: real });
-    }
-  });
-
   it('no port names the cable and the computer', () => {
     mock.s!.setVerdict({ kind: 'no-port' });
     const { getByRole } = render(() => <ConnectPanel />);

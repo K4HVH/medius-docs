@@ -5,14 +5,14 @@ import { SerialLink, attachLink, speaksCurrentWire } from './link';
 
 export type Probe =
   | { kind: 'box'; version: Version; device: DeviceInfo | null; baud: number }
-  | { kind: 'old-firmware' | 'new-firmware'; version: Version }
+  | { kind: 'old-firmware'; version: Version }
   | { kind: 'busy' }
   | { kind: 'silent' }
   | { kind: 'other'; message: string };
 
 export function probeFromError(e: unknown): Probe {
   const v = classifyConnectError(e);
-  if (v.kind === 'old-firmware' || v.kind === 'new-firmware') return v;
+  if (v.kind === 'old-firmware') return v;
   if (v.kind === 'busy' || v.kind === 'silent') return { kind: v.kind };
   return { kind: 'other', message: v.kind === 'other' ? v.message : 'The port went away' };
 }

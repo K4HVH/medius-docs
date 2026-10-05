@@ -5,11 +5,12 @@ import {
   BadProtoVerError,
   NoReplyError,
   QueryTimeoutError,
+  canUpdate,
   type SerialLink,
   type SerialLinkEvents,
 } from '../../src/dashboard/serial';
 import type { SerialLike } from '../../src/app/pages/dashboard/boxes';
-import { DeviceKind, MIN_PROTO_VER, PROTO_VER, type DeviceInfo, type Health, type Version } from '../../src/dashboard/protocol';
+import { DeviceKind, PROTO_VER, type DeviceInfo, type Health, type Version } from '../../src/dashboard/protocol';
 
 export interface BoxOpts {
   mac?: number[];
@@ -150,7 +151,7 @@ export class FakeLink {
     if (b.gate) await b.gate;
     if (!this.open_ || !b.alive || this.baud !== b.baud) throw new NoReplyError();
     this.rx();
-    if (b.version.protoVer < MIN_PROTO_VER || b.version.protoVer > PROTO_VER) throw new BadProtoVerError(b.version);
+    if (!canUpdate(b.version)) throw new BadProtoVerError(b.version);
     return b.version;
   }
 
