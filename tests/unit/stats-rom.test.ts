@@ -72,7 +72,7 @@ describe('ROM download reports', () => {
     ]);
   });
 
-  it("a mouse-side chip flash carries no MAC: its own isn't the box's", async () => {
+  it("a mouse-side chip flash carries no MAC: a box is known by its main chip's", async () => {
     const f = make();
     await f.flash(port, image('medius_host', '3.4.4'), 'app', { page: 'advanced', chip: 'host', source: 'file' });
     expect(reports[0]).toMatchObject({ mac: null, chips: 'host', kind: 'app', source: 'file', to: { device: null, host: '3.4.4' } });

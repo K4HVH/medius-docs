@@ -227,7 +227,7 @@ export function createBoxSession(
       try {
         hooks.report?.(r);
       } catch {
-        /* a lost count is never worth an error */
+        /* counting must not break a connect or a flash */
       }
     };
     const reportBox = (v: Version, info: FirmwareInfo | null) => {

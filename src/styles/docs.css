@@ -371,12 +371,18 @@ pre code[class*="language-"] {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Stats page: headline figures, bar lists and column charts. */
+/* Stats page: the totals, bar lists and column charts. */
 .stat-figures {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--g-spacing-sm);
   margin-top: var(--g-spacing-sm);
+}
+
+@media (max-width: 640px) {
+  .stat-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .stat-figure {
@@ -405,7 +411,7 @@ pre code[class*="language-"] {
 }
 
 .stat-empty {
-  margin: var(--g-spacing-sm) 0 0;
+  margin: 0;
   color: var(--g-text-muted);
 }
 
@@ -419,7 +425,6 @@ pre code[class*="language-"] {
   grid-template-columns: minmax(0, max-content) minmax(48px, 1fr) max-content;
   gap: 6px var(--g-spacing-sm);
   align-items: center;
-  margin-top: var(--g-spacing-sm);
   font-size: var(--font-size-sm);
 }
 
@@ -502,7 +507,6 @@ pre code[class*="language-"] {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--g-spacing-lg) calc(var(--g-spacing) * 2);
-  margin-top: var(--g-spacing-sm);
 }
 
 /* Under the home page's section cards. */

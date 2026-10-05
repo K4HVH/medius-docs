@@ -224,7 +224,7 @@ describe('flash reports over USB2', () => {
     ]);
   });
 
-  it('a second run refused while one is in flight sends nothing of its own', async () => {
+  it('a second run refused while one is in flight sends no report', async () => {
     const b = new FakeBox({ mac: MAC });
     const s = await connected(b);
     reports = [];
