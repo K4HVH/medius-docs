@@ -422,6 +422,32 @@ const Update: Component = () => {
           </div>
         </Card>
       </div>
+
+      <div id="unchanging" data-search-target>
+        <Card>
+          <CardHeader title="What never changes" subtitle="The update path, from protocol 5 on" />
+          <p>
+            A client that can update one box can update every later one. From protocol 5 (v3.2.0) on,
+            these keep their shape whatever else a protocol changes:
+          </p>
+          <table class="api-params">
+            <thead>
+              <tr><th>Part</th><th>Where</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>The frame: SOF, header, CRC, the 512-byte payload limit</td><td><A href="/native/frame#layout">Frame layout</A></td></tr>
+              <tr><td>The control rate: 6 Mbaud, and 4 Mbaud on firmware before v3.4.0</td><td><A href="/native/transport#serial">Serial link</A></td></tr>
+              <tr><td><code>QUERY(VERSION)</code>, its reply's first ten data bytes (<code>proto_ver</code>, version, MAC) and the name after them, and the hello</td><td><A href="/native/commands/requests#version">VERSION</A>, <A href="/native/connection#hello">Ready hello</A></td></tr>
+              <tr><td><code>QUERY(FIRMWARE)</code> and the 17 bytes of its reply; anything new follows them</td><td><A href="/native/commands/requests#firmware">FIRMWARE</A></td></tr>
+              <tr><td><code>UPDATE</code> and <code>UPDATE_RESP</code>: ops, targets, bodies, the 504-byte chunk, the credit and how it is read, every status and its <code>arg</code>, update mode, staging and <code>ACTIVATE</code></td><td>This page</td></tr>
+            </tbody>
+          </table>
+          <p>
+            A status may be added; read one you don't know as a refusal. The dashboard connects to any
+            box on protocol 5 or later, and only updates one on another protocol than its own.
+          </p>
+        </Card>
+      </div>
     </>
   );
 };

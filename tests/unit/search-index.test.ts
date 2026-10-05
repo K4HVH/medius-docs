@@ -67,6 +67,9 @@ describe('dashboard search index', () => {
   it('finds each card by the words on its own controls', () => {
     const cases: [string, string][] = [
       ['consume', 'Clip playback'],
+      ['test firmware', 'Advanced'],
+      ['flash over usb2', 'Advanced'],
+      ['newer protocol', 'Newer firmware'],
       ['mark complete', 'Clip playback'],
       ['replayable', 'Clip playback'],
       ['autolock', 'Clip playback'],
