@@ -152,6 +152,59 @@ describe('dashboard poller', () => {
     });
   });
 
+  it('a keepalive on version asks for version, never health, and reports its replies', async () => {
+    const calls = { health: 0, version: 0 };
+    const link = {
+      queryHealth: async () => {
+        calls.health++;
+        return { linkUp: true } as never;
+      },
+      queryVersion: async () => {
+        calls.version++;
+        return { protoVer: 10 } as never;
+      },
+    } as unknown as SerialLink;
+    const seen: boolean[] = [];
+    await createRoot(async (dispose) => {
+      createPoller(() => link, { keepalive: () => 'version', onKeepalive: (ok) => seen.push(ok) });
+      await settle();
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS * 2);
+      await settle();
+      expect(calls.health).toBe(0);
+      expect(calls.version).toBeGreaterThan(2);
+      expect(seen).toEqual(Array(calls.version).fill(true));
+      dispose();
+    });
+  });
+
+  it('moves the keepalive when the box it reads changes wire', async () => {
+    const calls = { health: 0, version: 0 };
+    const link = {
+      queryHealth: async () => {
+        calls.health++;
+        return { linkUp: true } as never;
+      },
+      queryVersion: async () => {
+        calls.version++;
+        return { protoVer: 10 } as never;
+      },
+    } as unknown as SerialLink;
+    await createRoot(async (dispose) => {
+      const [key, setKey] = createSignal<'health' | 'version'>('version');
+      createPoller(() => link, { keepalive: key });
+      await settle();
+      expect(calls.health).toBe(0);
+      setKey('health');
+      await settle();
+      const versions = calls.version;
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS * 3);
+      await settle();
+      expect(calls.health).toBeGreaterThan(2);
+      expect(calls.version).toBe(versions);
+      dispose();
+    });
+  });
+
   it('floors an interval a caller asks to be faster than', async () => {
     const { calls, link } = makeLink();
     await createRoot(async (dispose) => {

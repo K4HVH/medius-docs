@@ -224,9 +224,13 @@ export function createBoxSession(
     // Fed a derived link so an update, or a chip flashed over its own USB, silences every readback.
     const poller = createPoller(() => (status() === 'flashing' || hooks.nativeFlashing() ? null : link()), {
       onKeepalive,
+      keepalive: () => {
+        const v = version();
+        return v && !speaksCurrentWire(v) ? 'version' : 'health';
+      },
     });
-    // The poller already polls health as the keepalive; this only reads it.
-    const health = poller.subscribe('health');
+    // The keepalive polls health on the current wire; this only reads it.
+    const health = poller.peek('health');
     const polledVersion = poller.peek('version');
 
     createEffect(() => {

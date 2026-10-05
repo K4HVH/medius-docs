@@ -7,7 +7,7 @@ import {
   createBoxSession,
 } from '../../src/app/pages/dashboard/session';
 import { KEEPALIVE_MS } from '../../src/app/pages/dashboard/poll';
-import { LedMode, LedTarget } from '../../src/dashboard/protocol';
+import { LedMode, LedTarget, PROTO_VER } from '../../src/dashboard/protocol';
 import type { Probe } from '../../src/dashboard/serial';
 import { DEVICE, FakeBox, FakePort, asPort, makeFakeLink, settle } from './fake-boxes';
 
@@ -87,6 +87,29 @@ describe('box session', () => {
     expect(api.status()).toBe('lost');
     expect(api.link()).toBeNull();
     expect(box.isOpen).toBe(false);
+  });
+
+  it.each([[8], [PROTO_VER + 1]])(
+    'a box on protocol %i is kept connected by its version, and never asked for health',
+    async (protoVer) => {
+      const box = new FakeBox({ protoVer });
+      const { api } = open(box);
+      await api.connect();
+      expect(api.updateOnly()).toBe(true);
+      await keepalives(4);
+      expect(api.status()).toBe('connected');
+      expect(box.healthQueries).toBe(0);
+      expect(box.versionQueries).toBeGreaterThan(2);
+    },
+  );
+
+  it('a box on the current wire is kept connected by its health', async () => {
+    const box = new FakeBox();
+    const { api } = open(box);
+    await api.connect();
+    await keepalives(4);
+    expect(api.status()).toBe('connected');
+    expect(box.healthQueries).toBeGreaterThan(2);
   });
 
   it('a frame between misses restarts the count, so a streaming box is never lost', async () => {

@@ -1,7 +1,7 @@
 // One poller for the dashboard: shared timers, deduplicated subscribers, and a query stops once
 // nothing watches it.
 
-import { type Accessor, createSignal, onCleanup } from 'solid-js';
+import { type Accessor, createRenderEffect, createSignal, onCleanup, untrack } from 'solid-js';
 import type {
   Bearing,
   Caps,
@@ -128,9 +128,10 @@ export interface Poller {
 
 export function createPoller(
   link: Accessor<SerialLink | null>,
-  opts: { onKeepalive?: (answered: boolean) => void } = {},
+  opts: { onKeepalive?: (answered: boolean) => void; keepalive?: Accessor<'health' | 'version'> } = {},
 ): Poller {
   const slots = new Map<PollKey, Slot>();
+  const keepalive = opts.keepalive ?? (() => 'health' as const);
 
   const slotFor = (key: PollKey): Slot => {
     let s = slots.get(key);
@@ -161,12 +162,12 @@ export function createPoller(
         if (s.gen !== gen || link() !== l) return;
         s.write(v);
         s.setUnreadable(false);
-        if (key === 'health') opts.onKeepalive?.(true);
+        if (key === keepalive()) opts.onKeepalive?.(true);
       } catch (e) {
         // A transient miss is fine; the next tick tries again. A real drop closes the link.
         if (s.gen === gen && link() === l) {
           if (e instanceof UnreadableReplyError) s.setUnreadable(true);
-          if (key === 'health') opts.onKeepalive?.(e instanceof UnreadableReplyError);
+          if (key === keepalive()) opts.onKeepalive?.(e instanceof UnreadableReplyError);
         }
       }
     }
@@ -218,8 +219,12 @@ export function createPoller(
     }
   };
 
-  // The keepalive lives here rather than in a card.
-  subscribe('health', KEEPALIVE_MS);
+  // The keepalive lives here rather than in a card. A box on another protocol keeps alive on VERSION,
+  // which keeps its shape (§2.3).
+  createRenderEffect(() => {
+    const key = keepalive();
+    untrack(() => subscribe(key, KEEPALIVE_MS));
+  });
 
   if (typeof document !== 'undefined') {
     // On tab return, re-read everything rather than wait out a clamped interval.
