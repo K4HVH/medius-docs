@@ -113,6 +113,17 @@ async function main(): Promise<void> {
       process.stdout.write(`  ${route.path} -> ${route.path}.html + ${route.path}.md\n`);
     }
 
+    // Any path the app has no route for renders the NotFound page; the server answers unknown URLs
+    // with this snapshot and a 404 status. It goes before Home: sirv serves the SPA fallback with the
+    // size index.html had at startup, so a page loaded after Home overwrites it gets cut short.
+    await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForSelector(`${CONTENT} #not-found`, { timeout: 20000 });
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    );
+    writeFile(join(DIST, '404.html'), await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML));
+    process.stdout.write('  404 -> 404.html\n');
+
     // Prerender the Home landing page into dist/index.html so the root URL (the
     // most-crawled one, and the SPA fallback) is real content, not an empty shell.
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load', timeout: 30000 });
@@ -124,16 +135,6 @@ async function main(): Promise<void> {
     if (!/<h1[\s>]/i.test(homeHtml)) throw new Error('Home page did not render (no <h1>)');
     writeFile(join(DIST, 'index.html'), homeHtml);
     process.stdout.write('  / -> index.html (Home prerendered)\n');
-
-    // Any path the app has no route for renders the NotFound page; the server answers unknown URLs
-    // with this snapshot and a 404 status.
-    await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
-    await page.waitForSelector(`${CONTENT} #not-found`, { timeout: 20000 });
-    await page.evaluate(
-      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
-    );
-    writeFile(join(DIST, '404.html'), await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML));
-    process.stdout.write('  404 -> 404.html\n');
   } finally {
     await browser.close();
     server.close();
