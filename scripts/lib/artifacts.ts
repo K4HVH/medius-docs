@@ -7,7 +7,11 @@ export interface PageRecord {
   title: string;
   description: string;
   markdown: string;
+  lastmod?: string;
 }
+
+// Filled in by the server per request; their prerendered snapshot holds no release or figure.
+export const LIVE_PATHS: ReadonlySet<string> = new Set(['/dashboard/changelog', '/dashboard/stats']);
 
 export interface AgentIndex {
   site: string;
@@ -15,7 +19,7 @@ export interface AgentIndex {
   pages: Array<{ path: string; title: string; section: string; description: string; text: string }>;
 }
 
-const SECTION_ORDER = ['Native API', 'Rust Library', 'Bindings'];
+const SECTION_ORDER = ['Native API', 'Rust Library', 'Bindings', 'Dashboard'];
 const SITE_SUMMARY =
   'Mouse-passthrough firmware for MAKCU-class boxes: an open binary control protocol, byte-exact device behavior, and the medius Rust library.';
 
@@ -67,14 +71,20 @@ export function buildLlmsFullTxt(site: string, pages: PageRecord[]): string {
     '',
     `Source: ${site}`,
   ].join('\n');
-  const body = pages.map((p) => p.markdown.trim()).join('\n\n---\n\n');
+  const body = pages
+    .filter((p) => !LIVE_PATHS.has(p.path))
+    .map((p) => p.markdown.trim())
+    .join('\n\n---\n\n');
   return `${header}\n\n---\n\n${body}\n`;
 }
 
-export function buildSitemap(site: string, pages: PageRecord[]): string {
-  const urls = ['/', ...pages.map((p) => p.path)];
+export function buildSitemap(site: string, pages: PageRecord[], homeLastmod?: string): string {
+  const urls = [{ path: '/', lastmod: homeLastmod }, ...pages];
   const entries = urls
-    .map((u) => `  <url><loc>${xmlEscape(site + u)}</loc></url>`)
+    .map((u) => {
+      const date = u.lastmod ? `<lastmod>${xmlEscape(u.lastmod)}</lastmod>` : '';
+      return `  <url><loc>${xmlEscape(site + u.path)}</loc>${date}</url>`;
+    })
     .join('\n');
   return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -130,7 +140,7 @@ export function buildAgentIndex(site: string, pages: PageRecord[]): AgentIndex {
   return {
     site,
     mcp: `${site}/mcp`,
-    pages: pages.map((p) => ({
+    pages: pages.filter((p) => !LIVE_PATHS.has(p.path)).map((p) => ({
       path: p.path,
       title: p.title,
       section: p.section,
@@ -140,12 +150,12 @@ export function buildAgentIndex(site: string, pages: PageRecord[]): AgentIndex {
   };
 }
 
-export function buildArtifacts(opts: { dist: string; site: string; pages: PageRecord[] }): void {
-  const { dist, site, pages } = opts;
+export function buildArtifacts(opts: { dist: string; site: string; pages: PageRecord[]; homeLastmod?: string }): void {
+  const { dist, site, pages, homeLastmod } = opts;
   mkdirSync(dist, { recursive: true });
   writeFileSync(join(dist, 'llms.txt'), buildLlmsTxt(site, pages));
   writeFileSync(join(dist, 'llms-full.txt'), buildLlmsFullTxt(site, pages));
-  writeFileSync(join(dist, 'sitemap.xml'), buildSitemap(site, pages));
+  writeFileSync(join(dist, 'sitemap.xml'), buildSitemap(site, pages, homeLastmod));
   writeFileSync(join(dist, 'robots.txt'), buildRobotsTxt(site));
   writeFileSync(join(dist, 'agent-index.json'), JSON.stringify(buildAgentIndex(site, pages), null, 2) + '\n');
   const wellKnown = join(dist, '.well-known', 'mcp');
