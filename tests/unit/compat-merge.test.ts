@@ -38,6 +38,19 @@ describe('mergeCompat', () => {
     expect(rows.find((r) => r.name === 'Wooting Two HE')).toMatchObject({ boxes: 7, vidpid: '31e3:1220' });
   });
 
+  it('keeps two stats devices with one product name apart by their ids', () => {
+    const rows = mergeCompat(entries, [top(0x046d, 0xc547, 230, 'USB Receiver'), top(0x046d, 0xc539, 107, 'USB Receiver')]);
+    expect(rows.filter((r) => r.name === 'USB Receiver').map((r) => [r.vidpid, r.boxes])).toEqual([
+      ['046d:c547', 230],
+      ['046d:c539', 107],
+    ]);
+  });
+
+  it('adds only mice and keyboards from the stats, not other devices a box cloned', () => {
+    const rows = mergeCompat(entries, [top(0x2dc8, 0x3106, 23, '8BitDo Ultimate Wireless', 0), top(0x1a86, 0x7523, 5, null, 0)]);
+    expect(rows).toHaveLength(entries.length);
+  });
+
   it('adds a device cloned on two boxes with no report, named by its product or else its ids, in name order', () => {
     const rows = mergeCompat(entries, [top(0x31e3, 0x1322, 2, 'Wooting 60HE+', 1), top(0x3837, 0x100a, 3, null), top(0x3838, 0x100b, 2, 'None')]);
     expect(rows.map((r) => r.name)).toEqual(['3837:100a', '3838:100b', 'Logitech G502 HERO', 'Wooting 60HE+', 'Wooting Two HE']);

@@ -78,6 +78,13 @@ describe('Guide pages', () => {
     expect(row().querySelector('td')!.textContent).toBe('Razer Viper V3 Pro1532:00c1');
   });
 
+  it('names a device the stats know only by its ids once', async () => {
+    stats.value = { devices: { unique: 1, byKind: [], top: [{ vid: 0x3837, pid: 0x100a, kind: 2, product: null, boxes: 3 }] } };
+    const r = mount('/guide/compatibility', Compatibility);
+    await waitFor(() => expect(r.container.textContent).toContain('3837:100a'));
+    expect(r.container.textContent!.match(/3837:100a/g)).toHaveLength(1);
+  });
+
   it('puts every Guide page and every FAQ answer in search', () => {
     const paths = entries.map((e) => e.path);
     expect(paths).toEqual(expect.arrayContaining(PAGES.map(([p]) => p)));

@@ -149,6 +149,9 @@ describe('fillPage on the soft pages', () => {
     expect(html).not.toContain('Seed row');
     expect(html).toMatch(/<tr><td>Wooting 60HE\+<span class="vp">31e3:1322<\/span><\/td><td>Keyboard<\/td>.*<td>45<\/td><\/tr>/);
     expect(await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats: async () => null }, new Map())).toBe(COMPAT);
+    const unnamed = async () => ({ ...(await SOURCES.stats())!, devices: { unique: 1, byKind: [], top: [{ vid: 0x3837, pid: 0x100a, kind: 2, product: null, boxes: 3 }] } });
+    const once = (await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats: unnamed }, new Map()))!;
+    expect(once.match(/3837:100a/g)).toHaveLength(1);
   });
 });
 
