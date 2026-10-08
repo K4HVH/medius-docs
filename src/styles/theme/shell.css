@@ -158,3 +158,73 @@
   }
   .docbar b { color: var(--text); font-weight: 500; }
 }
+
+/* Page header: crumbs to the parent, the page's h1, the lead. */
+.page-header__bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; }
+.crumbs { margin: 0; color: var(--dim); }
+.crumbs a { color: var(--dim); text-decoration: none; transition: color 0.25s; }
+.crumbs a:hover { color: var(--text); text-decoration: none; }
+.page-header h1 {
+  margin: 20px 0 0; font: 700 clamp(44px, 5vw, 72px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text);
+}
+.page-header .lead { margin: 20px 0 0; font-size: 19px; line-height: 1.6; color: var(--text-2); max-width: 54ch; }
+
+/* Sections: a rule, a heading, the content. The gaps are set on what is drawn: 44px from the last ink
+   above the rule, 44px from the rule to the heading's capitals, 24px from its baseline to the content. */
+.doc-h2 {
+  position: relative; margin: 44px 0 0; padding-top: 38px; border-top: 1px solid var(--line);
+  font: 600 26px/1.2 var(--sans); letter-spacing: -0.02em; color: var(--text);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
+}
+.doc-h2::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.8s var(--ease);
+}
+.doc-h2.act::before { transform: scaleX(1); }
+.doc-caption { color: var(--dim); font-weight: 400; text-wrap: balance; }
+:is(.page-header, .doc-section):has(> p:last-child) + .doc-section > .doc-h2 { margin-top: 37px; }
+.doc-h2 + p { margin-top: 13px; }
+.doc-h2 + :is(.table-scroll, table, pre, .callout, .bytes, .rules, .tbl) { margin-top: 18px; }
+
+/* On this page */
+.toc { position: sticky; top: var(--nav-h); align-self: start; padding: 56px 24px 0 0; }
+.toc .label { margin-bottom: 16px; }
+.toc nav { position: relative; border-left: 1px solid var(--line); }
+.toc a { display: block; padding: 5px 0 5px 14px; font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.25s; }
+.toc a:hover, .toc a.act { color: var(--text); text-decoration: none; }
+.toc .ind {
+  position: absolute; left: -1px; width: 1px; background: var(--accent);
+  transition: top 0.45s var(--ease), height 0.45s var(--ease);
+}
+
+/* Index rows: name left, tag and arrow right; a blue rule wipes across on hover. */
+.go {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
+  padding-block: 32px; border-top: 1px solid var(--line); color: var(--text); text-decoration: none;
+}
+.go:last-child { border-bottom: 1px solid var(--line); }
+.go::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease);
+}
+.go:hover, .go:focus-visible { color: var(--text); text-decoration: none; }
+.go:hover::before, .go:focus-visible::before { transform: scaleX(1); }
+.go h3 { margin: 0; font: 600 clamp(40px, 5.2vw, 80px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text); transition: color 0.3s; }
+.go:hover h3 { color: var(--accent); }
+.go-r { display: flex; justify-content: space-between; align-items: center; gap: 24px; color: var(--muted); }
+.go-r .arr { width: 24px; height: 24px; color: var(--muted); transition: transform 0.45s var(--ease), color 0.3s; }
+.go:hover .go-r .arr { color: var(--text); }
+.docs-page .go { padding-block: 22px; }
+.docs-page .go h3 { font-size: 32px; letter-spacing: -0.02em; }
+
+@media (max-width: 1240px) {
+  .toc { display: none; }
+}
+
+@media (max-width: 900px) {
+  .page-header .crumbs { display: none; }
+  .page-header h1 { margin-top: 0; }
+  .doc-caption { flex-basis: 100%; }
+  .go { grid-template-columns: minmax(0, 1fr); row-gap: 12px; padding-block: 26px; }
+  .go-r { font-size: 15px; }
+}
