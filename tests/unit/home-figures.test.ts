@@ -48,6 +48,22 @@ describe('Discord member count', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it('asks again within minutes, not an hour, after a failed fetch', async () => {
+    let t = 0;
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('offline');
+    });
+    const members = createDiscordMembers(fetchImpl as unknown as typeof fetch, () => t);
+    expect(await members()).toBeNull();
+    t += 4 * 60_000;
+    await members();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    t += 2 * 60_000;
+    fetchImpl.mockImplementationOnce(async () => answer(596) as never);
+    expect(await members()).toBe(596);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it('gives up after 10 seconds, and has nothing to give before Discord ever answered', async () => {
     let signal: AbortSignal | undefined;
     const fetchImpl = vi.fn(async (_u: string, init?: RequestInit) => {

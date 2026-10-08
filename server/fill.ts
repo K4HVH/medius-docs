@@ -129,7 +129,7 @@ function compatHtml(html: string, stats: StatsSummary): string {
   const rows = mergeCompat(COMPAT, stats.devices.top)
     .map(
       (r) =>
-        `<tr><td>${esc(r.name)}${r.vidpid ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
+        `<tr><td>${esc(r.name)}${r.vidpid && r.vidpid !== r.name ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
         `<td>${KIND_LABEL[r.kind]}</td><td><span class="verdict verdict--${r.verdict}">${VERDICT_LABEL[r.verdict]}</span></td>` +
         `<td>${esc(r.note ?? '')}</td><td>${r.boxes ?? ''}</td></tr>`,
     )

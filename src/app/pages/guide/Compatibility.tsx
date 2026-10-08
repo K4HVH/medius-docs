@@ -18,7 +18,7 @@ const Compatibility: Component = () => {
 
   return (
     <>
-      <PageHeader lead="Owners' reports from the Discord server, and every device the usage stats saw cloned on two or more boxes." />
+      <PageHeader lead="Owners' reports from the Discord server, and every mouse and keyboard the usage stats saw cloned on two or more boxes" />
 
       <DocSection id="devices" title="Devices" caption="Search by name">
         <label class="compat-search">
@@ -34,7 +34,7 @@ const Compatibility: Component = () => {
                   <tr>
                     <td>
                       {r.name}
-                      <Show when={r.vidpid}>{(vp) => <span class="vp">{vp()}</span>}</Show>
+                      <Show when={r.vidpid !== r.name && r.vidpid}>{(vp) => <span class="vp">{vp()}</span>}</Show>
                     </td>
                     <td>{KIND_LABEL[r.kind]}</td>
                     <td><span class={`verdict verdict--${r.verdict}`}>{VERDICT_LABEL[r.verdict]}</span></td>

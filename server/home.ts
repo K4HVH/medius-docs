@@ -16,22 +16,28 @@ export interface HomeSources {
 }
 
 const HOUR_MS = 60 * 60 * 1000;
+const RETRY_MS = 5 * 60 * 1000;
 const DISCORD_TIMEOUT_MS = 10_000;
 const INVITE = LINKS.discord.slice(LINKS.discord.lastIndexOf('/') + 1);
 
-// The invite's public count: no token, cached an hour, the last good count kept while Discord is down.
+// The invite's public count: no token, cached an hour, the last good count kept while Discord is down and
+// asked again five minutes after a failure.
 export function createDiscordMembers(fetchImpl: typeof fetch = fetch, now: () => number = Date.now) {
   let last: number | null = null;
-  let askedAt = -Infinity;
+  let nextAt = -Infinity;
   return async (): Promise<number | null> => {
-    if (now() - askedAt < HOUR_MS) return last;
-    askedAt = now();
+    if (now() < nextAt) return last;
+    const askedAt = now();
+    nextAt = askedAt + RETRY_MS;
     try {
       const res = await fetchImpl(`https://discord.com/api/v10/invites/${INVITE}?with_counts=true`, {
         signal: AbortSignal.timeout(DISCORD_TIMEOUT_MS),
       });
       const n = res.ok ? ((await res.json()) as { approximate_member_count?: unknown }).approximate_member_count : null;
-      if (typeof n === 'number' && n > 0) last = n;
+      if (typeof n === 'number' && n > 0) {
+        last = n;
+        nextAt = askedAt + HOUR_MS;
+      }
     } catch {
       // keep the last count
     }
