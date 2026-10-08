@@ -33,6 +33,8 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 bun run dev          # Dev server (http://localhost:3000)
 bun run build        # Production build (output: dist/)
 bun run serve        # Preview production build
+bun run build:full   # Build and prerender every page, as the Docker image does
+bun run crawlcheck   # After build:full: status, title, canonical and JSON-LD of every page
 ```
 
 ## Project structure
@@ -43,7 +45,11 @@ src/
   index.tsx                           # App bootstrap
   app/
     App.tsx                           # Router setup (all routes defined here)
-    RouteMeta.tsx                     # Per-route title, meta tags and canonical URL
+    routes.ts                         # Route registry: every page's title, description, sidebar entry
+    site.ts                           # Site URL, outside links (Discord, GitHub, crates.io, PyPI)
+    RouteMeta.tsx                     # Per-route <head> from the registry, with structuredData.ts
+    NavLinks.tsx                      # Sidebar entries as links styled like MidnightUI tabs
+    SiteFooter.tsx                    # Footer on every page
     AiActions.tsx                     # Titlebar "use this page with an AI" menu
     prism.ts                          # Syntax highlighting for code blocks
     searchIndex.ts                    # Curated search index for Ctrl+K search
@@ -167,7 +173,9 @@ src/
 
 ### Routing
 
-`App.tsx` defines every route. `DocsLayout` wraps each docs page with the sidebar, titlebar, and search; the landing page (`Home.tsx`) sits outside it. A catch-all route redirects bad URLs to `/`.
+`App.tsx` maps every path to its component; `src/app/routes.ts` holds each page's metadata, and a test keeps the two path lists equal. `DocsLayout` wraps each page with the sidebar, breadcrumbs, titlebar, search and footer; the landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
+
+The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals.
 
 ### Search
 
@@ -187,7 +195,7 @@ Every Card is wrapped in a `<div id="..." data-search-target>`, so search and de
 
 ### Sidebar
 
-Sidebar tabs are arrays in `DocsLayout.tsx`: `nativeOverviewTabs`, `nativeProtocolTabs`, `nativeCommandTabs`, `nativeAdvancedTabs` (the advanced control commands: Raw, Transfer, Rewrite, Patch), `nativeReferenceTabs`, `libraryGettingStartedTabs`, `libraryApiTabs`, `libraryAdvancedTabs` (the advanced control layer: raw injection, control transfers, rewrite rules, descriptor patches), `libraryFeatureTabs`, `libraryGuidesTabs` (the guides: calls and input, connection, testing), `libraryReferenceTabs`, `aiAccessTabs` (the AI & LLMs page, at the foot of each code section), `dashboardTabs` (Set up, Device, Control, Advanced control, Update, Advanced, Changelog, Stats), `sectionTabs` (the four top-level sections), `bindingsSwitcherTabs` (Overview, C / C++, Python), and the per-language groups `makeBindingGroups(root)` builds (Getting Started: Install, First program; Usage: Calls & errors, Streams; Reference: API index, Types & errors; Build: Build & features). Add new pages to the right array. Nav icons come from `solid-icons/bs`.
+The sidebar is built from `src/app/routes.ts`: each entry's `section`, `group` (the divider label) and `nav` (the label, at most 18 characters) place it, in registry order. `NavLinks.tsx` renders the entries as router links with MidnightUI's tab classes, so crawlers can follow them. The AI & LLMs page sits at the foot of each code section; the bindings switcher (Overview, C / C++, Python) and the four section links are built in `DocsLayout.tsx`. Nav icons come from `solid-icons/bs`, named in the registry and mapped in `DocsLayout.tsx`.
 
 ## Consistency rules (read before editing)
 
@@ -285,7 +293,7 @@ existing internal `<A>` alone; never wrap an external `<a>` around or inside it.
 
 ## Favicon and social embeds
 
-The favicon lives in `public/favicon.svg` (served at `/favicon.svg`). A PNG copy at `public/favicon.png` is the Open Graph / Twitter Card preview. Embed metadata is in `src/index.html`; the preview-image and canonical URLs are placeholders (`https://medius.example/...`); set the real domain before deploying.
+The favicon lives in `public/favicon.svg` (served at `/favicon.svg`). A PNG copy at `public/favicon.png` is the Open Graph / Twitter Card preview. `src/index.html` carries Home's head; `RouteMeta.tsx` rewrites title, description, canonical, Open Graph, Twitter and JSON-LD per route from the registry.
 
 ```bash
 magick -background none -density 2048 public/favicon.svg -resize 1024x1024 public/favicon.png
@@ -300,7 +308,7 @@ magick -background none -density 2048 public/favicon.svg -resize 1024x1024 publi
 
 ## Deployment
 
-CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`.
+CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`. Before the image build, CI runs `scripts/lastmod.mjs` with the full git history, writing each page's last commit date to `src/generated/lastmod.json` for the sitemap and `dateModified`; a local build has no dates.
 
 ## Usage stats
 
@@ -320,7 +328,7 @@ Unit tests never count: the provider builds no sink under vitest. A dev server w
 
 1. Create the component under `src/app/pages/`. Wrap every Card in `<div id="..." data-search-target>`.
 2. Add a route in `App.tsx`.
-3. Add a tab entry in the right array in `DocsLayout.tsx` (with a `solid-icons/bs` icon).
+3. Add its entry to `src/app/routes.ts` in sidebar order: section, group, nav label, icon, title, and a description of 50 to 155 characters that no other page uses.
 4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).
 5. Follow the command/method template and the consistency rules above. Link to canonical tables; never duplicate them.
 

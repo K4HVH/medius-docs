@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "typecheck": "./scripts/typecheck.sh",
-    "conformance": "tsx scripts/conformance.ts"
+    "conformance": "tsx scripts/conformance.ts",
+    "crawlcheck": "tsx scripts/crawlcheck.ts"
   },
   "license": "MIT",
   "devDependencies": {
