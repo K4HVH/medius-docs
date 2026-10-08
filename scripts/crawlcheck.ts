@@ -42,7 +42,8 @@ async function checkPage(path: string, titles: Map<string, string>): Promise<voi
   titles.set(title, path);
   const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
   const want = SITE + (path === '/' ? '/' : path);
-  if (canonical !== want) fail(`${path}: canonical ${canonical}, want ${want}`);
+  if (route.index && canonical !== want) fail(`${path}: canonical ${canonical}, want ${want}`);
+  if (!route.index && !/<meta name="robots" content="noindex">/.test(html)) fail(`${path}: noindex page without robots noindex`);
   const ld = html.match(/<script id="ld-json" type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
   if (!ld) fail(`${path}: no JSON-LD`);
   else {
@@ -64,7 +65,7 @@ async function main(): Promise<void> {
     const titles = new Map<string, string>();
     for (const path of routes) await checkPage(path, titles);
 
-    for (const [from, to] of [['/native/', '/native'], ['/Native', '/native'], ['/native.html', '/native'], ['/index.html', '/'], ['/Dashboard/Setup/', '/dashboard/setup']]) {
+    for (const [from, to] of [['/native/', '/native'], ['/Native', '/native'], ['/native.html', '/native'], ['/NATIVE.HTML', '/native'], ['/index.html', '/'], ['/Dashboard/Setup/', '/dashboard/setup']]) {
       const res = await get(from);
       if (res.status !== 301 || res.headers.get('location') !== to) fail(`${from}: ${res.status} -> ${res.headers.get('location')}, want 301 -> ${to}`);
     }
@@ -75,11 +76,22 @@ async function main(): Promise<void> {
     if (!junkHtml.includes(`<title>${documentTitle(NOT_FOUND)}</title>`)) fail('404 page: wrong title');
     if (!/<meta name="robots" content="noindex">/.test(junkHtml)) fail('404 page: not noindex');
 
+    for (const odd of ['/404', '//native', '/%6Eative', '/native/commands']) {
+      const res = await get(odd);
+      if (res.status !== 404) fail(`${odd}: status ${res.status}, want 404`);
+    }
+
     const md = await get('/native.md');
     if (md.status !== 200 || !md.headers.get('content-type')?.startsWith('text/markdown')) fail('/native.md: not served as Markdown');
+    if (!md.headers.get('link')?.includes(`<${SITE}/native>; rel="canonical"`)) fail('/native.md: no canonical Link header');
+    if ((await get('/llms.txt')).headers.get('x-robots-tag') !== 'noindex') fail('/llms.txt: not noindex');
+    const home = await fetch(BASE + '/', { method: 'HEAD' });
+    if (!home.headers.get('content-type')?.startsWith('text/html')) fail('HEAD /: no text/html content-type');
 
     const sitemap = await (await get('/sitemap.xml')).text();
     for (const p of ['/dashboard/setup', '/dashboard/changelog']) if (!sitemap.includes(`<loc>${SITE}${p}</loc>`)) fail(`sitemap: no ${p}`);
+    for (const p of routes.filter((r) => !routeFor(r)!.index)) if (sitemap.includes(`<loc>${SITE}${p}</loc>`)) fail(`sitemap: lists noindex ${p}`);
+    for (const p of ['/dashboard/changelog', '/dashboard/stats']) if (sitemap.includes(`<loc>${SITE}${p}</loc><lastmod>`)) fail(`sitemap: dates live page ${p}`);
 
     const changelog = await (await get('/dashboard/changelog')).text();
     if (process.env.GITHUB_TOKEN) {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildJsonLd } from '../../src/app/structuredData';
-import { routeFor, NOT_FOUND, breadcrumbTrail, type RouteInfo } from '../../src/app/routes';
+import { routeFor, NOT_FOUND, breadcrumbTrail, documentTitle, type RouteInfo } from '../../src/app/routes';
 import { SITE, LINKS } from '../../src/app/site';
 
 type Node = Record<string, unknown> & { '@type': string | string[] };
@@ -9,30 +9,28 @@ const node = (g: Node[], type: string) => g.find((n) => n['@type'] === type);
 const at = (p: string) => routeFor(p)!;
 
 describe('buildJsonLd', () => {
-  it('describes the site and the firmware on every page', () => {
+  it('describes the site and Medius on every page, without a software-app item Google would want rated', () => {
     for (const r of [at('/'), at('/native/commands/move'), at('/dashboard/setup'), NOT_FOUND]) {
       const g = graph(r);
       expect(node(g, 'WebSite')?.['@id']).toBe(`${SITE}/#website`);
-      const app = node(g, 'SoftwareApplication')!;
-      expect(app.applicationCategory).toBe('DriverApplication');
-      expect((app.offers as Record<string, string>).price).toBe('0');
-      expect(app.sameAs).toEqual(Object.values(LINKS));
-      expect(app).not.toHaveProperty('aggregateRating');
-      expect(app).not.toHaveProperty('softwareVersion');
+      const medius = g.find((n) => n['@id'] === `${SITE}/#medius`)!;
+      expect(medius.name).toBe('Medius');
+      expect(medius.sameAs).toEqual(Object.values(LINKS));
+      for (const n of g) expect(['SoftwareApplication', 'WebApplication', 'MobileApplication']).not.toContain(n['@type']);
     }
   });
 
-  it('makes a docs page a TechArticle named after its title, dated only when a date is known', () => {
+  it('makes a docs page a TechArticle named by its full title, dated only when a date is known', () => {
     const undated = node(graph(at('/library/inject')), 'TechArticle')!;
-    expect(undated.headline).toBe('Inject');
+    expect(undated.headline).toBe(documentTitle(at('/library/inject')));
     expect(undated.url).toBe(`${SITE}/library/inject`);
     expect(undated).not.toHaveProperty('dateModified');
     expect(node(graph(at('/library/inject'), '2026-10-01'), 'TechArticle')!.dateModified).toBe('2026-10-01');
   });
 
-  it('makes a dashboard page a WebApplication that names its browser requirement', () => {
-    const app = node(graph(at('/dashboard/setup')), 'WebApplication')!;
-    expect(String(app.browserRequirements)).toMatch(/Chrome or Edge/);
+  it('makes a dashboard page a WebPage about Medius', () => {
+    const page = node(graph(at('/dashboard/setup')), 'WebPage')!;
+    expect(page.about).toEqual({ '@id': `${SITE}/#medius` });
     expect(node(graph(at('/dashboard/setup')), 'TechArticle')).toBeUndefined();
   });
 
@@ -43,6 +41,7 @@ describe('buildJsonLd', () => {
     expect(items.map((i) => i.item)).toEqual(breadcrumbTrail(r).map((c) => SITE + (c.href === '/' ? '/' : c.href)));
     expect(items.map((i) => i.position)).toEqual([1, 2, 3, 4]);
     expect(node(graph(at('/')), 'BreadcrumbList')).toBeUndefined();
+    expect(node(graph(NOT_FOUND), 'BreadcrumbList')).toBeUndefined();
   });
 
   it('round-trips through JSON', () => {

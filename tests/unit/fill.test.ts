@@ -30,12 +30,12 @@ const SOURCES: FillSources = {
   }),
 };
 
-const CHANGELOG = '<main><div data-fill="changelog"><p>Loading...</p></div></main>';
+const CHANGELOG = '<html><body><main><div data-fill="changelog"><p>Loading...</p></div></main></body></html>';
 const STATS = '<main><div data-fill="stats"><p>Loading...</p></div></main>';
 
 describe('fillPage', () => {
   it('puts every release into the changelog, notes first and commits folded', async () => {
-    const html = await fillPage('/dashboard/changelog', CHANGELOG, SOURCES);
+    const html = (await fillPage('/dashboard/changelog', CHANGELOG, SOURCES))!;
     expect(html).not.toContain('Loading...');
     expect(html).toContain('id="v3.4.5"');
     expect(html).toContain('<details><summary>Show commits</summary>');
@@ -45,35 +45,59 @@ describe('fillPage', () => {
 
   it('renders the bold and code the notes are written in', async () => {
     const md: FillSources = { ...SOURCES, releases: async () => [release('v3.4.4', `## Notes\nthere is **almost **no difference, protocol \`8\`\n\n${COMMITS_MARKER}\n- c (1)`)] };
-    const html = await fillPage('/dashboard/changelog', CHANGELOG, md);
+    const html = (await fillPage('/dashboard/changelog', CHANGELOG, md))!;
     expect(html).toContain('<strong>almost </strong>');
     expect(html).toContain('<code>8</code>');
   });
 
   it('escapes what the notes say', async () => {
-    const html = await fillPage('/dashboard/changelog', CHANGELOG, SOURCES);
+    const html = (await fillPage('/dashboard/changelog', CHANGELOG, SOURCES))!;
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
   });
 
   it('shows an older release its commit list directly, with nothing to unfold', async () => {
-    const html = await fillPage('/dashboard/changelog', CHANGELOG, SOURCES);
+    const html = (await fillPage('/dashboard/changelog', CHANGELOG, SOURCES))!;
     const old = html.slice(html.indexOf('id="v2.2.0"'));
     expect(old).toContain('fw: older commit list (1234567)');
     expect(old).not.toContain('<details>');
   });
 
   it('puts the totals into the stats page', async () => {
-    const html = await fillPage('/dashboard/stats', STATS, SOURCES);
+    const html = (await fillPage('/dashboard/stats', STATS, SOURCES))!;
     expect(html).toMatch(/87<\/\w+>\s*<\w+[^>]*>Unique boxes/);
     expect(html).toContain('Countries');
     expect(html).not.toContain('Loading...');
   });
 
-  it('leaves the page alone when its source is down, and any other page always', async () => {
+  it('says so when a source has never answered, and leaves any other page alone', async () => {
     const down: FillSources = { releases: async () => null, stats: async () => null };
-    expect(await fillPage('/dashboard/changelog', CHANGELOG, down)).toBe(CHANGELOG);
+    expect(await fillPage('/dashboard/changelog', CHANGELOG, down, new Map())).toBeNull();
     expect(await fillPage('/native', CHANGELOG, SOURCES)).toBe(CHANGELOG);
+  });
+
+  it('treats a source that throws like one that is down', async () => {
+    const broken: FillSources = {
+      releases: async () => { throw new Error('fetch failed'); },
+      stats: async () => { throw new Error('db gone'); },
+    };
+    expect(await fillPage('/dashboard/changelog', CHANGELOG, broken, new Map())).toBeNull();
+    expect(await fillPage('/dashboard/stats', STATS, broken, new Map())).toBeNull();
+    expect(await fillMarkdown('/dashboard/changelog', broken, new Map())).toBeNull();
+  });
+
+  it('embeds the releases for the page to start from, so it does not flash back to Loading', async () => {
+    const html = (await fillPage('/dashboard/changelog', CHANGELOG, SOURCES, new Map()))!;
+    const json = html.match(/<script id="releases-data" type="application\/json">([\s\S]*?)<\/script>/)![1];
+    expect(JSON.parse(json).map((r: { tag: string }) => r.tag)).toEqual(['v3.4.5', 'v2.2.0']);
+    expect(json).not.toContain('<script>');
+  });
+
+  it('serves the last good copy while a source is down', async () => {
+    const memory = new Map<string, string>();
+    const good = await fillPage('/dashboard/changelog', CHANGELOG, SOURCES, memory);
+    const down: FillSources = { releases: async () => null, stats: async () => null };
+    expect(await fillPage('/dashboard/changelog', CHANGELOG, down, memory)).toBe(good);
   });
 });
 
@@ -87,5 +111,11 @@ describe('fillMarkdown', () => {
 
   it('has nothing for a page it does not fill', async () => {
     expect(await fillMarkdown('/native', SOURCES)).toBeNull();
+  });
+
+  it('serves the last good Markdown while a source is down', async () => {
+    const memory = new Map<string, string>();
+    const good = await fillMarkdown('/dashboard/changelog', SOURCES, memory);
+    expect(await fillMarkdown('/dashboard/changelog', { releases: async () => null, stats: async () => null }, memory)).toBe(good);
   });
 });

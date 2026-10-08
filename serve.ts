@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
 import { handleStatsApi } from "./server/stats";
-import { handleAgentDocs, DOC_CACHE } from "./server/agent";
+import { handleAgentDocs, DOC_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
 import { handleMcp } from "./server/mcp";
 import { planRedirect } from "./server/routing";
 
@@ -25,6 +25,9 @@ const ARTIFACTS = /^\/(llms\.txt|llms-full\.txt|sitemap\.xml|robots\.txt|agent-i
 
 function cacheHeaders(pathname: string): Record<string, string> | undefined {
   if (pathname.startsWith("/assets/")) return { "cache-control": ASSET_CACHE };
+  if (pathname === "/index.html")
+    return { "content-type": "text/html; charset=utf-8", "cache-control": DOC_CACHE, link: LLMS_LINK };
+  if (NOINDEX_ARTIFACTS.test(pathname)) return { "cache-control": DOC_CACHE, "x-robots-tag": "noindex" };
   if (ARTIFACTS.test(pathname) || pathname.startsWith("/.well-known/"))
     return { "cache-control": DOC_CACHE };
   return undefined;
@@ -46,12 +49,14 @@ Bun.serve({
     const location = planRedirect(url.pathname, url.search, ROUTES);
     if (location) return new Response(null, { status: 301, headers: { location } });
 
-    const agentDocs = await handleAgentDocs(req);
+    const agentDocs = await handleAgentDocs(req, ROUTES.size ? ROUTES : undefined);
     if (agentDocs) return agentDocs;
 
-    // Pages are served only above, as prerendered routes; a stray .html (404.html itself) is not a page.
+    // Pages come only from above. Here: Home, and files with an extension other than .html (assets,
+    // favicons, the agent files), never a directory or a stray .html like 404.html itself.
     const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
-    if (pathname === "/index.html" || !pathname.endsWith(".html")) {
+    const last = pathname.slice(pathname.lastIndexOf("/") + 1);
+    if (pathname === "/index.html" || (/\.[A-Za-z0-9]+$/.test(last) && !last.endsWith(".html"))) {
       const file = Bun.file(join(PUBLIC_DIR, pathname));
       if (await file.exists()) return new Response(file, { headers: cacheHeaders(pathname) });
     }
@@ -59,8 +64,9 @@ Bun.serve({
     if (await Bun.file(join(PUBLIC_DIR, "404.html")).exists()) return notFound();
     return new Response("Not Found", { status: 404 });
   },
-  error() {
-    return new Response("Not Found", { status: 404 });
+  error(e) {
+    console.error(e);
+    return new Response("Server error", { status: 500 });
   },
 });
 

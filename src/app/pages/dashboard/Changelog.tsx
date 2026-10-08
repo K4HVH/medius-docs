@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createResource } from 'solid-js';
+import { For, Match, Show, Switch, createEffect, createResource } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, fetchReleases } from '../../../dashboard/firmware';
@@ -68,13 +68,45 @@ const Release = (props: { release: FirmwareRelease }) => {
   );
 };
 
+// The releases server/fill.ts embedded in the page, so the first render already has them.
+const embedded = (): FirmwareRelease[] | undefined => {
+  try {
+    const el = document.getElementById('releases-data');
+    return el ? (JSON.parse(el.textContent ?? '') as FirmwareRelease[]) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const Changelog = () => {
-  const [releases] = createResource(fetchReleases);
+  const [releases] = createResource(fetchReleases, { initialValue: embedded() });
+  // A link to one release (the Discord post's Commits link) lands on it with its commits open.
+  let landed = false;
+  createEffect(() => {
+    if (landed || !releases()?.length) return;
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id) return;
+    landed = true;
+    // The list attaches a frame or two after the releases arrive.
+    const land = (frames: number) =>
+      requestAnimationFrame(() => {
+        const section = document.getElementById(id);
+        if (!section) return frames > 0 && land(frames - 1);
+        section.querySelector('details')?.setAttribute('open', '');
+        section.scrollIntoView({ block: 'start' });
+      });
+    land(30);
+  });
   return (
     <div id="changelog" data-search-target>
       <Card>
         <CardHeader title="Changelog" subtitle="Firmware releases" />
         <Switch>
+          <Match when={releases()?.length}>
+            <div class="releases">
+              <For each={releases()}>{(r) => <Release release={r} />}</For>
+            </div>
+          </Match>
           <Match when={releases.loading}>
             <div data-fill="changelog"><p>Loading...</p></div>
           </Match>
@@ -83,11 +115,6 @@ const Changelog = () => {
           </Match>
           <Match when={releases()?.length === 0}>
             <p>No releases yet.</p>
-          </Match>
-          <Match when={releases()}>
-            <div class="releases">
-              <For each={releases()}>{(r) => <Release release={r} />}</For>
-            </div>
           </Match>
         </Switch>
       </Card>

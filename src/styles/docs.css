@@ -530,11 +530,12 @@ a.tabs__tab:active {
   color: var(--g-text-primary);
 }
 
-.tabs--disabled a.tabs__tab:hover {
+/* An anchor is never :disabled, so MidnightUI's subtle hover would still light a locked link. */
+.tabs--subtle.tabs--disabled a.tabs__tab:hover:not(:disabled) {
   color: var(--g-text-muted);
 }
 
-.tabs--disabled a.tabs__tab:hover::before {
+.tabs--subtle.tabs--disabled a.tabs__tab:hover:not(:disabled)::before {
   background: transparent;
 }
 
@@ -581,6 +582,10 @@ a.tabs__tab:active {
 }
 
 /* Changelog releases: Changelog.tsx renders them, server/fill.ts writes the same markup for crawlers. */
+.release {
+  scroll-margin-top: 80px;
+}
+
 .releases {
   display: flex;
   flex-direction: column;

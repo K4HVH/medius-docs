@@ -60,10 +60,11 @@ export default function RouteMeta() {
     upsertMeta('name', 'description', route.description);
     setLink('canonical', url);
     setRobots(route.index ? null : 'noindex');
-    upsertMeta('property', 'og:type', route.kind === 'article' ? 'article' : 'website');
+    upsertMeta('property', 'og:type', route.kind === 'article' && route.index ? 'article' : 'website');
     upsertMeta('property', 'og:title', title);
     upsertMeta('property', 'og:description', route.description);
     if (url) upsertMeta('property', 'og:url', url);
+    else document.head.querySelector('meta[property="og:url"]')?.remove();
     upsertMeta('name', 'twitter:title', title);
     upsertMeta('name', 'twitter:description', route.description);
     setJsonLd(buildJsonLd(route, LASTMOD[route.path]));

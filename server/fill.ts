@@ -77,25 +77,50 @@ function statsHtml(s: StatsSummary): string {
 const replaceFill = (html: string, key: string, inner: string) =>
   html.replace(new RegExp(`<div data-fill="${key}">[\\s\\S]*?</div>`), () => `<div data-fill="${key}">${inner}</div>`);
 
-export async function fillPage(path: string, html: string, sources: FillSources = LIVE): Promise<string> {
-  if (path === '/dashboard/changelog') {
-    const releases = await sources.releases();
-    return releases
-      ? replaceFill(html, 'changelog', `<div class="releases">${releases.map(releaseHtml).join('')}</div>`)
-      : html;
+// JSON inside <script>: "<" escaped so no value can close the tag.
+const embed = (id: string, data: unknown) =>
+  `<script id="${id}" type="application/json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+
+async function read<T>(source: () => Promise<T | null>): Promise<T | null> {
+  try {
+    return await source();
+  } catch {
+    return null;
   }
-  if (path === '/dashboard/stats') {
-    const stats = await sources.stats();
-    return stats ? replaceFill(html, 'stats', statsHtml(stats)) : html;
-  }
-  return html;
 }
 
-export async function fillMarkdown(path: string, sources: FillSources = LIVE): Promise<string | null> {
-  const source = `<!-- Source: ${SITE}${path} -->`;
+// The last page each source filled, served while that source is down.
+const LAST_GOOD = new Map<string, string>();
+
+async function fresh(path: string, sources: FillSources, html: string): Promise<string | null> {
   if (path === '/dashboard/changelog') {
-    const releases = await sources.releases();
+    const releases = await read(sources.releases);
     if (!releases) return null;
+    // The data goes outside #root, which the client clears before it renders.
+    const list = `<div class="releases">${releases.map(releaseHtml).join('')}</div>`;
+    return replaceFill(html, 'changelog', list).replace('</body>', () => `${embed('releases-data', releases)}</body>`);
+  }
+  const stats = await read(sources.stats);
+  return stats ? replaceFill(html, 'stats', statsHtml(stats)) : null;
+}
+
+// The page with its live block filled, the last good copy while the source is down, or null when the
+// source has never answered. Any other page comes back unchanged.
+export async function fillPage(
+  path: string,
+  html: string,
+  sources: FillSources = LIVE,
+  memory: Map<string, string> = LAST_GOOD,
+): Promise<string | null> {
+  if (path !== '/dashboard/changelog' && path !== '/dashboard/stats') return html;
+  const filled = await fresh(path, sources, html);
+  if (filled) memory.set(path, filled);
+  return filled ?? memory.get(path) ?? null;
+}
+
+function freshMarkdown(path: string, releases: FirmwareRelease[] | null, s: StatsSummary | null): string | null {
+  const source = `<!-- Source: ${SITE}${path} -->`;
+  if (releases) {
     const parts = releases.map((r) => {
       const { notes, commits } = splitRelease(r.notes);
       const body = [notes.replace(/^## /gm, '### '), commits ? `### Commits\n\n${commits}` : ''].filter(Boolean);
@@ -103,9 +128,7 @@ export async function fillMarkdown(path: string, sources: FillSources = LIVE): P
     });
     return [`${source}\n# Medius firmware changelog`, ...parts].join('\n\n') + '\n';
   }
-  if (path === '/dashboard/stats') {
-    const s = await sources.stats();
-    if (!s) return null;
+  if (s) {
     const countries = s.countries.filter((c) => c.key !== 'unknown').length;
     const rows = [
       ['Unique boxes', s.boxes.total],
@@ -117,4 +140,18 @@ export async function fillMarkdown(path: string, sources: FillSources = LIVE): P
     return [`${source}\n# Medius usage stats`, ['| Figure | Count |', '|---|---|', ...rows].join('\n')].join('\n\n') + '\n';
   }
   return null;
+}
+
+export async function fillMarkdown(
+  path: string,
+  sources: FillSources = LIVE,
+  memory: Map<string, string> = LAST_GOOD,
+): Promise<string | null> {
+  const key = path + '.md';
+  let md: string | null = null;
+  if (path === '/dashboard/changelog') md = freshMarkdown(path, await read(sources.releases), null);
+  else if (path === '/dashboard/stats') md = freshMarkdown(path, null, await read(sources.stats));
+  else return null;
+  if (md) memory.set(key, md);
+  return md ?? memory.get(key) ?? null;
 }

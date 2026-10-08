@@ -45,12 +45,15 @@ export const ConnectView = (props: ConnectViewProps) => {
     </Button>
   );
 
-  // Callers mount this inside their own Card; the page-level copies in Device, Advanced and Setup
-  // carry the card chrome.
-  if (!props.supported)
-    return <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>;
-  if (!props.secure)
-    return <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>;
+  // Callers mount this inside a Card. Without a usable port the wiring stays and the reason stands
+  // where Connect would.
+  if (!props.supported || !props.secure)
+    return (
+      <>
+        <WiringPorts />
+        <div class="callout callout--warning" role="alert">{props.supported ? BAD_CONTEXT : BAD_BROWSER}</div>
+      </>
+    );
 
   return (
     <div aria-live="polite">

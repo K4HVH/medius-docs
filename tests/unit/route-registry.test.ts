@@ -53,6 +53,11 @@ describe('route registry', () => {
     }
   });
 
+  it('keeps the two tool pages nobody searches for out of the index, and every other page in', () => {
+    const quiet = ROUTES.filter((r) => !r.index).map((r) => r.path).sort();
+    expect(quiet).toEqual(['/dashboard/advanced-control', '/dashboard/control']);
+  });
+
   it('keeps sidebar labels within the 200 px pane', () => {
     for (const r of ROUTES) expect(r.nav.length, r.path).toBeLessThanOrEqual(18);
   });

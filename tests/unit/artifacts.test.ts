@@ -117,6 +117,10 @@ describe('buildSitemap', () => {
     expect(out).toContain('<loc>https://s/library/clip</loc>');
     expect(out).not.toContain('.md</loc>');
   });
+  it('leaves out a page marked noindex', () => {
+    const quiet = buildSitemap(SITE, [...PAGES, { ...PAGES[0], path: '/dashboard/control', index: false }]);
+    expect(quiet).not.toContain('/dashboard/control');
+  });
   it('lists the dashboard pages', () => {
     expect(out).toContain('<loc>https://s/dashboard/setup</loc>');
   });
@@ -147,8 +151,10 @@ describe('buildAgentIndex', () => {
   it('carries one searchable record per page with the source comment stripped from text', () => {
     expect(out.site).toBe(SITE);
     expect(out.mcp).toBe('https://s/mcp');
-    expect(out.pages).toHaveLength(4);
-    expect(out.pages.map((p) => p.path)).not.toContain('/dashboard/changelog');
+    expect(out.pages).toHaveLength(5);
+    const live = out.pages.find((p) => p.path === '/dashboard/changelog')!;
+    expect(live.text).toBe('Firmware releases');
+    expect(live.text).not.toContain('Could not load');
     const clip = out.pages.find((p) => p.path === '/library/clip')!;
     expect(clip.title).toBe('Clip');
     expect(clip.section).toBe('Rust Library');

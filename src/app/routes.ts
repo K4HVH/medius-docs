@@ -39,7 +39,7 @@ export const SECTION_ROOT: Partial<Record<Section, string>> = {
 export const LANG_LABEL: Record<Lang, string> = { c: 'C / C++', python: 'Python' };
 export const LANG_ROOT: Record<Lang, string> = { c: '/bindings/c', python: '/bindings/python' };
 
-type Entry = Omit<RouteInfo, 'kind' | 'index'> & { kind?: Kind };
+type Entry = Omit<RouteInfo, 'kind' | 'index'> & { kind?: Kind; index?: boolean };
 
 const native = (path: string, group: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
   ({ path, section: 'native', group, nav, icon, title, description, fullTitle });
@@ -47,8 +47,8 @@ const library = (path: string, group: string, nav: string, icon: string, title: 
   ({ path, section: 'library', group, nav, icon, title, description, fullTitle });
 const binding = (lang: Lang, sub: string, group: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
   ({ path: LANG_ROOT[lang] + sub, section: 'bindings', lang, group, nav, icon, title, description, fullTitle });
-const dashboard = (path: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
-  ({ path, section: 'dashboard', group: 'Dashboard', nav, icon, title, description, fullTitle, kind: 'app' });
+const dashboard = (path: string, nav: string, icon: string, title: string, description: string, fullTitle?: string, index = true): Entry =>
+  ({ path, section: 'dashboard', group: 'Dashboard', nav, icon, title, description, fullTitle, kind: 'app', index });
 
 const ENTRIES: Entry[] = [
   {
@@ -223,9 +223,11 @@ const ENTRIES: Entry[] = [
     'Connect a MAKCU box running Medius from Chrome or Edge, no driver needed, and see its firmware, health, cloned device and log.',
     'MAKCU box dashboard in the browser · Medius'),
   dashboard('/dashboard/control', 'Control', 'BsSliders', 'Control',
-    'Test a connected Medius box from the browser: inject input, lock physical input, catch events, play clips, drive the LED.'),
+    'Test a connected Medius box from the browser: inject input, lock physical input, catch events, play clips, drive the LED.',
+    undefined, false),
   dashboard('/dashboard/advanced-control', 'Advanced control', 'BsCodeSlash', 'Advanced control',
-    'Rewrite rules, descriptor patches, raw reports and control transfers for a connected Medius box, from the browser.'),
+    'Rewrite rules, descriptor patches, raw reports and control transfers for a connected Medius box, from the browser.',
+    undefined, false),
   dashboard('/dashboard/update', 'Update', 'BsArrowRepeat', 'Update',
     'Update both chips of a MAKCU box running Medius to the latest firmware in one click from Chrome or Edge, over the control port.',
     'Update a MAKCU box to the latest Medius'),
@@ -239,7 +241,7 @@ const ENTRIES: Entry[] = [
     'Public usage counts for Medius: boxes, cloned devices, firmware versions, flashes, countries and the systems the dashboard runs on.'),
 ];
 
-export const ROUTES: readonly RouteInfo[] = ENTRIES.map((e) => ({ ...e, kind: e.kind ?? 'article', index: true }));
+export const ROUTES: readonly RouteInfo[] = ENTRIES.map((e) => ({ ...e, kind: e.kind ?? 'article', index: e.index ?? true }));
 
 export const NOT_FOUND: RouteInfo = {
   path: '/404',

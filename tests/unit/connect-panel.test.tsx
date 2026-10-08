@@ -121,6 +121,8 @@ describe('ConnectPanel', () => {
     const { queryByRole, container } = render(() => <ConnectPanel />);
     expect(container.textContent).toMatch(/Chrome/);
     expect(queryByRole('button')).toBeNull();
+    // The wiring a supported browser shows stays, so the page still says how the box is cabled.
+    expect(container.textContent).toMatch(/USB1/);
   });
 
   it('an insecure page says what to open instead, with nothing to press', () => {
@@ -128,6 +130,7 @@ describe('ConnectPanel', () => {
     const { queryByRole, container } = render(() => <ConnectPanel />);
     expect(container.textContent).toMatch(/isn't secure/i);
     expect(queryByRole('button')).toBeNull();
+    expect(container.textContent).toMatch(/USB1/);
   });
 
   it('an unrecognised failure still shows its own message and a retry', () => {
