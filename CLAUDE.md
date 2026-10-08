@@ -24,7 +24,7 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 | Vite | Build tool (root set to `src/`) |
 | Bun | Runtime and package manager |
 | TypeScript | Language |
-| MidnightUI | Component library (Card, Tabs, Pane, Titlebar, CommandPalette, etc.) |
+| MidnightUI | Component library (the CommandPalette, and the dashboard's panels and controls), restyled by the site theme |
 | solid-icons (`solid-icons/bs`) | Bootstrap icons |
 
 ## Commands
@@ -48,14 +48,18 @@ src/
     routes.ts                         # Route registry: every page's title, description, sidebar entry
     site.ts                           # Site URL, outside links (Discord, GitHub, crates.io, PyPI)
     RouteMeta.tsx                     # Per-route <head> from the registry, with structuredData.ts
-    NavLinks.tsx                      # Sidebar entries as links styled like MidnightUI tabs
-    SiteFooter.tsx                    # Footer on every page
-    AiActions.tsx                     # Titlebar "use this page with an AI" menu
+    AiActions.tsx                     # The "use this page with an AI" menu beside the crumbs
+    shell/                            # The site shell: SiteNav, SiteFooter, DocsSidebar, PageHeader, DocSection,
+                                      # OnThisPage, IndexRow, ByteStrip, Arrow, motion.ts (scroll reveals)
+    data/                             # FAQ, compatibility reports and their merge with the stats, the landing's
+                                      # figures, and the bench captures the landing draws (never edited by hand)
     prism.ts                          # Syntax highlighting for code blocks
     searchIndex.ts                    # Curated search index for Ctrl+K search
     pages/
-      Home.tsx                        # Landing page
-      DocsLayout.tsx                  # Docs layout (sidebar, titlebar, search)
+      Home.tsx                        # Landing page: hero and report feed, vitals, descriptor panel, index
+      home/                           # The landing's blocks
+      guide/                          # The Guide: install, update, compatibility, FAQ, troubleshooting, device fixes
+      DocsLayout.tsx                  # Every other page: nav, sidebar, the page in main, on-this-page rail, search
       AiAccess.tsx                    # Markdown twins, llms.txt, the MCP server
       native/
         Introduction.tsx              # Native API overview
@@ -165,7 +169,8 @@ src/
   utils/                              # shared helpers (DO NOT MODIFY)
   styles/
     global.css                        # MidnightUI theme tokens (DO NOT MODIFY)
-    docs.css                          # Documentation-specific styles (editable)
+    theme/                            # The site theme over MidnightUI: tokens, base, shell, content, components,
+                                      # landing, motion (editable)
     components/                       # MidnightUI component styles (DO NOT MODIFY)
 ```
 
@@ -173,9 +178,9 @@ src/
 
 ### Routing
 
-`App.tsx` maps every path to its component; `src/app/routes.ts` holds each page's metadata, and a test keeps the two path lists equal. `DocsLayout` wraps each page with the sidebar, breadcrumbs, titlebar, search and footer; the landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
+`App.tsx` maps every path to its component; `src/app/routes.ts` holds each page's metadata, and a test keeps the two path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer; the page renders the `PageHeader` (crumbs, h1, lead). The landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
 
-The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals.
+The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals. The landing's vitals and the compatibility table are filled the same way, but those pages (`SOFT_FILL_PATHS`) answer 200 as prerendered while a source is down, never 503.
 
 ### Search
 
@@ -183,19 +188,17 @@ Ctrl+K search is MidnightUI's `CommandPalette` over the curated list in `src/app
 
 ### Scroll targets
 
-Every Card is wrapped in a `<div id="..." data-search-target>`, so search and deep links scroll to and highlight it (`scroll-margin-top` clears the sticky titlebar).
+Every section is a `DocSection` with an id. It renders `section.doc-section` with `data-search-target`, so search and deep links scroll to it and highlight it (`scroll-padding-top` on `html` clears the fixed nav).
 
 ```tsx
-<div id="my-section" data-search-target>
-  <Card>
-    <CardHeader title="My Section" />
-  </Card>
-</div>
+<DocSection id="my-section" title="My section" caption="What it holds">
+  ...
+</DocSection>
 ```
 
 ### Sidebar
 
-The sidebar is built from `src/app/routes.ts`: each entry's `section`, `group` (the divider label) and `nav` (the label, at most 18 characters) place it, in registry order. `NavLinks.tsx` renders the entries as router links with MidnightUI's tab classes, so crawlers can follow them. The AI & LLMs page sits at the foot of each code section; the bindings switcher (Overview, C / C++, Python) and the four section links are built in `DocsLayout.tsx`. Nav icons come from `solid-icons/bs`, named in the registry and mapped in `DocsLayout.tsx`.
+The sidebar is built from `src/app/routes.ts`: each entry's `section`, `group` (the group label) and `nav` (the label, at most 18 characters) place it, in registry order. `shell/DocsSidebar.tsx` renders the entries as router links, so crawlers can follow them, and builds the code-section switcher (Native, Rust, Bindings), the bindings language switcher and the search button. The AI & LLMs page sits at the foot of each code section. On a phone the sidebar opens full height from the bar under the nav.
 
 ## Consistency rules (read before editing)
 
@@ -231,9 +234,9 @@ Link to these; never paste a second copy with different columns. Verify with a g
 
 Every native opcode section uses one element order (gold references: `commands/Move.tsx`, `commands/Admin.tsx`):
 
-`CardHeader` -> intro `<p>` (one sentence, ends "Opcode `0xNN`.") -> `pre.api-signature` -> badge `<p>` -> `PAYLOAD` label + `byte-table` (or `<p>No payload (...).</p>`) -> optional detail table (`ACTIONS`/`TARGETS`/`LEVELS`/`SELECTORS`/`FLAGS`) -> `EFFECT` label + `<p>` (ends "Library binding: ...") -> `EXAMPLE` label + `pre.diagram` byte grid.
+`DocSection` -> intro `<p>` (one sentence, ends "Opcode `0xNN`.") -> `pre.api-signature` -> badge `<p>` -> `PAYLOAD` label + `byte-table` (or `<p>No payload (...).</p>`) -> optional detail table (`ACTIONS`/`TARGETS`/`LEVELS`/`SELECTORS`/`FLAGS`) -> `EFFECT` label + `<p>` (ends "Library binding: ...") -> `EXAMPLE` label + `ByteStrip`.
 
-Library method sections (gold reference: `library/Move.tsx`): `pre.api-signature` (bare `fn name(...) -> T`) -> badge `<p>` under each signature -> a primary table under its ALL-CAPS semantic label -> description `<p>` -> `EXAMPLE` label + `<pre><code>`. Every table in a method section carries a label, and every code example carries `EXAMPLE`. The label names what the table holds: `PARAMETERS` (args), `RETURNS` (a returned struct's fields), `EFFECT` (state changes), `ACTIONS`/`BUTTONS`/`TARGETS`/`LEVELS` (enum detail), `FUNCTIONS`/`CONSTRUCTORS`/`QUERIES` (a grouped section's calls). Index and concept cards (Introduction, the Types page, `Connection#handshake`/`#zero-config`, `Lifecycle#keepalive`) use unlabeled tables and are not method sections.
+Library method sections (gold reference: `library/Move.tsx`): `pre.api-signature` (bare `fn name(...) -> T`) -> badge `<p>` under each signature -> a primary table under its ALL-CAPS semantic label -> description `<p>` -> `EXAMPLE` label + `<pre><code>`. Every table in a method section carries a label, and every code example carries `EXAMPLE`. The label names what the table holds: `PARAMETERS` (args), `RETURNS` (a returned struct's fields), `EFFECT` (state changes), `ACTIONS`/`BUTTONS`/`TARGETS`/`LEVELS` (enum detail), `FUNCTIONS`/`CONSTRUCTORS`/`QUERIES` (a grouped section's calls). Index and concept sections (Introduction, the Types page, `Connection#handshake`/`#zero-config`, `Lifecycle#keepalive`) use unlabeled tables and are not method sections.
 
 ### Capitalisation
 
@@ -246,15 +249,15 @@ Library method sections (gold reference: `library/Move.tsx`): `pre.api-signature
 ## Terseness
 
 The signature, the table, and the example carry the content. Prose is near zero.
-- Outside tables and code blocks, a card has AT MOST 2 short sentences (the page's first/intro card at most 3). Prefer 1, or zero when the table and example already say it.
+- Outside tables and code blocks, a section has AT MOST 2 short sentences (the page header at most 3). Prefer 1, or zero when the table and example already say it.
 - Delete: narration and transitions ("you work in two halves", "first ... second ..."), second-person hand-holding ("you'll", "a junior wants", "so you can"), and any sentence that restates what a table or example already shows.
 - If you're explaining how to use something in a paragraph, you're doing it wrong: put it in the example. If you're describing fields/variants in prose, put them in a table.
 - When in doubt, cut.
 
 ## Styling
 
-- Use MidnightUI components (Card, CardHeader, Divider) for all layout. Avoid custom CSS.
-- Documentation-specific styles live in `src/styles/docs.css` (callouts, API badges, tables). This file is editable; `global.css` and `src/components/` / `src/styles/components/` are not.
+- Docs and Guide pages are built from the shell: `PageHeader` first, then a `DocSection` per section, `IndexRow` for a list of links, `ByteStrip` for a frame. The dashboard keeps MidnightUI's `Card` panels and controls.
+- Site styles live in `src/styles/theme/`, imported after MidnightUI's `global.css` so its tokens win. Those files are editable; `global.css` and `src/components/` / `src/styles/components/` are not. Element styles take their scope through `:where()` so the spacing rules after a heading or a label win: 44px from the last ink to a section's rule, 44px from the rule to the heading's capitals, 24px from the heading's baseline to the content.
 - No emojis except the ⚠️ on the USB3 hazard callout.
 - Terse, declarative wording. No filler, no marketing language. De-AI it: no "robust/seamless/leverage", no "**Bold**: explanation" bullets, and use contractions.
 - ASCII punctuation only. No em-dashes or en-dashes, ever (rewrite with commas, periods, parentheses, or "to" for ranges); no unicode minus (use "-"). Verify with a unicode-dash scan before committing.
@@ -263,22 +266,24 @@ The signature, the table, and the example carry the content. Prose is near zero.
 
 | Class | Used on | For |
 |---|---|---|
-| (none) | `Card` | Every section. The first card is the page header (title + subtitle via `CardHeader`); subtitles are plain sentence-case noun phrases, no trailing period. |
+| `PageHeader` | first element | The page's one h1 (its registry title), crumbs to the parent, the lead and the intro body. The lead is a plain sentence-case noun phrase, no trailing period |
+| `DocSection` | every section | `id` (the anchor), `title`, `caption` (a sentence-case noun phrase, no trailing period) |
+| `ByteStrip` | a frame on the wire | Each value over its field name, the payload lit apart from the framing |
 | `api-signature` | `<pre>` | An opcode or method signature line only |
 | `api-response-label` | `<div>` | ALL-CAPS labels. Native: PAYLOAD, EFFECT, EXAMPLE, ACTIONS, TARGETS, LEVELS, SELECTORS, FLAGS. Library adds: PARAMETERS, RETURNS, FUNCTIONS, CONSTRUCTORS, QUERIES, BUTTONS. |
-| `api-params` | `<table>` | Parameter and reference tables |
-| `byte-table` | `<table>` | Wire and byte-layout tables (columns Offset / Field / Type / Notes) |
-| `callout` | `<div>` | Notes (`--info`, `--warning`, `--danger`) |
-| `diagram` | `<pre>` | ASCII byte/flow diagrams. Byte breakdowns are fixed-width grids: each cell is exactly 8 chars (`+--------+` ASCII borders), byte on the top row, field label beneath, so columns can never drift. Verify with a script that every line in a grid is the same length. |
+| `api-params` | `<table>` | Parameter and reference tables, inside `<div class="table-scroll">` |
+| `byte-table` | `<table>` | Wire and byte-layout tables (columns Offset / Field / Type / Notes), inside `<div class="table-scroll">` |
+| `callout` | `<div>` | Notes (`--info`, `--warning`, `--danger`), labelled Note, Warning, Danger by the theme |
+| `diagram` | `<pre>` | ASCII flow diagrams. A frame's bytes are a `ByteStrip`; an ASCII byte grid left elsewhere is fixed-width (each cell exactly 8 chars, `+--------+` borders), which conformance checks. |
 
 **Badges.** One `api-badge` span under each signature.
 
 | Modifier | Text | When |
 |---|---|---|
-| `--executed` (green) | Fire-and-forget | It sends a frame and expects no reply |
-| `--executed` (green) | No round-trip | It touches no wire at all (type conversions, port scans, `logs`/`counters`) |
-| `--responded` (blue) | Blocks | It waits for the box's reply ("Returns RESP" / "Reply" on native) |
-| `--warning` (yellow) | Unsolicited | |
+| `--executed` (blue) | Fire-and-forget | It sends a frame and expects no reply |
+| `--executed` (blue) | No round-trip | It touches no wire at all (type conversions, port scans, `logs`/`counters`) |
+| `--responded` (white) | Blocks | It waits for the box's reply ("Returns RESP" / "Reply" on native) |
+| `--warning` (amber) | Unsolicited | |
 
 **Links.** Internal: the router `<A href="/...">`. External (crate, tool, chip, spec, std type): a
 plain `<a href="https://..." target="_blank" rel="noreferrer">`. Link the first prose mention per
@@ -287,9 +292,8 @@ existing internal `<A>` alone; never wrap an external `<a>` around or inside it.
 
 ### Mobile
 
-- Tables must work on mobile. Avoid 3+ column tables with long `code` content.
-- `code` elements are `white-space: nowrap` globally; long code strings in cells can overflow. Prefer plain-text descriptions in cells.
-- `pre code` blocks override with `white-space: pre`. Cards use `overflow: hidden`.
+- Every table sits in `.table-scroll`, so a wide one scrolls inside its box and never the page. Avoid 3+ column tables with long `code` content all the same.
+- Inline `code` wraps; `pre` blocks scroll inside their box.
 
 ## Favicon and social embeds
 
@@ -326,7 +330,7 @@ Unit tests never count: the provider builds no sink under vitest. A dev server w
 
 ## Adding a page
 
-1. Create the component under `src/app/pages/`. Wrap every Card in `<div id="..." data-search-target>`.
+1. Create the component under `src/app/pages/`: a `PageHeader` (its `lead` and the intro body), then a `DocSection id="..."` per section.
 2. Add a route in `App.tsx`.
 3. Add its entry to `src/app/routes.ts` in sidebar order: section, group, nav label, icon, title, and a description of 50 to 155 characters that no other page uses.
 4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).
@@ -349,3 +353,11 @@ on the majority is wrong.
 When it flags something you believe is correct, one of the two is wrong. If the page is right, teach
 the rule the distinction the page makes (a dispatch card whose variants carry the examples, a byte grid
 against a topology diagram). Never widen a threshold to quiet the report.
+
+## Landing captures
+
+`src/app/data/descriptorSample.json` and `feedSample.json` are bench captures from medius-fw's
+`tools/rig/descriptor_capture.py` (the mouse's descriptors read through the box beside the clone's, failing
+on one differing byte) and `feed_capture.py` (the reports the PC took while MOVE injected into real
+motion). Recapture them; never edit them by hand.
+
