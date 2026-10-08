@@ -41,6 +41,8 @@ export function parseBlocks(md: string): Block[] {
 export interface Run {
   text: string;
   href?: string;
+  strong?: boolean;
+  code?: boolean;
 }
 
 // Bare https links become runs with an href; a trailing full stop or bracket stays outside the link.
@@ -55,5 +57,18 @@ export function linkify(text: string): Run[] {
     last = start + url.length;
   }
   if (last < text.length) runs.push({ text: text.slice(last) });
+  return runs.length ? runs : [{ text }];
+}
+
+// The Discord markdown release notes are written in: `code`, **bold**, then bare links in the rest.
+export function inlineRuns(text: string): Run[] {
+  const runs: Run[] = [];
+  let last = 0;
+  for (const m of text.matchAll(/`([^`]+)`|\*\*(.+?)\*\*/g)) {
+    if (m.index! > last) runs.push(...linkify(text.slice(last, m.index)));
+    runs.push(m[1] !== undefined ? { text: m[1], code: true } : { text: m[2], strong: true });
+    last = m.index! + m[0].length;
+  }
+  if (last < text.length) runs.push(...linkify(text.slice(last)));
   return runs.length ? runs : [{ text }];
 }

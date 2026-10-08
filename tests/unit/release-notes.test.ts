@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { COMMITS_MARKER, splitRelease, parseBlocks, linkify } from '../../src/dashboard/firmware/notes';
+import { COMMITS_MARKER, splitRelease, parseBlocks, linkify, inlineRuns } from '../../src/dashboard/firmware/notes';
 
 const BODY = [
   '## Changes',
@@ -49,5 +49,23 @@ describe('linkify', () => {
       { text: '. Enjoy' },
     ]);
     expect(linkify('no links')).toEqual([{ text: 'no links' }]);
+  });
+});
+
+describe('inlineRuns', () => {
+  it('reads the Discord markdown the notes are written in: bold, code and links', () => {
+    expect(inlineRuns('there is **almost **no difference, version `8`: https://x.dev/a.')).toEqual([
+      { text: 'there is ' },
+      { text: 'almost ', strong: true },
+      { text: 'no difference, version ' },
+      { text: '8', code: true },
+      { text: ': ' },
+      { text: 'https://x.dev/a', href: 'https://x.dev/a' },
+      { text: '.' },
+    ]);
+  });
+
+  it('leaves a lone asterisk or backtick as text', () => {
+    expect(inlineRuns('2 * 3 and a ` tick')).toEqual([{ text: '2 * 3 and a ` tick' }]);
   });
 });

@@ -9,7 +9,9 @@ import { SITE } from '../src/app/site';
 const PORT = Number(process.env.CRAWL_PORT || 4390);
 const BASE = `http://localhost:${PORT}`;
 const failures: string[] = [];
-const fail = (msg: string) => failures.push(msg);
+const fail = (msg: string): void => {
+  failures.push(msg);
+};
 
 const decode = (s: string) =>
   s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
