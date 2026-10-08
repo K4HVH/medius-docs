@@ -2,6 +2,8 @@
 // HTML, all with Vary: Accept so caches split the variants.
 import { existsSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
+import { LIVE_PATHS } from '../src/app/site';
+import { fillMarkdown, fillPage } from './fill';
 
 const DIST = resolve(process.env.PUBLIC_DIR || './dist');
 
@@ -72,6 +74,8 @@ function has(distRelPath: string): boolean {
 // and let CDNs/agents cache briefly while revalidating in the background.
 export const LLMS_LINK = '</llms.txt>; rel="llms-txt", </llms-full.txt>; rel="llms-full-txt"';
 export const DOC_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
+// The changelog and stats change without a deploy: cache them as briefly as their sources.
+const LIVE_CACHE = 'public, max-age=60';
 const MD_HEADERS = {
   'content-type': 'text/markdown; charset=utf-8',
   vary: 'Accept',
@@ -101,10 +105,20 @@ export async function handleAgentDocs(req: Request): Promise<Response | null> {
       });
     case 'markdown': {
       const abs = distFile(action.path)!;
+      const route = action.path.replace(/\.md$/, '');
+      if (LIVE_PATHS.has(route)) {
+        const md = await fillMarkdown(route);
+        if (md) return new Response(md, { headers: { ...MD_HEADERS, 'cache-control': LIVE_CACHE } });
+      }
       return new Response(Bun.file(abs), { headers: MD_HEADERS });
     }
     case 'html': {
       const abs = distFile(action.path)!;
+      const route = action.path.replace(/\.html$/, '');
+      if (LIVE_PATHS.has(route)) {
+        const html = await fillPage(route, await Bun.file(abs).text());
+        return new Response(html, { headers: { ...HTML_HEADERS, 'cache-control': LIVE_CACHE } });
+      }
       return new Response(Bun.file(abs), { headers: HTML_HEADERS });
     }
   }

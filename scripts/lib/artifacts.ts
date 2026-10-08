@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { LIVE_PATHS } from '../../src/app/site';
 
 export interface PageRecord {
   path: string;
@@ -10,8 +11,7 @@ export interface PageRecord {
   lastmod?: string;
 }
 
-// Filled in by the server per request; their prerendered snapshot holds no release or figure.
-export const LIVE_PATHS: ReadonlySet<string> = new Set(['/dashboard/changelog', '/dashboard/stats']);
+export { LIVE_PATHS };
 
 export interface AgentIndex {
   site: string;

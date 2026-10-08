@@ -1,6 +1,8 @@
 // Server-side firmware proxy. Holds the GitHub token and fetches releases and release assets from
 // the private firmware repo; the browser only ever sees the proxied results, never the token.
 
+import type { FirmwareRelease } from '../src/dashboard/firmware/client';
+
 const GITHUB_API = 'https://api.github.com';
 const REPO_RE = /^[\w.-]+\/[\w.-]+$/;
 const RELEASES_TTL_MS = 60_000;
@@ -40,6 +42,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+
 interface GhAsset {
   id: number;
   name: string;
@@ -59,7 +62,7 @@ interface GhRelease {
 async function loadReleases(): Promise<string | null> {
   const now = Date.now();
   if (releasesCache && now - releasesCache.at < RELEASES_TTL_MS) return releasesCache.body;
-  const res = await fetch(`${GITHUB_API}/repos/${repo()}/releases?per_page=20`, {
+  const res = await fetch(`${GITHUB_API}/repos/${repo()}/releases?per_page=100`, {
     headers: ghHeaders('application/vnd.github+json'),
   });
   if (!res.ok) {
@@ -81,6 +84,12 @@ async function loadReleases(): Promise<string | null> {
   const body = JSON.stringify({ repo: repo(), releases });
   releasesCache = { at: now, body };
   return body;
+}
+
+// The releases list for pages the server fills in, or null when GitHub can't be reached.
+export async function getReleases(): Promise<FirmwareRelease[] | null> {
+  const body = await loadReleases();
+  return body ? (JSON.parse(body) as { releases: FirmwareRelease[] }).releases : null;
 }
 
 function cacheGetAsset(id: number): Uint8Array<ArrayBuffer> | undefined {

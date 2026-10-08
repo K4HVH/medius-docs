@@ -52,6 +52,9 @@ async function main(): Promise<void> {
   const server = await startStaticServer(DIST, PORT);
   const browser = await chromium.launch();
   const page = await browser.newPage();
+  // Leave every API request unanswered: the changelog and stats snapshots stay on "Loading...", the
+  // block the server fills per request, instead of capturing an error from the static server.
+  await page.route('**/api/**', () => {});
   const records: PageRecord[] = [];
 
   try {
