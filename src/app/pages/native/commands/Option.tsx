@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Option: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Option" subtitle="Set a persistent box option by id" />
+      <PageHeader lead="Set a persistent box option by id">
         <p>
           One command (opcode <code>0x11</code>) sets every box-level toggle: an <code>id</code> byte
           picks the option, the rest is its value. All persist in NVS, restore at boot, and are{' '}
@@ -67,460 +66,436 @@ const Option: Component = () => {
         <p>
           A set option boots at its stored value, not the factory default.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="option" data-search-target>
-        <Card>
-          <CardHeader title="OPTION" subtitle="One generic, persistent option" />
-          <p>
-            <code>OPTION</code> carries an <code>id</code> byte then an id-specific value; the setting
-            persists across reboots. <A href="/native/frame#opcodes">Opcode</A>{' '}
-            <code>0x11</code>.
-          </p>
-          <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
-          <table class="byte-table">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>option</td></tr>
-              <tr><td>1..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, delimited by the frame <code>LEN</code></td></tr>
-            </tbody>
-          </table>
-          <p>
-            No reply. Read any value back with{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, id)</code></A>.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="option" title="OPTION" caption="One generic, persistent option">
+        <p>
+          <code>OPTION</code> carries an <code>id</code> byte then an id-specific value; the setting
+          persists across reboots. <A href="/native/frame#opcodes">Opcode</A>{' '}
+          <code>0x11</code>.
+        </p>
+        <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <table class="byte-table">
+          <thead>
+            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td><code>id</code></td><td><code>u8</code></td><td>option</td></tr>
+            <tr><td>1..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, delimited by the frame <code>LEN</code></td></tr>
+          </tbody>
+        </table>
+        <p>
+          No reply. Read any value back with{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, id)</code></A>.
+        </p>
+      </DocSection>
 
-      <div id="imperfect" data-search-target>
-        <Card>
-          <CardHeader title="IMPERFECT" subtitle="Clone anyway, and admit the advanced control layer" />
-          <pre class="api-signature">id 0  ·  [allow u8]</pre>
-          <div class="api-response-label">ALLOW</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone exactly <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Clone it anyway, every interface the box can serve byte-faithful, and admit the gated commands below</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">GATES</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Item</th><th>Opt-in off</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
-              <tr><td>a forced rate, <A href="/native/commands/option#emit"><code>EMIT</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
-              <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear; turning the opt-in off clears the table.</td></tr>
-              <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served; <code>APPLY</code> is ignored, and turning the opt-in off presents a patched clone again without its set.</td></tr>
-              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Replied with status <code>0xFC</code>.</td></tr>
-              <tr><td><A href="/native/commands/raw#raw"><code>RAW</code></A>, and a clip's raw and transfer items</td><td>Discarded; turning the opt-in off drops queued clip transfers.</td></tr>
-              <tr><td>a <A href="/native/commands/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused, and turning the opt-in off removes the ones the box holds.</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--info">
-            <p>
-              A device the box can't clone exactly has more than four IN endpoints live at once, or more
-              than six HID interfaces; more interfaces, alternate settings or endpoints than the box reads
-              (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
-              speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
-              a report descriptor truncated or never captured.
-            </p>
-            <p>
-              The{' '}
-              <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3
-              has four transmit FIFOs for the IN endpoints besides endpoint 0, numbered anything up to 6, a
-              control endpoint above 0 counting as one.
-            </p>
-            <p>
-              With more live at once, the ones the box binds as mouse, keyboard and media keep a FIFO each, and
-              the rest share the others: a report on one of those can go a poll or more late while every shared
-              FIFO is in use.
-            </p>
-            <p>
-              Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
-              the device chip to re-clone; otherwise the clone is presented again when the change
-              alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
-            </p>
-          </div>
+      <DocSection id="imperfect" title="IMPERFECT" caption="Clone anyway, and admit the advanced control layer">
+        <pre class="api-signature">id 0  ·  [allow u8]</pre>
+        <div class="api-response-label">ALLOW</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone exactly <em>(default)</em></td></tr>
+            <tr><td><code>1</code></td><td>Clone it anyway, every interface the box can serve byte-faithful, and admit the gated commands below</td></tr>
+          </tbody>
+        </table>
+        <div class="api-response-label">GATES</div>
+        <table class="api-params">
+          <thead>
+            <tr><th>Item</th><th>Opt-in off</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
+            <tr><td>a forced rate, <A href="/native/commands/option#emit"><code>EMIT</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
+            <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear; turning the opt-in off clears the table.</td></tr>
+            <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served; <code>APPLY</code> is ignored, and turning the opt-in off presents a patched clone again without its set.</td></tr>
+            <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Replied with status <code>0xFC</code>.</td></tr>
+            <tr><td><A href="/native/commands/raw#raw"><code>RAW</code></A>, and a clip's raw and transfer items</td><td>Discarded; turning the opt-in off drops queued clip transfers.</td></tr>
+            <tr><td>a <A href="/native/commands/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused, and turning the opt-in off removes the ones the box holds.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--info">
           <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 0)</code></A> (opt-in plus
-            the over-capacity and imperfect-clone flags) · Library{' '}
-            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+            A device the box can't clone exactly has more than four IN endpoints live at once, or more
+            than six HID interfaces; more interfaces, alternate settings or endpoints than the box reads
+            (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
+            speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
+            a report descriptor truncated or never captured.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Opt in (<code>allow = 1</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+          <p>
+            The{' '}
+            <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3
+            has four transmit FIFOs for the IN endpoints besides endpoint 0, numbered anything up to 6, a
+            control endpoint above 0 counting as one.
+          </p>
+          <p>
+            With more live at once, the ones the box binds as mouse, keyboard and media keep a FIFO each, and
+            the rest share the others: a report on one of those can go a poll or more late while every shared
+            FIFO is in use.
+          </p>
+          <p>
+            Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
+            the device chip to re-clone; otherwise the clone is presented again when the change
+            alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
+          </p>
+        </div>
+        <p>
+          Read{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 0)</code></A> (opt-in plus
+          the over-capacity and imperfect-clone flags) · Library{' '}
+          <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Opt in (<code>allow = 1</code>):</p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 02 00  | 00     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | allow  | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="move-ride" data-search-target>
-        <Card>
-          <CardHeader title="MOVE_RIDE" subtitle="Inject motion only on a native move" />
-          <pre class="api-signature">id 1  ·  [timeout u16 LE] ms</pre>
-          <div class="api-response-label">TIMEOUT</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Off: injected motion goes out on native reports and the box's own alike <em>(default)</em></td></tr>
-              <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
-            </tbody>
-          </table>
+      <DocSection id="move-ride" title="MOVE_RIDE" caption="Inject motion only on a native move">
+        <pre class="api-signature">id 1  ·  [timeout u16 LE] ms</pre>
+        <div class="api-response-label">TIMEOUT</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>Off: injected motion goes out on native reports and the box's own alike <em>(default)</em></td></tr>
+            <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Injected motion keeps native report density.
+        </p>
+        <div class="callout callout--warning">
           <p>
-            Injected motion keeps native report density.
+            While on, pure idle injection (moving the cursor while the real device is still) stops
+            working: motion waits for a native move and is dropped if none comes.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              While on, pure idle injection (moving the cursor while the real device is still) stops
-              working: motion waits for a native move and is dropped if none comes.
-            </p>
-            <p>
-              Button, key, and media injection are unaffected, and a move can opt out per command
-              with the <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
-            </p>
-            <p>
-              Changing the value drops whatever motion was held for a ride, and clears the standing{' '}
-              <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
-              <code>with</code> / <code>against</code> scale stops applying at that instant.
-            </p>
-          </div>
           <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 1)</code></A> · Library{' '}
-            <A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A>.
+            Button, key, and media injection are unaffected, and a move can opt out per command
+            with the <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Turn it on with a 20 ms window (<code>timeout = 0x0014</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+          <p>
+            Changing the value drops whatever motion was held for a ride, and clears the standing{' '}
+            <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
+            <code>with</code> / <code>against</code> scale stops applying at that instant.
+          </p>
+        </div>
+        <p>
+          Read{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 1)</code></A> · Library{' '}
+          <A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Turn it on with a 20 ms window (<code>timeout = 0x0014</code>):</p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 03 00  | 01     | 14 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | timeout| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="emit" data-search-target>
-        <Card>
-          <CardHeader title="EMIT" subtitle="Pace and wire-rate injected motion" />
-          <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
+      <DocSection id="emit" title="EMIT" caption="Pace and wire-rate injected motion">
+        <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
+        <p>
+          Every <code>OPTION(EMIT)</code> writes all three fields; resend the ones to keep.
+        </p>
+        <div class="api-response-label">MODE</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The mouse's measured report rate</td></tr>
+            <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
+            <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--info">
           <p>
-            Every <code>OPTION(EMIT)</code> writes all three fields; resend the ones to keep.
+            Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333 and 250 are exact
+            (<code>0</code> means 1000).
           </p>
-          <div class="api-response-label">MODE</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The mouse's measured report rate</td></tr>
-              <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
-              <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--info">
-            <p>
-              Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333 and 250 are exact
-              (<code>0</code> means 1000).
-            </p>
-            <p>The pace is a ceiling; the box emits only while injection is pending.</p>
-          </div>
-          <div class="api-response-label">FORCE_HZ</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
-              <tr><td>target Hz</td><td>Writes the <code>bInterval</code> nearest that rate onto every HID interrupt-IN endpoint of the served descriptor, and polls the device at that same interval</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--warning">
-            <p>
-              A forced rate applies only with{' '}
-              <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> on, because the
-              descriptor stops matching the real device. Changing the resolved interval re-clones the
-              box, which drops this port for a few seconds.
-            </p>
-            <p>
-              Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
-              low-speed clone cannot express an interval below 10 ms and only powers of two are
-              offered, so its floor is <code>bInterval</code> 16 and any request above 62 Hz there
-              resolves to 62.
-            </p>
-          </div>
+          <p>The pace is a ceiling; the box emits only while injection is pending.</p>
+        </div>
+        <div class="api-response-label">FORCE_HZ</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
+            <tr><td>target Hz</td><td>Writes the <code>bInterval</code> nearest that rate onto every HID interrupt-IN endpoint of the served descriptor, and polls the device at that same interval</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--warning">
           <p>
-            An unknown <code>mode</code> discards the <strong>whole</strong> command,{' '}
-            <code>force_hz</code> included, with no reply.
+            A forced rate applies only with{' '}
+            <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> on, because the
+            descriptor stops matching the real device. Changing the resolved interval re-clones the
+            box, which drops this port for a few seconds.
           </p>
           <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (the stored
-            fields, the rate in effect, and what the clone advertises) · Library{' '}
-            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
+            Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
+            low-speed clone cannot express an interval below 10 ms and only powers of two are
+            offered, so its floor is <code>bInterval</code> 16 and any request above 62 Hz there
+            resolves to 62.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            A fixed 1 kHz ceiling with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
-            <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
+        </div>
+        <p>
+          An unknown <code>mode</code> discards the <strong>whole</strong> command,{' '}
+          <code>force_hz</code> included, with no reply.
+        </p>
+        <p>
+          Read{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 2)</code></A> (the stored
+          fields, the rate in effect, and what the clone advertises) · Library{' '}
+          <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          A fixed 1 kHz ceiling with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
+          <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
+        </p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
 | A5     | 11     | 00     | 06 00  | 02     | 02     | E8 03   | E8 03    | lo hi  |
 +--------+--------+--------+--------+--------+--------+---------+----------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
 +--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="name" data-search-target>
-        <Card>
-          <CardHeader title="NAME" subtitle="Human-readable box name" />
-          <pre class="api-signature">id 3  ·  [name ascii 1..32]  (0 bytes = clear)</pre>
-          <div class="api-response-label">VALUE</div>
-          <table class="api-params">
-            <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>1..32</code> printable ASCII</td><td>Sets the name to those bytes.</td></tr>
-              <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the MAC-derived <code>Medius-XXXX</code> default.</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--info">
-            <p>
-              The name pairs with the box{' '}
-              <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
-              is the ASCII tail of <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A>{' '}
-              after the MAC, read there rather than through{' '}
-              <A href="/native/commands/requests#options"><code>QUERY(OPTIONS)</code></A>.
-            </p>
-          </div>
+      <DocSection id="name" title="NAME" caption="Human-readable box name">
+        <pre class="api-signature">id 3  ·  [name ascii 1..32]  (0 bytes = clear)</pre>
+        <div class="api-response-label">VALUE</div>
+        <table class="api-params">
+          <thead><tr><th>Bytes</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>1..32</code> printable ASCII</td><td>Sets the name to those bytes.</td></tr>
+            <tr><td><code>0</code> (the <code>id</code> alone)</td><td>Clears the name, reverting to the MAC-derived <code>Medius-XXXX</code> default.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--info">
           <p>
-            Read it back on{' '}
-            <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> · Library{' '}
-            <A href="/library/options#set-name"><code>set_name</code></A>.
+            The name pairs with the box{' '}
+            <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
+            is the ASCII tail of <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A>{' '}
+            after the MAC, read there rather than through{' '}
+            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS)</code></A>.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Name the box "Loki" (<code>id = 3</code>, ascii <code>4C 6F 6B 69</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
+        </div>
+        <p>
+          Read it back on{' '}
+          <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> · Library{' '}
+          <A href="/library/options#set-name"><code>set_name</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Name the box "Loki" (<code>id = 3</code>, ascii <code>4C 6F 6B 69</code>):</p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
 | A5     | 11     | 00     | 05 00  | 03     | 4C 6F 6B 69  | lo hi  |
 +--------+--------+--------+--------+--------+--------------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | name ascii   | CRC16  |
 +--------+--------+--------+--------+--------+--------------+--------+`}</pre>
-        </Card>
-      </div>
-      <div id="bearing" data-search-target>
-        <Card>
-          <CardHeader title="BEARING" subtitle="What with and against are measured against" />
-          <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
-          <div class="api-response-label">WINDOW</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> are inert whatever their scale</td></tr>
-              <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">MODE</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th><A href="/native/commands/lock#geometry">Geometry</A></th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Vector</td></tr>
-              <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--warning">
-            <p>
-              A write that changes either field drops the standing{' '}
-              <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
-              <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
-              <code>with</code> / <code>against</code> scale live that is a visible step in what
-              reaches the game PC, so set the geometry before the scales, not between reports.
-            </p>
-          </div>
+      </DocSection>
+      <DocSection id="bearing" title="BEARING" caption="What with and against are measured against">
+        <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
+        <div class="api-response-label">WINDOW</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>No bearing is ever held, so <code>with</code> and <code>against</code> are inert whatever their scale</td></tr>
+            <tr><td><code>N</code> ms</td><td>An axis keeps the direction of its last injected delta for <code>N</code> ms <em>(default 20)</em></td></tr>
+          </tbody>
+        </table>
+        <div class="api-response-label">MODE</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th><A href="/native/commands/lock#geometry">Geometry</A></th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>Per axis <em>(default)</em></td></tr>
+            <tr><td><code>1</code></td><td>Vector</td></tr>
+            <tr><td><code>2</code> or above</td><td>Unknown: the whole command is dropped, window included, with no reply</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--warning">
           <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}
-            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+            A write that changes either field drops the standing{' '}
+            <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
+            <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
+            <code>with</code> / <code>against</code> scale live that is a visible step in what
+            reaches the game PC, so set the geometry before the scales, not between reports.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <p>
+          Read{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 4)</code></A> · Library{' '}
+          <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 04 00  | 04     | 14 00  | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | window | mode   | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-      <div id="render" data-search-target>
-        <Card>
-          <CardHeader title="RENDER" subtitle="Motion rendering texture" />
-          <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
-          <p>
-            Every <code>OPTION(RENDER)</code> writes both fields; resend the one to keep.
-          </p>
-          <div class="api-response-label">MODE</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
-              <tr><td><code>1</code></td><td>Stock</td><td>The model's bit-exact triangular smoother. Its first report carries a larger delta than the ones after it.</td></tr>
-              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
-              <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model receives the raw injection.</td></tr>
-            </tbody>
-          </table>
-          <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
+      </DocSection>
+      <DocSection id="render" title="RENDER" caption="Motion rendering texture">
+        <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
+        <p>
+          Every <code>OPTION(RENDER)</code> writes both fields; resend the one to keep.
+        </p>
+        <div class="api-response-label">MODE</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
+            <tr><td><code>1</code></td><td>Stock</td><td>The model's bit-exact triangular smoother. Its first report carries a larger delta than the ones after it.</td></tr>
+            <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
+            <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model receives the raw injection.</td></tr>
+          </tbody>
+        </table>
+        <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
   mode = 0     | | | | | | | | | | | |      even fill at the paced rate
   mode > 0     | | . | . . | | . | . |      the live device's on/off texture`}</pre>
-          <table class="api-params">
-            <thead><tr><th>Aspect</th><th><code>mode = 0</code></th><th><code>mode &gt; 0</code></th></tr></thead>
-            <tbody>
-              <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
-              <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
-              <tr><td>Before a profile arms</td><td>Emits at once</td><td>Emits the paced fill, then switches over</td></tr>
-            </tbody>
-          </table>
-          <div id="full" data-search-target class="api-response-label">FULL</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
-              <tr><td><code>1</code></td><td>Renders both: native cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
-            </tbody>
-          </table>
-          <div class="callout callout--warning">
-            <p>
-              Rendering adds a little latency, which reaches native motion when{' '}
-              <code>full</code> is <code>1</code>.
-            </p>
-            <p>
-              A rendered report is bounded per axis by what the clone's cursor field holds, and by no less
-              than 127 counts. The model carries anything past that as debt into the reports after it.
-            </p>
-          </div>
-          <div class="callout callout--info">
-            <p>
-              The <A href="/native/commands/option#emit">pace</A> caps the rendered rate, and the
-              model's debt carries what the cap coalesces. Buttons, the wheel and every other field are
-              relayed at native timing in both modes: the model renders cursor motion only.
-            </p>
-            <p>
-              A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
-              paced path instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each fix
-              exact timing, which the renderer otherwise sets.{' '}
-              <A href="/native/commands/clip">Clip</A> cursor motion renders like a <code>MOVE</code>{' '}
-              with no flag.
-            </p>
-            <p>
-              Under <code>full</code> the rendered stream ignores{' '}
-              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot then
-              holds native motion it never rides out. A clip's stream does too.
-            </p>
-            <p>
-              The profile is built from the live mouse and never persisted, so every boot starts without
-              one and arms from a window of mouse motion. <code>full</code> renders nothing while{' '}
-              <code>mode</code> is <code>0</code>, with no model in the path.
-            </p>
-          </div>
+        <table class="api-params">
+          <thead><tr><th>Aspect</th><th><code>mode = 0</code></th><th><code>mode &gt; 0</code></th></tr></thead>
+          <tbody>
+            <tr><td>Per-report delta</td><td>The accumulator, split to fit the field</td><td>Shaped by the model, summing to the same total</td></tr>
+            <tr><td>Model</td><td>None</td><td><a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a> (MIT), fit live per device</td></tr>
+            <tr><td>Before a profile arms</td><td>Emits at once</td><td>Emits the paced fill, then switches over</td></tr>
+          </tbody>
+        </table>
+        <div id="full" data-search-target class="api-response-label">FULL</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
+            <tr><td><code>1</code></td><td>Renders both: native cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--warning">
           <p>
-            A <code>mode</code> above 3 or a <code>full</code> above 1 discards the{' '}
-            <strong>whole</strong> command, with no reply.
+            Rendering adds a little latency, which reaches native motion when{' '}
+            <code>full</code> is <code>1</code>.
           </p>
           <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 5)</code></A> (both stored
-            fields, and whether a profile has armed) · Library{' '}
-            <A href="/library/options#set-render"><code>set_render</code></A>.
+            A rendered report is bounded per axis by what the clone's cursor field holds, and by no less
+            than 127 counts. The model carries anything past that as debt into the reports after it.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
+        </div>
+        <div class="callout callout--info">
           <p>
-            De-spiked, rendering native motion too (<code>mode = 2</code>,{' '}
-            <code>full = 1</code>):
+            The <A href="/native/commands/option#emit">pace</A> caps the rendered rate, and the
+            model's debt carries what the cap coalesces. Buttons, the wheel and every other field are
+            relayed at native timing in both modes: the model renders cursor motion only.
           </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
+          <p>
+            A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
+            paced path instead: <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each fix
+            exact timing, which the renderer otherwise sets.{' '}
+            <A href="/native/commands/clip">Clip</A> cursor motion renders like a <code>MOVE</code>{' '}
+            with no flag.
+          </p>
+          <p>
+            Under <code>full</code> the rendered stream ignores{' '}
+            <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot then
+            holds native motion it never rides out. A clip's stream does too.
+          </p>
+          <p>
+            The profile is built from the live mouse and never persisted, so every boot starts without
+            one and arms from a window of mouse motion. <code>full</code> renders nothing while{' '}
+            <code>mode</code> is <code>0</code>, with no model in the path.
+          </p>
+        </div>
+        <p>
+          A <code>mode</code> above 3 or a <code>full</code> above 1 discards the{' '}
+          <strong>whole</strong> command, with no reply.
+        </p>
+        <p>
+          Read{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 5)</code></A> (both stored
+          fields, and whether a profile has armed) · Library{' '}
+          <A href="/library/options#set-render"><code>set_render</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          De-spiked, rendering native motion too (<code>mode = 2</code>,{' '}
+          <code>full = 1</code>):
+        </p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 03 00  | 05     | 02     | 01     | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | mode   | full   | CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-      <div id="spread" data-search-target>
-        <Card>
-          <CardHeader title="SPREAD" subtitle="Injected delta spread over time" />
-          <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
-          <p>
-            A host loop slower than the native report rate sends deltas worth several native reports.
-            The percent is the share of the command interval the box releases each delta across.
-          </p>
-          <div class="api-response-label">PERCENT</div>
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code></td><td>The whole delta goes out on the next report the box emits.</td></tr>
-              <tr><td><code>1..99</code></td><td>Released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
-              <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
-              <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
-            </tbody>
-          </table>
-          <pre class="diagram">{`a 250 Hz host on a 1000 Hz native rate: one MOVE of 8 every 4 ms, 12 ms of wire
+      </DocSection>
+      <DocSection id="spread" title="SPREAD" caption="Injected delta spread over time">
+        <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
+        <p>
+          A host loop slower than the native report rate sends deltas worth several native reports.
+          The percent is the share of the command interval the box releases each delta across.
+        </p>
+        <div class="api-response-label">PERCENT</div>
+        <table class="api-params">
+          <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>The whole delta goes out on the next report the box emits.</td></tr>
+            <tr><td><code>1..99</code></td><td>Released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
+            <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
+            <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
+          </tbody>
+        </table>
+        <pre class="diagram">{`a 250 Hz host on a 1000 Hz native rate: one MOVE of 8 every 4 ms, 12 ms of wire
 
   ms             0  1  2  3  4  5  6  7  8  9 10 11
   percent = 0    8  .  .  .  8  .  .  .  8  .  .  .    one report per command, 4x the delta
   percent = 100  2  2  2  2  2  2  2  2  2  2  2  2    a report every ms at the native magnitude`}</pre>
+        <p>
+          The box learns the interval as the most common gap between{' '}
+          <A href="/native/commands/move"><code>MOVE</code></A> arrivals, so a burst doesn't move it
+          and a rate change is followed. Until it has one, and for commands more than about 32 ms
+          apart, the whole delta goes out on the next report regardless of percent.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Aspect</th><th><code>percent = 0</code></th><th><code>percent = 100</code></th></tr></thead>
+          <tbody>
+            <tr><td>Delivered total</td><td>Exact</td><td>Exact</td></tr>
+            <tr><td>Added latency</td><td>None</td><td>Half the interval on average, about 4 ms at 125 Hz</td></tr>
+            <tr><td>Reports per command</td><td>One</td><td>Up to one per report the box emits in the interval, and never more than the delta's own count</td></tr>
+            <tr><td>Wheel motion</td><td>Not spread</td><td>Not spread: a detent is one unit</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A loop at the native report rate keeps each command whole: it waits in a short queue and
+          leaves on a report of its own, no later than the first report after its interval ends. A
+          delta smaller than its interval's report count can't be split one count per report; it
+          goes out once, part way through.
+        </p>
+        <div class="callout callout--info">
           <p>
-            The box learns the interval as the most common gap between{' '}
-            <A href="/native/commands/move"><code>MOVE</code></A> arrivals, so a burst doesn't move it
-            and a rate change is followed. Until it has one, and for commands more than about 32 ms
-            apart, the whole delta goes out on the next report regardless of percent.
+            A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag is not spread:{' '}
+            <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each fix exact timing.{' '}
+            <code>FLUSH</code> and <code>DISCARD</code> also act on any still-waiting part of an
+            earlier delta, so they mean the same at any percent.
           </p>
-          <table class="api-params">
-            <thead><tr><th>Aspect</th><th><code>percent = 0</code></th><th><code>percent = 100</code></th></tr></thead>
-            <tbody>
-              <tr><td>Delivered total</td><td>Exact</td><td>Exact</td></tr>
-              <tr><td>Added latency</td><td>None</td><td>Half the interval on average, about 4 ms at 125 Hz</td></tr>
-              <tr><td>Reports per command</td><td>One</td><td>Up to one per report the box emits in the interval, and never more than the delta's own count</td></tr>
-              <tr><td>Wheel motion</td><td>Not spread</td><td>Not spread: a detent is one unit</td></tr>
-            </tbody>
-          </table>
           <p>
-            A loop at the native report rate keeps each command whole: it waits in a short queue and
-            leaves on a report of its own, no later than the first report after its interval ends. A
-            delta smaller than its interval's report count can't be split one count per report; it
-            goes out once, part way through.
+            <code>SPREAD</code> and <A href="/native/commands/option#render"><code>RENDER</code></A>{' '}
+            compose independently. Under <code>full</code> rendering only injected motion is spread; native
+            motion already arrives at the device's report rate.
           </p>
-          <div class="callout callout--info">
-            <p>
-              A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag is not spread:{' '}
-              <code>NOW</code>, <code>FLUSH</code> and <code>DISCARD</code> each fix exact timing.{' '}
-              <code>FLUSH</code> and <code>DISCARD</code> also act on any still-waiting part of an
-              earlier delta, so they mean the same at any percent.
-            </p>
-            <p>
-              <code>SPREAD</code> and <A href="/native/commands/option#render"><code>RENDER</code></A>{' '}
-              compose independently. Under <code>full</code> rendering only injected motion is spread; native
-              motion already arrives at the device's report rate.
-            </p>
-          </div>
-          <p>
-            Read{' '}
-            <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 6)</code></A> (the percent,
-            and the interval in effect) · Library{' '}
-            <A href="/library/options#set-spread"><code>set_spread</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>One whole command interval (<code>percent = 0x0064</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <p>
+          Read{' '}
+          <A href="/native/commands/requests#options"><code>QUERY(OPTIONS, 6)</code></A> (the percent,
+          and the interval in effect) · Library{' '}
+          <A href="/library/options#set-spread"><code>set_spread</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>One whole command interval (<code>percent = 0x0064</code>):</p>
+        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
 | A5     | 11     | 00     | 03 00  | 06     | 64 00  | lo hi  |
 +--------+--------+--------+--------+--------+--------+--------+
 | SOF    | TYPE   | SEQ    | LEN    | id     | percent| CRC16  |
 +--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
 
     </>

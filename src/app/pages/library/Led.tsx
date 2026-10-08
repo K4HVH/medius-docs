@@ -1,67 +1,60 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Led: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="LED" subtitle="Status LED override" />
+      <PageHeader lead="Status LED override">
         <p>
           <A href="/library/led#led"><code>led</code></A> overrides one of the box's two green status
           LEDs; <A href="/library/types/enums#led-mode"><code>LedMode::Auto</code></A> returns it to the
           status display. <A href="/native/injection#fire-and-forget">Fire-and-forget</A>: one frame, no
           reply.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="led" data-search-target>
-        <Card>
-          <CardHeader title="led" subtitle="Override or restore a status LED" />
-          <pre class="api-signature">fn led(&self, target: LedTarget, mode: LedMode, level: u8) -&gt; Result&lt;()&gt;</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>target</code></td><td><A href="/library/types/enums#led-target"><code>LedTarget</code></A></td><td>Which chip's LED.</td></tr>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#led-mode"><code>LedMode</code></A></td><td>Restore the chip's status display, or override it.</td></tr>
-              <tr><td><code>level</code></td><td><code>u8</code></td><td>Brightness 0-255 for <code>Solid</code> and <code>Blink</code>; ignored otherwise.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            <code>Auto</code>, control-PC silence,{' '}
-            <A href="/library/admin#reset"><code>reset</code></A>, or inter-chip link loss returns an
-            override to the status display. Each chip's status patterns are on the native{' '}
-            <A href="/native/commands/led#led"><code>LED</code></A> command.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, LedTarget, LedMode};
+      <DocSection id="led" title="led" caption="Override or restore a status LED">
+        <pre class="api-signature">fn led(&self, target: LedTarget, mode: LedMode, level: u8) -&gt; Result&lt;()&gt;</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <table class="api-params">
+          <thead>
+            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>target</code></td><td><A href="/library/types/enums#led-target"><code>LedTarget</code></A></td><td>Which chip's LED.</td></tr>
+            <tr><td><code>mode</code></td><td><A href="/library/types/enums#led-mode"><code>LedMode</code></A></td><td>Restore the chip's status display, or override it.</td></tr>
+            <tr><td><code>level</code></td><td><code>u8</code></td><td>Brightness 0-255 for <code>Solid</code> and <code>Blink</code>; ignored otherwise.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          <code>Auto</code>, control-PC silence,{' '}
+          <A href="/library/admin#reset"><code>reset</code></A>, or inter-chip link loss returns an
+          override to the status display. Each chip's status patterns are on the native{' '}
+          <A href="/native/commands/led#led"><code>LED</code></A> command.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, LedTarget, LedMode};
 
 let device = Device::find()?;
 device.led(LedTarget::Both, LedMode::Blink, 200)?;   // both LEDs blink, bright
 device.led(LedTarget::Device, LedMode::Auto, 0)?;    // back to the status display`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="async" data-search-target>
-        <Card>
-          <CardHeader title="On AsyncDevice" subtitle="Still fire-and-forget, no await" />
-          <p>
-            <A href="/library/features/async"><code>AsyncDevice</code></A> re-exposes <code>led</code>{' '}
-            unchanged: no reply, so no <code>.await</code> and no{' '}
-            <a href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html" target="_blank" rel="noreferrer"><code>block_on</code></a>.
-            Only queries are async.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{AsyncDevice, LedTarget, LedMode};
+      <DocSection id="async" title="On AsyncDevice" caption="Still fire-and-forget, no await">
+        <p>
+          <A href="/library/features/async"><code>AsyncDevice</code></A> re-exposes <code>led</code>{' '}
+          unchanged: no reply, so no <code>.await</code> and no{' '}
+          <a href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html" target="_blank" rel="noreferrer"><code>block_on</code></a>.
+          Only queries are async.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{AsyncDevice, LedTarget, LedMode};
 
 let device = AsyncDevice::open("/dev/ttyACM0")?;
 device.led(LedTarget::Host, LedMode::Solid, 128)?;   // sync, no await`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
     </>
   );
 };

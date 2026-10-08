@@ -13,6 +13,34 @@ describe('htmlToMarkdown', () => {
     expect(htmlToMarkdown('<div class="card__header"><h3>clip</h3></div>')).toBe('## clip');
   });
 
+  it('renders the page header as the h1, its lead in italics, and drops its crumbs and AI menu', () => {
+    const md = htmlToMarkdown(
+      '<header class="page-header"><div class="page-header__bar"><nav class="crumbs caps" data-agent-hide>' +
+        '<a href="/">Medius</a> / <a href="/native">Native API</a></nav><span class="ai-actions">AI</span></div>' +
+        '<h1>Inject</h1><p class="lead">Press and release any input</p><p>Intro.</p></header>',
+    );
+    expect(md).toBe('# Inject\n\n_Press and release any input_\n\nIntro.');
+  });
+
+  it('renders a section heading as an h2 with its caption in italics, not run together', () => {
+    const md = htmlToMarkdown(
+      '<section class="doc-section" id="inject"><h2 class="doc-h2">INJECT<span class="doc-caption caps">Momentary-usage override</span></h2><p>Body.</p></section>',
+    );
+    expect(md).toBe('## INJECT\n\n_Momentary-usage override_\n\nBody.');
+    expect(htmlToMarkdown('<h2 class="doc-h2">Notes</h2>')).toBe('## Notes');
+  });
+
+  it('renders consecutive index rows as one bullet list of links', () => {
+    const row = (href: string, title: string, tag?: string) =>
+      `<a class="go" href="${href}"><h3>${title}</h3><span class="go-r">${tag ? `<span>${tag}</span>` : ''}<svg class="arr"></svg></span></a>`;
+    const md = htmlToMarkdown(
+      `<section class="doc-section"><h2 class="doc-h2">Overview</h2>${row('/native/quickstart', 'Quickstart', 'Open the port and inject')}${row('/native/hardware', 'Hardware')}</section>`,
+    );
+    expect(md).toBe(
+      '## Overview\n\n- [Quickstart](/native/quickstart.md): Open the port and inject\n- [Hardware](/native/hardware.md)',
+    );
+  });
+
   it('renders pre.api-signature as a fenced text block, decoding entities', () => {
     const md = htmlToMarkdown('<pre class="api-signature">fn clip(&amp;self) -&gt; ClipHandle</pre>');
     expect(md).toBe('```text\nfn clip(&self) -> ClipHandle\n```');

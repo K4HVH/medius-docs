@@ -61,7 +61,7 @@ async function main(): Promise<void> {
     for (const route of routes) {
       const url = `http://localhost:${PORT}${route.path}`;
       await page.goto(url, { waitUntil: 'load', timeout: 30000 });
-      await page.waitForSelector(`${CONTENT} [data-search-target]`, { timeout: 20000 });
+      await page.waitForSelector(`${CONTENT} .page-header h1`, { timeout: 20000 });
       // Let the route's post-render effects (incl. Prism) settle a couple of frames.
       await page.evaluate(
         () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
           }
           const content = document.querySelector(sel);
           return {
-            rendered: !!content?.querySelector('.card__header h3'),
+            rendered: !!content?.querySelector('.page-header h1'),
             contentHtml: content ? content.innerHTML : '',
             outerHtml: '<!DOCTYPE html>\n' + document.documentElement.outerHTML,
           };
@@ -88,7 +88,7 @@ async function main(): Promise<void> {
       )) as Captured;
 
       if (!cap.contentHtml.trim()) throw new Error(`Empty ${CONTENT} content for ${route.path}`);
-      if (!cap.rendered) throw new Error(`No card header rendered for ${route.path}`);
+      if (!cap.rendered) throw new Error(`No page header rendered for ${route.path}`);
       const info = routeFor(route.path);
       if (!info) throw new Error(`${route.path} is not in the route registry`);
 

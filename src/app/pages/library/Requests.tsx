@@ -1,45 +1,41 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Requests: Component = () => {
   return (
     <>
-      <div id="requests-overview" data-search-target>
-        <Card>
-          <CardHeader title="Requests" subtitle="One QUERY frame out, one RESP frame back" />
-          <p>
-            Queries block, unlike the{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls. They are{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>,{' '}
-            <A href="/library/requests#health"><code>query_health</code></A>,{' '}
-            <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
-            <A href="/library/requests#caps"><code>caps</code></A>,{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>, and{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>, plus{' '}
-            <A href="/library/requests#clip-status"><code>query_status</code></A> and{' '}
-            <A href="/library/requests#clip-config"><code>query_config</code></A> on the{' '}
-            <A href="/library/clip#handle">clip handle</A>.
-          </p>
-        </Card>
-      </div>
+      <PageHeader lead="One QUERY frame out, one RESP frame back">
+        <span id="requests-overview" data-search-target />
+        <p>
+          Queries block, unlike the{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls. They are{' '}
+          <A href="/library/requests#version"><code>query_version</code></A>,{' '}
+          <A href="/library/requests#health"><code>query_health</code></A>,{' '}
+          <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
+          <A href="/library/requests#caps"><code>caps</code></A>,{' '}
+          <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
+          <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A>, and{' '}
+          <A href="/library/requests#query-catch"><code>query_catch</code></A>, plus{' '}
+          <A href="/library/requests#clip-status"><code>query_status</code></A> and{' '}
+          <A href="/library/requests#clip-config"><code>query_config</code></A> on the{' '}
+          <A href="/library/clip#handle">clip handle</A>.
+        </p>
+      </PageHeader>
 
-      <div id="version" data-search-target>
-        <Card>
-          <CardHeader title="query_version" subtitle="Firmware identity, round-trip" />
-          <pre class="api-signature">fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="version" title="query_version" caption="Firmware identity, round-trip">
+        <pre class="api-signature">fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#version"><code>Version</code></A>; the box's{' '}
-            <A href="/library/options#set-name">name</A> is its <code>name</code> field.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#version"><code>Version</code></A>; the box's{' '}
+          <A href="/library/options#set-name">name</A> is its <code>name</code> field.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
@@ -47,30 +43,27 @@ println!("{v}");                       // fw 3.4.5
 println!("proto {}", v.proto_ver);     // proto 9
 println!("name {}", v.name);           // Loki`}</code></pre>
 
-          <div class="callout callout--info">
-            <p>
-              <A href="/library/connection#open"><code>Device::find()</code></A> already runs a version
-              query in the handshake; <code>query_version</code> re-reads it.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="health" data-search-target>
-        <Card>
-          <CardHeader title="query_health" subtitle="Status bits of the device-box-PC path" />
-          <pre class="api-signature">fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-
+        <div class="callout callout--info">
           <p>
-            Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eleven booleans from
-            one <code>u16</code> flags word. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
-            <code>clone_configured</code> must all be true for{' '}
-            <A href="/native/injection">injection</A> to emit.
+            <A href="/library/connection#open"><code>Device::find()</code></A> already runs a version
+            query in the handshake; <code>query_version</code> re-reads it.
           </p>
+        </div>
+      </DocSection>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+      <DocSection id="health" title="query_health" caption="Status bits of the device-box-PC path">
+        <pre class="api-signature">fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+        <p>
+          Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eleven booleans from
+          one <code>u16</code> flags word. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
+          <code>clone_configured</code> must all be true for{' '}
+          <A href="/native/injection">injection</A> to emit.
+        </p>
+
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let h = device.query_health()?;
@@ -79,25 +72,22 @@ if h.link_up && h.mouse_attached && h.clone_configured {
 } else {
     eprintln!("not ready: {h:?}");
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="device-info" data-search-target>
-        <Card>
-          <CardHeader title="device_info" subtitle="Clone's USB identity, kind, product" />
-          <pre class="api-signature">fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="device-info" title="device_info" caption="Clone's USB identity, kind, product">
+        <pre class="api-signature">fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>: the{' '}
-            <code>vid</code>, <code>pid</code>, USB version, a{' '}
-            <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A>, and the{' '}
-            <code>product</code> string the box read from the real device. Every field is zero or empty
-            with nothing cloned. <code>Display</code> prints <code>VVVV:PPPP product</code>.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>: the{' '}
+          <code>vid</code>, <code>pid</code>, USB version, a{' '}
+          <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A>, and the{' '}
+          <code>product</code> string the box read from the real device. Every field is zero or empty
+          with nothing cloned. <code>Display</code> prints <code>VVVV:PPPP product</code>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, DeviceKind};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, DeviceKind};
 
 let device = Device::find()?;
 let d = device.device_info()?;
@@ -111,27 +101,24 @@ if d.vid == 0 {
         // the clone is a mouse
     }
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="caps" data-search-target>
-        <Card>
-          <CardHeader title="caps" subtitle="Feature-detect the whole device" />
-          <pre class="api-signature">fn caps(&self) -&gt; Result&lt;Caps&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="caps" title="caps" caption="Feature-detect the whole device">
+        <pre class="api-signature">fn caps(&self) -&gt; Result&lt;Caps&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#caps"><code>Caps</code></A>: a{' '}
-            <A href="/library/types/structs#mouse-caps"><code>mouse</code></A> half, a{' '}
-            <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
-            change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
-            <code>has_keyboard()</code> say which are bound. An{' '}
-            <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is
-            dropped with no error; check here first.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#caps"><code>Caps</code></A>: a{' '}
+          <A href="/library/types/structs#mouse-caps"><code>mouse</code></A> half, a{' '}
+          <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
+          change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
+          <code>has_keyboard()</code> say which are bound. An{' '}
+          <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is
+          dropped with no error; check here first.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let caps = device.caps()?;
@@ -142,24 +129,21 @@ if caps.mouse.has_wheel {
 if caps.has_keyboard() && caps.keyboard.has_consumer {
     device.press(medius::MediaKey::MUTE)?;
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="query-rate" data-search-target>
-        <Card>
-          <CardHeader title="query_rate" subtitle="Live native report rate" />
-          <pre class="api-signature">fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="query-rate" title="query_rate" caption="Live native report rate">
+        <pre class="api-signature">fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#rate"><code>Rate</code></A>.{' '}
-            <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
-            <code>native_period_us</code> is <code>0</code> (not learned yet). <code>confident</code> is
-            true once the estimator window is full.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#rate"><code>Rate</code></A>.{' '}
+          <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
+          <code>native_period_us</code> is <code>0</code> (not learned yet). <code>confident</code> is
+          true once the estimator window is full.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let r = device.query_rate()?;
@@ -168,30 +152,27 @@ match r.native_hz() {
     Some(hz)                => println!("{hz:.0} Hz (still settling)"),
     None                    => println!("rate not learned yet"),
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="query-stats" data-search-target>
-        <Card>
-          <CardHeader title="query_stats" subtitle="Delivery counters" />
-          <pre class="api-signature">fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="query-stats" title="query_stats" caption="Delivery counters">
+        <pre class="api-signature">fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. Nonzero{' '}
-            <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the way to the
-            PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between
-            the box's two chips.
-          </p>
-          <p>
-            <code>relay_drops</code> counts relayed traffic and commands that went no further, none of it
-            native input. The narrowed counters saturate instead of wrapping; the three drop counts are
-            full width. <code>session</code> moves each time the box releases some or all of what a host
-            set; the library watches it for <A href="/library/lifecycle#restart">session recovery</A>.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. Nonzero{' '}
+          <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the way to the
+          PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between
+          the box's two chips.
+        </p>
+        <p>
+          <code>relay_drops</code> counts relayed traffic and commands that went no further, none of it
+          native input. The narrowed counters saturate instead of wrapping; the three drop counts are
+          full width. <code>session</code> moves each time the box releases some or all of what a host
+          set; the library watches it for <A href="/library/lifecycle#restart">session recovery</A>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let s = device.query_stats()?;
@@ -206,26 +187,23 @@ if s.link_rx_drops > 0 || s.host_rx_drops > 0 {
 if s.relay_drops > 0 {
     println!("{} relayed packets shed under load", s.relay_drops);
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="query-locks" data-search-target>
-        <Card>
-          <CardHeader title="query_locks" subtitle="Active input scales" />
-          <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="query-locks" title="query_locks" caption="Active input scales">
+        <pre class="api-signature">fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction{' '}
-            <A href="/library/lock#scale"><code>scale</code></A> currently weighs.{' '}
-            <code>scale_of(target, direction)</code> reads the percentage in effect;{' '}
-            <code>is_locked(target, direction)</code> reports a full block. What a
-            blanket, a media usage, and a vector-mode relative direction report is on{' '}
-            <A href="/library/types/structs#locks">Locks</A>.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction{' '}
+          <A href="/library/lock#scale"><code>scale</code></A> currently weighs.{' '}
+          <code>scale_of(target, direction)</code> reads the percentage in effect;{' '}
+          <code>is_locked(target, direction)</code> reports a full block. What a
+          blanket, a media usage, and a vector-mode relative direction report is on{' '}
+          <A href="/library/types/structs#locks">Locks</A>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, Axis, Direction};
 
 let device = Device::find()?;
 let locks = device.query_locks()?;
@@ -233,41 +211,38 @@ if locks.is_locked(Axis::X, Direction::Both) {
     println!("horizontal motion is frozen");
 }
 println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="query-catch" data-search-target>
-        <Card>
-          <CardHeader title="query_catch" subtitle="Active catch subscription" />
-          <pre class="api-signature">fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="query-catch" title="query_catch" caption="Active catch subscription">
+        <pre class="api-signature">fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the
-            live subscription table as a list of{' '}
-            <A href="/library/types/structs#catch-entry"><code>CatchEntry</code></A>, the{' '}
-            <code>table_full</code> flag, the box-wide <code>dropped</code> count, and a{' '}
-            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> relating the
-            two chips' timers.
-          </p>
-          <p>
-            <A href="/library/catch#catch-events"><code>catch_events</code></A> gets no reply, so
-            comparing the entries (the <code>class / id / direction / capture</code> the box accepted)
-            against the <A href="/library/types/structs#catch-filter">filters</A> sent is the only way to
-            confirm each was accepted.
-          </p>
-          <p>
-            A missing filter was refused; <code>table_full</code> says whether the 32-entry table was
-            full or the filter was malformed.
-          </p>
+        <p>
+          Returns a <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the
+          live subscription table as a list of{' '}
+          <A href="/library/types/structs#catch-entry"><code>CatchEntry</code></A>, the{' '}
+          <code>table_full</code> flag, the box-wide <code>dropped</code> count, and a{' '}
+          <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> relating the
+          two chips' timers.
+        </p>
+        <p>
+          <A href="/library/catch#catch-events"><code>catch_events</code></A> gets no reply, so
+          comparing the entries (the <code>class / id / direction / capture</code> the box accepted)
+          against the <A href="/library/types/structs#catch-filter">filters</A> sent is the only way to
+          confirm each was accepted.
+        </p>
+        <p>
+          A missing filter was refused; <code>table_full</code> says whether the 32-entry table was
+          full or the filter was malformed.
+        </p>
 
-          <p>
-            A lost event is charged to every entry it resolved against; drops on an entry mean the
-            subscription is too broad for the link.
-          </p>
+        <p>
+          A lost event is charged to every entry it resolved against; drops on an entry mean the
+          subscription is too broad for the link.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Capture, CatchFilter, Class, Device, TrafficClass};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Capture, CatchFilter, Class, Device, TrafficClass};
 
 let device = Device::find()?;
 // Bind the stream: dropping it unsubscribes, emptying the table.
@@ -288,131 +263,118 @@ println!("{} dropped box-wide", c.dropped);
 if let Some(age) = c.clock.age {
     println!("clocks differ by {} us (+/- {}, {age:?} old)", c.clock.offset_us, c.clock.delay_us / 2);
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip-status" data-search-target>
-        <Card>
-          <CardHeader title="query_status (clip)" subtitle="Clip ring depth, progress, playback state" />
-          <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="clip-status" title="query_status (clip)" caption="Clip ring depth, progress, playback state">
+        <pre class="api-signature">fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            On the <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
-            <A href="/library/clip#clip"><code>device.clip()</code></A>, not <code>Device</code>.
-            Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
-            <code>state</code> (including{' '}
-            <A href="/library/types/enums#clip-state"><code>Faulted</code></A>), ring <code>free</code>,
-            retained <code>played</code>/<code>total</code>, the playback counters, and the{' '}
-            <code>held</code> usages. Backs{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
-          </p>
+        <p>
+          On the <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}
+          <A href="/library/clip#clip"><code>device.clip()</code></A>, not <code>Device</code>.
+          Returns a <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>:{' '}
+          <code>state</code> (including{' '}
+          <A href="/library/types/enums#clip-state"><code>Faulted</code></A>), ring <code>free</code>,
+          retained <code>played</code>/<code>total</code>, the playback counters, and the{' '}
+          <code>held</code> usages. Backs{' '}
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let clip = device.clip();
 let s = clip.query_status()?;
 if s.state == medius::ClipState::Faulted { clip.clear()?; }
 println!("{} free, {} played", s.free, s.played);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip-config" data-search-target>
-        <Card>
-          <CardHeader title="query_config (clip)" subtitle="Clip config readback" />
-          <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="clip-config" title="query_config (clip)" caption="Clip config readback">
+        <pre class="api-signature">fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <p>
-            The config view of the{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame{' '}
-            <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on{' '}
-            <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
-            <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>: auto-lock, loop,
-            retain, finalized flag, and both kinds of <A href="/library/clip#triggers">trigger</A> set,
-            each packet trigger with its <code>hits</code>. Every setting round-trips.
-          </p>
+        <p>
+          The config view of the{' '}
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame{' '}
+          <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on{' '}
+          <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
+          <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>: auto-lock, loop,
+          retain, finalized flag, and both kinds of <A href="/library/clip#triggers">trigger</A> set,
+          each packet trigger with its <code>hits</code>. Every setting round-trips.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 let device = Device::find()?;
 let cfg = device.clip().query_config()?;
 println!("{} input triggers, {} packet triggers, loop={}",
     cfg.triggers.len(), cfg.packet_triggers.len(), cfg.loop_);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="firmware-info" data-search-target>
-        <Card>
-          <CardHeader title="firmware_info" subtitle="Both chips' versions, slots, staged images" />
-          <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <p>
-            Returns a <A href="/library/types/structs#firmware-info"><code>FirmwareInfo</code></A>,
-            backing <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>;
-            the other firmware calls are on <A href="/library/update">Update</A>.
-          </p>
-          <p>
-            The only call reporting the host chip's version;{' '}
-            <A href="/library/requests#version"><code>query_version</code></A> reports the device chip
-            alone.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let fw = device.firmware_info()?;
+      <DocSection id="firmware-info" title="firmware_info" caption="Both chips' versions, slots, staged images">
+        <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <p>
+          Returns a <A href="/library/types/structs#firmware-info"><code>FirmwareInfo</code></A>,
+          backing <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>;
+          the other firmware calls are on <A href="/library/update">Update</A>.
+        </p>
+        <p>
+          The only call reporting the host chip's version;{' '}
+          <A href="/library/requests#version"><code>query_version</code></A> reports the device chip
+          alone.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let fw = device.firmware_info()?;
 println!("device {}", fw.device);
 match fw.host {
     Some(h) => println!("host {h}"),
     None => println!("host chip not answering"),
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="async" data-search-target>
-        <Card>
-          <CardHeader title="Async queries" subtitle="The same queries on AsyncDevice" />
-          <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
-          <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
-          <pre class="api-signature">async fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>
-          <pre class="api-signature">async fn caps(&self) -&gt; Result&lt;Caps&gt;</pre>
-          <pre class="api-signature">async fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
-          <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
-          <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
-          <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
-          <pre class="api-signature">async fn query_imperfect(&self) -&gt; Result&lt;ImperfectStatus&gt;</pre>
-          <pre class="api-signature">async fn query_movement_riding(&self) -&gt; Result&lt;Option&lt;Duration&gt;&gt;</pre>
-          <pre class="api-signature">async fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
-          <pre class="api-signature">async fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
-          <pre class="api-signature">async fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
-          <pre class="api-signature">async fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
-          <pre class="api-signature">async fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="async" title="Async queries" caption="The same queries on AsyncDevice">
+        <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
+        <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
+        <pre class="api-signature">async fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>
+        <pre class="api-signature">async fn caps(&self) -&gt; Result&lt;Caps&gt;</pre>
+        <pre class="api-signature">async fn query_rate(&self) -&gt; Result&lt;Rate&gt;</pre>
+        <pre class="api-signature">async fn query_stats(&self) -&gt; Result&lt;Stats&gt;</pre>
+        <pre class="api-signature">async fn query_locks(&self) -&gt; Result&lt;Locks&gt;</pre>
+        <pre class="api-signature">async fn query_catch(&self) -&gt; Result&lt;CatchState&gt;</pre>
+        <pre class="api-signature">async fn query_imperfect(&self) -&gt; Result&lt;ImperfectStatus&gt;</pre>
+        <pre class="api-signature">async fn query_movement_riding(&self) -&gt; Result&lt;Option&lt;Duration&gt;&gt;</pre>
+        <pre class="api-signature">async fn query_bearing(&self) -&gt; Result&lt;Bearing&gt;</pre>
+        <pre class="api-signature">async fn query_emit_pace(&self) -&gt; Result&lt;EmitPaceStatus&gt;</pre>
+        <pre class="api-signature">async fn query_status(&self) -&gt; Result&lt;ClipStatus&gt;</pre>
+        <pre class="api-signature">async fn query_config(&self) -&gt; Result&lt;ClipSettings&gt;</pre>
+        <pre class="api-signature">async fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <pre><code class="language-bash">cargo add medius --features async</code></pre>
+        <pre><code class="language-bash">cargo add medius --features async</code></pre>
 
-          <p>
-            With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
-            <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures;
-            other methods stay synchronous. Any executor drives them (no tokio), such as{' '}
-            <a
-              href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html"
-              target="_blank"
-              rel="noreferrer"
-            ><code>futures::executor::block_on</code></a>.
-          </p>
+        <p>
+          With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
+          <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures;
+          other methods stay synchronous. Any executor drives them (no tokio), such as{' '}
+          <a
+            href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html"
+            target="_blank"
+            rel="noreferrer"
+          ><code>futures::executor::block_on</code></a>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use futures::executor::block_on;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::Device;
 
 let device = Device::find()?.into_async();
 let v = block_on(device.query_version())?;
 let h = block_on(device.query_health())?;
 println!("{v} link_up={}", h.link_up);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
     </>
   );

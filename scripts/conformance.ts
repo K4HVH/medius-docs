@@ -51,19 +51,34 @@ const SIGS = (b: string) =>
   strip(
     [...b.matchAll(/<pre class="api-signature">([\s\S]*?)<\/pre>/g)].map((m) => m[1]).join(' \n '),
   );
+// Docs pages open with a page header (the intro, first in its page as the first card was) and hold
+// sections; dashboard pages hold cards.
 function cards(src: string): CardBlock[] {
+  const block = (title: string, subtitle: string | undefined, body: string, start: number): CardBlock => ({
+    title,
+    subtitle: subtitle ?? '',
+    body,
+    start,
+    sig: SIGS(body),
+  });
   return [
-    ...src.matchAll(
-      /<CardHeader\s+title="([^"]*)"(?:\s+subtitle="([^"]*)")?[^>]*\/>([\s\S]*?)<\/Card>/g,
+    ...[...src.matchAll(/<PageHeader(?:\s+lead="([^"]*)")?\s*>([\s\S]*?)<\/PageHeader>/g)].map((m) =>
+      block('page header', m[1], m[2], m.index!),
     ),
-  ].map((m) => ({
-    title: m[1],
-    subtitle: m[2] ?? '',
-    body: m[3],
-    start: m.index!,
-    sig: SIGS(m[3]),
-  }));
+    ...[
+      ...src.matchAll(
+        /<DocSection(?:\s+id="[^"]*")?\s+title="([^"]*)"(?:\s+caption="([^"]*)")?\s*>([\s\S]*?)<\/DocSection>/g,
+      ),
+      ...src.matchAll(/<CardHeader\s+title="([^"]*)"(?:\s+subtitle="([^"]*)")?[^>]*\/>([\s\S]*?)<\/Card>/g),
+    ].map((m) => block(m[1], m[2], m[3], m.index!)),
+  ].sort((a, b) => a.start - b.start);
 }
+// An index row's tag is the subtitle its tile carried.
+const tags = (src: string) =>
+  [...src.matchAll(/<IndexRow\s+href="[^"]*"\s+title="([^"]*)"(?:\s+tag="([^"]*)")?/g)]
+    .filter((m) => m[2])
+    .map((m) => block0(m[1], m[2], m.index!));
+const block0 = (title: string, subtitle: string, start: number): CardBlock => ({ title, subtitle, body: '', start, sig: '' });
 
 // A method section's signature is a CALL you make; a type card's is a declaration or a constructor
 // list.
@@ -293,7 +308,7 @@ rates.set('cell-punctuation', `${punctChecked} cells measured against their own 
 // ---- subtitles: no trailing period ----
 derived(
   'subtitle-period',
-  allCards.filter(({ c }) => c.subtitle),
+  [...allCards, ...files.flatMap((f) => tags(srcOf.get(f)!).map((c) => ({ f, c })))].filter(({ c }) => c.subtitle),
   ({ c }) => !/[.]$/.test(c.subtitle),
   ({ f, c }) => [f, lineAt(f, c), `"${c.title}" subtitle ends in a period`],
 );
