@@ -2,8 +2,8 @@ import { createEffect, on, onCleanup } from 'solid-js';
 
 const holders = new Set<string>();
 
-// The page under an open phone panel stays still. Each panel holds its own key, so closing one never
-// unlocks the page under the other.
+// The page under an open phone panel stays still. Each panel locks under a separate key, so closing one
+// never unlocks the page under the other.
 export function lockPage(key: string, locked: boolean): void {
   if (locked) holders.add(key);
   else holders.delete(key);
