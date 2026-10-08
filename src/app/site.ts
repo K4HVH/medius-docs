@@ -6,3 +6,6 @@ export const LINKS = {
   crates: 'https://crates.io/crates/medius',
   pypi: 'https://pypi.org/project/medius/',
 } as const;
+
+// Pages the server fills in per request; their prerendered snapshot holds no release or figure.
+export const LIVE_PATHS: ReadonlySet<string> = new Set(['/dashboard/changelog', '/dashboard/stats']);

@@ -383,7 +383,7 @@ const Stats = () => {
           <div id="stats" data-search-target>
             <Card>
               <CardHeader title="Usage stats" subtitle={SCOPE} />
-              <p>Loading...</p>
+              <div data-fill="stats"><p>Loading...</p></div>
             </Card>
           </div>
         }

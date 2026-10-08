@@ -579,3 +579,49 @@ a.tabs__tab:active {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Changelog releases: Changelog.tsx renders them, server/fill.ts writes the same markup for crawlers. */
+.releases {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing);
+}
+
+.release__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--g-spacing-sm);
+  flex-wrap: wrap;
+}
+
+.release__title h4 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.release__date {
+  color: var(--g-text-secondary);
+}
+
+.release__heading {
+  font-weight: 600;
+  margin-top: var(--g-spacing-sm);
+}
+
+.release ul {
+  margin: var(--g-spacing-xs) 0 0;
+  padding-left: var(--g-spacing);
+}
+
+.release p {
+  margin: var(--g-spacing-xs) 0 0;
+}
+
+.release details {
+  margin-top: var(--g-spacing-sm);
+}
+
+.release summary {
+  cursor: pointer;
+  color: var(--g-text-link);
+}
