@@ -35,6 +35,8 @@ describe('RouteMeta', () => {
     await waitFor(() => expect(document.title).toBe('Page not found · Medius'));
     expect(meta('meta[name="robots"]')).toBe('noindex');
     expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
+    expect(document.head.querySelector('meta[property="og:url"]')).toBeNull();
+    expect(meta('meta[property="og:type"]')).toBe('website');
   });
 
   it('gives Home the site title and a website og:type', async () => {

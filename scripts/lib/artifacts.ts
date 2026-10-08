@@ -9,6 +9,7 @@ export interface PageRecord {
   description: string;
   markdown: string;
   lastmod?: string;
+  index?: boolean;
 }
 
 export { LIVE_PATHS };
@@ -79,7 +80,7 @@ export function buildLlmsFullTxt(site: string, pages: PageRecord[]): string {
 }
 
 export function buildSitemap(site: string, pages: PageRecord[], homeLastmod?: string): string {
-  const urls = [{ path: '/', lastmod: homeLastmod }, ...pages];
+  const urls = [{ path: '/', lastmod: homeLastmod }, ...pages.filter((p) => p.index !== false)];
   const entries = urls
     .map((u) => {
       const date = u.lastmod ? `<lastmod>${xmlEscape(u.lastmod)}</lastmod>` : '';
@@ -140,12 +141,13 @@ export function buildAgentIndex(site: string, pages: PageRecord[]): AgentIndex {
   return {
     site,
     mcp: `${site}/mcp`,
-    pages: pages.filter((p) => !LIVE_PATHS.has(p.path)).map((p) => ({
+    // A live page's snapshot holds only "Loading..."; the MCP server fills it per request.
+    pages: pages.map((p) => ({
       path: p.path,
       title: p.title,
       section: p.section,
       description: p.description,
-      text: stripSourceComment(p.markdown).trim(),
+      text: LIVE_PATHS.has(p.path) ? p.description : stripSourceComment(p.markdown).trim(),
     })),
   };
 }

@@ -190,7 +190,13 @@ const DocsLayout = (props: RouteSectionProps) => {
       {(group) => (
         <>
           <Divider spacing="compact" label={group.label} labelAlign="start" />
-          <NavLinks items={items(group.routes)} active={location.pathname} disabled={p.disabled} onNavigate={closeOnMobile} />
+          <NavLinks
+            items={items(group.routes)}
+            active={location.pathname}
+            label={group.label}
+            disabled={p.disabled}
+            onNavigate={closeOnMobile}
+          />
         </>
       )}
     </For>
@@ -223,6 +229,8 @@ const DocsLayout = (props: RouteSectionProps) => {
           <NavLinks
             items={sectionItems}
             active={`/${activeSection()}`}
+            label="Sections"
+            current="true"
             disabled={flashing()}
             onNavigate={closeOnMobile}
           />
@@ -236,7 +244,7 @@ const DocsLayout = (props: RouteSectionProps) => {
           </Show>
           <Show when={activeSection() === 'bindings'}>
             <Divider spacing="compact" label="Bindings" labelAlign="start" />
-            <NavLinks items={bindingSwitcher} active={bindingRoot()} onNavigate={closeOnMobile} />
+            <NavLinks items={bindingSwitcher} active={bindingRoot()} label="Languages" current="true" onNavigate={closeOnMobile} />
             <Show when={bindingLang()} keyed>
               {(lang) => <Groups groups={sidebarGroups('bindings', lang)} />}
             </Show>
@@ -309,11 +317,11 @@ const DocsLayout = (props: RouteSectionProps) => {
             }
           />
           <Show when={trail().length > 1}>
-            <Breadcrumbs items={trail()} variant="subtle" size="compact" class="docs-breadcrumbs" />
+            <Breadcrumbs items={trail()} variant="subtle" size="compact" class="docs-breadcrumbs" disabled={flashing()} />
           </Show>
-          <div class="docs-page">
+          <main class="docs-page">
             {props.children}
-          </div>
+          </main>
           <SiteFooter />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { planAgentResponse, acceptsMarkdown, isCandidateRoute } from '../../server/agent';
+import { planAgentResponse, acceptsMarkdown, isCandidateRoute, markdownLink, NOINDEX_ARTIFACTS } from '../../server/agent';
 
 const FILES = new Set([
   '/library/clip.html',
@@ -18,6 +18,13 @@ describe('acceptsMarkdown', () => {
     expect(acceptsMarkdown('text/html,application/xhtml+xml,*/*')).toBe(false);
     expect(acceptsMarkdown('*/*')).toBe(false);
     expect(acceptsMarkdown('')).toBe(false);
+  });
+
+  it('respects quality values: a zero refuses Markdown, and HTML preferred over it wins', () => {
+    expect(acceptsMarkdown('text/markdown;q=0')).toBe(false);
+    expect(acceptsMarkdown('text/html, text/markdown;q=0.1')).toBe(false);
+    expect(acceptsMarkdown('text/markdown, text/html;q=0.5')).toBe(true);
+    expect(acceptsMarkdown('text/markdown;q=0.8, text/html;q=0.8')).toBe(true);
   });
 });
 
@@ -78,5 +85,19 @@ describe('planAgentResponse', () => {
     expect(planAgentResponse('/', 'text/markdown', has)).toEqual({ kind: 'pass' });
     expect(planAgentResponse('/assets/index.js', 'text/markdown', has)).toEqual({ kind: 'pass' });
     expect(planAgentResponse('/mcp', 'text/markdown', has)).toEqual({ kind: 'pass' });
+  });
+});
+
+describe('Markdown twin headers', () => {
+  it('point a twin at its HTML page as the canonical copy, beside the llms.txt links', () => {
+    const link = markdownLink('/native/quickstart.md');
+    expect(link).toContain('<https://medius.k4tech.net/native/quickstart>; rel="canonical"');
+    expect(link).toContain('</llms.txt>; rel="llms-txt"');
+  });
+
+  it('keep the agent artifacts out of the search index', () => {
+    for (const p of ['/llms.txt', '/llms-full.txt', '/agent-index.json', '/routes.json']) expect(NOINDEX_ARTIFACTS.test(p)).toBe(true);
+    expect(NOINDEX_ARTIFACTS.test('/sitemap.xml')).toBe(false);
+    expect(NOINDEX_ARTIFACTS.test('/robots.txt')).toBe(false);
   });
 });

@@ -1,14 +1,13 @@
 import { SITE, LINKS } from './site';
-import { breadcrumbTrail, routeFor, type RouteInfo } from './routes';
+import { breadcrumbTrail, documentTitle, routeFor, type RouteInfo } from './routes';
 
 const WEBSITE_ID = `${SITE}/#website`;
-const SOFTWARE_ID = `${SITE}/#software`;
-const DASHBOARD_ID = `${SITE}/#dashboard`;
+const MEDIUS_ID = `${SITE}/#medius`;
 
 const abs = (path: string) => SITE + (path === '/' ? '/' : path);
-const FREE = { '@type': 'Offer', price: '0', priceCurrency: 'USD' };
 
-// schema.org graph for one page. Only facts the site states: no ratings, counts or version.
+// schema.org graph for one page. Medius is a plain Thing: a SoftwareApplication item is a rich-result
+// candidate Google wants a rating for, and Medius has none to give.
 export function buildJsonLd(route: RouteInfo, lastmod?: string): object {
   const url = abs(route.path);
   const graph: object[] = [
@@ -21,16 +20,12 @@ export function buildJsonLd(route: RouteInfo, lastmod?: string): object {
       publisher: { '@type': 'Organization', name: 'K4HVH', url: 'https://github.com/K4HVH' },
     },
     {
-      '@type': 'SoftwareApplication',
-      '@id': SOFTWARE_ID,
+      '@type': 'Thing',
+      '@id': MEDIUS_ID,
       name: 'Medius',
+      alternateName: 'Medius for MAKCU',
       description: routeFor('/')?.description,
-      applicationCategory: 'DriverApplication',
-      operatingSystem: 'MAKCU box (ESP32-S3)',
       url: abs('/'),
-      downloadUrl: abs('/dashboard/setup'),
-      isAccessibleForFree: true,
-      offers: FREE,
       sameAs: Object.values(LINKS),
     },
   ];
@@ -38,49 +33,27 @@ export function buildJsonLd(route: RouteInfo, lastmod?: string): object {
   if (route.kind === 'article' && route.index) {
     graph.push({
       '@type': 'TechArticle',
-      headline: route.title,
+      headline: documentTitle(route),
       description: route.description,
       url,
       inLanguage: 'en',
       isPartOf: { '@id': WEBSITE_ID },
-      about: { '@id': SOFTWARE_ID },
+      about: { '@id': MEDIUS_ID },
       ...(lastmod ? { dateModified: lastmod } : {}),
     });
-  } else if (route.kind === 'app') {
-    graph.push(
-      {
-        '@type': 'WebApplication',
-        '@id': DASHBOARD_ID,
-        name: 'Medius dashboard',
-        url: abs('/dashboard'),
-        applicationCategory: 'UtilitiesApplication',
-        operatingSystem: 'Windows, macOS, Linux, ChromeOS',
-        browserRequirements: 'Requires Web Serial: Chrome or Edge',
-        isAccessibleForFree: true,
-        offers: FREE,
-      },
-      {
-        '@type': 'WebPage',
-        url,
-        name: route.title,
-        description: route.description,
-        isPartOf: { '@id': WEBSITE_ID },
-        mainEntity: { '@id': DASHBOARD_ID },
-      },
-    );
-  } else if (route.kind === 'home') {
+  } else if (route.kind !== 'article') {
     graph.push({
       '@type': 'WebPage',
       url,
-      name: route.fullTitle ?? route.title,
+      name: documentTitle(route),
       description: route.description,
       isPartOf: { '@id': WEBSITE_ID },
-      about: { '@id': SOFTWARE_ID },
+      about: { '@id': MEDIUS_ID },
     });
   }
 
   const trail = breadcrumbTrail(route);
-  if (trail.length > 0) {
+  if (trail.length > 1) {
     graph.push({
       '@type': 'BreadcrumbList',
       itemListElement: trail.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.label, item: abs(c.href) })),

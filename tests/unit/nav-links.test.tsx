@@ -8,9 +8,9 @@ const ITEMS = [
   { href: '/native/quickstart', label: 'Quickstart' },
 ];
 
-const mount = (props: { disabled?: boolean; onNavigate?: () => void } = {}) => {
+const mount = (props: { disabled?: boolean; onNavigate?: () => void; current?: 'page' | 'true'; label?: string } = {}, at = '/native') => {
   const history = createMemoryHistory();
-  history.set({ value: '/native' });
+  history.set({ value: at });
   const r = render(() => (
     <MemoryRouter history={history}>
       <Route path="*" component={() => <NavLinks items={ITEMS} active="/native" {...props} />} />
@@ -51,5 +51,11 @@ describe('NavLinks', () => {
     await new Promise((res) => setTimeout(res, 0));
     expect(r.history.get()).toBe('/native');
     expect(onNavigate).not.toHaveBeenCalled();
+  });
+
+  it('names its landmark and marks the section you are in, deeper than its root, as current but not the page', () => {
+    const r = mount({ label: 'Sections', current: 'true' }, '/native/commands/inject');
+    expect(r.container.querySelector('nav')!.getAttribute('aria-label')).toBe('Sections');
+    expect(r.link('Introduction').getAttribute('aria-current')).toBe('true');
   });
 });

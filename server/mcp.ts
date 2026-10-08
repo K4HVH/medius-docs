@@ -12,6 +12,8 @@ import {
   toSearchResults,
   type IndexPage,
 } from './mcpSearch';
+import { fillMarkdown } from './fill';
+import { LIVE_PATHS } from '../src/app/site';
 
 const DIST = resolve(process.env.PUBLIC_DIR || './dist');
 const SITE = (process.env.SITE_ORIGIN || 'https://medius.k4tech.net').replace(/\/+$/, '');
@@ -32,6 +34,12 @@ function loadPages(): IndexPage[] {
   }
   cachedPages = pages;
   return pages;
+}
+
+// The changelog and stats as they are now, from the same fill the server gives crawlers.
+async function liveText(page: IndexPage): Promise<string> {
+  if (!LIVE_PATHS.has(page.path)) return page.text;
+  return (await fillMarkdown(page.path)) ?? page.text;
 }
 
 function textResult(value: unknown, isError = false) {
@@ -61,11 +69,11 @@ function buildServer(): McpServer {
       required: ['path'],
       additionalProperties: false,
     },
-    handler: (args: any) => {
+    handler: async (args: any) => {
       const path = typeof args?.path === 'string' ? args.path : '';
       const page = getPage(pages, path);
       if (!page) return textResult(`No page at "${path}". Call list_pages for valid paths.`, true);
-      return textResult(page.text);
+      return textResult(await liveText(page));
     },
   });
 
@@ -144,10 +152,12 @@ function buildServer(): McpServer {
       },
       required: ['id', 'title', 'text', 'url'],
     },
-    handler: (args: any) => {
+    handler: async (args: any) => {
       const id = typeof args?.id === 'string' ? args.id : '';
       const doc = toFetchDoc(pages, id, SITE);
       if (!doc) return textResult(`No page with id "${id}". Use search or list_pages for valid ids.`, true);
+      const page = getPage(pages, id);
+      if (page) doc.text = await liveText(page);
       return { content: [{ type: 'text' as const, text: JSON.stringify(doc) }], structuredContent: doc };
     },
   });

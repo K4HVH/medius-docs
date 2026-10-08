@@ -2,7 +2,7 @@
 // HTML, all with Vary: Accept so caches split the variants.
 import { existsSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
-import { LIVE_PATHS } from '../src/app/site';
+import { LIVE_PATHS, SITE } from '../src/app/site';
 import { fillMarkdown, fillPage } from './fill';
 
 const DIST = resolve(process.env.PUBLIC_DIR || './dist');
@@ -13,8 +13,19 @@ export type AgentAction =
   | { kind: 'html'; path: string }
   | { kind: 'notfound' };
 
+// Markdown only when it's asked for by name, with a quality above zero and no lower than HTML's.
 export function acceptsMarkdown(accept: string): boolean {
-  return accept.split(',').some((part) => part.trim().split(';')[0].trim() === 'text/markdown');
+  let md = -1;
+  let html = -1;
+  for (const part of accept.split(',')) {
+    const [type, ...params] = part.trim().split(';').map((x) => x.trim());
+    const qParam = params.find((p) => p.startsWith('q='));
+    const q = qParam ? Number(qParam.slice(2)) : 1;
+    if (Number.isNaN(q)) continue;
+    if (type === 'text/markdown') md = Math.max(md, q);
+    else if (type === 'text/html') html = Math.max(html, q);
+  }
+  return md > 0 && md >= html;
 }
 
 export function isCandidateRoute(pathname: string): boolean {
@@ -73,6 +84,14 @@ function has(distRelPath: string): boolean {
 // Advertise the llms.txt indexes from every doc response (RFC 8288 Link header),
 // and let CDNs/agents cache briefly while revalidating in the background.
 export const LLMS_LINK = '</llms.txt>; rel="llms-txt", </llms-full.txt>; rel="llms-full-txt"';
+
+// A Markdown twin names its HTML page as the canonical copy, so search engines index the page, not both.
+export function markdownLink(mdPath: string): string {
+  return `<${SITE}${mdPath.replace(/\.md$/, '')}>; rel="canonical", ${LLMS_LINK}`;
+}
+
+// Agent files that are not pages for a search result.
+export const NOINDEX_ARTIFACTS = /^\/(llms\.txt|llms-full\.txt|agent-index\.json|routes\.json)$/;
 export const DOC_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
 // The changelog and stats change without a deploy: cache them as briefly as their sources.
 const LIVE_CACHE = 'public, max-age=60';
@@ -89,12 +108,20 @@ const HTML_HEADERS = {
   'cache-control': DOC_CACHE,
 };
 
-export async function handleAgentDocs(req: Request): Promise<Response | null> {
+const LIVE_DOWN = { 'retry-after': '120', 'cache-control': 'no-store' };
+
+// `routes` (the registry paths) limits pages to real addresses: //native or /%6Eative decode to a file
+// on disk but are not pages.
+export async function handleAgentDocs(req: Request, routes?: ReadonlySet<string>): Promise<Response | null> {
   if (req.method !== 'GET' && req.method !== 'HEAD') return null;
   const pathname = new URL(req.url).pathname;
   if (distFile(pathname) === null) return new Response('Bad request', { status: 400 });
 
   const action = planAgentResponse(pathname, req.headers.get('accept') || '', has);
+  const route = pathname.replace(/\.md$/, '');
+  if (routes && action.kind !== 'pass' && !routes.has(route)) {
+    return action.kind === 'html' ? null : new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  }
   switch (action.kind) {
     case 'pass':
       return null;
@@ -105,18 +132,23 @@ export async function handleAgentDocs(req: Request): Promise<Response | null> {
       });
     case 'markdown': {
       const abs = distFile(action.path)!;
-      const route = action.path.replace(/\.md$/, '');
-      if (LIVE_PATHS.has(route)) {
-        const md = await fillMarkdown(route);
-        if (md) return new Response(md, { headers: { ...MD_HEADERS, 'cache-control': LIVE_CACHE } });
+      const headers = { ...MD_HEADERS, link: markdownLink(action.path) };
+      const live = action.path.replace(/\.md$/, '');
+      if (LIVE_PATHS.has(live)) {
+        const md = await fillMarkdown(live);
+        if (!md) return new Response('Try again shortly.\n', { status: 503, headers: { ...headers, ...LIVE_DOWN } });
+        return new Response(md, { headers: { ...headers, 'cache-control': LIVE_CACHE } });
       }
-      return new Response(Bun.file(abs), { headers: MD_HEADERS });
+      return new Response(Bun.file(abs), { headers });
     }
     case 'html': {
       const abs = distFile(action.path)!;
-      const route = action.path.replace(/\.html$/, '');
-      if (LIVE_PATHS.has(route)) {
-        const html = await fillPage(route, await Bun.file(abs).text());
+      const live = action.path.replace(/\.html$/, '');
+      if (LIVE_PATHS.has(live)) {
+        const snapshot = await Bun.file(abs).text();
+        const html = await fillPage(live, snapshot);
+        // Never a 200 that reads "Loading...": crawlers retry a 503, and a browser still runs the app.
+        if (!html) return new Response(snapshot, { status: 503, headers: { ...HTML_HEADERS, ...LIVE_DOWN } });
         return new Response(html, { headers: { ...HTML_HEADERS, 'cache-control': LIVE_CACHE } });
       }
       return new Response(Bun.file(abs), { headers: HTML_HEADERS });

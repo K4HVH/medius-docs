@@ -10,8 +10,15 @@ export interface NavItem {
 
 // A vertical list of router links that look like MidnightUI's subtle vertical Tabs, so crawlers can
 // follow the sidebar and a page opens in a new tab.
-export const NavLinks = (props: { items: NavItem[]; active: string; disabled?: boolean; onNavigate?: () => void }) => (
-  <nav>
+export const NavLinks = (props: {
+  items: NavItem[];
+  active: string;
+  label?: string;
+  current?: 'page' | 'true';
+  disabled?: boolean;
+  onNavigate?: () => void;
+}) => (
+  <nav aria-label={props.label}>
     <div class={`tabs tabs--subtle tabs--vertical${props.disabled ? ' tabs--disabled' : ''}`}>
       <For each={props.items}>
         {(item) => {
@@ -23,7 +30,7 @@ export const NavLinks = (props: { items: NavItem[]; active: string; disabled?: b
               activeClass=""
               inactiveClass=""
               class={`tabs__tab${active() ? ' tabs__tab--active' : ''}`}
-              aria-current={active() ? 'page' : undefined}
+              aria-current={active() ? (props.current ?? 'page') : undefined}
               aria-disabled={props.disabled ? 'true' : undefined}
               tabIndex={props.disabled ? -1 : undefined}
               on:click={(e: MouseEvent) => {

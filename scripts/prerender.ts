@@ -9,6 +9,7 @@ import { htmlToMarkdown } from './lib/htmlToMarkdown';
 import { assemblePageMarkdown } from './lib/pageDoc';
 import { buildArtifacts, type PageRecord } from './lib/artifacts';
 import { ROUTES, routeFor } from '../src/app/routes';
+import { LIVE_PATHS } from '../src/app/site';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -107,7 +108,8 @@ async function main(): Promise<void> {
         title: info.title,
         description: info.description,
         markdown,
-        lastmod: lastmod[route.path],
+        lastmod: LIVE_PATHS.has(route.path) ? undefined : lastmod[route.path],
+        index: info.index,
       });
       process.stdout.write(`  ${route.path} -> ${route.path}.html + ${route.path}.md\n`);
     }

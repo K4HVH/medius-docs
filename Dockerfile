@@ -49,9 +49,12 @@ ENV STATS_DB=/app/data/stats.db
 # Copy the enriched dist/ (SPA + prerendered .html/.md + agent artifacts).
 COPY --from=prerender --chown=bunuser:nodejs /app/dist /app/dist
 
-# Copy the Bun server, its handlers, and the one runtime dependency (mcp-lite).
+# Copy the Bun server, its handlers, the two app modules it shares with the client, and the one
+# runtime dependency (mcp-lite). tests/unit/runner-image.test.ts fails when serve.ts loads anything else.
 COPY --from=builder --chown=bunuser:nodejs /app/serve.ts /app/serve.ts
 COPY --from=builder --chown=bunuser:nodejs /app/server /app/server
+COPY --from=builder --chown=bunuser:nodejs /app/src/app/site.ts /app/src/app/site.ts
+COPY --from=builder --chown=bunuser:nodejs /app/src/dashboard/firmware/notes.ts /app/src/dashboard/firmware/notes.ts
 COPY --from=builder --chown=bunuser:nodejs /app/node_modules/mcp-lite /app/node_modules/mcp-lite
 
 USER bunuser

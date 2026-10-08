@@ -59,15 +59,29 @@ interface GhRelease {
 
 // Fetch (or serve cached) the releases list, recording the .bin asset ids it
 // references. Returns the projected JSON body, or null on an upstream failure.
+// A failed list request is not retried for this long, so a GitHub outage costs one call a window.
+const RELEASES_RETRY_MS = 30_000;
+let releasesFailedAt = 0;
+
 async function loadReleases(): Promise<string | null> {
   const now = Date.now();
   if (releasesCache && now - releasesCache.at < RELEASES_TTL_MS) return releasesCache.body;
-  const res = await fetch(`${GITHUB_API}/repos/${repo()}/releases?per_page=100`, {
-    headers: ghHeaders('application/vnd.github+json'),
-  });
+  if (now - releasesFailedAt < RELEASES_RETRY_MS) return releasesCache?.body ?? null;
+  let res: Response;
+  try {
+    res = await fetch(`${GITHUB_API}/repos/${repo()}/releases?per_page=100`, {
+      headers: ghHeaders('application/vnd.github+json'),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (e) {
+    console.warn(`[firmware] releases request failed: ${(e as Error).message}`);
+    releasesFailedAt = now;
+    return releasesCache?.body ?? null;
+  }
   if (!res.ok) {
     console.warn(`[firmware] releases request failed: ${res.status}`);
-    return null;
+    releasesFailedAt = now;
+    return releasesCache?.body ?? null;
   }
   const data = (await res.json()) as GhRelease[];
   const releases = data.map((r) => ({
