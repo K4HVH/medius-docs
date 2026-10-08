@@ -27,13 +27,17 @@ code, pre, kbd, samp {
 }
 
 /* Scrollbars: a thin square graphite bar that turns blue on hover and while dragged.
-   Firefox takes the standard properties instead. */
+   Firefox takes the standard properties instead. Chrome lets the standard properties win over
+   ::-webkit-scrollbar, so the ones MidnightUI sets for Firefox are reset where the pseudo-element works. */
+@supports selector(::-webkit-scrollbar) {
+  * { scrollbar-width: auto; scrollbar-color: auto; }
+}
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 html::-webkit-scrollbar-track { background: var(--ground); }
-::-webkit-scrollbar-thumb { background: var(--line-2); border: 3px solid transparent; background-clip: padding-box; }
-::-webkit-scrollbar-thumb:hover { background-color: var(--primary); }
-::-webkit-scrollbar-thumb:active { background-color: var(--accent); }
+::-webkit-scrollbar-thumb { background: var(--line-2); border: 3px solid transparent; border-radius: 0; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--primary); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:active { background-color: var(--accent); background-clip: padding-box; }
 ::-webkit-scrollbar-corner { background: transparent; }
 @supports not selector(::-webkit-scrollbar) {
   * { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
