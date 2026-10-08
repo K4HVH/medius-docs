@@ -15,7 +15,7 @@ const bytesIn = (hex: string) => hex.split(' ').length;
 
 // A captured mouse's descriptors beside its clone's, field by field. The count and the rows check off
 // together once the panel is on screen, then the panel steps through the descriptors every six seconds
-// while it stays there, unless the pointer is on it or a tab was picked.
+// while it stays there, unless the pointer or keyboard focus is on it or a tab was picked.
 export function DescriptorPanel(props: { sample: DescriptorSample }) {
   const reduce = prefersReducedMotion();
   const fields = (k: number) => props.sample.descriptors[TABS[k].key];
@@ -142,14 +142,22 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
 
   onMount(() => {
     sizeCount(totalOf(0), true);
+    void document.fonts?.ready.then(() => sizeCount(totalOf(shown()), true));
     if (reduce || typeof IntersectionObserver === 'undefined' || !section || !scoreB) return;
+    const panel = section;
     let started = false;
     let inView = false;
     let hover = false;
+    let focus = false;
+    const boot: ReturnType<typeof setTimeout>[] = [];
     const onEnter = () => (hover = true);
     const onLeave = () => (hover = false);
-    section.addEventListener('pointerenter', onEnter);
-    section.addEventListener('pointerleave', onLeave);
+    const onFocusIn = () => (focus = true);
+    const onFocusOut = (e: FocusEvent) => (focus = panel.contains(e.relatedTarget as Node | null));
+    panel.addEventListener('pointerenter', onEnter);
+    panel.addEventListener('pointerleave', onLeave);
+    panel.addEventListener('focusin', onFocusIn);
+    panel.addEventListener('focusout', onFocusOut);
     const view = new IntersectionObserver(
       (es) => {
         inView = es[0].isIntersecting;
@@ -158,19 +166,20 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
       { threshold: 0.35 },
     );
     view.observe(section);
-    // The first count starts once the number is wholly on screen.
+    // The first count starts once the number is wholly on screen; a tab picked before then takes its place.
     const first = new IntersectionObserver(
       (es) => {
         if (!es.some((e) => e.isIntersecting)) return;
         first.disconnect();
-        const g = gen;
-        setTimeout(() => {
-          if (g === gen) {
-            setCount(0);
-            runCompare(g);
-          }
-          setTimeout(() => (started = true), 1500);
-        }, 650);
+        boot.push(
+          setTimeout(() => {
+            if (!gen) {
+              setCount(0);
+              runCompare(gen);
+            }
+            boot.push(setTimeout(() => (started = true), 1500));
+          }, 650),
+        );
       },
       { threshold: 1 },
     );
@@ -180,7 +189,7 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
     const cycle = (t: number) => {
       const dt = Math.min(t - last, 50);
       last = t;
-      if (started && inView && !hover && !picked() && !document.hidden) {
+      if (started && inView && !hover && !focus && !picked() && !document.hidden) {
         prog += dt;
         setProgress(Math.min(1, prog / CYCLE_MS));
         if (prog >= CYCLE_MS) show((selected() + 1) % TABS.length, true);
@@ -190,10 +199,13 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
     raf = requestAnimationFrame(cycle);
     onCleanup(() => {
       cancelAnimationFrame(raf);
+      boot.forEach(clearTimeout);
       view.disconnect();
       first.disconnect();
-      section?.removeEventListener('pointerenter', onEnter);
-      section?.removeEventListener('pointerleave', onLeave);
+      panel.removeEventListener('pointerenter', onEnter);
+      panel.removeEventListener('pointerleave', onLeave);
+      panel.removeEventListener('focusin', onFocusIn);
+      panel.removeEventListener('focusout', onFocusOut);
     });
   });
   onCleanup(() => timers.forEach(clearTimeout));
@@ -268,7 +280,7 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
           </table>
         </div>
         <p class="desc-src caps">
-          {props.sample.device} · v{props.sample.firmware} · captured {props.sample.captured}
+          {props.sample.device} · {props.sample.vidpid} · v{props.sample.firmware} · captured {props.sample.captured}
         </p>
       </div>
     </section>

@@ -2,6 +2,7 @@
    approved mockup. */
 
 .landing { position: relative; z-index: 1; }
+.landing > canvas { animation: fade 1.6s ease both; }
 .frame { position: relative; z-index: 1; padding-inline: var(--gutter); }
 
 /* Hero: three quarters for the claim, the last quarter for the wire; its rule runs down into the vitals. */
@@ -81,6 +82,7 @@
   text-transform: uppercase; color: var(--dim); background: none; border: 0; cursor: pointer; transition: color 0.25s;
 }
 .dtabs button:hover, .dtabs button[aria-selected="true"] { color: var(--text); }
+.dtabs button:focus-visible { outline-offset: -2px; }
 .dtabs .bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--accent); transform-origin: left; transform: scaleX(0); }
 .cmp { overflow-x: auto; }
 @keyframes rowin { from { opacity: 0; transform: translateY(6px); } }
@@ -132,4 +134,12 @@
   .dtabs { gap: 16px; }
   .cmp .wide { display: none; }
   .cmp td:first-child { font-size: 13px; }
+}
+@media (max-width: 420px) {
+  .dtabs { gap: 12px; }
+  .dtabs button { letter-spacing: 0.08em; }
+}
+@media (max-width: 340px) {
+  .dtabs { gap: 10px; }
+  .dtabs button { letter-spacing: 0.03em; }
 }

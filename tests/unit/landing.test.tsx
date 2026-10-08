@@ -216,6 +216,59 @@ describe('DescriptorPanel', () => {
 
   it('names the captured device under the panel', () => {
     const r = panel();
-    expect(r.container.querySelector('.desc-src')!.textContent).toBe('Test Mouse · v3.4.5 · captured 2026-10-09');
+    expect(r.container.querySelector('.desc-src')!.textContent).toBe('Test Mouse · 1234:5678 · v3.4.5 · captured 2026-10-09');
+  });
+
+  // jsdom has no IntersectionObserver: these hold each observer so a test can say when something is on screen.
+  const observed: { cb: IntersectionObserverCallback; el?: Element }[] = [];
+  const watch = () => {
+    observed.length = 0;
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(private cb: IntersectionObserverCallback) {}
+        observe(el: Element) {
+          observed.push({ cb: this.cb, el });
+        }
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+  };
+  const show = () =>
+    observed.forEach((o) => o.cb([{ isIntersecting: true, target: o.el } as IntersectionObserverEntry], {} as IntersectionObserver));
+
+  it('drops the first count when a tab was picked before the panel came on screen', () => {
+    vi.useFakeTimers();
+    watch();
+    const r = panel();
+    fireEvent.click(tab(r.container, 'Device'));
+    const counts: number[] = [];
+    for (let t = 0; t < 200; t += 20) vi.advanceTimersByTime(20);
+    show();
+    for (let t = 0; t < 3000; t += 20) {
+      vi.advanceTimersByTime(20);
+      const n = score(r.container).split('/')[0];
+      if (n !== '--') counts.push(Number(n));
+    }
+    expect(counts.length).toBeGreaterThan(0);
+    counts.forEach((n, i) => i && expect(n).toBeGreaterThanOrEqual(counts[i - 1]));
+    expect(score(r.container)).toBe('6/6');
+    vi.unstubAllGlobals();
+  });
+
+  it('holds the panel on its tab while keyboard focus is inside it', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    watch();
+    const r = panel();
+    show();
+    vi.advanceTimersByTime(3000);
+    tab(r.container, 'Config').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(8000);
+    expect(r.container.querySelector('#desc-label')!.textContent).toBe('Device descriptor');
+    tab(r.container, 'Config').dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    vi.advanceTimersByTime(8000);
+    expect(r.container.querySelector('#desc-label')!.textContent).not.toBe('Device descriptor');
+    vi.unstubAllGlobals();
   });
 });
