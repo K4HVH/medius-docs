@@ -164,25 +164,11 @@ const Advanced = () => {
     }
   };
 
+  // The form shows in any browser; Flash needs Web Serial on a secure page.
+  const blocked = () => (!boxes.supported ? BAD_BROWSER : !boxes.secure ? BAD_CONTEXT : null);
+
   return (
     <>
-      <Show when={!boxes.supported}>
-        <div id="unsupported" data-search-target>
-          <Card>
-            <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
-            <p>{BAD_BROWSER}</p>
-          </Card>
-        </div>
-      </Show>
-      <Show when={boxes.supported && !boxes.secure}>
-        <div id="insecure" data-search-target>
-          <Card>
-            <CardHeader title="Page not secure" subtitle="No box access from this page" />
-            <p>{BAD_CONTEXT}</p>
-          </Card>
-        </div>
-      </Show>
-
       <Show when={native.running() || updating()}>
         <div id="flashing" data-search-target>
           <Card>
@@ -195,7 +181,7 @@ const Advanced = () => {
         </div>
       </Show>
 
-      <Show when={boxes.supported && boxes.secure && !native.running() && !updating()}>
+      <Show when={!native.running() && !updating()}>
         <div id="advanced" data-search-target>
           <Card>
             <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
@@ -330,11 +316,18 @@ const Advanced = () => {
                       Never plug USB1 and USB3 into the same computer.
                     </div>
                   </Show>
-                  <div style={{ ...section, ...row }}>
-                    <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
-                      Flash
-                    </Button>
-                  </div>
+                  <Show
+                    when={blocked()}
+                    fallback={
+                      <div style={{ ...section, ...row }}>
+                        <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
+                          Flash
+                        </Button>
+                      </div>
+                    }
+                  >
+                    {(reason) => <div class="callout callout--warning" role="alert" style={section}>{reason()}</div>}
+                  </Show>
                 </Match>
               </Switch>
             </Show>
