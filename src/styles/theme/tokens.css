@@ -1,0 +1,81 @@
+/* Site theme: the k4tech look on top of MidnightUI. MidnightUI's files stay untouched; its tokens are
+   redefined here so its components follow. Values match the approved mockup. */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin-var.woff2') format('woff2-variations'), url('/fonts/inter-latin-var.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/ibm-plex-mono-latin-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/ibm-plex-mono-latin-500.woff2') format('woff2');
+}
+
+:root {
+  --ground: #000000;
+  --line: #1a1a1a;
+  --line-2: #2a2a2a;
+  --text: #ffffff;
+  --text-2: #cccccc;
+  --muted: #8a8a8a;
+  --dim: #767676;
+  --accent: #0080ff;
+  --primary: #0066cc;
+  --primary-2: #004d99;
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --bad: #dc2626;
+  --sans: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: 32px;
+  --nav-h: 72px;
+
+  --g-radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --g-border-color: var(--line-2);
+  --g-border-color-subtle: var(--line);
+  --g-border-color-emphasis: var(--primary);
+  --g-background: #0a0a0a;
+  --g-background-elevated: #111111;
+  --g-background-subtle: var(--ground);
+  --g-text-primary: var(--text);
+  --g-text-secondary: var(--text-2);
+  --g-text-muted: var(--muted);
+  --g-text-link: var(--accent);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-success: var(--ok);
+  --color-warning: var(--warn);
+  --color-danger: var(--bad);
+  --g-button-primary: linear-gradient(205deg, var(--primary), var(--primary-2));
+
+  color-scheme: dark;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --gutter: 20px;
+    --nav-h: 64px;
+  }
+}
