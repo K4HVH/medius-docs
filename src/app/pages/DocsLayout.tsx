@@ -18,7 +18,7 @@ import {
 import { buildSearchItems } from '../searchIndex';
 import AiActions from '../AiActions';
 import { NavLinks, type NavItem } from '../NavLinks';
-import { SiteFooter } from '../SiteFooter';
+import { SiteFooter } from '../shell/SiteFooter';
 import { LANG_LABEL, LANG_ROOT, NOT_FOUND, breadcrumbTrail, routeFor, sidebarGroups, type Lang, type RouteInfo } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
