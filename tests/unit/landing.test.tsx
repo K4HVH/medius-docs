@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import type { JSX } from 'solid-js';
@@ -94,10 +94,69 @@ describe('ReportFeed', () => {
     expect(rows).toHaveLength(44);
     const last = rows[rows.length - 1];
     expect(last.classList.contains('now')).toBe(true);
-    const withApi = rows.find((x) => x.querySelector('span span.api'))!;
-    expect([...withApi.querySelectorAll('span span.api')].map((s) => s.textContent)).toEqual(['01', '00']);
-    expect(withApi.lastElementChild!.textContent).toBe('+API');
-    expect(rows.some((x) => x.children[2].textContent === 'NAK')).toBe(true);
+    const withApi = rows.find((x) => x.querySelector('.b.api'))!;
+    expect([...withApi.querySelectorAll('.b.api')].map((s) => s.textContent)).toEqual(['01', '00']);
+    expect(withApi.textContent).not.toContain('+API');
+    expect(rows.some((x) => x.children[1].textContent === 'NAK')).toBe(true);
+  });
+
+  it('gives the report every byte, set apart by a gap, not a space, beside its frame alone', () => {
+    const r = render(() => <ReportFeed frames={FRAMES} />);
+    const row = [...r.container.querySelectorAll('.row')].find((x) => x.querySelector('.b'))!;
+    expect(row.children).toHaveLength(2);
+    expect([...row.children[1].querySelectorAll('.b')].map((s) => s.textContent).join('')).toMatch(/^[0-9A-F]{10}$/);
+    expect(row.children[1].textContent).not.toContain(' ');
+    expect([...r.container.querySelectorAll('.tape-head > span')].map((s) => s.textContent)).toEqual(['Frame', 'Report', 'MouseAPI']);
+  });
+
+  // jsdom lays nothing out. A byte is two 0.6em characters at the rows' type size (12.5px from a
+  // stylesheet), set apart by --byte-gap, in a column of the given width.
+  const layout = (column: number) => {
+    const sheet = document.createElement('style');
+    sheet.textContent = '.rows { font-size: 12.5px; }';
+    document.head.appendChild(sheet);
+    onTestFinished(() => sheet.remove());
+    const metrics = (el: Element) => {
+      const rows = el.closest('.rows') as HTMLElement;
+      const size = parseFloat(getComputedStyle(rows).fontSize);
+      const gap = rows.style.getPropertyValue('--byte-gap') || '1ch';
+      return { w: size * 1.2, g: gap.endsWith('ch') ? parseFloat(gap) * size * 0.6 : parseFloat(gap) };
+    };
+    const rect = (left: number, width: number) => ({ left, right: left + width, width }) as DOMRect;
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (this.querySelector(':scope > .b')) return rect(0, column);
+      if (this.matches('.b')) {
+        const { w, g } = metrics(this);
+        return rect([...this.parentElement!.children].indexOf(this) * (w + g), w);
+      }
+      return rect(0, 0);
+    });
+  };
+  const fitted = async (column: number) => {
+    layout(column);
+    const r = render(() => <ReportFeed frames={FRAMES} />);
+    await new Promise((ok) => setTimeout(ok, 0));
+    const rows = r.container.querySelector('.rows') as HTMLElement;
+    vi.restoreAllMocks();
+    return { size: rows.style.fontSize, gap: rows.style.getPropertyValue('--byte-gap') };
+  };
+
+  it('keeps a full space between bytes where the report has room', async () => {
+    expect(await fitted(200)).toEqual({ size: '', gap: '7.5px' });
+  });
+
+  it('narrows the gap before it touches the type', async () => {
+    const { size, gap } = await fitted(100);
+    expect(size).toBe('');
+    expect(parseFloat(gap)).toBeCloseTo(6.25, 1);
+  });
+
+  it('steps the type down only once the gap is down to 0.3ch', async () => {
+    const { size, gap } = await fitted(60);
+    expect(parseFloat(size)).toBeLessThanOrEqual(60 / 6.72);
+    expect(parseFloat(size)).toBeGreaterThan(60 / 6.72 - 0.1);
+    expect(parseFloat(gap)).toBeGreaterThanOrEqual(0.3 * parseFloat(size) * 0.6 - 0.01);
+    expect(parseFloat(gap)).toBeLessThan(0.35 * parseFloat(size) * 0.6);
   });
 });
 
