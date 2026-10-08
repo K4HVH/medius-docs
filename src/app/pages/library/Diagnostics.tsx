@@ -6,8 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Diagnostics: Component = () => {
   return (
     <>
-      <PageHeader lead="Read-only views of the link">
-        <span id="diagnostics-overview" data-search-target />
+      <PageHeader id="diagnostics-overview" lead="Read-only views of the link">
         <p>
           <code>logs</code> and <code>counters</code> are lock-free, on both{' '}
           <A href="/library/connection"><code>Device</code></A> and{' '}

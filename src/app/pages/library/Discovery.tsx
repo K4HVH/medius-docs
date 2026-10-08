@@ -6,8 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Discovery: Component = () => {
   return (
     <>
-      <PageHeader lead="Open one box of several">
-        <span id="discovery-overview" data-search-target />
+      <PageHeader id="discovery-overview" lead="Open one box of several">
         <p>
           <A href="/library/connection#open"><code>find</code></A> opens the first match. These calls
           list every box and open one by a stable{' '}

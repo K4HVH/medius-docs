@@ -41,10 +41,14 @@ const DocsLayout = (props: RouteSectionProps) => {
   });
   let main: HTMLElement | undefined;
 
-  const scrollToTarget = (id: string, behavior: ScrollBehavior) => {
+  // 'auto' glides by the page's CSS, which reduced motion turns off; a new page lands with 'instant'.
+  // The outline marks a search result or a deep link, not a section the reader moved to themselves.
+  let highlightNext: string | null = null;
+  const scrollToTarget = (id: string, behavior: ScrollBehavior, highlight: boolean) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior, block: 'start' });
+    if (!highlight) return;
     el.classList.add('search-highlight');
     setTimeout(() => el.classList.remove('search-highlight'), 2000);
   };
@@ -55,7 +59,8 @@ const DocsLayout = (props: RouteSectionProps) => {
     setSearchOpen(false);
     setCloseKey((k) => k + 1);
     const [path, hash] = fullPath.split('#');
-    if (path === location.pathname && hash && hash === hashId()) scrollToTarget(hash, 'smooth');
+    highlightNext = hash ?? null;
+    if (path === location.pathname && hash && hash === hashId()) scrollToTarget(hash, 'auto', true);
     else navigate(fullPath, { scroll: path !== location.pathname });
   };
 
@@ -80,20 +85,22 @@ const DocsLayout = (props: RouteSectionProps) => {
       () => [location.pathname, location.hash] as const,
       ([path, hash]) => {
         if (path === shownPath) {
-          if (hash) scrollToTarget(hashId(), 'smooth');
+          if (hash) scrollToTarget(hashId(), 'auto', hashId() === highlightNext);
+          highlightNext = null;
           return;
         }
         shownPath = path;
         const run = ++settled;
         disposeReveals();
         disposeReveals = () => {};
-        if (!hash) window.scrollTo(0, 0);
+        if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         requestAnimationFrame(() => {
           if (run !== settled || !main) return;
           Prism.highlightAllUnder(main);
           void fontsReady().then(() => {
             if (run !== settled || !main) return;
-            if (hash) scrollToTarget(hashId(), 'auto');
+            if (hash) scrollToTarget(hashId(), 'instant', true);
+            highlightNext = null;
             disposeReveals = armReveals(main, REVEAL_DOCS);
           });
         });

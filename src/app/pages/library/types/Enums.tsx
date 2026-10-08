@@ -6,8 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Enums: Component = () => {
   return (
     <>
-      <PageHeader lead="Command and status enumerations">
-        <span id="enums" data-search-target />
+      <PageHeader id="enums" lead="Command and status enumerations">
         <p>
           Each is tied to a wire byte; conversion helpers are listed with the type.
         </p>

@@ -6,8 +6,7 @@ import { IndexRow } from '../../shell/IndexRow';
 const TypesAndErrors: Component = () => {
   return (
     <>
-      <PageHeader lead="Arguments, results, and errors">
-        <span id="types-overview" data-search-target />
+      <PageHeader id="types-overview" lead="Arguments, results, and errors">
         <p>
           Every public type is re-exported at the crate root: import from{' '}
           <code>medius::</code>, not <code>medius::types::</code>.

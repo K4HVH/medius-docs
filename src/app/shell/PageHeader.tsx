@@ -4,7 +4,7 @@ import AiActions from '../AiActions';
 import { NOT_FOUND, breadcrumbTrail, routeFor } from '../routes';
 
 // The top of every page: crumbs to the parent, the page's one h1 (its registry title), and the lead.
-export function PageHeader(props: { lead?: string; children?: JSX.Element }) {
+export function PageHeader(props: { id?: string; lead?: string; children?: JSX.Element }) {
   const location = useLocation();
   const route = createMemo(() => routeFor(location.pathname) ?? NOT_FOUND);
   const crumbs = createMemo(() => {
@@ -14,7 +14,7 @@ export function PageHeader(props: { lead?: string; children?: JSX.Element }) {
   });
 
   return (
-    <header class="page-header">
+    <header class="page-header" id={props.id} data-search-target={props.id ? '' : undefined}>
       <div class="page-header__bar">
         <nav class="crumbs caps" aria-label="Breadcrumb" data-agent-hide>
           <For each={crumbs()}>

@@ -31,7 +31,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 
 /* Docs: a ruled sidebar, the article centred in its column, the rail on wide screens. */
 .docs {
-  --side: 264px; position: relative; z-index: 1; display: grid;
+  --side: 264px; position: relative; z-index: 2; display: grid;
   grid-template-columns: var(--side) minmax(0, 1fr) 200px; align-content: start; padding-top: var(--nav-h); min-height: 100svh;
   background: linear-gradient(var(--line), var(--line)) calc(var(--side) - 1px) 0 / 1px 100% no-repeat;
 }
@@ -166,6 +166,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   color: var(--text); border-left-color: var(--accent);
   background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%);
 }
+.side:focus-within { -webkit-mask: none; mask: none; }
 .docbar { display: none; }
 
 @media (max-width: 900px) {

@@ -75,6 +75,39 @@ describe('SiteNav', () => {
     expect(r.history.get()).toBe('/dashboard');
   });
 
+  it('closes the phone menu when the page changes underneath it, as on Back', async () => {
+    const r = mount('/native');
+    fireEvent.click(r.menu());
+    expect(r.nav().classList.contains('open')).toBe(true);
+    r.history.set({ value: '/library' });
+    await settle();
+    expect(r.nav().classList.contains('open')).toBe(false);
+    expect(document.documentElement.classList.contains('locked')).toBe(false);
+  });
+
+  it('moves focus into the open menu, keeps Tab inside it, and Escape closes it back to its button', async () => {
+    const r = mount('/native');
+    fireEvent.click(r.menu());
+    await settle();
+    const links = [...r.container.querySelectorAll<HTMLElement>('#site-links a')];
+    expect(document.activeElement).toBe(links[0]);
+    links[links.length - 1].focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(r.menu());
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(links[links.length - 1]);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(r.nav().classList.contains('open')).toBe(false);
+    expect(document.activeElement).toBe(r.menu());
+  });
+
+  it('puts its menu button ahead of the links it opens, for a screen reader', () => {
+    const r = mount('/native');
+    const button = r.menu();
+    const links = r.container.querySelector('#site-links')!;
+    expect(button.compareDocumentPosition(links) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('goes nowhere while a flash runs', async () => {
     const r = mount('/dashboard/setup', { disabled: true });
     for (const label of ['Medius', 'Guide', 'Docs', 'Install']) {

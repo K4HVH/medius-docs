@@ -34,3 +34,10 @@
     transform: none;
   }
 }
+
+@media print {
+  .rv.pre {
+    opacity: 1;
+    transform: none;
+  }
+}

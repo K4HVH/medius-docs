@@ -42,11 +42,15 @@ export default function AiActions() {
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') close();
   };
+  // The menu is fixed where it opened; once the page moves, it no longer sits under its button.
+  const onScroll = () => open() && close();
   document.addEventListener('pointerdown', onDocPointer);
   document.addEventListener('keydown', onKey);
+  window.addEventListener('scroll', onScroll, { passive: true });
   onCleanup(() => {
     document.removeEventListener('pointerdown', onDocPointer);
     document.removeEventListener('keydown', onKey);
+    window.removeEventListener('scroll', onScroll);
     clearTimeout(copyTimer);
   });
 

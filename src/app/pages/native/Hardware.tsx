@@ -6,8 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Hardware: Component = () => {
   return (
     <>
-      <PageHeader lead="Three USB ports and cabling">
-        <span id="ports" data-search-target />
+      <PageHeader id="ports" lead="Three USB ports and cabling">
         <p>
           Inside are two <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3 microcontrollers and a <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> USB-serial bridge. A
           program speaks only to the <code>CH343</code> serial port; the two chips share an internal
