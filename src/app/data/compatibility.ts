@@ -45,7 +45,7 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'Lenovo MA204W', kind: 'mouse', verdict: 'works' },
   { name: 'Logitech G PRO X', kind: 'mouse', verdict: 'works' },
   { name: 'Logitech G PRO X SUPERLIGHT', kind: 'mouse', verdict: 'works' },
-  { name: 'Logitech G PRO X SUPERLIGHT 2', kind: 'mouse', verdict: 'works', note: 'Runs at 125 Hz without the Logitech fix' },
+  { name: 'Logitech G PRO X SUPERLIGHT 2', kind: 'mouse', verdict: 'works', note: '125 Hz without imperfect clone and a forced 1000 Hz rate' },
   { name: 'Logitech G PRO X2 SUPERSTRIKE', kind: 'mouse', verdict: 'partial', note: 'Wireless needs imperfect clone and a forced 1000 Hz rate' },
   { name: 'Logitech G402', kind: 'mouse', verdict: 'works' },
   { name: 'Logitech G502 HERO', kind: 'mouse', verdict: 'works', vidpid: '046d:c08b' },

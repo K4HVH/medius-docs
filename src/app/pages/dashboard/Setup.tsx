@@ -18,7 +18,7 @@ type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
 const STEPS: Step[] = ['main', 'unplug', 'mouse', 'unplug3', 'cables'];
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
-const HAZARD = 'USB1 and USB3 in one computer can kill it.';
+export const HAZARD = 'USB1 and USB3 in one computer can kill it.';
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Setup = () => {

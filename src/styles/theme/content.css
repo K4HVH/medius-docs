@@ -332,3 +332,26 @@ pre code[class*='language-'] { font: inherit; color: #bdbdbd; }
   cursor: pointer;
   color: var(--g-text-link);
 }
+
+/* Compatibility: a filter over the table; verdicts as mono caps in their colour. */
+.compat-search {
+  display: flex; align-items: center; gap: 14px; max-width: 420px; margin-top: 18px; padding: 0 14px;
+  border: 1px solid var(--line-2); transition: border-color 0.25s;
+}
+.compat-search:focus-within { border-color: var(--accent); }
+.compat-search .label { flex: none; }
+.compat-search input {
+  flex: 1; min-width: 0; height: 42px; border: 0; outline: none; background: none;
+  font: 400 15px/1 var(--sans); color: var(--text);
+}
+.compat-search input::placeholder { color: var(--dim); }
+.compat td:last-child { font-family: var(--mono); color: var(--text); }
+.compat .vp { display: block; margin-top: 2px; font-size: 11.5px; color: var(--dim); }
+.verdict { font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+.verdict--works { color: var(--ok); }
+.verdict--partial { color: var(--warn); }
+.verdict--doesnt { color: var(--color-red-300); }
+
+/* Links under an answer: one row of them. */
+:where(.doc-section) ul.see { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; padding: 0; list-style: none; }
+:where(.doc-section) ul.see li { margin: 0; }
