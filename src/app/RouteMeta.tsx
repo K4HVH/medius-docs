@@ -1,10 +1,12 @@
 import { createEffect } from 'solid-js';
 import { useLocation } from '@solidjs/router';
+import { NOT_FOUND, documentTitle, routeFor } from './routes';
+import { SITE } from './site';
+import { buildJsonLd } from './structuredData';
 
-const SITE = 'https://medius.k4tech.net';
-const DEFAULT_TITLE = 'Medius Documentation';
-const DEFAULT_DESC =
-  "Medius documentation: the mouse-passthrough firmware's binary control protocol and device behaviour, and the medius Rust library.";
+// Written by scripts/lastmod.mjs in CI; absent in a local build.
+const LASTMOD: Record<string, string> =
+  Object.values(import.meta.glob<Record<string, string>>('../generated/lastmod.json', { eager: true, import: 'default' }))[0] ?? {};
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string): void {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -16,38 +18,55 @@ function upsertMeta(attr: 'name' | 'property', key: string, content: string): vo
   el.setAttribute('content', content);
 }
 
-function upsertCanonical(href: string): void {
-  let el = document.head.querySelector('link[rel="canonical"]');
+function setLink(rel: string, href: string | null): void {
+  let el = document.head.querySelector(`link[rel="${rel}"]`);
+  if (href === null) {
+    el?.remove();
+    return;
+  }
   if (!el) {
     el = document.createElement('link');
-    el.setAttribute('rel', 'canonical');
+    el.setAttribute('rel', rel);
     document.head.appendChild(el);
   }
   el.setAttribute('href', href);
 }
 
-// Per-route <head> from the page's header card, for the SPA and prerendered snapshots.
-// Tags update in place over index.html's defaults, so none is duplicated.
+function setRobots(content: string | null): void {
+  const el = document.head.querySelector('meta[name="robots"]');
+  if (content === null) el?.remove();
+  else upsertMeta('name', 'robots', content);
+}
+
+function setJsonLd(data: object): void {
+  let el = document.head.querySelector('script#ld-json');
+  if (!el) {
+    el = document.createElement('script');
+    el.id = 'ld-json';
+    el.setAttribute('type', 'application/ld+json');
+    document.head.appendChild(el);
+  }
+  el.textContent = JSON.stringify(data);
+}
+
+// Per-route <head> from the route registry, for the SPA and the prerendered snapshots alike.
 export default function RouteMeta() {
   const location = useLocation();
   createEffect(() => {
-    location.pathname; // re-read on every navigation
-    requestAnimationFrame(() => {
-      const h = document.querySelector('.docs-page .card__header h3');
-      const sub = document.querySelector('.docs-page .card__header small');
-      const title = (h?.textContent || '').trim();
-      const desc = (sub?.textContent || '').trim() || DEFAULT_DESC;
-      const full = title ? `${title} · Medius` : DEFAULT_TITLE;
-      const url = SITE + location.pathname;
-      document.title = full;
-      upsertMeta('name', 'description', desc);
-      upsertCanonical(url);
-      upsertMeta('property', 'og:title', full);
-      upsertMeta('property', 'og:description', desc);
-      upsertMeta('property', 'og:url', url);
-      upsertMeta('name', 'twitter:title', full);
-      upsertMeta('name', 'twitter:description', desc);
-    });
+    const route = routeFor(location.pathname) ?? NOT_FOUND;
+    const title = documentTitle(route);
+    const url = route.index ? SITE + (route.path === '/' ? '/' : route.path) : null;
+    document.title = title;
+    upsertMeta('name', 'description', route.description);
+    setLink('canonical', url);
+    setRobots(route.index ? null : 'noindex');
+    upsertMeta('property', 'og:type', route.kind === 'article' ? 'article' : 'website');
+    upsertMeta('property', 'og:title', title);
+    upsertMeta('property', 'og:description', route.description);
+    if (url) upsertMeta('property', 'og:url', url);
+    upsertMeta('name', 'twitter:title', title);
+    upsertMeta('name', 'twitter:description', route.description);
+    setJsonLd(buildJsonLd(route, LASTMOD[route.path]));
   });
   return null;
 }
