@@ -1,1 +1,134 @@
-/* landing: filled in by its task. */
+/* Landing page: hero with the wire, vitals, the descriptor compare and the index. Values from the
+   approved mockup. */
+
+.landing { position: relative; z-index: 1; }
+.frame { position: relative; z-index: 1; padding-inline: var(--gutter); }
+
+/* Hero: three quarters for the claim, the last quarter for the wire; its rule runs down into the vitals. */
+.hero {
+  position: relative; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto; min-height: clamp(600px, 100svh, 1440px);
+  padding-top: calc(var(--nav-h) + 40px);
+}
+.hero-copy { align-self: center; padding: 0 48px 7svh 0; }
+.hero h1 { margin: 0; font: 700 clamp(33px, min(6.2vw, 10.5svh), 120px)/1 var(--sans); letter-spacing: -0.035em; }
+.ln { display: block; overflow: hidden; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.ln > span { display: block; text-wrap: balance; animation: up 1.1s var(--ease) both; }
+.ln.l2 > span { color: var(--accent); animation-delay: 0.12s; }
+@keyframes up { from { transform: translateY(105%); } }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 48px; animation: rise 0.9s var(--ease) 0.35s both; }
+
+/* The wire: USB1's reports frame by frame, injected bytes in blue. */
+.tape {
+  position: relative; min-width: 0; min-height: 320px; padding: 0 0 32px 24px; border-left: 1px solid var(--line);
+  display: grid; grid-template-rows: auto 1fr auto; animation: fade 1s ease 0.2s both;
+}
+.tape-head, .row { display: grid; grid-template-columns: 40px 22px minmax(0, 1fr) auto; gap: 10px; padding-inline: 8px; }
+.tape-head { position: relative; padding-bottom: 12px; color: var(--dim); }
+.tape-head::after, .tape-foot::before {
+  content: ""; position: absolute; left: 0; right: 0; height: 1px; background: var(--line);
+  transform-origin: left; animation: draw 1.2s var(--ease) 0.3s both;
+}
+.tape-head::after { bottom: 0; }
+.lamps { display: flex; gap: 14px; }
+.lamp::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 7px; vertical-align: 1px;
+  background: #262626; transition: background 0.15s;
+}
+.lamp.lit::before { background: var(--text); }
+.lamp.api.lit::before { background: var(--accent); }
+.tape-body { position: relative; overflow: hidden; -webkit-mask: linear-gradient(transparent, #000 45%); mask: linear-gradient(transparent, #000 45%); }
+.rows { position: absolute; left: 0; right: 0; bottom: 0; font: 400 12.5px/26px var(--mono); color: #474747; }
+.row { white-space: nowrap; transition: color 0.2s ease, background 0.2s ease; }
+.row .api { color: var(--accent); }
+.row.now { color: var(--text); background: rgba(0, 128, 255, 0.08); box-shadow: inset 2px 0 var(--accent); }
+.tape-foot { position: relative; padding: 12px 8px 0; color: var(--dim); }
+.tape-foot::before { top: 0; }
+
+/* Vitals: four figures under the hero's rule. */
+.vitals { position: relative; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+.vitals::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--line);
+  transform-origin: left; animation: draw 1.4s var(--ease) 0.4s both;
+}
+.vitals div { padding: 18px 0 22px; display: grid; gap: 6px; animation: rise 0.7s var(--ease) both; }
+.vitals div:nth-child(1) { animation-delay: 0.45s; }
+.vitals div:nth-child(2) { animation-delay: 0.53s; }
+.vitals div:nth-child(3) { animation-delay: 0.61s; }
+.vitals div:nth-child(4) { animation-delay: 0.69s; }
+.vitals div + div { padding-left: 24px; border-left: 1px solid var(--line); }
+.vitals dt { color: var(--dim); }
+.vitals dd { margin: 0; min-height: 1.3em; font: 500 14px/1.3 var(--mono); letter-spacing: 0; text-transform: none; color: var(--text); }
+.live::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 10px; vertical-align: 2px;
+  background: var(--ok); animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+/* Descriptor: the left half counts, the right half compares, field by field. */
+.desc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding-block: clamp(80px, 9vw, 136px); align-items: start; }
+.score { position: sticky; top: calc(var(--nav-h) + 32px); padding-right: 48px; }
+.score b { display: block; margin: 24px 0 0 -0.04em; font: 700 clamp(96px, 12vw, 184px)/0.85 var(--sans); letter-spacing: -0.05em; }
+.score b span { display: inline-block; text-align: right; transition: min-width 0.45s var(--ease); }
+.score b span.wait { color: var(--dim); }
+.score b i { font-style: normal; color: var(--dim); }
+.score .caps { display: block; margin-top: 20px; color: var(--muted); }
+.dtabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.dtabs button {
+  position: relative; flex: none; padding: 0 0 14px; font: 500 10.5px/1 var(--mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--dim); background: none; border: 0; cursor: pointer; transition: color 0.25s;
+}
+.dtabs button:hover, .dtabs button[aria-selected="true"] { color: var(--text); }
+.dtabs .bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--accent); transform-origin: left; transform: scaleX(0); }
+.cmp { overflow-x: auto; }
+@keyframes rowin { from { opacity: 0; transform: translateY(6px); } }
+.cmp tr.in td { animation: rowin 0.45s var(--ease) both; animation-delay: var(--d, 0ms); }
+.cmp tr.pad td { color: transparent; }
+#desc-label, .score b, .cmp tbody { transition: opacity 0.25s ease; }
+.desc.swap #desc-label, .desc.swap .score b, .desc.swap .cmp tbody { opacity: 0; transition: opacity 0.15s ease; }
+.cmp table { width: 100%; border-collapse: collapse; font: 400 13px/1 var(--mono); }
+.cmp th {
+  text-align: left; padding: 14px 12px; color: var(--dim); font: 500 10.5px/1 var(--mono); letter-spacing: 0.14em;
+  text-transform: uppercase; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.cmp td { padding: 11px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; transition: background 0.6s ease, color 0.25s, box-shadow 0.25s; }
+.cmp td:first-child { color: var(--muted); font-family: var(--sans); font-size: 14px; }
+.cmp td.v { color: var(--text); }
+.cmp td.eq { width: 3ch; text-align: center; color: var(--accent); transition: color 0.3s, background 0.6s ease; }
+.cmp td.eq.off { color: #262626; }
+.cmp tr.hit td { background: rgba(0, 128, 255, 0.1); transition: none; }
+@media (hover: hover) and (min-width: 601px) {
+  .cmp tbody tr:not(.pad):hover td:first-child { color: var(--text); box-shadow: inset 2px 0 var(--accent); }
+}
+.desc-src { margin: 16px 0 0; color: var(--dim); text-transform: none; letter-spacing: 0.02em; }
+
+/* Index: ruled rows; names on the left half, tags on the right. */
+.index { padding-bottom: clamp(80px, 9vw, 136px); }
+.index > .label { margin-bottom: 32px; }
+
+@media (max-width: 1360px) {
+  .rows { font-size: 11.5px; }
+  .tape-head, .row { gap: 8px; }
+}
+@media (max-width: 1240px) and (min-width: 901px) {
+  .hero { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .vitals { grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 2fr) minmax(0, 3fr); }
+  .tape-foot { letter-spacing: 0.06em; white-space: nowrap; }
+}
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; min-height: 0; padding-top: calc(var(--nav-h) + 48px); }
+  .hero h1 { font-size: clamp(34px, 10.4vw, 52px); }
+  .hero-copy { display: block; padding: 0; }
+  .actions { display: grid; margin-top: 36px; }
+  .tape { height: 300px; min-height: 0; margin-top: 40px; padding-left: 0; border-left: 0; }
+  .rows { font-size: 11.5px; }
+  .vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vitals div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .vitals div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .desc { grid-template-columns: minmax(0, 1fr); row-gap: 40px; }
+  .score { position: static; padding-right: 0; }
+  .cmp td, .cmp th { padding-inline: 8px; }
+  .dtabs { gap: 16px; }
+  .cmp .wide { display: none; }
+  .cmp td:first-child { font-size: 13px; }
+}

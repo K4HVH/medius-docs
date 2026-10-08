@@ -8,7 +8,8 @@ import { mergeCompat } from '../src/app/data/compatMerge';
 import type { StatsSummary } from './stats/types';
 import { getReleases } from './firmware';
 import { getStatsSummary } from './stats';
-import { getDiscordMembers, getHomeFigures, type HomeFigures } from './home';
+import { figureText, type HomeFigures } from '../src/app/data/homeFigures';
+import { getDiscordMembers, getHomeFigures } from './home';
 
 export interface FillSources {
   releases: () => Promise<FirmwareRelease[] | null>;
@@ -118,7 +119,7 @@ function homeHtml(html: string, figures: HomeFigures): string {
     if (v === undefined) continue;
     out = out.replace(
       new RegExp(`(<(\\w+)[^>]*\\sdata-fill="vital-${k}"[^>]*>)[\\s\\S]*?(</\\2>)`),
-      (_m, open: string, _t: string, close: string) => `${open}${esc(String(v))}${close}`,
+      (_m, open: string, _t: string, close: string) => `${open}${esc(figureText(k, v))}${close}`,
     );
   }
   return out.replace('</body>', () => `${embed('home-data', figures)}</body>`);
