@@ -47,8 +47,8 @@ const library = (path: string, group: string, nav: string, icon: string, title: 
   ({ path, section: 'library', group, nav, icon, title, description, fullTitle });
 const binding = (lang: Lang, sub: string, group: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
   ({ path: LANG_ROOT[lang] + sub, section: 'bindings', lang, group, nav, icon, title, description, fullTitle });
-const dashboard = (path: string, nav: string, icon: string, title: string, description: string, fullTitle?: string, index = true): Entry =>
-  ({ path, section: 'dashboard', group: 'Dashboard', nav, icon, title, description, fullTitle, kind: 'app', index });
+const dashboard = (path: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
+  ({ path, section: 'dashboard', group: 'Dashboard', nav, icon, title, description, fullTitle, kind: 'app' });
 
 const ENTRIES: Entry[] = [
   {
@@ -223,11 +223,9 @@ const ENTRIES: Entry[] = [
     'Connect a MAKCU box running Medius from Chrome or Edge, no driver needed, and see its firmware, health, cloned device and log.',
     'MAKCU box dashboard in the browser · Medius'),
   dashboard('/dashboard/control', 'Control', 'BsSliders', 'Control',
-    'Test a connected Medius box from the browser: inject input, lock physical input, catch events, play clips, drive the LED.',
-    undefined, false),
+    'Test a connected Medius box from the browser: inject input, lock physical input, catch events, play clips, drive the LED.'),
   dashboard('/dashboard/advanced-control', 'Advanced control', 'BsCodeSlash', 'Advanced control',
-    'Rewrite rules, descriptor patches, raw reports and control transfers for a connected Medius box, from the browser.',
-    undefined, false),
+    'Rewrite rules, descriptor patches, raw reports and control transfers for a connected Medius box, from the browser.'),
   dashboard('/dashboard/update', 'Update', 'BsArrowRepeat', 'Update',
     'Update both chips of a MAKCU box running Medius to the latest firmware in one click from Chrome or Edge, over the control port.',
     'Update a MAKCU box to the latest Medius'),
