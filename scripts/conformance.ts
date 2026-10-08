@@ -62,8 +62,8 @@ function cards(src: string): CardBlock[] {
     sig: SIGS(body),
   });
   return [
-    ...[...src.matchAll(/<PageHeader(?:\s+lead="([^"]*)")?\s*>([\s\S]*?)<\/PageHeader>/g)].map((m) =>
-      block('page header', m[1], m[2], m.index!),
+    ...[...src.matchAll(/<PageHeader(?:\s+lead="([^"]*)")?\s*(?:\/>|>([\s\S]*?)<\/PageHeader>)/g)].map((m) =>
+      block('page header', m[1], m[2] ?? '', m.index!),
     ),
     ...[
       ...src.matchAll(

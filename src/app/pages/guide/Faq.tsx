@@ -6,7 +6,7 @@ import { FAQ } from '../../data/faq';
 
 const Faq: Component = () => (
   <>
-    <PageHeader lead="Answers from the Discord server's FAQ." />
+    <PageHeader lead="Answers from the Discord server's FAQ" />
     <For each={FAQ}>
       {(f) => (
         <DocSection id={f.id} title={f.q}>

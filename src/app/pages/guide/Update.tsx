@@ -7,7 +7,7 @@ import { LINKS } from '../../site';
 
 const Update: Component = () => (
   <>
-    <PageHeader lead="A box already running Medius updates over USB2 from the dashboard, wired as it is." />
+    <PageHeader lead="One click over USB2, for a box already running Medius" />
 
     <DocSection id="one-click" title="Update" caption="From the Update tab">
       <div class="table-scroll">
@@ -40,14 +40,14 @@ const Update: Component = () => (
           <thead><tr><th>Case</th><th>Fix</th></tr></thead>
           <tbody>
             <tr><td>The new firmware won't run</td><td>The chip boots the firmware it ran before, and the dashboard reads "The box came back, but not on the version sent". Update again.</td></tr>
-            <tr><td>MAKCU's own firmware</td><td>The fetch_makcu_fw script in the <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord</a> #tools channel downloads MAKCU v4 firmware. Flash it with Upload a file on <A href="/dashboard/advanced">Advanced</A>.</td></tr>
+            <tr><td>MAKCU's stock firmware</td><td>The fetch_makcu_fw script in the <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord</a> #tools channel downloads MAKCU v4 firmware. Flash it on <A href="/dashboard/advanced">Advanced</A>, via ROM download, with Upload a file.</td></tr>
           </tbody>
         </table>
       </div>
     </DocSection>
 
     <DocSection id="open" title="Updater">
-      <IndexRow href="/dashboard/update" title="Update" tag="Update and configure a box" />
+      <IndexRow href="/dashboard/update" title="Update" tag="Update a box over USB2" />
     </DocSection>
   </>
 );

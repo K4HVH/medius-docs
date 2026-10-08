@@ -4,7 +4,7 @@ import { IndexRow } from '../shell/IndexRow';
 
 const NotFound = () => (
   <>
-    <PageHeader lead="No page at this address.">
+    <PageHeader lead="No page at this address">
       <span id="not-found" data-search-target />
     </PageHeader>
     <DocSection title="Pages">
