@@ -13,7 +13,7 @@ export const FAQ: readonly FaqItem[] = [
   {
     id: 'software',
     q: "Why doesn't my software work with Medius?",
-    a: 'Medius uses its own binary protocol, so software written for the stock MAKCU firmware needs support added for it. Libraries for Rust, Python, C and C++ are in the docs, and the AI access page serves the docs to coding agents.',
+    a: "Medius's control protocol is binary and differs from the stock MAKCU firmware's, so software written for stock firmware needs support added for Medius. Libraries for Rust, Python, C and C++ are in the docs, and the AI access page serves the docs to coding agents.",
     links: [
       { label: 'Rust library', href: '/library' },
       { label: 'Bindings', href: '/bindings' },

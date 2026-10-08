@@ -17,12 +17,16 @@ export function mergeCompat(entries: readonly CompatEntry[], top: TopDevice[] | 
   for (const d of top) {
     if (d.boxes < minBoxes) continue;
     const vidpid = `${hex(d.vid)}:${hex(d.pid)}`;
-    const known = rows.find((r) => r.vidpid === vidpid);
+    const product = d.product?.trim();
+    const known =
+      rows.find((r) => r.vidpid === vidpid) ??
+      (product ? rows.find((r) => r.name.toLowerCase() === product.toLowerCase()) : undefined);
     if (known) {
-      known.boxes = d.boxes;
+      // One device can reach the stats under two ids, wired and through its receiver.
+      known.boxes = (known.boxes ?? 0) + d.boxes;
+      known.vidpid ??= vidpid;
       continue;
     }
-    const product = d.product?.trim();
     rows.push({
       name: product && product !== 'None' ? product : vidpid,
       kind: KIND[d.kind] ?? 'other',

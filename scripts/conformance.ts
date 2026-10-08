@@ -363,6 +363,14 @@ function idsWithChildren(file: string, seen = new Set<string>()): Set<string> {
     return out;
   }
   for (const m of src.matchAll(/id="([A-Za-z0-9-]+)"/g)) out.add(m[1]);
+  // A page that renders a section per data entry (the FAQ) takes its ids from that entry's `id`.
+  for (const m of src.matchAll(/from\s+'(\.[^']*\/data\/[^']+)'/g)) {
+    try {
+      for (const d of readFileSync(resolve(dirname(file), m[1]) + '.ts', 'utf8').matchAll(/\bid: '([a-z0-9-]+)'/g)) out.add(d[1]);
+    } catch {
+      // not a data module this page reads ids from
+    }
+  }
   for (const [name, path] of importsOf(src, file))
     if (new RegExp(`<${name}\\b`).test(src))
       for (const id of idsWithChildren(path, seen)) out.add(id);
