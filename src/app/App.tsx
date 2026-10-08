@@ -1,8 +1,9 @@
 import type { Component, JSX } from 'solid-js';
-import { Router, Route, Navigate } from '@solidjs/router';
+import { Router, Route } from '@solidjs/router';
 import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import Home from './pages/Home';
+import NotFound from './pages/NotFound';
 import DocsLayout from './pages/DocsLayout';
 import NativeIntroduction from './pages/native/Introduction';
 import NativeQuickstart from './pages/native/Quickstart';
@@ -184,8 +185,8 @@ const App: Component = () => {
           <Route path="/dashboard/advanced" component={DashboardAdvanced} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
           <Route path="/dashboard/stats" component={DashboardStats} />
+          <Route path="*" component={NotFound} />
         </Route>
-        <Route path="*" component={() => <Navigate href="/" />} />
         </Router>
       </DashboardProvider>
       </NotificationProvider>
