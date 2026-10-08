@@ -58,7 +58,6 @@ describe('dashboard search index', () => {
     // Cards that are pure connection or progress state, not a feature to search for.
     const notFeatures = new Set([
       'Controls', 'Your box', 'Status', 'Installing', 'Flashing',
-      'Browser not supported', 'Page not secure',
     ]);
     const missing = [...titles].filter((t) => !notFeatures.has(t) && find(t).length === 0);
     expect(missing).toEqual([]);
