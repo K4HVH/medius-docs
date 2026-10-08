@@ -1,8 +1,9 @@
 import { For, Match, Show, Switch, createEffect, createResource } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
+import { Card } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, fetchReleases } from '../../../dashboard/firmware';
 import { type Block, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 const fmtDate = (iso: string) => {
@@ -98,27 +99,29 @@ const Changelog = () => {
     land(30);
   });
   return (
-    <div id="changelog" data-search-target>
-      <Card>
-        <CardHeader title="Changelog" subtitle="Firmware releases" />
-        <Switch>
-          <Match when={releases()?.length}>
-            <div class="releases">
-              <For each={releases()}>{(r) => <Release release={r} />}</For>
-            </div>
-          </Match>
-          <Match when={releases.loading}>
-            <div data-fill="changelog"><p>Loading...</p></div>
-          </Match>
-          <Match when={releases.error}>
-            <div class="callout callout--warning">Could not load the changelog.</div>
-          </Match>
-          <Match when={releases()?.length === 0}>
-            <p>No releases yet.</p>
-          </Match>
-        </Switch>
-      </Card>
-    </div>
+    <>
+      <PageHeader lead="Firmware releases" />
+      <div id="changelog" data-search-target>
+        <Card>
+          <Switch>
+            <Match when={releases()?.length}>
+              <div class="releases">
+                <For each={releases()}>{(r) => <Release release={r} />}</For>
+              </div>
+            </Match>
+            <Match when={releases.loading}>
+              <div data-fill="changelog"><p>Loading...</p></div>
+            </Match>
+            <Match when={releases.error}>
+              <div class="callout callout--warning">Could not load the changelog.</div>
+            </Match>
+            <Match when={releases()?.length === 0}>
+              <p>No releases yet.</p>
+            </Match>
+          </Switch>
+        </Card>
+      </div>
+    </>
   );
 };
 

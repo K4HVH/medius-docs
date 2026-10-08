@@ -36,7 +36,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   background: linear-gradient(var(--line), var(--line)) calc(var(--side) - 1px) 0 / 1px 100% no-repeat;
 }
 .doc {
-  min-width: 0; width: 100%; max-width: 880px; justify-self: center;
+  min-width: 0; width: 100%; max-width: 880px; justify-self: center; align-content: start;
   padding: 56px clamp(24px, 4vw, 56px) 24px;
 }
 @media (max-width: 1240px) {
@@ -163,7 +163,6 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   color: var(--text); border-left-color: var(--accent);
   background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%);
 }
-.group > :not(.label):not(a) { margin-inline: 24px; }
 .docbar { display: none; }
 
 @media (max-width: 900px) {
@@ -184,6 +183,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 }
 
 /* Page header: crumbs to the parent, the page's h1, the lead. */
+.doc > .page-header { margin-bottom: 8px; }
 .page-header__bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; }
 .crumbs { margin: 0; color: var(--dim); }
 .crumbs a { color: var(--dim); text-decoration: none; transition: color 0.25s; }

@@ -13,6 +13,7 @@ import DevicePatch from './DevicePatch';
 import DeviceRaw from './DeviceRaw';
 import DeviceTransfer from './DeviceTransfer';
 import { col, columns } from './ui';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 const DeviceDeveloper = () => {
@@ -20,54 +21,57 @@ const DeviceDeveloper = () => {
   const navigate = useNavigate();
 
   return (
-    <Show
-      when={dash.status() === 'connected' && !dash.updateOnly()}
-      fallback={
-        <Show
-          when={!dash.updateOnly()}
-          fallback={<UpdateOnlyCard use="the advanced control layer" />}
-        >
-          <div id="advanced-control-layer" data-search-target>
-            <Card>
-              <CardHeader
-                title="Advanced control layer"
-                subtitle="Rewrite rules, descriptor patches, and raw injection"
-              />
-              <div aria-live="polite">
-                <Switch>
-                  <Match when={dash.status() === 'connecting'}>
-                    <Button loading disabled>Connecting...</Button>
-                  </Match>
+    <>
+      <PageHeader />
+      <Show
+        when={dash.status() === 'connected' && !dash.updateOnly()}
+        fallback={
+          <Show
+            when={!dash.updateOnly()}
+            fallback={<UpdateOnlyCard use="the advanced control layer" />}
+          >
+            <div id="advanced-control-layer" data-search-target>
+              <Card>
+                <CardHeader
+                  title="Advanced control layer"
+                  subtitle="Rewrite rules, descriptor patches, and raw injection"
+                />
+                <div aria-live="polite">
+                  <Switch>
+                    <Match when={dash.status() === 'connecting'}>
+                      <Button loading disabled>Connecting...</Button>
+                    </Match>
 
-                  <Match when={dash.status() === 'flashing'}>
-                    <p>Updating.</p>
-                    <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                      Go to Update
-                    </Button>
-                  </Match>
+                    <Match when={dash.status() === 'flashing'}>
+                      <p>Updating.</p>
+                      <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                        Go to Update
+                      </Button>
+                    </Match>
 
-                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
-                    <ConnectPanel />
-                  </Match>
+                    <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
+                      <ConnectPanel />
+                    </Match>
 
-                </Switch>
-              </div>
-            </Card>
+                  </Switch>
+                </div>
+              </Card>
+            </div>
+          </Show>
+        }
+      >
+        <div style={columns}>
+          <div style={col}>
+            <DeviceRewrite />
+            <DevicePatch />
           </div>
-        </Show>
-      }
-    >
-      <div style={columns}>
-        <div style={col}>
-          <DeviceRewrite />
-          <DevicePatch />
+          <div style={col}>
+            <DeviceRaw />
+            <DeviceTransfer />
+          </div>
         </div>
-        <div style={col}>
-          <DeviceRaw />
-          <DeviceTransfer />
-        </div>
-      </div>
-    </Show>
+      </Show>
+    </>
   );
 };
 

@@ -3,6 +3,7 @@ import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { type Count, type StatsSummary, type WeekFlashes, fetchStats } from '../../../dashboard/stats';
 import { Section } from './Section';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 // Longer lists end in one row summing the rest.
@@ -204,7 +205,6 @@ const Summary = (props: { s: StatsSummary }) => {
     <>
       <div id="stats" data-search-target>
         <Card>
-          <CardHeader title="Usage stats" subtitle={SCOPE} />
           <div class="stat-figures" data-testid="figures">
             <Figure value={num(s().boxes.total)} label="Unique boxes" />
             <Figure value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} label="New this week" />
@@ -378,11 +378,11 @@ const Stats = () => {
   };
   return (
     <>
+      <PageHeader lead={SCOPE} />
       <Switch
         fallback={
           <div id="stats" data-search-target>
             <Card>
-              <CardHeader title="Usage stats" subtitle={SCOPE} />
               <div data-fill="stats"><p>Loading...</p></div>
             </Card>
           </div>
@@ -391,7 +391,6 @@ const Stats = () => {
         <Match when={summary.state === 'errored'}>
           <div id="stats" data-search-target>
             <Card>
-              <CardHeader title="Usage stats" subtitle={SCOPE} />
               <div class="callout callout--warning" role="alert">
                 {(summary.error as Error).message}
               </div>

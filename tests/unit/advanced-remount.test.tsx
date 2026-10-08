@@ -19,7 +19,11 @@ vi.mock('../../src/dashboard/firmware', () => ({
   ],
   downloadAsset: async () => new Uint8Array(4096),
 }));
-vi.mock('@solidjs/router', () => ({ useNavigate: () => vi.fn() }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => vi.fn(),
+  useLocation: () => ({ pathname: '/dashboard/advanced', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
 import Advanced from '../../src/app/pages/dashboard/Advanced';
 

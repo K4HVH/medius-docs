@@ -55,6 +55,7 @@ const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => navigate,
   A: (p: { children: unknown }) => p.children,
+  useLocation: () => ({ pathname: '/dashboard', hash: '' }),
 }));
 
 import Device from '../../src/app/pages/dashboard/Device';
