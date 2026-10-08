@@ -135,7 +135,7 @@ const ENTRIES: Entry[] = [
   library('/library/transform', 'API', 'Transform', 'BsSliders', 'Transform',
     'transform, transform_swap, transform_remap and untransform: swap or remap fields of the cloned device from Rust.'),
   library('/library/options', 'API', 'Options', 'BsPuzzle', 'Options',
-    'The seven persistent box settings from Rust, each set and read on its own: imperfect cloning, movement riding, emit pace, name and more.'),
+    'The seven persistent box settings from Rust, each set and read separately: imperfect cloning, movement riding, emit pace, name and more.'),
   library('/library/clip', 'API', 'Clip', 'BsStack', 'Clip',
     'ClipBuilder and ClipHandle: build per-frame input in Rust, load it onto the box, and drive its playback and triggers.'),
   library('/library/requests', 'API', 'Requests', 'BsArrowLeftRight', 'Requests',

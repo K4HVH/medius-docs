@@ -5,7 +5,7 @@ export interface DocRoute {
   section: string;
 }
 
-// Every page the prerender snapshots: the registry minus Home, which it renders on its own.
+// Every page the prerender snapshots: the registry minus Home, which it renders separately.
 export function getDocRoutes(): DocRoute[] {
   return ROUTES.filter((r) => r.path !== '/').map((r) => ({ path: r.path, section: SECTION_LABEL[r.section] }));
 }
