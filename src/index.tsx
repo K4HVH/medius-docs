@@ -3,6 +3,7 @@ import { render } from 'solid-js/web';
 import 'solid-devtools';
 
 import App from './app/App';
+import { introElapsed, resumeIntro } from './app/shell/takeover';
 import './styles/global.css';
 import './styles/theme/index.css';
 
@@ -16,6 +17,8 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 // Prerendered SSG pages ship a static snapshot inside #root; clear it before the
 // client renders a fresh tree (this is a client render(), not a hydrate()).
+const elapsed = introElapsed();
 if (root) root.textContent = '';
 
 render(() => <App />, root!);
+resumeIntro(elapsed);
