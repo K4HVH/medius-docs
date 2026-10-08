@@ -7,6 +7,7 @@ import { documentTitle, routeFor, NOT_FOUND } from '../src/app/routes';
 import { SITE } from '../src/app/site';
 
 const PORT = Number(process.env.CRAWL_PORT || 4390);
+const HERO = 'Replacement firmware for the MAKCU box.';
 const BASE = `http://localhost:${PORT}`;
 const failures: string[] = [];
 const fail = (msg: string): void => {
@@ -54,7 +55,18 @@ async function checkPage(path: string, titles: Map<string, string>): Promise<voi
     }
   }
   if (/Browser not supported|Page not secure/.test(html)) fail(`${path}: unsupported-browser card in the snapshot`);
-  if (path !== '/' && !html.includes('class="site-footer"')) fail(`${path}: no footer`);
+  if (!html.includes('class="site-footer"')) fail(`${path}: no footer`);
+  if (/class="[^"]*\brv\b[^"]*\bpre\b/.test(html)) fail(`${path}: a block hidden for a scroll reveal in the snapshot`);
+  const h1s = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)].map((m) => decode(m[1].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim());
+  const heading = path === '/' ? HERO : route.title;
+  if (h1s.length !== 1) fail(`${path}: ${h1s.length} h1 elements, want 1`);
+  else if (h1s[0] !== heading) fail(`${path}: h1 "${h1s[0]}", want "${heading}"`);
+  if (path === '/') {
+    const boxes = html.match(/data-fill="vital-boxes"[^>]*>([^<]*)</)?.[1];
+    if (boxes === undefined) fail('/: no vital-boxes cell');
+    else if (boxes && !/^[\d,]+$/.test(boxes)) fail(`/: vital-boxes reads "${boxes}"`);
+    if (/Loading/.test(html)) fail('/: "Loading" in the raw HTML');
+  }
 }
 
 async function main(): Promise<void> {
