@@ -1,0 +1,238 @@
+{
+  "device": "G502 X LIGHTSPEED",
+  "vidpid": "046d:c098",
+  "firmware": "3.4.5",
+  "captured": "2026-10-09",
+  "descriptors": {
+    "device": [
+      {
+        "field": "bLength",
+        "mouse": "12",
+        "clone": "12"
+      },
+      {
+        "field": "bDescriptorType",
+        "mouse": "01",
+        "clone": "01"
+      },
+      {
+        "field": "bcdUSB",
+        "mouse": "00 02",
+        "clone": "00 02"
+      },
+      {
+        "field": "bDeviceClass",
+        "mouse": "00",
+        "clone": "00"
+      },
+      {
+        "field": "bDeviceSubClass",
+        "mouse": "00",
+        "clone": "00"
+      },
+      {
+        "field": "bDeviceProtocol",
+        "mouse": "00",
+        "clone": "00"
+      },
+      {
+        "field": "bMaxPacketSize0",
+        "mouse": "40",
+        "clone": "40"
+      },
+      {
+        "field": "idVendor",
+        "mouse": "6D 04",
+        "clone": "6D 04"
+      },
+      {
+        "field": "idProduct",
+        "mouse": "98 C0",
+        "clone": "98 C0"
+      },
+      {
+        "field": "bcdDevice",
+        "mouse": "00 30",
+        "clone": "00 30"
+      },
+      {
+        "field": "iManufacturer",
+        "mouse": "01",
+        "clone": "01"
+      },
+      {
+        "field": "iProduct",
+        "mouse": "02",
+        "clone": "02"
+      },
+      {
+        "field": "iSerialNumber",
+        "mouse": "03",
+        "clone": "03"
+      },
+      {
+        "field": "bNumConfigurations",
+        "mouse": "01",
+        "clone": "01"
+      }
+    ],
+    "configuration": [
+      {
+        "field": "bLength",
+        "mouse": "09",
+        "clone": "09"
+      },
+      {
+        "field": "bDescriptorType",
+        "mouse": "02",
+        "clone": "02"
+      },
+      {
+        "field": "wTotalLength",
+        "mouse": "54 00",
+        "clone": "54 00"
+      },
+      {
+        "field": "bNumInterfaces",
+        "mouse": "03",
+        "clone": "03"
+      },
+      {
+        "field": "bConfigurationValue",
+        "mouse": "01",
+        "clone": "01"
+      },
+      {
+        "field": "iConfiguration",
+        "mouse": "04",
+        "clone": "04"
+      },
+      {
+        "field": "bmAttributes",
+        "mouse": "E0",
+        "clone": "E0"
+      },
+      {
+        "field": "bMaxPower",
+        "mouse": "FA",
+        "clone": "FA"
+      }
+    ],
+    "interface": [
+      {
+        "field": "bLength",
+        "mouse": "09",
+        "clone": "09"
+      },
+      {
+        "field": "bDescriptorType",
+        "mouse": "04",
+        "clone": "04"
+      },
+      {
+        "field": "bInterfaceNumber",
+        "mouse": "00",
+        "clone": "00"
+      },
+      {
+        "field": "bAlternateSetting",
+        "mouse": "00",
+        "clone": "00"
+      },
+      {
+        "field": "bNumEndpoints",
+        "mouse": "01",
+        "clone": "01"
+      },
+      {
+        "field": "bInterfaceClass",
+        "mouse": "03",
+        "clone": "03"
+      },
+      {
+        "field": "bInterfaceSubClass",
+        "mouse": "01",
+        "clone": "01"
+      },
+      {
+        "field": "bInterfaceProtocol",
+        "mouse": "02",
+        "clone": "02"
+      },
+      {
+        "field": "iInterface",
+        "mouse": "00",
+        "clone": "00"
+      }
+    ],
+    "hid": [
+      {
+        "field": "bLength",
+        "mouse": "09",
+        "clone": "09"
+      },
+      {
+        "field": "bDescriptorType",
+        "mouse": "21",
+        "clone": "21"
+      },
+      {
+        "field": "bcdHID",
+        "mouse": "11 01",
+        "clone": "11 01"
+      },
+      {
+        "field": "bCountryCode",
+        "mouse": "00",
+        "clone": "00"
+      },
+      {
+        "field": "bNumDescriptors",
+        "mouse": "01",
+        "clone": "01"
+      },
+      {
+        "field": "bDescriptorType",
+        "mouse": "22",
+        "clone": "22"
+      },
+      {
+        "field": "wDescriptorLength",
+        "mouse": "53 00",
+        "clone": "53 00"
+      }
+    ],
+    "endpoint": [
+      {
+        "field": "bLength",
+        "mouse": "07",
+        "clone": "07"
+      },
+      {
+        "field": "bDescriptorType",
+        "mouse": "05",
+        "clone": "05"
+      },
+      {
+        "field": "bEndpointAddress",
+        "mouse": "81",
+        "clone": "81"
+      },
+      {
+        "field": "bmAttributes",
+        "mouse": "03",
+        "clone": "03"
+      },
+      {
+        "field": "wMaxPacketSize",
+        "mouse": "40 00",
+        "clone": "40 00"
+      },
+      {
+        "field": "bInterval",
+        "mouse": "01",
+        "clone": "01"
+      }
+    ]
+  }
+}
