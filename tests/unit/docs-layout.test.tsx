@@ -89,6 +89,7 @@ const mount = (path: string, w = world()) => {
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
         <Route path="/dashboard/advanced" component={() => <p>advanced page</p>} />
+        <Route path="*" component={() => <p>other page</p>} />
       </Route>
     </MemoryRouter>
   ));
@@ -193,6 +194,42 @@ describe('DocsLayout and the boxes', () => {
     await waitFor(() => expect(document.querySelector('.command-palette')).toBeNull());
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
     await waitFor(() => expect(document.querySelector('.command-palette')).not.toBeNull());
+  });
+
+  it('closes the phone page panel when a box is picked, and unlocks the page', async () => {
+    const r = mount('/dashboard/changelog');
+    await waitFor(() => expect(row(r)).toBeTruthy());
+    fireEvent.click(r.container.querySelector('button.docbar')!);
+    expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(true);
+    fireEvent.click(row(r));
+    await waitFor(() => expect(r.container.textContent).toContain('device page'));
+    expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(false);
+    expect(document.documentElement.classList.contains('locked')).toBe(false);
+    fireEvent.click(r.container.querySelector('button.docbar')!);
+    fireEvent.click(row(r));
+    expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(false);
+  });
+
+  it('closes the phone page panel when a search result is chosen', async () => {
+    const r = mount('/native');
+    await waitFor(() => expect(r.container.textContent).toContain('native'));
+    fireEvent.click(r.container.querySelector('button.docbar')!);
+    fireEvent.click(r.container.querySelector('.side button.search')!);
+    const input = await waitFor(() => document.querySelector<HTMLInputElement>('.command-palette__input')!);
+    fireEvent.input(input, { target: { value: 'Inject' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(document.querySelector('.command-palette')).toBeNull());
+    expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(false);
+    expect(document.documentElement.classList.contains('locked')).toBe(false);
+  });
+
+  it('gives the dashboard the full width beside the sidebar, and the docs their reading measure', async () => {
+    const r = mount('/dashboard/advanced');
+    await waitFor(() => expect(r.container.textContent).toContain('advanced page'));
+    expect(r.container.querySelector('.docs')!.classList.contains('tool')).toBe(true);
+    r.history.set({ value: '/native' });
+    await waitFor(() => expect(r.container.textContent).toContain('native'));
+    expect(r.container.querySelector('.docs')!.classList.contains('tool')).toBe(false);
   });
 
   it('makes every sidebar entry a link a crawler can follow', async () => {

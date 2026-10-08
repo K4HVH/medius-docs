@@ -29,6 +29,7 @@ const fontsReady = (): Promise<unknown> => document.fonts?.ready ?? Promise.reso
 
 const DocsLayout = (props: RouteSectionProps) => {
   const [searchOpen, setSearchOpen] = createSignal(false);
+  const [closeKey, setCloseKey] = createSignal(0);
   const navigate = useNavigate();
   const location = useLocation();
   const native = useNativeFlash();
@@ -52,6 +53,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   const handleSearchNavigate = (fullPath: string) => {
     if (flashing()) return;
     setSearchOpen(false);
+    setCloseKey((k) => k + 1);
     const [path, hash] = fullPath.split('#');
     if (path === location.pathname && hash && hash === hashId()) scrollToTarget(hash, 'smooth');
     else navigate(fullPath, { scroll: path !== location.pathname });
@@ -101,6 +103,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   onCleanup(() => disposeReveals());
 
   const handleBoxPick = () => {
+    setCloseKey((k) => k + 1);
     const p = location.pathname;
     if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
   };
@@ -113,9 +116,10 @@ const DocsLayout = (props: RouteSectionProps) => {
     <>
       <GridBackground gridSize={10} />
       <SiteNav disabled={flashing()} />
-      <div class="docs">
+      <div class="docs" classList={{ tool: section() === 'dashboard' }}>
         <DocsSidebar
           pathname={location.pathname}
+          closeKey={closeKey()}
           title={barTitle()}
           disabled={flashing()}
           onSearch={() => {

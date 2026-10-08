@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import { LANG_LABEL, LANG_ROOT, SECTION_LABEL, routeFor, sectionLabel, sidebarGroups, type Lang, type Section } from '../routes';
 
@@ -24,6 +24,8 @@ export function DocsSidebar(props: {
   disabled?: boolean;
   onSearch: () => void;
   onNavigate?: () => void;
+  /** Any change closes the phone panel: a box picked, a search result chosen. */
+  closeKey?: unknown;
   title?: string;
   boxes?: JSX.Element;
 }) {
@@ -47,6 +49,7 @@ export function DocsSidebar(props: {
     document.documentElement.classList.toggle('locked', next);
   };
   onCleanup(() => document.documentElement.classList.remove('locked'));
+  createEffect(on([() => props.pathname, () => props.closeKey], () => open() && setPanel(false), { defer: true }));
 
   const go = (e: MouseEvent) => {
     if (props.disabled) {

@@ -67,24 +67,29 @@ pre.api-signature {
   :is(.api-params, .byte-table) tbody tr:hover td:first-child { box-shadow: inset 2px 0 var(--accent); }
 }
 
-/* Callouts: a two-cell box, the kind as a mono caps label beside the text. */
+/* Callouts: a hairline box edged in the kind's colour. In the docs, a two-cell box with the kind as a
+   mono caps label beside the text; the dashboard's alerts keep their words as they are. */
 .callout {
-  position: relative; margin-top: 20px; padding: 13px 18px 13px 138px; min-height: 50px;
-  border: 1px solid var(--line); background: rgba(10, 10, 10, 0.7); color: var(--text-2);
+  position: relative; margin-top: 20px; padding: 13px 18px; border: 1px solid var(--line);
+  border-left: 2px solid var(--callout, var(--accent)); background: rgba(10, 10, 10, 0.7); color: var(--text-2);
 }
-.callout::before {
-  position: absolute; top: 0; bottom: 0; left: 0; width: 120px; padding: 16px;
-  border-right: 1px solid var(--line);
-  font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
-}
-.callout--info::before { content: 'Note'; color: var(--accent); }
-.callout--warning::before { content: 'Warning'; color: var(--warn); }
-.callout--danger::before { content: 'Danger'; color: var(--color-red-300); }
+.callout--info { --callout: var(--accent); }
+.callout--warning { --callout: var(--warn); }
+.callout--danger { --callout: var(--color-red-300); }
 .callout > * { margin: 0; max-width: none; }
 .callout > * + * { margin-top: 10px; }
+:where(.page-header, .doc-section) .callout { padding-left: 138px; min-height: 50px; border-left-width: 1px; border-left-color: var(--line); }
+:where(.page-header, .doc-section) .callout::before {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 120px; padding: 16px;
+  border-right: 1px solid var(--line); color: var(--callout);
+  font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+}
+:where(.page-header, .doc-section) .callout--info::before { content: 'Note'; }
+:where(.page-header, .doc-section) .callout--warning::before { content: 'Warning'; }
+:where(.page-header, .doc-section) .callout--danger::before { content: 'Danger'; }
 @media (max-width: 600px) {
-  .callout { padding: 42px 16px 14px; }
-  .callout::before { bottom: auto; width: auto; padding: 14px 16px 0; border-right: 0; }
+  :where(.page-header, .doc-section) .callout { padding: 42px 16px 14px; }
+  :where(.page-header, .doc-section) .callout::before { bottom: auto; width: auto; padding: 14px 16px 0; border-right: 0; }
 }
 
 /* Diagrams and code: mono in a hairline box that scrolls inside itself. */
