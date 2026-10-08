@@ -8,7 +8,7 @@ import { useDashboard } from './context';
 import DeviceInfo from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
-import { BAD_BROWSER, BAD_CONTEXT, ConnectPanel } from './ConnectPanel';
+import { ConnectPanel } from './ConnectPanel';
 import UpdateOnlyCard from './UpdateOnlyCard';
 import { row } from './ui';
 import '../../../styles/docs.css';
@@ -54,136 +54,117 @@ const Device = () => {
 
   return (
     <>
-      <Show when={!dash.supported}>
-        <div id="unsupported" data-search-target>
-          <Card>
-            <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
-            <p>{BAD_BROWSER}</p>
-          </Card>
-        </div>
-      </Show>
-      <Show when={dash.supported && !dash.secure}>
-        <div id="insecure" data-search-target>
-          <Card>
-            <CardHeader title="Page not secure" subtitle="No box access from this page" />
-            <p>{BAD_CONTEXT}</p>
-          </Card>
-        </div>
-      </Show>
-
-      <Show when={dash.supported && dash.secure}>
-        <div style={{ display: 'flex', gap: 'var(--g-spacing)', 'flex-wrap': 'wrap', 'align-items': 'flex-start' }}>
-          <div style={col}>
-            <div id="your-box" data-search-target>
-              <Card>
-                <CardHeader title="Your box" subtitle="Connect over USB" />
-                <div aria-live="polite">
-                  <Switch>
-                    <Match when={dash.status() === 'connected'}>
-                      <Show when={dash.version()}>
-                        {(v) => (
-                          <p>
-                            Connected. Firmware <Chip variant="success">v{versionString(v())}</Chip>
-                          </p>
-                        )}
-                      </Show>
-                      <div style={row}>
-                        {/* LED isn't on the stable update path, so a newer box isn't sent it. */}
-                        <Show when={(dash.version()?.protoVer ?? 0) <= PROTO_VER}>
-                          <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
-                            {dash.identifying() ? 'Identifying...' : 'Identify'}
-                          </Button>
-                        </Show>
-                        <Button variant="secondary" onClick={() => void dash.disconnect()}>
-                          Disconnect
-                        </Button>
-                      </div>
-                    </Match>
-
-                    <Match when={dash.status() === 'connecting'}>
-                      <Button loading disabled>Connecting...</Button>
-                    </Match>
-
-                    <Match when={dash.status() === 'flashing'}>
-                      <p>Updating.</p>
-                      <Show
-                        when={dash.update()?.page === 'advanced'}
-                        fallback={
-                          <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                            Go to Update
-                          </Button>
-                        }
-                      >
-                        <Button variant="primary" onClick={() => navigate('/dashboard/advanced')}>
-                          Go to Advanced
+      <div style={{ display: 'flex', gap: 'var(--g-spacing)', 'flex-wrap': 'wrap', 'align-items': 'flex-start' }}>
+        <div style={col}>
+          <div id="your-box" data-search-target>
+            <Card>
+              <CardHeader title="Your box" subtitle="Connect over USB" />
+              <div aria-live="polite">
+                <Switch>
+                  <Match when={dash.status() === 'connected'}>
+                    <Show when={dash.version()}>
+                      {(v) => (
+                        <p>
+                          Connected. Firmware <Chip variant="success">v{versionString(v())}</Chip>
+                        </p>
+                      )}
+                    </Show>
+                    <div style={row}>
+                      {/* LED isn't on the stable update path, so a newer box isn't sent it. */}
+                      <Show when={(dash.version()?.protoVer ?? 0) <= PROTO_VER}>
+                        <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
+                          {dash.identifying() ? 'Identifying...' : 'Identify'}
                         </Button>
                       </Show>
-                    </Match>
+                      <Button variant="secondary" onClick={() => void dash.disconnect()}>
+                        Disconnect
+                      </Button>
+                    </div>
+                  </Match>
 
-                    <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
-                      <ConnectPanel />
-                    </Match>
-                  </Switch>
-                </div>
-              </Card>
-            </div>
+                  <Match when={dash.status() === 'connecting'}>
+                    <Button loading disabled>Connecting...</Button>
+                  </Match>
 
-            <Show when={dash.updateOnly()}>
-              <UpdateOnlyCard use="the rest of the dashboard" />
-            </Show>
+                  <Match when={dash.status() === 'flashing'}>
+                    <p>Updating.</p>
+                    <Show
+                      when={dash.update()?.page === 'advanced'}
+                      fallback={
+                        <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                          Go to Update
+                        </Button>
+                      }
+                    >
+                      <Button variant="primary" onClick={() => navigate('/dashboard/advanced')}>
+                        Go to Advanced
+                      </Button>
+                    </Show>
+                  </Match>
 
-            <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
-              <div id="status" data-search-target>
-                <Card>
-                  <CardHeader title="Status" subtitle="Live device health" />
-                  <Show when={dash.health()} fallback={<p>Reading...</p>}>
-                    {(h) => (
-                      <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
-                        <For each={healthItems(h())}>
-                          {(item) => <Chip variant={item.value ? 'success' : 'neutral'}>{item.label}</Chip>}
-                        </For>
-                      </div>
-                    )}
-                  </Show>
-                </Card>
+                  <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
+                    <ConnectPanel />
+                  </Match>
+                </Switch>
               </div>
-
-              <DeviceInfo />
-            </Show>
+            </Card>
           </div>
 
-          <div style={col}>
-            <div id="device-log" data-search-target>
+          <Show when={dash.updateOnly()}>
+            <UpdateOnlyCard use="the rest of the dashboard" />
+          </Show>
+
+          <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
+            <div id="status" data-search-target>
               <Card>
-                <CardHeader title="Device log" subtitle="Live box diagnostics" />
-                <Show
-                  when={dash.status() === 'connected' || dash.deviceLog().length > 0}
-                  fallback={<p>Connect to see diagnostics.</p>}
-                >
-                  <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
-                    <Button variant="subtle" size="compact" onClick={() => dash.clearDeviceLog()}>Clear</Button>
-                  </div>
-                  <pre
-                    ref={logEl}
-                    onScroll={onLogScroll}
-                    class="diagram"
-                    style={{ 'max-height': '360px', overflow: 'auto', 'white-space': 'pre-wrap' }}
-                  >
-                    <Show when={dash.deviceLog().length > 0} fallback="(no messages)">
-                      {dash.deviceLog().join('\n')}
-                    </Show>
-                  </pre>
+                <CardHeader title="Status" subtitle="Live device health" />
+                <Show when={dash.health()} fallback={<p>Reading...</p>}>
+                  {(h) => (
+                    <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: 'var(--g-spacing-sm)' }}>
+                      <For each={healthItems(h())}>
+                        {(item) => <Chip variant={item.value ? 'success' : 'neutral'}>{item.label}</Chip>}
+                      </For>
+                    </div>
+                  )}
                 </Show>
               </Card>
             </div>
 
-            <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
-              <DeviceOptions />
-              <DeviceFactoryReset />
-            </Show>
-          </div>
+            <DeviceInfo />
+          </Show>
         </div>
-      </Show>
+
+        <div style={col}>
+          <div id="device-log" data-search-target>
+            <Card>
+              <CardHeader title="Device log" subtitle="Live box diagnostics" />
+              <Show
+                when={dash.status() === 'connected' || dash.deviceLog().length > 0}
+                fallback={<p>Connect to see diagnostics.</p>}
+              >
+                <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
+                  <Button variant="subtle" size="compact" onClick={() => dash.clearDeviceLog()}>Clear</Button>
+                </div>
+                <pre
+                  ref={logEl}
+                  onScroll={onLogScroll}
+                  class="diagram"
+                  style={{ 'max-height': '360px', overflow: 'auto', 'white-space': 'pre-wrap' }}
+                >
+                  <Show when={dash.deviceLog().length > 0} fallback="(no messages)">
+                    {dash.deviceLog().join('\n')}
+                  </Show>
+                </pre>
+              </Show>
+            </Card>
+          </div>
+
+          <Show when={dash.status() === 'connected' && !dash.updateOnly()}>
+            <DeviceOptions />
+            <DeviceFactoryReset />
+          </Show>
+        </div>
+      </div>
     </>
   );
 };

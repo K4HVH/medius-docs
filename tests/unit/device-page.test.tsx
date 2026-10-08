@@ -72,6 +72,23 @@ afterEach(() => {
 });
 
 describe('Device', () => {
+  it('keeps the page in a browser without Web Serial, with the reason where Connect was', async () => {
+    mock.supported = false;
+    const { container, queryByRole } = render(() => <Device />);
+    await waitFor(() => expect(container.textContent).toContain('Your box'));
+    expect(container.textContent).toMatch(/can't talk to your box/i);
+    expect(container.textContent).not.toMatch(/Browser not supported/);
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+  });
+
+  it('keeps the page on an insecure origin, with the reason where Connect was', async () => {
+    mock.secure = false;
+    const { container } = render(() => <Device />);
+    await waitFor(() => expect(container.textContent).toContain('Your box'));
+    expect(container.textContent).toMatch(/isn't secure/i);
+    expect(container.textContent).not.toMatch(/Page not secure/);
+  });
+
   it('uses the same browser wording as every other page, not its own', async () => {
     mock.supported = false;
     const { container } = render(() => <Device />);

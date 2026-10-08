@@ -17,6 +17,7 @@ const st = vi.hoisted(() => ({
 const mock = vi.hoisted(() => ({
   s: null as ReturnType<(typeof st)['make']> | null,
   supported: true,
+  secure: true,
   flashOk: true,
   flashError: 'That port is still held by an earlier session.',
   chooserEmpty: false,
@@ -37,7 +38,7 @@ const mock = vi.hoisted(() => ({
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   useBoxes: () => ({
     supported: mock.supported,
-    secure: true,
+    secure: mock.secure,
     snapshot: () => ({ answering: new Set(mock.answering), all: new Set(mock.answering) }),
     connectNew: async (before: { answering: ReadonlySet<string> }) => {
       mock.befores.push([...before.answering]);
@@ -103,6 +104,7 @@ const mount = () => {
 afterEach(() => {
   cleanup();
   mock.supported = true;
+  mock.secure = true;
   mock.flashOk = true;
   mock.chooserEmpty = false;
   mock.releasesThrow = false;
@@ -273,10 +275,21 @@ describe('Setup', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('an unsupported browser gets the reason and no wizard at all', async () => {
+  it('an unsupported browser sees the first step, with the reason where Install was', async () => {
     mock.supported = false;
     const r = mount();
-    expect(r.container.textContent).toMatch(/Chrome/);
+    expect(r.container.textContent).toContain('Install Medius');
+    expect(r.container.textContent).toMatch(/Hold the button next to USB1/);
+    expect(r.container.textContent).toMatch(/Open this page in Chrome/);
+    expect(r.container.textContent).not.toMatch(/Browser not supported/);
+    expect(r.queryByRole('button')).toBeNull();
+  });
+
+  it('an insecure origin sees the first step, with the reason where Install was', async () => {
+    mock.secure = false;
+    const r = mount();
+    expect(r.container.textContent).toContain('Install Medius');
+    expect(r.container.textContent).toMatch(/isn't secure/);
     expect(r.queryByRole('button')).toBeNull();
   });
 

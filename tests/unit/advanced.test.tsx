@@ -21,13 +21,15 @@ const mock = vi.hoisted(() => ({
   flashes: 0,
   holdFlash: false,
   metas: [] as unknown[],
+  supported: true,
+  secure: true,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   // The selected box's session, read through the registry: Advanced is not inside BoxScope.
   useBoxes: () => ({
-    supported: true,
-    secure: true,
+    supported: mock.supported,
+    secure: mock.secure,
     scope: () => ({
       status: () => mock.s!.status(),
       name: () => 'Desk',
@@ -101,6 +103,8 @@ afterEach(() => {
   mock.flashes = 0;
   mock.metas = [];
   mock.holdFlash = false;
+  mock.supported = true;
+  mock.secure = true;
   navigate.mockClear();
 });
 
@@ -452,5 +456,22 @@ describe('Advanced', () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
     await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
     expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
+  });
+
+  it('keeps the form in a browser without Web Serial, with the reason where Flash was', async () => {
+    mock.supported = false;
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('Manual flash, any chip or image'));
+    expect(r.container.textContent).toMatch(/Open this page in Chrome/);
+    expect(r.container.textContent).not.toMatch(/Browser not supported/);
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
+  });
+
+  it('keeps the form on an insecure origin, with the reason where Flash was', async () => {
+    mock.secure = false;
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.textContent).toContain('Manual flash, any chip or image'));
+    expect(r.container.textContent).toMatch(/isn't secure/);
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 });

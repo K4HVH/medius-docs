@@ -96,25 +96,11 @@ const Setup = () => {
     setStep(to);
   };
 
+  // The first step shows in any browser; Install needs Web Serial on a secure page.
+  const blocked = () => (!boxes.supported ? BAD_BROWSER : !boxes.secure ? BAD_CONTEXT : null);
+
   return (
     <>
-      <Show when={!boxes.supported}>
-        <div id="unsupported" data-search-target>
-          <Card>
-            <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
-            <p>{BAD_BROWSER}</p>
-          </Card>
-        </div>
-      </Show>
-      <Show when={boxes.supported && !boxes.secure}>
-        <div id="insecure" data-search-target>
-          <Card>
-            <CardHeader title="Page not secure" subtitle="No box access from this page" />
-            <p>{BAD_CONTEXT}</p>
-          </Card>
-        </div>
-      </Show>
-
       <Show when={native.running()}>
         <div id="installing" data-search-target>
           <Card>
@@ -124,7 +110,7 @@ const Setup = () => {
         </div>
       </Show>
 
-      <Show when={boxes.supported && boxes.secure && !native.running()}>
+      <Show when={!native.running()}>
         <div id="install" data-search-target>
           <Card>
             <CardHeader title="Install Medius" subtitle="Ports are numbered on the box" />
@@ -142,13 +128,20 @@ const Setup = () => {
             <Switch>
               <Match when={step() === 'main'}>
                 <InstallPorts socket="usb1" />
-                <Button
-                  variant="primary"
-                  disabled={busy() || releases.loading}
-                  onClick={() => void install('device', 'unplug')}
+                <Show
+                  when={blocked()}
+                  fallback={
+                    <Button
+                      variant="primary"
+                      disabled={busy() || releases.loading}
+                      onClick={() => void install('device', 'unplug')}
+                    >
+                      {busy() ? 'Installing...' : 'Install'}
+                    </Button>
+                  }
                 >
-                  {busy() ? 'Installing...' : 'Install'}
-                </Button>
+                  {(reason) => <div class="callout callout--warning" role="alert">{reason()}</div>}
+                </Show>
               </Match>
 
               <Match when={step() === 'unplug'}>
