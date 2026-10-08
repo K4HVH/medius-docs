@@ -129,12 +129,12 @@ async function main(): Promise<void> {
     // Prerender the Home landing page into dist/index.html so the root URL (the
     // most-crawled one, and the SPA fallback) is real content, not an empty shell.
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load', timeout: 30000 });
-    await page.waitForSelector('h1', { timeout: 20000 });
+    await page.waitForSelector('.hero h1', { timeout: 20000 });
     await page.evaluate(
       () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
     );
     const homeHtml = await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML);
-    if (!/<h1[\s>]/i.test(homeHtml)) throw new Error('Home page did not render (no <h1>)');
+    if (!homeHtml.includes('class="hero')) throw new Error('Home page did not render (no hero)');
     writeFile(join(DIST, 'index.html'), homeHtml);
     process.stdout.write('  / -> index.html (Home prerendered)\n');
   } finally {

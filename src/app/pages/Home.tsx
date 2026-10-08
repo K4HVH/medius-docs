@@ -1,73 +1,57 @@
-import type { Component } from 'solid-js';
-import { A } from '@solidjs/router';
+import { createResource, onCleanup, onMount, type Component } from 'solid-js';
 import { GridBackground } from '../../components/surfaces/GridBackground';
-import { Card, CardHeader } from '../../components/surfaces/Card';
+import { SiteNav } from '../shell/SiteNav';
 import { SiteFooter } from '../shell/SiteFooter';
+import { armReveals } from '../shell/motion';
+import { DESCRIPTOR_SAMPLE, FEED_SAMPLE } from '../data/samples';
+import type { HomeFigures } from '../data/homeFigures';
+import { Hero } from './home/Hero';
+import { DescriptorPanel } from './home/DescriptorPanel';
+import { IndexRows } from './home/IndexRows';
+
+export const REVEAL_HOME = '.score, .dside, .index > .label, .go, .site-footer > div';
+
+// The figures the server put in the page, else a fetch: the prerendered copy carries none.
+const embedded = (): HomeFigures | null => {
+  try {
+    const el = document.getElementById('home-data');
+    return el ? (JSON.parse(el.textContent ?? '') as HomeFigures) : null;
+  } catch {
+    return null;
+  }
+};
+const load = async (): Promise<HomeFigures | null> =>
+  embedded() ??
+  fetch('/api/home')
+    .then((r) => (r.ok ? (r.json() as Promise<HomeFigures>) : null))
+    .catch(() => null);
 
 const Home: Component = () => {
-  return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <GridBackground />
-      <div class="content" style={{
-        display: 'flex',
-        "flex-direction": 'column',
-        "align-items": 'center',
-        "justify-content": 'center',
-        height: '100%',
-        padding: 'var(--g-spacing-lg)',
-      }}>
-        <div style={{
-          "max-width": '600px',
-          width: '100%',
-          display: 'flex',
-          "flex-direction": 'column',
-          gap: 'var(--g-spacing-lg)',
-          "text-align": 'center',
-        }}>
-          <div>
-            <h1 style={{ "margin-bottom": 'var(--g-spacing-sm)' }}>Medius</h1>
-            <p class="text-lg">
-              Documentation for the Medius box and Rust library.
-            </p>
-          </div>
+  const [figures] = createResource(load);
+  let root: HTMLDivElement | undefined;
 
-          <div class="docs-grid">
-            <A href="/native" style={{ "text-decoration": "none" }}>
-              <Card interactive padding="normal">
-                <CardHeader
-                  title="Native API"
-                  subtitle="Binary control protocol"
-                />
-              </Card>
-            </A>
-            <A href="/library" style={{ "text-decoration": "none" }}>
-              <Card interactive padding="normal">
-                <CardHeader
-                  title="Rust Library"
-                  subtitle="Official Rust client"
-                />
-              </Card>
-            </A>
-            <A href="/bindings" style={{ "text-decoration": "none" }}>
-              <Card interactive padding="normal">
-                <CardHeader
-                  title="Bindings"
-                  subtitle="C, C++ and Python clients"
-                />
-              </Card>
-            </A>
-            <A href="/dashboard" style={{ "text-decoration": "none" }}>
-              <Card interactive padding="normal">
-                <CardHeader
-                  title="Dashboard"
-                  subtitle="Connect, view and flash a box"
-                />
-              </Card>
-            </A>
-          </div>
-          <SiteFooter />
-        </div>
-      </div>
+  onMount(() => {
+    let dispose = () => {};
+    let live = true;
+    void (document.fonts?.ready ?? Promise.resolve()).then(() => {
+      if (live && root) dispose = armReveals(root, REVEAL_HOME);
+    });
+    onCleanup(() => {
+      live = false;
+      dispose();
+    });
+  });
+
+  return (
+    <div class="landing" ref={root}>
+      <GridBackground gridSize={10} />
+      <SiteNav overHero />
+      <main id="home">
+        <Hero frames={FEED_SAMPLE.frames} figures={figures() ?? null} />
+        <DescriptorPanel sample={DESCRIPTOR_SAMPLE} />
+        <IndexRows discord={figures()?.discord} />
+      </main>
+      <SiteFooter />
     </div>
   );
 };
