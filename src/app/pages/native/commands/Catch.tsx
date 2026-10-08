@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Catch: Component = () => {
   return (
@@ -126,21 +127,39 @@ const Catch: Component = () => {
           bytes of each packet (<code>class = 6</code>, <code>id = 0xFFFF</code>,{' '}
           <code>snaplen = 32</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0B     | 00     | 06 00  | 06     | FF FF  | 00     | 01     | 20     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | snaplen| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0B', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '06', name: 'class' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '20', name: 'snaplen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Subscribe to everything: <code>class=0xFF, id=0xFFFF, dir=BOTH, state=1</code>.
           Unsubscribe everything: the same with <code>state=0</code>, which clears the whole table
           in one frame:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0B     | 01     | 06 00  | FF     | FF FF  | 00     | 00     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | snaplen| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0B', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: 'FF', name: 'class' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '00', name: 'state' },
+            { value: '00', name: 'snaplen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           A blanket (<code>id = 0xFFFF</code>) stays one wildcard entry, unlike a{' '}
           <A href="/native/commands/lock#blanket"><code>LOCK</code> button or axis blanket</A>,
@@ -296,11 +315,21 @@ const Catch: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>A physical +10 right, no other motion (<code>dx = 10</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+
-| A5     | 0C     | 2A     | 0D 00  | 40 42 0F 00 | 00     | 0A 00  | 00 00  | 00 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | dx     | dy     | dz     | dpan   | CRC16  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0C', name: 'TYPE' },
+            { value: '2A', name: 'SEQ' },
+            { value: '0D 00', name: 'LEN' },
+            { value: '40 42 0F 00', name: 'ts_us' },
+            { value: '00', name: 'clk' },
+            { value: '0A 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '00 00', name: 'dz' },
+            { value: '00 00', name: 'dpan' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="usage-event" title="USAGE_EVENT" caption="One physical held-usage snapshot, box → PC">
@@ -354,11 +383,22 @@ const Catch: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Left Shift held while pressing <code>A</code> (a keys snapshot, two usages both <code>class = 1</code>: Left Shift <code>id = 0xE1</code>, then A <code>id = 0x04</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+
-| A5     | 0F     | 2B     | 0E 00  | 40 42 0F 00 | 00     | 01     | 01     | 02     | 01 E1 00 | 01 04 00 | lo hi  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | cls    | dir    | n      | usage[0] | usage[1] | CRC16  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0F', name: 'TYPE' },
+            { value: '2B', name: 'SEQ' },
+            { value: '0E 00', name: 'LEN' },
+            { value: '40 42 0F 00', name: 'ts_us' },
+            { value: '00', name: 'clk' },
+            { value: '01', name: 'cls' },
+            { value: '01', name: 'dir' },
+            { value: '02', name: 'n' },
+            { value: '01 E1 00', name: 'usage[0]' },
+            { value: '01 04 00', name: 'usage[1]' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="traffic-event" title="TRAFFIC_EVENT" caption="Byte-oriented class traffic, box → PC">
@@ -510,48 +550,68 @@ const Catch: Component = () => {
           under a <code>snaplen = 16</code> entry (16 bytes present, so payload{' '}
           <code>LEN = 28</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| A5     | 16     | 3C     | 1C 00  | 40 42 0F 00 | 00     | 06     | 83 00  | 01     |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-
-+--------+--------+---------------------------------------+--------+
-| 00     | 40 00  | 04 01 12 00 ...        (16 bytes)     | lo hi  |
-+--------+--------+---------------------------------------+--------+
-| flags  |true_len| bytes: 16 of 64, so the rest was cut  | CRC16  |
-+--------+--------+---------------------------------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '16', name: 'TYPE' },
+            { value: '3C', name: 'SEQ' },
+            { value: '1C 00', name: 'LEN' },
+            { value: '40 42 0F 00', name: 'ts_us' },
+            { value: '00', name: 'clk' },
+            { value: '06', name: 'class' },
+            { value: '83 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '00', name: 'flags' },
+            { value: '40 00', name: 'true_len' },
+            { value: '04 01 12 00 ... (16 bytes)', name: 'bytes: 16 of 64, so the rest was cut' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           A <code>SET_INTERFACE</code> bus event on interface 1, alternate setting 2 (two operand
           bytes, so payload <code>LEN = 14</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| A5     | 16     | 3D     | 0E 00  | 41 42 0F 00 | 01     | 0A     | 00 00  | 00     |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+
-| 05     | 02 00  | 01     | 02     | lo hi  |
-+--------+--------+--------+--------+--------+
-| flags  |true_len| a=iface| b=alt  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '16', name: 'TYPE' },
+            { value: '3D', name: 'SEQ' },
+            { value: '0E 00', name: 'LEN' },
+            { value: '41 42 0F 00', name: 'ts_us' },
+            { value: '01', name: 'clk' },
+            { value: '0A', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '05', name: 'flags' },
+            { value: '02 00', name: 'true_len' },
+            { value: '01', name: 'a=iface' },
+            { value: '02', name: 'b=alt' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           A <code>SET_REPORT</code> on EP0 that a <code>STALL</code> rule refused:{' '}
           <code>flags = 0x81</code>, <code>RULE</code> with handshake <code>1</code> (STALL), and the
           two data bytes the PC sent (payload <code>LEN = 22</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| A5     | 16     | 3E     | 16 00  | 42 42 0F 00 | 01     | 08     | 00 00  | 02     |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-
-+--------+--------+-------------------------+--------+--------+
-| 81     | 0A 00  | 21 09 00 02 00 00 02 00 | 01 00  | lo hi  |
-+--------+--------+-------------------------+--------+--------+
-| flags  |true_len| setup                   | data   | CRC16  |
-+--------+--------+-------------------------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '16', name: 'TYPE' },
+            { value: '3E', name: 'SEQ' },
+            { value: '16 00', name: 'LEN' },
+            { value: '42 42 0F 00', name: 'ts_us' },
+            { value: '01', name: 'clk' },
+            { value: '08', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '02', name: 'dir' },
+            { value: '81', name: 'flags' },
+            { value: '0A 00', name: 'true_len' },
+            { value: '21 09 00 02 00 00 02 00', name: 'setup' },
+            { value: '01 00', name: 'data' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="rules" title="Rules and taps" caption="Tap positions around the rewrite table">

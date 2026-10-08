@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Transform: Component = () => {
   return (
@@ -111,32 +112,40 @@ const Transform: Component = () => {
           Swap X and Y: <code>op = 1</code>, source <code>(axis 3, id 0)</code>, dest{' '}
           <code>(axis 3, id 1)</code>, <code>state = 1</code>:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1E     | 00     | 08 00  | 01     | 03     |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | sclass |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+
-| 00 00  | 03     | 01 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+
-| sid    | dclass | did    | state  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1E', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '08 00', name: 'LEN' },
+            { value: '01', name: 'op' },
+            { value: '03', name: 'sclass' },
+            { value: '00 00', name: 'sid' },
+            { value: '03', name: 'dclass' },
+            { value: '01 00', name: 'did' },
+            { value: '01', name: 'state' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           The wheel drives vertical motion: <code>op = 0</code> (remap), source{' '}
           <code>(axis 3, id 2)</code>, dest <code>(axis 3, id 1)</code>:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1E     | 01     | 08 00  | 00     | 03     |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | sclass |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+
-| 02 00  | 03     | 01 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+
-| sid    | dclass | did    | state  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1E', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '08 00', name: 'LEN' },
+            { value: '00', name: 'op' },
+            { value: '03', name: 'sclass' },
+            { value: '02 00', name: 'sid' },
+            { value: '03', name: 'dclass' },
+            { value: '01 00', name: 'did' },
+            { value: '01', name: 'state' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library bindings:{' '}
           <A href="/library/transform#transform"><code>transform</code></A>,{' '}
@@ -197,17 +206,21 @@ const Transform: Component = () => {
           Side button 3 drives the <code>a</code> key: <code>op = 0</code> (remap), source{' '}
           <code>(button 0, id 3)</code>, dest <code>(key 1, id 0x04)</code>:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1E     | 02     | 08 00  | 00     | 00     |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | sclass |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+
-| 03 00  | 01     | 04 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+
-| sid    | dclass | did    | state  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1E', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '08 00', name: 'LEN' },
+            { value: '00', name: 'op' },
+            { value: '00', name: 'sclass' },
+            { value: '03 00', name: 'sid' },
+            { value: '01', name: 'dclass' },
+            { value: '04 00', name: 'did' },
+            { value: '01', name: 'state' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           The keycode is a <A href="/native/commands/usage#keycodes">HID keyboard usage</A>; a
           media destination takes a 16-bit{' '}

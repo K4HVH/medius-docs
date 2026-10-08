@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
+import { ByteStrip } from '../../shell/ByteStrip';
 
 const Frame: Component = () => {
   return (
@@ -142,11 +143,19 @@ def encode_frame(type, seq, payload):
           <li>Payload: <code>motion</code> (<code>00</code> = cursor), 16-bit <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then <code>flags</code> (<code>00</code>).</li>
           <li><code>LEN</code> is <code>06 00</code>.</li>
         </ul>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 06 00  | 00     | 64 00  | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '00', name: 'motion' },
+            { value: '64 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           The CRC is the little-endian <code>crc16_ccitt</code> of{' '}
           <code>01 00 06 00 00 64 00 00 00 00</code>; compute it, don't copy a literal.

@@ -183,6 +183,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 }
 
 /* Page header: crumbs to the parent, the page's h1, the lead. */
+.doc > * { min-width: 0; }
 .doc > .page-header { margin-bottom: 8px; }
 .page-header__bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; }
 .crumbs { margin: 0; color: var(--dim); }

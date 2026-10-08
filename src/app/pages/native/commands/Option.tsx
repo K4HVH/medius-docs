@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Option: Component = () => {
   return (
@@ -150,11 +151,17 @@ const Option: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Opt in (<code>allow = 1</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 02 00  | 00     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | allow  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '00', name: 'id' },
+            { value: '01', name: 'allow' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="move-ride" title="MOVE_RIDE" caption="Inject motion only on a native move">
@@ -192,11 +199,17 @@ const Option: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Turn it on with a 20 ms window (<code>timeout = 0x0014</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 03 00  | 01     | 14 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | timeout| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '01', name: 'id' },
+            { value: '14 00', name: 'timeout' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="emit" title="EMIT" caption="Pace and wire-rate injected motion">
@@ -257,11 +270,19 @@ const Option: Component = () => {
           A fixed 1 kHz ceiling with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
           <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+---------+----------+--------+
-| A5     | 11     | 00     | 06 00  | 02     | 02     | E8 03   | E8 03    | lo hi  |
-+--------+--------+--------+--------+--------+--------+---------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | rate_hz | force_hz | CRC16  |
-+--------+--------+--------+--------+--------+--------+---------+----------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '02', name: 'id' },
+            { value: '02', name: 'mode' },
+            { value: 'E8 03', name: 'rate_hz' },
+            { value: 'E8 03', name: 'force_hz' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="name" title="NAME" caption="Human-readable box name">
@@ -290,11 +311,17 @@ const Option: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Name the box "Loki" (<code>id = 3</code>, ascii <code>4C 6F 6B 69</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+--------+
-| A5     | 11     | 00     | 05 00  | 03     | 4C 6F 6B 69  | lo hi  |
-+--------+--------+--------+--------+--------+--------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | name ascii   | CRC16  |
-+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '05 00', name: 'LEN' },
+            { value: '03', name: 'id' },
+            { value: '4C 6F 6B 69', name: 'name ascii' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
       <DocSection id="bearing" title="BEARING" caption="What with and against are measured against">
         <pre class="api-signature">id 4  ·  [window u16 LE] ms  [mode u8]</pre>
@@ -331,11 +358,18 @@ const Option: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>A 20 ms window in vector mode (<code>window = 0x0014</code>, <code>mode = 1</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 04 00  | 04     | 14 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | window | mode   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '04', name: 'id' },
+            { value: '14 00', name: 'window' },
+            { value: '01', name: 'mode' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
       <DocSection id="render" title="RENDER" caption="Motion rendering texture">
         <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
@@ -421,11 +455,18 @@ const Option: Component = () => {
           De-spiked, rendering native motion too (<code>mode = 2</code>,{' '}
           <code>full = 1</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 03 00  | 05     | 02     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | mode   | full   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '05', name: 'id' },
+            { value: '02', name: 'mode' },
+            { value: '01', name: 'full' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
       <DocSection id="spread" title="SPREAD" caption="Injected delta spread over time">
         <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
@@ -490,11 +531,17 @@ const Option: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>One whole command interval (<code>percent = 0x0064</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 11     | 00     | 03 00  | 06     | 64 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | percent| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '11', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '06', name: 'id' },
+            { value: '64 00', name: 'percent' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
 

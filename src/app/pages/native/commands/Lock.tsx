@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Lock: Component = () => {
   return (
@@ -199,30 +200,54 @@ re-clone    the box binds a device again`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Block the wheel's negative (scroll-down) sign: <code>class = 3</code> (axis), <code>id = 2</code> (wheel), <code>direction = 2</code>, <code>scale = 0</code>:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 00     | 06 00  | 03     | 02 00  | 02     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0A', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '03', name: 'class' },
+            { value: '02 00', name: 'id' },
+            { value: '02', name: 'dir' },
+            { value: '00 00', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Keep 40% of leftward movement while the bearing on X is positive: <code>direction = 4</code>{' '}
           (against), <code>scale = 40</code>. A physical <code>-10</code> then leaves as{' '}
           <code>-4</code>, and as <code>-10</code> again once the bearing lapses:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 01     | 06 00  | 03     | 00 00  | 04     | 28 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0A', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '03', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '04', name: 'dir' },
+            { value: '28 00', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Invert X on both signs: <code>scale = -100</code>, which is <code>0xFF9C</code>{' '}
           little-endian.
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 02     | 06 00  | 03     | 00 00  | 00     | 9C FF  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0A', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '03', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '9C FF', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="bearing" title="Bearing" caption="Current injected direction">

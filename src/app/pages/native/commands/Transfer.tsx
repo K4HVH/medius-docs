@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Transfer: Component = () => {
   return (
@@ -99,32 +100,41 @@ const Transfer: Component = () => {
           <code>GET_DESCRIPTOR(device)</code> on EP0, 18 bytes: setup{' '}
           <code>80 06 00 01 00 00 12 00</code>.
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+
-| A5     | 1A     | 07     | 09 00  | 00     |
-+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep     |
-+--------+--------+--------+--------+--------+
-
-+---------------+----------+--------+--------+--------+--------+
-| 80            | 06       | 00 01  | 00 00  | 12 00  | lo hi  |
-+---------------+----------+--------+--------+--------+--------+
-| bmRequestType | bRequest | wValue | wIndex | wLength| CRC16  |
-+---------------+----------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1A', name: 'TYPE' },
+            { value: '07', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: '00', name: 'ep' },
+            { value: '80', name: 'bmRequestType' },
+            { value: '06', name: 'bRequest' },
+            { value: '00 01', name: 'wValue' },
+            { value: '00 00', name: 'wIndex' },
+            { value: '12 00', name: 'wLength' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           An OUT request: <code>SET_REPORT(Output)</code> on interface 0 with one data byte,{' '}
           <code>02</code>, a boot keyboard's Caps Lock LED.
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+
-| A5     | 1A     | 08     | 0A 00  | 00     |
-+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep     |
-+--------+--------+--------+--------+--------+
-
-+---------------+----------+--------+--------+--------+--------+--------+
-| 21            | 09       | 00 02  | 00 00  | 01 00  | 02     | lo hi  |
-+---------------+----------+--------+--------+--------+--------+--------+
-| bmRequestType | bRequest | wValue | wIndex | wLength| data   | CRC16  |
-+---------------+----------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1A', name: 'TYPE' },
+            { value: '08', name: 'SEQ' },
+            { value: '0A 00', name: 'LEN' },
+            { value: '00', name: 'ep' },
+            { value: '21', name: 'bmRequestType' },
+            { value: '09', name: 'bRequest' },
+            { value: '00 02', name: 'wValue' },
+            { value: '00 00', name: 'wIndex' },
+            { value: '01 00', name: 'wLength' },
+            { value: '02', name: 'data' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library bindings:{' '}
           <A href="/library/advanced/transfer#transfer"><code>transfer</code></A>,{' '}
@@ -171,23 +181,30 @@ const Transfer: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>The device descriptor for <code>SEQ 07</code> (18 data bytes, so <code>LEN = 20</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1B     | 07     | 14 00  | 00     | 00     |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep     | status |
-+--------+--------+--------+--------+--------+--------+
-
-+--------------------------------------------+--------+
-| 12 01 00 02 00 00 00 40 ...  (18 bytes)    | lo hi  |
-+--------------------------------------------+--------+
-| IN data: the device descriptor             | CRC16  |
-+--------------------------------------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1B', name: 'TYPE' },
+            { value: '07', name: 'SEQ' },
+            { value: '14 00', name: 'LEN' },
+            { value: '00', name: 'ep' },
+            { value: '00', name: 'status' },
+            { value: '12 01 00 02 00 00 00 40 ... (18 bytes)', name: 'IN data: the device descriptor' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>A device that STALLs <code>SEQ 08</code>'s request (no data):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 1B     | 08     | 02 00  | 00     | FD     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep     | status | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1B', name: 'TYPE' },
+            { value: '08', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '00', name: 'ep' },
+            { value: 'FD', name: 'status' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="in-flight" title="One at a time" caption="A TRANSFER holds the control port until its reply">

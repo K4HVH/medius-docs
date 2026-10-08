@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Move: Component = () => {
   return (
@@ -59,11 +60,19 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Cursor <code>dx = 100</code>, <code>dy = 0</code> (<code>motion = 0</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 06 00  | 00     | 64 00  | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '00', name: 'motion' },
+            { value: '64 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="wheel" title="MOVE (wheel)" caption="Vertical scroll">
@@ -93,11 +102,18 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Wheel <code>dz = 1</code>, one step up (<code>motion = 1</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 04 00  | 01     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dz     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '01', name: 'motion' },
+            { value: '01 00', name: 'dz' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="pan" title="MOVE (pan)" caption="Horizontal scroll (AC Pan)">
@@ -131,11 +147,18 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Pan <code>dpan = 1</code>, one step right (<code>motion = 2</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 04 00  | 02     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dpan   | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '02', name: 'motion' },
+            { value: '01 00', name: 'dpan' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="flags" title="MOVE flags" caption="Per-command movement-riding override">
@@ -165,11 +188,19 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Flush held motion with no delta (<code>flags = 0x02</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 06 00  | 00     | 00 00  | 00 00  | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '00', name: 'motion' },
+            { value: '00 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '02', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
     </>
   );

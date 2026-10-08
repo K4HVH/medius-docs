@@ -143,6 +143,19 @@ export function createTurndown(): TurndownService {
     },
   });
 
+  // div.bytes (a frame's byte strip) -> a two-row table: the values, then the field names.
+  td.addRule('byteStrip', {
+    filter: (node: any) => node.nodeName === 'DIV' && hasClass(node, 'bytes'),
+    replacement: (_content, node: any) => {
+      const cells = (Array.from(node.children) as any[]).map((c) => ({
+        value: (c.querySelector('b')?.textContent || '').trim().replace(/\|/g, '\\|'),
+        name: (c.querySelector('span')?.textContent || '').trim().replace(/\|/g, '\\|'),
+      }));
+      const line = (xs: string[]) => '| ' + xs.join(' | ') + ' |';
+      return '\n\n' + [line(cells.map((c) => c.value)), line(cells.map(() => '---')), line(cells.map((c) => c.name))].join('\n') + '\n\n';
+    },
+  });
+
   // pre.api-signature -> fenced text block, verbatim.
   td.addRule('apiSignature', {
     filter: (node: any) => node.nodeName === 'PRE' && hasClass(node, 'api-signature'),

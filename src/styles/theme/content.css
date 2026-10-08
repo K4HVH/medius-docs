@@ -1,1 +1,24 @@
-/* content: filled in by its task. */
+/* Content: what sits inside a docs page. Values from the approved mockup. */
+
+/* Byte strips: a frame's values over its field names, the payload lit apart from the framing. A long
+   frame wraps; every row fills the width and no cell is narrower than its text. */
+.bytes {
+  display: flex; flex-wrap: wrap; margin-top: 16px;
+  border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: rgba(10, 10, 10, 0.7);
+}
+.bytes > div {
+  flex: var(--w) 1 calc(var(--w) * 64px); min-width: max-content;
+  display: grid; gap: 10px; align-content: start; padding: 16px 12px 14px;
+  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  transition: background 0.5s ease;
+}
+.bytes b { font: 500 20px/1 var(--mono); color: var(--muted); white-space: nowrap; transition: color 0.5s; }
+.bytes span { font: 500 11px/1.5 var(--mono); letter-spacing: 0.06em; color: var(--dim); white-space: nowrap; }
+.bytes .pl { background: rgba(0, 128, 255, 0.07); }
+.bytes .pl b { color: var(--text); }
+.bytes .pl span { color: var(--accent); }
+.bytes div.hit { background: rgba(0, 128, 255, 0.28); transition: none; }
+.bytes div.hit b { color: var(--text); transition: none; }
+@media (max-width: 600px) {
+  .bytes b { font-size: 17px; }
+}

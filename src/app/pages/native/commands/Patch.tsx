@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Patch: Component = () => {
   return (
@@ -122,17 +123,20 @@ const Patch: Component = () => {
           Set <code>bcdDevice</code> to <code>0x0200</code>: section DEVICE, <code>offset = 12</code>,
           bytes <code>00 02</code>:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1D     | 00     | 07 00  | 00     | 00     |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | section| cfg    |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+
-| 00     | 0C 00  | 00 02  | lo hi  |
-+--------+--------+--------+--------+
-| index  | offset | bytes  | CRC16  |
-+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1D', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '07 00', name: 'LEN' },
+            { value: '00', name: 'section' },
+            { value: '00', name: 'cfg' },
+            { value: '00', name: 'index' },
+            { value: '0C 00', name: 'offset' },
+            { value: '00 02', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library binding:{' '}
           <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A>.
@@ -176,11 +180,16 @@ const Patch: Component = () => {
         </table>
         <div class="api-response-label">EXAMPLE</div>
         <p>Present the stored set:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1D     | 01     | 01 00  | FE     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | section| CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1D', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: 'FE', name: 'section' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library binding:{' '}
           <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A>.
@@ -221,11 +230,16 @@ const Patch: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Erase the set:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1D     | 02     | 01 00  | FF     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | section| CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1D', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: 'FF', name: 'section' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library binding:{' '}
           <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>.

@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Led: Component = () => {
   return (
@@ -77,11 +78,18 @@ const Led: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Both LEDs to blink at <code>level = 200</code> (<code>0xC8</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 09     | 00     | 03 00  | 02     | 03     | C8     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | target | mode   | level  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '09', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '02', name: 'target' },
+            { value: '03', name: 'mode' },
+            { value: 'C8', name: 'level' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
     </>
   );
