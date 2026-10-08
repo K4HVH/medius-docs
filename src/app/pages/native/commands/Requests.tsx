@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Requests: Component = () => {
   return (
@@ -103,11 +104,16 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p><code>what = 0</code> (read the version):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 05     | 00     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '05', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '00', name: 'what' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="resp" title="RESP" caption="The box's reply">
@@ -168,16 +174,24 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Firmware <code>3.4.5</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 09     | 03     | 04     | 05     | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-
-| ...    | 12 34 56 78 9A BC  | 4C 6F 6B 69  | lo hi  |
-+--------+--------------------+--------------+--------+
-| ...    | mac (6 bytes)      | "Loki"       | CRC16  |
-+--------+--------------------+--------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0F 00', name: 'LEN' },
+            { value: '00', name: 'what' },
+            { value: '09', name: 'proto' },
+            { value: '03', name: 'major' },
+            { value: '04', name: 'minor' },
+            { value: '05', name: 'patch' },
+            { value: '...', name: '...' },
+            { value: '...', name: '...' },
+            { value: '12 34 56 78 9A BC', name: 'mac (6 bytes)' },
+            { value: '4C 6F 6B 69', name: '"Loki"' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="health" title="HEALTH" caption="RESP payload, what = 1">
@@ -223,11 +237,17 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Ready, with link, mouse, and clone all up (<code>flags = 0x0007</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 03 00  | 01     | 07 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '01', name: 'what' },
+            { value: '07 00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="device-info" title="DEVICE_INFO" caption="RESP payload, what = 2">
@@ -283,16 +303,25 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>A Logitech G502 (<code>046D:C08B</code>), USB 2.01, serial and BOS served, kind mouse, product "G502":</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 02     | 6D 04  | 8B C0  | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | vid    | pid    | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-
-| ...    | 10 01  | 01 02  | 03     | 02     | 47 35 30 32  | lo hi  |
-+--------+--------+--------+--------+--------+--------------+--------+
-| ...    | bcdDev | bcdUSB | flags  | kind   | "G502"       | CRC16  |
-+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0F 00', name: 'LEN' },
+            { value: '02', name: 'what' },
+            { value: '6D 04', name: 'vid' },
+            { value: '8B C0', name: 'pid' },
+            { value: '...', name: '...' },
+            { value: '...', name: '...' },
+            { value: '10 01', name: 'bcdDev' },
+            { value: '01 02', name: 'bcdUSB' },
+            { value: '03', name: 'flags' },
+            { value: '02', name: 'kind' },
+            { value: '47 35 30 32', name: '"G502"' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="caps" title="CAPS" caption="RESP payload, what = 3">
@@ -353,11 +382,22 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>A 5-button mouse (X/Y/wheel, one interface) plus a 6-key Consumer keyboard (<code>axis_flags = 0x07</code>, <code>kbd_flags = 0x02</code>, keyboard change-driven):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 07 00  | 03     | 05     | 07     | 01     | 06     | 02     | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | n_btn  | axis   | n_hid  | n_keys | kbdfl  | chgdrv | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '07 00', name: 'LEN' },
+            { value: '03', name: 'what' },
+            { value: '05', name: 'n_btn' },
+            { value: '07', name: 'axis' },
+            { value: '01', name: 'n_hid' },
+            { value: '06', name: 'n_keys' },
+            { value: '02', name: 'kbdfl' },
+            { value: '02', name: 'chgdrv' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="rate" title="RATE" caption="RESP payload, what = 4">
@@ -404,11 +444,19 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>A 1 kHz mouse, 1000 µs poll, estimator confident (<code>flags = 0x01</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 06 00  | 04     | E8 03  | E8 03  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | native | poll   | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '04', name: 'what' },
+            { value: 'E8 03', name: 'native' },
+            { value: 'E8 03', name: 'poll' },
+            { value: '01', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="stats" title="STATS" caption="RESP payload, what = 5">
@@ -499,21 +547,28 @@ const Requests: Component = () => {
         </table>
         <div class="api-response-label">EXAMPLE</div>
         <p>4096 emits, nothing dropped on any of the three wires, <code>session</code> at 2:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 1F 00  | 05     | 00 10 00 00  |
-+--------+--------+--------+--------+--------+--------------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
-+--------+--------+--------+--------+--------+--------------+
-
-| 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  |
-+--------+--------+--------+--------+--------+--------+--------+
-| drops  | merges | maxdep | wedges | wakeup | resets | config |
-+--------+--------+--------+--------+--------+--------+--------+
-
-| 00 00 00 00   | 00 00 00 00   | 00 00 00 00   | 02 00   | lo hi  |
-+---------------+---------------+---------------+---------+--------+
-| link_rx_drops | host_rx_drops | relay_drops   | session | CRC16  |
-+---------------+---------------+---------------+---------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '1F 00', name: 'LEN' },
+            { value: '05', name: 'what' },
+            { value: '00 10 00 00', name: 'inject_emits' },
+            { value: '00 00', name: 'drops' },
+            { value: '00 00', name: 'merges' },
+            { value: '00', name: 'maxdep' },
+            { value: '00', name: 'wedges' },
+            { value: '00 00', name: 'wakeup' },
+            { value: '00 00', name: 'resets' },
+            { value: '00 00', name: 'config' },
+            { value: '00 00 00 00', name: 'link_rx_drops' },
+            { value: '00 00 00 00', name: 'host_rx_drops' },
+            { value: '00 00 00 00', name: 'relay_drops' },
+            { value: '02 00', name: 'session' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="locks" title="LOCKS" caption="RESP payload, what = 6">
@@ -591,11 +646,21 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>One entry: the wheel's negative (scroll-down) sign blocked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>direction = 2</code>, <code>scale = 0</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 08 00  | 06     | 01     | 03     | 02 00  | 02     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '08 00', name: 'LEN' },
+            { value: '06', name: 'what' },
+            { value: '01', name: 'n' },
+            { value: '03', name: 'class' },
+            { value: '02 00', name: 'id' },
+            { value: '02', name: 'dir' },
+            { value: '00 00', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="catch" title="CATCH" caption="RESP payload, what = 7">
@@ -678,23 +743,28 @@ const Requests: Component = () => {
           <code>id = 0xFFFF</code>, <code>dir = 0</code>, <code>snaplen = 0</code>), with no drops
           and no clock estimate taken yet:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 1A 00  | 07     | 00     | 00 00 00 00  |
-+--------+--------+--------+--------+--------+--------+--------------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | dropped      |
-+--------+--------+--------+--------+--------+--------+--------------+
-
-+-------------+-------------+--------+--------+--------+
-| 00 00 00 00 | 00 00 00 00 | 00 00  | FF FF  | 01     |
-+-------------+-------------+--------+--------+--------+
-| clk_offset  | clk_rate    |clk_dly | clk_age| n      |
-+-------------+-------------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 00     | FF FF  | 00     | 00     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| class  | id     | dir    |snaplen | dropped| CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '1A 00', name: 'LEN' },
+            { value: '07', name: 'what' },
+            { value: '00', name: 'flags' },
+            { value: '00 00 00 00', name: 'dropped' },
+            { value: '00 00 00 00', name: 'clk_offset' },
+            { value: '00 00 00 00', name: 'clk_rate' },
+            { value: '00 00', name: 'clk_dly' },
+            { value: 'FF FF', name: 'clk_age' },
+            { value: '01', name: 'n' },
+            { value: '00', name: 'class' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '00', name: 'snaplen' },
+            { value: '00 00', name: 'dropped' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="options" title="OPTIONS" caption="RESP payload, what = 9">
@@ -851,11 +921,20 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 09     | 00     | 01     | 01     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '05 00', name: 'LEN' },
+            { value: '09', name: 'what' },
+            { value: '00', name: 'id' },
+            { value: '01', name: 'allow' },
+            { value: '01', name: 'overcap' },
+            { value: '01', name: 'imperf' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="clip" title="CLIP" caption="RESP payload, what = 10">
@@ -941,21 +1020,32 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Idle, empty 64 KB ring, no held usages, no autolock, no triggers of either kind (<code>state = 0</code>, <code>free = 65536</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 23 00  | 0A     | 00     | 00 00 01 00  |
-+--------+--------+--------+--------+--------+--------+--------------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
-+--------+--------+--------+--------+--------+--------+--------------+
-
-| 00 00 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
-+--------------+--------------+--------------+--------+--------+--------+
-| total        | played       | ticks        | undrun | ovrrun | seqgap |
-+--------------+--------------+--------------+--------+--------+--------+
-
-| 00 00  | 00 00  | 00 00  | 00     | 00     | 00     | 00     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| xfers  |xfer_err| gated  | held_n | autolk | flags  | n_trig | n_pkt  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '23 00', name: 'LEN' },
+            { value: '0A', name: 'what' },
+            { value: '00', name: 'state' },
+            { value: '00 00 01 00', name: 'free' },
+            { value: '00 00 00 00', name: 'total' },
+            { value: '00 00 00 00', name: 'played' },
+            { value: '00 00 00 00', name: 'ticks' },
+            { value: '00 00', name: 'undrun' },
+            { value: '00 00', name: 'ovrrun' },
+            { value: '00 00', name: 'seqgap' },
+            { value: '00 00', name: 'xfers' },
+            { value: '00 00', name: 'xfer_err' },
+            { value: '00 00', name: 'gated' },
+            { value: '00', name: 'held_n' },
+            { value: '00', name: 'autolk' },
+            { value: '00', name: 'flags' },
+            { value: '00', name: 'n_trig' },
+            { value: '00', name: 'n_pkt' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           One packet trigger entry: <code>HID_IN</code> id <code>0x0102</code>, IN,{' '}
           <code>TOGGLE</code>, consume and <code>RUN</code>, selector 1, <code>hits</code>{' '}
@@ -1029,23 +1119,29 @@ const Requests: Component = () => {
           Both chips on <code>3.4.5</code>, device on <code>ota_1</code>, host on{' '}
           <code>ota_0</code>, both images <code>valid</code>, nothing staged:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03     | 04     | 05     |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | devmaj | devmin | devpat |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| 01     | 02     | 01     | 03     | 04     | 05     | 00     | 02     |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| devslt | devsta | hostpr | hstmaj | hstmin | hstpat | hstslt | hststa |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-
-+-------------+--------+--------+
-| 00 00 0F 00 | 00     | lo hi  |
-+-------------+--------+--------+
-| slot_size   | staged | CRC16  |
-+-------------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '11 00', name: 'LEN' },
+            { value: '0B', name: 'what' },
+            { value: '03', name: 'devmaj' },
+            { value: '04', name: 'devmin' },
+            { value: '05', name: 'devpat' },
+            { value: '01', name: 'devslt' },
+            { value: '02', name: 'devsta' },
+            { value: '01', name: 'hostpr' },
+            { value: '03', name: 'hstmaj' },
+            { value: '04', name: 'hstmin' },
+            { value: '05', name: 'hstpat' },
+            { value: '00', name: 'hstslt' },
+            { value: '02', name: 'hststa' },
+            { value: '00 00 0F 00', name: 'slot_size' },
+            { value: '00', name: 'staged' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="rewrite" title="REWRITE" caption="RESP payload, what = 12">
@@ -1105,23 +1201,27 @@ const Requests: Component = () => {
           One rule, <code>DROP</code> on <code>EMIT</code> endpoint 1, after 42 hits, with the
           table not full:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 10 00  | 0C     | 00     | 01     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | gen    |
-+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 01     | 09     | 01 00  | 01     | 01     | 00     |
-+--------+--------+--------+--------+--------+--------+
-| n      | cls    | id     | dir    | action | mlen   |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+
-| 00 00  | 00 00  | 2A 00  | lo hi  |
-+--------+--------+--------+--------+
-| off    | plen   | hits   | CRC16  |
-+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '10 00', name: 'LEN' },
+            { value: '0C', name: 'what' },
+            { value: '00', name: 'flags' },
+            { value: '01', name: 'gen' },
+            { value: '01', name: 'n' },
+            { value: '09', name: 'cls' },
+            { value: '01 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'action' },
+            { value: '00', name: 'mlen' },
+            { value: '00 00', name: 'off' },
+            { value: '00 00', name: 'plen' },
+            { value: '2A 00', name: 'hits' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="rewrite-entry" title="REWRITE_ENTRY" caption="RESP payload, what = 13">
@@ -1162,17 +1262,24 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Rule 0, the <code>DROP</code> on <code>EMIT</code> endpoint 1:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 0B 00  | 0D     | 00     | 09     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | index  | cls    |
-+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+--------+
-| 01 00  | 01     | 01     | 01     | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| id     | dir    | state  | action | off    | mlen   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '0B 00', name: 'LEN' },
+            { value: '0D', name: 'what' },
+            { value: '00', name: 'index' },
+            { value: '09', name: 'cls' },
+            { value: '01 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '01', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '00', name: 'mlen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="patches" title="PATCHES" caption="RESP payload, what = 14">
@@ -1230,17 +1337,23 @@ const Requests: Component = () => {
           One applied patch, <code>bcdDevice</code> in the device descriptor (<code>offset = 12</code>,{' '}
           <code>len = 2</code>):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0A 00  | 0E     | 01     | 01     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
-+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 00     | 00     | 00     | 0C 00  | 02 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| section| cfg    | index  | offset | len    | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0A 00', name: 'LEN' },
+            { value: '0E', name: 'what' },
+            { value: '01', name: 'flags' },
+            { value: '01', name: 'n' },
+            { value: '00', name: 'section' },
+            { value: '00', name: 'cfg' },
+            { value: '00', name: 'index' },
+            { value: '0C 00', name: 'offset' },
+            { value: '02 00', name: 'len' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="patch-entry" title="PATCH_ENTRY" caption="RESP payload, what = 15">
@@ -1276,17 +1389,22 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Entry 0, the <code>bcdDevice</code> patch setting <code>0x0200</code>:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 09 00  | 0F     | 00     | 00     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | entry  | section|
-+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+
-| 00     | 00     | 0C 00  | 00 02  | lo hi  |
-+--------+--------+--------+--------+--------+
-| cfg    | index  | offset | bytes  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: '0F', name: 'what' },
+            { value: '00', name: 'entry' },
+            { value: '00', name: 'section' },
+            { value: '00', name: 'cfg' },
+            { value: '00', name: 'index' },
+            { value: '0C 00', name: 'offset' },
+            { value: '00 02', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="transforms" title="TRANSFORMS" caption="RESP payload, what = 16">
@@ -1357,17 +1475,23 @@ const Requests: Component = () => {
           One entry, X and Y swapped (<code>op = 1</code>, source <code>(axis 3, id 0)</code>, dest{' '}
           <code>(axis 3, id 1)</code>), with the table not full:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0A 00  | 10     | 00     | 01     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
-+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 01     | 03     | 00 00  | 03     | 01 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| op     | sclass | sid    | dclass | did    | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0A 00', name: 'LEN' },
+            { value: '10', name: 'what' },
+            { value: '00', name: 'flags' },
+            { value: '01', name: 'n' },
+            { value: '01', name: 'op' },
+            { value: '03', name: 'sclass' },
+            { value: '00 00', name: 'sid' },
+            { value: '03', name: 'dclass' },
+            { value: '01 00', name: 'did' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
     </>

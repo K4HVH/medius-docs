@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Raw: Component = () => {
   return (
@@ -93,26 +94,47 @@ const Raw: Component = () => {
           Left button down on HID interrupt IN endpoint 1: <code>ep_num = 1</code>,{' '}
           <code>dir = 1</code>, a 4-byte report:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 19     | 00     | 06 00  | 01     | 01     | 01 00 00 00 | lo hi  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes       | CRC16  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '19', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '01', name: 'ep_num' },
+            { value: '01', name: 'dir' },
+            { value: '01 00 00 00', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>The release, button bit clear:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 19     | 01     | 06 00  | 01     | 01     | 00 00 00 00 | lo hi  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes       | CRC16  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '19', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '01', name: 'ep_num' },
+            { value: '01', name: 'dir' },
+            { value: '00 00 00 00', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           A keyboard LED report, Caps Lock on, to interrupt OUT endpoint 2: <code>ep_num = 2</code>,{' '}
           <code>dir = 2</code>, one byte:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 19     | 02     | 03 00  | 02     | 02     | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '19', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '02', name: 'ep_num' },
+            { value: '02', name: 'dir' },
+            { value: '02', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library bindings:{' '}
           <A href="/library/advanced/raw#raw"><code>raw</code></A>, and{' '}

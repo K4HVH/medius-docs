@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Admin: Component = () => {
   return (
@@ -70,16 +71,26 @@ const Admin: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Plain release, then with the flag:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 04     | 00     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 04     | 00     | 01 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '04', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '04', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '01', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="reboot" title="REBOOT" caption="Restart a chip">
@@ -119,11 +130,16 @@ const Admin: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p><code>target = 2</code> (device chip to run):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 07     | 00     | 01 00  | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | target | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '07', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '02', name: 'target' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="log" title="LOG" caption="Device diagnostics">
@@ -170,11 +186,17 @@ const Admin: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p><code>level = 2</code> (info), text <code>hi</code> (<code>68 69</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 08     | 00     | 03 00  | 02     | 68 69  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | level  | text   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '08', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '02', name: 'level' },
+            { value: '68 69', name: 'text' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
     </>
   );

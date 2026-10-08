@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Inject: Component = () => {
   return (
@@ -106,11 +107,18 @@ RESET      releases every override at once`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Press Left: <code>class</code> <code>0x00</code>, <code>id</code> <code>0x0000</code>, <code>action</code> <code>0x01</code>:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 03     | 00     | 04 00  | 00     | 00 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | action | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '03', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '00', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '01', name: 'action' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="key" title="class = key" caption="Keyboard key and modifier override">
@@ -128,11 +136,18 @@ RESET      releases every override at once`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Press <code>A</code>: <code>class</code> <code>0x01</code>, <code>id</code> <code>0x0004</code>, <code>action</code> <code>0x01</code>:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 03     | 00     | 04 00  | 01     | 04 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | action | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '03', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '01', name: 'class' },
+            { value: '04 00', name: 'id' },
+            { value: '01', name: 'action' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="media" title="class = media" caption="Media key override">
@@ -149,11 +164,18 @@ RESET      releases every override at once`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Press Volume Up: <code>class</code> <code>0x02</code>, <code>id</code> <code>0x00E9</code>, <code>action</code> <code>0x01</code>:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 03     | 00     | 04 00  | 02     | E9 00  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | action | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '03', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '02', name: 'class' },
+            { value: 'E9 00', name: 'id' },
+            { value: '01', name: 'action' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
     </>
   );

@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Clip: Component = () => {
   return (
@@ -322,12 +323,22 @@ const Clip: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Append one content tick, cursor <code>dx = 10</code> (a 5-byte entry, so <code>LEN = 5</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 12     | 00     | 05 00  | 01     | 0A 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | flags  | dx     | dy     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-                    ^ append seq     \\- one XY content tick --/`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '12', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '05 00', name: 'LEN' },
+            { value: '01', name: 'flags' },
+            { value: '0A 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          <code>SEQ</code> is the append sequence. <code>flags</code>, <code>dx</code> and <code>dy</code> are
+          the one XY content tick.
+        </p>
       </DocSection>
 
       <DocSection id="ctrl" title="CLIP_CTRL" caption="Drive the playback engine">
@@ -402,11 +413,16 @@ re-clone    the box clones a device again`}</pre>
         <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Start playback (<code>op = 0</code>, a single-byte payload so <code>LEN = 1</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 13     | 00     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '13', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '00', name: 'op' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="set" title="CLIP_SET" caption="Set a clip setting">
@@ -476,11 +492,17 @@ re-clone    the box clones a device again`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Turn looping on (<code>id = 1</code>, <code>value = 1</code>, so <code>LEN = 2</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 14     | 00     | 02 00  | 01     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | value  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '14', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '01', name: 'id' },
+            { value: '01', name: 'value' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="trigger" title="CLIP_TRIGGER" caption="Bind a physical edge or a matched packet to an engine verb">
@@ -575,11 +597,20 @@ re-clone    the box clones a device again`}</pre>
           <code>id = 0x04</code>, <code>edge = 1</code> press, <code>action = 0</code> start,{' '}
           <code>flags = 0x01</code> present):
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 15     | 00     | 06 00  | 01     | 04 00  | 01     | 00     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | edge   | action | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '15', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '01', name: 'class' },
+            { value: '04 00', name: 'id' },
+            { value: '01', name: 'edge' },
+            { value: '00', name: 'action' },
+            { value: '01', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="packet-triggers" title="Packet triggers" caption="CLIP_TRIGGER with a traffic class">
@@ -706,16 +737,24 @@ re-clone    the box clones a device again`}</pre>
           (<code>slen = 1</code>) and bit 5 of the next byte is the condition, so{' '}
           <code>LEN = 12</code>.
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 15     | 00     | 0C 00  | 04     | 02 00  | 01     | 00     | 07     |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | action | flags  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-
-| 01     | 02     | 07 20  | FF 20  | lo hi  |
-+--------+--------+--------+--------+--------+
-| slen   | mlen   | match  | mask   | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '15', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0C 00', name: 'LEN' },
+            { value: '04', name: 'class' },
+            { value: '02 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '00', name: 'action' },
+            { value: '07', name: 'flags' },
+            { value: '01', name: 'slen' },
+            { value: '02', name: 'mlen' },
+            { value: '07 20', name: 'match' },
+            { value: 'FF 20', name: 'mask' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>The same trigger removed: the key stays, <code>action</code>, <code>flags</code> and <code>slen</code> are zero.</p>
         <pre class="diagram">{`04 02 00 01 00 00 00 02 07 20 FF 20
    class=4 HID_IN   id=2   dir=1 IN   action=0   flags=0   slen=0   mlen=2   match=07 20   mask=FF 20`}</pre>

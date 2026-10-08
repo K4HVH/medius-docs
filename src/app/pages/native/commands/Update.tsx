@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Update: Component = () => {
   return (
@@ -105,11 +106,19 @@ const Update: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Open a 364784-byte device-chip image (<code>size</code> is <code>0x000590F0</code>):</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+-------------+----------+--------+
-| A5     | 17     | 00     | 26 00  | 00     | 00     | F0 90 05 00 | 32 bytes | lo hi  |
-+--------+--------+--------+--------+--------+--------+-------------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | target | size        | sha256   | CRC16  |
-+--------+--------+--------+--------+--------+--------+-------------+----------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '17', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '26 00', name: 'LEN' },
+            { value: '00', name: 'op' },
+            { value: '00', name: 'target' },
+            { value: 'F0 90 05 00', name: 'size' },
+            { value: '32 bytes', name: 'sha256' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="data" title="DATA" caption="One chunk, in order">
@@ -169,11 +178,19 @@ const Update: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Chunk 3 of a device-chip image, a full 504 bytes of payload:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 17     | 2A     | FC 01  | 01     | 00     | 03 00  | ...    | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | target | seq    | bytes  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '17', name: 'TYPE' },
+            { value: '2A', name: 'SEQ' },
+            { value: 'FC 01', name: 'LEN' },
+            { value: '01', name: 'op' },
+            { value: '00', name: 'target' },
+            { value: '03 00', name: 'seq' },
+            { value: '...', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="end" title="END" caption="Verify the digest and stop">
@@ -199,11 +216,17 @@ const Update: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Close the device-chip session:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 17     | 3C     | 02 00  | 02     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | target | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '17', name: 'TYPE' },
+            { value: '3C', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '02', name: 'op' },
+            { value: '00', name: 'target' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="abort" title="ABORT" caption="Discard the transfer">
@@ -239,11 +262,17 @@ const Update: Component = () => {
         </div>
         <div class="api-response-label">EXAMPLE</div>
         <p>Discard whatever the host chip is holding:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 17     | 41     | 02 00  | 03     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | target | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '17', name: 'TYPE' },
+            { value: '41', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '03', name: 'op' },
+            { value: '01', name: 'target' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="activate" title="ACTIVATE" caption="Commit every staged image and boot it">
@@ -288,11 +317,17 @@ const Update: Component = () => {
         </div>
         <div class="api-response-label">EXAMPLE</div>
         <p>Commit everything staged:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 17     | 55     | 02 00  | 04     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | target | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '17', name: 'TYPE' },
+            { value: '55', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '04', name: 'op' },
+            { value: '00', name: 'target' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="resp" title="UPDATE_RESP" caption="Reply to one op">
@@ -356,11 +391,19 @@ const Update: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p><code>READY</code> for a device-chip <code>BEGIN</code>, credit <code>16</code>:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 18     | 00     | 07 00  | 00     | 00     | 01     | 10 00 00 00 | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+-------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | target | status | arg         | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+-------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '18', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '07 00', name: 'LEN' },
+            { value: '00', name: 'op' },
+            { value: '00', name: 'target' },
+            { value: '01', name: 'status' },
+            { value: '10 00 00 00', name: 'arg' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
       </DocSection>
 
       <DocSection id="rollback" title="Rollback" caption="Reverts an image that won't run">

@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Rewrite: Component = () => {
   return (
@@ -118,40 +119,47 @@ const Rewrite: Component = () => {
           <code>cls = 9</code>, <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code>{' '}
           (<code>DROP</code>), <code>mlen = 0</code>, which matches every packet:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1C     | 00     | 09 00  | 09     | 01 00  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | cls    | id     |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 01     | 01     | 01     | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| dir    | state  | action | off    | mlen   | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1C', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: '09', name: 'cls' },
+            { value: '01 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '01', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '00', name: 'mlen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Answer every HID <code>GET_REPORT</code> on EP0 with report ID 7's four bytes:{' '}
           <code>cls = 8</code>, <code>dir = 1</code>, <code>action = 4</code>, and a two-byte
           match on <code>bmRequestType</code> and <code>bRequest</code> under mask{' '}
           <code>FF FF</code>:
         </p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1C     | 01     | 11 00  | 08     | 00 00  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | cls    | id     |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 01     | 01     | 04     | 00 00  | 02     | A1 01  |
-+--------+--------+--------+--------+--------+--------+
-| dir    | state  | action | off    | mlen   | match  |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------------+--------+
-| FF FF  | 07 01 00 00  | lo hi  |
-+--------+--------------+--------+
-| mask   | payload      | CRC16  |
-+--------+--------------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1C', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '11 00', name: 'LEN' },
+            { value: '08', name: 'cls' },
+            { value: '00 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '04', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '02', name: 'mlen' },
+            { value: 'A1 01', name: 'match' },
+            { value: 'FF FF', name: 'mask' },
+            { value: '07 01 00 00', name: 'payload' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library bindings:{' '}
           <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>,{' '}
@@ -343,17 +351,22 @@ opt-in off  OPTION(IMPERFECT) turned off`}</pre>
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Clear the whole table:</p>
-        <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1C     | 02     | 09 00  | FF     | FF FF  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | cls    | id     |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 00     | 00     | 00     | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| dir    | state  | action | off    | mlen   | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1C', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: 'FF', name: 'cls' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '00', name: 'state' },
+            { value: '00', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '00', name: 'mlen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
         <p>
           Library bindings:{' '}
           <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> and{' '}
