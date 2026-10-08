@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Card, CardHeader } from '../../components/surfaces/Card';
+import { SiteFooter } from '../SiteFooter';
 import '../../styles/docs.css';
 
 const Home: Component = () => {
@@ -65,6 +66,7 @@ const Home: Component = () => {
               </Card>
             </A>
           </div>
+          <SiteFooter />
         </div>
       </div>
     </div>

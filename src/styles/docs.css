@@ -537,3 +537,45 @@ a.tabs__tab:active {
 .tabs--disabled a.tabs__tab:hover::before {
   background: transparent;
 }
+
+/* Breadcrumb trail between the titlebar and the page. */
+.docs-breadcrumbs {
+  padding: 0 var(--g-spacing-lg);
+  margin-top: var(--g-spacing-sm);
+}
+
+/* Footer under every page (src/app/SiteFooter.tsx). */
+.site-footer {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--g-spacing);
+  margin: 0 var(--g-spacing-lg) var(--g-spacing-lg);
+  padding-top: var(--g-spacing);
+  border-top: var(--g-border-width) solid var(--g-border-color-subtle);
+  font-size: var(--font-size-sm);
+}
+
+.site-footer__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-xs);
+}
+
+.site-footer__title {
+  color: var(--g-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.site-footer a {
+  color: var(--g-text-muted);
+}
+
+.site-footer a:hover {
+  color: var(--g-text-primary);
+}
+
+@media (max-width: 768px) {
+  .site-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

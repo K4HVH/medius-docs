@@ -3,6 +3,7 @@ import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Pane, type PaneState } from '../../components/navigation/Pane';
 import { Divider } from '../../components/display/Divider';
+import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Titlebar } from '../../components/navigation/Titlebar';
 import { Button } from '../../components/inputs/Button';
 import { CommandPalette } from '../../components/navigation/CommandPalette';
@@ -17,7 +18,8 @@ import {
 import { buildSearchItems } from '../searchIndex';
 import AiActions from '../AiActions';
 import { NavLinks, type NavItem } from '../NavLinks';
-import { LANG_LABEL, LANG_ROOT, routeFor, sidebarGroups, type Lang, type RouteInfo } from '../routes';
+import { SiteFooter } from '../SiteFooter';
+import { LANG_LABEL, LANG_ROOT, NOT_FOUND, breadcrumbTrail, routeFor, sidebarGroups, type Lang, type RouteInfo } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
 import Prism from '../prism';
@@ -149,6 +151,8 @@ const DocsLayout = (props: RouteSectionProps) => {
     const box = BOX_ROUTES.has(location.pathname) ? boxes.selected()?.session.name() : null;
     return box ? `${label} - ${box}` : label;
   });
+
+  const trail = createMemo(() => breadcrumbTrail(routeFor(location.pathname) ?? NOT_FOUND));
 
   let contentRef: HTMLDivElement | undefined;
 
@@ -304,9 +308,13 @@ const DocsLayout = (props: RouteSectionProps) => {
               </>
             }
           />
+          <Show when={trail().length > 1}>
+            <Breadcrumbs items={trail()} variant="subtle" size="compact" class="docs-breadcrumbs" />
+          </Show>
           <div class="docs-page">
             {props.children}
           </div>
+          <SiteFooter />
         </div>
       </div>
 
