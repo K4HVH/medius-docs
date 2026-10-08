@@ -5,8 +5,7 @@ import { PageHeader } from '../../../shell/PageHeader';
 const Frames: Component = () => {
   return (
     <>
-      <PageHeader lead="FrameType, DecodedFrame">
-        <span id="frames" data-search-target />
+      <PageHeader id="frames" lead="FrameType, DecodedFrame">
         <p>
           Low-level types for inspecting raw <A href="/native/frame">frame</A> traffic:{' '}
           <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one

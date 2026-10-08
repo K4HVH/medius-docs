@@ -147,7 +147,7 @@
   border: var(--g-spacing-xs) solid transparent;
   margin: calc(-1 * var(--g-spacing-sm));
   background-clip: padding-box;
-  border-radius: calc(var(--g-radius) + var(--g-spacing-xs));
+  border-radius: 0;
   transition: background-color var(--g-transition);
 }
 

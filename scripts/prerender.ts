@@ -52,7 +52,9 @@ async function main(): Promise<void> {
 
   const server = await startStaticServer(DIST, PORT);
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  // Reduced motion: the snapshot is served before the app runs, so it must hold no reveal-hidden block
+  // and no animation's first frame.
+  const page = await browser.newPage({ reducedMotion: 'reduce' });
   // Unanswered API calls hold the changelog and stats on the "Loading..." block the server fills.
   await page.route('**/api/**', () => {});
   const records: PageRecord[] = [];

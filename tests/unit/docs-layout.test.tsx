@@ -223,6 +223,18 @@ describe('DocsLayout and the boxes', () => {
     expect(document.documentElement.classList.contains('locked')).toBe(false);
   });
 
+  it('keeps the page locked while either phone panel is still open', async () => {
+    const r = mount('/native');
+    await waitFor(() => expect(r.container.textContent).toContain('native'));
+    fireEvent.click(r.container.querySelector('button.docbar')!);
+    fireEvent.click(r.container.querySelector('button.menu-btn')!);
+    fireEvent.click(r.container.querySelector('button.menu-btn')!);
+    expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(true);
+    expect(document.documentElement.classList.contains('locked')).toBe(true);
+    fireEvent.click(r.container.querySelector('button.docbar')!);
+    expect(document.documentElement.classList.contains('locked')).toBe(false);
+  });
+
   it('gives the dashboard the full width beside the sidebar, and the docs their reading measure', async () => {
     const r = mount('/dashboard/advanced');
     await waitFor(() => expect(r.container.textContent).toContain('advanced page'));
@@ -264,6 +276,7 @@ describe('DocsLayout and the boxes', () => {
 describe('DocsLayout scrolling', () => {
   let observed: Element[];
   let jumped: Element | null;
+  let how: boolean | ScrollIntoViewOptions | undefined;
 
   beforeEach(() => {
     observed = [];
@@ -278,8 +291,9 @@ describe('DocsLayout scrolling', () => {
         disconnect() {}
       },
     );
-    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element, arg?: boolean | ScrollIntoViewOptions) {
       jumped = this;
+      how = arg;
     });
     // Before the jump the target sits a screen down; after it, at the top. The last section never
     // reaches the screen.
@@ -299,6 +313,7 @@ describe('DocsLayout scrolling', () => {
     const r = mount('/native/transport#frames');
     await waitFor(() => expect(r.container.querySelector('#later p')?.classList.contains('pre')).toBe(true));
     expect(jumped).toBe(r.container.querySelector('#frames'));
+    expect(how).toEqual({ behavior: 'instant', block: 'start' });
     for (const el of r.container.querySelectorAll('#frames h2, #frames p')) {
       expect(el.classList.contains('rv')).toBe(true);
       expect(el.classList.contains('pre')).toBe(false);
@@ -312,7 +327,7 @@ describe('DocsLayout scrolling', () => {
     top.mockClear();
     r.history.set({ value: '/native/transport' });
     await waitFor(() => expect(r.container.querySelector('#frames')).not.toBeNull());
-    expect(top).toHaveBeenCalledWith(0, 0);
+    expect(top).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' });
     expect(jumped).toBeNull();
   });
 });

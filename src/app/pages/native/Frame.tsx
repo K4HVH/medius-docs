@@ -7,8 +7,7 @@ import { ByteStrip } from '../../shell/ByteStrip';
 const Frame: Component = () => {
   return (
     <>
-      <PageHeader lead="One packet shape">
-        <span id="layout" data-search-target />
+      <PageHeader id="layout" lead="One packet shape">
         <p>
           Every message, both directions, has this shape.
         </p>

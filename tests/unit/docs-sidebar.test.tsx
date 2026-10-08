@@ -111,6 +111,20 @@ describe('DocsSidebar', () => {
     expect(r.link('Device').getAttribute('aria-disabled')).toBe('true');
   });
 
+  it('moves focus into the open panel, keeps Tab inside it, and Escape closes it back to the bar', async () => {
+    const r = mount('/native');
+    fireEvent.click(r.docbar());
+    await settle();
+    const inside = [...r.side().querySelectorAll<HTMLElement>('a, button')];
+    expect(document.activeElement).toBe(inside[0]);
+    inside[inside.length - 1].focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(r.docbar());
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(r.side().classList.contains('open')).toBe(false);
+    expect(document.activeElement).toBe(r.docbar());
+  });
+
   it('opens as a full panel on a phone, locks the page, and a link closes it', async () => {
     const r = mount('/native/commands/inject');
     expect(r.docbar().textContent).toContain('Native API / Inject');

@@ -25,4 +25,15 @@ describe('theme contrast', () => {
   it.each(['text', 'text-2', 'muted', 'dim', 'accent'])('--%s reads on the ground at 4.5:1', (t) => {
     expect(ratio(token(t), token('ground'))).toBeGreaterThanOrEqual(4.5);
   });
+
+  // Tables, strips and panels sit on #0a0a0a at most (rgba(10,10,10,.7) over the ground measures #070707).
+  it.each(['text-2', 'muted', 'dim', 'accent'])('--%s reads on a panel at 4.5:1', (t) => {
+    expect(ratio(token(t), '#0a0a0a')).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('code comments read on a code block at 4.5:1', () => {
+    const content = readFileSync('src/styles/theme/content.css', 'utf8');
+    const comment = content.match(/\.token\.comment[^{]*\{[^}]*color:\s*(#[0-9a-fA-F]{6})/)![1];
+    expect(ratio(comment, '#050505')).toBeGreaterThanOrEqual(4.5);
+  });
 });

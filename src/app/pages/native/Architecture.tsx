@@ -6,8 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Architecture: Component = () => {
   return (
     <>
-      <PageHeader lead="Mouse, box, and PC">
-        <span id="data-flow" data-search-target />
+      <PageHeader id="data-flow" lead="Mouse, box, and PC">
         <p>
           The clone copies the mouse's USB identity.
         </p>

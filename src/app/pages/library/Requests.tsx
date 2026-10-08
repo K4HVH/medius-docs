@@ -6,8 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Requests: Component = () => {
   return (
     <>
-      <PageHeader lead="One QUERY frame out, one RESP frame back">
-        <span id="requests-overview" data-search-target />
+      <PageHeader id="requests-overview" lead="One QUERY frame out, one RESP frame back">
         <p>
           Queries block, unlike the{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls. They are{' '}

@@ -1,5 +1,6 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
+import { lockPage, panelKeys } from './panel';
 import { LANG_LABEL, LANG_ROOT, SECTION_LABEL, routeFor, sectionLabel, sidebarGroups, type Lang, type Section } from '../routes';
 
 type CodeSection = 'native' | 'library' | 'bindings';
@@ -44,11 +45,14 @@ export function DocsSidebar(props: {
   const lang = () => route()?.lang;
 
   const [open, setOpen] = createSignal(false);
+  let side: HTMLElement | undefined;
+  let bar: HTMLButtonElement | undefined;
   const setPanel = (next: boolean) => {
     setOpen(next);
-    document.documentElement.classList.toggle('locked', next);
+    lockPage('side', next);
   };
-  onCleanup(() => document.documentElement.classList.remove('locked'));
+  onCleanup(() => lockPage('side', false));
+  panelKeys({ open, panel: () => side, toggle: () => bar, close: () => setPanel(false) });
   createEffect(on([() => props.pathname, () => props.closeKey], () => open() && setPanel(false), { defer: true }));
 
   const go = (e: MouseEvent) => {
@@ -91,6 +95,7 @@ export function DocsSidebar(props: {
   return (
     <>
       <button
+        ref={bar}
         class="docbar caps"
         type="button"
         aria-expanded={open() ? 'true' : 'false'}
@@ -103,7 +108,7 @@ export function DocsSidebar(props: {
         </span>
         <span>{open() ? 'Close' : 'Pages'}</span>
       </button>
-      <aside class="side" id="side" classList={{ open: open() }} aria-label={SECTION_LABEL[section()]}>
+      <aside ref={side} class="side" id="side" classList={{ open: open() }} aria-label={SECTION_LABEL[section()]}>
         <Show when={isCode(section())}>
           <nav class="sections" aria-label="Sections">
             <For each={SECTIONS}>

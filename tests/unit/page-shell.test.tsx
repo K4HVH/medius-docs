@@ -22,6 +22,14 @@ const frames = () => new Promise((res) => requestAnimationFrame(() => requestAni
 afterEach(cleanup);
 
 describe('PageHeader', () => {
+  it('is the search target for an anchor it carries, header and all', () => {
+    const r = mount('/native/frame', () => <PageHeader id="layout" lead="Lead" />);
+    const h = r.container.querySelector('header.page-header')!;
+    expect(h.id).toBe('layout');
+    expect(h.hasAttribute('data-search-target')).toBe(true);
+    expect(r.container.querySelector('header.page-header > span')).toBeNull();
+  });
+
   it('gives the page one h1, its registry title, under crumbs to the parent', () => {
     const r = mount('/native/commands/inject', () => <PageHeader lead="Press and release any input." />);
     const h1s = r.container.querySelectorAll('h1');
@@ -88,24 +96,37 @@ describe('OnThisPage', () => {
     expect(r.container.querySelector('#payload h2')!.classList.contains('act')).toBe(true);
   });
 
-  it('glides to a section from the rail and puts its hash in the address', async () => {
-    const r = mount('/native/commands/inject', () => (
-      <>
-        <main class="docs-page">
-          <DocSection id="payload" title="Payload">x</DocSection>
-          <DocSection id="classes" title="Classes">y</DocSection>
-        </main>
-        <OnThisPage pathname="/native/commands/inject" />
-      </>
+  it('moves to a section through the router, so a later link back to the first hash still works', async () => {
+    const history = createMemoryHistory();
+    history.set({ value: '/native/commands/inject#payload' });
+    // The browser router keeps the document's address on the page, so a bare #hash resolves there.
+    window.history.replaceState(null, '', '/native/commands/inject#payload');
+    Element.prototype.scrollIntoView ??= () => {};
+    const r = render(() => (
+      <MemoryRouter history={history}>
+        <Route
+          path="*"
+          component={() => (
+            <>
+              <main class="docs-page">
+                <DocSection id="payload" title="Payload">x</DocSection>
+                <DocSection id="classes" title="Classes">
+                  <a href="#payload">back</a>
+                </DocSection>
+              </main>
+              <OnThisPage pathname="/native/commands/inject" />
+            </>
+          )}
+        />
+      </MemoryRouter>
     ));
     await frames();
-    const target = r.container.querySelector<HTMLElement>('#classes')!;
-    const glide = vi.fn();
-    target.scrollIntoView = glide;
-    const click = fireEvent.click([...r.container.querySelectorAll('.toc a')][1]);
-    expect(click).toBe(false);
-    expect(glide).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-    expect(window.location.hash).toBe('#classes');
+    fireEvent.click([...r.container.querySelectorAll('.toc a')][1]);
+    await frames();
+    expect(history.get()).toBe('/native/commands/inject#classes');
+    fireEvent.click(r.container.querySelector('#classes a')!);
+    await frames();
+    expect(history.get()).toBe('/native/commands/inject#payload');
   });
 });
 

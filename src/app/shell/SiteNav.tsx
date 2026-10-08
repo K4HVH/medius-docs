@@ -1,7 +1,8 @@
-import { createMemo, createSignal, For, onCleanup, onMount } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount } from 'solid-js';
 import { A, useLocation } from '@solidjs/router';
 import { routeFor, type Section } from '../routes';
 import { Arrow } from './Arrow';
+import { lockPage, panelKeys } from './panel';
 
 export const NAV_LINKS: { label: string; href: string; sections: Section[] }[] = [
   { label: 'Guide', href: '/guide', sections: ['guide'] },
@@ -19,6 +20,8 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
   const [closing, setClosing] = createSignal(false);
   const [solid, setSolid] = createSignal(!props.overHero);
   let bar: HTMLElement | undefined;
+  let links: HTMLElement | undefined;
+  let menuButton: HTMLButtonElement | undefined;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
   const section = createMemo(() => routeFor(location.pathname)?.section);
@@ -32,8 +35,10 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
       closeTimer = setTimeout(() => setClosing(false), 220);
     }
     setOpen(next);
-    document.documentElement.classList.toggle('locked', next);
+    lockPage('nav', next);
   };
+  panelKeys({ open, panel: () => links, toggle: () => menuButton, close: () => setMenu(false) });
+  createEffect(on(() => location.pathname, () => open() && setMenu(false), { defer: true }));
 
   const guard = (e: MouseEvent) => {
     if (props.disabled) {
@@ -58,7 +63,7 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
   onCleanup(() => {
     window.removeEventListener('scroll', onScroll);
     clearTimeout(closeTimer);
-    document.documentElement.classList.remove('locked');
+    lockPage('nav', false);
   });
 
   const off = () => (props.disabled ? 'true' : undefined);
@@ -72,7 +77,17 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
       <A href="/" class="brand" end activeClass="" inactiveClass="" aria-disabled={off()} on:click={guard}>
         Medius
       </A>
-      <nav class="links" id="site-links" aria-label="Site">
+      <button
+        ref={menuButton}
+        class="menu-btn"
+        type="button"
+        aria-expanded={open() ? 'true' : 'false'}
+        aria-controls="site-links"
+        onClick={() => setMenu(!open())}
+      >
+        {open() ? 'Close' : 'Menu'}
+      </button>
+      <nav class="links" id="site-links" aria-label="Site" ref={links}>
         <For each={NAV_LINKS}>
           {(l) => (
             <A
@@ -92,15 +107,6 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
       <A href="/guide" class="btn primary sm" end activeClass="" inactiveClass="" aria-disabled={off()} on:click={guard}>
         Install <Arrow />
       </A>
-      <button
-        class="menu-btn"
-        type="button"
-        aria-expanded={open() ? 'true' : 'false'}
-        aria-controls="site-links"
-        onClick={() => setMenu(!open())}
-      >
-        {open() ? 'Close' : 'Menu'}
-      </button>
     </header>
   );
 }

@@ -4,9 +4,7 @@ import { IndexRow } from '../shell/IndexRow';
 
 const NotFound = () => (
   <>
-    <PageHeader lead="No page at this address">
-      <span id="not-found" data-search-target />
-    </PageHeader>
+    <PageHeader id="not-found" lead="No page at this address" />
     <DocSection title="Pages">
       <IndexRow href="/guide" title="Install" tag="Flash a box from the browser" />
       <IndexRow href="/native" title="Native API" tag="The control protocol" />
