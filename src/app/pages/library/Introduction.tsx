@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
+import { IndexRow } from '../../shell/IndexRow';
 
 const Introduction: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Medius Rust Library" subtitle="Official Rust client" />
+      <PageHeader lead="Official Rust client">
         <p>
           The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate
           injects input on top of a real mouse, keyboard, or combo over a USB-serial link.
@@ -50,217 +50,80 @@ const Introduction: Component = () => {
             </tr>
           </tbody>
         </table>
-      </Card>
+      </PageHeader>
 
-      <div id="installation" data-search-target>
-        <Card>
-          <CardHeader title="Installation" />
-          <pre><code class="language-bash">cargo add medius</code></pre>
-          <p>With optional features:</p>
-          <pre><code class="language-bash">cargo add medius --features async,mock</code></pre>
-          <table class="api-params">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><A href="/library/features/async"><code>async</code></A></td>
-                <td>Runtime-agnostic <code>AsyncDevice</code>, async queries.</td>
-              </tr>
-              <tr>
-                <td><A href="/library/features/mock"><code>mock</code></A></td>
-                <td>In-process fake box for tests.</td>
-              </tr>
+      <DocSection id="installation" title="Installation">
+        <pre><code class="language-bash">cargo add medius</code></pre>
+        <p>With optional features:</p>
+        <pre><code class="language-bash">cargo add medius --features async,mock</code></pre>
+        <table class="api-params">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><A href="/library/features/async"><code>async</code></A></td>
+              <td>Runtime-agnostic <code>AsyncDevice</code>, async queries.</td>
+            </tr>
+            <tr>
+              <td><A href="/library/features/mock"><code>mock</code></A></td>
+              <td>In-process fake box for tests.</td>
+            </tr>
 
-              <tr>
-                <td><A href="/library/features/tracing"><code>tracing</code></A></td>
-                <td>Tracing across the connection lifecycle.</td>
-              </tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
+            <tr>
+              <td><A href="/library/features/tracing"><code>tracing</code></A></td>
+              <td>Tracing across the connection lifecycle.</td>
+            </tr>
+          </tbody>
+        </table>
+      </DocSection>
 
-      <div id="getting-started" data-search-target>
-        <Card>
-          <CardHeader title="Getting started" />
-          <div class="docs-grid">
-            <A href="/library/connection" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Connection" subtitle="Open, find, handshake" />
-              </Card>
-            </A>
-            <A href="/library/discovery" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Discovery" subtitle="List boxes, open by identity" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="getting-started" title="Getting started">
+        <IndexRow href="/library/connection" title="Connection" tag="Open, find, handshake" />
+        <IndexRow href="/library/discovery" title="Discovery" tag="List boxes, open by identity" />
+      </DocSection>
 
-      <div id="api" data-search-target>
-        <Card>
-          <CardHeader title="API" />
-          <div class="docs-grid">
-            <A href="/library/inject" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Inject" subtitle="press, release, force_release" />
-              </Card>
-            </A>
-            <A href="/library/move" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Move" subtitle="move_axis, move_rel, wheel, riding override" />
-              </Card>
-            </A>
-            <A href="/library/lock" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lock" subtitle="scale, lock, unlock, scale_all" />
-              </Card>
-            </A>
-            <A href="/library/catch" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Catch" subtitle="Stream input and raw traffic" />
-              </Card>
-            </A>
-            <A href="/library/transform" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Transform" subtitle="transform, untransform, query_transforms" />
-              </Card>
-            </A>
-            <A href="/library/clip" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Clip" subtitle="Preload input, box-clocked playback" />
-              </Card>
-            </A>
-            <A href="/library/requests" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Requests" subtitle="version, health, device info" />
-              </Card>
-            </A>
-            <A href="/library/led" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="LED" subtitle="Status LED" />
-              </Card>
-            </A>
-            <A href="/library/admin" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Admin" subtitle="reset, reboot" />
-              </Card>
-            </A>
-            <A href="/library/update" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Update" subtitle="update_firmware, stage_firmware, activate_firmware" />
-              </Card>
-            </A>
-            <A href="/library/options" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Options" subtitle="imperfect clones, riding, bearing, emit pace, name" />
-              </Card>
-            </A>
-            <A href="/library/lifecycle" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Lifecycle" subtitle="reapply, reconnect, session recovery" />
-              </Card>
-            </A>
-            <A href="/library/diagnostics" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Logs & counters" subtitle="Read logs, snapshot counters" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="api" title="API">
+        <IndexRow href="/library/inject" title="Inject" tag="press, release, force_release" />
+        <IndexRow href="/library/move" title="Move" tag="move_axis, move_rel, wheel, riding override" />
+        <IndexRow href="/library/lock" title="Lock" tag="scale, lock, unlock, scale_all" />
+        <IndexRow href="/library/catch" title="Catch" tag="Stream input and raw traffic" />
+        <IndexRow href="/library/transform" title="Transform" tag="transform, untransform, query_transforms" />
+        <IndexRow href="/library/clip" title="Clip" tag="Preload input, box-clocked playback" />
+        <IndexRow href="/library/requests" title="Requests" tag="version, health, device info" />
+        <IndexRow href="/library/led" title="LED" tag="Status LED" />
+        <IndexRow href="/library/admin" title="Admin" tag="reset, reboot" />
+        <IndexRow href="/library/update" title="Update" tag="update_firmware, stage_firmware, activate_firmware" />
+        <IndexRow href="/library/options" title="Options" tag="imperfect clones, riding, bearing, emit pace, name" />
+        <IndexRow href="/library/lifecycle" title="Lifecycle" tag="reapply, reconnect, session recovery" />
+        <IndexRow href="/library/diagnostics" title="Logs & counters" tag="Read logs, snapshot counters" />
+      </DocSection>
 
-      <div id="advanced" data-search-target>
-        <Card>
-          <CardHeader title="Advanced control" />
-          <div class="docs-grid">
-            <A href="/library/advanced/raw" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Raw injection" subtitle="raw" />
-              </Card>
-            </A>
-            <A href="/library/advanced/transfer" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Control transfers" subtitle="transfer, transfer_timeout" />
-              </Card>
-            </A>
-            <A href="/library/advanced/rewrite" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Rewrite rules" subtitle="set_rewrite, remove_rewrite, clear_rewrite" />
-              </Card>
-            </A>
-            <A href="/library/advanced/patch" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Descriptor patches" subtitle="set_patch, apply_patch, clear_patch" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="advanced" title="Advanced control">
+        <IndexRow href="/library/advanced/raw" title="Raw injection" tag="raw" />
+        <IndexRow href="/library/advanced/transfer" title="Control transfers" tag="transfer, transfer_timeout" />
+        <IndexRow href="/library/advanced/rewrite" title="Rewrite rules" tag="set_rewrite, remove_rewrite, clear_rewrite" />
+        <IndexRow href="/library/advanced/patch" title="Descriptor patches" tag="set_patch, apply_patch, clear_patch" />
+      </DocSection>
 
-      <div id="features" data-search-target>
-        <Card>
-          <CardHeader title="Features" />
-          <div class="docs-grid">
-            <A href="/library/features/async" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="async" subtitle="AsyncDevice" />
-              </Card>
-            </A>
-            <A href="/library/features/mock" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="mock" subtitle="In-process fake box" />
-              </Card>
-            </A>
-            <A href="/library/features/tracing" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="tracing" subtitle="Structured diagnostics" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="features" title="Features">
+        <IndexRow href="/library/features/async" title="async" tag="AsyncDevice" />
+        <IndexRow href="/library/features/mock" title="mock" tag="In-process fake box" />
+        <IndexRow href="/library/features/tracing" title="tracing" tag="Structured diagnostics" />
+      </DocSection>
 
-      <div id="guides" data-search-target>
-        <Card>
-          <CardHeader title="Guides" subtitle="Behaviour and how-to" />
-          <div class="docs-grid">
-            <A href="/library/guides/calls" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Calls & input" subtitle="Call kinds, async, motion, clicks" />
-              </Card>
-            </A>
-            <A href="/library/guides/connection" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Connection" subtitle="Ports, threads, keepalive" />
-              </Card>
-            </A>
-            <A href="/library/guides/testing" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Testing" subtitle="MockBox in tests" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="guides" title="Guides" caption="Behaviour and how-to">
+        <IndexRow href="/library/guides/calls" title="Calls & input" tag="Call kinds, async, motion, clicks" />
+        <IndexRow href="/library/guides/connection" title="Connection" tag="Ports, threads, keepalive" />
+        <IndexRow href="/library/guides/testing" title="Testing" tag="MockBox in tests" />
+      </DocSection>
 
-      <div id="reference" data-search-target>
-        <Card>
-          <CardHeader title="Reference" />
-          <div class="docs-grid">
-            <A href="/library/types" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Types & errors" subtitle="Enums, Result, Error" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="reference" title="Reference">
+        <IndexRow href="/library/types" title="Types & errors" tag="Enums, Result, Error" />
+      </DocSection>
     </>
   );
 };

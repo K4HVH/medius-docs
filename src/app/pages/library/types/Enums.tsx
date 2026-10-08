@@ -1,150 +1,137 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Enums: Component = () => {
   return (
     <>
-      <div id="enums" data-search-target>
-        <Card>
-          <CardHeader title="Enums" subtitle="Command and status enumerations" />
-          <p>
-            Each is tied to a wire byte; conversion helpers are listed with the type.
-          </p>
-        </Card>
-      </div>
-      <div id="device-kind" data-search-target>
-        <Card>
-          <CardHeader title="DeviceKind" subtitle="The cloned device's primary kind" />
-          <pre class="api-signature">enum DeviceKind {'{'} Unknown, Keyboard, Mouse {'}'}</pre>
-          <p>
-            The <code>kind</code> field of a{' '}
-            <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, read from the
-            cloned device's HID report descriptors and Boot declarations: one carrying both kinds reads keyboard
-            with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse
-            otherwise. It also drives{' '}
-            <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A> and{' '}
-            <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
-            <code>Display</code> prints the lowercase name.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/library/types/structs#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart.</td></tr>
-              <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>A keyboard.</td></tr>
-              <tr><td><code>Mouse</code></td><td><code>2</code></td><td>A mouse.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="action" data-search-target>
-        <Card>
-          <CardHeader title="Action" subtitle="Press / release tri-state" />
-          <pre class="api-signature">enum Action {'{'} SoftRelease, Press, ForceRelease {'}'}</pre>
-          <p>
-            The override action for an{' '}
-            <A href="/library/inject#inject"><code>inject</code></A> call, on any{' '}
-            <A href="/library/types/structs#usage"><code>Usage</code></A> class (button, key, or media). The
-            discriminant is the wire byte; convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force; a physical hold stays down.</td></tr>
-              <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
-              <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
-            </tbody>
-          </table>
-          <p>The two releases differ only under a physical hold:</p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Not held</th><th>Physically held</th></tr></thead>
-            <tbody>
-              <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
-              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (the physical bit stands)</td></tr>
-              <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="class" data-search-target>
-        <Card>
-          <CardHeader title="Class" subtitle="The class of a momentary usage" />
-          <pre class="api-signature">enum Class {'{'} Button, Key, Media {'}'}</pre>
-          <p>
-            The class byte of a <A href="/library/types/structs#usage"><code>Usage</code></A>, shared by{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A>,{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>, and{' '}
-            <A href="/native/commands/catch"><code>CATCH</code></A>. Convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;Class&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td></tr>
-              <tr><td><code>Key</code></td><td><code>1</code></td><td>A keyboard key; id is a HID keycode (0xE0 .. 0xE7 is a modifier).</td></tr>
-              <tr><td><code>Media</code></td><td><code>2</code></td><td>A media usage; id is a 16-bit Consumer usage.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="catch-class" data-search-target>
-        <Card>
-          <CardHeader title="CatchClass" subtitle="What a catch subscription addresses" />
-          <pre class="api-signature">enum CatchClass {'{'} Button, Key, Media, Axis, HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
-          <p>
-            The address space a{' '}
-            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> picks from, and
-            the <code>class</code> of a{' '}
-            <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>. Convert with{' '}
-            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;CatchClass&gt;</code>; split it
-            with <code>is_input()</code> and <code>is_traffic()</code>.
-          </p>
-          <p>
-            The first four are <A href="/native/commands/lock"><code>LOCK</code></A>'s classes at the
-            same byte values. The other eight address USB traffic;{' '}
-            <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half on
-            its own.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
-            <tbody>
-              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
-              <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
-              <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
-              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
-              <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
-              <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
-              <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
-              <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
-              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device).</td><td>every control endpoint.</td></tr>
-              <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
-              <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
-              <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            A blanket is one table entry, not one per id. <code>CatchFilter::watch_class(c)</code> and{' '}
-            <code>traffic_class(c)</code> are the per-class blankets and{' '}
-            <code>CatchFilter::everything()</code> the wildcard over all twelve; the wire sentinels never
-            appear in Rust.
-          </p>
-          <p>
-            The input classes are captured at the emission merge point, <em>before</em>{' '}
-            <A href="/library/lock#lock">lock</A> suppression and{' '}
-            <A href="/library/inject#inject">injection</A>, so a locked input still reports.{' '}
-            <code>Emit</code> is the far end of the same path: what the clone put on the wire.
-          </p>
-          <pre class="diagram">{`real device --> [ merge point ] --> locks --> injection --> [ clone emits ] --> game PC
+      <PageHeader lead="Command and status enumerations">
+        <span id="enums" data-search-target />
+        <p>
+          Each is tied to a wire byte; conversion helpers are listed with the type.
+        </p>
+      </PageHeader>
+      <DocSection id="device-kind" title="DeviceKind" caption="The cloned device's primary kind">
+        <pre class="api-signature">enum DeviceKind {'{'} Unknown, Keyboard, Mouse {'}'}</pre>
+        <p>
+          The <code>kind</code> field of a{' '}
+          <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, read from the
+          cloned device's HID report descriptors and Boot declarations: one carrying both kinds reads keyboard
+          with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse
+          otherwise. It also drives{' '}
+          <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A> and{' '}
+          <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
+          <code>Display</code> prints the lowercase name.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/library/types/structs#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart.</td></tr>
+            <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>A keyboard.</td></tr>
+            <tr><td><code>Mouse</code></td><td><code>2</code></td><td>A mouse.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="action" title="Action" caption="Press / release tri-state">
+        <pre class="api-signature">enum Action {'{'} SoftRelease, Press, ForceRelease {'}'}</pre>
+        <p>
+          The override action for an{' '}
+          <A href="/library/inject#inject"><code>inject</code></A> call, on any{' '}
+          <A href="/library/types/structs#usage"><code>Usage</code></A> class (button, key, or media). The
+          discriminant is the wire byte; convert with <code>as_u8()</code> and{' '}
+          <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force; a physical hold stays down.</td></tr>
+            <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
+            <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
+          </tbody>
+        </table>
+        <p>The two releases differ only under a physical hold:</p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Not held</th><th>Physically held</th></tr></thead>
+          <tbody>
+            <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
+            <tr><td><code>SoftRelease</code></td><td>up</td><td>down (the physical bit stands)</td></tr>
+            <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="class" title="Class" caption="The class of a momentary usage">
+        <pre class="api-signature">enum Class {'{'} Button, Key, Media {'}'}</pre>
+        <p>
+          The class byte of a <A href="/library/types/structs#usage"><code>Usage</code></A>, shared by{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A>,{' '}
+          <A href="/native/commands/lock"><code>LOCK</code></A>, and{' '}
+          <A href="/native/commands/catch"><code>CATCH</code></A>. Convert with <code>as_u8()</code> and{' '}
+          <code>from_u8(u8) -&gt; Option&lt;Class&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td></tr>
+            <tr><td><code>Key</code></td><td><code>1</code></td><td>A keyboard key; id is a HID keycode (0xE0 .. 0xE7 is a modifier).</td></tr>
+            <tr><td><code>Media</code></td><td><code>2</code></td><td>A media usage; id is a 16-bit Consumer usage.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="catch-class" title="CatchClass" caption="What a catch subscription addresses">
+        <pre class="api-signature">enum CatchClass {'{'} Button, Key, Media, Axis, HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
+        <p>
+          The address space a{' '}
+          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> picks from, and
+          the <code>class</code> of a{' '}
+          <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>. Convert with{' '}
+          <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;CatchClass&gt;</code>; split it
+          with <code>is_input()</code> and <code>is_traffic()</code>.
+        </p>
+        <p>
+          The first four are <A href="/native/commands/lock"><code>LOCK</code></A>'s classes at the
+          same byte values. The other eight address USB traffic;{' '}
+          <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half on
+          its own.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
+          <tbody>
+            <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
+            <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
+            <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
+            <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
+            <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
+            <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
+            <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
+            <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
+            <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device).</td><td>every control endpoint.</td></tr>
+            <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
+            <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
+            <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A blanket is one table entry, not one per id. <code>CatchFilter::watch_class(c)</code> and{' '}
+          <code>traffic_class(c)</code> are the per-class blankets and{' '}
+          <code>CatchFilter::everything()</code> the wildcard over all twelve; the wire sentinels never
+          appear in Rust.
+        </p>
+        <p>
+          The input classes are captured at the emission merge point, <em>before</em>{' '}
+          <A href="/library/lock#lock">lock</A> suppression and{' '}
+          <A href="/library/inject#inject">injection</A>, so a locked input still reports.{' '}
+          <code>Emit</code> is the far end of the same path: what the clone put on the wire.
+        </p>
+        <pre class="diagram">{`real device --> [ merge point ] --> locks --> injection --> [ clone emits ] --> game PC
                        |                                           |
           Button / Key / Media / Axis                            Emit`}</pre>
-          <p>
-            The traffic classes tap each pipe on the chip that owns it; each event's{' '}
-            <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> records which.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, Capture, CatchFilter, Direction, TrafficClass};
+        <p>
+          The traffic classes tap each pipe on the chip that owns it; each event's{' '}
+          <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> records which.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Button, Capture, CatchFilter, Direction, TrafficClass};
 
 // The same target, once as a lock and once as a catch.
 device.lock(Button::SIDE1, Direction::Both)?;                    // suppressed in the emitted report
@@ -158,419 +145,362 @@ let trace = device.catch_events([
         .inbound()
         .with_capture(Capture::First(16)),
 ])?;`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="traffic-class" data-search-target>
-        <Card>
-          <CardHeader title="TrafficClass" subtitle="The byte-oriented half of the address space" />
-          <pre class="api-signature">enum TrafficClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
-          <p>
-            The eight packet-carrying classes, at their{' '}
-            <A href="/library/types/enums#catch-class"><code>CatchClass</code></A> byte values. A separate
-            enum, so <code>CatchFilter::traffic</code> cannot take an input class.{' '}
-            <code>TrafficClass::ALL</code> lists them; <code>From</code> and <code>TryFrom</code>{' '}
-            convert both ways.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="traffic-class" title="TrafficClass" caption="The byte-oriented half of the address space">
+        <pre class="api-signature">enum TrafficClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
+        <p>
+          The eight packet-carrying classes, at their{' '}
+          <A href="/library/types/enums#catch-class"><code>CatchClass</code></A> byte values. A separate
+          enum, so <code>CatchFilter::traffic</code> cannot take an input class.{' '}
+          <code>TrafficClass::ALL</code> lists them; <code>From</code> and <code>TryFrom</code>{' '}
+          convert both ways.
+        </p>
+      </DocSection>
 
-      <div id="capture" data-search-target>
-        <Card>
-          <CardHeader title="Capture" subtitle="How much of each packet to keep" />
-          <pre class="api-signature">enum Capture {'{'} Whole, First(u8) {'}'}</pre>
-          <p>
-            Traffic classes only: a capture on an input class, which carries no packet, is refused.
-          </p>
-          <p>
-            A ceiling, not a guarantee: the box holds one entry per address and cuts once, so
-            another subscriber naming the same address more widely raises yours too.{' '}
-            <code>First(0)</code> is <code>Whole</code>; <code>bytes()</code> returns{' '}
-            <code>Option&lt;u8&gt;</code> and <code>widest()</code> resolves two.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="capture" title="Capture" caption="How much of each packet to keep">
+        <pre class="api-signature">enum Capture {'{'} Whole, First(u8) {'}'}</pre>
+        <p>
+          Traffic classes only: a capture on an input class, which carries no packet, is refused.
+        </p>
+        <p>
+          A ceiling, not a guarantee: the box holds one entry per address and cuts once, so
+          another subscriber naming the same address more widely raises yours too.{' '}
+          <code>First(0)</code> is <code>Whole</code>; <code>bytes()</code> returns{' '}
+          <code>Option&lt;u8&gt;</code> and <code>widest()</code> resolves two.
+        </p>
+      </DocSection>
 
-      <div id="input" data-search-target>
-        <Card>
-          <CardHeader title="Input" subtitle="One decoded input edge" />
-          <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16, dpan: i16 {'}'} {'}'}</pre>
-          <p>
-            What <A href="/library/catch#input-events"><code>input_events</code></A> yields, wrapped in
-            an <A href="/library/types/structs#input-event"><code>InputEvent</code></A> with its
-            timestamp. <code>usage()</code>, <code>is_press()</code>, <code>is_release()</code>,{' '}
-            <code>direction()</code> and <code>axes()</code> read it without a match.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="input" title="Input" caption="One decoded input edge">
+        <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16, dpan: i16 {'}'} {'}'}</pre>
+        <p>
+          What <A href="/library/catch#input-events"><code>input_events</code></A> yields, wrapped in
+          an <A href="/library/types/structs#input-event"><code>InputEvent</code></A> with its
+          timestamp. <code>usage()</code>, <code>is_press()</code>, <code>is_release()</code>,{' '}
+          <code>direction()</code> and <code>axes()</code> read it without a match.
+        </p>
+      </DocSection>
 
-      <div id="motion" data-search-target>
-        <Card>
-          <CardHeader title="Motion" subtitle="A relative axis for move_axis" />
-          <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16), Pan(i16) {'}'}</pre>
-          <p>
-            What <A href="/library/move#move"><code>move_axis</code></A> drives. Both span the full{' '}
-            <code>i16</code> range. A lock names a single{' '}
-            <A href="/library/types/enums#axis"><code>Axis</code></A> instead.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Payload</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
-              <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
-              <tr><td><code>Pan</code></td><td><code>i16</code></td><td>Relative AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="move-timing" data-search-target>
-        <Card>
-          <CardHeader title="MoveTiming" subtitle="When a delta reaches the game PC" />
-          <pre class="api-signature">enum MoveTiming {'{'} Ride, Now {'}'}</pre>
-          <p>
-            The <A href="/library/move#move"><code>move_axis</code></A> timing argument, against{' '}
-            <A href="/library/options#set-movement-riding">movement riding</A>. Defaults to{' '}
-            <code>Ride</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
-              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="pending-motion" data-search-target>
-        <Card>
-          <CardHeader title="PendingMotion" subtitle="What a move does to held motion" />
-          <pre class="api-signature">enum PendingMotion {'{'} Keep, Flush, Discard {'}'}</pre>
-          <p>
-            The <A href="/library/move#move"><code>move_axis</code></A> pending argument: what happens to
-            motion already held for a real move. Defaults to <code>Keep</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Keep</code></td><td><code>0x00</code></td><td>Leave it held.</td></tr>
-              <tr><td><code>Flush</code></td><td><code>0x02</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
-              <tr><td><code>Discard</code></td><td><code>0x04</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="axis" data-search-target>
-        <Card>
-          <CardHeader title="Axis" subtitle="A single relative axis" />
-          <pre class="api-signature">enum Axis {'{'} X, Y, Wheel, Pan {'}'}</pre>
-          <p>
-            A <A href="/library/lock#lock-axis"><code>lock_axis</code></A> or{' '}
-            <A href="/library/types/enums#lock-target"><code>LockTarget::Axis</code></A> names one, with a{' '}
-            <A href="/library/types/enums#direction"><code>Direction</code></A> for the sign.
-            Convert with <code>as_u16()</code> and <code>from_u16()</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>X</code></td><td><code>0</code></td><td>The X cursor axis.</td></tr>
-              <tr><td><code>Y</code></td><td><code>1</code></td><td>The Y cursor axis.</td></tr>
-              <tr><td><code>Wheel</code></td><td><code>2</code></td><td>The wheel.</td></tr>
-              <tr><td><code>Pan</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="reboot-target" data-search-target>
-        <Card>
-          <CardHeader title="RebootTarget" subtitle="Which chip to restart, and how" />
-          <pre class="api-signature">enum RebootTarget {'{'} DeviceDownload, HostDownload, DeviceRun, HostRun {'}'}</pre>
-          <p>
-            Which chip a <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> restarts, and
-            into what mode. Convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;RebootTarget&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>DeviceDownload</code></td><td><code>0</code></td><td>Device chip into ROM download mode, ready to flash over the serial link.</td></tr>
-              <tr><td><code>HostDownload</code></td><td><code>1</code></td><td>Host chip into ROM download mode, ready to flash over USB3.</td></tr>
-              <tr><td><code>DeviceRun</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
-              <tr><td><code>HostRun</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="emit-pace" data-search-target>
-        <Card>
-          <CardHeader title="EmitPace" subtitle="What paces injected motion" />
-          <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
-          <p>
-            What sets the emit-rate ceiling for injected motion, passed to{' '}
-            <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
-            <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It raises
-            the ceiling only, so idle stays idle.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Learned</code></td><td>Pace to the learnt native report rate (the default).</td></tr>
-              <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
-              <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="render-mode" data-search-target>
-        <Card>
-          <CardHeader title="RenderMode" subtitle="The texture the box renders motion with" />
-          <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
-          <p>
-            Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
-            <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>. The box boots
-            at <code>Despiked</code>, which is also this enum's <code>Default</code>. The model is{' '}
-            <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
-            (MIT).
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
-              <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
-              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
-              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="led-target" data-search-target>
-        <Card>
-          <CardHeader title="LedTarget" subtitle="Which chip's status LED to drive" />
-          <pre class="api-signature">enum LedTarget {'{'} Device, Host, Both {'}'}</pre>
-          <p>
-            Which chip's LED a <A href="/native/commands/led"><code>LED</code></A> command drives. The
-            discriminant is the wire <code>target</code> byte. Convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;LedTarget&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Device</code></td><td><code>0</code></td><td>The device chip's LED.</td></tr>
-              <tr><td><code>Host</code></td><td><code>1</code></td><td>The host chip's LED, relayed over the inter-chip link.</td></tr>
-              <tr><td><code>Both</code></td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="led-mode" data-search-target>
-        <Card>
-          <CardHeader title="LedMode" subtitle="What to drive the LED to" />
-          <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
-          <p>
-            What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to;{' '}
-            <code>Auto</code> restores the box's status display. The discriminant is the wire{' '}
-            <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Auto</code></td><td><code>0</code></td><td>Restore the chip's status display.</td></tr>
-              <tr><td><code>Off</code></td><td><code>1</code></td><td>LED dark.</td></tr>
-              <tr><td><code>Solid</code></td><td><code>2</code></td><td>Lit steadily at the command's <code>level</code>.</td></tr>
-              <tr><td><code>Blink</code></td><td><code>3</code></td><td>Blinks at the command's <code>level</code>.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="lock-target" data-search-target>
-        <Card>
-          <CardHeader title="LockTarget" subtitle="One addressable input field: an axis or a usage" />
-          <pre class="api-signature">enum LockTarget {'{'} Axis(Axis), Usage(Usage) {'}'}</pre>
-          <p>
-            What a <A href="/library/lock#lock"><code>lock</code></A> weighs and a{' '}
-            <A href="/library/types/structs#transform"><code>Transform</code></A> reads and writes; the
-            box addresses a field the same way everywhere. An <code>Axis</code> and any{' '}
-            <code>impl Into&lt;Usage&gt;</code> convert <code>Into&lt;LockTarget&gt;</code>, so either
-            passes straight in. A button locks exactly like a key.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
-            <tbody>
-              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan</td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
-              <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A>: a button, key, or media usage</td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>.class_id()</code></td><td><code>(u8, u16)</code></td><td>The wire <code>(class, id)</code> this field encodes to.</td></tr>
-              <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse; <code>None</code> for a class no field names or an axis id past the declared axes.</td></tr>
-              <tr><td><code>.as_axis()</code></td><td><code>Option&lt;<A href="/library/types/enums#axis">Axis</A>&gt;</code></td><td>The axis this field names, or <code>None</code> for a momentary usage.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="lock-scope" data-search-target>
-        <Card>
-          <CardHeader title="LockScope" subtitle="What a reported lock covers" />
-          <pre class="api-signature">enum LockScope {'{'} Target(LockTarget), Blanket(Class) {'}'}</pre>
-          <p>
-            What a <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> in a{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A> reply covers.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Payload</th><th>Covers</th></tr></thead>
-            <tbody>
-              <tr><td><code>Target</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>A specific axis or usage.</td></tr>
-              <tr><td><code>Blanket</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>Every button, key, or media usage of the class.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="direction" data-search-target>
-        <Card>
-          <CardHeader title="Direction" subtitle="Which way, which edge, or which transfer direction" />
-          <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative, With, Against {'}'}</pre>
-          <p>
-            The one byte <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
-            <A href="/native/commands/clip"><code>CLIP</code></A> and{' '}
-            <A href="/native/commands/catch"><code>CATCH</code></A> all carry. The variants are named
-            for the axis reading; the class selects which of the three applies, and no class carries
-            two. Convert with <code>as_u8()</code> and{' '}
-            <code>from_u8(u8) -&gt; Option&lt;Direction&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a button or key</th><th>On a traffic class</th></tr></thead>
-            <tbody>
-              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
-              <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
-              <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
-              <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
-              <tr><td><code>Against</code></td><td><code>4</code></td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
-            </tbody>
-          </table>
-          <p>
-            A media usage has no edges: an edge on one goes out, and reads back in{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>, as <code>Both</code>.
-          </p>
-          <p>
-            <code>With</code> and <code>Against</code> are measured against the bearing, not a fixed
-            sign, so the sign they cover follows the injection; <code>is_relative()</code> tells them
-            apart, and a lock or{' '}
-            <A href="/library/catch#catch-events">catch</A> call on any class but an axis refuses one
-            with <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
-            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
-          </p>
-          <p>
-            The other two readings get their own names:{' '}
-            <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
-            <code>Direction::IN</code> and <code>OUT</code> for traffic.{' '}
-            <code>admits()</code> tests one against another, and <code>of_delta()</code> reads the
-            sign of a movement.
-          </p>
-        </Card>
-      </div>
-      <div id="bearing-mode" data-search-target>
-        <Card>
-          <CardHeader title="BearingMode" subtitle="How the box reads the injected direction" />
-          <pre class="api-signature">enum BearingMode {'{'} PerAxis, Vector {'}'}</pre>
-          <p>
-            Set by <A href="/library/options#set-bearing"><code>set_bearing</code></A>; resolves{' '}
-            <code>Direction::With</code> and <code>Against</code>. Convert with{' '}
-            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;BearingMode&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its sign against its own bearing. The default.</td></tr>
-              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            In <code>Vector</code> the relative pair addresses X and Y as one vector: the box takes the
-            lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
-            <A href="/library/lock#lock-all"><code>scale_all</code></A>.{' '}
-            <A href="/library/types/structs#locks"><code>Locks</code></A> documents the readback.
-          </p>
-          <p>
-            The projection is the first of two stages. Each axis's <code>Positive</code> /{' '}
-            <code>Negative</code> scale then applies to what the projection left on that axis, so it can
-            weigh motion the projection moved there. See{' '}
-            <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
-          </p>
-        </Card>
-      </div>
-      <div id="blanket" data-search-target>
-        <Card>
-          <CardHeader title="Blanket" subtitle="A whole-group lock selector" />
-          <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
-          <p>
-            A whole input group: which one <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
-            <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh in one call, and the members of a
-            clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
-            <tbody>
-              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
-              <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>
-              <tr><td><code>Buttons</code></td><td>Every mouse button.</td><td>An edge, on each button.</td></tr>
-              <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td><td>An edge: <code>Positive</code> blocks presses, <code>Negative</code> releases, <code>Both</code> both.</td></tr>
-              <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td><td>Nothing; media has no edges.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="log-level" data-search-target>
-        <Card>
-          <CardHeader title="LogLevel" subtitle="Severity tag on a log line" />
-          <pre class="api-signature">enum LogLevel {'{'} Error, Warn, Info, Debug, Verbose {'}'}</pre>
-          <p>
-            The severity tag on a <A href="/library/types/structs#log-line"><code>LogLine</code></A>.{' '}
-            <code>from_u8(u8)</code> is infallible: an unknown byte falls back to <code>Info</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Error</code></td><td><code>0</code></td><td>A failure the box could not recover from.</td></tr>
-              <tr><td><code>Warn</code></td><td><code>1</code></td><td>Something off that the box handled.</td></tr>
-              <tr><td><code>Info</code></td><td><code>2</code></td><td>Normal operational notices.</td></tr>
-              <tr><td><code>Debug</code></td><td><code>3</code></td><td>Detail for diagnosing a problem.</td></tr>
-              <tr><td><code>Verbose</code></td><td><code>4</code></td><td>The finest-grained trace output.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="catch-event" data-search-target>
-        <Card>
-          <CardHeader title="CatchEvent" subtitle="One caught event off the stream" />
-          <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot), Traffic(TrafficEvent) {'}'}</pre>
-          <p>
-            What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields, one
-            variant per event frame the box pushes.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
-            <tbody>
-              <tr><td><code>Motion</code></td><td><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>A cursor or wheel change, from a <A href="/library/types/enums#catch-class"><code>CatchClass::Axis</code></A> filter.</td></tr>
-              <tr><td><code>Usages</code></td><td><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A></td><td>A button, key, or media change, from a <code>Button / Key / Media</code> filter.</td></tr>
-              <tr><td><code>Traffic</code></td><td><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>Bytes off a pipe, from any <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> filter.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            All three carry <code>ts_us</code> and a{' '}
-            <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>: a stamp compares
-            only to another from the same domain until the{' '}
-            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> is applied.
-          </p>
-          <p>
-            One rolling <code>seq</code> counter covers all three frame types and counts what the box{' '}
-            <em>sent</em>, not what it saw; loss shows in{' '}
-            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, not a{' '}
-            <code>seq</code> gap.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
+      <DocSection id="motion" title="Motion" caption="A relative axis for move_axis">
+        <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16), Pan(i16) {'}'}</pre>
+        <p>
+          What <A href="/library/move#move"><code>move_axis</code></A> drives. Both span the full{' '}
+          <code>i16</code> range. A lock names a single{' '}
+          <A href="/library/types/enums#axis"><code>Axis</code></A> instead.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Payload</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
+            <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
+            <tr><td><code>Pan</code></td><td><code>i16</code></td><td>Relative AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="move-timing" title="MoveTiming" caption="When a delta reaches the game PC">
+        <pre class="api-signature">enum MoveTiming {'{'} Ride, Now {'}'}</pre>
+        <p>
+          The <A href="/library/move#move"><code>move_axis</code></A> timing argument, against{' '}
+          <A href="/library/options#set-movement-riding">movement riding</A>. Defaults to{' '}
+          <code>Ride</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
+            <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="pending-motion" title="PendingMotion" caption="What a move does to held motion">
+        <pre class="api-signature">enum PendingMotion {'{'} Keep, Flush, Discard {'}'}</pre>
+        <p>
+          The <A href="/library/move#move"><code>move_axis</code></A> pending argument: what happens to
+          motion already held for a real move. Defaults to <code>Keep</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Keep</code></td><td><code>0x00</code></td><td>Leave it held.</td></tr>
+            <tr><td><code>Flush</code></td><td><code>0x02</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
+            <tr><td><code>Discard</code></td><td><code>0x04</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="axis" title="Axis" caption="A single relative axis">
+        <pre class="api-signature">enum Axis {'{'} X, Y, Wheel, Pan {'}'}</pre>
+        <p>
+          A <A href="/library/lock#lock-axis"><code>lock_axis</code></A> or{' '}
+          <A href="/library/types/enums#lock-target"><code>LockTarget::Axis</code></A> names one, with a{' '}
+          <A href="/library/types/enums#direction"><code>Direction</code></A> for the sign.
+          Convert with <code>as_u16()</code> and <code>from_u16()</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>X</code></td><td><code>0</code></td><td>The X cursor axis.</td></tr>
+            <tr><td><code>Y</code></td><td><code>1</code></td><td>The Y cursor axis.</td></tr>
+            <tr><td><code>Wheel</code></td><td><code>2</code></td><td>The wheel.</td></tr>
+            <tr><td><code>Pan</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="reboot-target" title="RebootTarget" caption="Which chip to restart, and how">
+        <pre class="api-signature">enum RebootTarget {'{'} DeviceDownload, HostDownload, DeviceRun, HostRun {'}'}</pre>
+        <p>
+          Which chip a <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> restarts, and
+          into what mode. Convert with <code>as_u8()</code> and{' '}
+          <code>from_u8(u8) -&gt; Option&lt;RebootTarget&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>DeviceDownload</code></td><td><code>0</code></td><td>Device chip into ROM download mode, ready to flash over the serial link.</td></tr>
+            <tr><td><code>HostDownload</code></td><td><code>1</code></td><td>Host chip into ROM download mode, ready to flash over USB3.</td></tr>
+            <tr><td><code>DeviceRun</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
+            <tr><td><code>HostRun</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="emit-pace" title="EmitPace" caption="What paces injected motion">
+        <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
+        <p>
+          What sets the emit-rate ceiling for injected motion, passed to{' '}
+          <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A> and returned in{' '}
+          <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It raises
+          the ceiling only, so idle stays idle.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Learned</code></td><td>Pace to the learnt native report rate (the default).</td></tr>
+            <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
+            <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="render-mode" title="RenderMode" caption="The texture the box renders motion with">
+        <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
+        <p>
+          Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
+          <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>. The box boots
+          at <code>Despiked</code>, which is also this enum's <code>Default</code>. The model is{' '}
+          <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
+          (MIT).
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
+            <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
+            <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
+            <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="led-target" title="LedTarget" caption="Which chip's status LED to drive">
+        <pre class="api-signature">enum LedTarget {'{'} Device, Host, Both {'}'}</pre>
+        <p>
+          Which chip's LED a <A href="/native/commands/led"><code>LED</code></A> command drives. The
+          discriminant is the wire <code>target</code> byte. Convert with <code>as_u8()</code> and{' '}
+          <code>from_u8(u8) -&gt; Option&lt;LedTarget&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Device</code></td><td><code>0</code></td><td>The device chip's LED.</td></tr>
+            <tr><td><code>Host</code></td><td><code>1</code></td><td>The host chip's LED, relayed over the inter-chip link.</td></tr>
+            <tr><td><code>Both</code></td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="led-mode" title="LedMode" caption="What to drive the LED to">
+        <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
+        <p>
+          What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to;{' '}
+          <code>Auto</code> restores the box's status display. The discriminant is the wire{' '}
+          <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
+          <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Auto</code></td><td><code>0</code></td><td>Restore the chip's status display.</td></tr>
+            <tr><td><code>Off</code></td><td><code>1</code></td><td>LED dark.</td></tr>
+            <tr><td><code>Solid</code></td><td><code>2</code></td><td>Lit steadily at the command's <code>level</code>.</td></tr>
+            <tr><td><code>Blink</code></td><td><code>3</code></td><td>Blinks at the command's <code>level</code>.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="lock-target" title="LockTarget" caption="One addressable input field: an axis or a usage">
+        <pre class="api-signature">enum LockTarget {'{'} Axis(Axis), Usage(Usage) {'}'}</pre>
+        <p>
+          What a <A href="/library/lock#lock"><code>lock</code></A> weighs and a{' '}
+          <A href="/library/types/structs#transform"><code>Transform</code></A> reads and writes; the
+          box addresses a field the same way everywhere. An <code>Axis</code> and any{' '}
+          <code>impl Into&lt;Usage&gt;</code> convert <code>Into&lt;LockTarget&gt;</code>, so either
+          passes straight in. A button locks exactly like a key.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
+          <tbody>
+            <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan</td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
+            <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A>: a button, key, or media usage</td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
+          </tbody>
+        </table>
+        <table class="api-params">
+          <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>.class_id()</code></td><td><code>(u8, u16)</code></td><td>The wire <code>(class, id)</code> this field encodes to.</td></tr>
+            <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse; <code>None</code> for a class no field names or an axis id past the declared axes.</td></tr>
+            <tr><td><code>.as_axis()</code></td><td><code>Option&lt;<A href="/library/types/enums#axis">Axis</A>&gt;</code></td><td>The axis this field names, or <code>None</code> for a momentary usage.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="lock-scope" title="LockScope" caption="What a reported lock covers">
+        <pre class="api-signature">enum LockScope {'{'} Target(LockTarget), Blanket(Class) {'}'}</pre>
+        <p>
+          What a <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> in a{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A> reply covers.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Payload</th><th>Covers</th></tr></thead>
+          <tbody>
+            <tr><td><code>Target</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>A specific axis or usage.</td></tr>
+            <tr><td><code>Blanket</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>Every button, key, or media usage of the class.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="direction" title="Direction" caption="Which way, which edge, or which transfer direction">
+        <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative, With, Against {'}'}</pre>
+        <p>
+          The one byte <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
+          <A href="/native/commands/clip"><code>CLIP</code></A> and{' '}
+          <A href="/native/commands/catch"><code>CATCH</code></A> all carry. The variants are named
+          for the axis reading; the class selects which of the three applies, and no class carries
+          two. Convert with <code>as_u8()</code> and{' '}
+          <code>from_u8(u8) -&gt; Option&lt;Direction&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a button or key</th><th>On a traffic class</th></tr></thead>
+          <tbody>
+            <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
+            <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
+            <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
+            <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
+            <tr><td><code>Against</code></td><td><code>4</code></td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A media usage has no edges: an edge on one goes out, and reads back in{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A>, as <code>Both</code>.
+        </p>
+        <p>
+          <code>With</code> and <code>Against</code> are measured against the bearing, not a fixed
+          sign, so the sign they cover follows the injection; <code>is_relative()</code> tells them
+          apart, and a lock or{' '}
+          <A href="/library/catch#catch-events">catch</A> call on any class but an axis refuses one
+          with <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. See{' '}
+          <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+        </p>
+        <p>
+          The other two readings get their own names:{' '}
+          <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
+          <code>Direction::IN</code> and <code>OUT</code> for traffic.{' '}
+          <code>admits()</code> tests one against another, and <code>of_delta()</code> reads the
+          sign of a movement.
+        </p>
+      </DocSection>
+      <DocSection id="bearing-mode" title="BearingMode" caption="How the box reads the injected direction">
+        <pre class="api-signature">enum BearingMode {'{'} PerAxis, Vector {'}'}</pre>
+        <p>
+          Set by <A href="/library/options#set-bearing"><code>set_bearing</code></A>; resolves{' '}
+          <code>Direction::With</code> and <code>Against</code>. Convert with{' '}
+          <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;BearingMode&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its sign against its own bearing. The default.</td></tr>
+            <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          In <code>Vector</code> the relative pair addresses X and Y as one vector: the box takes the
+          lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
+          <A href="/library/lock#lock-all"><code>scale_all</code></A>.{' '}
+          <A href="/library/types/structs#locks"><code>Locks</code></A> documents the readback.
+        </p>
+        <p>
+          The projection is the first of two stages. Each axis's <code>Positive</code> /{' '}
+          <code>Negative</code> scale then applies to what the projection left on that axis, so it can
+          weigh motion the projection moved there. See{' '}
+          <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
+        </p>
+      </DocSection>
+      <DocSection id="blanket" title="Blanket" caption="A whole-group lock selector">
+        <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
+        <p>
+          A whole input group: which one <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
+          <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh in one call, and the members of a
+          clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
+          <tbody>
+            <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
+            <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>
+            <tr><td><code>Buttons</code></td><td>Every mouse button.</td><td>An edge, on each button.</td></tr>
+            <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td><td>An edge: <code>Positive</code> blocks presses, <code>Negative</code> releases, <code>Both</code> both.</td></tr>
+            <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td><td>Nothing; media has no edges.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="log-level" title="LogLevel" caption="Severity tag on a log line">
+        <pre class="api-signature">enum LogLevel {'{'} Error, Warn, Info, Debug, Verbose {'}'}</pre>
+        <p>
+          The severity tag on a <A href="/library/types/structs#log-line"><code>LogLine</code></A>.{' '}
+          <code>from_u8(u8)</code> is infallible: an unknown byte falls back to <code>Info</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Error</code></td><td><code>0</code></td><td>A failure the box could not recover from.</td></tr>
+            <tr><td><code>Warn</code></td><td><code>1</code></td><td>Something off that the box handled.</td></tr>
+            <tr><td><code>Info</code></td><td><code>2</code></td><td>Normal operational notices.</td></tr>
+            <tr><td><code>Debug</code></td><td><code>3</code></td><td>Detail for diagnosing a problem.</td></tr>
+            <tr><td><code>Verbose</code></td><td><code>4</code></td><td>The finest-grained trace output.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="catch-event" title="CatchEvent" caption="One caught event off the stream">
+        <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot), Traffic(TrafficEvent) {'}'}</pre>
+        <p>
+          What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields, one
+          variant per event frame the box pushes.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
+          <tbody>
+            <tr><td><code>Motion</code></td><td><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>A cursor or wheel change, from a <A href="/library/types/enums#catch-class"><code>CatchClass::Axis</code></A> filter.</td></tr>
+            <tr><td><code>Usages</code></td><td><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A></td><td>A button, key, or media change, from a <code>Button / Key / Media</code> filter.</td></tr>
+            <tr><td><code>Traffic</code></td><td><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>Bytes off a pipe, from any <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> filter.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          All three carry <code>ts_us</code> and a{' '}
+          <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>: a stamp compares
+          only to another from the same domain until the{' '}
+          <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> is applied.
+        </p>
+        <p>
+          One rolling <code>seq</code> counter covers all three frame types and counts what the box{' '}
+          <em>sent</em>, not what it saw; loss shows in{' '}
+          <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, not a{' '}
+          <code>seq</code> gap.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
 
 let stream = device.catch_events([CatchFilter::everything()])?;
 match stream.recv()? {
@@ -578,102 +508,93 @@ match stream.recv()? {
     CatchEvent::Usages(s)  => println!("{} held", s.usages.len()),
     CatchEvent::Traffic(t) => println!("{:?} 0x{:04X}: {} bytes", t.class, t.id, t.true_len),
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clock-domain" data-search-target>
-        <Card>
-          <CardHeader title="ClockDomain" subtitle="Which chip stamped the event" />
-          <pre class="api-signature">enum ClockDomain {'{'} HostChip, DeviceChip {'}'}</pre>
-          <p>
-            The <code>clock</code> field beside every event's <code>ts_us</code>. The box runs two
-            microsecond timers and nothing relates them; the chip that saw the event stamps it. Convert
-            with{' '}
-            <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;ClockDomain&gt;</code>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
-            <tbody>
-              <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
-            <tbody>
-              <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and native IN traffic on the vendor classes.</td></tr>
-              <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, a <A href="/library/advanced/raw">raw</A> packet on a vendor IN endpoint, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Both timers are box-local, unrelated to any clock on this machine. They wrap every ~71.6
-            minutes (a <code>u32</code> of microseconds) and restart at zero when their chip reboots.
-          </p>
-          <p>
-            A stamp below the one before it is a wrap, a reboot, or a domain change, and only the
-            third shows in the value itself. To put both domains on one timeline, apply the{' '}
-            <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> from{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="clock-domain" title="ClockDomain" caption="Which chip stamped the event">
+        <pre class="api-signature">enum ClockDomain {'{'} HostChip, DeviceChip {'}'}</pre>
+        <p>
+          The <code>clock</code> field beside every event's <code>ts_us</code>. The box runs two
+          microsecond timers and nothing relates them; the chip that saw the event stamps it. Convert
+          with{' '}
+          <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;ClockDomain&gt;</code>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
+          <tbody>
+            <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
+            <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap.</td></tr>
+          </tbody>
+        </table>
+        <table class="api-params">
+          <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
+          <tbody>
+            <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and native IN traffic on the vendor classes.</td></tr>
+            <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, a <A href="/library/advanced/raw">raw</A> packet on a vendor IN endpoint, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Both timers are box-local, unrelated to any clock on this machine. They wrap every ~71.6
+          minutes (a <code>u32</code> of microseconds) and restart at zero when their chip reboots.
+        </p>
+        <p>
+          A stamp below the one before it is a wrap, a reboot, or a domain change, and only the
+          third shows in the value itself. To put both domains on one timeline, apply the{' '}
+          <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> from{' '}
+          <A href="/library/requests#query-catch"><code>query_catch</code></A>.
+        </p>
+      </DocSection>
 
-      <div id="control-status" data-search-target>
-        <Card>
-          <CardHeader title="ControlStatus" subtitle="Handshake the game PC received" />
-          <pre class="api-signature">enum ControlStatus {'{'} Ok, Stalled, Naked, Other(u8) {'}'}</pre>
-          <p>
-            Read it with <code>TrafficEvent::control_status()</code>, which returns{' '}
-            <code>None</code> for any class other than{' '}
-            <A href="/library/types/enums#catch-class"><code>Control</code></A>. It is{' '}
-            <code>flags</code> bits 0-1; bit 7 is{' '}
-            <A href="/library/types/structs#traffic-event"><code>rule_acted()</code></A>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>flags b0-b1</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
-              <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
-              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only: the device never replied, or a <code>Nak</code> rule.</td></tr>
-              <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
+      <DocSection id="control-status" title="ControlStatus" caption="Handshake the game PC received">
+        <pre class="api-signature">enum ControlStatus {'{'} Ok, Stalled, Naked, Other(u8) {'}'}</pre>
+        <p>
+          Read it with <code>TrafficEvent::control_status()</code>, which returns{' '}
+          <code>None</code> for any class other than{' '}
+          <A href="/library/types/enums#catch-class"><code>Control</code></A>. It is{' '}
+          <code>flags</code> bits 0-1; bit 7 is{' '}
+          <A href="/library/types/structs#traffic-event"><code>rule_acted()</code></A>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>flags b0-b1</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
+            <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
+            <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only: the device never replied, or a <code>Nak</code> rule.</td></tr>
+            <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
 
-      <div id="bus-event" data-search-target>
-        <Card>
-          <CardHeader title="BusEvent" subtitle="What happened on the USB bus" />
-          <pre class="api-signature">{`enum BusEvent { Reset, Suspend, Resume, Configured(u8), Deconfigured,
+      <DocSection id="bus-event" title="BusEvent" caption="What happened on the USB bus">
+        <pre class="api-signature">{`enum BusEvent { Reset, Suspend, Resume, Configured(u8), Deconfigured,
                 SetInterface { interface: u8, alt: u8 },
                 DeviceAttached, DeviceDetached, CloneUp, CloneDown }`}</pre>
-          <p>
-            The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
-            event. Read it with <code>TrafficEvent::bus_event()</code>, which returns{' '}
-            <code>Option&lt;BusEvent&gt;</code>: <code>None</code> for a kind byte this build does not
-            name. The two kinds with operands parse them into their own fields.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
-              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone.</td></tr>
-              <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back.</td></tr>
-              <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
-              <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
-              <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
-              <tr><td><code>DeviceAttached</code></td><td><code>6</code></td><td>-</td><td>The real device appeared on the host chip.</td></tr>
-              <tr><td><code>DeviceDetached</code></td><td><code>7</code></td><td>-</td><td>The real device went away.</td></tr>
-              <tr><td><code>CloneUp</code></td><td><code>8</code></td><td>-</td><td>The box started presenting the clone to the game PC.</td></tr>
-              <tr><td><code>CloneDown</code></td><td><code>9</code></td><td>-</td><td>The box stopped presenting it.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-            the other eight are native USB1 bus, which the control PC is not on.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};
+        <p>
+          The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
+          event. Read it with <code>TrafficEvent::bus_event()</code>, which returns{' '}
+          <code>Option&lt;BusEvent&gt;</code>: <code>None</code> for a kind byte this build does not
+          name. The two kinds with operands parse them into their own fields.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
+            <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone.</td></tr>
+            <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back.</td></tr>
+            <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
+            <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
+            <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
+            <tr><td><code>DeviceAttached</code></td><td><code>6</code></td><td>-</td><td>The real device appeared on the host chip.</td></tr>
+            <tr><td><code>DeviceDetached</code></td><td><code>7</code></td><td>-</td><td>The real device went away.</td></tr>
+            <tr><td><code>CloneUp</code></td><td><code>8</code></td><td>-</td><td>The box started presenting the clone to the game PC.</td></tr>
+            <tr><td><code>CloneDown</code></td><td><code>9</code></td><td>-</td><td>The box stopped presenting it.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
+          the other eight are native USB1 bus, which the control PC is not on.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};
 
 let stream = device.catch_events([CatchFilter::traffic_class(TrafficClass::Bus)])?;
 if let CatchEvent::Traffic(t) = stream.recv()? {
@@ -684,168 +605,147 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         None                                       => {}
     }
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="transform-op" data-search-target>
-        <Card>
-          <CardHeader title="TransformOp" subtitle="What a transform does to its fields" />
-          <pre class="api-signature">enum TransformOp {'{'} Remap, Swap {'}'}</pre>
-          <p>
-            How a <A href="/library/types/structs#transform"><code>Transform</code></A>'s source and
-            destination relate. <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte;{' '}
-            <code>admits(source, dest)</code> checks a pair, as the crate does before sending.
-          </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead><tr><th>Variant</th><th>Byte</th><th>Fields it admits</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's value into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
-                <tr><td><code>Swap</code></td><td><code>1</code></td><td>two axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p>
-            <code>admits</code> refuses a pair whose source and destination are the same field. To
-            weigh a field, or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>.
-          </p>
-        </Card>
-      </div>
-      <div id="clip-state" data-search-target>
-        <Card>
-          <CardHeader title="ClipState" subtitle="Clip lifecycle state" />
-          <pre class="api-signature">enum ClipState {'{'} Idle, Playing, Paused, Faulted {'}'}</pre>
-          <p>
-            The device-side clip state on{' '}
-            <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
-            <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>.
-          </p>
+      <DocSection id="transform-op" title="TransformOp" caption="What a transform does to its fields">
+        <pre class="api-signature">enum TransformOp {'{'} Remap, Swap {'}'}</pre>
+        <p>
+          How a <A href="/library/types/structs#transform"><code>Transform</code></A>'s source and
+          destination relate. <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte;{' '}
+          <code>admits(source, dest)</code> checks a pair, as the crate does before sending.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Fields it admits</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
-              <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input; resumes from the same spot.</td></tr>
-              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <code>clear</code>.</td></tr>
+              <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's value into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
+              <tr><td><code>Swap</code></td><td><code>1</code></td><td>two axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="edge" data-search-target>
-        <Card>
-          <CardHeader title="Edge" subtitle="Which edge fires a clip trigger" />
-          <pre class="api-signature">enum Edge {'{'} Both, Press, Release {'}'}</pre>
-          <p>
-            Which edge of a bound usage fires a{' '}
-            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A>; shares wire
-            values with{' '}
-            <A href="/library/types/enums#direction"><code>Direction</code></A>.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Both</code></td><td><code>0</code></td><td>Fire on either edge.</td></tr>
-              <tr><td><code>Press</code></td><td><code>1</code></td><td>Fire on the press edge.</td></tr>
-              <tr><td><code>Release</code></td><td><code>2</code></td><td>Fire on the release edge.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="clip-action" data-search-target>
-        <Card>
-          <CardHeader title="ClipAction" subtitle="What a fired clip trigger does" />
-          <pre class="api-signature">enum ClipAction {'{'} Start, Stop, Pause, Resume, Restart, Toggle {'}'}</pre>
-          <p>
-            What a bound{' '}
-            <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> or{' '}
-            <A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A>{' '}
-            does to the clip when it fires. The discriminant doubles as the{' '}
-            <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op byte for the same
-            action.
-          </p>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Start</code></td><td><code>0</code></td><td>Play from the ring's head, or resume a pause.</td></tr>
-              <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
-              <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
-              <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
-              <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
-              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Play if idle or paused, stop if playing.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
-      <div id="update-target" data-search-target>
-        <Card>
-          <CardHeader title="UpdateTarget" subtitle="Which chip an update op addresses" />
-          <pre class="api-signature">enum UpdateTarget {'{'} Device, Host {'}'}</pre>
-          <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-            <tbody>
-              <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
-              <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
-            </tbody>
-          </table>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <code>admits</code> refuses a pair whose source and destination are the same field. To
+          weigh a field, or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>.
+        </p>
+      </DocSection>
+      <DocSection id="clip-state" title="ClipState" caption="Clip lifecycle state">
+        <pre class="api-signature">enum ClipState {'{'} Idle, Playing, Paused, Faulted {'}'}</pre>
+        <p>
+          The device-side clip state on{' '}
+          <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
+          <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
+            <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+            <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input; resumes from the same spot.</td></tr>
+            <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <code>clear</code>.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="edge" title="Edge" caption="Which edge fires a clip trigger">
+        <pre class="api-signature">enum Edge {'{'} Both, Press, Release {'}'}</pre>
+        <p>
+          Which edge of a bound usage fires a{' '}
+          <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A>; shares wire
+          values with{' '}
+          <A href="/library/types/enums#direction"><code>Direction</code></A>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Both</code></td><td><code>0</code></td><td>Fire on either edge.</td></tr>
+            <tr><td><code>Press</code></td><td><code>1</code></td><td>Fire on the press edge.</td></tr>
+            <tr><td><code>Release</code></td><td><code>2</code></td><td>Fire on the release edge.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="clip-action" title="ClipAction" caption="What a fired clip trigger does">
+        <pre class="api-signature">enum ClipAction {'{'} Start, Stop, Pause, Resume, Restart, Toggle {'}'}</pre>
+        <p>
+          What a bound{' '}
+          <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A> or{' '}
+          <A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A>{' '}
+          does to the clip when it fires. The discriminant doubles as the{' '}
+          <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op byte for the same
+          action.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Start</code></td><td><code>0</code></td><td>Play from the ring's head, or resume a pause.</td></tr>
+            <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
+            <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
+            <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
+            <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
+            <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Play if idle or paused, stop if playing.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+      <DocSection id="update-target" title="UpdateTarget" caption="Which chip an update op addresses">
+        <pre class="api-signature">enum UpdateTarget {'{'} Device, Host {'}'}</pre>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
+            <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
 
-      <div id="image-state" data-search-target>
-        <Card>
-          <CardHeader title="ImageState" subtitle="Where a booted image is in its probation" />
-          <pre class="api-signature">enum ImageState {'{'} New, PendingVerify, Valid, Invalid, Aborted, Unknown {'}'}</pre>
-          <p>
-            The bootloader's record for a slot; see{' '}
-            <A href="/native/commands/update#rollback">rollback</A>.
-          </p>
+      <DocSection id="image-state" title="ImageState" caption="Where a booted image is in its probation">
+        <pre class="api-signature">enum ImageState {'{'} New, PendingVerify, Valid, Invalid, Aborted, Unknown {'}'}</pre>
+        <p>
+          The bootloader's record for a slot; see{' '}
+          <A href="/native/commands/update#rollback">rollback</A>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
+            <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>
+            <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
+            <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
+            <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
+            <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+          </tbody>
+        </table>
+      </DocSection>
+
+      <DocSection id="transfer-status" title="TransferStatus" caption="How a control transfer ended">
+        <pre class="api-signature">enum TransferStatus {'{'} Ok, Refused, Stall, Nak, NoDevice, Other(u8) {'}'}</pre>
+        <p>
+          The status byte of a{' '}
+          <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>, and of a{' '}
+          <code>ClipTransfer</code> event through <code>TrafficEvent::transfer_status()</code>. The
+          codes sit at the top of the byte range so they never collide with a length; an unknown byte
+          is carried through as <code>Other</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
-              <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>
-              <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
-              <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
-              <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
-              <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
+              <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the device: the opt-in is off, the request was malformed, <code>wLength</code> was above 504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
+              <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
+              <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no reply crossed the link within 800 ms.</td></tr>
+              <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No device is attached on the host chip.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-
-      <div id="transfer-status" data-search-target>
-        <Card>
-          <CardHeader title="TransferStatus" subtitle="How a control transfer ended" />
-          <pre class="api-signature">enum TransferStatus {'{'} Ok, Refused, Stall, Nak, NoDevice, Other(u8) {'}'}</pre>
+        </div>
+        <div class="callout callout--info">
           <p>
-            The status byte of a{' '}
-            <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>, and of a{' '}
-            <code>ClipTransfer</code> event through <code>TrafficEvent::transfer_status()</code>. The
-            codes sit at the top of the byte range so they never collide with a length; an unknown byte
-            is carried through as <code>Other</code>.
+            <code>Refused</code> comes from the box, before the device; <code>Stall</code> comes from
+            the device. <code>Nak</code> can be either: a device that did not finish, or a request with
+            no reply. See the native{' '}
+            <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.
           </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-              <tbody>
-                <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
-                <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the device: the opt-in is off, the request was malformed, <code>wLength</code> was above 504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
-                <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
-                <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no reply crossed the link within 800 ms.</td></tr>
-                <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No device is attached on the host chip.</td></tr>
-                <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="callout callout--info">
-            <p>
-              <code>Refused</code> comes from the box, before the device; <code>Stall</code> comes from
-              the device. <code>Nak</code> can be either: a device that did not finish, or a request with
-              no reply. See the native{' '}
-              <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.
-            </p>
-          </div>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::TransferStatus;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::TransferStatus;
 
 match reply.status {
     TransferStatus::Ok => println!("{} bytes", reply.data().len()),
@@ -854,94 +754,84 @@ match reply.status {
     TransferStatus::Refused => println!("box refused it: opt-in off, malformed, too large, or queue full"),
     other => println!("other status: {other:?}"),
 }`}</code></pre>
-        </Card>
-      </div>
-      <div id="rewrite-class" data-search-target>
-        <Card>
-          <CardHeader title="RewriteClass" subtitle="Which traffic a rewrite rule addresses" />
-          <pre class="api-signature">enum RewriteClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Any {'}'}</pre>
-          <p>
-            The class picks the traffic a{' '}
-            <A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A> addresses and the
-            id picks the address within it, the writable half of{' '}
-            <A href="/library/catch">catch</A>'s address space.
-          </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead>
-                <tr><th>Variant</th><th>Byte</th><th>Traffic</th><th>id</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, as it arrived; see <A href="/library/advanced/rewrite#hid-in-motion">motion</A>.</td><td>the interface number</td></tr>
-                <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the endpoint number</td></tr>
-                <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
-                <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
-                <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply. On EP0, the requests the clone passes to the device (class and vendor ones, and a few standard ones); a control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
-                <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
-                <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every surface a packet crosses, so a report meets the rule at <code>HidIn</code> and again at <code>Emit</code>. <code>Pass</code>, <code>Patch</code> and <code>Replace</code> only, ranked below every other class.</td><td>ignored</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p>
-            The parsed-input and bus classes are not rewritable.{' '}
-            <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte.
-          </p>
-        </Card>
-      </div>
-      <div id="rewrite-action" data-search-target>
-        <Card>
-          <CardHeader title="RewriteAction" subtitle="What the top-ranked rewrite rule does" />
-          <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
-          <p>
-            The top-ranked rule's action sets what happens to a matched packet. The class column is
-            which{' '}
-            <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
-            report-only action on a control class, or the reverse, is{' '}
-            <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.
-          </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead>
-                <tr><th>Variant</th><th>Byte</th><th>Class</th><th>Payload</th><th>Effect</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><code>Pass</code></td><td><code>0</code></td><td>any</td><td>no</td><td>Matched, but left untouched: a shadow over a broader rule.</td></tr>
-                <tr><td><code>Drop</code></td><td><code>1</code></td><td>report</td><td>no</td><td>Not delivered. An <code>Emit</code> drop mutes the wire; a <code>HidIn</code> drop drops the device's contribution while injection still emits.</td></tr>
-                <tr><td><code>Patch</code></td><td><code>2</code></td><td>any</td><td>yes</td><td>Overwrite the payload bytes at <code>offset</code>, length preserved. On <code>Control</code>, an OUT request's data stage only.</td></tr>
-                <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload. On <code>Control</code>, the payload overwrites the start of an OUT request's data stage and <code>wLength</code> is kept.</td></tr>
-                <tr><td><code>Answer</code></td><td><code>4</code></td><td>control</td><td>yes</td><td>Answer from the payload without asking the device.</td></tr>
-                <tr><td><code>Stall</code></td><td><code>5</code></td><td>control</td><td>no</td><td>Protocol STALL.</td></tr>
-                <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>EP0 NAKs to a timeout; a control endpoint above 0 STALLs.</td></tr>
-                <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the device's reply at <code>offset</code>.</td></tr>
-                <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the device's reply with the payload.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-      <div id="patch-section" data-search-target>
-        <Card>
-          <CardHeader title="PatchSection" subtitle="Which descriptor a patch overwrites" />
-          <pre class="api-signature">enum PatchSection {'{'} Device, Config, Report, String, Bos {'}'}</pre>
-          <p>
-            The section names the descriptor a{' '}
-            <A href="/library/types/structs#patch"><code>Patch</code></A> overwrites, and that patch's{' '}
-            <code>cfg</code> and <code>index</code> address within it.
-          </p>
-          <div class="table-scroll">
-            <table class="api-params">
-              <thead><tr><th>Variant</th><th>Byte</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
-              <tbody>
-                <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
-                <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index, counting from 0</td></tr>
-                <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is that index, <code>index</code> the interface number</td></tr>
-                <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: up to 126 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
-                <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
+      </DocSection>
+      <DocSection id="rewrite-class" title="RewriteClass" caption="Which traffic a rewrite rule addresses">
+        <pre class="api-signature">enum RewriteClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Any {'}'}</pre>
+        <p>
+          The class picks the traffic a{' '}
+          <A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A> addresses and the
+          id picks the address within it, the writable half of{' '}
+          <A href="/library/catch">catch</A>'s address space.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Variant</th><th>Byte</th><th>Traffic</th><th>id</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>HidIn</code></td><td><code>4</code></td><td>A HID report from the device, as it arrived; see <A href="/library/advanced/rewrite#hid-in-motion">motion</A>.</td><td>the interface number</td></tr>
+              <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the device.</td><td>the endpoint number</td></tr>
+              <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
+              <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the device's reply. On EP0, the requests the clone passes to the device (class and vendor ones, and a few standard ones); a control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
+              <tr><td><code>Emit</code></td><td><code>9</code></td><td>The outgoing wire, after the renderer. Catches injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
+              <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every surface a packet crosses, so a report meets the rule at <code>HidIn</code> and again at <code>Emit</code>. <code>Pass</code>, <code>Patch</code> and <code>Replace</code> only, ranked below every other class.</td><td>ignored</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The parsed-input and bus classes are not rewritable.{' '}
+          <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte.
+        </p>
+      </DocSection>
+      <DocSection id="rewrite-action" title="RewriteAction" caption="What the top-ranked rewrite rule does">
+        <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
+        <p>
+          The top-ranked rule's action sets what happens to a matched packet. The class column is
+          which{' '}
+          <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
+          report-only action on a control class, or the reverse, is{' '}
+          <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Variant</th><th>Byte</th><th>Class</th><th>Payload</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>Pass</code></td><td><code>0</code></td><td>any</td><td>no</td><td>Matched, but left untouched: a shadow over a broader rule.</td></tr>
+              <tr><td><code>Drop</code></td><td><code>1</code></td><td>report</td><td>no</td><td>Not delivered. An <code>Emit</code> drop mutes the wire; a <code>HidIn</code> drop drops the device's contribution while injection still emits.</td></tr>
+              <tr><td><code>Patch</code></td><td><code>2</code></td><td>any</td><td>yes</td><td>Overwrite the payload bytes at <code>offset</code>, length preserved. On <code>Control</code>, an OUT request's data stage only.</td></tr>
+              <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload. On <code>Control</code>, the payload overwrites the start of an OUT request's data stage and <code>wLength</code> is kept.</td></tr>
+              <tr><td><code>Answer</code></td><td><code>4</code></td><td>control</td><td>yes</td><td>Answer from the payload without asking the device.</td></tr>
+              <tr><td><code>Stall</code></td><td><code>5</code></td><td>control</td><td>no</td><td>Protocol STALL.</td></tr>
+              <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>EP0 NAKs to a timeout; a control endpoint above 0 STALLs.</td></tr>
+              <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the device's reply at <code>offset</code>.</td></tr>
+              <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the device's reply with the payload.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </DocSection>
+      <DocSection id="patch-section" title="PatchSection" caption="Which descriptor a patch overwrites">
+        <pre class="api-signature">enum PatchSection {'{'} Device, Config, Report, String, Bos {'}'}</pre>
+        <p>
+          The section names the descriptor a{' '}
+          <A href="/library/types/structs#patch"><code>Patch</code></A> overwrites, and that patch's{' '}
+          <code>cfg</code> and <code>index</code> address within it.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Overwrites</th><th><code>cfg</code> / <code>index</code></th></tr></thead>
+            <tbody>
+              <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
+              <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index, counting from 0</td></tr>
+              <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is that index, <code>index</code> the interface number</td></tr>
+              <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: up to 126 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
+              <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </DocSection>
 
     </>
   );

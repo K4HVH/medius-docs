@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Quickstart: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="First program" subtitle="Connect, move, click, read one event" />
+      <PageHeader lead="Connect, move, click, read one event">
         <p>
           One file: find the <A href="/native/hardware">box</A>, move, click, read one physical
           event. Install with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
@@ -24,12 +23,10 @@ const Quickstart: Component = () => {
             <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="program" data-search-target>
-        <Card>
-          <CardHeader title="The program" subtitle="The full listing" />
-          <pre><code class="language-python">{`import time
+      <DocSection id="program" title="The program" caption="The full listing">
+        <pre><code class="language-python">{`import time
 from medius import Device, Usage, Button, CatchFilter, NotFoundError
 
 try:
@@ -60,172 +57,156 @@ try:
         # stream and link close on block exit
 except NotFoundError:
     raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              Injection reaches only the <em>game</em> PC, through the clone port, so the cursor and
-              click don't show on the control PC running this script. Port map:{' '}
-              <A href="/native/hardware">Hardware</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="walkthrough" data-search-target>
-        <Card>
-          <CardHeader title="Walkthrough" subtitle="Each call, its kind, and its concept page" />
-          <table class="api-params">
-            <thead>
-              <tr><th>Call</th><th>Kind</th><th>Does</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><A href="/bindings/python/api#connect"><code>Device.find()</code></A></td>
-                <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Open the first box and run the <A href="/native/connection#handshake">handshake</A>. See <A href="/library/connection">Connection</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/bindings/python/api#queries"><code>dev.query_version()</code></A></td>
-                <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Read a <A href="/bindings/python/types#version"><code>Version</code></A>. See <A href="/library/requests">Requests</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/bindings/python/api#move"><code>dev.move_rel(100, 0)</code></A></td>
-                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>See <A href="/native/commands/move#move">MOVE</A> / <A href="/library/move">Move</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/bindings/python/api#inject"><code>dev.press(Usage.button(Button.LEFT))</code></A></td>
-                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Sends <code>Action.PRESS</code>. See the <A href="/native/injection#fire-and-forget">injection model</A> / <A href="/library/inject">Inject</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/bindings/python/api#inject"><code>dev.soft_release(Usage.button(Button.LEFT))</code></A></td>
-                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Sends <code>Action.SOFT_RELEASE</code>. See <A href="/native/injection">Injection</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.everything())</code></A></td>
-                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Subscribe with one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> (or an iterable); returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
-              </tr>
-              <tr>
-                <td><A href="/bindings/python/streams"><code>stream.recv_timeout(5000)</code></A></td>
-                <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Wait up to 5 s for one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>, or <code>None</code>. See <A href="/bindings/python/streams">Streams</A>.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="callout callout--info">
           <p>
-            <A href="/bindings/python/types#button">Button</A> ids are on{' '}
-            <A href="/native/commands/usage#buttons">Usage IDs</A>; every call is on the{' '}
-            <A href="/bindings/python/api">API index</A>.
+            Injection reaches only the <em>game</em> PC, through the clone port, so the cursor and
+            click don't show on the control PC running this script. Port map:{' '}
+            <A href="/native/hardware">Hardware</A>.
           </p>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="run" data-search-target>
-        <Card>
-          <CardHeader title="Run it" subtitle="One command, expected output" />
-          <pre><code class="language-bash">{`python first.py
+      <DocSection id="walkthrough" title="Walkthrough" caption="Each call, its kind, and its concept page">
+        <table class="api-params">
+          <thead>
+            <tr><th>Call</th><th>Kind</th><th>Does</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><A href="/bindings/python/api#connect"><code>Device.find()</code></A></td>
+              <td><span class="api-badge api-badge--responded">Blocks</span></td>
+              <td>Open the first box and run the <A href="/native/connection#handshake">handshake</A>. See <A href="/library/connection">Connection</A>.</td>
+            </tr>
+            <tr>
+              <td><A href="/bindings/python/api#queries"><code>dev.query_version()</code></A></td>
+              <td><span class="api-badge api-badge--responded">Blocks</span></td>
+              <td>Read a <A href="/bindings/python/types#version"><code>Version</code></A>. See <A href="/library/requests">Requests</A>.</td>
+            </tr>
+            <tr>
+              <td><A href="/bindings/python/api#move"><code>dev.move_rel(100, 0)</code></A></td>
+              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+              <td>See <A href="/native/commands/move#move">MOVE</A> / <A href="/library/move">Move</A>.</td>
+            </tr>
+            <tr>
+              <td><A href="/bindings/python/api#inject"><code>dev.press(Usage.button(Button.LEFT))</code></A></td>
+              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+              <td>Sends <code>Action.PRESS</code>. See the <A href="/native/injection#fire-and-forget">injection model</A> / <A href="/library/inject">Inject</A>.</td>
+            </tr>
+            <tr>
+              <td><A href="/bindings/python/api#inject"><code>dev.soft_release(Usage.button(Button.LEFT))</code></A></td>
+              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+              <td>Sends <code>Action.SOFT_RELEASE</code>. See <A href="/native/injection">Injection</A>.</td>
+            </tr>
+            <tr>
+              <td><A href="/bindings/python/api#streams"><code>dev.catch_events(CatchFilter.everything())</code></A></td>
+              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+              <td>Subscribe with one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> (or an iterable); returns an <A href="/bindings/python/streams"><code>EventStream</code></A>. See <A href="/library/catch">Catch</A>.</td>
+            </tr>
+            <tr>
+              <td><A href="/bindings/python/streams"><code>stream.recv_timeout(5000)</code></A></td>
+              <td><span class="api-badge api-badge--responded">Blocks</span></td>
+              <td>Wait up to 5 s for one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>, or <code>None</code>. See <A href="/bindings/python/streams">Streams</A>.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <A href="/bindings/python/types#button">Button</A> ids are on{' '}
+          <A href="/native/commands/usage#buttons">Usage IDs</A>; every call is on the{' '}
+          <A href="/bindings/python/api">API index</A>.
+        </p>
+      </DocSection>
+
+      <DocSection id="run" title="Run it" caption="One command, expected output">
+        <pre><code class="language-bash">{`python first.py
 # firmware 3.4.5, proto 9
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
-          <p>
-            The <code>motion</code> line needs a physical mouse move or click within 5 s.{' '}
-            <code>CatchFilter.everything()</code> covers every class, so a device with busy vendor
-            endpoints can print a <code>traffic</code> line first; narrow it with{' '}
-            <code>CatchFilter.watch_axes()</code>.
-          </p>
-        </Card>
-      </div>
+        <p>
+          The <code>motion</code> line needs a physical mouse move or click within 5 s.{' '}
+          <code>CatchFilter.everything()</code> covers every class, so a device with busy vendor
+          endpoints can print a <code>traffic</code> line first; narrow it with{' '}
+          <code>CatchFilter.watch_axes()</code>.
+        </p>
+      </DocSection>
 
-      <div id="reading" data-search-target>
-        <Card>
-          <CardHeader title="Reading events" subtitle="Four ways to pull from a stream" />
-          <p>
-            The program uses <code>recv_timeout</code> so it can't hang.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Reader</th><th>Empty queue</th><th>Link dropped</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><A href="/bindings/python/streams"><code>stream.recv()</code></A></td><td>blocks forever</td><td>raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A></td></tr>
-              <tr><td><A href="/bindings/python/streams"><code>stream.recv_timeout(ms)</code></A></td><td>returns <code>None</code> after <code>ms</code></td><td>returns <code>None</code> (same as a timeout)</td></tr>
-              <tr><td><A href="/bindings/python/streams"><code>stream.try_recv()</code></A></td><td>returns <code>None</code> at once</td><td>returns <code>None</code> (same as empty)</td></tr>
-              <tr><td><code>for ev in stream:</code></td><td>blocks for each</td><td>loop ends cleanly</td></tr>
-            </tbody>
-          </table>
-          <p>
-            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
-            <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
-            <code>None</code>), plus <code>.ts_us</code> and the{' '}
-            <A href="/bindings/python/types#clockdomain"><code>.clock</code></A> domain that stamped it. A{' '}
-            <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
-            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
-            a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
-            <code>truncated()</code>. Payload shapes are on{' '}
-            <A href="/bindings/python/streams">Streams</A>.
-          </p>
-          <p>
-            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
-            and release edges directly, with no snapshot diffing.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="reading" title="Reading events" caption="Four ways to pull from a stream">
+        <p>
+          The program uses <code>recv_timeout</code> so it can't hang.
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>Reader</th><th>Empty queue</th><th>Link dropped</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><A href="/bindings/python/streams"><code>stream.recv()</code></A></td><td>blocks forever</td><td>raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A></td></tr>
+            <tr><td><A href="/bindings/python/streams"><code>stream.recv_timeout(ms)</code></A></td><td>returns <code>None</code> after <code>ms</code></td><td>returns <code>None</code> (same as a timeout)</td></tr>
+            <tr><td><A href="/bindings/python/streams"><code>stream.try_recv()</code></A></td><td>returns <code>None</code> at once</td><td>returns <code>None</code> (same as empty)</td></tr>
+            <tr><td><code>for ev in stream:</code></td><td>blocks for each</td><td>loop ends cleanly</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
+          <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
+          <code>None</code>), plus <code>.ts_us</code> and the{' '}
+          <A href="/bindings/python/types#clockdomain"><code>.clock</code></A> domain that stamped it. A{' '}
+          <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
+          <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
+          a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
+          <code>truncated()</code>. Payload shapes are on{' '}
+          <A href="/bindings/python/streams">Streams</A>.
+        </p>
+        <p>
+          <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
+          and release edges directly, with no snapshot diffing.
+        </p>
+      </DocSection>
 
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="Raised exceptions, not return codes" />
-          <p>
-            Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
-            <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
-            <code>.status</code>, <code>.message</code>, and <code>.proto_ver</code>.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>When</th><th>Raises</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>find()</code> with no box present</td><td><A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A></td></tr>
-              <tr><td>a <code>query_*</code> gets no reply in time</td><td><A href="/bindings/python/types#subclasses"><code>QueryTimeoutError</code></A></td></tr>
-              <tr><td>the box speaks a different protocol</td><td><A href="/bindings/python/types#subclasses"><code>BadProtoVerError</code></A> (check <code>.proto_ver</code>)</td></tr>
-              <tr><td>a stream read after the link drops</td><td><A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A></td></tr>
-              <tr><td>any other failure</td><td>a <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass</td></tr>
-            </tbody>
-          </table>
-          <p>
-            Catch <code>MediusError</code> to handle them all. Full list and the{' '}
-            <A href="/bindings/python/types#status"><code>Status</code></A> codes on{' '}
-            <A href="/bindings/python/types">Types &amp; errors</A>;
-            patterns on <A href="/bindings/python/usage">Calls &amp; errors</A>.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="errors" title="Errors" caption="Raised exceptions, not return codes">
+        <p>
+          Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
+          <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
+          <code>.status</code>, <code>.message</code>, and <code>.proto_ver</code>.
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>When</th><th>Raises</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>find()</code> with no box present</td><td><A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A></td></tr>
+            <tr><td>a <code>query_*</code> gets no reply in time</td><td><A href="/bindings/python/types#subclasses"><code>QueryTimeoutError</code></A></td></tr>
+            <tr><td>the box speaks a different protocol</td><td><A href="/bindings/python/types#subclasses"><code>BadProtoVerError</code></A> (check <code>.proto_ver</code>)</td></tr>
+            <tr><td>a stream read after the link drops</td><td><A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A></td></tr>
+            <tr><td>any other failure</td><td>a <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Catch <code>MediusError</code> to handle them all. Full list and the{' '}
+          <A href="/bindings/python/types#status"><code>Status</code></A> codes on{' '}
+          <A href="/bindings/python/types">Types &amp; errors</A>;
+          patterns on <A href="/bindings/python/usage">Calls &amp; errors</A>.
+        </p>
+      </DocSection>
 
-      <div id="cleanup" data-search-target>
-        <Card>
-          <CardHeader title="Closing" subtitle="A with-block, close(), or garbage collection" />
-          <p>
-            A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
-            to combine:
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Mechanism</th><th>Frees when</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>with Device.find() as dev:</code></td><td>the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> exits (used twice above, for the link and the stream)</td></tr>
-              <tr><td><code>dev.close()</code></td><td>you call it; a second call is a no-op</td></tr>
-              <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>the object is collected, via <a href="https://docs.python.org/3/reference/datamodel.html#object.__del__" target="_blank" rel="noreferrer"><code>__del__</code></a></td></tr>
-            </tbody>
-          </table>
-          <p>
-            <A href="/bindings/python/api#connect"><code>dev.clone()</code></A> returns another handle to the same link; the connection lives
-            until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
-            <A href="/library/guides/connection#keepalive">keepalive</A> thread.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="cleanup" title="Closing" caption="A with-block, close(), or garbage collection">
+        <p>
+          A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
+          to combine:
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>Mechanism</th><th>Frees when</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>with Device.find() as dev:</code></td><td>the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> exits (used twice above, for the link and the stream)</td></tr>
+            <tr><td><code>dev.close()</code></td><td>you call it; a second call is a no-op</td></tr>
+            <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>the object is collected, via <a href="https://docs.python.org/3/reference/datamodel.html#object.__del__" target="_blank" rel="noreferrer"><code>__del__</code></a></td></tr>
+          </tbody>
+        </table>
+        <p>
+          <A href="/bindings/python/api#connect"><code>dev.clone()</code></A> returns another handle to the same link; the connection lives
+          until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
+          <A href="/library/guides/connection#keepalive">keepalive</A> thread.
+        </p>
+      </DocSection>
     </>
   );
 };

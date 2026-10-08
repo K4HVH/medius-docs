@@ -1,72 +1,66 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Usage: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Calls & errors" subtitle="Blocking, exceptions, lifecycle, builders" />
+      <PageHeader lead="Blocking, exceptions, lifecycle, builders">
         <p>
           The <A href="/bindings/python/api">API index</A> lists every call;{' '}
           <A href="/bindings/python/types">Types &amp; errors</A> the value types. What each command{' '}
           <em>does</em> is in the <A href="/library">Rust Library</A> and <A href="/native">Native API</A>.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="calls" data-search-target>
-        <Card>
-          <CardHeader title="Fire-and-forget vs blocking" subtitle="The two call-kind badges" />
-          <table class="api-params">
-            <thead><tr><th>Badge</th><th>Means</th><th>Which calls</th></tr></thead>
-            <tbody>
-              <tr>
-                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-                <td>Queues a <A href="/native/frame">frame</A> and returns at once; no reply is read (<A href="/native/injection#fire-and-forget">fire-and-forget</A>).</td>
-                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
-              </tr>
-              <tr>
-                <td><span class="api-badge api-badge--responded">Blocks</span></td>
-                <td>Sends, then waits for the <A href="/native/hardware">box</A>'s reply (or times out).</td>
-                <td><A href="/bindings/python/api#connect"><code>Device.open</code></A> / <A href="/bindings/python/api#connect"><code>find</code></A> (the <A href="/native/connection#handshake">handshake</A>), every <A href="/native/commands/requests"><code>query_*</code></A> / <A href="/native/commands/requests"><code>caps</code></A> / <A href="/library/diagnostics"><code>counters</code></A>, and a stream <A href="/bindings/python/streams"><code>recv()</code></A></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="callout callout--info">
-            <p>
-              A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning
-              without raising means the frame was <em>queued</em>, not that the box acted on it.
-              Confirm with a <span class="api-badge api-badge--responded">Blocks</span> query such as{' '}
-              <A href="/bindings/python/api#queries"><code>dev.query_health()</code></A>. Default reply wait:{' '}
-              <A href="/bindings/python/api#module"><code>medius.default_query_timeout_ms()</code></A> (1000 ms).
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="MediusError and its subclasses" />
+      <DocSection id="calls" title="Fire-and-forget vs blocking" caption="The two call-kind badges">
+        <table class="api-params">
+          <thead><tr><th>Badge</th><th>Means</th><th>Which calls</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+              <td>Queues a <A href="/native/frame">frame</A> and returns at once; no reply is read (<A href="/native/injection#fire-and-forget">fire-and-forget</A>).</td>
+              <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
+            </tr>
+            <tr>
+              <td><span class="api-badge api-badge--responded">Blocks</span></td>
+              <td>Sends, then waits for the <A href="/native/hardware">box</A>'s reply (or times out).</td>
+              <td><A href="/bindings/python/api#connect"><code>Device.open</code></A> / <A href="/bindings/python/api#connect"><code>find</code></A> (the <A href="/native/connection#handshake">handshake</A>), every <A href="/native/commands/requests"><code>query_*</code></A> / <A href="/native/commands/requests"><code>caps</code></A> / <A href="/library/diagnostics"><code>counters</code></A>, and a stream <A href="/bindings/python/streams"><code>recv()</code></A></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout callout--info">
           <p>
-            A failed call <strong>raises</strong>. The base type
-            is <A href="/bindings/python/types#mediuserror"><code>MediusError</code></A> (an{' '}
-            <a href="https://docs.python.org/3/library/exceptions.html#Exception" target="_blank" rel="noreferrer"><code>Exception</code></a>{' '}
-            subclass); each{' '}
-            <A href="/library/types/errors">status code</A> (a <A href="/bindings/python/types#status"><code>Status</code></A>{' '}
-            <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">IntEnum</a>)
-            maps to its own <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
-            <code>MediusError</code> for all of them; full mapping on{' '}
-            <A href="/bindings/python/types#subclasses">Types &amp; errors</A>.
+            A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning
+            without raising means the frame was <em>queued</em>, not that the box acted on it.
+            Confirm with a <span class="api-badge api-badge--responded">Blocks</span> query such as{' '}
+            <A href="/bindings/python/api#queries"><code>dev.query_health()</code></A>. Default reply wait:{' '}
+            <A href="/bindings/python/api#module"><code>medius.default_query_timeout_ms()</code></A> (1000 ms).
           </p>
-          <pre class="api-signature">{`class MediusError(Exception):
+        </div>
+      </DocSection>
+
+      <DocSection id="errors" title="Errors" caption="MediusError and its subclasses">
+        <p>
+          A failed call <strong>raises</strong>. The base type
+          is <A href="/bindings/python/types#mediuserror"><code>MediusError</code></A> (an{' '}
+          <a href="https://docs.python.org/3/library/exceptions.html#Exception" target="_blank" rel="noreferrer"><code>Exception</code></a>{' '}
+          subclass); each{' '}
+          <A href="/library/types/errors">status code</A> (a <A href="/bindings/python/types#status"><code>Status</code></A>{' '}
+          <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">IntEnum</a>)
+          maps to its own <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
+          <code>MediusError</code> for all of them; full mapping on{' '}
+          <A href="/bindings/python/types#subclasses">Types &amp; errors</A>.
+        </p>
+        <pre class="api-signature">{`class MediusError(Exception):
     status:    Status   # the failure code
     message:   str      # the box's last error text, may be ""
     proto_ver: int      # offending byte for BadProtoVerError, else 0
 
 str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
 
 try:
     with Device.find() as dev:
@@ -76,50 +70,47 @@ except DisconnectedError:
     print("the link dropped mid-session")
 except MediusError as e:
     print(e.status, "-", e.message)   # e.g. Status.ERR_NOT_FOUND - no medius port found`}</code></pre>
-          <div class="callout callout--warning">
-            <p>
-              A dropped link raises <code>DisconnectedError</code> from a call and from{' '}
-              <code>recv()</code>, but a <A href="/bindings/python/streams">stream</A> iterator
-              (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) ends cleanly.
-              Box-side telemetry behind these errors is on{' '}
-              <A href="/library/diagnostics">Diagnostics</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="lifecycle" data-search-target>
-        <Card>
-          <CardHeader title="Lifecycle" subtitle="Handle ownership and release" />
+        <div class="callout callout--warning">
           <p>
-            A <code>Device</code> owns a handle: open it, optionally <A href="/bindings/python/api#connect"><code>clone()</code></A> it,
-            release it three ways. Connection sharing is on{' '}
-            <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
+            A dropped link raises <code>DisconnectedError</code> from a call and from{' '}
+            <code>recv()</code>, but a <A href="/bindings/python/streams">stream</A> iterator
+            (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) ends cleanly.
+            Box-side telemetry behind these errors is on{' '}
+            <A href="/library/diagnostics">Diagnostics</A>.
           </p>
-          <table class="api-params">
-            <thead><tr><th>Open with</th><th>Does</th></tr></thead>
-            <tbody>
-              <tr><td><code>Device.find()</code></td><td>First box found + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
-              <tr><td><code>Device.open(path)</code></td><td>One serial path + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
-              <tr><td><code>dev.clone()</code></td><td>Another handle to the <em>same</em> link.</td></tr>
-              <tr><td><code>MockBox().open()</code></td><td>Open over an in-process <A href="/bindings/python/api#mock">mock box</A> (needs the mock feature).</td></tr>
-            </tbody>
-          </table>
-          <pre class="diagram">{`Device.find() ──┐
+        </div>
+      </DocSection>
+
+      <DocSection id="lifecycle" title="Lifecycle" caption="Handle ownership and release">
+        <p>
+          A <code>Device</code> owns a handle: open it, optionally <A href="/bindings/python/api#connect"><code>clone()</code></A> it,
+          release it three ways. Connection sharing is on{' '}
+          <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Open with</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>Device.find()</code></td><td>First box found + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
+            <tr><td><code>Device.open(path)</code></td><td>One serial path + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
+            <tr><td><code>dev.clone()</code></td><td>Another handle to the <em>same</em> link.</td></tr>
+            <tr><td><code>MockBox().open()</code></td><td>Open over an in-process <A href="/bindings/python/api#mock">mock box</A> (needs the mock feature).</td></tr>
+          </tbody>
+        </table>
+        <pre class="diagram">{`Device.find() ──┐
                 ├──▶  one USB-serial link  (stays up while ANY handle is open)
 dev.clone() ────┘
 
   each handle is freed on its own; the link closes with the last one`}</pre>
-          <div class="api-response-label">RELEASE ROUTES</div>
-          <table class="api-params">
-            <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
-            <tbody>
-              <tr><td><code>with Device.find() as dev:</code></td><td>When the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> block exits (<code>__exit__</code>). Preferred.</td></tr>
-              <tr><td><code>dev.close()</code></td><td>Immediately; a second call is a no-op.</td></tr>
-              <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>Best-effort via <code>__del__</code>. Don't rely on timing.</td></tr>
-            </tbody>
-          </table>
-          <pre><code class="language-python">{`# preferred: the context manager closes on exit
+        <div class="api-response-label">RELEASE ROUTES</div>
+        <table class="api-params">
+          <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
+          <tbody>
+            <tr><td><code>with Device.find() as dev:</code></td><td>When the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> block exits (<code>__exit__</code>). Preferred.</td></tr>
+            <tr><td><code>dev.close()</code></td><td>Immediately; a second call is a no-op.</td></tr>
+            <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>Best-effort via <code>__del__</code>. Don't rely on timing.</td></tr>
+          </tbody>
+        </table>
+        <pre><code class="language-python">{`# preferred: the context manager closes on exit
 with Device.find() as dev:
     dev.move_rel(5, 5)
 
@@ -128,42 +119,39 @@ dev = Device.find()
 worker = dev.clone()
 worker.close()
 dev.close()`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              <code>EventStream</code>, <code>InputStream</code>, <code>LogStream</code>,{' '}
-              <code>Timeline</code>, and <code>MockBox</code> follow the same pattern: a{' '}
-              <code>with</code> block, <code>.close()</code>, or GC. An open stream keeps the device
-              open; see <A href="/bindings/python/streams">Streams</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="builders" data-search-target>
-        <Card>
-          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget, CatchFilter for the generic verbs" />
+        <div class="callout callout--info">
           <p>
-            The <A href="/library/inject">inject</A>, <A href="/library/move">move</A>,{' '}
-            <A href="/library/lock">lock</A>, and <A href="/library/catch">catch</A> calls take a{' '}
-            <em>target object</em> built with a classmethod, not a bare value.
+            <code>EventStream</code>, <code>InputStream</code>, <code>LogStream</code>,{' '}
+            <code>Timeline</code>, and <code>MockBox</code> follow the same pattern: a{' '}
+            <code>with</code> block, <code>.close()</code>, or GC. An open stream keeps the device
+            open; see <A href="/bindings/python/streams">Streams</A>.
           </p>
-          <table class="api-params">
-            <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
-            <tbody>
-              <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
-              <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
-              <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
-              <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor move</td></tr>
-              <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
-              <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
-              <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
-              <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed as a lock is</td></tr>
-              <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>
-              <tr><td><code>.with_direction(direction)</code> / <code>.with_capture(n)</code> / <code>.on_press()</code> / <code>.inbound()</code></td><td>a narrowed copy of one</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchFilter, TrafficClass,
+        </div>
+      </DocSection>
+
+      <DocSection id="builders" title="Building targets" caption="Usage, Motion, LockTarget, CatchFilter for the generic verbs">
+        <p>
+          The <A href="/library/inject">inject</A>, <A href="/library/move">move</A>,{' '}
+          <A href="/library/lock">lock</A>, and <A href="/library/catch">catch</A> calls take a{' '}
+          <em>target object</em> built with a classmethod, not a bare value.
+        </p>
+        <table class="api-params">
+          <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
+          <tbody>
+            <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
+            <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
+            <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
+            <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor move</td></tr>
+            <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
+            <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
+            <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
+            <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed as a lock is</td></tr>
+            <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>
+            <tr><td><code>.with_direction(direction)</code> / <code>.with_capture(n)</code> / <code>.on_press()</code> / <code>.inbound()</code></td><td>a narrowed copy of one</td></tr>
+          </tbody>
+        </table>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchFilter, TrafficClass,
                     Button, Action, Direction)
 
 with Device.find() as dev:
@@ -175,27 +163,26 @@ with Device.find() as dev:
         CatchFilter.watch_axes(),
         CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16),
     ])`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
-              <code>SOFT_RELEASE</code> / <code>FORCE_RELEASE</code>); the{' '}
-              <A href="/native/injection">injection model</A> defines what each does.
-            </p>
-            <p>
-              <code>Usage.button</code> takes a{' '}
-              <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
-              <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
-              raw <code>int</code>.
-            </p>
-            <p>
-              A filter's <code>direction</code> is the same{' '}
-              <A href="/bindings/python/types#direction"><code>Direction</code></A>: on an input class
-              it picks the press or release edge (<code>PRESS</code> / <code>RELEASE</code>), on a
-              traffic class the flow (<code>IN</code> / <code>OUT</code>).
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            <code>action</code> is an <A href="/bindings/python/types#action"><code>Action</code></A> (<code>PRESS</code> /{' '}
+            <code>SOFT_RELEASE</code> / <code>FORCE_RELEASE</code>); the{' '}
+            <A href="/native/injection">injection model</A> defines what each does.
+          </p>
+          <p>
+            <code>Usage.button</code> takes a{' '}
+            <A href="/bindings/python/types#button"><code>Button</code></A>;{' '}
+            <code>Usage.key</code>/<code>media</code> accept a <A href="/bindings/python/types#key"><code>Key</code></A>/<A href="/bindings/python/types#mediakey"><code>MediaKey</code></A> or a
+            raw <code>int</code>.
+          </p>
+          <p>
+            A filter's <code>direction</code> is the same{' '}
+            <A href="/bindings/python/types#direction"><code>Direction</code></A>: on an input class
+            it picks the press or release edge (<code>PRESS</code> / <code>RELEASE</code>), on a
+            traffic class the flow (<code>IN</code> / <code>OUT</code>).
+          </p>
+        </div>
+      </DocSection>
     </>
   );
 };

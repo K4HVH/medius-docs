@@ -1,57 +1,31 @@
 import type { Component } from 'solid-js';
-import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
+import { IndexRow } from '../../shell/IndexRow';
 
 const TypesAndErrors: Component = () => {
   return (
     <>
-      <div id="types-overview" data-search-target>
-        <Card>
-          <CardHeader
-            title="Types & errors"
-            subtitle="Arguments, results, and errors"
-          />
-          <p>
-            Every public type is re-exported at the crate root: import from{' '}
-            <code>medius::</code>, not <code>medius::types::</code>.
-          </p>
+      <PageHeader lead="Arguments, results, and errors">
+        <span id="types-overview" data-search-target />
+        <p>
+          Every public type is re-exported at the crate root: import from{' '}
+          <code>medius::</code>, not <code>medius::types::</code>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, Action, Health, Version, Error, Result};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Button, Action, Health, Version, Error, Result};
 
 // One flat namespace. Does not compile:
 // use medius::types::Button;`}</code></pre>
-        </Card>
-      </div>
+      </PageHeader>
 
-      <div id="sections" data-search-target>
-        <Card>
-          <CardHeader title="Reference pages" subtitle="Pick a group" />
-          <div class="docs-grid">
-            <A href="/library/types/enums" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Enums" subtitle="Button, Action, RebootTarget, LogLevel, CatchEvent" />
-              </Card>
-            </A>
-            <A href="/library/types/structs" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Structs" subtitle="Version, Health, MouseCaps, KbdCaps, Key, MediaKey, and more" />
-              </Card>
-            </A>
-            <A href="/library/types/frames" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Frames" subtitle="FrameType, DecodedFrame" />
-              </Card>
-            </A>
-            <A href="/library/types/errors" style={{ "text-decoration": "none" }}>
-              <Card interactive variant="subtle" padding="compact">
-                <CardHeader title="Errors" subtitle="Error, Result" />
-              </Card>
-            </A>
-          </div>
-        </Card>
-      </div>
+      <DocSection id="sections" title="Reference pages" caption="Pick a group">
+        <IndexRow href="/library/types/enums" title="Enums" tag="Button, Action, RebootTarget, LogLevel, CatchEvent" />
+        <IndexRow href="/library/types/structs" title="Structs" tag="Version, Health, MouseCaps, KbdCaps, Key, MediaKey, and more" />
+        <IndexRow href="/library/types/frames" title="Frames" tag="FrameType, DecodedFrame" />
+        <IndexRow href="/library/types/errors" title="Errors" tag="Error, Result" />
+      </DocSection>
 
     </>
   );

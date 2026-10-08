@@ -1,23 +1,22 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const GuideConnection: Component = () => {
   return (
     <>
-      <div id="choosing-a-port" data-search-target>
-        <Card>
-          <CardHeader title="Choosing a port" subtitle="When more than one box is plugged in" />
-          <p>
-            <A href="/library/connection#open"><code>find</code></A> opens the first match. With several
-            boxes, <code>find_medius</code> lists every match as a{' '}
-            <A href="/library/types/structs#port-info"><code>PortInfo</code></A> (<code>path</code>,{' '}
-            <code>vid</code>, <code>pid</code>) without opening;{' '}
-            <A href="/library/connection#open"><code>open</code></A> the chosen one.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, find_medius};
+      <PageHeader lead="When more than one box is plugged in">
+        <span id="choosing-a-port" data-search-target />
+        <p>
+          <A href="/library/connection#open"><code>find</code></A> opens the first match. With several
+          boxes, <code>find_medius</code> lists every match as a{' '}
+          <A href="/library/types/structs#port-info"><code>PortInfo</code></A> (<code>path</code>,{' '}
+          <code>vid</code>, <code>pid</code>) without opening;{' '}
+          <A href="/library/connection#open"><code>open</code></A> the chosen one.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, find_medius};
 
 let ports = find_medius();
 for port in &ports {
@@ -27,124 +26,111 @@ for port in &ports {
 // open one (here, the first):
 let port = ports.first().ok_or(medius::Error::NotFound)?;
 let dev = Device::open(&port.path)?;`}</code></pre>
-        </Card>
-      </div>
+      </PageHeader>
 
-      <div id="threading" data-search-target>
-        <Card>
-          <CardHeader title="Threading and Clone" subtitle="Share one connection across threads" />
-          <p>
-            <A href="/library/connection"><code>Device</code></A> is <code>Send + Sync</code> and clones
-            cheaply (an <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html" target="_blank" rel="noreferrer"><code>Arc</code></a> inside),
-            so one connection serves any number of threads; a clone shares the open port.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use std::thread;
+      <DocSection id="threading" title="Threading and Clone" caption="Share one connection across threads">
+        <p>
+          <A href="/library/connection"><code>Device</code></A> is <code>Send + Sync</code> and clones
+          cheaply (an <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html" target="_blank" rel="noreferrer"><code>Arc</code></a> inside),
+          so one connection serves any number of threads; a clone shares the open port.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use std::thread;
 
 let worker = device.clone();
 let handle = thread::spawn(move || {
     worker.move_rel(10, 0)
 });
 handle.join().unwrap()?;`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="concurrency" data-search-target>
-        <Card>
-          <CardHeader title="Concurrent queries" subtitle="join and cloning across tasks" />
-          <p>
-            <A href="/library/features/async"><code>AsyncDevice</code></A> clones the same way, across
-            tasks;{' '}
-            <a href="https://docs.rs/futures/latest/futures/future/fn.join.html" target="_blank" rel="noreferrer"><code>futures::future::join</code></a>{' '}
-            awaits queries together.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let (v, h) = futures::future::join(
+      <DocSection id="concurrency" title="Concurrent queries" caption="join and cloning across tasks">
+        <p>
+          <A href="/library/features/async"><code>AsyncDevice</code></A> clones the same way, across
+          tasks;{' '}
+          <a href="https://docs.rs/futures/latest/futures/future/fn.join.html" target="_blank" rel="noreferrer"><code>futures::future::join</code></a>{' '}
+          awaits queries together.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let (v, h) = futures::future::join(
     device.query_version(),
     device.query_health(),
 ).await;
 let v = v?;
 let h = h?;
 println!("{v}, link_up={}", h.link_up);`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              Only the queries need <code>.await</code>; mutators stay synchronous on either handle.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            Only the queries need <code>.await</code>; mutators stay synchronous on either handle.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="keepalive" data-search-target>
-        <Card>
-          <CardHeader title="Keepalive and holds" subtitle="Holds past the silence window" />
-          <p>
-            The box clears every injected input and pending move once no frame arrives for its{' '}
-            <A href="/native/injection#safety">silence window</A>.
-          </p>
-          <p>
-            A <code>Device</code> holds overrides past it: a background thread
-            (<code>medius-keepalive</code>) sends{' '}
-            <A href="/native/commands/requests#stats"><code>QUERY(STATS)</code></A> every{' '}
-            <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held, and re-sends held
-            catch subscriptions, rewrite rules and transforms.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>State</th><th>Behaviour</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Override held</td><td>Keepalive thread runs; the reply's <A href="/library/types/structs#stats"><code>session</code></A> counter says whether the box released the session.</td></tr>
-              <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger of either kind is bound.</td></tr>
-              <tr><td>Idle</td><td>No <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms, every 500 ms after the first 5 s, until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
-            </tbody>
-          </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.press(Button::LEFT)?;
+      <DocSection id="keepalive" title="Keepalive and holds" caption="Holds past the silence window">
+        <p>
+          The box clears every injected input and pending move once no frame arrives for its{' '}
+          <A href="/native/injection#safety">silence window</A>.
+        </p>
+        <p>
+          A <code>Device</code> holds overrides past it: a background thread
+          (<code>medius-keepalive</code>) sends{' '}
+          <A href="/native/commands/requests#stats"><code>QUERY(STATS)</code></A> every{' '}
+          <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held, and re-sends held
+          catch subscriptions, rewrite rules and transforms.
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>State</th><th>Behaviour</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Override held</td><td>Keepalive thread runs; the reply's <A href="/library/types/structs#stats"><code>session</code></A> counter says whether the box released the session.</td></tr>
+            <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger of either kind is bound.</td></tr>
+            <tr><td>Idle</td><td>No <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms, every 500 ms after the first 5 s, until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
+          </tbody>
+        </table>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`device.press(Button::LEFT)?;
 
 // The keepalive thread sends QUERY(STATS), so the hold outlasts
 // the 1000 ms silence window.
 std::thread::sleep(std::time::Duration::from_secs(5));
 
 device.reset()?;`}</code></pre>
-          <p>
-            An <em>override</em> is an input the box holds down or up, set by{' '}
-            <A href="/library/inject#inject"><code>press</code></A> or{' '}
-            <A href="/library/inject#inject"><code>force_release</code></A>; the library keeps a
-            copy. <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
-            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it after a dropped
-            link; the library restores it itself after a device-chip restart or a{' '}
-            <A href="/library/lifecycle#restart">released session</A>.
-          </p>
-        </Card>
-      </div>
+        <p>
+          An <em>override</em> is an input the box holds down or up, set by{' '}
+          <A href="/library/inject#inject"><code>press</code></A> or{' '}
+          <A href="/library/inject#inject"><code>force_release</code></A>; the library keeps a
+          copy. <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
+          <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it after a dropped
+          link; the library restores it itself after a device-chip restart or a{' '}
+          <A href="/library/lifecycle#restart">released session</A>.
+        </p>
+      </DocSection>
 
-      <div id="release" data-search-target>
-        <Card>
-          <CardHeader title="Releasing the device" subtitle="Drop it; no close() call" />
-          <p>
-            Dropping the last{' '}
-            <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> runs its{' '}
-            <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
-            and tears the connection down.
-          </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Step</th><th>What drop does</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Signal</td><td>Sets the stop flag the reader and keepalive threads watch.</td></tr>
-              <tr><td>Join</td><td>Waits for both threads to exit.</td></tr>
-              <tr><td>Close</td><td>Releases the serial port as the transport drops.</td></tr>
-            </tbody>
-          </table>
-          <p>
-            To return the box to passthrough at once, call <A href="/library/admin#reset"><code>reset</code></A> before drop.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`device.reset()?;   // passthrough now, not after the silence window
+      <DocSection id="release" title="Releasing the device" caption="Drop it; no close() call">
+        <p>
+          Dropping the last{' '}
+          <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> runs its{' '}
+          <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
+          and tears the connection down.
+        </p>
+        <table class="api-params">
+          <thead>
+            <tr><th>Step</th><th>What drop does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Signal</td><td>Sets the stop flag the reader and keepalive threads watch.</td></tr>
+            <tr><td>Join</td><td>Waits for both threads to exit.</td></tr>
+            <tr><td>Close</td><td>Releases the serial port as the transport drops.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          To return the box to passthrough at once, call <A href="/library/admin#reset"><code>reset</code></A> before drop.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`device.reset()?;   // passthrough now, not after the silence window
 drop(device);      // tears down threads and closes the port`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
     </>
   );
 };
