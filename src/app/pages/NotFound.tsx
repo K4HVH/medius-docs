@@ -1,19 +1,20 @@
-import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../components/surfaces/Card';
+import { PageHeader } from '../shell/PageHeader';
+import { DocSection } from '../shell/DocSection';
+import { IndexRow } from '../shell/IndexRow';
 
 const NotFound = () => (
-  <div id="not-found" data-search-target>
-    <Card>
-      <CardHeader title="Page not found" subtitle="No page at this address" />
-      <ul>
-        <li><A href="/">Home</A></li>
-        <li><A href="/native">Native API</A></li>
-        <li><A href="/library">Rust Library</A></li>
-        <li><A href="/bindings">Bindings</A></li>
-        <li><A href="/dashboard/setup">Install Medius</A></li>
-      </ul>
-    </Card>
-  </div>
+  <>
+    <PageHeader lead="No page at this address.">
+      <span id="not-found" data-search-target />
+    </PageHeader>
+    <DocSection title="Pages">
+      <IndexRow href="/guide" title="Install" tag="Flash a box from the browser" />
+      <IndexRow href="/native" title="Native API" tag="The control protocol" />
+      <IndexRow href="/library" title="Rust library" tag="The official client" />
+      <IndexRow href="/dashboard" title="Dashboard" tag="Update and configure a box" />
+      <IndexRow href="/" title="Home" />
+    </DocSection>
+  </>
 );
 
 export default NotFound;
